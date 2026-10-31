@@ -16,3 +16,7 @@ OUT=out/ $B -b --python mpfb_human.py
 ```
 
 See `../../references/3d-pipeline-research.md` for timings, asset licences and the recommended setup.
+
+`convert_packs.py` prints clip names, heights and triangle counts for the Gobkit Vol.1 GLBs and turns Kenney
+"Animated Characters Survivors" (one FBX model, idle/run/jump FBX clips, four PNG skins) into one GLB per skin
+with named clips (`ASSETS=/path/with/gobkit-v1,kenney-survivors`).

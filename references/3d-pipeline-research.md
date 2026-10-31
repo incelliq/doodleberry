@@ -49,6 +49,16 @@ Takeaways:
 Setup notes: EEVEE needs `libEGL.so.1` even in background mode (apt: `libegl1 libegl-mesa0 libgl1-mesa-dri libgbm1 mesa-vulkan-drivers`).
 Cycles needs nothing extra. The Blender tarball is 1.2 GB unpacked.
 
+## 3b. Packs now in hand (uploaded 2026-10-31), all CC0 per their licence files
+
+| pack | contents | clips | used in |
+|------|----------|-------|---------|
+| Gobkit Free Character Pack Vol.1 | 8 everyday people (office lady, schoolkid, cashier, food courier, grandma shopper, stock clerk, store manager, shoplifter); 1 m tall, 1.8–3.4k tris, one shared 13-bone skeleton | Idle, Walk, Run, Death, Hit, Attack, Special (wave/jump/cheer) | `tools/three/cast-test.html` |
+| Kenney Animated Characters Survivors 1.1 | one FBX character, 4 skins (2 survivors, 2 zombies) | idle, run, jump (separate FBX) | converted to GLB per skin |
+| Quaternius Universal Animation Library [Standard] | UE-style 65-bone mannequin (fingers), 8.5k-vertex mannequin mesh; GLB/FBX, with and without root motion | 43 clips: Idle, Idle_Talking, Walk, Walk_Formal, Jog, Sprint, Crouch, Roll, Jump, Hit_Chest, Hit_Head, Death01, Sitting (enter/idle/talk/exit), Fixing_Kneeling, PickUp, Interact, Push, Driving, Swim, Dance, pistol, punch, sword, spell | walk → hit → death fall in the test |
+
+Missing: Quaternius Universal Base Characters (same rig as UAL, so its 6 humans would play all 43 clips with no retargeting).
+
 ## 4. Recommendation
 
 1. **Blender headless as the asset factory, driven by Claude Code:** generate MPFB humans (or load Quaternius/KayKit), dress them,
