@@ -64,7 +64,7 @@ def sheets(v, out, dur):
     per = 6
     for k in range(int(np.ceil(dur / per))):
         sh('ffmpeg', '-v', 'error', '-y', '-ss', str(k * per), '-t', str(per), '-i', str(v), '-vf',
-           "fps=5,scale=216:384,drawtext=text='%{pts\\:hms}':x=6:y=6:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6,tile=10x3",
+           "fps=5,scale=216:384,drawtext=text='%{pts\\:hms\\:" + str(k * per) + "}':x=6:y=6:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6,tile=10x3",
            '-frames:v', '1', str(out / f'dense-{k:02d}.jpg'))
 
 
@@ -80,7 +80,8 @@ def main():
     I, tp = loudness(v)
     timing = json.loads((a.film / 'timing.json').read_text())
     facts = {f['id'] for f in json.loads((a.film / 'facts.json').read_text())['facts']}
-    untraced = [l['id'] for l in timing['lines'] if l.get('fact') not in facts]
+    cites = lambda l: l.get('fact') if isinstance(l.get('fact'), list) else [l.get('fact')]
+    untraced = [l['id'] for l in timing['lines'] if not cites(l) or any(c not in facts for c in cites(l))]
     frozen_total = sum(f['len'] for f in frozen)
     report = {
         **p,

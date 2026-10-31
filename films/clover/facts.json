@@ -11,6 +11,11 @@
       "source_sentence": "In many traditional farming practices, fields are rotated through various types of crops, which usually include one consisting mainly or entirely of clover."
     },
     {
+      "id": "needs_n",
+      "claim": "Crops need nitrogen.",
+      "source_sentence": "Nitrogen fixation is a key component of the nitrogen cycle and is essential to life on Earth, as all vital organic compounds such as DNA and proteins contain nitrogen."
+    },
+    {
       "id": "air_inert",
       "claim": "Air is full of nitrogen, but in that form plants can't use it.",
       "source_sentence": "Nitrogen fixation is a chemical process by which the abundant but relatively inert molecular dinitrogen (N2) is converted into bioavailable nitrogen compounds such as ammonia (NH3) and nitrates (NO3)."

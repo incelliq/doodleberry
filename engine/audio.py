@@ -310,6 +310,8 @@ def main():
 
     duck = duck_curve(timing['lines'], n)
     mix = voice + mus * duck + fx
+    fade = int(score.get('fade_out_s', 0.6) * SR)
+    mix[-fade:] *= np.linspace(1, 0, fade) ** 2
     for _ in range(3):
         L = meter.integrated_loudness(mix)
         mix *= 10 ** ((-14 - L) / 20)

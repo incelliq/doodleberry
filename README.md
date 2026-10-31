@@ -48,7 +48,7 @@ node   engine/render.mjs $F --dump-cues                    # sound cues from the
 python engine/audio.py $F                                  # score, sfx, mix
 node   engine/render.mjs $F --workers 4                    # picture
 ffmpeg -i $F/build/picture.mp4 -i $F/build/mix.wav -map 0:v -map 1:a \
-       -c:v copy -c:a aac -b:a 256k -shortest $F/build/final.mp4
+       -c:v copy -c:a aac -b:a 256k -af apad -t <length> $F/build/final.mp4
 python engine/qa.py $F                                     # measured checks + sheets
 ```
 

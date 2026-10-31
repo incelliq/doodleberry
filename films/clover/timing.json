@@ -60,7 +60,10 @@
   },
   {
    "id": "need",
-   "fact": "air_inert",
+   "fact": [
+    "needs_n",
+    "air_inert"
+   ],
    "text": "Crops need nitrogen. The air is full of it, but plants can't use it.",
    "start": 3.754,
    "end": 8.248,
