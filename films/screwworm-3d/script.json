@@ -1,0 +1,85 @@
+{
+ "speakers": {
+  "nar": {
+   "voice": "en_US-ryan-high"
+  }
+ },
+ "length_scale": 1.04,
+ "gap_s": 0.3,
+ "lead_in_s": 0.3,
+ "lines": [
+  {
+   "id": "hook",
+   "fact": "hosts",
+   "text": "What happens if a fly lays its eggs in your cut?",
+   "pause": 0.2
+  },
+  {
+   "id": "alive",
+   "fact": "living",
+   "text": "Most flies want dead flesh. The New World screwworm wants you alive."
+  },
+  {
+   "id": "eggs",
+   "fact": "eggs",
+   "text": "It lands on a scrape, and lays up to five hundred eggs along the edge."
+  },
+  {
+   "id": "burrow",
+   "fact": "living",
+   "text": "The maggots hatch, and burrow into healthy tissue."
+  },
+  {
+   "id": "screw",
+   "fact": "screw",
+   "text": "Disturb them, and they screw in deeper. That's the name.",
+   "pause": 0.3
+  },
+  {
+   "id": "rare",
+   "fact": [
+    "hosts",
+    "nicaragua"
+   ],
+   "text": "In people, it's rare, but real. Nicaragua confirmed thirty human cases in early 2025."
+  },
+  {
+   "id": "us",
+   "fact": "us_human",
+   "text": "And in August 2025, the United States confirmed its first human case."
+  },
+  {
+   "id": "doctor",
+   "fact": [
+    "remove",
+    "cover"
+   ],
+   "text": "A doctor has to remove the larvae. The best defense is simple. Cover open wounds.",
+   "pause": 0.3
+  },
+  {
+   "id": "back",
+   "fact": "cases",
+   "text": "Now the fly is back in the US, mostly in animals. Seventy one cases by late October."
+  },
+  {
+   "id": "planes",
+   "fact": "release_now",
+   "text": "The fix sounds crazy. Planes are dropping sterile flies."
+  },
+  {
+   "id": "once",
+   "fact": [
+    "once",
+    "sit"
+   ],
+   "text": "A female mates only once. If her mate is sterile, her eggs never hatch.",
+   "pause": 0.3
+  },
+  {
+   "id": "end",
+   "fact": "gone_1966",
+   "text": "America beat this fly in 1966. Now it's doing it again."
+  }
+ ]
+}

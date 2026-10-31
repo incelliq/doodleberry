@@ -14,7 +14,9 @@ Later films: `films/clover-friends` (character story), `films/banana-herb` (bana
 research-story pair `films/screwworm` (full, ~3:23) + `films/screwworm-hook` (~41 s), which share
 `films/screwworm-shared/` (original rigs, a Natural Earth map built by `tools/mapgen.py`, and a shot-list
 sequencer: each cut's `scene.js` is just a list of shots keyed to script lines). `tools/shotstills.mjs` renders
-a contact sheet with one still per shot.
+a contact sheet with one still per shot. `films/screwworm-3d` is the first 3D short: three.js (vendored in
+`engine/vendor/three`, MIT) in headless Chromium via `tools/three/run3d.mjs`, CC0 Quaternius characters and
+animation, CMU mocap retargeted by `tools/blender/cmu_retarget.py`; serve `motion/` over HTTP to render it.
 
 ## Pipeline
 

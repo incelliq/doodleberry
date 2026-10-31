@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Screwworm 3D</title>
+<style>
+  @font-face { font-family: 'Fredoka'; src: url('../../engine/fonts/Fredoka.ttf') format('truetype'); font-weight: 300 700; }
+  html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+  canvas { display: block; position: absolute; left: 0; top: 0; }
+  #ov { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  text { font-family: 'Fredoka', sans-serif; }
+</style>
+<script type="importmap">{"imports":{"three":"../../engine/vendor/three/three.module.min.js"}}</script>
+</head>
+<body>
+<svg id="ov" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920"></svg>
+<script src="build/timing.js"></script>
+<script src="../screwworm-shared/map.js"></script>
+<script type="module" src="scene.js"></script>
+</body>
+</html>

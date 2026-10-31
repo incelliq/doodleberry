@@ -1,0 +1,133 @@
+{
+ "retrieved": "2026-10-31",
+ "sources": {
+  "aphis_jun": {
+   "title": "USDA Confirms Presence of New World Screwworm in the United States (APHIS, June 3, 2026)",
+   "url": "https://www.aphis.usda.gov/news/agency-announcements/usda-confirms-presence-new-world-screwworm-united-states"
+  },
+  "aphis_az": {
+   "title": "USDA Confirms New World Screwworm in Arizona (APHIS, Oct 28, 2026)",
+   "url": "https://www.aphis.usda.gov/news/agency-announcements/usda-confirms-new-world-screwworm-arizona"
+  },
+  "dtn_oct": {
+   "title": "New World Screwworm Found in Arizona as USDA Reopens Border Trade (DTN, Oct 30, 2026)",
+   "url": "https://www.dtnpf.com/agriculture/web/ag/livestock/article/2026/10/30/new-world-screwworm-found-arizona"
+  },
+  "dtn_apr": {
+   "title": "USDA groundbreaking marks step (DTN, Apr 17, 2026)",
+   "url": "https://www.dtnpf.com/agriculture/web/ag/livestock/article/2026/04/17/usda-groundbreaking-marks-step-new"
+  },
+  "ars": {
+   "title": "Screwworm eradication timeline (USDA ARS)",
+   "url": "https://www.ars.usda.gov/oc/timeline/worm"
+  },
+  "nal": {
+   "title": "STOP Screwworms, 1953-1955 (USDA National Agricultural Library)",
+   "url": "https://www.nal.usda.gov/exhibits/speccoll/exhibits/show/stop-screwworms--selections-fr/1953-1955"
+  },
+  "wiki": {
+   "title": "Cochliomyia hominivorax (Wikipedia, retrieved 2026-10-31)",
+   "url": "https://en.wikipedia.org/wiki/Cochliomyia_hominivorax"
+  },
+  "nobel": {
+   "title": "Hermann J. Muller, Nobel Prize in Physiology or Medicine 1946",
+   "url": "https://www.nobelprize.org/prizes/medicine/1946/muller/facts/"
+  },
+  "papers": {
+   "title": "Bushland & Hopkins 1951, J Econ Entomol 44:725 (doi:10.1093/jee/44.5.725); Knipling 1955, J Econ Entomol 48:459 (doi:10.1093/jee/48.4.459); Baumhover et al. 1955, J Econ Entomol 48:462 (doi:10.1093/jee/48.4.462)",
+   "url": "https://doi.org/10.1093/jee/48.4.459"
+  },
+  "bmj": {
+   "title": "Taylor L. New World screwworm: Nicaragua confirms 30 human cases of flesh eating parasite. BMJ 2025;388:r355",
+   "url": "https://doi.org/10.1136/bmj.r355"
+  },
+  "tmaid": {
+   "title": "Majeed A et al. New World screwworm infestation in a returned traveller from Costa Rica. Travel Med Infect Dis 2025;65:102843",
+   "url": "https://doi.org/10.1016/j.tmaid.2025.102843"
+  },
+  "cdc": {
+   "title": "CDC: About Myiasis",
+   "url": "https://www.cdc.gov/myiasis/about/index.html"
+  }
+ },
+ "facts": [
+  {
+   "id": "living",
+   "src": "wiki",
+   "claim": "Screwworm maggots feed on living tissue of warm-blooded animals and attack healthy tissue.",
+   "source_sentence": "a species of parasitic blowfly whose larvae (maggots) feed on living tissue of warm-blooded animals ... screwworm maggots are unusual because they attack healthy tissue."
+  },
+  {
+   "id": "gone_1966",
+   "src": "ars",
+   "claim": "Sterile flies eradicated the screwworm from the US in 1966.",
+   "source_sentence": "The sterile-insect approach eradicated the screwworm from the U.S. in 1966."
+  },
+  {
+   "id": "eggs",
+   "src": "wiki",
+   "claim": "Females lay 250-500 eggs in exposed flesh, near wounds or newborns' navels.",
+   "source_sentence": "Screwworm females lay 250\u2013500 eggs in the exposed flesh of warm-blooded animals ... near wounds ... but also near the navel of newborns"
+  },
+  {
+   "id": "screw",
+   "src": "wiki",
+   "claim": "Disturbed larvae burrow or 'screw' deeper, hence the name; damage can kill the host and the wound attracts more flies.",
+   "source_sentence": "Should the wound be disturbed during this time, the larvae burrow or \"screw\" deeper into the flesh, hence the larva's common name. The maggots can cause severe tissue damage or even death to the host. ... the damaged tissue attracts more flies."
+  },
+  {
+   "id": "hosts",
+   "src": "wiki",
+   "claim": "It infests wild and domestic animals, and less frequently birds and humans.",
+   "source_sentence": "The New World screwworm fly infests wild and domestic animals, and less frequently birds and humans."
+  },
+  {
+   "id": "once",
+   "src": "wiki",
+   "claim": "Females mate only once and keep the sperm for life; the sterile insect technique exploits this.",
+   "source_sentence": "Females copulate only once and retain the male's sperm for life, a fact which has been exploited in eradication programs using the sterile insect technique."
+  },
+  {
+   "id": "sit",
+   "src": "ars",
+   "claim": "Fertile wild females would mate with mass-reared sterilized males released into infested areas.",
+   "source_sentence": "Fertile females would mate with sterilized males mass-reared in insectaries and released into infested areas."
+  },
+  {
+   "id": "cases",
+   "src": "dtn_oct",
+   "claim": "By Oct 30, 2026: 71 total US cases, including dogs and a cat, in Texas, New Mexico and Arizona (first Arizona case Oct 28).",
+   "source_sentence": "The U.S. has 71 total NWS cases ... Oct. 28: a dog and a domestic cat in New Mexico ... (APHIS: a dog in Cochise County, Arizona ... the first detection of NWS in Arizona)"
+  },
+  {
+   "id": "release_now",
+   "src": "aphis_jun",
+   "claim": "Sterile flies are being released over the Texas outbreak area.",
+   "source_sentence": "4 million sterile flies per week already being released aerially in the area ... ground release chambers are being deployed"
+  },
+  {
+   "id": "nicaragua",
+   "src": "bmj",
+   "claim": "Nicaragua confirmed 30 human cases (reported Feb 2025).",
+   "source_sentence": "New World screwworm: Nicaragua confirms 30 human cases of flesh eating parasite. (BMJ, 19 Feb 2025)"
+  },
+  {
+   "id": "us_human",
+   "src": "wiki",
+   "claim": "The first human case in the US was confirmed in August 2025.",
+   "source_sentence": "\"First human case of flesh-eating screwworm parasite confirmed in US\", The Guardian/Reuters, 25 August 2025 (cited in Wikipedia, Cochliomyia hominivorax)"
+  },
+  {
+   "id": "remove",
+   "src": "cdc",
+   "claim": "A healthcare provider removes the larvae.",
+   "source_sentence": "a healthcare provider will remove the larvae through surgery."
+  },
+  {
+   "id": "cover",
+   "src": "cdc",
+   "claim": "Cover open wounds; myiasis is not common in the US.",
+   "source_sentence": "Cover open wounds. ... Myiasis is not common in the US."
+  }
+ ]
+}
