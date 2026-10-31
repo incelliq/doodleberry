@@ -451,7 +451,7 @@
       const p = inv(t0, t0 + 1.6, t);
       if (p <= 0) return;
       const sp = pop(t, t0, 0.4);
-      const x = 30 + side * (40 + p * 120), y = 0 - p * 300;
+      const x = 20 + side * (30 + p * 120), y = -80 - p * 260;
       out += nh3(x, y, sp.s * 1.4, { tag: tg ? { t, at: amT } : null });
     });
     return out;
@@ -681,7 +681,7 @@
       const row = Math.floor(i / 3), colm = i % 3;
       const bx = 230 + colm * 230 + (row % 2) * 105 + (rand(i + 200) - 0.5) * 40, by = 410 + row * 125 + (rand(i + 300) - 0.5) * 30;
       const x = bx + noise(i + 400, t * 0.4) * 22 + t * 4, y = by + noise(i + 500, t * 0.35) * 18;
-      world += n2(x, y - (1 - out) * 120, 1.15 * p.s * out * (0.4 + 0.6 * edge), noise(i + 600, t * 0.3) * 40, i === 2 ? { tag: { t, at: airT + 0.3 } } : {});
+      world += n2(x, y - (1 - out) * 120, 1.15 * p.s * out * (0.4 + 0.6 * edge), noise(i + 600, t * 0.3) * 40, i === 4 ? { tag: { t, at: airT + 0.3 } } : {});
     }
     // the bounce: one pair drops onto the seedling and is shrugged off
     {
@@ -704,10 +704,10 @@
 
     // the new clover's nitrogen flows to the corn under the end card
     if (t > L.recap.start + 0.4) {
-      for (let i = 0; i < 5; i++) {
-        const ph = ((t - L.recap.start - 0.4) / 1.6 + i / 5) % 1;
+      for (let i = 0; i < 6; i++) {
+        const ph = ((t - L.recap.start - 0.4) / 1.8 + i / 6) % 1;
         const x = lerp(CLOVER_X + 30, CORN_X - 20, ph), y = GROUND + 120 - Math.sin(ph * Math.PI) * 40;
-        world += nDot(x, y, 0.5, Math.sin(ph * Math.PI) * inv(L.recap.start + 0.4, L.recap.start + 0.9, t));
+        world += nDot(x, y, 0.75, Math.sin(ph * Math.PI) * inv(L.recap.start + 0.4, L.recap.start + 0.9, t));
       }
     }
     // released nitrogen spreading through soil, then flowing to the corn
