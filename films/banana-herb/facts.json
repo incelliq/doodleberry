@@ -1,0 +1,23 @@
+{
+  "source": {
+    "title": "Banana — Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Banana",
+    "retrieved": "2026-10-31"
+  },
+  "facts": [
+    {"id": "pseudostem", "claim": "The banana 'trunk' is a pseudostem made of leaf stalks.",
+     "source_sentence": "Plants are normally tall and fairly sturdy with a tree-like appearance, but what appears to be a trunk is actually a pseudostem composed of multiple leaf-stalks (petioles)."},
+    {"id": "corm", "claim": "Everything above ground grows from the corm.",
+     "source_sentence": "All the above-ground parts of a banana plant grow from a structure called a corm."},
+    {"id": "inflorescence", "claim": "When mature, it stops making leaves and grows a flower spike.",
+     "source_sentence": "When a banana plant is mature, the corm stops producing new leaves and begins to form a flower spike or inflorescence."},
+    {"id": "bracts", "claim": "Rows of flowers sit between petal-like bracts.",
+     "source_sentence": "The inflorescence contains many petal-like bracts between rows of flowers."},
+    {"id": "hands", "claim": "Fruits form a bunch of about nine hands, up to 20 fruits each.",
+     "source_sentence": "The banana fruits develop from the banana heart, in a large hanging cluster called a bunch, made up of around nine tiers called hands, with up to 20 fruits to a hand."},
+    {"id": "sucker", "claim": "A smaller sucker grows to fruit next.",
+     "source_sentence": "The plant is allowed to produce two shoots at a time; a larger one for immediate fruiting and a smaller \"sucker\" or \"follower\" to produce fruit in 6–8 months."},
+    {"id": "herb", "claim": "Bananas grow on large treelike herbaceous plants.",
+     "source_sentence": "A banana is an elongated, edible fruit that is botanically a berry produced by several kinds of large treelike herbaceous flowering plants in the genus Musa."}
+  ]
+}

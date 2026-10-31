@@ -191,5 +191,168 @@
     });
   }
 
-  root.Cast = { face, MOODS, kid, worm, spine, KID, WORM };
+  // ---------- Banana plant ----------
+  // Origin at ground level. o: t, s, growth (0 pup .. 1 mature), unfurl (newest leaf 0 rolled .. 1 open),
+  // flower (0..1 spike emerges and hangs), bunch (0..1 hands form tier by tier), ripe (0 green .. 1 yellow),
+  // bracts (0..1 bracts lift), wind, underground (draw corm + roots), pup (0..1 sucker), face {mood, talk, look, bl}
+  const BAN = { stem: '#7fb24a', stemDark: '#5e8a35', blotch: '#5a3a4a', leaf: '#5aae3c', leafHi: '#7cc955', vein: '#3f7f2a',
+    corm: '#a06b4c', root: '#efe0bd', heart: '#7a2346', heartHi: '#a8466e', green: '#7cbf3b', yellow: '#f6d046' };
+  function bananaLeaf(B, ang, Lb, Wb, droop, tear, seed, colr, wind, t) {
+    const dir = [Math.cos(ang), Math.sin(ang)];
+    const bend = droop * Lb * 0.55 + wind * Lb * 0.006;
+    const T = [B[0] + dir[0] * Lb, B[1] + dir[1] * Lb + bend];
+    const mid = D.bez(B, [B[0] + dir[0] * Lb * 0.33, B[1] + dir[1] * Lb * 0.33], [B[0] + dir[0] * Lb * 0.72, B[1] + dir[1] * Lb * 0.72 + bend * 0.45], T, 24);
+    const n = mid.length - 1;
+    const left = [], right = [];
+    for (let i = 0; i <= n; i++) {
+      const u = i / n;
+      const a = mid[Math.max(0, i - 1)], b = mid[Math.min(n, i + 1)];
+      let nx = -(b[1] - a[1]), ny = b[0] - a[0]; const m = Math.hypot(nx, ny) || 1; nx /= m; ny /= m;
+      const w = Wb * Math.pow(Math.sin(Math.PI * clamp(0.035 + u * 0.965)), 0.42) / 2;
+      // splits along the veins on older leaves: the edge pulls in toward the midrib
+      const cut = (k2, sd) => tear > 0 && k2 > 4 && k2 < n - 2 && root.M.rand(seed + Math.floor(k2 / 2) * sd) < tear * 0.22;
+      const cutL = cut(i, 3.1) && i % 2 === 0, cutR = cut(i, 7.7) && i % 2 === 1;
+      left.push([mid[i][0] + nx * w * (cutL ? 0.12 : 1), mid[i][1] + ny * w * (cutL ? 0.12 : 1)]);
+      right.push([mid[i][0] - nx * w * (cutR ? 0.12 : 1), mid[i][1] - ny * w * (cutR ? 0.12 : 1)]);
+    }
+    const d = left.map(([x, y], i) => `${i ? 'L' : 'M'}${f2(x)} ${f2(y)}`).join('') + right.slice().reverse().map(([x, y]) => `L${f2(x)} ${f2(y)}`).join('') + 'Z';
+    let out = D.shade(d, colr, { dir: [0.3, 1], depth: Wb * 0.16, light: 4, w: 4.5, ink: INK });
+    // parallel lateral veins, then the pale midrib
+    let veins = '';
+    for (let i = 2; i < n - 1; i += 1) {
+      const [mx, my] = mid[i];
+      for (const side of [left, right]) {
+        const [ex, ey] = side[Math.min(n, i + 1)];
+        veins += `M${f2(mx)} ${f2(my)} L${f2(lerp(mx, ex, 0.93))} ${f2(lerp(my, ey, 0.93))}`;
+      }
+    }
+    out += `<path d="${veins}" fill="none" stroke="${BAN.vein}" stroke-width="1.6" opacity="0.45"/>`;
+    out += D.taper(mid, Wb * 0.07, 1.2, D.lightOf(colr, 1.3), 'opacity="0.95"');
+    return out;
+  }
+  function finger(len, colr, spots, seed) {
+    // a curved fruit pointing up, tip and stalk end darker
+    const d = `M0 0 C${-len * 0.18} ${-len * 0.35} ${-len * 0.12} ${-len * 0.8} ${len * 0.06} ${-len} C${len * 0.12} ${-len * 0.78} ${len * 0.2} ${-len * 0.35} ${len * 0.16} 0 Z`;
+    let s = D.shade(d, colr, { dir: [1, 0.2], depth: len * 0.07, light: 2.5, w: 3, ink: INK });
+    s += `<ellipse cx="${f2(len * 0.06)}" cy="${f2(-len)}" rx="3.5" ry="4" fill="#4a3a22"/>`;
+    for (let k = 0; k < spots; k++) s += `<circle cx="${f2((root.M.rand(seed + k) - 0.4) * len * 0.2)}" cy="${f2(-len * (0.2 + root.M.rand(seed + k * 3) * 0.6))}" r="${f2(1.5 + root.M.rand(seed + k * 5) * 2)}" fill="#6b4a22" opacity="0.7"/>`;
+    return s;
+  }
+  function banana(x, y, o = {}) {
+    const { t = 0, s = 1, growth = 1, unfurl = 1, flower = 0, bunch = 0, ripe = 0, bracts = 0, wind = 0, underground = false, pup = 0, side = 1, seed = 1 } = o;
+    const c = { ...BAN, ...(o.colors || {}) };
+    const g = clamp(growth);
+    const H = lerp(110, 640, g), W0 = lerp(34, 108, g), W1 = W0 * 0.58;
+    const sway = noise(seed, t * 0.5) * 1.5 + wind * 0.35;
+    let under = '', back = '', mid = '', front = '';
+    // corm and cord roots
+    if (underground) {
+      for (let k = 0; k < 9; k++) {
+        const a = Math.PI * (0.08 + 0.84 * (k / 8)) + (root.M.rand(seed + k) - 0.5) * 0.2;
+        const L = lerp(90, 230, g) * (0.7 + root.M.rand(seed + k * 3) * 0.5);
+        const pts = D.bez([Math.cos(a) * W0 * 0.6, 40 + Math.sin(a) * 30], [Math.cos(a) * L * 0.4, 50 + Math.sin(a) * L * 0.35], [Math.cos(a) * L * 0.75, 60 + Math.sin(a) * L * 0.7], [Math.cos(a) * L, 70 + Math.sin(a) * L * 0.85], 10);
+        under += D.taper(pts, 15, 4, INK) + D.taper(pts, 9, 1.6, c.root);
+        const r = D.rootlets(pts, seed * 13 + k, { count: 3, len: 34, w: 2.6, fill: c.root, ink: INK, depth: 1 });
+        under += r.ink + r.fill;
+      }
+      under += G(tf(0, 42), D.shade(ellD(W0 * 0.95, 52 * lerp(0.6, 1, g)), c.corm, { depth: 12, light: 4, w: 5, ink: INK }));
+      for (let k = 0; k < 4; k++) under += `<path d="M${f2(-W0 * (0.8 - k * 0.12))} ${30 + k * 10} Q0 ${44 + k * 12} ${f2(W0 * (0.8 - k * 0.12))} ${30 + k * 10}" fill="none" stroke="${D.shadowOf(c.corm, 1.3)}" stroke-width="3" opacity="0.6"/>`;
+    }
+    // sucker: a small shoot with narrow sword leaves, joined to the corm below ground
+    if (pup > 0.01) {
+      const px = side * W0 * 1.55, ps = pup;
+      if (underground) {
+        const rh = D.bez([side * W0 * 0.55, 64], [side * W0 * 0.9, 96], [px * 0.85, 84], [px, 44], 10);
+        under += D.taper(rh, 26 * ps + 6, 16 * ps + 6, INK) + D.taper(rh, 26 * ps, 16 * ps, D.shadowOf(c.corm, 0.6));
+        under += G(tf(px, 40), D.shade(ellD(30 * ps, 22 * ps), c.corm, { depth: 6, light: 2, w: 4, ink: INK }));
+      }
+      let sp = D.shade(`M${-16 * ps} 0 L${-9 * ps} ${-120 * ps} L${9 * ps} ${-120 * ps} L${16 * ps} 0 Z`, c.stem, { depth: 6, light: 2, w: 4, ink: INK });
+      for (const [a, L] of [[-0.35, 150], [0.3, 130], [-0.05, 175]]) {
+        const pts = D.bez([0, -110 * ps], [a * 60 * ps, -160 * ps], [a * 120 * ps, -200 * ps], [a * 160 * ps + noise(seed + a, t) * 6, (-110 - L) * ps], 10);
+        sp += D.inkTaper(pts, 22 * ps, 2, c.leafHi, INK, 3.5);
+      }
+      front += G(tf(px, 4, side * 4 + wind * 0.5), sp);
+    }
+    // pseudostem: overlapping leaf-sheath bands, tapering up, with dark blotches
+    const stemD = `M${-W0 / 2} 0 C${-W0 / 2} ${-H * 0.4} ${-W1 / 2} ${-H * 0.8} ${-W1 / 2} ${-H} L${W1 / 2} ${-H} C${W1 / 2} ${-H * 0.8} ${W0 / 2} ${-H * 0.4} ${W0 / 2} 0 Z`;
+    mid += D.shade(stemD, c.stem, { dir: [1, 0.1], depth: W0 * 0.3, light: 4, w: 6, ink: INK });
+    for (let k = 1; k < 6; k++) {
+      const yk = -H * (k / 6), wk = lerp(W0, W1, k / 6) / 2, sideK = k % 2 ? 1 : -1;
+      mid += `<path d="M${f2(-wk * sideK)} ${f2(yk + 40)} Q${f2(wk * 0.2 * sideK)} ${f2(yk - 10)} ${f2(wk * sideK)} ${f2(yk - 30)}" fill="none" stroke="${c.stemDark}" stroke-width="4" opacity="0.75"/>`;
+    }
+    for (let k = 0; k < 7; k++) {
+      const by = -H * (0.1 + root.M.rand(seed + k * 9) * 0.75), bx = (root.M.rand(seed + k * 4) - 0.5) * lerp(W0, W1, -by / H) * 0.7;
+      mid += `<ellipse cx="${f2(bx)}" cy="${f2(by)}" rx="${f2(5 + root.M.rand(k) * 9)}" ry="${f2(3 + root.M.rand(k + 2) * 5)}" fill="${c.blotch}" opacity="0.35"/>`;
+    }
+    // leaves: spiral from the crown; old ones droop and split, the newest unrolls from a "cigar"
+    const N = Math.max(2, Math.round(lerp(2, 8, g)));
+    const crown = [0, -H + 8];
+    for (let i = 0; i < N; i++) {
+      const u = N === 1 ? 1 : i / (N - 1);
+      const sd = i % 2 ? 1 : -1;
+      const theta = lerp(82, 18, u) + (root.M.rand(seed + i) - 0.5) * 10;
+      const lag = D.wind ? 0 : 0;
+      const ang = ((-90 + sd * theta + wind * (0.5 + 0.5 * (1 - u)) + noise(seed + i * 2, t * 0.9) * 3) * Math.PI) / 180;
+      const Lp = lerp(40, 110, g), Lb = lerp(140, 430, g) * (0.85 + root.M.rand(seed + i * 5) * 0.25), Wb = Lb * 0.33;
+      const P = [crown[0] + Math.cos(ang) * Lp, crown[1] + Math.sin(ang) * Lp];
+      const isNew = i === N - 1, open = isNew ? clamp(unfurl) : 1;
+      const colr = D.mix(c.leaf, '#c2b54a', (1 - u) * 0.35 * g);
+      const pet = D.bez(crown, [lerp(crown[0], P[0], 0.4), lerp(crown[1], P[1], 0.4) - 10], [lerp(crown[0], P[0], 0.8), lerp(crown[1], P[1], 0.8)], P, 8);
+      const layer = D.inkTaper(pet, 16 * lerp(0.6, 1, g), 9, c.stem, INK, 4) +
+        (open > 0.08 ? bananaLeaf(P, ang + (1 - open) * (sd * -0.6), Lb * lerp(0.75, 1, open), Wb * open, lerp(0.75, 0.04, u), lerp(0.9, 0, u), seed * 31 + i, i % 2 ? colr : D.mix(colr, c.leafHi, 0.35), wind, t) : '');
+      if (isNew && open < 1) {
+        const ch = Lb * 0.7 * (1 - open);
+        back += D.inkTaper(D.bez(crown, [crown[0], crown[1] - ch * 0.4], [crown[0] + 4, crown[1] - ch * 0.8], [crown[0] + 8 + noise(seed, t) * 3, crown[1] - ch], 10), 26, 6, D.mix(c.leafHi, '#e8f5c8', 0.35), INK, 4);
+      }
+      if (u < 0.5) back += layer; else front += layer;
+    }
+    // flower spike: rises from the crown, arcs over and hangs; bracts lift as hands of fruit form
+    let flowerS = '';
+    if (flower > 0.01) {
+      const fe = clamp(flower);
+      const sx = o.spikeSide || side;
+      const path = D.bez(crown, [0, -H - 140], [sx * 190, -H - 150], [sx * 230, -H + 60 + 80 * fe], 30);
+      const cut = Math.max(2, Math.round(path.length * Math.min(1, fe * 1.4)));
+      const stalk = path.slice(0, cut);
+      flowerS += D.inkTaper(stalk, 22, 18, c.stemDark, INK, 4);
+      const tip = stalk[stalk.length - 1];
+      // hands: tiers up the hanging stalk above the heart, each a row of curved fruits
+      const hands = Math.floor(clamp(bunch) * 9 + 1e-6);
+      const ripeC = ripe <= 1 ? D.mix(c.green, c.yellow, clamp(ripe)) : D.mix(c.yellow, '#c79a2e', clamp(ripe - 1));
+      for (let h = 0; h < 9; h++) {
+        const grow = clamp(clamp(bunch) * 9 - h);
+        if (grow <= 0) continue;
+        const k = Math.max(1, Math.round(cut - 5 - h * 1.7));
+        const [hx, hy] = path[Math.min(k, path.length - 1)], [qx, qy] = path[Math.min(k + 1, path.length - 1)];
+        const tang = (Math.atan2(qy - hy, qx - hx) * 180) / Math.PI;
+        const nf = 6;
+        let hand = '';
+        for (let j = 0; j < nf; j++) {
+          const off = (j - (nf - 1) / 2) * 15;
+          hand += G(tf(off, Math.abs(off) * 0.25, off * 0.9 - tang * 0.15), finger(lerp(20, 74, grow) * (1 - h * 0.03), ripeC, ripe > 1.05 ? 5 : 0, h * 17 + j));
+        }
+        flowerS += G(tf(hx - sx * 8, hy, 0), hand);
+      }
+      // the heart: layered bracts, outer ones peeling back
+      if (fe > 0.35) {
+        const hs = clamp((fe - 0.35) / 0.4) * (1 - clamp(bunch) * 0.25);
+        let heart = '';
+        heart += D.shade('M0 -20 C-46 0 -50 70 0 120 C50 70 46 0 0 -20 Z', c.heart, { depth: 12, light: 4, w: 5, ink: INK });
+        heart += D.shade('M0 -10 C-30 10 -30 70 0 106 C24 74 24 18 0 -10 Z', D.mix(c.heart, '#3d0f22', 0.2), { depth: 8, light: 3, w: 3.5, ink: INK });
+        const lift = clamp(bracts);
+        heart += G(`rotate(${f2(-lift * 55)} -10 0)`, D.shade('M-4 -18 C-52 4 -54 60 -18 96 C-30 50 -24 14 -4 -18 Z', c.heartHi, { depth: 7, light: 3, w: 4, ink: INK }));
+        if (lift > 0.2) for (let j = 0; j < 5; j++) heart += `<ellipse cx="${-20 + j * 9}" cy="-14" rx="4" ry="9" fill="#f3e3b0" stroke="${INK}" stroke-width="2" opacity="${f2(clamp((lift - 0.2) * 3))}"/>`;
+        flowerS += G(tf(tip[0], tip[1], sx * -10, hs), heart);
+      }
+    }
+    let face = '';
+    if (o.face) {
+      const fc = o.face;
+      face = Cast.face({ x: 0, y: -H * 0.46, s: lerp(0.9, 1.75, g), mood: fc.mood || 'happy', talk: fc.talk || 0, lookX: fc.lookX || 0, lookY: fc.lookY || 0, bl: fc.bl || 0, lid: c.stem, sep: 24, wink: fc.wink });
+    }
+    const plant = back + mid + face + front + flowerS;
+    return G(`translate(${f2(x)} ${f2(y)}) scale(${f2(s)})`, under + G(`rotate(${f2(sway)})`, plant));
+  }
+
+  root.Cast = { face, MOODS, kid, worm, spine, banana, KID, WORM, BAN };
 })(typeof window !== 'undefined' ? window : globalThis);
