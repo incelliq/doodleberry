@@ -88,13 +88,16 @@
   }
   function flower(x, y, s, t, wilt = 0) {
     if (s <= 0.001) return '';
-    let petals = '';
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2, r = 30 + (i % 2) * 6;
-      petals += ell(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55 - 4, 9, 20, col(i % 3 ? C.white : '#ffe6ef', '#b59c6a', wilt), 3.5, C.ink,
-        `transform="rotate(${f2(a * 180 / Math.PI + 90)} ${f2(Math.cos(a) * r * 0.55)} ${f2(Math.sin(a) * r * 0.55 - 4)})"`);
-    }
-    return G(tf(x, y, noise(9, t * 0.7) * 4 + wilt * 70, s), petals + circle(0, -4, 14, col('#fff3c9', '#9a8150', wilt), 3.5));
+    // white clover head: a ball of small florets, outer ones blushing pink
+    let out = circle(0, 0, 26, col('#ffffff', '#b59c6a', wilt), 4);
+    [[16, 30, '#f6d4e0'], [10, 19, '#fbeaf0'], [6, 9, '#ffffff']].forEach(([n, r, c]) => {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + r;
+        const fx = Math.cos(a) * r * 0.75, fy = Math.sin(a) * r * 0.75;
+        out += ell(fx, fy, 5, 10, col(c, '#a88d5c', wilt), 2.6, C.ink, `transform="rotate(${f2(a * 180 / Math.PI + 90)} ${f2(fx)} ${f2(fy)})"`);
+      }
+    });
+    return G(tf(x, y, noise(9, t * 0.7) * 4 - wilt * 50, s), out);
   }
   // o: t, s, wilt, sink, flower, mood, look, bl, talk, sq (squash), seed, face
   function clover(x, o) {
@@ -102,7 +105,7 @@
     const wilt = o.wilt || 0;
     const sway = noise(seed, t * 0.55) * 3 + noise(seed + 7, t * 1.3) * 1.2;
     const Hs = 255;
-    const bend = wilt * 34 + sway;                     // degrees the tip leans
+    const bend = -wilt * 34 + sway;                     // degrees the tip leans
     const a = (bend * Math.PI) / 180;
     const tipX = Math.sin(a) * Hs * (1 - wilt * 0.25), tipY = -Math.cos(a) * Hs * (1 - wilt * 0.25);
     const ctrlX = tipX * 0.15, ctrlY = tipY * 0.6;
@@ -116,7 +119,7 @@
       out += ell(fx, fy - 6, 10 * Math.min(1, fl * 3), 14 * Math.min(1, fl * 3), '#e9f7d9', 4) + flower(fx, fy, M.pop(o.t, o.flowerAt || 0, 0.5).s * (1 - wilt * 0.3), t, wilt);
     }
     out += tube(`M0 0 Q${f2(ctrlX)} ${f2(ctrlY)} ${f2(tipX)} ${f2(tipY)}`, stemCol, 12, 6);
-    const leafRot = bend * 1.1 + wilt * 22;
+    const leafRot = bend * 1.1 - wilt * 22;
     const lS = 1.08;
     const mk = 0.75 * (1 - wilt);
     const fc = o.face === false ? '' : face({ x: 0, y: -72, s: 0.95, mood: o.mood, lookX: o.lookX || 0, lookY: o.lookY || 0, bl: o.bl || 0, talk: o.talk || 0 });
@@ -152,7 +155,7 @@
       const R = r * base * pulse * (1 - fade * 0.6);
       out += circle(nx, ny, R, col(C.nodule, '#9a7a55', fade), 4.5) + circle(nx - R * 0.35, ny - R * 0.35, R * 0.28, '#ffd9d2', 0, 'none', `opacity="${1 - fade}"`);
     });
-    return G(tf(x, GROUND + 18, 0, ROOT_SX, ROOT_SY), out, `opacity="${1 - (o.gone || 0)}"`);
+    return G(tf(x, GROUND + 18, 0, ROOT_SX, ROOT_SY), out, `opacity="${f2(1 - 0.55 * (o.gone || 0))}"`);
   }
   const NODULE_WORLD = () => [CLOVER_X + NODULES[0][0] * ROOT_SX, GROUND + 18 + NODULES[0][1] * ROOT_SY];
   const CORN_ROOTS = ['M0 0 C-8 50 -30 90 -48 140', 'M0 0 C6 60 4 110 10 160', 'M0 0 C14 46 36 86 56 130', 'M-4 30 C-40 50 -64 70 -84 96', 'M4 34 C36 52 60 72 82 100'];
@@ -326,8 +329,8 @@
       [L.need.start - 0.1, k(505, 1010, 1.22), 'linear'],
       [L.need.start + 0.6, k(560, 1000, 1.22), 'inOutCubic'],
       [at('need', 'the') + 0.4, k(560, 985, 1.22), 'inOutCubic'],
-      [at('need', 'but') + 0.1, k(790, 900, 1.6), 'inOutCubic'],
-      [L.help.start - 0.55, k(792, 902, 1.61), 'linear'],
+      [at('need', 'but') + 0.1, k(830, 900, 1.6), 'inOutCubic'],
+      [L.help.start - 0.55, k(832, 902, 1.61), 'linear'],
       [L.help.start + 0.15, k(300, 1130, 1.6), 'inOutCubic'],
       [L.nodules.start, k(310, 1135, 1.6), 'linear'],
       [L.nodules.start + 0.6, k(453, 1085, 1.65), 'inOutCubic'],
@@ -408,6 +411,8 @@
 
   // ---------- lens (window into the nodule) ----------
   const LENS = { x: 615, y: 1010, r: 290 };
+  const LENS_BIG = { x: 515, y: 900, r: 400 };
+  const lensZoom = t => keys(t, [[L.fix.start - 0.15, 0], [L.fix.start + 0.35, 1, 'inOutCubic'], [L.feed.start - 1.0, 1], [L.feed.start - 0.5, 0, 'inOutCubic']]);
   const CELLS = Array.from({ length: 44 }, (_, i) => [(rand(i + 7) - 0.5) * 1100, (rand(i + 61) - 0.5) * 1100, 60 + rand(i + 17) * 50]);
   const BUGS = [[-170, -120, 18, 0.8], [170, -150, -24, 0.75], [-210, 120, 12, 0.7], [200, 140, -8, 0.78], [0, 260, 4, 0.7]];
   function lensInner(t, R, ce = 1) {
@@ -439,8 +444,8 @@
         i === 0 ? { tag: { t, at: t0 + 0.25 } } : {});
     };
     out += n2path(fixT - 0.05, [-R * 0.82, R * 0.05], [44, 18], 0);
-    out += n2path(fixT + 0.5, [R * 0.9, -R * 0.4], [170, -150], 1);
-    out += n2path(fixT + 0.9, [-R * 0.9, R * 0.3], [-210, 120], 2);
+    out += n2path(fixT + 0.5, [R * 0.95, -R * 0.45], [170, -150], 1);
+    out += n2path(fixT + 0.9, [-R * 1.0, R * 0.32], [-210, 120], 2);
     // NH3 out
     [[turnT + 0.15, -1, true], [amT, 1, false]].forEach(([t0, side, tg], i) => {
       const p = inv(t0, t0 + 1.6, t);
@@ -458,7 +463,8 @@
     const [nx, ny] = toScreen(cam, ...NODULE_WORLD());
     const e = t < t1 ? ease.outBack(openP, 1.3) : ease.inCubic(openP);
     const ce = ease.outCubic(openP);
-    const cx = lerp(nx, LENS.x, ce), cy = lerp(ny, LENS.y, ce), r = Math.max(1, LENS.r * e);
+    const lz = lensZoom(t), LX = lerp(LENS.x, LENS_BIG.x, lz), LY = lerp(LENS.y, LENS_BIG.y, lz), LR = lerp(LENS.r, LENS_BIG.r, lz);
+    const cx = lerp(nx, LX, ce), cy = lerp(ny, LY, ce), r = Math.max(1, LR * e);
     // leader cone from the nodule to the lens
     const ang = Math.atan2(cy - ny, cx - nx), dist = Math.hypot(cx - nx, cy - ny);
     let out = '';
@@ -477,7 +483,7 @@
     const rimPulse = 1 + 0.03 * Math.exp(-Math.max(0, t - bumps) * 5) * Math.sin(Math.max(0, t - bumps) * 20) * (t > bumps ? 1 : 0);
     const rr = r * rimPulse;
     out += `<defs><clipPath id="lensclip"><circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(rr)}"/></clipPath></defs>`;
-    out += `<g clip-path="url(#lensclip)">${G(tf(cx, cy, 0, (0.6 + 0.4 * ce) * (LENS.r / 370) * (1 + 0.1 * inv(L.nodules.start + 0.6, L.fix.start, t))), lensInner(t, 370, ce))}</g>`;
+    out += `<g clip-path="url(#lensclip)">${G(tf(cx, cy, 0, (0.6 + 0.4 * ce) * (LR / 370) * (1 + 0.1 * inv(L.nodules.start + 0.6, L.fix.start, t))), lensInner(t, 370, ce))}</g>`;
     out += circle(cx, cy, rr, 'none', 22, C.ink) + circle(cx, cy, rr, 'none', 10, '#ffffff') + circle(cx, cy, rr - 12, 'none', 4, '#e7c3bb');
     out += `<path d="M${f2(cx - rr * 0.62)} ${f2(cy - rr * 0.5)} A${f2(rr * 0.8)} ${f2(rr * 0.8)} 0 0 1 ${f2(cx - rr * 0.1)} ${f2(cy - rr * 0.8)}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity="0.55"/>`;
     return out;
@@ -493,11 +499,15 @@
   function title(t) {
     const t0 = L.recap.start;
     if (t < t0 - 0.05) return '';
-    const plate = pop(t, t0 - 0.05, 0.5);
+    const ps = 0.82 + 0.18 * spring(t - t0 + 0.05, { freq: 2.4, damping: 0.62 });
+    const plate = { sx: ps, sy: ps };
+    const itT = L.recap.words[1].start;
+    const ph = lerp(232, 340, ease.outCubic(inv(itT - 0.2, itT + 0.15, t)));
     const words = L.recap.words.slice(1);
-    let out = `<rect x="-400" y="-170" width="800" height="340" rx="44" fill="${C.cream}" stroke="${C.ink}" stroke-width="8"/>`;
+    let out = `<rect x="-400" y="-170" width="800" height="${f2(ph)}" rx="44" fill="${C.cream}" stroke="${C.ink}" stroke-width="8"/>`;
     const cl = pop(t, t0, 0.45);
-    out += G(tf(0, -25, 0, cl.sx, cl.sy), `<text x="0" y="0" font-size="150" font-weight="700" fill="#4e9d31" text-anchor="middle" stroke="${C.ink}" stroke-width="10" paint-order="stroke" stroke-linejoin="round">CLOVER</text>`);
+    out += G(tf(-322, -50, noise(81, t * 0.6) * 6, 0.5 * cl.s), tube('M0 0 L0 40', '#4fa034', 12, 6) + leaflet(-62, 0.92, C.leaf, 0.75) + leaflet(62, 0.92, C.leaf, 0.75) + leaflet(0, 1, C.leafHi, 0.75)) +
+      G(tf(36, -25, 0, cl.sx, cl.sy), `<text x="0" y="0" font-size="150" font-weight="700" fill="#4e9d31" text-anchor="middle" stroke="${C.ink}" stroke-width="10" paint-order="stroke" stroke-linejoin="round">CLOVER</text>`);
     // words build into the line, each on its narration time
     const line = words.map(w => w.text.replace(/[.]/g, ''));
     const widths = line.map((w, i) => textWidth(w + (i === line.length - 1 ? '.' : ''), 62, 600) + 18);
@@ -549,7 +559,6 @@
     if (t > dieT + 0.2) clMood = 'sleep';
     const clLook = t < L.need.start ? [0.3, -0.6] : t < L.help.start ? [1, -0.2] : t < L.feed.start ? [0, 1] : [0.2, 0];
 
-    const sprout = pop(t, L.recap.start, 0.6);
     const endWink = L.recap.end + 0.7;
 
     // corn: appears on "Crops", droops, flinches at the bounce, grows on "next"
@@ -559,7 +568,7 @@
     const cg = spring(t - growT, { freq: 1.4, damping: 0.5 }) * (t > growT ? 1 : 0);
     const cornHealth = clamp(inv(L.next.start, growT + 0.6, t));
     const nod = t > endWink ? Math.exp(-(t - endWink) * 4) * Math.sin((t - endWink) * 14) * 5 : 0;
-    const cornMood = t < L.next.start ? (t > bounceT - 0.1 ? 'sad' : 'curious') : t < growT ? 'curious' : 'happy';
+    const cornMood = t < L.next.start ? (t > bounceT - 0.1 ? 'sad' : 'curious') : t < growT ? 'curious' : t > endWink && t < endWink + 0.45 ? 'wink' : 'happy';
 
     // --- world ---
     let world = hills(dusk);
@@ -585,7 +594,6 @@
 
     // roots (clover's fade after it dies), corn roots
     world += roots(CLOVER_X, { t, nodulePop: at('nodules', 'bumps'), pulse: at('nodules', 'bumps'), fade: inv(dieT, dieT + 1, t), gone: inv(relT, relT + 0.8, t) });
-    if (sprout.s > 0) world += G(tf(CLOVER_X, GROUND + 18, 0, sprout.s * 0.5 * ROOT_SX, sprout.s * 0.5 * ROOT_SY), tube(CLOVER_ROOTS[0], C.root, 9, 5));
     if (t > L.need.start) world += cornRoots(CORN_X, cg);
 
     {
@@ -606,11 +614,11 @@
       }
     }
     {
-      const fixT = at('fix', 'pull'), d0 = fixT - 0.5, d1 = fixT - 0.05;
+      const fixT = at('fix', 'pull'), d0 = fixT - 0.7, d1 = fixT - 0.05;
       if (t > d0 && t < d1 + 0.25) {
         const [nx, ny] = NODULE_WORLD();
         const p = ease.inQuad(inv(d0, d1, t));
-        world += n2(lerp(nx + 70, nx, p), lerp(GROUND - 330, ny, p), 0.85 * (1 - inv(d1, d1 + 0.2, t)), p * 160);
+        world += n2(lerp(nx + 70, nx, p), lerp(GROUND - 640, ny, p), 0.85 * (1 - inv(d1, d1 + 0.2, t)), p * 160);
         if (t > d1) world += circle(nx, ny, 18 + (t - d1) * 120, 'none', 5, '#fff', `opacity="${f2(1 - inv(d1, d1 + 0.25, t))}"`);
       }
     }
@@ -647,9 +655,10 @@
         mood: clMood, lookX: clLook[0], lookY: clLook[1], bl: blink(t, 1, 3.1), sq: bounceSq, seed: 1,
       }) + `</g>`;
     }
-    // new sprout at the end (the cycle starts again)
-    if (sprout.s > 0.01) {
-      world += `<g clip-path="url(#above)">` + clover(CLOVER_X, { t, s: 0.85 * sprout.s, seed: 5, mood: (t > at('recap', 'it') && t < endWink) || t > endWink + 0.45 ? 'happy' : 'wink', bl: blink(t, 4, 2.8), sq: [sprout.sx / Math.max(sprout.s, 0.01), sprout.sy / Math.max(sprout.s, 0.01)] }) + `</g>`;
+    // the old clover's remains glow on "Clover." under the end card
+    {
+      const g = pop(t, L.recap.start, 0.6).s * (1 - 0.5 * inv(L.recap.start + 0.8, L.recap.start + 1.6, t));
+      if (g > 0.01) world += `<ellipse cx="${CLOVER_X}" cy="${GROUND + 110}" rx="${f2(150 * g)}" ry="${f2(80 * g)}" fill="url(#glow)" opacity="0.7"/>`;
     }
 
     // hero corn
@@ -667,10 +676,12 @@
     for (let i = 0; i < 9; i++) {
       const p = pop(t, airT - 0.15 + i * 0.07, 0.5);
       const out = 1 - ease.inCubic(inv(L.help.start + 0.2 + i * 0.03, L.help.start + 0.7 + i * 0.03, t));
-      if (p.s * out <= 0.01) continue;
-      const bx = 210 + rand(i + 200) * 540, by = 400 + rand(i + 300) * 300;
-      const x = bx + noise(i + 400, t * 0.4) * 50 + t * 6, y = by + noise(i + 500, t * 0.35) * 40;
-      world += n2(x, y - (1 - out) * 120, 1.15 * p.s * out, noise(i + 600, t * 0.3) * 40, i === 2 ? { tag: { t, at: airT + 0.3 } } : {});
+      const edge = (() => { const [sx] = toScreen(cam, 230 + (i % 3) * 230 + (Math.floor(i / 3) % 2) * 105 + t * 4, 0); return clamp(inv(20, 90, sx) * inv(1060, 960, sx)); })();
+      if (p.s * out * edge <= 0.01) continue;
+      const row = Math.floor(i / 3), colm = i % 3;
+      const bx = 230 + colm * 230 + (row % 2) * 105 + (rand(i + 200) - 0.5) * 40, by = 410 + row * 125 + (rand(i + 300) - 0.5) * 30;
+      const x = bx + noise(i + 400, t * 0.4) * 22 + t * 4, y = by + noise(i + 500, t * 0.35) * 18;
+      world += n2(x, y - (1 - out) * 120, 1.15 * p.s * out * (0.4 + 0.6 * edge), noise(i + 600, t * 0.3) * 40, i === 2 ? { tag: { t, at: airT + 0.3 } } : {});
     }
     // the bounce: one pair drops onto the seedling and is shrugged off
     {
@@ -696,15 +707,15 @@
       for (let i = 0; i < 5; i++) {
         const ph = ((t - L.recap.start - 0.4) / 1.6 + i / 5) % 1;
         const x = lerp(CLOVER_X + 30, CORN_X - 20, ph), y = GROUND + 120 - Math.sin(ph * Math.PI) * 40;
-        world += nDot(x, y, 0.34, Math.sin(ph * Math.PI) * inv(L.recap.start + 0.4, L.recap.start + 0.9, t));
+        world += nDot(x, y, 0.5, Math.sin(ph * Math.PI) * inv(L.recap.start + 0.4, L.recap.start + 0.9, t));
       }
     }
     // released nitrogen spreading through soil, then flowing to the corn
     let glowLayer = '';
     if (t > nitroT - 0.1 && t < L.recap.start + 1.5) {
       for (let i = 0; i < 26; i++) {
-        const a = rand(i + 700) * Math.PI * 2, d = 60 + rand(i + 800) * 300;
-        const sx = CLOVER_X + Math.cos(a) * d * 1.2, sy = GROUND + 140 + Math.sin(a) * d * 0.55;
+        const a = rand(i + 700) * Math.PI * 2, d = 60 + rand(i + 800) * 220;
+        const sx = CLOVER_X + 60 + Math.cos(a) * d * 0.85, sy = GROUND + 120 + Math.sin(a) * d * 0.35;
         const spread = ease.outCubic(inv(nitroT - 0.1 + i * 0.03, relT + 0.6 + i * 0.02, t));
         const toCorn = ease.inOutCubic(inv(L.next.start - 0.1 + i * 0.025, growT + 0.35 + i * 0.02, t));
         const x0 = lerp(CLOVER_X, sx, spread), y0 = lerp(GROUND + 120, sy, spread);
@@ -712,7 +723,9 @@
         const x = lerp(x0, tx, toCorn) + noise(i + 1000, t) * 6, y = lerp(y0, ty, toCorn) + noise(i + 1100, t) * 6;
         const op = spread * (1 - inv(growT + 0.2, growT + 0.9, t));
         const bright = 1 + 0.25 * Math.exp(-Math.max(0, t - relT) * 3) * (t > relT ? 1 : 0);
-        if (op > 0.01 && i % 3 !== 2) glowLayer += nDot(x, y, 0.58 * bright, op);
+        const [, scrY] = toScreen(cam, x, y);
+        const clear = 1 - inv(1300, 1345, scrY);
+        if (op * clear > 0.01 && i % 3 !== 2) glowLayer += nDot(x, y, 0.58 * bright, op * clear);
       }
     }
 
@@ -725,17 +738,6 @@
     svg += lens(t, cam);
     svg += t < L.recap.start - 0.05 ? captions(t) : '';
     svg += title(t);
-    {
-      const lp = ease.outCubic(inv(L.recap.start + 0.3, L.recap.start + 0.8, t));
-      if (lp > 0) {
-        const [sx, sy] = toScreen(cam, CLOVER_X, GROUND - 330 * 0.85);
-        const x0 = 300, y0 = 588;
-        const ex = lerp(x0, sx, lp), ey = lerp(y0, sy - 40, lp);
-        svg += `<path d="M${x0} ${y0} Q${f2(x0 - 40)} ${f2((y0 + ey) / 2)} ${f2(ex)} ${f2(ey)}" fill="none" stroke="${C.ink}" stroke-width="12" stroke-linecap="round" opacity="0.85"/>` +
-          `<path d="M${x0} ${y0} Q${f2(x0 - 40)} ${f2((y0 + ey) / 2)} ${f2(ex)} ${f2(ey)}" fill="none" stroke="${C.cream}" stroke-width="5" stroke-dasharray="14 12" stroke-linecap="round"/>` +
-          circle(ex, ey, 10 * lp, C.cream, 4.5);
-      }
-    }
     // hook mark: a question bubble beside the clover on frame one
     const q = 1 - inv(at('hook', 'fields'), at('hook', 'fields') + 0.25, t);
     if (q > 0) {
