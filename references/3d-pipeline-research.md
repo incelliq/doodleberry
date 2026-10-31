@@ -59,6 +59,28 @@ Cycles needs nothing extra. The Blender tarball is 1.2 GB unpacked.
 
 Missing: Quaternius Universal Base Characters (same rig as UAL, so its 6 humans would play all 43 clips with no retargeting).
 
+
+## 3c. CMU mocap and Innerscene (checked 2026-10-31)
+
+**CMU Graphics Lab Motion Capture Database** (mocap.cs.cmu.edu): 2,605 trials, ASF/AMC + C3D, 120 fps. Terms on the
+home page: "free for all uses"; "You may include this data in commercially-sold products, but you may not resell this
+data directly, even in converted form"; please don't crawl (download individual trials, or the published zip).
+Fall-type trials found by search: 90_16 fall on face, 90_17 BananaPeelSlip, 90_18 RugPullFall, 85_15 twist fall,
+104_13 StumbleWalk, 22_12 / 23_12 A stumbles into B, 91_9 / 105_9 DrunkWalk, 77_19–24 limping, 91_16 / 105_16 Limp,
+139_16–18 and 140_x get up from the ground, 13_x sit on a stool and stand up.
+**Tested:** `tools/blender/cmu_retarget.py` retargets ASF/AMC straight onto the UAL mannequin (world-rotation
+transfer with per-bone rest-direction alignment, root height scaled, 120→30 fps) and exports a GLB holding UAL's 43
+clips plus the CMU ones. 90_16/17/18 retargeted in 13 s and play correctly in three.js (`tools/three/falls-test.html`).
+
+**Innerscene Free 3D Parts Library** (innerscene.com/tools/library/3d-parts): 4,918 parts, mostly GLB; CC0 by its
+library terms. Contributions come from viewer users (who must affirm they hold the rights) plus public-domain
+collections, and each part page names its source. The People & figures tag has 360 items; the ones we checked
+("Built by Innerscene from MakeHuman/MPFB CC0 body and skin assets") are dressed, textured, real-scale people
+(~47k triangles) in fixed poses: lying flat, reclined or sitting up in bed, seated, standing groups, queues,
+audiences. They are **static meshes with no armature**, so they suit set dressing (a hospital ward, a waiting room,
+a crowd) rather than animated actors. Direct download endpoint: `/api/library/<slug>/download`.
+Check each part's source line before use; prefer items marked as Innerscene/MakeHuman-derived.
+
 ## 4. Recommendation
 
 1. **Blender headless as the asset factory, driven by Claude Code:** generate MPFB humans (or load Quaternius/KayKit), dress them,
