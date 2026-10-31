@@ -13,7 +13,7 @@
   const C = {
     ink: '#3a2618',
     skyTop: '#79c6ee', skyBot: '#e2f5fb', duskTop: '#4f4f9e', duskBot: '#f5ad78',
-    leaf: '#5fb33d', leafHi: '#86cf5a', leafMark: '#d4f0b4', leafDead: '#a8894c',
+    leaf: '#62c040', leafHi: '#86d957', leafMark: '#d4f0b4', leafDead: '#a8894c',
     soil: '#8a5c3c', soilDeep: '#5f3d27', soilLine: '#74492e',
     root: '#ecd6a9', nodule: '#ef9f95',
     nitro: '#58aef0', ammonia: '#c3f45f', bact: '#f5a94b',
@@ -46,87 +46,115 @@
   // ---------- face ----------
   // mood: happy | curious | sad | wink | sleep | open | chomp
   function face(o) {
-    const { x = 0, y = 0, s = 1, mood = 'happy', lookX = 0, lookY = 0, bl = 0, talk = 0, sep = 21 } = o;
+    const { x = 0, y = 0, s = 1, mood = 'happy', lookX = 0, lookY = 0, bl = 0, talk = 0, sep = 21, lid = C.leafHi } = o;
     let out = '';
-    const eye = (ex, closed, kind) => {
-      if (kind === 'wink' || kind === 'sleep') {
-        const d = kind === 'sleep' ? `M${ex - 11} -2 Q${ex} 8 ${ex + 11} -2` : `M${ex - 11} 3 Q${ex} -9 ${ex + 11} 3`;
-        return path(d, 'none', 5);
-      }
-      const ry = 16 * (1 - closed * 0.92);
-      return ell(ex, 0, 13.5, ry, C.white, 4.5) +
-        (closed < 0.7 ? circle(ex + lookX * 4.5, lookY * 4.5 + 1, 7.5 * (1 - closed * 0.5), C.ink, 0) +
-          circle(ex + lookX * 4.5 + 2.6, lookY * 4.5 - 2.2, 2.4, C.white, 0) : '');
-    };
-    const lw = mood === 'wink' ? 'wink' : mood === 'sleep' ? 'sleep' : null;
-    out += eye(-sep, bl, mood === 'sleep' ? 'sleep' : null);
-    out += eye(sep, bl, lw);
-    if (mood === 'sad') {
-      out += path(`M${-sep - 12} -24 L${-sep + 8} -19`, 'none', 4.5) + path(`M${sep + 12} -24 L${sep - 8} -19`, 'none', 4.5);
+    const arcEye = (ex, down) => D.inkTaper(down ? D.bez([ex - 12, -2], [ex - 5, 9], [ex + 5, 9], [ex + 12, -2], 8) : D.bez([ex - 12, 4], [ex - 5, -9], [ex + 5, -9], [ex + 12, 4], 8), 5, 3, C.ink, C.ink, 0);
+    if (mood === 'sleep') out += arcEye(-sep, true) + arcEye(sep, true);
+    else {
+      out += D.eye(-sep, 0, { lookX, lookY, bl, lid });
+      out += mood === 'wink' ? arcEye(sep, false) : D.eye(sep, 0, { lookX, lookY, bl, lid });
     }
-    if (mood === 'curious') out += path(`M${sep - 10} -27 Q${sep} -33 ${sep + 11} -26`, 'none', 4.5);
+    // brows carry the expression
+    const brow = (ex, side) => {
+      const lift = mood === 'curious' ? (side > 0 ? -7 : 0) : mood === 'sad' ? 0 : mood === 'chomp' || mood === 'open' ? -5 : -2;
+      const tilt = mood === 'sad' ? side * 6 : mood === 'curious' && side > 0 ? -3 : 0;
+      const by = -27 + lift;
+      return D.taper(D.bez([ex - 11, by + tilt], [ex - 4, by - 4], [ex + 4, by - 4], [ex + 11, by - tilt], 6), 5, 2.4, C.ink);
+    };
+    if (mood !== 'sleep') out += brow(-sep, -1) + brow(sep, 1);
     // mouth
     const my = 30;
-    if (mood === 'sad') out += path(`M-11 ${my + 4} Q0 ${my - 6} 11 ${my + 4}`, 'none', 5);
+    if (mood === 'sad') out += D.taper(D.bez([-12, my + 5], [-5, my - 5], [5, my - 5], [12, my + 5], 8), 3, 5, C.ink);
     else if (mood === 'open' || mood === 'chomp' || talk > 0.05) {
       const h = mood === 'chomp' ? 4 + talk * 16 : 6 + talk * 10;
-      out += path(`M-12 ${my - 2} Q0 ${my - 4} 12 ${my - 2} Q8 ${my + h} 0 ${my + h} Q-8 ${my + h} -12 ${my - 2} Z`, '#8c2f2a', 4.5);
-    } else if (mood === 'curious') out += path(`M-7 ${my} Q0 ${my - 3} 7 ${my + 1}`, 'none', 5);
-    else out += path(`M-13 ${my - 3} Q0 ${my + 10} 13 ${my - 3}`, 'none', 5);
-    // cheeks
-    if (mood !== 'sad') out += ell(-sep - 14, 20, 8, 5, '#ff8f86', 0, 'none', 'opacity="0.55"') + ell(sep + 14, 20, 8, 5, '#ff8f86', 0, 'none', 'opacity="0.55"');
+      const md = `M-12 ${my - 2} Q0 ${my - 4} 12 ${my - 2} Q8 ${my + h} 0 ${my + h} Q-8 ${my + h} -12 ${my - 2} Z`;
+      out += `<path d="${md}" fill="${D.linear([[0, '#6e1f1c'], [1, '#a83a32']])}" stroke="${C.ink}" stroke-width="4.5" stroke-linejoin="round"/>`;
+      if (h > 8) out += `<ellipse cx="2" cy="${f2(my + h * 0.7)}" rx="6" ry="${f2(h * 0.25)}" fill="#ff8a8a"/>`;
+    } else if (mood === 'curious') out += D.taper(D.bez([-7, my], [-2, my - 3], [3, my - 2], [8, my + 1], 6), 3, 4.5, C.ink);
+    else out += D.taper(D.bez([-14, my - 4], [-6, my + 9], [6, my + 9], [14, my - 4], 10), 3, 5.5, C.ink);
+    if (mood !== 'sad') {
+      const blush = D.radial([[0, '#ff7f7a', 0.75], [1, '#ff7f7a', 0]], { cx: 0.5, cy: 0.5, r: 0.5 });
+      out += `<ellipse cx="${-sep - 14}" cy="20" rx="12" ry="8" fill="${blush}"/><ellipse cx="${sep + 14}" cy="20" rx="12" ry="8" fill="${blush}"/>`;
+    }
     return G(tf(x, y, 0, s), out);
+  }
+
+  // light direction rotated into a shape's local frame
+  const litDir = (rot, base = [0.55, 0.83]) => {
+    const a = (-rot * Math.PI) / 180;
+    return [base[0] * Math.cos(a) - base[1] * Math.sin(a), base[0] * Math.sin(a) + base[1] * Math.cos(a)];
+  };
+  const ellD = (rx, ry) => `M${-rx} 0 A${rx} ${ry} 0 1 0 ${rx} 0 A${rx} ${ry} 0 1 0 ${-rx} 0 Z`;
+  function mound(w, h, color = '#8f6040') {
+    const d = `M${-w} 6 C${-w * 0.72} ${-h * 0.8} ${-w * 0.28} ${-h} 0 ${-h} C${w * 0.3} ${-h} ${w * 0.7} ${-h * 0.8} ${w} 6 Z`;
+    let s = D.shade(d, color, { depth: 7, light: 3, w: 4.5, ink: C.ink });
+    [[-w * 0.85, 2, 9], [w * 0.8, 3, 7], [-w * 0.35, -h * 0.55, 5]].forEach(([cx, cy, r]) => {
+      s += G(tf(cx, cy, 0, 1), D.shade(ellD(r, r * 0.75), D.mix(color, '#000', 0.1), { depth: 3, light: 1.5, w: 3, ink: C.ink }));
+    });
+    return s;
   }
 
   // ---------- clover ----------
   const HEART = 'M0 0 C-22 -18 -62 -48 -62 -84 C-62 -116 -30 -128 0 -102 C30 -128 62 -116 62 -84 C62 -48 22 -18 0 0 Z';
   function leaflet(rot, s, fill, markOpacity, inner = '', fold = 0) {
+    const dark = D.shadowOf(fill);
+    let veins = D.taper(D.bez([0, -4], [0, -40], [1, -70], [0, -98], 10), 5, 1.2, dark, 'opacity="0.75"');
+    for (let k = 1; k <= 3; k++) for (const sd of [-1, 1]) {
+      const y0 = -18 - k * 22;
+      veins += D.taper(D.bez([0, y0], [sd * 14, y0 - 6], [sd * 28, y0 - 14], [sd * 40, y0 - 24], 6), 3, 0.5, dark, 'opacity="0.5"');
+    }
     return G(tf(0, 0, rot, s * (1 - 0.55 * fold), s * (1 - 0.2 * fold)),
-      path(HEART, fill, 6) +
-      `<path d="M-30 -74 Q0 -46 30 -74" fill="none" stroke="${C.leafMark}" stroke-width="8" stroke-linecap="round" opacity="${markOpacity}"/>` +
-      `<path d="M-40 -96 Q-46 -84 -40 -70" fill="none" stroke="${C.white}" stroke-width="5" stroke-linecap="round" opacity="0.35"/>` + inner);
+      D.shade(HEART, fill, { dir: litDir(rot), depth: 9, light: 5, w: 5.5, ink: C.ink, shadow: D.shadowOf(fill, 0.75) }) +
+      `<path d="M-30 -74 Q0 -46 30 -74" fill="none" stroke="${C.leafMark}" stroke-width="8" stroke-linecap="round" opacity="${markOpacity * 0.85}"/>` +
+      veins + D.glintMark(-36, -94, 0.75, -35) + inner);
   }
   function flower(x, y, s, t, wilt = 0) {
     if (s <= 0.001) return '';
     // white clover head: a ball of small florets, outer ones blushing pink
-    let out = circle(0, 0, 26, col('#ffffff', '#b59c6a', wilt), 4);
+    let out = D.sphere(0, 0, 26, D.mix('#ffffff', '#b59c6a', wilt), { w: 4, spec: false });
     [[16, 30, '#f6d4e0'], [10, 19, '#fbeaf0'], [6, 9, '#ffffff']].forEach(([n, r, c]) => {
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2 + r;
         const fx = Math.cos(a) * r * 0.75, fy = Math.sin(a) * r * 0.75;
-        out += ell(fx, fy, 5, 10, col(c, '#a88d5c', wilt), 2.6, C.ink, `transform="rotate(${f2(a * 180 / Math.PI + 90)} ${f2(fx)} ${f2(fy)})"`);
+        const fc = D.mix(c, '#a88d5c', wilt);
+        out += `<ellipse cx="${f2(fx)}" cy="${f2(fy)}" rx="5" ry="10" fill="${D.linear([[0, D.lightOf(fc)], [1, D.shadowOf(fc, 0.6)]])}" stroke="${C.ink}" stroke-width="2.6" transform="rotate(${f2(a * 180 / Math.PI + 90)} ${f2(fx)} ${f2(fy)})"/>`;
       }
     });
     return G(tf(x, y, noise(9, t * 0.7) * 4 - wilt * 50, s), out);
   }
-  // o: t, s, wilt, sink, flower, mood, look, bl, talk, sq (squash), seed, face
+  // o: t, s, wilt, sink, flower, mood, look, bl, talk, sq (squash), seed, face, wind
   function clover(x, o) {
     const t = o.t, s = o.s, seed = o.seed || 1;
     const wilt = o.wilt || 0;
-    const sway = noise(seed, t * 0.55) * 3 + noise(seed + 7, t * 1.3) * 1.2;
+    const w0 = o.wind || 0, w1 = o.windLag !== undefined ? o.windLag : w0;
+    const sway = noise(seed, t * 0.55) * 3 + noise(seed + 7, t * 1.3) * 1.2 + w0 * 0.7;
     const Hs = 255;
     const bend = -wilt * 34 + sway;                     // degrees the tip leans
     const a = (bend * Math.PI) / 180;
     const tipX = Math.sin(a) * Hs * (1 - wilt * 0.25), tipY = -Math.cos(a) * Hs * (1 - wilt * 0.25);
-    const ctrlX = tipX * 0.15, ctrlY = tipY * 0.6;
-    const leafCol = col(C.leaf, C.leafDead, wilt), stemCol = col('#4fa034', '#8d7440', wilt);
-    let out = '';
+    const leafCol = D.mix(C.leaf, C.leafDead, wilt), stemCol = D.mix('#4fa034', '#8d7440', wilt);
+    let out = o.face === false ? '' : mound(46, 20);
     // flower on its own stalk
     const fl = o.flower || 0;
     if (fl > 0) {
       const fx = 74 + Math.sin(a) * 60, fy = -Hs * 0.62 * ease.outCubic(fl) + wilt * 40;
-      out += tube(`M6 0 Q${f2(fx * 0.2)} ${f2(fy * 0.55)} ${f2(fx)} ${f2(fy)}`, stemCol, 8, 5);
+      out += D.inkTaper(D.bez([6, 0], [fx * 0.1, fy * 0.35], [fx * 0.45, fy * 0.85], [fx, fy], 12), 10, 6, stemCol, C.ink, 4.5);
       out += ell(fx, fy - 6, 10 * Math.min(1, fl * 3), 14 * Math.min(1, fl * 3), '#e9f7d9', 4) + flower(fx, fy, M.pop(o.t, o.flowerAt || 0, 0.5).s * (1 - wilt * 0.3), t, wilt);
     }
-    out += tube(`M0 0 Q${f2(ctrlX)} ${f2(ctrlY)} ${f2(tipX)} ${f2(tipY)}`, stemCol, 12, 6);
+    // tapered stem with a lit edge
+    const stem = D.bez([0, 0], [0, tipY * 0.35], [tipX * 0.35, tipY * 0.72], [tipX, tipY], 14);
+    out += D.inkTaper(stem, 18, 10, stemCol, C.ink, 5.5);
+    out += D.taper(stem.map(([px, py]) => [px - 3.5, py]), 4, 2, D.lightOf(stemCol), 'opacity="0.7"');
     const leafRot = bend * 1.1 - wilt * 22;
     const lS = 1.08;
     const mk = 0.75 * (1 - wilt);
-    const fc = o.face === false ? '' : face({ x: 0, y: -72, s: 0.95, mood: o.mood, lookX: o.lookX || 0, lookY: o.lookY || 0, bl: o.bl || 0, talk: o.talk || 0 });
+    const fc = o.face === false ? '' : face({ x: 0, y: -72, s: 0.95, mood: o.mood, lookX: o.lookX || 0, lookY: o.lookY || 0, bl: o.bl || 0, talk: o.talk || 0, lid: D.mix(C.leafHi, C.leafDead, wilt) });
+    // leaflets flutter on their own, a beat behind the stem (follow-through)
+    const flut = i => noise(seed + 3 + i, t * 2.1) * 3 + (w1 - w0) * 1.2 + w1 * 0.5 * (i - 1);
     const crown =
-      leaflet(-62 + noise(seed + 3, t) * 3 + wilt * 30, lS * 0.92, leafCol, mk, '', wilt) +
-      leaflet(62 + noise(seed + 4, t) * 3 - wilt * 30, lS * 0.92, leafCol, mk, '', wilt) +
-      leaflet(0, lS * (1 - 0.15 * wilt), col(C.leafHi, C.leafDead, wilt), mk, fc, wilt * 0.4);
+      leaflet(-62 + flut(0) + wilt * 30, lS * 0.92, leafCol, mk, '', wilt) +
+      leaflet(62 + flut(2) - wilt * 30, lS * 0.92, leafCol, mk, '', wilt) +
+      leaflet(flut(1) * 0.5, lS * (1 - 0.15 * wilt), D.mix(C.leafHi, C.leafDead, wilt), mk, fc, wilt * 0.4);
     const sq = o.sq || [1, 1];
     out += G(`translate(${f2(tipX)} ${f2(tipY)}) rotate(${f2(leafRot)}) scale(${f2(sq[0])} ${f2(sq[1])})`, crown);
     return G(tf(x, GROUND + 6 + (o.sink || 0), 0, s), out);
@@ -143,69 +171,108 @@
   ];
   // nodule positions (local to root origin), first one is the hero nodule
   const NODULES = [[-62, 116, 15], [52, 143, 13], [-82, 178, 12], [8, 240, 13], [-36, 262, 11], [88, 214, 11], [-2, 160, 10]];
+  const ROOT_PTS = CLOVER_ROOTS.map(d => D.pathPts(d, 10));
+  const rootCache = new Map();
+  function rootSystem(fadeQ) {
+    if (rootCache.has(fadeQ)) return rootCache.get(fadeQ);
+    const fill = D.mix(C.root, '#9a7a55', fadeQ / 10);
+    let inkS = '', fillS = '', hl = '';
+    ROOT_PTS.forEach((pts, i) => {
+      const w0 = i === 0 ? 14 : 9, w1 = i === 0 ? 4 : 3;
+      inkS += D.taper(pts, w0 + 9, w1 + 5, C.ink);
+      fillS += D.taper(pts, w0, w1, fill);
+      hl += D.taper(pts.map(([x, y]) => [x - 2, y - 1]), w0 * 0.3, 0.6, D.lightOf(fill), 'opacity="0.8"');
+      const r = D.rootlets(pts, 17 + i * 7, { count: i === 0 ? 9 : 5, len: i === 0 ? 50 : 38, w: 3.4, fill, ink: C.ink, depth: 1 });
+      inkS += r.ink; fillS += r.fill;
+    });
+    const s = inkS + fillS + hl;
+    rootCache.set(fadeQ, s);
+    return s;
+  }
   function roots(x, o) {
     const fade = o.fade || 0;
-    const rc = col(C.root, '#9a7a55', fade);
-    let out = '';
-    for (const d of CLOVER_ROOTS) out += tube(d, rc, 9, 5);
+    let out = rootSystem(Math.round(fade * 10));
     NODULES.forEach(([nx, ny, r], i) => {
       const p = o.nodulePop ? M.pop(o.t, o.nodulePop + i * 0.05, 0.45) : { s: 1 };
       const base = 0.65 + 0.35 * p.s;
       const pulse = o.pulse ? 1 + 0.12 * Math.exp(-Math.max(0, o.t - o.pulse - i * 0.05) * 4) * Math.sin(Math.max(0, o.t - o.pulse - i * 0.05) * 18) : 1;
       const R = r * base * pulse * (1 - fade * 0.6);
-      out += circle(nx, ny, R, col(C.nodule, '#9a7a55', fade), 4.5) + circle(nx - R * 0.35, ny - R * 0.35, R * 0.28, '#ffd9d2', 0, 'none', `opacity="${1 - fade}"`);
+      out += D.sphere(nx, ny, R, D.mix(C.nodule, '#9a7a55', fade), { w: 4 });
     });
     return G(tf(x, GROUND + 18, 0, ROOT_SX, ROOT_SY), out, `opacity="${f2(1 - 0.55 * (o.gone || 0))}"`);
   }
   const NODULE_WORLD = () => [CLOVER_X + NODULES[0][0] * ROOT_SX, GROUND + 18 + NODULES[0][1] * ROOT_SY];
   const CORN_ROOTS = ['M0 0 C-8 50 -30 90 -48 140', 'M0 0 C6 60 4 110 10 160', 'M0 0 C14 46 36 86 56 130', 'M-4 30 C-40 50 -64 70 -84 96', 'M4 34 C36 52 60 72 82 100'];
+  const CORN_ROOT_SVG = (() => {
+    let inkS = '', fillS = '';
+    CORN_ROOTS.forEach((d, i) => {
+      const pts = D.pathPts(d, 10);
+      inkS += D.taper(pts, 15, 6, C.ink);
+      fillS += D.taper(pts, 8, 2, C.root);
+      const r = D.rootlets(pts, 41 + i * 5, { count: 4, len: 30, w: 2.8, fill: C.root, ink: C.ink, depth: 1 });
+      inkS += r.ink; fillS += r.fill;
+    });
+    return inkS + fillS;
+  })();
   function cornRoots(x, g) {
-    let out = '';
-    for (const d of CORN_ROOTS) out += tube(d, C.root, 7, 4.5);
-    return G(tf(x, GROUND + 14, 0, 0.35 + 0.65 * g, 0.3 + 0.7 * g), out);
+    return G(tf(x, GROUND + 14, 0, 0.35 + 0.65 * g, 0.3 + 0.7 * g), CORN_ROOT_SVG);
   }
 
   // ---------- corn ----------
-  // o: t, grow, health, mood, flinch, s, face, cob, seed, bl, look
+  // o: t, grow, health, mood, flinch, s, face, cob, seed, bl, look, wind
   function corn(x, o) {
     const t = o.t, g = o.grow, seed = o.seed || 2;
     const Hh = lerp(150, 560, g);
     const w = lerp(28, 42, g);
-    const leafC = col('#b9c74a', '#4e9d31', o.health), leafHi = col('#c4d97a', '#6dbb47', o.health);
-    const sway = noise(seed, t * 0.5) * 2.5 + (o.flinch || 0);
-    let out = '';
+    const leafC = D.mix('#b9c74a', '#4e9d31', o.health), leafHi = D.mix('#c4d97a', '#6dbb47', o.health);
+    const wnd = o.wind || 0;
+    const sway = noise(seed, t * 0.5) * 2.5 + (o.flinch || 0) + wnd * 0.45;
+    let out = o.face === false ? '' : mound(lerp(40, 58, g), lerp(16, 22, g));
     // tassel
     if (g > 0.6) {
       const ts = inv(0.6, 1, g);
-      for (let i = -2; i <= 2; i++) out += tube(`M0 ${-Hh + 4} q${i * 10} -30 ${i * 22} -${50 + (2 - Math.abs(i)) * 14}`, '#e3c24f', 5, 3.5).replace(/<path/g, `<path opacity="${ts}"`);
+      let tas = '';
+      for (let i = -2; i <= 2; i++) {
+        const pts = D.bez([0, -Hh + 4], [i * 5, -Hh - 20], [i * 14, -Hh - 40], [i * 22 + noise(i + seed, t * 1.5) * 4, -Hh - 50 - (2 - Math.abs(i)) * 14], 10);
+        tas += D.inkTaper(pts, 7, 2.5, '#e8c44f', C.ink, 3) + D.taper(pts.map(([px, py]) => [px - 1.5, py]), 2, 0.6, '#fff1b0');
+      }
+      out += `<g opacity="${f2(ts)}">${tas}</g>`;
     }
-    // stalk
-    out += path(`M${-w / 2} 0 C${-w / 2} ${-Hh * 0.5} ${-w * 0.3} ${-Hh * 0.8} ${-w * 0.18} ${-Hh} Q0 ${-Hh - 34} ${w * 0.18} ${-Hh} C${w * 0.3} ${-Hh * 0.8} ${w / 2} ${-Hh * 0.5} ${w / 2} 0 Z`, leafC, 6);
-    out += path(`M${-w * 0.15} -10 L${-w * 0.06} ${-Hh + 20}`, 'none', 4, leafHi);
-    // leaves
+    // stalk with node rings
+    const stalkD = `M${-w / 2} 0 C${-w / 2} ${-Hh * 0.5} ${-w * 0.3} ${-Hh * 0.8} ${-w * 0.18} ${-Hh} Q0 ${-Hh - 34} ${w * 0.18} ${-Hh} C${w * 0.3} ${-Hh * 0.8} ${w / 2} ${-Hh * 0.5} ${w / 2} 0 Z`;
+    out += D.shade(stalkD, leafC, { dir: [1, 0.15], depth: w * 0.32, light: 3.5, w: 6, ink: C.ink });
+    for (const k of [0.2, 0.4, 0.6, 0.78]) {
+      const hy = -Hh * k, ww = lerp(w / 2, w * 0.2, k) * 0.95;
+      out += `<path d="M${f2(-ww)} ${f2(hy)} Q0 ${f2(hy + 6)} ${f2(ww)} ${f2(hy)}" fill="none" stroke="${D.shadowOf(leafC, 1.3)}" stroke-width="3" opacity="0.7"/>`;
+    }
+    // leaves: shaded blades with a midrib, fluttering with a lag up the stalk
     const n = 6;
     for (let i = 0; i < n; i++) {
       const app = i < 3 ? 1 : clamp((g - (i - 3) * 0.2) / 0.22);
       if (app <= 0) continue;
       const dir = i % 2 ? 1 : -1;
-      const hy = -Hh * (i < 2 ? 0.55 + i * 0.18 : 0.18 + (i - 2) * 0.17);
+      const hy = -Hh * (i < 3 ? 0.55 + i * 0.12 : 0.18 + (i - 3) * 0.17);
       const Ln = (i < 3 ? lerp(118 - i * 14, 150, g) : 150 + i * 8) * ease.outBack(app);
-      const droop = lerp(0.05, -0.15, o.health) + noise(seed + i, t * 0.8) * 0.06 + (1 - o.health) * 0.35;
+      const droop = lerp(0.05, -0.15, o.health) + noise(seed + i, t * 0.8) * 0.06 + (1 - o.health) * 0.35 + dir * wnd * 0.012 * (1 + i * 0.2);
       const d = `M0 0 Q${dir * Ln * 0.55} ${-Ln * (0.5 - droop)} ${dir * Ln} ${Ln * droop} Q${dir * Ln * 0.5} ${-Ln * (0.32 - droop)} 0 -16 Z`;
-      out += G(tf(dir * w * 0.3, hy, 0, 1), path(d, i % 2 ? leafC : leafHi, 5.5) +
-        `<path d="M0 -8 Q${dir * Ln * 0.5} ${-Ln * (0.4 - droop)} ${dir * Ln * 0.92} ${Ln * droop}" fill="none" stroke="${leafHi}" stroke-width="3" opacity="0.8"/>`);
+      const rib = D.bez([0, -8], [dir * Ln * 0.3, -Ln * (0.46 - droop)], [dir * Ln * 0.7, -Ln * (0.3 - droop)], [dir * Ln * 0.94, Ln * droop], 12);
+      out += G(tf(dir * w * 0.3, hy, 0, 1), D.shade(d, i % 2 ? leafC : leafHi, { dir: [0.2 * dir, 1], depth: 9, light: 3, w: 5.5, ink: C.ink }) +
+        D.taper(rib, 4, 0.8, D.lightOf(leafHi), 'opacity="0.85"'));
     }
     // cob
     if ((o.cob || 0) > 0) {
       const cp = o.cob;
       let k = '';
-      for (let r = 0; r < 7; r++) for (let c2 = -1; c2 <= 1; c2++) k += ell(c2 * 11, -20 - r * 14, 5, 6, '#ffd84d', 2, '#c99a1d');
+      for (let r = 0; r < 7; r++) for (let c2 = -1; c2 <= 1; c2++) {
+        k += `<ellipse cx="${c2 * 11}" cy="${-20 - r * 14}" rx="5.5" ry="6.5" fill="${D.radial([[0, '#fff3a8'], [1, '#e5ad1f']], { cx: 0.35, cy: 0.3, r: 0.8 })}" stroke="#b9861a" stroke-width="2"/>`;
+      }
       out += G(tf(w * 0.45, -Hh * 0.5, 28, cp),
-        ell(0, -62, 24, 58, '#ffd23f', 5) + k +
-        path('M-18 -10 Q-34 -60 -10 -118 Q-14 -60 4 -6 Z', '#6fbe46', 5) + path('M18 -10 Q34 -64 14 -112 Q10 -56 -2 -6 Z', '#5aa83a', 5));
+        `<g transform="translate(0 -62)">${D.shade(ellD(24, 58), '#ffd23f', { depth: 8, light: 3, w: 5, ink: C.ink })}</g>` + k +
+        D.shade('M-18 -10 Q-34 -60 -10 -118 Q-14 -60 4 -6 Z', '#6fbe46', { depth: 6, w: 5, ink: C.ink }) +
+        D.shade('M18 -10 Q34 -64 14 -112 Q10 -56 -2 -6 Z', '#5aa83a', { depth: 6, w: 5, ink: C.ink }));
     }
     if (o.face !== false) {
-      out += face({ x: 0, y: -Hh * lerp(0.55, 0.42, g), s: lerp(0.78, 0.95, g), mood: o.mood, bl: o.bl || 0, lookX: o.lookX || 0, lookY: o.lookY || 0, talk: o.talk || 0, sep: 19 });
+      out += face({ x: 0, y: -Hh * lerp(0.55, 0.42, g), s: lerp(0.78, 0.95, g), mood: o.mood, bl: o.bl || 0, lookX: o.lookX || 0, lookY: o.lookY || 0, talk: o.talk || 0, sep: 19, lid: leafC });
     }
     const sq = o.sq || [1, 1];
     return G(`translate(${f2(x)} ${GROUND + 8}) rotate(${f2(sway)}) scale(${f2(o.s * sq[0])} ${f2(o.s * sq[1])})`, out);
@@ -214,16 +281,16 @@
   // ---------- molecules & microbes ----------
   function n2(x, y, s, rot, o = {}) {
     const a = 22;
-    let out = circle(-a * 0.8, 0, a, C.nitro, 5) + circle(a * 0.8, 0, a, C.nitro, 5);
-    out += circle(-a * 0.8 - 8, -9, 6, '#bfe3ff', 0) + circle(a * 0.8 - 8, -9, 6, '#bfe3ff', 0);
+    let out = `<rect x="${-a * 0.8}" y="-5" width="${a * 1.6}" height="10" fill="${D.shadowOf(C.nitro)}"/>`;
+    out += D.sphere(-a * 0.8, 0, a, C.nitro, { w: 5 }) + D.sphere(a * 0.8, 0, a, C.nitro, { w: 5 });
     out += `<text x="${-a * 0.8}" y="9" font-size="24" font-weight="700" fill="#fff" text-anchor="middle">N</text><text x="${a * 0.8}" y="9" font-size="24" font-weight="700" fill="#fff" text-anchor="middle">N</text>`;
-    if (o.tag) out += tag(0, -54, 'N₂', C.nitro, o.tag);
+    if (o.tag) out += G(`rotate(${f2(-rot)})`, tag(0, -54, 'N₂', C.nitro, o.tag));
     return G(tf(x, y, rot, s), out, o.op !== undefined ? `opacity="${o.op}"` : '');
   }
   function nh3(x, y, s, o = {}) {
     let out = `<circle cx="0" cy="0" r="46" fill="url(#glow)" opacity="${o.glow ?? 0.9}"/>`;
-    [[-24, -14], [24, -14], [0, 26]].forEach(([hx, hy]) => { out += circle(hx, hy, 11, C.white, 4); });
-    out += circle(0, 0, 20, C.nitro, 5) + `<text x="0" y="8" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">N</text>`;
+    [[-24, -14], [24, -14], [0, 26]].forEach(([hx, hy]) => { out += D.sphere(hx, hy, 11, '#f4f7ff', { w: 4 }); });
+    out += D.sphere(0, 0, 20, C.nitro, { w: 5 }) + `<text x="0" y="8" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">N</text>`;
     if (o.tag) out += tag(0, -62, 'NH₃', '#6aa21c', o.tag);
     return G(tf(x, y, 0, s), out);
   }
@@ -231,7 +298,8 @@
     const s = M.pop(p.t, p.at, 0.4);
     if (s.s <= 0.01) return '';
     const w = label.length * 19 + 34;
-    return G(tf(x, y, 0, s.sx, s.sy), `<rect x="${-w / 2}" y="-24" width="${w}" height="44" rx="22" fill="${C.white}" stroke="${C.ink}" stroke-width="4.5"/>` +
+    return G(tf(x, y, 0, s.sx, s.sy), `<rect x="${-w / 2 + 3}" y="-20" width="${w}" height="44" rx="22" fill="${C.ink}" opacity="0.25"/>` +
+      `<rect x="${-w / 2}" y="-24" width="${w}" height="44" rx="22" fill="${C.white}" stroke="${C.ink}" stroke-width="4.5"/>` +
       `<text x="0" y="9" font-size="28" font-weight="700" fill="${color}" text-anchor="middle">${label}</text>`);
   }
   // the travelling nitrogen keeps the NH3 look it had in the window
@@ -242,82 +310,120 @@
     return `<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r * 2.6)}" fill="url(#glow)" opacity="${f2(op * 0.85)}"/>` +
       `<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${C.ammonia}" stroke="#4d7d14" stroke-width="3" opacity="${f2(op)}"/>`;
   }
-  // o: t, chomp(0..1), s, seed, mood
+  // o: t, chomp(0..1), s, seed, mood, sq
+  const BACT = 'M-32 -30 H32 A30 30 0 0 1 32 30 H-32 A30 30 0 0 1 -32 -30 Z';
   function rhizobium(x, y, rot, o) {
     const t = o.t, ph = t * 7 + (o.seed || 0);
     const wig = Math.sin(ph) * 6;
-    let tail = 'M-58 0';
-    for (let i = 1; i <= 6; i++) tail += ` Q${-58 - i * 14 + 7} ${f2(Math.sin(ph + i * 1.3) * 14)} ${-58 - i * 14} ${f2(Math.sin(ph + i * 1.3 + 0.6) * 4)}`;
+    const tail = [[-60, 0]];
+    for (let i = 1; i <= 12; i++) tail.push([-60 - i * 7, Math.sin(ph + i * 0.65) * 10 * Math.min(1, i / 4)]);
     const sq = 1 + (o.chomp || 0) * 0.14;
     const ex = o.sq || [1, 1];
-    let out = `<path d="${tail}" fill="none" stroke="${C.ink}" stroke-width="5" stroke-linecap="round"/>`;
+    let out = D.inkTaper(tail, 7, 1.5, '#d98a35', C.ink, 2.5);
+    let pili = '';
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2, px = Math.cos(a) * 58, py = Math.sin(a) * 30;
+      const len = 9 + Math.sin(ph * 0.7 + i) * 2;
+      pili += D.taper([[px, py], [px + Math.cos(a) * len, py + Math.sin(a) * len]], 3, 1, C.ink);
+    }
     out += G(`scale(${f2(sq * ex[0])} ${f2(ex[1] / sq)})`,
-      `<rect x="-62" y="-30" width="124" height="60" rx="30" fill="${C.bact}" stroke="${C.ink}" stroke-width="5.5"/>` +
-      `<rect x="-44" y="-21" width="70" height="12" rx="6" fill="#ffd79a" opacity="0.8"/>` +
-      circle(-30, 12, 4, '#d9852a', 0) + circle(-14, 18, 3, '#d9852a', 0) +
-      face({ x: 24, y: -6, s: 0.62, mood: o.mood || 'happy', bl: blink(t, (o.seed || 0) + 11, 2.7), talk: o.talk || 0, lookX: 0.4 }));
+      pili + D.shade(BACT, C.bact, { dir: litDir(rot + wig * 0.4), depth: 8, light: 5, w: 5.5, ink: C.ink, shadow: D.shadowOf(C.bact, 0.7), lit: '#ffe2a8' }) +
+      `<rect x="-44" y="-22" width="70" height="12" rx="6" fill="#fff" opacity="0.45"/>` +
+      D.sphere(-30, 12, 5, '#d9852a', { w: 0, spec: false }) + D.sphere(-12, 18, 4, '#d9852a', { w: 0, spec: false }) +
+      face({ x: 24, y: -6, s: 0.62, mood: o.mood || 'happy', bl: blink(t, (o.seed || 0) + 11, 2.7), talk: o.talk || 0, lookX: 0.4, lid: C.bact }));
     return G(tf(x, y + wig * 0.3, rot + wig * 0.4, o.s || 1), out);
   }
 
   // ---------- environment ----------
   function sky(t, dusk) {
-    const top = col(C.skyTop, C.duskTop, dusk), bot = col(C.skyBot, C.duskBot, dusk);
+    const top = col(C.skyTop, C.duskTop, dusk), mid = col('#a8dcf3', '#b77fa8', dusk), bot = col(C.skyBot, C.duskBot, dusk);
     let stars = '';
     if (dusk > 0.01) for (let i = 0; i < 14; i++) {
       const x = 60 + rand(i + 40) * 960, y = 120 + rand(i + 90) * 600;
       stars += circle(x, y, 3 + rand(i) * 3, '#fff6d6', 0, 'none', `opacity="${f2(dusk * (0.55 + 0.45 * Math.sin(t * 3 + i)))}"`);
     }
-    return `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient>` +
+    return `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="0.55" stop-color="${mid}"/><stop offset="1" stop-color="${bot}"/></linearGradient>` +
       `<radialGradient id="glow"><stop offset="0" stop-color="${C.ammonia}" stop-opacity="0.9"/><stop offset="1" stop-color="${C.ammonia}" stop-opacity="0"/></radialGradient>` +
       `<radialGradient id="spot"><stop offset="0.55" stop-color="#fff" stop-opacity="0.16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>` +
       `<clipPath id="above"><rect x="-2000" y="-3000" width="5000" height="${3000 + GROUND + 4}"/></clipPath>` +
       `</defs><rect x="0" y="0" width="${W}" height="${H}" fill="url(#sky)"/>` + stars;
   }
-  function cloud(x, y, s, seed) {
-    const blobs = [[0, 0, 56], [-60, 14, 40], [58, 12, 44], [-22, -26, 40], [28, -30, 36]];
-    let back = '', front = '';
-    blobs.forEach(([bx, by, r]) => { back += circle(bx, by, r, '#fff', 10, '#a9d6ea'); front += circle(bx, by, r, '#fff', 0); });
-    return G(tf(x, y, 0, s), back + front + ell(0, 28, 90, 10, '#e4f3fa', 0, 'none'));
-  }
+  const cloud = (x, y, s, seed) => D.cloud(x, y, s, seed);
+  // far backdrop (drawn blurred, with parallax): hills, a tree line, the barn
   function hills(dusk) {
     const tint = c => col(c, '#7d6a9e', dusk * 0.45);
-    let out = path(`M-600 ${GROUND} L-600 900 C-300 820 -60 880 180 860 C420 840 600 760 860 800 C1100 840 1300 820 1700 860 L1700 ${GROUND} Z`, tint('#b9de8a'), 5, col('#7fb05a', '#5b4f78', dusk * 0.5));
-    out += path(`M-600 ${GROUND} L-600 980 C-200 930 100 990 380 960 C640 932 900 900 1180 950 C1400 990 1600 960 1700 970 L1700 ${GROUND} Z`, tint('#97cb64'), 5, col('#6aa046', '#5b4f78', dusk * 0.5));
-    // barn
-    out += G(tf(880, 930, 0, 0.9),
-      path('M-60 0 L-60 -70 L0 -112 L60 -70 L60 0 Z', tint('#cf5a3f'), 5) +
-      path('M-22 0 L-22 -40 L22 -40 L22 0 Z', tint('#f6efe0'), 4) + path('M-22 -40 L22 0 M22 -40 L-22 0', 'none', 4) +
-      path('M-66 -66 L0 -118 L66 -66', 'none', 8, tint('#f6efe0')));
-    // round trees
-    [[-40, 905, 1], [90, 900, 0.8], [620, 905, 0.9], [1010, 930, 0.7]].forEach(([tx, ty, ts], i) => {
-      out += G(tf(tx, ty, 0, ts), tube('M0 0 L0 -40', '#8a5c3c', 10, 4) + circle(-18, -60, 34, tint('#5ea840'), 5) + circle(20, -66, 38, tint('#6bb64b'), 5) + circle(0, -92, 32, tint('#78c256'), 5));
-    });
+    let out = `<path d="M-900 ${GROUND + 700} L-900 880 C-500 800 -160 860 180 840 C480 820 700 740 960 790 C1220 840 1500 800 2000 850 L2000 ${GROUND + 700} Z" fill="${tint('#c4e3a0')}"/>`;
+    out += `<path d="M-900 ${GROUND + 700} L-900 960 C-400 910 60 980 380 950 C660 922 940 890 1220 940 C1500 990 1800 950 2000 960 L2000 ${GROUND + 700} Z" fill="${tint('#a6d27a')}"/>`;
+    // tree line: shaded round canopies of varied size
+    for (let i = 0; i < 16; i++) {
+      const tx = -700 + i * 170 + rand(i + 5) * 60, ty = 960 + rand(i + 9) * 20, ts = 0.8 + rand(i + 13) * 0.6;
+      const c0 = tint(D.mix('#5ea840', '#7cc456', rand(i + 2)));
+      out += G(tf(tx, ty, 0, ts), `<rect x="-6" y="-46" width="12" height="46" fill="${tint('#7a5236')}"/>` +
+        G(tf(-24, -66, 0, 1), D.shade(ellD(38, 34), c0, { depth: 12, light: 5, w: 0 })) +
+        G(tf(22, -72, 0, 1), D.shade(ellD(42, 38), D.mix(c0, '#ffffff', 0.06), { depth: 12, light: 5, w: 0 })) +
+        G(tf(0, -100, 0, 1), D.shade(ellD(36, 32), D.mix(c0, '#ffffff', 0.12), { depth: 10, light: 5, w: 0 })));
+    }
+    out += G(tf(880, 960, 0, 1.05),
+      D.shade('M-60 0 L-60 -70 L0 -112 L60 -70 L60 0 Z', tint('#cf5a3f'), { dir: [1, 0.2], depth: 22, w: 0 }) +
+      path('M-22 0 L-22 -40 L22 -40 L22 0 Z', tint('#f6efe0'), 0) + path('M-66 -66 L0 -118 L66 -66', 'none', 8, tint('#f6efe0')));
     return out;
   }
-  function ground(t, dusk) {
-    let out = `<defs><linearGradient id="soilg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.soil}"/><stop offset="1" stop-color="${C.soilDeep}"/></linearGradient></defs>`;
-    out += `<rect x="-800" y="${GROUND + 14}" width="2700" height="1600" fill="url(#soilg)"/>`;
+  // nearer hedge band (lightly blurred, parallax)
+  function hedge(dusk) {
+    const c0 = col('#a9da78', '#6f7f6a', dusk * 0.4);
+    let d = `M-900 ${GROUND + 700} L-900 ${GROUND - 40}`;
+    for (let x = -900; x <= 2000; x += 70) d += ` Q${x + 35} ${GROUND - 92 - rand(x) * 40} ${x + 70} ${GROUND - 40 - rand(x + 1) * 10}`;
+    d += ` L2000 ${GROUND + 700} Z`;
+    return D.shade(d, c0, { dir: [0, 1], depth: 26, light: 6, w: 0 });
+  }
+  // static soil detail, built once
+  const SOIL_DETAIL = D.prebuilt('soil', () => {
+    let s = '';
+    // soft darker bands in the subsoil
     for (let i = 0; i < 4; i++) {
-      const y = GROUND + 190 + i * 170;
-      out += `<path d="M-800 ${y} C-400 ${y - 26} -100 ${y + 22} 300 ${y} C700 ${y - 24} 1000 ${y + 20} 1900 ${y - 6}" fill="none" stroke="${C.soilLine}" stroke-width="7" opacity="0.6"/>`;
+      const y = GROUND + 200 + i * 160;
+      s += `<path d="M-800 ${y} C-400 ${y - 30} -100 ${y + 26} 300 ${y} C700 ${y - 28} 1000 ${y + 24} 1900 ${y - 6} L1900 ${y + 40} L-800 ${y + 40} Z" fill="#4a2e1c" opacity="0.18" filter="${'FILTER'}"/>`;
     }
     for (let i = 0; i < 46; i++) {
-      const x = -300 + rand(i + 3) * 1700, y = GROUND + 60 + rand(i + 50) * 860, r = 6 + rand(i + 99) * 12;
-      out += ell(x, y, r * 1.4, r, i % 3 ? '#a37b58' : '#7b5134', 3.5, '#5a3a24');
+      const x = -300 + rand(i + 3) * 1700, y = GROUND + 110 + rand(i + 50) * 820, r = 6 + rand(i + 99) * 12;
+      s += G(tf(x, y, rand(i) * 40 - 20, 1), D.shade(ellD(r * 1.4, r), i % 3 ? '#a37b58' : '#7b5134', { depth: r * 0.45, light: 2, w: 3, ink: '#4a2e1c' }));
     }
-    // grass band with tufts
-    let tufts = `M-800 ${GROUND + 18} L-800 ${GROUND - 4}`;
-    for (let x = -800; x <= 1900; x += 26) {
-      const sw = noise(x * 0.01, t * 0.8) * 5;
-      tufts += ` L${x + 8 + sw} ${GROUND - 16 - (x % 52 === 0 ? 8 : 0)} L${x + 16} ${GROUND - 4}`;
+    for (let i = 0; i < 160; i++) {
+      const x = -400 + rand(i + 500) * 1900, y = GROUND + 30 + rand(i + 600) * 900;
+      s += `<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(1.5 + rand(i + 700) * 2.5)}" fill="${i % 2 ? '#c49a6f' : '#3f2717'}" opacity="0.55"/>`;
     }
-    tufts += ` L1900 ${GROUND + 18} Z`;
-    out += path(tufts, col('#73b844', '#5a7a52', dusk * 0.4), 5);
-    out += `<rect x="-800" y="${GROUND + 8}" width="2700" height="12" fill="${col('#73b844', '#5a7a52', dusk * 0.4)}"/>`;
-    out += `<path d="M-800 ${GROUND + 18} L1900 ${GROUND + 18}" stroke="${C.ink}" stroke-width="6"/>`;
+    // topsoil clods along the band
+    for (let i = 0; i < 40; i++) {
+      const x = -500 + rand(i + 800) * 2100, y = GROUND + 34 + rand(i + 900) * 34;
+      s += G(tf(x, y, 0, 1), D.shade(ellD(8 + rand(i) * 8, 5 + rand(i + 1) * 4), '#9a6a45', { depth: 3, light: 1.5, w: 2.5, ink: '#4a2e1c' }));
+    }
+    return s;
+  });
+  function ground(t, dusk) {
+    let out = `<rect x="-800" y="${GROUND + 14}" width="2700" height="1600" fill="${D.linear([[0, '#7d5134'], [0.4, '#6a4329'], [1, '#4f311e']])}"/>`;
+    // lighter topsoil band with a wavy lower edge
+    let band = `M-800 ${GROUND + 14} L1900 ${GROUND + 14} L1900 ${GROUND + 70}`;
+    for (let x = 1900; x >= -800; x -= 90) band += ` Q${x - 45} ${GROUND + 82 + rand(x) * 14} ${x - 90} ${GROUND + 70}`;
+    out += `<path d="${band} Z" fill="${D.linear([[0, '#b98a5e'], [1, '#9c6d47']])}"/>`;
+    out += `<path d="${band.replace(/^M-800 \S+ L1900 \S+ /, 'M1900 ' + (GROUND + 70) + ' ').replace(/^M1900 \S+ L/, 'M')}" fill="none" stroke="#4a2e1c" stroke-width="3" opacity="0.35"/>`;
+    out += SOIL_DETAIL.replace(/FILTER/g, D.blurFilter(8));
+    // grass: tapered blades in three greens, leaning with the wind
+    const gc = ['#4f9a33', '#6bb544', '#8ccf5c'].map(c => col(c, '#5a7a52', dusk * 0.4));
+    out += `<rect x="-800" y="${GROUND - 2}" width="2700" height="18" fill="${gc[1]}"/>`;
+    let blades = '';
+    for (let x = -800; x <= 1900; x += 30) {
+      const lean = D.wind(t, x) * 1.6;
+      for (let k = 0; k < 3; k++) {
+        const bx = x + k * 9 + rand(x + k) * 6, h = 20 + rand(x * 3 + k) * 18;
+        const tipx = bx + (k - 1) * 6 + lean * (h / 30) + noise(x * 0.1 + k, t * 1.2) * 2;
+        blades += D.taper(D.bez([bx, GROUND + 10], [bx, GROUND - h * 0.4], [tipx * 0.5 + bx * 0.5, GROUND - h * 0.8], [tipx, GROUND - h], 6), 7, 1, gc[(k + Math.round(rand(x))) % 3]);
+      }
+    }
+    out += `<g stroke="${C.ink}" stroke-width="0">${blades}</g>`;
+    out += `<path d="M-800 ${GROUND + 15} L1900 ${GROUND + 15}" stroke="${C.ink}" stroke-width="5"/>`;
     return out;
   }
-  function shadow(x, w, op = 0.22) { return ell(x, GROUND + 4, w, 9, '#2d4a1e', 0, 'none', `opacity="${op}"`); }
+  function shadow(x, w, op = 0.22) { return `<ellipse cx="${f2(x)}" cy="${GROUND + 6}" rx="${f2(w)}" ry="10" fill="#1f3412" opacity="${op}" filter="${D.blurFilter(3)}"/>`; }
 
   // ---------- camera ----------
   function camera(t) {
@@ -536,6 +642,7 @@
 
   // ---------- the film ----------
   function frame(f) {
+    D.begin();
     const t = f / FPS;
     const cam = camera(t);
     const dusk = keys(t, [[L.release.start - 0.1, 0], [L.release.start + 0.6, 1, 'inOutQuad'], [L.next.start - 0.7, 1], [L.next.start, 0, 'inOutQuad']]);
@@ -571,18 +678,16 @@
     const cornMood = t < L.next.start ? (t > bounceT - 0.1 ? 'sad' : 'curious') : t < growT ? 'curious' : t > endWink && t < endWink + 0.45 ? 'wink' : 'happy';
 
     // --- world ---
-    let world = hills(dusk);
-    // sun
+    // backdrop layers: sky (sun, soft clouds), far hills and trees, the hedge; each with its own parallax
     const sunY = keys(t, [[0, 300], [L.release.start, 300], [L.release.start + 0.8, 1060, 'inQuad'], [L.next.start - 0.8, 1060], [L.next.start, 300, 'outCubic']]);
-    world = circle(190, sunY, 64, '#ffe27a', 6, '#f2b84b') + world;
-    // clouds (parallax drift)
-    let clouds = '';
+    let skyL = `<circle cx="190" cy="${f2(sunY)}" r="150" fill="${D.radial([[0, '#fff3b0', 0.7], [1, '#fff3b0', 0]], { cx: 0.5, cy: 0.5, r: 0.5 })}"/>` +
+      D.sphere(190, sunY, 64, '#ffd75e', { w: 0, spec: false });
     [[120, 220, 1.0, 1], [700, 160, 0.8, 2], [430, 420, 0.65, 3], [980, 380, 0.75, 4]].forEach(([x, y, s, sd]) => {
       const xx = ((x + t * 9 * s + 300) % 1500) - 300;
-      clouds += cloud(xx, y, s, sd);
+      skyL += cloud(xx, y, s, sd);
     });
-    world = clouds + world;
-    world += ground(t, dusk);
+    const farL = hills(dusk), hedgeL = hedge(dusk);
+    let world = ground(t, dusk);
 
     // underground spotlight on clover roots
     const spot = inv(helpT - 0.1, helpT + 0.35, t) * (1 - inv(L.feed.start + 0.3, L.feed.start + 0.9, t));
@@ -639,11 +744,11 @@
     let bgPlants = '';
     BG.forEach((x, i) => {
       const p = pop(t, fieldsT + i * 0.06, 0.5);
-      if (p.s > 0.01 && sinkP < 1) bgPlants += G(tf(x, 0, 0, 1), clover(0, { t, s: 0.42 * p.s, seed: 10 + i, wilt, sink: sinkP * 120, face: false, mood: 'happy', sq: [p.sx / Math.max(p.s, 0.01), p.sy / Math.max(p.s, 0.01)] }));
+      if (p.s > 0.01 && sinkP < 1) bgPlants += G(tf(x, 0, 0, 1), clover(0, { t, s: 0.42 * p.s, seed: 10 + i, wilt, wind: D.wind(t, x), sink: sinkP * 120, face: false, mood: 'happy', sq: [p.sx / Math.max(p.s, 0.01), p.sy / Math.max(p.s, 0.01)] }));
     });
     [150, 480, 900].forEach((x, i) => {
       const g = spring(t - (growT + 0.15 + i * 0.08), { freq: 1.4, damping: 0.5 }) * (t > growT + 0.15 + i * 0.08 ? 1 : 0);
-      if (g > 0.01) bgPlants += corn(x, { t, grow: g * 0.9, health: cornHealth, s: 0.5 * Math.min(1, g * 1.4), face: false, seed: 20 + i, cob: 0 });
+      if (g > 0.01) bgPlants += corn(x, { t, grow: g * 0.9, health: cornHealth, wind: D.wind(t, x), s: 0.5 * Math.min(1, g * 1.4), face: false, seed: 20 + i, cob: 0 });
     });
     world += `<g clip-path="url(#above)">${bgPlants}</g>`;
 
@@ -653,6 +758,7 @@
       world += `<g clip-path="url(#above)">` + clover(CLOVER_X, {
         t, s: 1.0 * clGrow, wilt, sink: sinkP * 330, flower: inv(feedT - 0.05, flowerT, t), flowerAt: flowerT,
         mood: clMood, lookX: clLook[0], lookY: clLook[1], bl: blink(t, 1, 3.1), sq: bounceSq, seed: 1,
+        wind: D.wind(t, CLOVER_X) * (1 - wilt), windLag: D.wind(t - 0.15, CLOVER_X) * (1 - wilt),
       }) + `</g>`;
     }
     // the old clover's remains glow on "Clover." under the end card
@@ -665,12 +771,17 @@
     if (cornIn.s > 0.01) {
       world += shadow(CORN_X, lerp(55, 120, cg), 0.2);
       world += `<g clip-path="url(#above)">` + corn(CORN_X, {
-        t, grow: cg, health: cornHealth, mood: cornMood, flinch: flinch + nod, s: cornIn.s * 1.35, bl: blink(t, 2, 3.4),
+        t, grow: cg, health: cornHealth, mood: cornMood, flinch: flinch + nod, s: cornIn.s * 1.35, bl: blink(t, 2, 3.4), wind: D.wind(t, CORN_X),
         lookX: t < bounceT ? -0.3 : 0.2, lookY: t < bounceT && t > at('need', 'the') ? -1 : 0,
         cob: pop(t, growT + 0.75, 0.5).s, sq: [cornIn.sx / Math.max(cornIn.s, 0.01), cornIn.sy / Math.max(cornIn.s, 0.01)],
       }) + `</g>`;
     }
 
+    // soil crumbs where things break the surface
+    world += D.crumbs(t, L.need.start, CORN_X, GROUND + 6, { seed: 5, n: 10 });
+    world += D.crumbs(t, dieT + 0.75, CLOVER_X, GROUND + 6, { seed: 9, n: 14, up: 420 });
+    world += D.crumbs(t, growT, CORN_X, GROUND + 6, { seed: 13, n: 12, up: 600 });
+    BG.forEach((x, i) => { world += D.crumbs(t, fieldsT + i * 0.06, x, GROUND + 6, { seed: 30 + i, n: 5, up: 300 }); });
     // nitrogen in the air
     const airT = at('need', 'air');
     for (let i = 0; i < 9; i++) {
@@ -694,10 +805,7 @@
         world += G(`translate(${f2(x)} ${f2(y)}) scale(${sqz[0]} ${sqz[1]})`, n2(0, 0, 0.95, r));
         if (t > hit && t < hit + 0.35) {
           const q = inv(hit, hit + 0.35, t);
-          for (let k = 0; k < 5; k++) {
-            const a = -Math.PI * (0.15 + k * 0.17);
-            world += `<path d="M${f2(CORN_X - 6 + Math.cos(a) * (40 + q * 30))} ${f2(GROUND - 215 + Math.sin(a) * (40 + q * 30))} l${f2(Math.cos(a) * 22)} ${f2(Math.sin(a) * 22)}" stroke="${C.ink}" stroke-width="6" stroke-linecap="round" opacity="${f2(1 - q)}"/>`;
-          }
+          world += `<g opacity="${f2(1 - q)}">` + D.shock(CORN_X - 6, GROUND - 230, -Math.PI * 0.62, 1 + q * 0.4) + D.shock(CORN_X - 6, GROUND - 230, -Math.PI * 0.2, 0.8 + q * 0.4) + `</g>`;
         }
       }
     }
@@ -731,7 +839,12 @@
 
     // assemble: camera transform over the world
     const camT = `translate(${W / 2} ${H / 2}) scale(${f2(cam.z)}) translate(${f2(-cam.cx)} ${f2(-cam.cy)})`;
+    const layerT = p => `translate(${W / 2} ${H / 2}) scale(${f2(1 + (cam.z - 1) * p)}) translate(${f2(-(540 + (cam.cx - 540) * p))} ${f2(-(960 + (cam.cy - 960) * p))})`;
+    const dof = 1 + Math.max(0, cam.z - 1) * 1.4;
     let svg = sky(t, dusk);
+    svg += `<g transform="${layerT(0.15)}">${skyL}</g>`;
+    svg += `<g transform="${layerT(0.45)}" filter="${D.blurFilter(Math.round(4.5 * dof * 2) / 2)}">${farL}</g>`;
+    svg += `<g transform="${layerT(0.75)}" filter="${D.blurFilter(Math.round(2 * dof * 2) / 2)}">${hedgeL}</g>`;
     svg += `<g transform="${camT}">${world}</g>`;
     if (dusk > 0.01) svg += `<rect width="${W}" height="${H}" fill="#3b2a6b" opacity="${f2(dusk * 0.16)}" style="mix-blend-mode:multiply"/>`;
     if (glowLayer) svg += `<g transform="${camT}">${glowLayer}</g>`;
@@ -746,7 +859,7 @@
       svg += G(tf(qx, qy + Math.sin(t * 3) * 6, 8, b * q), circle(0, 0, 58, C.white, 6) + path('M-30 44 L-50 74 L-6 56', C.white, 6) + `<rect x="-40" y="34" width="44" height="22" fill="#fff"/>` +
         `<text x="0" y="26" font-size="78" font-weight="700" fill="${C.nitro}" text-anchor="middle">?</text>`);
     }
-    return svg;
+    return svg + D.defs();
   }
 
   // ---------- sound cues (read by engine/audio.py) ----------

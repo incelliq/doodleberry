@@ -27,6 +27,7 @@ scene.js (frame → SVG) ◀───────┘           score.json
 | file | what it does |
 |------|--------------|
 | `engine/timeline.js` | easing, closed-form springs, keyframes, seeded noise, blinks, squash-and-stretch pops, timing lookups. No clocks, no `Math.random`. |
+| `engine/draw.js` | richer drawing primitives: cel shading with hue-shifted shadows and warm rim light, tapered strokes (veins, root hairs, grass, brows), glossy eyes and shaded spheres, seeded branching rootlets, soft blurred clouds, depth-of-field blur filters, travelling wind gusts, soil-crumb bursts and emphasis marks. `D.begin()` per frame, `D.defs()` once in the frame's SVG, `D.prebuilt()` for art built once. |
 | `engine/render.mjs` | loads a film's `index.html`, calls `window.renderFrame(f)` for each frame across N parallel browser pages, pipes PNGs into ffmpeg. `--still 0,60,…` for stills, `--from/--to` for test renders, `--dump-cues` for the sound-cue list. |
 | `engine/voice.py` | Piper TTS per script line, faster-whisper word alignment mapped back onto the script's own words, writes `timing.json`. `--audition` renders every voice and reports words per minute. |
 | `engine/voicefx.py` | re-voices the narration with the WORLD vocoder: pitch, formant (vocal-tract length) and intonation range change, timing doesn't, so captions and picture stay in sync. Presets `child` and `baby`; set `"voice_fx": "baby"` (or `{"preset": "baby", "pitch": 2.0}`) in `script.json`. |
