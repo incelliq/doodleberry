@@ -148,7 +148,7 @@
   // pts: spine points from head to tail (world units). o: t, talk, mood, look, bl, glasses, bow
   const WORM = { body: '#e8918a', band: '#f4b3a6', ring: '#b8605c' };
   function worm(pts, o = {}) {
-    const { t = 0, talk = 0, mood = 'smug', lookX = 0.3, lookY = 0, bl = 0, glasses = true, bow = true, s = 1 } = o;
+    const { t = 0, talk = 0, mood = 'smug', lookX = 0.3, lookY = 0, bl = 0, glasses = true, bow = true, s = 1, headS = 1, wink = false } = o;
     const c = { ...WORM, ...(o.colors || {}) };
     let out = D.inkTaper(pts.slice().reverse(), 30 * s, 54 * s, c.body, INK, 5);
     out += D.taper(pts.slice().reverse().map(([x, y]) => [x - 4 * s, y - 5 * s]), 8 * s, 14 * s, D.lightOf(c.body), 'opacity="0.55"');
@@ -160,22 +160,24 @@
       const band = i > pts.length * 0.22 && i < pts.length * 0.34;
       out += `<path d="M${f2(px + nx * w)} ${f2(py + ny * w)} Q${f2(px + (bx - ax) * 0.15)} ${f2(py + (by - ay) * 0.15)} ${f2(px - nx * w)} ${f2(py - ny * w)}" fill="none" stroke="${band ? c.band : c.ring}" stroke-width="${f2((band ? 9 : 3) * s)}" stroke-linecap="round" opacity="${band ? 0.95 : 0.7}"/>`;
     }
-    // head
+    // bow tie first, so the head always sits on top of it
+    if (bow && pts.length > 7) {
+      const [bx, by] = pts[5];
+      out += G(tf(bx, by, 0, s * headS * 0.9), D.shade('M0 0 L-20 -13 L-20 13 Z M0 0 L20 -13 L20 13 Z', '#d6453d', { depth: 4, light: 2, w: 3.5, ink: INK }) + D.sphere(0, 0, 6, '#d6453d', { w: 3 }));
+    }
+    // head: leans with the spine but never tips past 25 degrees, so the face stays upright
     const [hx, hy] = pts[0], [nx2, ny2] = pts[2];
-    const ang = (Math.atan2(hy - ny2, hx - nx2) * 180) / Math.PI + 90; // head points along the spine
+    let ang = (Math.atan2(hy - ny2, hx - nx2) * 180) / Math.PI + 90;
+    ang = ((ang + 540) % 360) - 180;
     let head = D.shade(ellD(34, 36), c.body, { depth: 9, light: 4, w: 5.5, ink: INK });
-    head += face({ x: 0, y: -6, s: 0.72, mood, talk, lookX, lookY, bl, sep: 21, lid: c.body, mouthY: 34, cheeks: true });
+    head += face({ x: 0, y: -6, s: 0.72, mood, talk, lookX, lookY, bl, sep: 21, lid: c.body, mouthY: 34, cheeks: true, wink });
     if (glasses) {
       head += `<g transform="translate(0 -6) scale(0.72)">` +
         [-21, 21].map(gx => `<circle cx="${gx}" cy="0" r="23" fill="#dff1ff" fill-opacity="0.18" stroke="${INK}" stroke-width="5"/>` +
           `<path d="M${gx - 12} -10 Q${gx - 6} -16 ${gx + 2} -16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.8"/>`).join('') +
         `<path d="M-2 -2 Q0 -6 2 -2" fill="none" stroke="${INK}" stroke-width="5"/></g>`;
     }
-    out += G(`translate(${f2(hx)} ${f2(hy)}) rotate(${f2(clamp(ang, -40, 40))}) scale(${f2(s)})`, head);
-    if (bow && pts.length > 5) {
-      const [bx, by] = pts[3];
-      out += G(tf(bx, by, 0, s), D.shade('M0 0 L-20 -13 L-20 13 Z M0 0 L20 -13 L20 13 Z', '#d6453d', { depth: 4, light: 2, w: 3.5, ink: INK }) + D.sphere(0, 0, 6, '#d6453d', { w: 3 }));
-    }
+    out += G(`translate(${f2(hx)} ${f2(hy)}) rotate(${f2(clamp(ang, -25, 25))}) scale(${f2(s * headS)})`, head);
     return out;
   }
   // Spine through four control points, head first, with a travelling wiggle.

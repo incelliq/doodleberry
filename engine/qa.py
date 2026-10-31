@@ -58,7 +58,8 @@ def loudness(v):
 
 def sheets(v, out, dur):
     out.mkdir(exist_ok=True)
-    sh('ffmpeg', '-v', 'error', '-y', '-i', str(v), '-vf', 'fps=2,scale=216:384,tile=10x7', '-frames:v', '1',
+    rows = int(np.ceil(dur * 2 / 10))
+    sh('ffmpeg', '-v', 'error', '-y', '-i', str(v), '-vf', f'fps=2,scale=216:384,tile=10x{rows}', '-frames:v', '1',
        str(out / 'sheet-2fps.jpg'))
     # every 0.2 s, 30 frames (6 s) per sheet
     per = 6

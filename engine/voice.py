@@ -78,6 +78,10 @@ def align_words(model, audio, text):
             span = (nxt_i if nxt_i is not None else len(times)) - i
             step = (nxt - prev) / max(span, 1)
             times[i] = (prev, prev + step)
+    # a word Whisper missed can inherit its neighbour's start; keep starts at least 0.16 s apart
+    for i in range(1, len(times)):
+        if times[i][0] < times[i - 1][0] + 0.16:
+            times[i] = (min(times[i - 1][0] + 0.16, dur), max(times[i][1], times[i - 1][0] + 0.3))
     return [{"text": w, "start": round(s, 3), "end": round(e, 3)}
             for w, (s, e) in zip(script, times)]
 

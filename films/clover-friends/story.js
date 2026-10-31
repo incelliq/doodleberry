@@ -1,15 +1,15 @@
   // ================= story: "Clover Friends" =================
-  const SPK_COL = { mina: '#ff8a6e', kernel: '#a8cc34', wiggs: '#e8918a', clover: '#86d957', narrator: '#ffffff' };
+  const SPK_COL = { mina: '#ff8a6e', kernel: '#ffd23f', wiggs: '#a77bf0', clover: '#86d957', narrator: '#ffffff' };
   const MOUTH = window.TIMING.mouth || {};
   const talkOf = (spk, f) => (MOUTH[spk] && MOUTH[spk][f]) || 0;
-  const DIV_X = 560, MINA_X = -40, TALL_X = 330;
+  const DIV_X = 560, MINA_X = -40, MINA_X2 = 60, TALL_X = 330;
 
   // ---------- title card ----------
   function title(t) {
     const t0 = L.rotate.start;
     if (t < t0 - 0.05) return '';
     const ps = 0.82 + 0.18 * spring(t - t0 + 0.05, { freq: 2.4, damping: 0.62 });
-    const w2 = at('rotate', 'clover');
+    const w2 = t0 + 0.3;
     let out = `<rect x="-404" y="-160" width="808" height="330" rx="44" fill="${C.ink}" opacity="0.25" transform="translate(8 10)"/>`;
     out += `<rect x="-404" y="-160" width="808" height="330" rx="44" fill="${C.cream}" stroke="${C.ink}" stroke-width="8"/>`;
     const a = 0.6 + 0.4 * spring(t - t0, { freq: 3, damping: 0.5 });
@@ -19,8 +19,8 @@
       const b = 0.6 + 0.4 * spring(t - w2 + 0.02, { freq: 3, damping: 0.5 });
       out += G(tf(0, 66, 0, b), `<text x="0" y="0" font-size="64" font-weight="700" fill="${C.ink}" text-anchor="middle">first. Then corn.</text>`);
     }
-    out += `<text x="0" y="132" font-size="30" font-weight="500" fill="#7a6553" text-anchor="middle" opacity="${f2(inv(L.rotate.end, L.rotate.end + 0.5, t))}">Source: Wikipedia, “Nitrogen fixation”</text>`;
-    return G(tf(495, 360 + noise(77, t * 0.6) * 4, 0, ps, ps), out);
+    out += `<text x="0" y="132" font-size="32" font-weight="600" fill="#6b5646" text-anchor="middle" opacity="${f2(inv(t0 + 0.6, t0 + 1.0, t))}">Source: Wikipedia, “Nitrogen fixation”</text>`;
+    return G(tf(495, 330 + noise(77, t * 0.6) * 4, 0, ps, ps), out);
   }
   function squash(t, t0, amt = 0.14) {
     const d = t - t0;
@@ -39,13 +39,14 @@
     lensOpen: at('nodules', 'bacteria') - 0.25,
     lensClose: L.yum.start - 0.45,
     cardIn: L.later.start - 0.45, cardOut: L.release.start - 0.05,
+    springIn: L.spring.start - 0.45, springOut: L.plant.start - 0.05,
     dieT: at('release', 'dies'), nitroT: at('release', 'nitrogen'), relT: at('release', 'released'),
-    rainOff: L.release.end + 0.25,
+    rainOff: L.spring.start - 0.1,
     seedL: at('plant', 'corn'), seedR: at('plant', 'sides'),
     growT: L.plant.end + 0.35,
     endWink: L.rotate.end + 0.6,
   };
-  const END = L.rotate.end + 1.3;
+  const END = L.rotate.end + 1.6;
 
   // ---------- camera ----------
   function camera(t) {
@@ -59,12 +60,12 @@
       [L.air.start - 0.3, k(640, 950, 1.14), 'linear'],
       [L.air.start + 0.4, k(360, 820, 1.0), 'inOutCubic'],
       [L.cant.start - 0.2, k(360, 820, 1.0), 'linear'],
-      [L.cant.start + 0.35, k(670, 920, 1.22), 'inOutCubic'],
-      [B.followT + 0.1, k(670, 920, 1.22), 'linear'],
-      [B.followT + 1.3, k(440, 1150, 1.45), 'inOutCubic'],
-      [B.lensOpen, k(440, 1150, 1.45), 'linear'],
-      [B.lensOpen + 0.6, k(450, 1090, 1.6), 'inOutCubic'],
-      [B.lensClose + 0.5, k(450, 1090, 1.6), 'linear'],
+      [L.cant.start + 0.35, k(640, 920, 1.2), 'inOutCubic'],
+      [B.followT + 0.1, k(640, 920, 1.2), 'linear'],
+      [B.followT + 1.3, k(420, 1150, 1.45), 'inOutCubic'],
+      [B.lensOpen, k(420, 1150, 1.45), 'linear'],
+      [B.lensOpen + 0.6, k(430, 1090, 1.6), 'inOutCubic'],
+      [B.lensClose + 0.5, k(430, 1090, 1.6), 'linear'],
       [B.lensClose + 0.95, k(330, 900, 1.25), 'inOutCubic'],
       [B.cardOut, k(500, 960, 1.05), 'linear'],
       [L.plant.start - 0.3, k(500, 960, 1.05), 'linear'],
@@ -82,10 +83,11 @@
   // ---------- Wiggs: spine poses keyed in time ----------
   const GR = GROUND;
   const POSE = {
-    sleep: [[590, GR + 170], [645, GR + 160], [655, GR + 235], [595, GR + 255]],
+    sleep: [[600, GR + 150], [652, GR + 178], [642, GR + 252], [586, GR + 246]],
+    peek: [[560, GR - 70], [563, GR + 10], [568, GR + 70], [596, GR + 140]],
     rise: [[565, GR + 40], [575, GR + 120], [600, GR + 190], [595, GR + 260]],
-    out: [[560, GR - 165], [566, GR - 40], [560, GR + 90], [590, GR + 235]],
-    wind: [[578, GR - 215], [560, GR - 95], [560, GR + 40], [575, GR + 175]],
+    out: [[560, GR - 175], [566, GR - 60], [562, GR + 40], [588, GR + 135]],
+    wind: [[578, GR - 225], [560, GR - 105], [560, GR + 10], [575, GR + 110]],
     arc: [[522, GR + 40], [530, GR - 140], [585, GR - 150], [592, GR - 4]],
     slide: [[480, GR + 150], [520, GR + 60], [548, GR - 60], [562, GR + 18]],
     roots: [[452, GR + 192], [492, GR + 176], [536, GR + 122], [560, GR + 42]],
@@ -97,9 +99,10 @@
       [0, P('sleep')], [B.wigPop - 0.05, P('sleep')], [B.wigPop + 0.12, P('rise'), 'inQuad'], [B.wigPop + 0.4, P('out'), 'outBack'],
       [B.followT - 0.15, P('out')], [B.followT + 0.05, P('wind'), 'outCubic'], [B.followT + 0.35, P('arc'), 'inCubic'],
       [B.followT + 0.65, P('slide'), 'linear'], [B.followT + 1.2, P('roots'), 'outCubic'],
-      [B.cardIn, P('roots')], [B.cardOut - 0.01, P('out'), 'linear'],
-      [B.rainOff + 0.2, P('out')], [B.rainOff + 0.6, P('watch'), 'inOutCubic'],
-      [L.rotate.start - 0.6, P('watch')], [L.rotate.start - 0.2, P('out'), 'outBack'],
+      [B.lensClose + 0.2, P('roots')], [B.lensClose + 1.0, P('peek'), 'inOutCubic'],
+      [B.cardIn + 0.4, P('peek')], [B.cardOut - 0.01, P('out'), 'linear'],
+      [B.springIn + 0.4, P('out')], [B.springOut, P('peek'), 'linear'],
+      [L.rotate.start - 0.6, P('peek')], [L.rotate.start - 0.1, P('out'), 'outBack'],
     ];
     const v = keys(t, seq);
     return [[v[0], v[1]], [v[2], v[3]], [v[4], v[5]], [v[6], v[7]]];
@@ -109,6 +112,7 @@
     if (t < B.wigPop + 0.6) return 'surprised';
     if (t > B.endWink - 0.1 && t < B.endWink + 0.5) return 'happy';
     if (t > L.release.start && t < B.rainOff) return 'sad';
+    if (t > B.springOut && t < L.rotate.start - 0.2) return 'happy';
     if (t > B.lensClose && t < B.cardIn) return 'excited';
     return 'smug';
   }
@@ -120,13 +124,13 @@
     const cam = camera(t);
     const card = t > B.cardIn + 0.36 && t < B.cardOut - 0.36;
     // weather: autumn rain after the card, spring sun after the rain
-    const storm = clamp(inv(B.cardOut - 0.4, B.cardOut, t) * (1 - inv(B.rainOff - 0.2, B.rainOff + 0.6, t)));
-    const rainAmt = clamp(inv(B.cardOut - 0.3, B.cardOut + 0.3, t) * (1 - inv(B.rainOff - 0.3, B.rainOff + 0.2, t)));
-    const wet = clamp(inv(B.cardOut, B.cardOut + 1.5, t) * (1 - inv(B.growT, B.growT + 2.5, t)));
+    const storm = clamp(inv(B.cardOut - 0.4, B.cardOut, t) * (1 - inv(B.springIn + 0.36, B.springOut - 0.36, t)));
+    const rainAmt = clamp(inv(B.cardOut - 0.3, B.cardOut + 0.3, t) * (1 - inv(B.springIn + 0.36, B.springOut - 0.36, t)));
+    const wet = clamp(inv(B.cardOut, B.cardOut + 1.5, t) * (1 - inv(B.springIn + 0.3, B.springOut - 0.3, t)));
     const dusk = 0;
 
     // --- the clover ---
-    const sprout = pop(t, 1.95, 0.6);
+    const sprout = pop(t, 0.12, 0.6);
     const yumT = L.yum.start, feedsT = at('yum', 'feeds');
     const wilt = ease.inOutCubic(inv(B.dieT, B.dieT + 0.7, t));
     const sinkP = ease.inCubic(inv(B.dieT + 0.75, B.dieT + 1.25, t));
@@ -140,11 +144,15 @@
     const kIn = pop(t, 0, 0.5);
     const flinch = t > B.cantT ? Math.exp(-(t - B.cantT) * 3.5) * Math.sin((t - B.cantT) * 22) * 9 : 0;
     let kMood = 'hungry';
+    if (t < L.hungry.start) kMood = 'skeptical';
+    else if (t < L.hungry.end) kMood = 'sad';
+    else if (t < B.wigPop + 0.6 && t > B.wigPop) kMood = 'surprised';
+    else if (t > L.air.start && t < L.air.end) kMood = 'skeptical';
     if (t > B.cantT - 0.1 && t < B.cantT + 1.2) kMood = 'sad';
     if (t > B.cardOut && t < B.rainOff) kMood = 'sleep';
     if (t > B.growT + 0.3) kMood = 'envious';
     if (t > L.fed.start + 0.5) kMood = 'hungry';
-    const kLook = t > B.growT + 0.3 && t < L.fed.end ? [-1, -1] : t < L.hungry.start ? [-0.6, 0] : [-0.4, 0.2];
+    const kLook = t > B.growT + 0.3 && t < L.fed.end ? [-1, -1] : t < L.hungry.start ? [-1, 0] : t > B.wigPop && t < L.air.start ? [-1, 0.3] : [-0.6, 0.2];
 
     // --- the tall corn on the clover side (spring) ---
     const tg = spring(t - B.growT, { freq: 1.4, damping: 0.5 }) * (t > B.growT ? 1 : 0);
@@ -153,19 +161,30 @@
     // --- world ---
     let world = ground(t, dusk);
     if (wet > 0.01) {
-      world += `<rect x="-800" y="${GROUND + 14}" width="2700" height="70" fill="#2e1c10" opacity="${f2(0.28 * wet)}"/>`;
+      world += `<rect x="-800" y="${GROUND - 4}" width="2700" height="96" fill="#2a1a0e" opacity="${f2(0.45 * wet)}"/>`;
     }
     // the dividing stake and string between the two halves of the field
     world += G(tf(DIV_X, GROUND + 4), D.shade('M-9 0 L-8 -96 L0 -112 L8 -96 L9 0 Z', '#b07a46', { depth: 6, light: 2, w: 4.5, ink: C.ink }));
     world += `<path d="M-800 ${GROUND - 70} Q${DIV_X - 200} ${GROUND - 58} ${DIV_X} ${GROUND - 78}" fill="none" stroke="#f3e2b8" stroke-width="3" opacity="0"/>`;
+    // ground signs make the comparison readable: which side had clover (drawn behind the cast)
+    [[472, ['AFTER', 'CLOVER'], '#4e9d31', B.seedL + 0.4], [652, ['NO', 'CLOVER'], '#9a6a45', B.seedR + 0.4]].forEach(([sx, label, colr, t0]) => {
+      const p = pop(t, t0, 0.5);
+      if (p.s < 0.01) return;
+      world += G(`translate(${sx} ${GROUND + 6}) scale(${f2(p.sx)} ${f2(p.sy)})`,
+        D.shade('M-7 0 L-7 -240 L7 -240 L7 0 Z', '#b07a46', { depth: 4, light: 2, w: 4, ink: C.ink }) +
+        G(tf(0, -282, sx < DIV_X ? -3 : 3), D.shade('M-82 -48 H82 V48 H-82 Z', '#f6e7c8', { depth: 7, light: 3, w: 5, ink: C.ink }) +
+          `<text x="0" y="-6" font-size="34" font-weight="700" fill="${colr}" text-anchor="middle">${label[0]}</text>` +
+          `<text x="0" y="32" font-size="34" font-weight="700" fill="${colr}" text-anchor="middle">${label[1]}</text>`));
+    });
     // Wiggs's tunnel from the hole to the clover roots, once he has dug it
     const tun = inv(B.followT + 0.3, B.followT + 1.2, t);
     if (tun > 0) {
       const pts = D.bez([DIV_X, GROUND + 14], [DIV_X, GROUND + 90], [520, GROUND + 160], [446, GROUND + 196], 16);
-      world += D.taper(pts.slice(0, Math.max(2, Math.round(pts.length * tun))), 62, 54, '#3f2817', 'opacity="0.55"');
+      const tunOp = 0.55 * (1 - inv(B.lensClose + 0.6, B.lensClose + 1.4, t));
+      if (tunOp > 0.01) world += D.taper(pts.slice(0, Math.max(2, Math.round(pts.length * tun))), 62, 54, '#3f2817', `opacity="${f2(tunOp)}"`);
     }
     // roots
-    if (t < B.growT + 1.5) world += roots(CLOVER_X, { t, nodulePop: at('nodules', 'bumps'), pulse: at('nodules', 'bumps'), fade: inv(B.dieT, B.dieT + 1, t), gone: 0.55 * inv(B.relT, B.relT + 0.8, t) + 0.45 * inv(L.plant.start, B.growT + 1.2, t) });
+    if (t < B.growT + 1.5) world += roots(CLOVER_X, { t, nodulePop: at('nodules', 'bumps'), pulse: at('nodules', 'bumps'), fade: inv(B.dieT, B.dieT + 1, t), gone: Math.max(1 - sprout.s, 0.55 * inv(B.relT, B.relT + 0.8, t) + 0.45 * inv(L.plant.start, B.growT + 1.2, t)) });
     world += cornRoots(CORN_X, 0.15);
     if (t > B.seedL + 0.5) world += cornRoots(TALL_X, tg);
     {
@@ -219,7 +238,7 @@
         wind: D.wind(t, CLOVER_X) * (1 - wilt), windLag: D.wind(t - 0.15, CLOVER_X) * (1 - wilt),
       }) + `</g>`;
     }
-    world += D.crumbs(t, 1.95, CLOVER_X, GROUND + 6, { seed: 9, n: 8 });
+    world += D.crumbs(t, 0.12, CLOVER_X, GROUND + 6, { seed: 9, n: 8 });
     world += D.crumbs(t, B.dieT + 0.75, CLOVER_X, GROUND + 6, { seed: 19, n: 12, up: 380 });
     // tall corn on the clover side (spring)
     if (tallIn.s > 0.01) {
@@ -237,10 +256,11 @@
       wind: D.wind(t, CORN_X), lookX: kLook[0], lookY: kLook[1], cob: 0,
     }) + `</g>`;
     // Mina: away during the rain, walks back in for spring
-    const minaHere = t < B.cardIn + 0.4 || t > B.rainOff - 0.1;
+    const act2 = t > B.springOut - 0.36;
+    const mx = act2 ? MINA_X2 : MINA_X - 420 * ease.inOutCubic(inv(B.followT + 0.4, B.followT + 1.6, t));
+    const minaHere = (t < B.cardIn || act2) && toScreen(cam, mx, GROUND - 300)[0] > 30;
     if (minaHere) {
-      const walk = t > B.rainOff - 0.1 ? 1 - ease.outCubic(inv(B.rainOff - 0.1, L.plant.start + 0.1, t)) : 0;
-      const mx = MINA_X - walk * 360;
+      const walk = act2 ? 0 : inv(B.followT + 0.4, B.followT + 1.6, t) > 0 && inv(B.followT + 0.4, B.followT + 1.6, t) < 1 ? 1 : 0;
       const throwArm = tt => { // a throw swings the arm up and over
         for (const th of tt) { const d = t - th; if (d > -0.25 && d < 0.35) return d < 0 ? 40 + (d + 0.25) / 0.25 * 100 : 140 - d / 0.35 * 90; }
         return 40;
@@ -250,12 +270,12 @@
       else if (t < B.wigPop) pose = { mood: 'sad', armL: { sh: 25, el: 50 }, armR: { sh: 14, el: 10 }, look: [1, 0.1], hand: { l: 'pouch' } };
       else if (t < L.air.start) pose = { mood: 'surprised', armL: { sh: 35, el: 40 }, armR: { sh: 35, el: 40 }, look: [1, 0.3], hand: {} };
       else if (t < L.cant.start) pose = { mood: t < B.airT ? 'skeptical' : 'excited', armL: { sh: 15, el: 10 }, armR: { sh: lerp(20, 165, ease.outBack(inv(L.air.start, L.air.start + 0.4, t))), el: 5 }, look: [0.4, -1], hand: {} };
-      else if (t < B.cardIn) pose = { mood: t > B.followT ? 'surprised' : 'skeptical', armL: { sh: 35, el: 110 }, armR: { sh: 35, el: 110 }, look: [1, 0.4], hand: {} };
+      else if (t < B.cardIn) pose = { mood: t > B.followT ? 'excited' : 'skeptical', armL: { sh: 35, el: 110 }, armR: { sh: 35, el: 110 }, look: [1, 0.4], hand: {} };
       else if (t < L.tall.start) pose = { mood: 'happy', armL: { sh: 25, el: 50 }, armR: { sh: throwArm([B.seedL, B.seedR]), el: 25 }, look: [t < B.seedR - 0.3 ? 0.6 : 1, 0.3], hand: { l: 'pouch' } };
       else if (t < L.fed.start) pose = { mood: 'happy', armL: { sh: 20, el: 120 }, armR: { sh: 20, el: 120 }, look: [1, -0.6], hand: {} };
       else if (t < L.rotate.start) pose = { mood: 'proud', armL: { sh: 15, el: 10 }, armR: { sh: lerp(20, 80, ease.outBack(inv(L.fed.start, L.fed.start + 0.4, t))), el: 10 }, look: [1, 0], hand: {} };
       else pose = { mood: 'excited', armL: { sh: 15, el: 10 }, armR: { sh: 150, el: 20 + Math.sin(t * 9) * 25 }, look: [1, 0], hand: {} };
-      const k = Cast.kid(mx, GROUND + 8, { t, s: 1.0, talk: talkOf('mina', f), mood: pose.mood, lookX: pose.look[0], lookY: pose.look[1], bl: blink(t, 8, 3.6),
+      const k = Cast.kid(mx, GROUND + 8, { t, s: 1.0, talk: talkOf('mina', f), mood: pose.mood, lookX: pose.look[0], lookY: pose.look[1], bl: blink(t + 1.3, 8, 3.6),
         armL: pose.armL, armR: pose.armR, hand: pose.hand, lean: walk * 4 * Math.sin(t * 12) + (t < L.hungry.start ? 2 : 0) });
       world += shadow(mx, 90, 0.22) + k.svg;
       // seeds from her hand: clover seeds in the hook, corn seeds in spring
@@ -277,7 +297,7 @@
     {
       const sp = wiggsPose(t);
       const pts = Cast.spine(sp[0], sp[1], sp[2], sp[3], t, t < B.wigPop ? 1.5 : 4, 24);
-      world += Cast.worm(pts, { t, talk: talkOf('wiggs', f), mood: wiggsMood(t), lookX: t > B.followT && t < B.cardIn ? -0.8 : -0.4, lookY: 0, bl: blink(t, 4, 2.9), wink: t > B.endWink && t < B.endWink + 0.45 });
+      world += Cast.worm(pts, { t, talk: talkOf('wiggs', f), mood: wiggsMood(t), lookX: t > B.followT && t < B.cardIn ? -0.8 : -0.4, lookY: 0, bl: blink(t, 4, 2.9), wink: t > B.endWink && t < B.endWink + 0.45, headS: 1.5 });
       // a leaf umbrella in the rain
       if (storm > 0.01) {
         const [hx, hy] = pts[0];
@@ -300,8 +320,8 @@
       const out = 1 - ease.inCubic(inv(B.followT + i * 0.03, B.followT + 0.5 + i * 0.03, t));
       if (p.s * out <= 0.01) continue;
       const row = Math.floor(i / 3), colm = i % 3;
-      const bx = 230 + colm * 230 + (row % 2) * 105 + (rand(i + 200) - 0.5) * 40, by = 360 + row * 125 + (rand(i + 300) - 0.5) * 30;
-      world += n2(bx + noise(i + 400, t * 0.4) * 22 + t * 4, by + noise(i + 500, t * 0.35) * 18 - (1 - out) * 120, 1.15 * p.s * out, noise(i + 600, t * 0.3) * 40, i === 4 ? { tag: { t, at: B.airT + 0.3 } } : {});
+      const bx = 230 + colm * 240 + (row % 2) * 110 + (rand(i + 200) - 0.5) * 30, by = 340 + row * 145 + (rand(i + 300) - 0.5) * 24;
+      world += n2(bx + noise(i + 400, t * 0.4) * 18 + t * 4, by + noise(i + 500, t * 0.35) * 14 - (1 - out) * 900, 1.15 * p.s, noise(i + 600, t * 0.3) * 40, i === 4 ? { tag: { t, at: B.airT + 0.3 } } : {});
     }
     {
       const t0 = B.cantT - 0.55, hit = B.cantT;
@@ -341,7 +361,7 @@
     }
 
     // backdrop layers
-    const sunY = keys(t, [[0, 290], [B.cardOut - 0.2, 290], [B.cardOut, 1080, 'linear'], [B.rainOff, 1080], [B.rainOff + 0.8, 290, 'outCubic']]);
+    const sunY = keys(t, [[0, 290], [B.cardOut - 0.2, 290], [B.cardOut, 1080, 'linear'], [B.springIn + 0.4, 1080], [B.springOut - 0.36, 290, 'linear']]);
     const sunL = `<circle cx="880" cy="${f2(sunY)}" r="150" fill="${D.radial([[0, '#fff3b0', 0.7], [1, '#fff3b0', 0]], { cx: 0.5, cy: 0.5, r: 0.5 })}"/>` + D.sphere(880, sunY, 64, '#ffd75e', { w: 0, spec: false });
     let skyL = '';
     [[120, 220, 1.0, 1], [700, 160, 0.8, 2], [430, 420, 0.65, 3], [980, 380, 0.75, 4], [250, 120, 0.9, 5]].forEach(([x, y, s, sd], i) => {
@@ -350,7 +370,7 @@
       skyL += D.cloud(xx, y + storm * 30, s * (1 + storm * 0.35), sd, D.mix('#ffffff', '#8e98a6', storm), D.mix('#dceef8', '#6c7684', storm));
     });
     const farL = hills(dusk, t), hedgeL = hedge(dusk);
-    const fgL = D.fgGrass(-120, GROUND + 40, 520, 3, t) + D.fgGrass(1210, GROUND + 40, 560, 7, t);
+    const fgL = D.fgGrass(1230, GROUND + 40, 560, 7, t);
 
     const camT = `translate(${W / 2} ${H / 2}) scale(${f2(cam.z)}) translate(${f2(-cam.cx)} ${f2(-cam.cy)})`;
     const layerT = p => `translate(${W / 2} ${H / 2}) scale(${f2(1 + (cam.z - 1) * p)}) translate(${f2(-(540 + (cam.cx - 540) * p))} ${f2(-(960 + (cam.cy - 960) * p))})`;
@@ -367,9 +387,10 @@
     svg += `<g filter="${D.blurFilter(9)}"><g transform="${layerT(1.4)}">${fgL}</g></g>`;
     if (rainAmt > 0.01) svg += D.rain(t, { amount: rainAmt, groundY: toScreen(cam, 0, GROUND)[1] });
     svg += lens(t, cam);
-    svg += t < L.rotate.start - 0.05 ? captions(t) : '';
+    svg += captions(t);
     svg += title(t);
     svg += D.timeCard(t, B.cardIn, B.cardOut, { text: 'MONTHS LATER…' });
+    svg += D.timeCard(t, B.springIn, B.springOut, { text: 'NEXT SPRING…', months: ['NOV', 'DEC', 'JAN', 'FEB', 'MAR', 'APR'] });
     return svg + D.defs();
   }
 
@@ -393,7 +414,7 @@
     cue(B.cardOut - 0.2, 'rain'),
     cue(B.dieT, 'wilt'), cue(B.dieT + 0.75, 'sink'),
     cue(B.nitroT - 0.1, 'shimmer'),
-    cue(B.rainOff + 0.3, 'chime', 0.7),
+    cue(B.springIn, 'whoosh'), cue(B.springIn + 0.45, 'flip'), cue(B.springOut - 0.4, 'whoosh'), cue(B.springOut - 0.1, 'chime', 0.7),
     cue(B.seedL - 0.05, 'whoosh', 0.5), cue(B.seedL + 0.5, 'pop_small', 0.7),
     cue(B.seedR - 0.05, 'whoosh', 0.5), cue(B.seedR + 0.5, 'pop_small', 0.7),
     cue(B.growT, 'grow_big'), cue(B.growT + 0.8, 'pop'),
