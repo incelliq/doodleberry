@@ -298,6 +298,69 @@ def sfx(kind):
             m = int(0.06 * SR)
             add(out, bp(RNG.normal(0, 1, m), 1200, 6000) * env(m, 0.003, 0.02), 0.08 + i * 0.2)
         return out
+    if kind == 'buzz':  # a fly passing: buzzy saw tone with wobbling pitch and a fade in/out
+        n = int(1.4 * SR)
+        t = np.arange(n) / SR
+        f = 210 + 25 * np.sin(2 * np.pi * 5.5 * t) + 12 * np.sin(2 * np.pi * 13 * t)
+        ph = np.cumsum(f) / SR
+        x = 2 * (ph % 1) - 1
+        x = bp(x, 180, 3500) * (0.6 + 0.4 * np.sin(2 * np.pi * 31 * t))
+        return x * np.sin(np.linspace(0, np.pi, n)) ** 1.5 * 0.5
+    if kind == 'swarm':  # many detuned buzzes swelling
+        n = int(2.4 * SR)
+        t = np.arange(n) / SR
+        out = np.zeros(n)
+        for k in range(7):
+            f = 190 + 22 * k + 15 * np.sin(2 * np.pi * (3 + k) * t + k)
+            ph = np.cumsum(f) / SR
+            out += bp(2 * (ph % 1) - 1, 160, 3000) / 7
+        return out * np.minimum(1, t / 1.2) * np.minimum(1, (2.4 - t) / 0.6) * 0.8
+    if kind == 'squirm':  # wet little squelches
+        out = np.zeros(int(1.2 * SR))
+        for i in range(6):
+            m = int(0.08 * SR)
+            add(out, lp(RNG.normal(0, 1, m), 900) * env(m, 0.005, 0.03) * 0.6 + sweep(300, 180, 0.08) * env(m, 0.004, 0.03) * 0.4, 0.05 + i * 0.17 + RNG.uniform(0, 0.05))
+        return out
+    if kind == 'stamp':  # rubber stamp thud with a paper slap
+        n = int(0.35 * SR)
+        x = thump()[:n] if len(thump()) >= n else np.pad(thump(), (0, n - len(thump())))
+        return x * 0.9 + bp(RNG.normal(0, 1, n), 800, 5000) * env(n, 0.001, 0.03) * 0.5
+    if kind == 'crack':
+        n = int(0.5 * SR)
+        out = np.zeros(n)
+        for i in range(9):
+            m = int(0.02 * SR)
+            add(out, hp(RNG.normal(0, 1, m), 1500) * env(m, 0.001, 0.006), i * 0.035 + RNG.uniform(0, 0.02))
+        return out * 0.8
+    if kind == 'drill':  # rising screw whine
+        n = int(1.0 * SR)
+        x = sweep(220, 520, 1.0) * (0.6 + 0.4 * np.sign(np.sin(2 * np.pi * 24 * np.arange(n) / SR)))
+        return bp(x, 150, 3000) * np.sin(np.linspace(0, np.pi, n)) * 0.4
+    if kind == 'plane':  # prop drone passing (doppler-ish pitch drop)
+        n = int(3.2 * SR)
+        t = np.arange(n) / SR
+        f = 92 - 14 * np.tanh((t - 1.6) * 2)
+        ph = np.cumsum(f) / SR
+        x = sum(np.sin(2 * np.pi * ph * h) / h for h in (1, 2, 3, 4, 6))
+        x = lp(x * (0.75 + 0.25 * np.sin(2 * np.pi * 2 * f * t)), 1400)
+        return x * np.exp(-((t - 1.6) / 1.0) ** 2) * 0.6
+    if kind == 'drone':  # low ominous swell
+        n = int(2.5 * SR)
+        t = np.arange(n) / SR
+        x = np.sin(2 * np.pi * 55 * t) + 0.5 * np.sin(2 * np.pi * 82.4 * t + 0.4) + 0.3 * np.sin(2 * np.pi * 110 * t * (1 + 0.003 * np.sin(2 * np.pi * 0.7 * t)))
+        return lp(x, 600) * np.sin(np.linspace(0, np.pi, n)) ** 1.2 * 0.6
+    if kind == 'ping':  # map marker
+        out = bell(note_hz(88), 0.6, 0.6)
+        add(out, bell(note_hz(76), 0.4, 0.3), 0.0)
+        return out
+    if kind == 'tick':
+        m = int(0.03 * SR)
+        return bp(RNG.normal(0, 1, m), 2500, 7000) * env(m, 0.001, 0.008)
+    if kind == 'zap':  # x-ray hum burst with a crackle
+        n = int(0.6 * SR)
+        t = np.arange(n) / SR
+        x = np.sign(np.sin(2 * np.pi * 120 * t)) * 0.4 + bp(RNG.normal(0, 1, n), 2000, 8000) * 0.5
+        return lp(x, 6000) * env(n, 0.01, 0.25) * 0.6
     raise ValueError(kind)
 
 
@@ -306,7 +369,9 @@ def sfx(kind):
 # and the effects bus is carved in the speech band while the narrator talks
 SFX_LEVEL = {'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
              'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
-             'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11}
+             'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11,
+             'buzz': -12, 'swarm': -13, 'squirm': -12, 'stamp': -8, 'crack': -10, 'drill': -13, 'plane': -13,
+             'drone': -12, 'ping': -9, 'tick': -14, 'zap': -11}
 
 
 def presence(voice, n, attack=0.04, release=0.35):

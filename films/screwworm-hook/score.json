@@ -1,0 +1,11 @@
+{
+  "length_s": 41.3,
+  "bpm": 100,
+  "offset_s": 0.0,
+  "note": "tense intro over the calf, drive from 'the weapon', lift on the factory and CTA",
+  "sections": [
+    {"kind": "intro",   "from_beat": 0,  "to_beat": 26, "chords": ["Dm", "Bb", "Gm", "Am"]},
+    {"kind": "main",    "from_beat": 26, "to_beat": 52, "chords": ["Dm", "Bb", "F", "C"]},
+    {"kind": "finale",  "from_beat": 52, "to_beat": 68, "chords": ["F", "C", "Bb", "C"], "end_chord": "F"}
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "speakers": {"nar": {"voice": "en_US-ryan-high"}},
+  "length_scale": 1.06,
+  "gap_s": 0.32,
+  "lead_in_s": 0.3,
+  "lines": [
+    {"id": "open",     "fact": "tx_calf",   "text": "June 2026. A three-week-old calf in Zavala County, Texas, is found with maggots in its navel."},
+    {"id": "alive",    "fact": "living",    "text": "Not ordinary maggots. These eat living flesh.", "pause": 0.2},
+    {"id": "back",     "fact": "gone_1966", "text": "The New World screwworm. America wiped it out in 1966. Now it's back."},
+    {"id": "weapon",   "fact": "billions",  "text": "And the weapon that beat it last time wasn't a poison. It was more flies. Billions of them.", "pause": 0.6},
+
+    {"id": "eggs",     "fact": "eggs",      "text": "Here's how it works. A female lays two hundred fifty to five hundred eggs at the edge of a wound, or a newborn's navel."},
+    {"id": "screw",    "fact": "screw",     "text": "The maggots burrow into healthy flesh. Disturb them, and they screw in deeper. That's the name."},
+    {"id": "worse",    "fact": "screw",     "text": "The wound draws more flies. Left alone, it can kill the animal."},
+    {"id": "hosts",    "fact": "hosts",     "text": "Cattle, deer, dogs, cats. Even, sometimes, people."},
+    {"id": "canada",   "fact": "canada",    "text": "In good years, it spread all the way to the Canadian border.", "pause": 0.5},
+
+    {"id": "duo",      "fact": "duo",       "text": "In the nineteen thirties, two government scientists, Edward Knipling and Raymond Bushland, went looking for a better way to fight it."},
+    {"id": "once",     "fact": "once",      "text": "And they found a weakness. A female screwworm mates only once in her life."},
+    {"id": "dud",      "fact": "sit",       "text": "So what if her one mate was sterile? Flood the land with sterile males, and wild females lay eggs that never hatch."},
+    {"id": "how",      "fact": "muller",    "text": "But how do you sterilize a fly? The clue came from a book by Nobel laureate Hermann Muller, on radiation and genes.", "pause": 0.2},
+    {"id": "xray",     "fact": "xray",      "text": "Bushland borrowed an army X-ray machine in Kerrville, Texas. In six months, he had the dose."},
+    {"id": "paper1",   "fact": "paper51",   "text": "They published in 1951.", "pause": 0.4},
+
+    {"id": "sanibel",  "fact": "sanibel",   "text": "A first test on Sanibel Island, Florida, backed the idea. But Sanibel sits right off the coast. They wanted proof."},
+    {"id": "curacao",  "fact": "curacao",   "text": "So, in 1954, they went to Curaçao, an island in the Caribbean. Every week, an airplane dropped sterile flies over it."},
+    {"id": "seventy",  "fact": "curacao70", "text": "After three weeks, about seventy percent of the egg masses they found were sterile. Within about two months, fertile eggs were gone."},
+    {"id": "paper2",   "fact": "paper55",   "text": "In 1955, the results and the theory went to print, side by side.", "pause": 0.5},
+
+    {"id": "scale",    "fact": "southeast", "text": "Then they scaled up. Florida first, in 1958. Then the whole Southwest."},
+    {"id": "gone",     "fact": ["gone_1966", "billions"], "text": "By 1966, the screwworm was gone from the United States. Over the next decade, America and Mexico released more than ninety four billion sterile flies."},
+    {"id": "south",    "fact": "mexico",    "text": "Mexico was declared free in 1991. Then, country by country, Central America."},
+    {"id": "wall",     "fact": "panama",    "text": "Today, a plant in Panama releases up to a hundred million sterile flies a week, a living wall at the Darién Gap."},
+    {"id": "keys",     "fact": "keys",      "text": "Even when it slipped into the Florida Keys in 2016, attacking endangered Key deer, it was beaten by March 2017.", "pause": 0.6},
+
+    {"id": "breach",   "fact": "breach",    "text": "Then, in late 2024, the wall broke. Screwworms showed up in southern Mexico, and started moving north."},
+    {"id": "border",   "fact": "border",    "text": "In July 2025, the US closed the border to Mexican cattle."},
+    {"id": "closer",   "fact": "closer",    "text": "The fly kept coming. Seventy miles from the border. Then thirty one."},
+    {"id": "june",     "fact": "tx_calf",   "text": "Then, June third, 2026. Texas.", "pause": 0.3},
+    {"id": "cases",    "fact": "cases",     "text": "By the end of October, seventy one cases. Texas, New Mexico, Arizona. Cattle, and dogs, and a cat.", "pause": 0.5},
+
+    {"id": "again",    "fact": "release_now", "text": "So America is doing what worked before. Sterile flies are dropping over Texas again."},
+    {"id": "plant",    "fact": "plant",     "text": "And a new fly factory at Moore Air Base in Edinburg, Texas, is meant to start by the end of this year. A hundred million flies at first. Three hundred million by 2028."},
+    {"id": "advice",   "fact": "advice",    "text": "If you have animals, check their wounds. Report maggots to a vet or the USDA. And no, your beef is safe."},
+    {"id": "end",      "fact": "once",      "text": "We beat this fly once, not with poison, but with one strange fact. She only mates once. Now, we have to do it again."}
+  ]
+}

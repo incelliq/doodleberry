@@ -1,0 +1,17 @@
+{
+  "speakers": {"nar": {"voice": "en_US-ryan-high"}},
+  "length_scale": 1.04,
+  "gap_s": 0.28,
+  "lead_in_s": 0.25,
+  "lines": [
+    {"id": "open",    "fact": ["tx_calf", "living"], "text": "June 2026. A calf in Texas is found with maggots eating it alive."},
+    {"id": "back",    "fact": "gone_1966", "text": "The New World screwworm. America wiped it out in 1966. Now it's back."},
+    {"id": "eggs",    "fact": "eggs",      "text": "A female lays up to five hundred eggs in a wound. The maggots burrow into living flesh."},
+    {"id": "weapon",  "fact": "billions",  "text": "And the weapon that beat it last time? More flies. Billions of them.", "pause": 0.3},
+    {"id": "how",     "fact": ["xray", "curacao"], "text": "Sterilized with radiation, and dropped from airplanes."},
+    {"id": "once",    "fact": "once",      "text": "Because a female mates only once. If her mate is sterile, her eggs never hatch.", "pause": 0.3},
+    {"id": "now",     "fact": "cases",     "text": "Now there are seventy one cases, from Texas to Arizona."},
+    {"id": "plant",   "fact": "plant",     "text": "And a new fly factory in Texas is racing to breed hundreds of millions more."},
+    {"id": "cta",     "fact": "duo",       "text": "Watch the full story: how two scientists beat it with an X-ray machine."}
+  ]
+}

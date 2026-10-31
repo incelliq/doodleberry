@@ -10,6 +10,12 @@ clover") built to prove out the cartoon cross-section explainer genre: soil
 cutaway, prop characters with faces, a magnifier window into a root nodule,
 one-word kinetic captions, narration-led.
 
+Later films: `films/clover-friends` (character story), `films/banana-herb` (banana plant rig) and the
+research-story pair `films/screwworm` (full, ~3:23) + `films/screwworm-hook` (~41 s), which share
+`films/screwworm-shared/` (original rigs, a Natural Earth map built by `tools/mapgen.py`, and a shot-list
+sequencer: each cut's `scene.js` is just a list of shots keyed to script lines). `tools/shotstills.mjs` renders
+a contact sheet with one still per shot.
+
 ## Pipeline
 
 ```
