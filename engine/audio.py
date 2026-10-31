@@ -285,6 +285,19 @@ def sfx(kind):
         add(out, bell(note_hz(84), 1.2, 0.5), 0)
         add(out, bell(note_hz(89), 1.2, 0.5), 0.14)
         return out
+    if kind == 'rain':
+        n = int(5.0 * SR)
+        hiss = bp(RNG.normal(0, 1, n), 1500, 9000) * 0.5 + lp(RNG.normal(0, 1, n), 700) * 0.35
+        out = hiss * np.minimum(1, np.arange(n) / (0.6 * SR)) * np.minimum(1, (n - np.arange(n)) / (0.8 * SR))
+        for i in range(160):  # droplets
+            add(out, bell(2400 + RNG.uniform(0, 3000), 0.05, 0.25), RNG.uniform(0.1, 4.8))
+        return out
+    if kind == 'flip':
+        out = np.zeros(int(1.4 * SR))
+        for i in range(6):
+            m = int(0.06 * SR)
+            add(out, bp(RNG.normal(0, 1, m), 1200, 6000) * env(m, 0.003, 0.02), 0.08 + i * 0.2)
+        return out
     raise ValueError(kind)
 
 
@@ -293,7 +306,7 @@ def sfx(kind):
 # and the effects bus is carved in the speech band while the narrator talks
 SFX_LEVEL = {'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
              'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
-             'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7}
+             'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11}
 
 
 def presence(voice, n, attack=0.04, release=0.35):

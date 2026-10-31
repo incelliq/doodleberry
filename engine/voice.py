@@ -82,35 +82,86 @@ def align_words(model, audio, text):
             for w, (s, e) in zip(script, times)]
 
 
+def mouth_track(audio, fps, floor_db=-38.0):
+    """0..1 mouth openness per video frame from a line's loudness, for lip-sync:
+    quick to open, a little slower to close, with a flutter so long vowels don't freeze."""
+    hop = SR_OUT // fps
+    n = int(np.ceil(len(audio) / hop))
+    rms = np.array([np.sqrt(np.mean(audio[i * hop:(i + 1) * hop] ** 2) + 1e-12) for i in range(n)])
+    db = 20 * np.log10(rms)
+    top = np.percentile(db, 95)
+    o = np.clip((db - max(floor_db, top - 30)) / max(6.0, top - max(floor_db, top - 30)), 0, 1)
+    out, m = np.zeros(n), 0.0
+    for i, x in enumerate(o):
+        m += (x - m) * (0.75 if x > m else 0.45)
+        out[i] = m
+    return out
+
+
+def load_fx():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("voicefx", Path(__file__).with_name("voicefx.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
 def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
+    """Single-voice scripts use script["voice"]; multi-speaker scripts define
+    script["speakers"] = {id: {"voice": ..., "fx": preset name or {pitch, formant, range}}}
+    and give each line a "speaker". Per-line "pause" adds silence after a line."""
     script = json.loads((film / "script.json").read_text())
-    voice_name = voice_name or script["voice"]
-    voice = PiperVoice.load(str(voices_dir / f"{voice_name}.onnx"))
+    speakers = script.get("speakers") or {"narrator": {"voice": voice_name or script["voice"]}}
+    default = next(iter(speakers))
+    voices = {}
+    fxmod = load_fx() if any(sp.get("fx") for sp in speakers.values()) else None
     from faster_whisper import WhisperModel
     model = WhisperModel("small.en", device="cpu", compute_type="int8")
+    fps = script.get("fps", 30)
 
     gap = script.get("gap_s", 0.3)
     t = script.get("lead_in_s", 0.3)
     pieces, lines = [np.zeros(int(t * SR_OUT), np.float32)], []
+    mouths = []  # (speaker, start_s, track)
     for ln in script["lines"]:
-        a = trim(synth_line(voice, ln["text"], script.get("length_scale", 1.0)))
+        spk = ln.get("speaker", default)
+        cfg = speakers[spk]
+        if cfg["voice"] not in voices:
+            voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"))
+        a = trim(synth_line(voices[cfg["voice"]], ln["text"], ln.get("length_scale", script.get("length_scale", 1.0))))
+        if cfg.get("fx") and fxmod:
+            fx = cfg["fx"] if isinstance(cfg["fx"], dict) else {"preset": cfg["fx"]}
+            p = {**fxmod.PRESETS.get(fx.get("preset"), {"pitch": 1.0, "formant": 1.0, "range": 1.0}),
+                 **{k: v for k, v in fx.items() if k != "preset"}}
+            y, _, _ = fxmod.revoice(a.astype(np.float64), SR_OUT, p["pitch"], p["formant"], p["range"])
+            a = (y * (0.9 / (np.max(np.abs(y)) + 1e-9))).astype(np.float32)
         words = align_words(model, a, ln["text"])
         d = len(a) / SR_OUT
-        lines.append({"id": ln["id"], "fact": ln["fact"], "text": ln["text"],
+        lines.append({"id": ln["id"], "speaker": spk, "fact": ln.get("fact"), "text": ln["text"],
                       "start": round(t, 3), "end": round(t + d, 3),
                       "words": [{**w, "start": round(t + w["start"], 3),
                                  "end": round(t + w["end"], 3)} for w in words]})
-        pieces += [a, np.zeros(int(gap * SR_OUT), np.float32)]
-        t += d + gap
+        mouths.append((spk, t, mouth_track(a, fps)))
+        pause = gap + ln.get("pause", 0.0)
+        pieces += [a, np.zeros(int(pause * SR_OUT), np.float32)]
+        t += d + pause
     audio = np.concatenate(pieces)
     out = film / "build"
     out.mkdir(exist_ok=True)
     sf.write(out / out_name, audio, SR_OUT, subtype="PCM_24")
+    # per-speaker mouth tracks on the film's frame grid
+    nfr = int(np.ceil(len(audio) / SR_OUT * fps)) + 1
+    mouth = {spk: np.zeros(nfr) for spk in speakers}
+    for spk, start, tr in mouths:
+        i0 = int(round(start * fps))
+        seg = tr[: max(0, nfr - i0)]
+        mouth[spk][i0:i0 + len(seg)] = np.maximum(mouth[spk][i0:i0 + len(seg)], seg)
     n_words = sum(len(l["words"]) for l in lines)
     speech = sum(l["end"] - l["start"] for l in lines)
-    return {"voice": voice_name, "duration": round(len(audio) / SR_OUT, 3),
+    return {"voice": ",".join(sorted({c["voice"] for c in speakers.values()})), "duration": round(len(audio) / SR_OUT, 3),
             "wpm": round(60 * n_words / (len(audio) / SR_OUT), 1),
-            "wpm_speech_only": round(60 * n_words / speech, 1), "lines": lines}
+            "wpm_speech_only": round(60 * n_words / speech, 1), "lines": lines,
+            "mouth": {k: [round(float(v), 2) for v in tr] for k, tr in mouth.items() if tr.any()}}
 
 
 def main():
@@ -127,11 +178,11 @@ def main():
         return
     r = build(args.film, args.voices_dir)
     timing = {"fps": 30, "voice": r["voice"], "duration": r["duration"],
-              "wpm": r["wpm"], "lines": r["lines"]}
+              "wpm": r["wpm"], "lines": r["lines"], "mouth": r["mouth"]}
     (args.film / "timing.json").write_text(json.dumps(timing, indent=1))
     # file:// pages can't fetch JSON, so the scene loads timing as a script
     (args.film / "build" / "timing.js").write_text(f"window.TIMING = {json.dumps(timing)};\n")
-    print(json.dumps({k: v for k, v in r.items() if k != "lines"}))
+    print(json.dumps({k: v for k, v in r.items() if k not in ("lines", "mouth")}))
 
 
 if __name__ == "__main__":

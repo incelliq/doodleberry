@@ -80,8 +80,10 @@ def main():
     I, tp = loudness(v)
     timing = json.loads((a.film / 'timing.json').read_text())
     facts = {f['id'] for f in json.loads((a.film / 'facts.json').read_text())['facts']}
-    cites = lambda l: l.get('fact') if isinstance(l.get('fact'), list) else [l.get('fact')]
-    untraced = [l['id'] for l in timing['lines'] if not cites(l) or any(c not in facts for c in cites(l))]
+    # a line marked "fact": null is conversation with no claim; every other line must cite real facts
+    cites = lambda l: l['fact'] if isinstance(l.get('fact'), list) else [l.get('fact')]
+    untraced = [l['id'] for l in timing['lines'] if 'fact' in l and l['fact'] is not None and any(c not in facts for c in cites(l))]
+    untraced += [l['id'] for l in timing['lines'] if 'fact' not in l]
     frozen_total = sum(f['len'] for f in frozen)
     report = {
         **p,

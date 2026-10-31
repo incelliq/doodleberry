@@ -118,7 +118,7 @@
   // ---------- eyes, spheres ----------
   // Glossy cartoon eye. bl = blink 0..1, look in -1..1.
   function eye(x, y, o = {}) {
-    const { rx = 14, ry = 17, lookX = 0, lookY = 0, bl = 0, ink = '#2a1a10', lid = '#5fb33d', w = 3.6 } = o;
+    const { rx = 14, ry = 17, lookX = 0, lookY = 0, bl = 0, ink = '#2a1a10', lid = '#5fb33d', w = 3.6, lidUp = 0, lidTilt = 0, lidLow = 0 } = o;
     const k = 1 - bl * 0.94;
     let s = `<g transform="translate(${f2(x)} ${f2(y)})">`;
     s += `<ellipse cx="0" cy="0" rx="${rx}" ry="${f2(ry * k)}" fill="${radial([[0, '#ffffff'], [0.62, '#ffffff'], [1, '#d6deea']], { cx: 0.42, cy: 0.38, r: 0.7 })}" stroke="${ink}" stroke-width="${w}"/>`;
@@ -132,6 +132,19 @@
       s += `<path d="M${-rx * 0.86} ${f2(-ry * k * 0.45)} Q0 ${f2(-ry * k * 1.05)} ${rx * 0.86} ${f2(-ry * k * 0.45)}" fill="none" stroke="#b9c6da" stroke-width="3" opacity="0.6"/>`;
     }
     if (bl > 0.05) s += `<path d="M${-rx} 0 Q0 ${f2(-ry * k * 1.3)} ${rx} 0" fill="${lid}" stroke="${ink}" stroke-width="${w * 0.8}" opacity="${f2(clamp(bl * 2))}"/>`;
+    // attitude lids: upper lid comes down (tilted for angry/worried), lower lid rises for a smug squint
+    if ((lidUp > 0.02 || lidLow > 0.02) && k > 0.35) {
+      const c = id('el');
+      const ty = Math.tan((lidTilt * Math.PI) / 180) * rx;
+      const yU = -ry * k + 2 * ry * k * clamp(lidUp, 0, 0.95);
+      const yLo = ry * k - 2 * ry * k * clamp(lidLow, 0, 0.6);
+      s += `<clipPath id="${c}"><ellipse cx="0" cy="0" rx="${rx}" ry="${f2(ry * k)}"/></clipPath><g clip-path="url(#${c})">`;
+      if (lidUp > 0.02) s += `<path d="M${-rx - 3} ${-ry - 6} L${rx + 3} ${-ry - 6} L${rx + 3} ${f2(yU + ty)} L${-rx - 3} ${f2(yU - ty)} Z" fill="${lid}"/>` +
+        `<path d="M${-rx - 3} ${f2(yU - ty)} L${rx + 3} ${f2(yU + ty)}" stroke="${ink}" stroke-width="${w}"/>`;
+      if (lidLow > 0.02) s += `<path d="M${-rx - 3} ${ry + 6} L${rx + 3} ${ry + 6} L${rx + 3} ${f2(yLo)} Q0 ${f2(yLo - 4)} ${-rx - 3} ${f2(yLo)} Z" fill="${lid}"/>` +
+        `<path d="M${-rx - 3} ${f2(yLo)} Q0 ${f2(yLo - 4)} ${rx + 3} ${f2(yLo)}" fill="none" stroke="${ink}" stroke-width="${w * 0.8}"/>`;
+      s += `</g><ellipse cx="0" cy="0" rx="${rx}" ry="${f2(ry * k)}" fill="none" stroke="${ink}" stroke-width="${w}"/>`;
+    }
     return s + '</g>';
   }
   // shaded sphere (atoms, droplets, nodules)
@@ -238,6 +251,68 @@
     return `<g transform="translate(${f2(x)} ${f2(y)}) scale(${f2(s)})">${out}</g>`;
   }
 
-  root.D = { begin, prebuilt, defs, blurFilter, radial, linear, mix, shadowOf, lightOf, shade, glintMark, bez, taperPath, taper, inkTaper,
+  // Screen-space rain: seeded streaks falling at an angle, with splash ticks at groundY (screen).
+  function rain(t, o = {}) {
+    const { n = 90, speed = 2200, angle = 12, len = 70, alpha = 0.55, w = 1080, h = 1920, groundY = null, seed = 5, amount = 1 } = o;
+    if (amount <= 0.01) return '';
+    const dx = Math.tan((angle * Math.PI) / 180);
+    let s = '';
+    for (let i = 0; i < Math.round(n * amount); i++) {
+      const sp = speed * (0.8 + rand(seed + i) * 0.4);
+      const y0 = rand(seed + i * 3) * (h + 400), x0 = rand(seed + i * 7) * (w + 300) - 150;
+      const y = ((y0 + t * sp) % (h + 400)) - 200;
+      if (groundY !== null && y > groundY) {
+        const k = (y - groundY) / 220;
+        if (k < 1) s += `<ellipse cx="${f2(x0 + y * dx)}" cy="${f2(groundY + 4)}" rx="${f2(6 + k * 18)}" ry="${f2(2 + k * 4)}" fill="none" stroke="#dfeeff" stroke-width="2" opacity="${f2(alpha * (1 - k))}"/>`;
+        continue;
+      }
+      const x = x0 + y * dx, l = len * (0.7 + rand(seed + i * 5) * 0.6);
+      s += `<line x1="${f2(x)}" y1="${f2(y)}" x2="${f2(x - l * dx)}" y2="${f2(y - l)}" stroke="#e6f1ff" stroke-width="${f2(2 + rand(i) * 1.5)}" stroke-linecap="round" opacity="${f2(alpha * amount)}"/>`;
+    }
+    return s;
+  }
+  // Time-skip card: an iris opens onto a calendar flipping through months, then closes.
+  function timeCard(t, t0, t1, o = {}) {
+    if (t < t0 || t > t1) return '';
+    const { text = 'MONTHS LATER…', months = ['JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV'], w = 1080, h = 1920, ink = '#2a1a10' } = o;
+    const R = Math.hypot(w, h) / 2 + 20;
+    const pin = clamp((t - t0) / 0.35), pout = clamp((t1 - t) / 0.35);
+    const r = R * Math.min(root.M.ease.inOutCubic(pin), root.M.ease.inOutCubic(pout));
+    const c = id('tc');
+    let s = `<clipPath id="${c}"><circle cx="${w / 2}" cy="${h / 2}" r="${f2(r)}"/></clipPath><g clip-path="url(#${c})">`;
+    s += `<rect width="${w}" height="${h}" fill="${linear([[0, '#1d5f63'], [1, '#2c2a6b']])}"/>`;
+    // drifting leaves on a slow swirl
+    for (let i = 0; i < 14; i++) {
+      const a = rand(i + 3) * 6.28 + (t - t0) * (0.6 + rand(i) * 0.6), rr = 260 + rand(i + 9) * 520;
+      const x = w / 2 + Math.cos(a) * rr, y = h / 2 + Math.sin(a) * rr * 1.3;
+      const col = ['#f2a33a', '#e0603a', '#f7d04a', '#9bcf53'][i % 4];
+      s += `<g transform="translate(${f2(x)} ${f2(y)}) rotate(${f2(a * 57 + i * 40)}) scale(${f2(0.8 + rand(i + 5) * 0.8)})">` +
+        shade('M0 -30 C18 -18 18 14 0 30 C-18 14 -18 -18 0 -30 Z', col, { depth: 6, light: 2, w: 3, ink }) + '</g>';
+    }
+    // calendar: pages flip (squash to the hinge, swap the month, open again)
+    const dur = t1 - t0, ph = clamp((t - t0 - 0.25) / Math.max(0.3, dur - 0.6)) * (months.length - 1);
+    const i0 = Math.min(months.length - 1, Math.floor(ph)), fr = ph - i0;
+    const flip = i0 < months.length - 1 ? Math.abs(Math.cos(fr * Math.PI)) : 1;
+    const mon = fr < 0.5 || i0 === months.length - 1 ? months[i0] : months[i0 + 1];
+    const cy = h / 2 - 120;
+    s += `<g transform="translate(${w / 2} ${cy})">` + shade('M-200 -150 H200 V190 H-200 Z', '#fff7e6', { depth: 14, light: 4, w: 7, ink }) +
+      shade('M-200 -150 H200 V-60 H-200 Z', '#e0603a', { depth: 8, light: 3, w: 7, ink }) +
+      `<circle cx="-110" cy="-150" r="14" fill="${ink}"/><circle cx="110" cy="-150" r="14" fill="${ink}"/>` +
+      `<g transform="translate(0 70) scale(1 ${f2(Math.max(0.05, flip))})"><text x="0" y="40" font-size="130" font-weight="700" fill="${ink}" text-anchor="middle">${mon}</text></g></g>`;
+    s += `<text x="${w / 2}" y="${cy + 420}" font-size="96" font-weight="700" fill="#fff4c8" text-anchor="middle" stroke="${ink}" stroke-width="14" paint-order="stroke" stroke-linejoin="round">${text}</text>`;
+    return s + '</g>' + (r < R - 2 ? `<circle cx="${w / 2}" cy="${h / 2}" r="${f2(r)}" fill="none" stroke="${ink}" stroke-width="16"/>` : '');
+  }
+  // Tall out-of-focus grass clumps for a foreground layer (draw inside a blurred wrapper).
+  function fgGrass(x, baseY, hgt, seed, t = 0, colr = '#5d9f3a') {
+    let s = '';
+    for (let k = 0; k < 7; k++) {
+      const bx = x + (rand(seed + k) - 0.5) * 120, hh = hgt * (0.6 + rand(seed + k * 3) * 0.5);
+      const lean = (rand(seed + k * 5) - 0.5) * 60 + noise(seed + k, t * 0.8) * 14;
+      const pts = bez([bx, baseY], [bx, baseY - hh * 0.4], [bx + lean * 0.5, baseY - hh * 0.8], [bx + lean, baseY - hh], 10);
+      s += taper(pts, 38, 4, mix(colr, k % 2 ? '#2f5a20' : '#8fcf5a', 0.3));
+    }
+    return s;
+  }
+  root.D = { begin, prebuilt, defs, rain, timeCard, fgGrass, blurFilter, radial, linear, mix, shadowOf, lightOf, shade, glintMark, bez, taperPath, taper, inkTaper,
     eye, sphere, rootlets, pathPts, cloud, wind, crumbs, shock };
 })(typeof window !== 'undefined' ? window : globalThis);
