@@ -19,7 +19,7 @@ were copied, and the subject is different.
 | facts      | facts.json (Wikipedia "Nitrogen fixation") | only source for claims |
 | assets     | everything drawn in SVG code | no raster assets |
 | style      | flat cel cartoon, warm ink outline, soft sky | genre convention, own palette |
-| sound      | voice + music + sfx | genre is narration-led |
+| sound      | voice + music + sfx; baby-voiced narrator | narration-led genre; baby voice requested by the user after delivery |
 | autonomy   | unattended | user is away; gates logged in ledger.md instead of stopping |
 | toolchain  | HTML/SVG + own frame-function timeline, Playwright, ffmpeg | every value is a function of frame number; no runtime deps |
 | sign-off   | end title "Clover: it feeds the next crop." + source line | recap + attribution |

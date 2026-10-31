@@ -289,7 +289,9 @@ def main():
     total = score['length_s']
     n = int(total * SR)
 
-    voice, vsr = sf.read(b / 'voice.wav', dtype='float64')
+    # a re-voiced narration (voicefx.py) replaces the raw one when the script asks for it
+    fx_on = json.loads((film / 'script.json').read_text()).get('voice_fx')
+    voice, vsr = sf.read(b / ('voice_fx.wav' if fx_on else 'voice.wav'), dtype='float64')
     assert vsr == SR
     voice = np.pad(voice, (0, max(0, n - len(voice))))[:n]
 

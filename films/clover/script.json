@@ -1,5 +1,6 @@
 {
   "voice": "en_US-lessac-high",
+  "voice_fx": "baby",
   "length_scale": 1.36,
   "gap_s": 0.5,
   "lead_in_s": 0.35,

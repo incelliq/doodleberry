@@ -29,6 +29,7 @@ scene.js (frame → SVG) ◀───────┘           score.json
 | `engine/timeline.js` | easing, closed-form springs, keyframes, seeded noise, blinks, squash-and-stretch pops, timing lookups. No clocks, no `Math.random`. |
 | `engine/render.mjs` | loads a film's `index.html`, calls `window.renderFrame(f)` for each frame across N parallel browser pages, pipes PNGs into ffmpeg. `--still 0,60,…` for stills, `--from/--to` for test renders, `--dump-cues` for the sound-cue list. |
 | `engine/voice.py` | Piper TTS per script line, faster-whisper word alignment mapped back onto the script's own words, writes `timing.json`. `--audition` renders every voice and reports words per minute. |
+| `engine/voicefx.py` | re-voices the narration with the WORLD vocoder: pitch, formant (vocal-tract length) and intonation range change, timing doesn't, so captions and picture stay in sync. Presets `child` and `baby`; set `"voice_fx": "baby"` (or `{"preset": "baby", "pitch": 2.0}`) in `script.json`. |
 | `engine/audio.py` | seeded synth score (pluck, bass, pads, shaker) on a beat grid from `score.json`, effects keyed to on-screen cues, music ducked under narration, loudness to −14 LUFS with true-peak limiting. Exports a music-only version. |
 | `engine/qa.py` | duration / size / fps, frozen-stretch detection, loudness and true peak of the encoded file, fact tracing, 2 fps sound-off sheet and 0.2 s dense sheets. |
 
@@ -38,12 +39,13 @@ A film directory holds `brief.md`, `facts.json`, `script.json`, `score.json`,
 ## Running it
 
 Requirements: Node with Playwright + Chromium, ffmpeg, Python 3.11+ with
-`piper-tts faster-whisper numpy scipy soundfile pyloudnorm`, and a Piper voice
+`piper-tts faster-whisper numpy scipy soundfile pyloudnorm pyworld` (pyworld also needs `setuptools<81`), and a Piper voice
 (`.onnx` + `.onnx.json`, e.g. from `rhasspy/piper-voices` on Hugging Face).
 
 ```bash
 F=films/clover
 python engine/voice.py $F --voices-dir ~/voices            # narration + timing.json
+python engine/voicefx.py $F                                # optional: re-voice (script.json "voice_fx")
 node   engine/render.mjs $F --dump-cues                    # sound cues from the scene
 python engine/audio.py $F                                  # score, sfx, mix
 node   engine/render.mjs $F --workers 4                    # picture
