@@ -10,8 +10,9 @@ scripts, layouts and scores.
 | 1 | "Why put fertilizer inside a banana stump?" | 48 s | cutaway soil plane, prop characters with faces, one-word captions, depth-of-field background, cel shading, fine roots |
 | 2 | "Why put straw under watermelons?" | 61 s | character comedy → time-skip card → visible consequence → expert explanation; several voices; weather as the result; blurred foreground layer |
 | 3 | "Why don't farmers chase ducks away in rice fields?" | 57 s | waterline split composition, locked-off acting-driven staging, villain/victim/hero structure, pose-to-pose snaps, persistent damage, off-screen entrance, dense loud mix | 
+| 4 | "This New Farming Machine Kills Weeds With Lasers Without Hurting Crops" | 72 s | skit-then-explainer two-act format, machine-POV HUD shot, motion burst as punctuation, dramatic-irony gag, one-word captions placed on the speaker | 
 
-See `ref3-rice-ducks.md` for the full study of ref 3; refs 1–2 are summarised below.
+See `ref3-rice-ducks.md` and `ref4-laser-weeder.md` for the full studies of refs 3 and 4; refs 1–2 are summarised below.
 
 ## Measurements across the three
 
