@@ -88,7 +88,7 @@
   function mound(w, h, color = '#8f6040') {
     const d = `M${-w} 6 C${-w * 0.72} ${-h * 0.8} ${-w * 0.28} ${-h} 0 ${-h} C${w * 0.3} ${-h} ${w * 0.7} ${-h * 0.8} ${w} 6 Z`;
     let s = D.shade(d, color, { depth: 7, light: 3, w: 4.5, ink: C.ink });
-    [[-w * 0.85, 2, 9], [w * 0.8, 3, 7], [-w * 0.35, -h * 0.55, 5]].forEach(([cx, cy, r]) => {
+    [[-w * 0.85, 2, 9], [w * 0.8, 3, 7]].forEach(([cx, cy, r]) => {
       s += G(tf(cx, cy, 0, 1), D.shade(ellD(r, r * 0.75), D.mix(color, '#000', 0.1), { depth: 3, light: 1.5, w: 3, ink: C.ink }));
     });
     return s;
@@ -199,7 +199,7 @@
       const R = r * base * pulse * (1 - fade * 0.6);
       out += D.sphere(nx, ny, R, D.mix(C.nodule, '#9a7a55', fade), { w: 4 });
     });
-    return G(tf(x, GROUND + 18, 0, ROOT_SX, ROOT_SY), out, `opacity="${f2(1 - 0.55 * (o.gone || 0))}"`);
+    return G(tf(x, GROUND + 18, 0, ROOT_SX, ROOT_SY), out, `opacity="${f2(1 - (o.gone || 0))}"`);
   }
   const NODULE_WORLD = () => [CLOVER_X + NODULES[0][0] * ROOT_SX, GROUND + 18 + NODULES[0][1] * ROOT_SY];
   const CORN_ROOTS = ['M0 0 C-8 50 -30 90 -48 140', 'M0 0 C6 60 4 110 10 160', 'M0 0 C14 46 36 86 56 130', 'M-4 30 C-40 50 -64 70 -84 96', 'M4 34 C36 52 60 72 82 100'];
@@ -224,7 +224,7 @@
     const t = o.t, g = o.grow, seed = o.seed || 2;
     const Hh = lerp(150, 560, g);
     const w = lerp(28, 42, g);
-    const leafC = D.mix('#b9c74a', '#4e9d31', o.health), leafHi = D.mix('#c4d97a', '#6dbb47', o.health);
+    const leafC = D.mix('#a8cc34', '#4e9d31', o.health), leafHi = D.mix('#c0dd52', '#6dbb47', o.health);
     const wnd = o.wind || 0;
     const sway = noise(seed, t * 0.5) * 2.5 + (o.flinch || 0) + wnd * 0.45;
     let out = o.face === false ? '' : mound(lerp(40, 58, g), lerp(16, 22, g));
@@ -245,19 +245,26 @@
       const hy = -Hh * k, ww = lerp(w / 2, w * 0.2, k) * 0.95;
       out += `<path d="M${f2(-ww)} ${f2(hy)} Q0 ${f2(hy + 6)} ${f2(ww)} ${f2(hy)}" fill="none" stroke="${D.shadowOf(leafC, 1.3)}" stroke-width="3" opacity="0.7"/>`;
     }
-    // leaves: shaded blades with a midrib, fluttering with a lag up the stalk
+    // leaves: filled tapered blades (wide near the stalk, pointed tip) with the midrib drawn inside,
+    // fluttering with a lag up the stalk; attach heights keep clear of the face
     const n = 6;
+    const HY = [0.6, 0.72, 0.84, 0.12, 0.24, 0.66];
+    const profile = u => Math.pow(Math.sin(Math.PI * (0.12 + 0.88 * u)), 0.75) * (1 - u * 0.15);
     for (let i = 0; i < n; i++) {
       const app = i < 3 ? 1 : clamp((g - (i - 3) * 0.2) / 0.22);
       if (app <= 0) continue;
       const dir = i % 2 ? 1 : -1;
-      const hy = -Hh * (i < 3 ? 0.55 + i * 0.12 : 0.18 + (i - 3) * 0.17);
+      const hy = -Hh * HY[i];
       const Ln = (i < 3 ? lerp(118 - i * 14, 150, g) : 150 + i * 8) * ease.outBack(app);
       const droop = lerp(0.05, -0.15, o.health) + noise(seed + i, t * 0.8) * 0.06 + (1 - o.health) * 0.35 + dir * wnd * 0.012 * (1 + i * 0.2);
-      const d = `M0 0 Q${dir * Ln * 0.55} ${-Ln * (0.5 - droop)} ${dir * Ln} ${Ln * droop} Q${dir * Ln * 0.5} ${-Ln * (0.32 - droop)} 0 -16 Z`;
-      const rib = D.bez([0, -8], [dir * Ln * 0.3, -Ln * (0.46 - droop)], [dir * Ln * 0.7, -Ln * (0.3 - droop)], [dir * Ln * 0.94, Ln * droop], 12);
-      out += G(tf(dir * w * 0.3, hy, 0, 1), D.shade(d, i % 2 ? leafC : leafHi, { dir: [0.2 * dir, 1], depth: 9, light: 3, w: 5.5, ink: C.ink }) +
-        D.taper(rib, 4, 0.8, D.lightOf(leafHi), 'opacity="0.85"'));
+      const arch = i === 3 || i === 4 ? 0.32 : 0.5;
+      const cl = D.bez([0, 0], [dir * Ln * 0.35, -Ln * (arch - droop)], [dir * Ln * 0.75, -Ln * (arch * 0.6 - droop)], [dir * Ln, Ln * droop], 18);
+      const Wd = lerp(20, 30, g) * (0.8 + 0.2 * app);
+      const blade = D.taperPath(cl, 0, Wd, profile);
+      const rib = cl.slice(1, -2);
+      const fill = i % 2 ? leafC : leafHi;
+      out += G(tf(dir * w * 0.3, hy, 0, 1), D.shade(blade, fill, { dir: [0.15 * dir, 1], depth: Wd * 0.28, light: 3, w: 4.5, ink: C.ink }) +
+        D.taper(rib, 3.2, 0.6, D.lightOf(fill, 1.2), 'opacity="0.9"'));
     }
     // cob
     if ((o.cob || 0) > 0) {
@@ -272,7 +279,7 @@
         D.shade('M18 -10 Q34 -64 14 -112 Q10 -56 -2 -6 Z', '#5aa83a', { depth: 6, w: 5, ink: C.ink }));
     }
     if (o.face !== false) {
-      out += face({ x: 0, y: -Hh * lerp(0.55, 0.42, g), s: lerp(0.78, 0.95, g), mood: o.mood, bl: o.bl || 0, lookX: o.lookX || 0, lookY: o.lookY || 0, talk: o.talk || 0, sep: 19, lid: leafC });
+      out += face({ x: 0, y: -Hh * lerp(0.42, 0.42, g), s: lerp(0.95, 1.25, g), mood: o.mood, bl: o.bl || 0, lookX: o.lookX || 0, lookY: o.lookY || 0, talk: o.talk || 0, sep: 19, lid: leafC });
     }
     const sq = o.sq || [1, 1];
     return G(`translate(${f2(x)} ${GROUND + 8}) rotate(${f2(sway)}) scale(${f2(o.s * sq[0])} ${f2(o.s * sq[1])})`, out);
@@ -283,7 +290,7 @@
     const a = 22;
     let out = `<rect x="${-a * 0.8}" y="-5" width="${a * 1.6}" height="10" fill="${D.shadowOf(C.nitro)}"/>`;
     out += D.sphere(-a * 0.8, 0, a, C.nitro, { w: 5 }) + D.sphere(a * 0.8, 0, a, C.nitro, { w: 5 });
-    out += `<text x="${-a * 0.8}" y="9" font-size="24" font-weight="700" fill="#fff" text-anchor="middle">N</text><text x="${a * 0.8}" y="9" font-size="24" font-weight="700" fill="#fff" text-anchor="middle">N</text>`;
+    for (const ax of [-a * 0.8, a * 0.8]) out += `<text x="${f2(ax)}" y="9" font-size="24" font-weight="700" fill="#fff" text-anchor="middle" transform="rotate(${f2(-rot)} ${f2(ax)} 0)">N</text>`;
     if (o.tag) out += G(`rotate(${f2(-rot)})`, tag(0, -54, 'N₂', C.nitro, o.tag));
     return G(tf(x, y, rot, s), out, o.op !== undefined ? `opacity="${o.op}"` : '');
   }
@@ -345,12 +352,14 @@
     return `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="0.55" stop-color="${mid}"/><stop offset="1" stop-color="${bot}"/></linearGradient>` +
       `<radialGradient id="glow"><stop offset="0" stop-color="${C.ammonia}" stop-opacity="0.9"/><stop offset="1" stop-color="${C.ammonia}" stop-opacity="0"/></radialGradient>` +
       `<radialGradient id="spot"><stop offset="0.55" stop-color="#fff" stop-opacity="0.16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>` +
+      `<linearGradient id="soilband" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2414" stop-opacity="0"/><stop offset="0.5" stop-color="#3b2414" stop-opacity="0.22"/><stop offset="1" stop-color="#3b2414" stop-opacity="0"/></linearGradient>` +
+      `<radialGradient id="cshadow"><stop offset="0" stop-color="#1f3412" stop-opacity="1"/><stop offset="1" stop-color="#1f3412" stop-opacity="0"/></radialGradient>` +
       `<clipPath id="above"><rect x="-2000" y="-3000" width="5000" height="${3000 + GROUND + 4}"/></clipPath>` +
       `</defs><rect x="0" y="0" width="${W}" height="${H}" fill="url(#sky)"/>` + stars;
   }
-  const cloud = (x, y, s, seed) => D.cloud(x, y, s, seed);
+  const cloud = (x, y, s, seed, dusk = 0) => D.cloud(x, y, s, seed, D.mix('#ffffff', '#c9b6e6', dusk), D.mix('#dceef8', '#9f86c8', dusk));
   // far backdrop (drawn blurred, with parallax): hills, a tree line, the barn
-  function hills(dusk) {
+  function hills(dusk, t = 0) {
     const tint = c => col(c, '#7d6a9e', dusk * 0.45);
     let out = `<path d="M-900 ${GROUND + 700} L-900 880 C-500 800 -160 860 180 840 C480 820 700 740 960 790 C1220 840 1500 800 2000 850 L2000 ${GROUND + 700} Z" fill="${tint('#c4e3a0')}"/>`;
     out += `<path d="M-900 ${GROUND + 700} L-900 960 C-400 910 60 980 380 950 C660 922 940 890 1220 940 C1500 990 1800 950 2000 960 L2000 ${GROUND + 700} Z" fill="${tint('#a6d27a')}"/>`;
@@ -358,7 +367,7 @@
     for (let i = 0; i < 16; i++) {
       const tx = -700 + i * 170 + rand(i + 5) * 60, ty = 960 + rand(i + 9) * 20, ts = 0.8 + rand(i + 13) * 0.6;
       const c0 = tint(D.mix('#5ea840', '#7cc456', rand(i + 2)));
-      out += G(tf(tx, ty, 0, ts), `<rect x="-6" y="-46" width="12" height="46" fill="${tint('#7a5236')}"/>` +
+      out += G(tf(tx, ty, D.wind(t, tx) * 0.5 + noise(i + 40, t * 0.6) * 1.2, ts), `<rect x="-6" y="-46" width="12" height="46" fill="${tint('#7a5236')}"/>` +
         G(tf(-24, -66, 0, 1), D.shade(ellD(38, 34), c0, { depth: 12, light: 5, w: 0 })) +
         G(tf(22, -72, 0, 1), D.shade(ellD(42, 38), D.mix(c0, '#ffffff', 0.06), { depth: 12, light: 5, w: 0 })) +
         G(tf(0, -100, 0, 1), D.shade(ellD(36, 32), D.mix(c0, '#ffffff', 0.12), { depth: 10, light: 5, w: 0 })));
@@ -379,14 +388,29 @@
   // static soil detail, built once
   const SOIL_DETAIL = D.prebuilt('soil', () => {
     let s = '';
+    // strata: each band a little darker going down, with a wavy boundary line
+    [[GROUND + 330, '#6a4329'], [GROUND + 560, '#5e3b24'], [GROUND + 780, '#52331f']].forEach(([y, c], k) => {
+      let d = `M-800 ${y}`;
+      for (let x = -800; x <= 1900; x += 110) d += ` Q${x + 55} ${y - 18 + rand(x + k * 7) * 36} ${x + 110} ${y + (rand(x + k) - 0.5) * 10}`;
+      s += `<path d="${d} L1900 ${GROUND + 1600} L-800 ${GROUND + 1600} Z" fill="${c}"/>`;
+      s += `<path d="${d}" fill="none" stroke="#3b2414" stroke-width="3" opacity="0.35"/>`;
+    });
+    for (let i = 0; i < 60; i++) {
+      const x = -300 + rand(i + 1200) * 1700, y = GROUND + 120 + rand(i + 1300) * 800;
+      s += `<path d="M${f2(x)} ${f2(y)} q${f2(4 + rand(i) * 8)} ${f2(-3 + rand(i + 1) * 6)} ${f2(10 + rand(i + 2) * 12)} ${f2(-2 + rand(i + 3) * 4)}" fill="none" stroke="#2f1c10" stroke-width="3" stroke-linecap="round" opacity="0.4"/>`;
+    }
+    // a big buried stone with a cast shadow, low in the frame
+    s += `<ellipse cx="170" cy="${GROUND + 640}" rx="70" ry="22" fill="#2b190d" opacity="0.35" transform="translate(16 18)"/>`;
+    s += G(tf(170, GROUND + 630, -8, 1), D.shade(ellD(70, 40), '#8f8a80', { depth: 16, light: 5, w: 4, ink: '#3b2414' }));
     // soft darker bands in the subsoil
     for (let i = 0; i < 4; i++) {
       const y = GROUND + 200 + i * 160;
-      s += `<path d="M-800 ${y} C-400 ${y - 30} -100 ${y + 26} 300 ${y} C700 ${y - 28} 1000 ${y + 24} 1900 ${y - 6} L1900 ${y + 40} L-800 ${y + 40} Z" fill="#4a2e1c" opacity="0.18" filter="${'FILTER'}"/>`;
+      s += `<path d="M-800 ${y} C-400 ${y - 30} -100 ${y + 26} 300 ${y} C700 ${y - 28} 1000 ${y + 24} 1900 ${y - 6} L1900 ${y + 70} L-800 ${y + 70} Z" fill="url(#soilband)"/>`;
     }
     for (let i = 0; i < 46; i++) {
       const x = -300 + rand(i + 3) * 1700, y = GROUND + 110 + rand(i + 50) * 820, r = 6 + rand(i + 99) * 12;
-      s += G(tf(x, y, rand(i) * 40 - 20, 1), D.shade(ellD(r * 1.4, r), i % 3 ? '#a37b58' : '#7b5134', { depth: r * 0.45, light: 2, w: 3, ink: '#4a2e1c' }));
+      const sc = ['#a37b58', '#8e8a82', '#b88a4a', '#9a5a3a', '#7b5134'][i % 5];
+      s += G(tf(x, y, rand(i) * 80 - 40, 0.7 + rand(i + 7) * 0.7), D.shade(ellD(r * (1.1 + rand(i + 3) * 0.6), r), sc, { depth: r * 0.45, light: 2.5, w: 3, ink: '#3b2414' }));
     }
     for (let i = 0; i < 160; i++) {
       const x = -400 + rand(i + 500) * 1900, y = GROUND + 30 + rand(i + 600) * 900;
@@ -406,13 +430,13 @@
     for (let x = 1900; x >= -800; x -= 90) band += ` Q${x - 45} ${GROUND + 82 + rand(x) * 14} ${x - 90} ${GROUND + 70}`;
     out += `<path d="${band} Z" fill="${D.linear([[0, '#b98a5e'], [1, '#9c6d47']])}"/>`;
     out += `<path d="${band.replace(/^M-800 \S+ L1900 \S+ /, 'M1900 ' + (GROUND + 70) + ' ').replace(/^M1900 \S+ L/, 'M')}" fill="none" stroke="#4a2e1c" stroke-width="3" opacity="0.35"/>`;
-    out += SOIL_DETAIL.replace(/FILTER/g, D.blurFilter(8));
+    out += SOIL_DETAIL;
     // grass: tapered blades in three greens, leaning with the wind
     const gc = ['#4f9a33', '#6bb544', '#8ccf5c'].map(c => col(c, '#5a7a52', dusk * 0.4));
     out += `<rect x="-800" y="${GROUND - 2}" width="2700" height="18" fill="${gc[1]}"/>`;
     let blades = '';
     for (let x = -800; x <= 1900; x += 30) {
-      const lean = D.wind(t, x) * 1.6;
+      const lean = D.wind(t, x) * 3.4;
       for (let k = 0; k < 3; k++) {
         const bx = x + k * 9 + rand(x + k) * 6, h = 20 + rand(x * 3 + k) * 18;
         const tipx = bx + (k - 1) * 6 + lean * (h / 30) + noise(x * 0.1 + k, t * 1.2) * 2;
@@ -423,32 +447,32 @@
     out += `<path d="M-800 ${GROUND + 15} L1900 ${GROUND + 15}" stroke="${C.ink}" stroke-width="5"/>`;
     return out;
   }
-  function shadow(x, w, op = 0.22) { return `<ellipse cx="${f2(x)}" cy="${GROUND + 6}" rx="${f2(w)}" ry="10" fill="#1f3412" opacity="${op}" filter="${D.blurFilter(3)}"/>`; }
+  function shadow(x, w, op = 0.22) { return `<ellipse cx="${f2(x)}" cy="${GROUND + 6}" rx="${f2(w * 1.2)}" ry="14" fill="url(#cshadow)" opacity="${f2(op * 1.6)}"/>`; }
 
   // ---------- camera ----------
   function camera(t) {
     const k = (cx, cy, z) => [cx, cy, z];
     const cam = keys(t, [
       [0, k(345, 1060, 1.5)],
-      [at('hook', 'fields') - 0.1, k(350, 1062, 1.47), 'linear'],
+      [at('hook', 'fields') - 0.1, k(345, 1060, 1.5), 'linear'],
       [at('hook', 'fields') + 0.55, k(500, 1010, 1.22), 'outCubic'],
-      [L.need.start - 0.1, k(505, 1010, 1.22), 'linear'],
+      [L.need.start - 0.1, k(500, 1010, 1.22), 'linear'],
       [L.need.start + 0.6, k(560, 1000, 1.22), 'inOutCubic'],
       [at('need', 'the') + 0.4, k(560, 985, 1.22), 'inOutCubic'],
       [at('need', 'but') + 0.1, k(830, 900, 1.6), 'inOutCubic'],
-      [L.help.start - 0.55, k(832, 902, 1.61), 'linear'],
+      [L.help.start - 0.55, k(830, 900, 1.6), 'linear'],
       [L.help.start + 0.15, k(300, 1130, 1.6), 'inOutCubic'],
-      [L.nodules.start, k(310, 1135, 1.6), 'linear'],
+      [L.nodules.start, k(300, 1130, 1.6), 'linear'],
       [L.nodules.start + 0.6, k(453, 1085, 1.65), 'inOutCubic'],
-      [L.feed.start + 0.05, k(455, 1086, 1.66), 'linear'],
+      [L.feed.start + 0.05, k(453, 1085, 1.65), 'linear'],
       [L.feed.start + 0.4, k(420, 990, 1.3), 'inOutCubic'],
       [L.release.start, k(470, 1000, 1.25), 'inOutCubic'],
-      [L.next.start - 0.3, k(480, 1005, 1.24), 'linear'],
+      [L.next.start - 0.3, k(470, 1000, 1.25), 'linear'],
       [L.next.start + 0.35, k(660, 960, 1.35), 'inOutCubic'],
-      [at('next', 'next') - 0.05, k(660, 958, 1.35), 'linear'],
+      [at('next', 'next') - 0.05, k(660, 960, 1.35), 'linear'],
       [at('next', 'next') + 0.7, k(600, 830, 0.85), 'outCubic'],
       [L.recap.start + 0.5, k(540, 596, 0.95), 'inOutCubic'],
-      [END, k(540, 580, 0.98), 'linear'],
+      [END, k(540, 596, 0.95), 'linear'],
     ]);
     return { cx: cam[0], cy: cam[1], z: cam[2] };
   }
@@ -510,22 +534,23 @@
     const pw = Math.min(800, Math.min(est, 730) + 70), ph = size * 1.22;
     const fill = isKey ? '#ffe45c' : C.white;
     return G(`translate(495 ${f2(y)}) scale(${f2(Math.max(0.01, p.sx))} ${f2(Math.max(0.01, p.sy))})`,
-      `<rect x="${f2(-pw / 2)}" y="${f2(-size * 0.92)}" width="${f2(pw)}" height="${f2(ph)}" rx="${f2(ph / 2)}" fill="#3d2616" opacity="0.5"/>` +
+      `<rect x="${f2(-pw / 2)}" y="${f2(-size * 0.92)}" width="${f2(pw)}" height="${f2(ph)}" rx="${f2(ph / 2)}" fill="#3d2616" opacity="0.88"/>` +
       `<text x="6" y="8" font-size="${f2(size)}" font-weight="700" text-anchor="middle" fill="${C.ink}" opacity="0.45" stroke="${C.ink}" stroke-width="16" stroke-linejoin="round">${text}</text>` +
       `<text x="0" y="0" font-size="${f2(size)}" font-weight="700" text-anchor="middle" fill="${fill}" stroke="${C.ink}" stroke-width="16" stroke-linejoin="round" paint-order="stroke">${text}</text>`);
   }
 
   // ---------- lens (window into the nodule) ----------
-  const LENS = { x: 615, y: 1010, r: 290 };
-  const LENS_BIG = { x: 515, y: 900, r: 400 };
+  const LENS = { x: 588, y: 1010, r: 285 };
+  const LENS_BIG = { x: 488, y: 900, r: 380 };
   const lensZoom = t => keys(t, [[L.fix.start - 0.15, 0], [L.fix.start + 0.35, 1, 'inOutCubic'], [L.feed.start - 1.0, 1], [L.feed.start - 0.5, 0, 'inOutCubic']]);
   const CELLS = Array.from({ length: 44 }, (_, i) => [(rand(i + 7) - 0.5) * 1100, (rand(i + 61) - 0.5) * 1100, 60 + rand(i + 17) * 50]);
   const BUGS = [[-170, -120, 18, 0.8], [170, -150, -24, 0.75], [-210, 120, 12, 0.7], [200, 140, -8, 0.78], [0, 260, 4, 0.7]];
   function lensInner(t, R, ce = 1) {
-    let out = `<rect x="${-R * 1.6}" y="${-R * 1.6}" width="${R * 3.2}" height="${R * 3.2}" fill="#f9d6cd"/>`;
+    let out = `<rect x="${-R * 1.6}" y="${-R * 1.6}" width="${R * 3.2}" height="${R * 3.2}" fill="#eaa392"/>`;
+    const cellFill = D.radial([[0, '#fde9df'], [0.7, '#f8c9b8'], [1, '#efab98']], { cx: 0.42, cy: 0.38, r: 0.7 });
     for (const [cx, cy, r] of CELLS) {
       const dx = noise(cx, t * 0.3) * 6, dy = noise(cy, t * 0.3) * 6;
-      out += circle(cx + dx, cy + dy, r, '#fbe3dc', 6, '#eaaea3');
+      out += circle(cx + dx, cy + dy, r, cellFill, 7, '#cf8572') + circle(cx + dx + r * 0.22, cy + dy - r * 0.12, r * 0.16, '#e3907d', 0, 'none', 'opacity="0.7"');
     }
     const fixT = at('fix', 'pull'), turnT = at('fix', 'turn'), amT = at('fix', 'ammonia');
     const rhT = at('nodules', 'rhizobia'), liveT = at('nodules', 'live');
@@ -557,7 +582,7 @@
       const p = inv(t0, t0 + 1.6, t);
       if (p <= 0) return;
       const sp = pop(t, t0, 0.4);
-      const x = 20 + side * (30 + p * 120), y = -80 - p * 260;
+      const x = 20 + side * (30 + p * 100), y = -80 - p * 170;
       out += nh3(x, y, sp.s * 1.4, { tag: tg ? { t, at: amT } : null });
     });
     return out;
@@ -590,8 +615,10 @@
     const rr = r * rimPulse;
     out += `<defs><clipPath id="lensclip"><circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(rr)}"/></clipPath></defs>`;
     out += `<g clip-path="url(#lensclip)">${G(tf(cx, cy, 0, (0.6 + 0.4 * ce) * (LR / 370) * (1 + 0.1 * inv(L.nodules.start + 0.6, L.fix.start, t))), lensInner(t, 370, ce))}</g>`;
-    out += circle(cx, cy, rr, 'none', 22, C.ink) + circle(cx, cy, rr, 'none', 10, '#ffffff') + circle(cx, cy, rr - 12, 'none', 4, '#e7c3bb');
-    out += `<path d="M${f2(cx - rr * 0.62)} ${f2(cy - rr * 0.5)} A${f2(rr * 0.8)} ${f2(rr * 0.8)} 0 0 1 ${f2(cx - rr * 0.1)} ${f2(cy - rr * 0.8)}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity="0.55"/>`;
+    out += circle(cx, cy, rr - 16, 'none', 16, C.ink, 'opacity="0.16"');
+    out += circle(cx, cy, rr, 'none', 24, C.ink) + circle(cx, cy, rr, 'none', 12, D.linear([[0, '#ffffff'], [1, '#bcd3e6']], { x1: 0.2, y1: 0, x2: 0.8, y2: 1 })) + circle(cx, cy, rr - 7, 'none', 2.5, '#8fa8bf', 'opacity="0.7"');
+    out += `<path d="M${f2(cx - rr * 0.62)} ${f2(cy - rr * 0.5)} A${f2(rr * 0.8)} ${f2(rr * 0.8)} 0 0 1 ${f2(cx - rr * 0.1)} ${f2(cy - rr * 0.8)}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity="0.55"/>` +
+      `<circle cx="${f2(cx + rr * 0.55)}" cy="${f2(cy + rr * 0.52)}" r="${f2(rr * 0.045)}" fill="#fff" opacity="0.6"/>`;
     return out;
   }
 
@@ -620,9 +647,10 @@
     const total = widths.reduce((a, b) => a + b, 0);
     let x = -total / 2;
     words.forEach((w, i) => {
-      const p = pop(t, w.start, 0.35);
+      const ws = t < w.start - 0.02 ? 0 : 0.6 + 0.4 * spring(t - w.start + 0.02, { freq: 3, damping: 0.5 });
+      const p = { s: ws, sx: ws, sy: ws };
       const cx = x + widths[i] / 2;
-      if (p.s > 0.01) out += G(tf(cx, 68 + (1 - Math.min(1, p.s)) * 20, 0, p.sx, p.sy),
+      if (p.s > 0.01) out += G(tf(cx, 68, 0, p.sx, p.sy),
         `<text x="0" y="0" font-size="62" font-weight="600" fill="${C.ink}" text-anchor="middle">${line[i]}${i === line.length - 1 ? '.' : ''}</text>`);
       x += widths[i];
     });
@@ -642,7 +670,7 @@
 
   // ---------- the film ----------
   function frame(f) {
-    D.begin();
+    D.begin(f);
     const t = f / FPS;
     const cam = camera(t);
     const dusk = keys(t, [[L.release.start - 0.1, 0], [L.release.start + 0.6, 1, 'inOutQuad'], [L.next.start - 0.7, 1], [L.next.start, 0, 'inOutQuad']]);
@@ -679,14 +707,15 @@
 
     // --- world ---
     // backdrop layers: sky (sun, soft clouds), far hills and trees, the hedge; each with its own parallax
-    const sunY = keys(t, [[0, 300], [L.release.start, 300], [L.release.start + 0.8, 1060, 'inQuad'], [L.next.start - 0.8, 1060], [L.next.start, 300, 'outCubic']]);
-    let skyL = `<circle cx="190" cy="${f2(sunY)}" r="150" fill="${D.radial([[0, '#fff3b0', 0.7], [1, '#fff3b0', 0]], { cx: 0.5, cy: 0.5, r: 0.5 })}"/>` +
-      D.sphere(190, sunY, 64, '#ffd75e', { w: 0, spec: false });
+    const sunY = keys(t, [[0, 290], [L.release.start - 0.3, 290], [L.release.start + 0.4, 1080, 'inQuad'], [L.next.start - 0.45, 1080], [L.next.start + 0.4, 290, 'outCubic']]);
+    let sunL = `<circle cx="880" cy="${f2(sunY)}" r="150" fill="${D.radial([[0, '#fff3b0', 0.7], [1, '#fff3b0', 0]], { cx: 0.5, cy: 0.5, r: 0.5 })}"/>` +
+      D.sphere(880, sunY, 64, '#ffd75e', { w: 0, spec: false });
+    let skyL = '';
     [[120, 220, 1.0, 1], [700, 160, 0.8, 2], [430, 420, 0.65, 3], [980, 380, 0.75, 4]].forEach(([x, y, s, sd]) => {
-      const xx = ((x + t * 9 * s + 300) % 1500) - 300;
-      skyL += cloud(xx, y, s, sd);
+      const xx = ((x + t * 16 * s + 300) % 1500) - 300;
+      skyL += cloud(xx, y, s, sd, dusk);
     });
-    const farL = hills(dusk), hedgeL = hedge(dusk);
+    const farL = hills(dusk, t), hedgeL = hedge(dusk);
     let world = ground(t, dusk);
 
     // underground spotlight on clover roots
@@ -698,7 +727,7 @@
     }
 
     // roots (clover's fade after it dies), corn roots
-    world += roots(CLOVER_X, { t, nodulePop: at('nodules', 'bumps'), pulse: at('nodules', 'bumps'), fade: inv(dieT, dieT + 1, t), gone: inv(relT, relT + 0.8, t) });
+    if (t < L.recap.start + 0.5) world += roots(CLOVER_X, { t, nodulePop: at('nodules', 'bumps'), pulse: at('nodules', 'bumps'), fade: inv(dieT, dieT + 1, t), gone: 0.55 * inv(relT, relT + 0.8, t) + 0.45 * inv(L.next.start, L.recap.start + 0.4, t) });
     if (t > L.need.start) world += cornRoots(CORN_X, cg);
 
     {
@@ -735,7 +764,7 @@
         if (p <= 0 || p >= 1) continue;
         const sx = nx + NODULES[i % NODULES.length][0] * 0.0 + (i % 3 - 1) * 20, sy = ny + (i % 2) * 40;
         const x = lerp(sx, CLOVER_X, ease.inOutQuad(p)), y = lerp(sy, GROUND - 160, ease.inQuad(p));
-        world += nDot(x, y, 0.42, 1 - Math.max(0, p - 0.8) * 5);
+        world += nDot(x, y, 0.42, 1 - inv(0.55, 0.85, p));
       }
     }
 
@@ -744,7 +773,7 @@
     let bgPlants = '';
     BG.forEach((x, i) => {
       const p = pop(t, fieldsT + i * 0.06, 0.5);
-      if (p.s > 0.01 && sinkP < 1) bgPlants += G(tf(x, 0, 0, 1), clover(0, { t, s: 0.42 * p.s, seed: 10 + i, wilt, wind: D.wind(t, x), sink: sinkP * 120, face: false, mood: 'happy', sq: [p.sx / Math.max(p.s, 0.01), p.sy / Math.max(p.s, 0.01)] }));
+      if (p.s > 0.01 && sinkP < 1) bgPlants += G(tf(x, 0, (rand(i + 71) - 0.5) * 8, 1), clover(0, { t, s: 0.42 * (0.82 + rand(i + 61) * 0.36) * p.s, seed: 10 + i, wilt, wind: D.wind(t, x), sink: sinkP * 120, face: false, mood: 'happy', sq: [p.sx / Math.max(p.s, 0.01), p.sy / Math.max(p.s, 0.01)] }));
     });
     [150, 480, 900].forEach((x, i) => {
       const g = spring(t - (growT + 0.15 + i * 0.08), { freq: 1.4, damping: 0.5 }) * (t > growT + 0.15 + i * 0.08 ? 1 : 0);
@@ -764,7 +793,7 @@
     // the old clover's remains glow on "Clover." under the end card
     {
       const g = pop(t, L.recap.start, 0.6).s * (1 - 0.5 * inv(L.recap.start + 0.8, L.recap.start + 1.6, t));
-      if (g > 0.01) world += `<ellipse cx="${CLOVER_X}" cy="${GROUND + 110}" rx="${f2(150 * g)}" ry="${f2(80 * g)}" fill="url(#glow)" opacity="0.7"/>`;
+      void g;
     }
 
     // hero corn
@@ -842,11 +871,12 @@
     const layerT = p => `translate(${W / 2} ${H / 2}) scale(${f2(1 + (cam.z - 1) * p)}) translate(${f2(-(540 + (cam.cx - 540) * p))} ${f2(-(960 + (cam.cy - 960) * p))})`;
     const dof = 1 + Math.max(0, cam.z - 1) * 1.4;
     let svg = sky(t, dusk);
-    svg += `<g transform="${layerT(0.15)}">${skyL}</g>`;
-    svg += `<g transform="${layerT(0.45)}" filter="${D.blurFilter(Math.round(4.5 * dof * 2) / 2)}">${farL}</g>`;
-    svg += `<g transform="${layerT(0.75)}" filter="${D.blurFilter(Math.round(2 * dof * 2) / 2)}">${hedgeL}</g>`;
+    svg += `<g transform="${layerT(0.15)}">${sunL}</g>`;
+    svg += `<g filter="${D.blurFilter(3.5)}"><g transform="${layerT(0.15)}">${skyL}</g></g>`;
+    svg += `<g filter="${D.blurFilter(5 * dof)}"><g transform="${layerT(0.45)}">${farL}</g></g>`;
+    svg += `<g filter="${D.blurFilter(2.4 * dof)}"><g transform="${layerT(0.75)}">${hedgeL}</g></g>`;
     svg += `<g transform="${camT}">${world}</g>`;
-    if (dusk > 0.01) svg += `<rect width="${W}" height="${H}" fill="#3b2a6b" opacity="${f2(dusk * 0.16)}" style="mix-blend-mode:multiply"/>`;
+    if (dusk > 0.01) svg += `<rect width="${W}" height="${H}" fill="#5a4a8a" opacity="${f2(dusk * 0.38)}" style="mix-blend-mode:multiply"/>`;
     if (glowLayer) svg += `<g transform="${camT}">${glowLayer}</g>`;
     svg += lens(t, cam);
     svg += t < L.recap.start - 0.05 ? captions(t) : '';

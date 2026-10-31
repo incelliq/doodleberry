@@ -22,7 +22,10 @@
 
   // per-frame ids restart each frame; art built once (cached) uses its own namespace so ids never collide
   let ns = 'f';
-  function begin() { uid = 0; filters.clear(); gradients.clear(); }
+  // frame tag goes into filter ids: the browser caches a filter's result by id, so an id reused
+  // across frames freezes the filtered layer until the id changes, then it jumps
+  let ftag = '';
+  function begin(tag = '') { uid = 0; ftag = String(tag); filters.clear(); gradients.clear(); }
   const id = p => `${ns}${p}${++uid}`;
   function prebuilt(name, fn) {
     const [pns, puid] = [ns, uid];
@@ -32,7 +35,7 @@
 
   // ---------- defs ----------
   function blurFilter(sd) {
-    const k = `blur${Math.round(sd * 10)}`;
+    const k = `blur${ftag}_${Math.round(sd * 100)}`;
     filters.add(`<filter id="${k}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${f2(sd)}"/></filter>`);
     return `url(#${k})`;
   }
@@ -182,15 +185,17 @@
   }
 
   // Soft, slightly blurred cloud (blob union with a darker belly)
-  function cloud(x, y, s, seed = 1) {
+  function cloud(x, y, s, seed = 1, bodyCol = '#ffffff', bellyCol = '#dceef8') {
     const blobs = [[0, 0, 60], [-66, 16, 44], [64, 14, 48], [-26, -30, 44], [30, -34, 40], [100, 26, 30], [-100, 28, 28]];
     let body = '', belly = '';
     blobs.forEach(([bx, by, r], i) => {
       const rr = r * (0.9 + rand(seed + i) * 0.25);
-      body += `<circle cx="${bx}" cy="${by}" r="${f2(rr)}" fill="#ffffff"/>`;
-      belly += `<circle cx="${bx}" cy="${by + rr * 0.35}" r="${f2(rr * 0.8)}" fill="#dceef8"/>`;
+      body += `<circle cx="${bx}" cy="${by}" r="${f2(rr)}" fill="${bodyCol}"/>`;
+      belly += `<circle cx="${bx}" cy="${by + rr * 0.35}" r="${f2(rr * 0.8)}" fill="${bellyCol}"/>`;
     });
-    return `<g transform="translate(${f2(x)} ${f2(y)}) scale(${f2(s)})" filter="${blurFilter(4.5)}">${belly}<g transform="translate(0 -8)">${body}</g></g>`;
+    // soften with a blur applied in screen space by the caller: a filter inside a group whose
+    // scale animates is re-rasterised in steps and twitches
+    return `<g transform="translate(${f2(x)} ${f2(y)}) scale(${f2(s)})">${belly}<g transform="translate(0 -8)">${body}</g></g>`;
   }
 
   // Wind: a gentle constant breeze plus gusts that travel left→right across the
