@@ -5,7 +5,7 @@
   const { clamp, lerp, inv, ease, spring, keys, noise, rand, blink, pop, tf } = M;
   const T = M.bindTiming(window.TIMING);
   const FPS = 30, W = 1080, H = 1920;
-  const END = 32.3;
+  const END = 31.7;
   const at = (line, word, nth = 0) => T.word(line, word, nth).start;
   const L = T.lines;
 
@@ -21,7 +21,7 @@
   };
   const GROUND = 1080;
   const CLOVER_X = 330, CORN_X = 690;
-  const ROOT_SX = 1.05, ROOT_SY = 0.78; // roots are squashed so captions stay clear
+  const ROOT_SX = 1.05, ROOT_SY = 0.62; // roots are squashed so captions stay clear
   const SAFE = { left: 70, right: 920, top: 230, bottom: 1520 };
 
   // ---------- small svg helpers ----------
@@ -86,15 +86,15 @@
       `<path d="M-30 -74 Q0 -46 30 -74" fill="none" stroke="${C.leafMark}" stroke-width="8" stroke-linecap="round" opacity="${markOpacity}"/>` +
       `<path d="M-40 -96 Q-46 -84 -40 -70" fill="none" stroke="${C.white}" stroke-width="5" stroke-linecap="round" opacity="0.35"/>` + inner);
   }
-  function flower(x, y, s, t) {
+  function flower(x, y, s, t, wilt = 0) {
     if (s <= 0.001) return '';
     let petals = '';
     for (let i = 0; i < 18; i++) {
       const a = (i / 18) * Math.PI * 2, r = 30 + (i % 2) * 6;
-      petals += ell(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55 - 4, 9, 20, i % 3 ? C.white : '#ffe6ef', 3.5, C.ink,
+      petals += ell(Math.cos(a) * r * 0.55, Math.sin(a) * r * 0.55 - 4, 9, 20, col(i % 3 ? C.white : '#ffe6ef', '#b59c6a', wilt), 3.5, C.ink,
         `transform="rotate(${f2(a * 180 / Math.PI + 90)} ${f2(Math.cos(a) * r * 0.55)} ${f2(Math.sin(a) * r * 0.55 - 4)})"`);
     }
-    return G(tf(x, y, noise(9, t * 0.7) * 4, s), petals + circle(0, -4, 14, '#fff3c9', 3.5));
+    return G(tf(x, y, noise(9, t * 0.7) * 4 + wilt * 70, s), petals + circle(0, -4, 14, col('#fff3c9', '#9a8150', wilt), 3.5));
   }
   // o: t, s, wilt, sink, flower, mood, look, bl, talk, sq (squash), seed, face
   function clover(x, o) {
@@ -111,9 +111,9 @@
     // flower on its own stalk
     const fl = o.flower || 0;
     if (fl > 0) {
-      const fx = -48 + Math.sin(a) * 40, fy = -Hs * 0.95 * ease.outCubic(fl);
-      out += tube(`M-6 0 Q-30 ${f2(fy * 0.5)} ${f2(fx)} ${f2(fy)}`, stemCol, 8, 5);
-      out += circle(fx, fy, 9 * Math.min(1, fl * 3), '#e9f7d9', 4) + flower(fx, fy, M.pop(o.t, o.flowerAt || 0, 0.5).s * (1 - wilt * 0.4), t);
+      const fx = 74 + Math.sin(a) * 60, fy = -Hs * 0.62 * ease.outCubic(fl) + wilt * 40;
+      out += tube(`M6 0 Q${f2(fx * 0.2)} ${f2(fy * 0.55)} ${f2(fx)} ${f2(fy)}`, stemCol, 8, 5);
+      out += ell(fx, fy - 6, 10 * Math.min(1, fl * 3), 14 * Math.min(1, fl * 3), '#e9f7d9', 4) + flower(fx, fy, M.pop(o.t, o.flowerAt || 0, 0.5).s * (1 - wilt * 0.3), t, wilt);
     }
     out += tube(`M0 0 Q${f2(ctrlX)} ${f2(ctrlY)} ${f2(tipX)} ${f2(tipY)}`, stemCol, 12, 6);
     const leafRot = bend * 1.1 + wilt * 22;
@@ -168,7 +168,7 @@
     const t = o.t, g = o.grow, seed = o.seed || 2;
     const Hh = lerp(150, 560, g);
     const w = lerp(28, 42, g);
-    const leafC = col('#a7c25a', '#4e9d31', o.health), leafHi = col('#c4d97a', '#6dbb47', o.health);
+    const leafC = col('#b9c74a', '#4e9d31', o.health), leafHi = col('#c4d97a', '#6dbb47', o.health);
     const sway = noise(seed, t * 0.5) * 2.5 + (o.flinch || 0);
     let out = '';
     // tassel
@@ -177,7 +177,7 @@
       for (let i = -2; i <= 2; i++) out += tube(`M0 ${-Hh + 4} q${i * 10} -30 ${i * 22} -${50 + (2 - Math.abs(i)) * 14}`, '#e3c24f', 5, 3.5).replace(/<path/g, `<path opacity="${ts}"`);
     }
     // stalk
-    out += path(`M${-w / 2} 0 C${-w / 2} ${-Hh * 0.5} ${-w * 0.3} ${-Hh * 0.8} ${-w * 0.18} ${-Hh} L${w * 0.18} ${-Hh} C${w * 0.3} ${-Hh * 0.8} ${w / 2} ${-Hh * 0.5} ${w / 2} 0 Z`, leafC, 6);
+    out += path(`M${-w / 2} 0 C${-w / 2} ${-Hh * 0.5} ${-w * 0.3} ${-Hh * 0.8} ${-w * 0.18} ${-Hh} Q0 ${-Hh - 34} ${w * 0.18} ${-Hh} C${w * 0.3} ${-Hh * 0.8} ${w / 2} ${-Hh * 0.5} ${w / 2} 0 Z`, leafC, 6);
     out += path(`M${-w * 0.15} -10 L${-w * 0.06} ${-Hh + 20}`, 'none', 4, leafHi);
     // leaves
     const n = 6;
@@ -324,22 +324,22 @@
       [at('hook', 'fields') - 0.1, k(350, 1062, 1.47), 'linear'],
       [at('hook', 'fields') + 0.55, k(500, 1010, 1.22), 'outCubic'],
       [L.need.start - 0.1, k(505, 1010, 1.22), 'linear'],
-      [L.need.start + 0.6, k(560, 930, 1.22), 'inOutCubic'],
-      [at('need', 'the') + 0.4, k(560, 860, 1.22), 'inOutCubic'],
-      [at('need', 'but') + 0.1, k(760, 900, 1.6), 'inOutCubic'],
-      [L.help.start - 0.15, k(762, 902, 1.61), 'linear'],
-      [L.help.start + 0.75, k(300, 1130, 1.6), 'inOutCubic'],
+      [L.need.start + 0.6, k(560, 1000, 1.22), 'inOutCubic'],
+      [at('need', 'the') + 0.4, k(560, 985, 1.22), 'inOutCubic'],
+      [at('need', 'but') + 0.1, k(790, 900, 1.6), 'inOutCubic'],
+      [L.help.start - 0.55, k(792, 902, 1.61), 'linear'],
+      [L.help.start + 0.15, k(300, 1130, 1.6), 'inOutCubic'],
       [L.nodules.start, k(310, 1135, 1.6), 'linear'],
-      [L.nodules.start + 0.6, k(453, 1103, 1.65), 'inOutCubic'],
-      [L.feed.start + 0.05, k(455, 1104, 1.66), 'linear'],
-      [L.feed.start + 0.6, k(420, 990, 1.3), 'inOutCubic'],
+      [L.nodules.start + 0.6, k(453, 1085, 1.65), 'inOutCubic'],
+      [L.feed.start + 0.05, k(455, 1086, 1.66), 'linear'],
+      [L.feed.start + 0.4, k(420, 990, 1.3), 'inOutCubic'],
       [L.release.start, k(470, 1000, 1.25), 'inOutCubic'],
       [L.next.start - 0.3, k(480, 1005, 1.24), 'linear'],
       [L.next.start + 0.35, k(660, 960, 1.35), 'inOutCubic'],
       [at('next', 'next') - 0.05, k(660, 958, 1.35), 'linear'],
-      [at('next', 'next') + 0.7, k(600, 780, 1.0), 'outCubic'],
+      [at('next', 'next') + 0.7, k(600, 830, 0.85), 'outCubic'],
       [L.recap.start + 0.5, k(540, 596, 0.95), 'inOutCubic'],
-      [END, k(540, 588, 0.96), 'linear'],
+      [END, k(540, 580, 0.98), 'linear'],
     ]);
     return { cx: cam[0], cy: cam[1], z: cam[2] };
   }
@@ -352,19 +352,36 @@
     const out = [];
     for (const l of window.TIMING.lines) {
       if (l.id === 'recap') continue;
-      let cur = null;
-      l.words.forEach((w, i) => {
-        const nxt = l.words[i + 1];
-        const dur = (nxt ? nxt.start : l.end) - w.start;
-        if (!cur) cur = { words: [], start: w.start };
-        cur.words.push(w.text);
-        const short = dur < 0.3 && nxt && cur.words.length < 3;
-        if (!short || !nxt) {
-          cur.end = nxt ? nxt.start : l.end + 0.3;
-          out.push(cur);
-          cur = null;
+      // split each line into phrases with an additive cost (dynamic programme):
+      // on screen at least 0.7 s and ~0.3 s per word, fits one line of type,
+      // doesn't end on a function word, doesn't glue across a comma
+      const ws = l.words, n = ws.length;
+      const until = i => (i < n ? ws[i].start : l.end + 0.3);
+      const FN = /^(the|a|an|in|of|to|into|on|and|is|their|its|for|from|that|do|has|it|but|they|called|when)$/i;
+      const bare = w => w.replace(/[^a-z']/gi, '');
+      const cost = (i, j) => {
+        const k = j - i, d = until(j) - ws[i].start;
+        const chars = ws.slice(i, j).map(w => bare(w.text)).join(' ').length;
+        let c = Math.max(0, 0.7 - d) * 2 + Math.max(0, 0.3 * k - d);
+        if (chars > 18) c += 5; else if (chars > 16) c += 0.4;
+        if (FN.test(bare(ws[j - 1].text)) && j < n && !/[,.?!]$/.test(ws[j - 1].text)) c += 0.3;
+        if (ws.slice(i, j - 1).some(w => /[,]$/.test(w.text))) c += 0.35;
+        if (ws.slice(i, j - 1).some(w => /[.?!]$/.test(w.text))) c += 99;
+        return c + 0.05; // slight preference for fewer, fuller phrases
+      };
+      const best = new Array(n + 1).fill(null);
+      best[n] = { c: 0, cuts: [] };
+      for (let i = n - 1; i >= 0; i--) {
+        for (let j = i + 1; j <= Math.min(n, i + 4); j++) {
+          const cand = { c: best[j].c + cost(i, j), cuts: [j, ...best[j].cuts] };
+          if (!best[i] || cand.c < best[i].c) best[i] = cand;
         }
-      });
+      }
+      let i0 = 0;
+      for (const j of best[0].cuts) {
+        out.push({ words: ws.slice(i0, j).map(w => w.text), start: ws[i0].start, end: until(j) });
+        i0 = j;
+      }
     }
     out[0].start = 0; // frame one carries the hook
     return out;
@@ -378,7 +395,7 @@
     let size = isKey ? 118 : 100;
     const est = textWidth(text, size);
     if (est > 730) size *= 730 / est;
-    const q = c.start === 0 && t < 0.4 ? 1 : 0.72 + 0.28 * spring(t - c.start + LEAD, { freq: 3, damping: 0.5 });
+    const q = c.start === 0 && t < 0.4 ? 1 : 0.9 + 0.1 * spring(t - c.start + LEAD, { freq: 4, damping: 0.5 });
     const p = { sx: q, sy: q };
     const y = 1478 - (1 - Math.min(1, q)) * 14;
     const pw = Math.min(800, Math.min(est, 730) + 70), ph = size * 1.22;
@@ -391,10 +408,10 @@
 
   // ---------- lens (window into the nodule) ----------
   const LENS = { x: 615, y: 1010, r: 290 };
-  const CELLS = Array.from({ length: 34 }, (_, i) => [(rand(i + 7) - 0.5) * 900, (rand(i + 61) - 0.5) * 900, 60 + rand(i + 17) * 50]);
+  const CELLS = Array.from({ length: 44 }, (_, i) => [(rand(i + 7) - 0.5) * 1100, (rand(i + 61) - 0.5) * 1100, 60 + rand(i + 17) * 50]);
   const BUGS = [[-170, -120, 18, 0.8], [170, -150, -24, 0.75], [-210, 120, 12, 0.7], [200, 140, -8, 0.78], [0, 260, 4, 0.7]];
   function lensInner(t, R, ce = 1) {
-    let out = `<rect x="${-R - 10}" y="${-R - 10}" width="${2 * R + 20}" height="${2 * R + 20}" fill="#f9d6cd"/>`;
+    let out = `<rect x="${-R * 1.6}" y="${-R * 1.6}" width="${R * 3.2}" height="${R * 3.2}" fill="#f9d6cd"/>`;
     for (const [cx, cy, r] of CELLS) {
       const dx = noise(cx, t * 0.3) * 6, dy = noise(cy, t * 0.3) * 6;
       out += circle(cx + dx, cy + dy, r, '#fbe3dc', 6, '#eaaea3');
@@ -421,7 +438,7 @@
       return n2(lerp(from[0], to[0], e) + Math.sin(p * 9 + i) * 10, lerp(from[1], to[1], e), 0.95 * (1 - Math.max(0, p - 0.85) * 5), p * 120 + i * 30,
         i === 0 ? { tag: { t, at: t0 + 0.25 } } : {});
     };
-    out += n2path(fixT - 0.1, [-R * 0.62, -R * 0.55], [44, 18], 0);
+    out += n2path(fixT - 0.05, [-R * 0.82, R * 0.05], [44, 18], 0);
     out += n2path(fixT + 0.5, [R * 0.9, -R * 0.4], [170, -150], 1);
     out += n2path(fixT + 0.9, [-R * 0.9, R * 0.3], [-210, 120], 2);
     // NH3 out
@@ -430,7 +447,7 @@
       if (p <= 0) return;
       const sp = pop(t, t0, 0.4);
       const x = 30 + side * (40 + p * 120), y = 0 - p * 300;
-      out += nh3(x, y, sp.s * 1.05, { tag: tg ? { t, at: amT } : null });
+      out += nh3(x, y, sp.s * 1.4, { tag: tg ? { t, at: amT } : null });
     });
     return out;
   }
@@ -460,7 +477,7 @@
     const rimPulse = 1 + 0.03 * Math.exp(-Math.max(0, t - bumps) * 5) * Math.sin(Math.max(0, t - bumps) * 20) * (t > bumps ? 1 : 0);
     const rr = r * rimPulse;
     out += `<defs><clipPath id="lensclip"><circle cx="${f2(cx)}" cy="${f2(cy)}" r="${f2(rr)}"/></clipPath></defs>`;
-    out += `<g clip-path="url(#lensclip)">${G(tf(cx, cy, 0, (0.6 + 0.4 * ce) * (LENS.r / 370) * (1 + 0.1 * inv(L.nodules.start + 0.6, L.fix.start, t))), lensInner(t, LENS.r, ce))}</g>`;
+    out += `<g clip-path="url(#lensclip)">${G(tf(cx, cy, 0, (0.6 + 0.4 * ce) * (LENS.r / 370) * (1 + 0.1 * inv(L.nodules.start + 0.6, L.fix.start, t))), lensInner(t, 370, ce))}</g>`;
     out += circle(cx, cy, rr, 'none', 22, C.ink) + circle(cx, cy, rr, 'none', 10, '#ffffff') + circle(cx, cy, rr - 12, 'none', 4, '#e7c3bb');
     out += `<path d="M${f2(cx - rr * 0.62)} ${f2(cy - rr * 0.5)} A${f2(rr * 0.8)} ${f2(rr * 0.8)} 0 0 1 ${f2(cx - rr * 0.1)} ${f2(cy - rr * 0.8)}" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity="0.55"/>`;
     return out;
@@ -588,6 +605,15 @@
           `<path d="${d}" fill="none" stroke="#fff6c8" stroke-width="8" stroke-linecap="round" pathLength="100" stroke-dasharray="${f2(tr * 100)} 100" opacity="${f2(Math.sin(tr * Math.PI))}"/>`).join(''));
       }
     }
+    {
+      const fixT = at('fix', 'pull'), d0 = fixT - 0.5, d1 = fixT - 0.05;
+      if (t > d0 && t < d1 + 0.25) {
+        const [nx, ny] = NODULE_WORLD();
+        const p = ease.inQuad(inv(d0, d1, t));
+        world += n2(lerp(nx + 70, nx, p), lerp(GROUND - 330, ny, p), 0.85 * (1 - inv(d1, d1 + 0.2, t)), p * 160);
+        if (t > d1) world += circle(nx, ny, 18 + (t - d1) * 120, 'none', 5, '#fff', `opacity="${f2(1 - inv(d1, d1 + 0.25, t))}"`);
+      }
+    }
     // ammonia travelling up the roots to the clover
     if (t > feedT - 0.1 && t < feedT + 1.3) {
       const [nx, ny] = NODULE_WORLD();
@@ -642,7 +668,7 @@
       const p = pop(t, airT - 0.15 + i * 0.07, 0.5);
       const out = 1 - ease.inCubic(inv(L.help.start + 0.2 + i * 0.03, L.help.start + 0.7 + i * 0.03, t));
       if (p.s * out <= 0.01) continue;
-      const bx = 210 + rand(i + 200) * 540, by = 260 + rand(i + 300) * 420;
+      const bx = 210 + rand(i + 200) * 540, by = 400 + rand(i + 300) * 300;
       const x = bx + noise(i + 400, t * 0.4) * 50 + t * 6, y = by + noise(i + 500, t * 0.35) * 40;
       world += n2(x, y - (1 - out) * 120, 1.15 * p.s * out, noise(i + 600, t * 0.3) * 40, i === 2 ? { tag: { t, at: airT + 0.3 } } : {});
     }
@@ -686,7 +712,7 @@
         const x = lerp(x0, tx, toCorn) + noise(i + 1000, t) * 6, y = lerp(y0, ty, toCorn) + noise(i + 1100, t) * 6;
         const op = spread * (1 - inv(growT + 0.2, growT + 0.9, t));
         const bright = 1 + 0.25 * Math.exp(-Math.max(0, t - relT) * 3) * (t > relT ? 1 : 0);
-        if (op > 0.01 && i % 3 !== 2) glowLayer += nDot(x, y, 0.36 * bright, op);
+        if (op > 0.01 && i % 3 !== 2) glowLayer += nDot(x, y, 0.58 * bright, op);
       }
     }
 
@@ -694,7 +720,7 @@
     const camT = `translate(${W / 2} ${H / 2}) scale(${f2(cam.z)}) translate(${f2(-cam.cx)} ${f2(-cam.cy)})`;
     let svg = sky(t, dusk);
     svg += `<g transform="${camT}">${world}</g>`;
-    if (dusk > 0.01) svg += `<rect width="${W}" height="${H}" fill="#3b2a6b" opacity="${f2(dusk * 0.24)}" style="mix-blend-mode:multiply"/>`;
+    if (dusk > 0.01) svg += `<rect width="${W}" height="${H}" fill="#3b2a6b" opacity="${f2(dusk * 0.16)}" style="mix-blend-mode:multiply"/>`;
     if (glowLayer) svg += `<g transform="${camT}">${glowLayer}</g>`;
     svg += lens(t, cam);
     svg += t < L.recap.start - 0.05 ? captions(t) : '';
@@ -731,6 +757,7 @@
     cue(at('need', "can't"), 'boing'),
     cue(L.help.start - 0.1, 'whoosh'), cue(at('help', 'help'), 'wink'),
     cue(L.nodules.start - 0.05, 'lens_open'),
+    cue(at('fix', 'pull') - 0.05, 'pop_small', 0.6),
     cue(at('nodules', 'bumps'), 'pop_small', 0.7),
     cue(at('fix', 'pull') + 0.6, 'chomp'),
     cue(at('fix', 'turn') + 0.15, 'sparkle'), cue(at('fix', 'ammonia'), 'sparkle'),
