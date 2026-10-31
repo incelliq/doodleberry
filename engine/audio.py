@@ -55,6 +55,32 @@ def add(buf, x, t, gain=1.0):
     buf[i:j] += x[: j - i] * gain
 
 
+def pan_gains(p):
+    """Constant-power pan, p in -1 (left) .. 1 (right)."""
+    a = (p + 1) * np.pi / 4
+    return np.cos(a), np.sin(a)
+
+
+def add_st(buf, x, t, gain=1.0, pan=0.0):
+    i = int(round(t * SR))
+    if i >= len(buf):
+        return
+    j = min(len(buf), i + len(x))
+    l, r = pan_gains(pan)
+    seg = x[: j - i] * gain
+    buf[i:j, 0] += seg * l
+    buf[i:j, 1] += seg * r
+
+
+def declick(x, ms=3):
+    k = min(len(x) // 2, int(ms * SR / 1000))
+    if k > 0:
+        x = x.copy()
+        x[:k] *= np.linspace(0, 1, k)
+        x[-k:] *= np.linspace(1, 0, k)
+    return x
+
+
 # ---------------- instruments ----------------
 def pluck(hz, dur, bright=0.5):
     """Karplus-Strong string, a soft ukulele-ish pluck."""
@@ -111,10 +137,12 @@ CHORDS = {  # root MIDI and triad, F major palette
 MELODY = [0, 2, 1, 2, 0, 1, 2, 1]  # index into chord tones, one per 8th
 
 
-def music(score, total):
+def music(score, total, speaking=lambda t: False):
+    """Stereo score. The melody sits an octave above the narrator's pitch band and
+    drops to quarter notes while the narrator speaks, eighths between lines."""
     bpm, off = score['bpm'], score['offset_s']
     beat = 60 / bpm
-    out = np.zeros(int(total * SR) + SR * 2)
+    out = np.zeros((int(total * SR) + SR * 4, 2))
     beats = []
     for sec in score['sections']:
         b0, b1 = sec['from_beat'], sec['to_beat']
@@ -131,34 +159,43 @@ def music(score, total):
             if kind in ('main', 'finale', 'intro'):
                 for half in range(2):
                     tt = t + half * beat / 2
+                    if half and speaking(tt):
+                        continue  # leave room for the words
                     k = (bar_beat * 2 + half)
-                    hz = note_hz(tri[MELODY[k % 8]] + (12 if kind == 'finale' and k % 4 == 3 else 0))
-                    add(out, pluck(hz, 0.5, 0.35 if kind == 'intro' else 0.55), tt, 0.16 if kind == 'intro' else 0.2)
+                    hz = note_hz(tri[MELODY[k % 8]] + 12 + (12 if kind == 'finale' and k % 4 == 3 else 0))
+                    vel = (0.11 if kind == 'intro' else 0.13) * (1.0 if half == 0 else 0.7) * (1.15 if bar_beat == 0 and half == 0 else 1)
+                    add_st(out, pluck(hz, 0.55, 0.28), tt, vel, -0.3)
             if kind in ('main', 'finale') and bar_beat in (0, 2):
-                add(out, bass(note_hz(root), beat * 1.8), t, 0.34)
+                add_st(out, bass(note_hz(root), beat * 1.8), t, 0.3)
             if kind == 'intro' and bar_beat == 0:
-                add(out, bass(note_hz(root), beat * 3.5), t, 0.22)
+                add_st(out, bass(note_hz(root), beat * 3.5), t, 0.2)
             if kind in ('main', 'finale'):
                 for half in range(2):
-                    add(out, shaker(), t + half * beat / 2, 0.05 if half else 0.08)
+                    add_st(out, shaker(), t + half * beat / 2, 0.045 if half else 0.065, 0.45 if half else -0.45)
                 if bar_beat == 0:
-                    add(out, thump(), t, 0.32)
+                    add_st(out, thump(), t, 0.28)
             if kind == 'reflect' and bar_beat == 0:
-                add(out, pad([note_hz(h) for h in tri], beat * 4.2), t, 0.22)
-                add(out, bass(note_hz(root), beat * 4), t, 0.18)
+                hz = [note_hz(h) for h in tri]
+                add_st(out, pad([h * 0.9983 for h in hz], beat * 4.2), t, 0.2, -0.6)   # slight detune L/R for width
+                add_st(out, pad([h * 1.0017 for h in hz], beat * 4.2), t, 0.2, 0.6)
+                add_st(out, bass(note_hz(root), beat * 4), t, 0.16)
             if kind == 'reflect' and bar_beat in (1, 3):
-                add(out, marimba(note_hz(tri[bar_beat // 2 + 1] + 12), 0.6), t, 0.08)
+                add_st(out, marimba(note_hz(tri[bar_beat // 2 + 1] + 12), 0.6), t, 0.07, 0.35)
             if kind == 'finale' and bar_beat == 0:
-                add(out, pad([note_hz(h) for h in tri], beat * 4.2), t, 0.12)
+                hz = [note_hz(h) for h in tri]
+                add_st(out, pad([h * 0.9983 for h in hz], beat * 4.2), t, 0.1, -0.6)
+                add_st(out, pad([h * 1.0017 for h in hz], beat * 4.2), t, 0.1, 0.6)
         if sec.get('end_chord'):
             t = off + b1 * beat
             root, tri = CHORDS[sec['end_chord']]
-            add(out, pad([note_hz(h) for h in tri] + [note_hz(tri[0] + 12)], 3.4), t, 0.26)
-            add(out, bass(note_hz(root), 3.0), t, 0.3)
-            for i, n in enumerate(tri + [tri[0] + 12]):
-                add(out, marimba(note_hz(n + 12), 1.2), t + i * 0.07, 0.12)
+            hz = [note_hz(h) for h in tri] + [note_hz(tri[0] + 12)]
+            add_st(out, pad([h * 0.9983 for h in hz], 3.4), t, 0.22, -0.6)
+            add_st(out, pad([h * 1.0017 for h in hz], 3.4), t, 0.22, 0.6)
+            add_st(out, bass(note_hz(root), 3.0), t, 0.28)
+            for i, nn in enumerate(tri + [tri[0] + 12]):
+                add_st(out, marimba(note_hz(nn + 12), 1.2), t + i * 0.07, 0.11, -0.4 + i * 0.27)
             beats.append(round(t, 3))
-    out = hp(out, 40)
+    out = hp(out.T, 40).T
     return out[: int(total * SR)], beats
 
 
@@ -173,7 +210,8 @@ def sweep(f0, f1, dur, shape='exp'):
 def bell(hz, dur, amp=1.0):
     n = int(dur * SR)
     t = np.arange(n) / SR
-    return amp * (np.sin(2 * np.pi * hz * t) + 0.4 * np.sin(2 * np.pi * hz * 2.76 * t)) * np.exp(-t * 6)
+    x = np.sin(2 * np.pi * hz * t) + 0.22 * np.sin(2 * np.pi * hz * 2.76 * t) * np.exp(-t * 9)
+    return amp * lp(x * np.minimum(1, t / 0.003) * np.exp(-t * 6), 9000)
 
 
 def sfx(kind):
@@ -251,33 +289,107 @@ def sfx(kind):
 
 
 # ---------------- mix ----------------
-def duck_curve(lines, n, depth_db=-9, attack=0.12, release=0.35):
-    g = np.ones(n)
-    target = 10 ** (depth_db / 20)
-    for l in lines:
-        a, b = int((l['start'] - attack) * SR), int((l['end'] + release) * SR)
-        g[max(0, a):min(n, b)] = target
-    k = int(0.15 * SR)
-    return np.convolve(g, np.ones(k) / k, mode='same')
+# each effect type's loudness relative to the narrator (LU); cue gains add on top,
+# and the effects bus is carved in the speech band while the narrator talks
+SFX_LEVEL = {'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
+             'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
+             'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7}
+
+
+def presence(voice, n, attack=0.04, release=0.35):
+    """0..1 control: how much the narrator is talking right now (10 ms frames)."""
+    hop = int(0.01 * SR)
+    fr = np.sqrt(np.convolve(voice ** 2, np.ones(hop) / hop, 'same')[::hop] + 1e-12)
+    db = 20 * np.log10(fr)
+    on = (db > db.max() - 35).astype(float)
+    p, out = 0.0, np.zeros(len(on))
+    ka, kr = 1 - np.exp(-0.01 / attack), 1 - np.exp(-0.01 / release)
+    for i, x in enumerate(on):
+        p += (x - p) * (ka if x > p else kr)
+        out[i] = p
+    return np.interp(np.arange(n), np.arange(len(out)) * hop, out)
+
+
+def multiband_duck(x, pres, low_db=-5, mid_db=-12, high_db=-6):
+    """Duck a stereo signal under the voice, hardest where words live (200 Hz-5 kHz)."""
+    low = lp(x.T, 200, 4).T
+    high = hp(x.T, 5000, 4).T
+    mid = x - low - high
+    g = lambda d: (10 ** (d * pres / 20))[:, None]
+    return low * g(low_db) + mid * g(mid_db) + high * g(high_db)
+
+
+def level_lines(voice, lines, meter, max_db=5):
+    """Even out line-to-line loudness with short ramps between lines."""
+    Ls = [meter.integrated_loudness(voice[int(l['start'] * SR):int(l['end'] * SR)]) if l['end'] - l['start'] > 0.45 else None for l in lines]
+    ref = np.median([L for L in Ls if L is not None])
+    g = np.ones(len(voice))
+    for l, L in zip(lines, Ls):
+        if L is None:
+            continue
+        a, b = int((l['start'] - 0.08) * SR), int((l['end'] + 0.08) * SR)
+        g[max(0, a):b] = 10 ** (np.clip(ref - L, -max_db, max_db) / 20)
+    k = int(0.04 * SR)
+    return voice * np.convolve(g, np.ones(k) / k, 'same')
+
+
+def compress(x, ratio=2.5, knee_db=-14, attack=0.006, release=0.09):
+    """Gentle RMS compressor, threshold relative to the signal's own peak level."""
+    hop = int(0.001 * SR)
+    lvl = 20 * np.log10(np.sqrt(np.convolve(x ** 2, np.ones(hop * 5) / (hop * 5), 'same')[::hop]) + 1e-9)
+    thr = lvl.max() + knee_db
+    target = np.where(lvl > thr, (thr - lvl) * (1 - 1 / ratio), 0.0)
+    g, out = 0.0, np.zeros(len(target))
+    ka, kr = 1 - np.exp(-0.001 / attack), 1 - np.exp(-0.001 / release)
+    for i, d in enumerate(target):
+        g += (d - g) * (ka if d < g else kr)
+        out[i] = g
+    gain = 10 ** (np.interp(np.arange(len(x)), np.arange(len(out)) * hop, out) / 20)
+    return x * gain
+
+
+def reverb_ir(rt60=1.1, length=1.6, predelay=0.018):
+    """Seeded stereo room: decorrelated noise with an exponential, darkening tail."""
+    n = int(length * SR)
+    t = np.arange(n) / SR
+    rng = np.random.default_rng(11)
+    ir = np.zeros((n + int(predelay * SR), 2))
+    for c in range(2):
+        noise = rng.normal(0, 1, n) * 10 ** (-3 * t / rt60)
+        dark = lp(noise, 3500)
+        mixw = np.minimum(1, t / 0.5)  # tail darkens over the first half second
+        ir[int(predelay * SR):, c] = noise * (1 - mixw) * 0.6 + dark * mixw
+    return ir / np.sqrt(np.sum(ir ** 2) / 2)
+
+
+def reverb(x, ir, wet):
+    from scipy.signal import fftconvolve
+    send = x.mean(axis=1) if x.ndim == 2 else x
+    out = np.stack([fftconvolve(send, ir[:, c])[: len(send)] for c in range(2)], axis=1)
+    return out * wet
+
+
+def to_st(x, pan=0.0):
+    l, r = pan_gains(pan)
+    return np.stack([x * l, x * r], axis=1)
 
 
 def true_peak_db(x):
-    up = resample_poly(x, 4, 1)
+    up = resample_poly(x, 4, 1, axis=0)
     return 20 * np.log10(np.max(np.abs(up)) + 1e-12)
 
 
-def limit(x, ceiling_db=-2.0):  # headroom for AAC overshoot
-    """Gain-reduction limiter on a 4x-oversampled envelope, lookahead 5 ms."""
-    c = 10 ** (ceiling_db / 20)
-    up = np.abs(resample_poly(x, 4, 1))
-    pk = up.reshape(-1, 4).max(axis=1)[: len(x)] if len(up) >= 4 * len(x) else np.pad(up[::4], (0, len(x)))[: len(x)]
-    g = np.minimum(1, c / (pk + 1e-12))
-    la = int(0.005 * SR)
+def limit(x, ceiling_db=-1.6):  # leaves headroom for AAC overshoot (checked after encode)
+    """Linked-stereo gain-reduction limiter on a 4x-oversampled envelope, 5 ms lookahead."""
     from scipy.ndimage import minimum_filter1d
-    g = minimum_filter1d(g, size=2 * la + 1)
+    c = 10 ** (ceiling_db / 20)
+    x2 = x if x.ndim == 2 else x[:, None]
+    up = np.abs(resample_poly(x2, 4, 1, axis=0)).max(axis=1)
+    pk = np.pad(up, (0, max(0, 4 * len(x2) - len(up))))[: 4 * len(x2)].reshape(-1, 4).max(axis=1)
+    g = minimum_filter1d(np.minimum(1, c / (pk + 1e-12)), size=2 * int(0.005 * SR) + 1)
     k = int(0.004 * SR)
     g = np.convolve(g, np.ones(k) / k, mode='same')
-    return x * g
+    return x * (g[:, None] if x.ndim == 2 else g)
 
 
 def main():
@@ -288,41 +400,69 @@ def main():
     cues = json.loads((b / 'cues.json').read_text())
     total = score['length_s']
     n = int(total * SR)
+    meter = pyln.Meter(SR)
 
+    # ---- narrator: clean ends, even lines, gentle compression
     # a re-voiced narration (voicefx.py) replaces the raw one when the script asks for it
     fx_on = json.loads((film / 'script.json').read_text()).get('voice_fx')
     voice, vsr = sf.read(b / ('voice_fx.wav' if fx_on else 'voice.wav'), dtype='float64')
     assert vsr == SR
     voice = np.pad(voice, (0, max(0, n - len(voice))))[:n]
+    voice = lp(hp(voice, 90, 2), 11000, 2)
+    voice = compress(level_lines(voice, timing['lines'], meter))
+    voice *= 10 ** ((-16 - meter.integrated_loudness(voice)) / 20)
+    V = -16.0
+    pres = presence(voice, n)
+    speaking = lambda t: pres[min(n - 1, int(t * SR))] > 0.5
 
-    mus, beats = music(score, total)
-    mus = np.pad(mus, (0, n - len(mus)))
-    fx = np.zeros(n + SR * 2)
+    # ---- score: bed sits 8 LU under the voice between lines, ducked by band under words
+    mus, beats = music(score, total, speaking)
+    mus = np.pad(mus, ((0, n - len(mus)), (0, 0)))
+    mus *= 10 ** ((V - 9 - meter.integrated_loudness(mus)) / 20)
+    ir = reverb_ir()
+    mus = mus + reverb(mus, ir, 0.22)
+    mus_d = multiband_duck(mus, pres)
+
+    # ---- effects: each levelled to its type's target, dipped a little under speech
+    fx = np.zeros((n + SR * 2, 2))
     for c in cues:
-        add(fx, sfx(c['type']), c['t'], c.get('gain', 1.0))
-    fx = hp(fx[:n], 250)  # effects sit just above the music's low end
+        x = declick(hp(sfx(c['type']), 250))
+        L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
+                 for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
+        g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)
+        if c['type'] == 'whoosh':  # sweeps left to right
+            p = np.linspace(-0.6, 0.6, len(x))
+            i = int(round(c['t'] * SR)); j = min(len(fx), i + len(x))
+            fx[i:j, 0] += (x * g * np.cos((p + 1) * np.pi / 4))[: j - i]
+            fx[i:j, 1] += (x * g * np.sin((p + 1) * np.pi / 4))[: j - i]
+        else:
+            add_st(fx, x, c['t'], g, 0.12 * np.sin(c['t'] * 2.3))
+    fx = fx[:n]
+    fx = fx + reverb(fx, ir, 0.16)
+    # keep the effects' punch and sparkle, clear their speech band under words
+    fx = multiband_duck(fx, pres, low_db=-2, mid_db=-8, high_db=-3)
 
-    meter = pyln.Meter(SR)
-    # level stems relative to the voice
-    vL = meter.integrated_loudness(voice)
-    voice *= 10 ** ((-16 - vL) / 20)
-    mL = meter.integrated_loudness(mus)
-    mus *= 10 ** ((-27 - mL) / 20)
-    fx *= 10 ** ((-25 - meter.integrated_loudness(fx)) / 20)
-
-    duck = duck_curve(timing['lines'], n)
-    mix = voice + mus * duck + fx
+    vo = to_st(voice) + reverb(voice, ir, 0.035)
+    mix = vo + mus_d + fx
     fade = int(score.get('fade_out_s', 0.6) * SR)
-    mix[-fade:] *= np.linspace(1, 0, fade) ** 2
-    for _ in range(3):
-        L = meter.integrated_loudness(mix)
-        mix *= 10 ** ((-14 - L) / 20)
-        mix = limit(mix)
+    mix[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
+    gain = 1.0
+    for _ in range(4):
+        g = 10 ** ((-14 - meter.integrated_loudness(mix)) / 20)
+        gain *= g
+        mix = limit(mix * g)
     sf.write(b / 'mix.wav', mix.astype(np.float32), SR, subtype='PCM_24')
-    sf.write(b / 'sfx.wav', fx.astype(np.float32), SR, subtype='PCM_24')
-    # music-only version, delivered at the same programme loudness
-    mo = mus * 10 ** ((-14 - meter.integrated_loudness(mus)) / 20)
-    sf.write(b / 'music.wav', limit(mo).astype(np.float32), SR, subtype='PCM_24')
+    # stems at their mixed level, for mixcheck.py
+    (b / 'stems').mkdir(exist_ok=True)
+    for name, x in (('voice', vo), ('music', mus_d), ('sfx', fx)):
+        sf.write(b / 'stems' / f'{name}.wav', (x * gain).astype(np.float32), SR, subtype='PCM_24')
+    sf.write(b / 'sfx.wav', (fx * gain).astype(np.float32), SR, subtype='PCM_24')
+    # music-only version, undocked, at programme loudness
+    mo = mus.copy()
+    mo[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
+    for _ in range(3):
+        mo = limit(mo * 10 ** ((-14 - meter.integrated_loudness(mo)) / 20))
+    sf.write(b / 'music.wav', mo.astype(np.float32), SR, subtype='PCM_24')
 
     timing['beats'] = beats
     timing['bpm'] = score['bpm']

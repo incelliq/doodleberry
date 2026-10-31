@@ -30,7 +30,8 @@ scene.js (frame → SVG) ◀───────┘           score.json
 | `engine/render.mjs` | loads a film's `index.html`, calls `window.renderFrame(f)` for each frame across N parallel browser pages, pipes PNGs into ffmpeg. `--still 0,60,…` for stills, `--from/--to` for test renders, `--dump-cues` for the sound-cue list. |
 | `engine/voice.py` | Piper TTS per script line, faster-whisper word alignment mapped back onto the script's own words, writes `timing.json`. `--audition` renders every voice and reports words per minute. |
 | `engine/voicefx.py` | re-voices the narration with the WORLD vocoder: pitch, formant (vocal-tract length) and intonation range change, timing doesn't, so captions and picture stay in sync. Presets `child` and `baby`; set `"voice_fx": "baby"` (or `{"preset": "baby", "pitch": 2.0}`) in `script.json`. |
-| `engine/audio.py` | seeded synth score (pluck, bass, pads, shaker) on a beat grid from `score.json`, effects keyed to on-screen cues, music ducked under narration, loudness to −14 LUFS with true-peak limiting. Exports a music-only version. |
+| `engine/audio.py` | stereo, seeded synth score (pluck, bass, pads, shaker, marimba) on a beat grid from `score.json`; the melody sits an octave above the narrator and thins to quarter notes while they speak. Effects keyed to on-screen cues, each levelled to a per-type target. Narrator cleaned, levelled line to line and gently compressed. Music and effects ducked by a voice-driven presence signal in three bands (hardest at 200 Hz–5 kHz), a seeded stereo room reverb, loudness to −14 LUFS with linked true-peak limiting. Writes stems and a music-only version. |
+| `engine/mixcheck.py` | measures a mix: loudness, loudness range, true peak, speech-to-background ratio while talking, music level between lines, effect levels, line-to-line voice spread, music energy in the voice's pitch band, and (`--whisper`) Whisper's confidence on the full mix. |
 | `engine/qa.py` | duration / size / fps, frozen-stretch detection, loudness and true peak of the encoded file, fact tracing, 2 fps sound-off sheet and 0.2 s dense sheets. |
 
 A film directory holds `brief.md`, `facts.json`, `script.json`, `score.json`,
@@ -51,6 +52,7 @@ python engine/audio.py $F                                  # score, sfx, mix
 node   engine/render.mjs $F --workers 4                    # picture
 ffmpeg -i $F/build/picture.mp4 -i $F/build/mix.wav -map 0:v -map 1:a \
        -c:v copy -c:a aac -b:a 256k -af apad -t <length> $F/build/final.mp4
+python engine/mixcheck.py $F --whisper                     # optional: mix balance and intelligibility
 python engine/qa.py $F                                     # measured checks + sheets
 ```
 
