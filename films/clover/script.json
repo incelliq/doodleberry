@@ -1,0 +1,17 @@
+{
+  "voice": "en_US-lessac-high",
+  "length_scale": 1.36,
+  "gap_s": 0.5,
+  "lead_in_s": 0.35,
+  "lines": [
+    {"id": "hook",     "fact": "rotation",    "text": "Why do farmers keep planting clover in their fields?"},
+    {"id": "need",     "fact": "air_inert",   "text": "Crops need nitrogen. The air is full of it, but plants can't use it."},
+    {"id": "help",     "fact": "nodules",     "text": "Clover has help, underground."},
+    {"id": "nodules",  "fact": "nodules",     "text": "Tiny bacteria called rhizobia live in bumps on its roots."},
+    {"id": "fix",      "fact": "ammonia",     "text": "They pull nitrogen from the air, and turn it into ammonia,"},
+    {"id": "feed",     "fact": "feeds_plant", "text": "feeding the clover."},
+    {"id": "release",  "fact": "released",    "text": "When the clover dies, that nitrogen is released into the soil,"},
+    {"id": "next",     "fact": "released",    "text": "ready for the next crop."},
+    {"id": "recap",    "fact": "released",    "text": "Clover. It feeds the next crop."}
+  ]
+}

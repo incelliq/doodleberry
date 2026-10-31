@@ -1,0 +1,39 @@
+{
+  "source": {
+    "title": "Nitrogen fixation — Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Nitrogen_fixation",
+    "retrieved": "2026-10-31"
+  },
+  "facts": [
+    {
+      "id": "rotation",
+      "claim": "Farmers often rotate clover through their fields.",
+      "source_sentence": "In many traditional farming practices, fields are rotated through various types of crops, which usually include one consisting mainly or entirely of clover."
+    },
+    {
+      "id": "air_inert",
+      "claim": "Air is full of nitrogen, but in that form plants can't use it.",
+      "source_sentence": "Nitrogen fixation is a chemical process by which the abundant but relatively inert molecular dinitrogen (N2) is converted into bioavailable nitrogen compounds such as ammonia (NH3) and nitrates (NO3)."
+    },
+    {
+      "id": "nodules",
+      "claim": "Clover roots have nodules holding bacteria called rhizobia.",
+      "source_sentence": "Plants that contribute to nitrogen fixation include those of the legume family—Fabaceae— with taxa such as kudzu, clover, soybean, alfalfa, lupin, peanut and rooibos. They contain symbiotic rhizobia bacteria within nodules in their root systems, producing nitrogen compounds that help the plant to grow and compete with other plants."
+    },
+    {
+      "id": "ammonia",
+      "claim": "The bacteria turn nitrogen from the air into ammonia.",
+      "source_sentence": "Biological nitrogen fixation (BNF) occurs when atmospheric nitrogen is converted to ammonia by a nitrogenase enzyme."
+    },
+    {
+      "id": "feeds_plant",
+      "claim": "That feeds the clover.",
+      "source_sentence": "They contain symbiotic rhizobia bacteria within nodules in their root systems, producing nitrogen compounds that help the plant to grow and compete with other plants."
+    },
+    {
+      "id": "released",
+      "claim": "When the clover dies, the nitrogen is released for the next crop; it fertilizes the soil.",
+      "source_sentence": "When the plant dies, the fixed nitrogen is released, making it available to other plants; this helps to fertilize the soil."
+    }
+  ]
+}

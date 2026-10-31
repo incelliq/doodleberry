@@ -1,0 +1,527 @@
+{
+ "fps": 30,
+ "voice": "en_US-lessac-high",
+ "duration": 30.899,
+ "wpm": 141.8,
+ "lines": [
+  {
+   "id": "hook",
+   "fact": "rotation",
+   "text": "Why do farmers keep planting clover in their fields?",
+   "start": 0.35,
+   "end": 3.254,
+   "words": [
+    {
+     "text": "Why",
+     "start": 0.35,
+     "end": 0.55
+    },
+    {
+     "text": "do",
+     "start": 0.55,
+     "end": 0.67
+    },
+    {
+     "text": "farmers",
+     "start": 0.67,
+     "end": 1.03
+    },
+    {
+     "text": "keep",
+     "start": 1.03,
+     "end": 1.41
+    },
+    {
+     "text": "planting",
+     "start": 1.41,
+     "end": 1.85
+    },
+    {
+     "text": "clover",
+     "start": 1.85,
+     "end": 2.31
+    },
+    {
+     "text": "in",
+     "start": 2.31,
+     "end": 2.47
+    },
+    {
+     "text": "their",
+     "start": 2.47,
+     "end": 2.59
+    },
+    {
+     "text": "fields?",
+     "start": 2.59,
+     "end": 2.91
+    }
+   ]
+  },
+  {
+   "id": "need",
+   "fact": "air_inert",
+   "text": "Crops need nitrogen. The air is full of it, but plants can't use it.",
+   "start": 3.754,
+   "end": 8.248,
+   "words": [
+    {
+     "text": "Crops",
+     "start": 3.754,
+     "end": 4.154
+    },
+    {
+     "text": "need",
+     "start": 4.154,
+     "end": 4.414
+    },
+    {
+     "text": "nitrogen.",
+     "start": 4.414,
+     "end": 4.994
+    },
+    {
+     "text": "The",
+     "start": 5.454,
+     "end": 5.614
+    },
+    {
+     "text": "air",
+     "start": 5.614,
+     "end": 5.754
+    },
+    {
+     "text": "is",
+     "start": 5.754,
+     "end": 5.974
+    },
+    {
+     "text": "full",
+     "start": 5.974,
+     "end": 6.174
+    },
+    {
+     "text": "of",
+     "start": 6.174,
+     "end": 6.334
+    },
+    {
+     "text": "it,",
+     "start": 6.334,
+     "end": 6.514
+    },
+    {
+     "text": "but",
+     "start": 6.794,
+     "end": 6.914
+    },
+    {
+     "text": "plants",
+     "start": 6.914,
+     "end": 7.294
+    },
+    {
+     "text": "can't",
+     "start": 7.294,
+     "end": 7.694
+    },
+    {
+     "text": "use",
+     "start": 7.694,
+     "end": 7.894
+    },
+    {
+     "text": "it.",
+     "start": 7.894,
+     "end": 8.134
+    }
+   ]
+  },
+  {
+   "id": "help",
+   "fact": "nodules",
+   "text": "Clover has help, underground.",
+   "start": 8.748,
+   "end": 10.771,
+   "words": [
+    {
+     "text": "Clover",
+     "start": 8.748,
+     "end": 8.968
+    },
+    {
+     "text": "has",
+     "start": 8.968,
+     "end": 9.288
+    },
+    {
+     "text": "help,",
+     "start": 9.288,
+     "end": 9.648
+    },
+    {
+     "text": "underground.",
+     "start": 9.968,
+     "end": 10.408
+    }
+   ]
+  },
+  {
+   "id": "nodules",
+   "fact": "nodules",
+   "text": "Tiny bacteria called rhizobia live in bumps on its roots.",
+   "start": 11.271,
+   "end": 15.317,
+   "words": [
+    {
+     "text": "Tiny",
+     "start": 11.271,
+     "end": 11.591
+    },
+    {
+     "text": "bacteria",
+     "start": 11.591,
+     "end": 12.131
+    },
+    {
+     "text": "called",
+     "start": 12.131,
+     "end": 12.771
+    },
+    {
+     "text": "rhizobia",
+     "start": 12.771,
+     "end": 13.491
+    },
+    {
+     "text": "live",
+     "start": 13.491,
+     "end": 13.831
+    },
+    {
+     "text": "in",
+     "start": 13.831,
+     "end": 14.011
+    },
+    {
+     "text": "bumps",
+     "start": 14.011,
+     "end": 14.331
+    },
+    {
+     "text": "on",
+     "start": 14.331,
+     "end": 14.551
+    },
+    {
+     "text": "its",
+     "start": 14.551,
+     "end": 14.691
+    },
+    {
+     "text": "roots.",
+     "start": 14.691,
+     "end": 14.991
+    }
+   ]
+  },
+  {
+   "id": "fix",
+   "fact": "ammonia",
+   "text": "They pull nitrogen from the air, and turn it into ammonia,",
+   "start": 15.817,
+   "end": 19.493,
+   "words": [
+    {
+     "text": "They",
+     "start": 15.817,
+     "end": 15.997
+    },
+    {
+     "text": "pull",
+     "start": 15.997,
+     "end": 16.217
+    },
+    {
+     "text": "nitrogen",
+     "start": 16.217,
+     "end": 16.657
+    },
+    {
+     "text": "from",
+     "start": 16.657,
+     "end": 17.037
+    },
+    {
+     "text": "the",
+     "start": 17.037,
+     "end": 17.217
+    },
+    {
+     "text": "air,",
+     "start": 17.217,
+     "end": 17.597
+    },
+    {
+     "text": "and",
+     "start": 17.897,
+     "end": 18.117
+    },
+    {
+     "text": "turn",
+     "start": 18.117,
+     "end": 18.357
+    },
+    {
+     "text": "it",
+     "start": 18.357,
+     "end": 18.537
+    },
+    {
+     "text": "into",
+     "start": 18.537,
+     "end": 18.797
+    },
+    {
+     "text": "ammonia,",
+     "start": 18.797,
+     "end": 19.137
+    }
+   ]
+  },
+  {
+   "id": "feed",
+   "fact": "feeds_plant",
+   "text": "feeding the clover.",
+   "start": 19.993,
+   "end": 21.066,
+   "words": [
+    {
+     "text": "feeding",
+     "start": 19.993,
+     "end": 20.373
+    },
+    {
+     "text": "the",
+     "start": 20.373,
+     "end": 20.473
+    },
+    {
+     "text": "clover.",
+     "start": 20.473,
+     "end": 20.913
+    }
+   ]
+  },
+  {
+   "id": "release",
+   "fact": "released",
+   "text": "When the clover dies, that nitrogen is released into the soil,",
+   "start": 21.566,
+   "end": 25.441,
+   "words": [
+    {
+     "text": "When",
+     "start": 21.566,
+     "end": 21.706
+    },
+    {
+     "text": "the",
+     "start": 21.706,
+     "end": 21.826
+    },
+    {
+     "text": "clover",
+     "start": 21.826,
+     "end": 22.146
+    },
+    {
+     "text": "dies,",
+     "start": 22.146,
+     "end": 22.626
+    },
+    {
+     "text": "that",
+     "start": 23.166,
+     "end": 23.286
+    },
+    {
+     "text": "nitrogen",
+     "start": 23.286,
+     "end": 23.706
+    },
+    {
+     "text": "is",
+     "start": 23.706,
+     "end": 24.046
+    },
+    {
+     "text": "released",
+     "start": 24.046,
+     "end": 24.386
+    },
+    {
+     "text": "into",
+     "start": 24.386,
+     "end": 24.686
+    },
+    {
+     "text": "the",
+     "start": 24.686,
+     "end": 24.886
+    },
+    {
+     "text": "soil,",
+     "start": 24.886,
+     "end": 25.186
+    }
+   ]
+  },
+  {
+   "id": "next",
+   "fact": "released",
+   "text": "ready for the next crop.",
+   "start": 25.941,
+   "end": 27.477,
+   "words": [
+    {
+     "text": "ready",
+     "start": 25.941,
+     "end": 26.181
+    },
+    {
+     "text": "for",
+     "start": 26.181,
+     "end": 26.461
+    },
+    {
+     "text": "the",
+     "start": 26.461,
+     "end": 26.581
+    },
+    {
+     "text": "next",
+     "start": 26.581,
+     "end": 26.861
+    },
+    {
+     "text": "crop.",
+     "start": 26.861,
+     "end": 27.281
+    }
+   ]
+  },
+  {
+   "id": "recap",
+   "fact": "released",
+   "text": "Clover. It feeds the next crop.",
+   "start": 27.977,
+   "end": 30.399,
+   "words": [
+    {
+     "text": "Clover.",
+     "start": 27.977,
+     "end": 28.377
+    },
+    {
+     "text": "It",
+     "start": 28.797,
+     "end": 28.957
+    },
+    {
+     "text": "feeds",
+     "start": 28.957,
+     "end": 29.277
+    },
+    {
+     "text": "the",
+     "start": 29.277,
+     "end": 29.517
+    },
+    {
+     "text": "next",
+     "start": 29.517,
+     "end": 29.797
+    },
+    {
+     "text": "crop.",
+     "start": 29.797,
+     "end": 30.217
+    }
+   ]
+  }
+ ],
+ "beats": [
+  0.35,
+  0.95,
+  1.55,
+  2.15,
+  2.75,
+  3.35,
+  3.95,
+  4.55,
+  5.15,
+  5.75,
+  6.35,
+  6.95,
+  7.55,
+  8.15,
+  8.75,
+  9.35,
+  9.95,
+  10.55,
+  11.15,
+  11.75,
+  12.35,
+  12.95,
+  13.55,
+  14.15,
+  14.75,
+  15.35,
+  15.95,
+  16.55,
+  17.15,
+  17.75,
+  18.35,
+  18.95,
+  19.55,
+  20.15,
+  20.75,
+  21.35,
+  21.95,
+  22.55,
+  23.15,
+  23.75,
+  24.35,
+  24.95,
+  25.55,
+  26.15,
+  26.75,
+  27.35,
+  27.95,
+  28.55,
+  29.15,
+  29.75,
+  30.35,
+  30.95
+ ],
+ "bpm": 100,
+ "sections": [
+  {
+   "kind": "intro",
+   "start": 0.35
+  },
+  {
+   "kind": "main",
+   "start": 8.75
+  },
+  {
+   "kind": "reflect",
+   "start": 21.35
+  },
+  {
+   "kind": "finale",
+   "start": 26.15
+  }
+ ]
+}
