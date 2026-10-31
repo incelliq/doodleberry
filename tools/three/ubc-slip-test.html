@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./three.module.min.js"}}</script></head><body>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+const W = 1080, H = 1920, FPS = 30;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#dfe7ec'); scene.fog = new THREE.Fog('#dfe7ec', 12, 30);
+const cam = new THREE.PerspectiveCamera(30, W / H, 0.1, 100);
+const key = new THREE.DirectionalLight('#fff0dc', 2.6); key.position.set(4, 8, 5); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 4; Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, far: 30 }); scene.add(key);
+const rim = new THREE.DirectionalLight('#9cc4ff', 1.6); rim.position.set(-5, 4, -4); scene.add(rim);
+scene.add(new THREE.HemisphereLight('#ffffff', '#8a7a6a', 0.8));
+// kitchen-ish set: tiled floor, back wall with cabinets
+const tex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? '#efe9de' : '#d6cdbf'; g.fillRect(i * 32, j * 32, 32, 32); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 12); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const box = (w, h, d, c, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 })); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; scene.add(m); };
+box(40, 8, 0.2, '#f3efe6', 0, 4, -4);
+for (let i = -4; i <= 4; i++) { box(1.1, 0.9, 0.6, '#6f8fa8', i * 1.2, 0.45, -3.6); box(1.15, 0.06, 0.65, '#e9e3d6', i * 1.2, 0.93, -3.6); box(1.1, 0.8, 0.4, '#7f9fb8', i * 1.2, 2.3, -3.7); }
+// a banana peel on the floor (original prop)
+const peel = new THREE.Group(); for (let k = 0; k < 4; k++) { const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.035, 0.16, 4, 8), new THREE.MeshStandardMaterial({ color: '#f2d24a', roughness: 0.5 })); m.rotation.set(Math.PI / 2, 0, k * Math.PI / 2 + 0.3); m.position.set(Math.cos(k * Math.PI / 2) * 0.08, 0.03, Math.sin(k * Math.PI / 2) * 0.08); m.castShadow = true; peel.add(m); } scene.add(peel);
+const loader = new GLTFLoader(); const load = u => new Promise((res, rej) => loader.load(u, res, undefined, rej));
+const lib = await load('assets/converted/ual_cmu.glb');
+const CLIPS = Object.fromEntries(lib.animations.map(c => [c.name, c]));
+const B = 'ubc/Base Characters/Godot - UE/', HR = 'ubc/Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/';
+async function person(files, opts) {
+  const holder = new THREE.Group(); scene.add(holder);
+  const mixers = [];
+  for (const f of files) { const g = await load(f); g.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; o.frustumCulled = false; } }); holder.add(g.scene); mixers.push(new THREE.AnimationMixer(g.scene)); }
+  return { holder, mixers, ...opts };
+}
+const man = await person([B + 'Superhero_Male_FullBody.gltf', HR + 'Hair_SimpleParted.gltf', HR + 'Eyebrows_Regular.gltf', HR + 'Hair_Beard.gltf'],
+  { tl: [[0, 'Walk_Loop', 1], [2.9, 'BananaPeelSlip', 0]], path: t => [-2.4 + Math.min(t, 2.9) * 1.2, 0, 0.4], ry: () => Math.PI / 2 });
+const woman = await person([B + 'Superhero_Female_FullBody.gltf', HR + 'Hair_Long.gltf', HR + 'Eyebrows_Female.gltf'],
+  { tl: [[0, 'Idle_Talking_Loop', 1], [4.4, 'Hit_Chest', 0], [4.7, 'Idle_Loop', 1]], path: () => [1.7, 0, -1.0], ry: t => t < 4.3 ? -0.9 : -1.6 });
+const actors = [man, woman];
+peel.position.set(-2.4 + 2.9 * 1.2 + 0.35, 0, 0.4);
+function pose(a, t) {
+  let seg = a.tl[0]; for (const s of a.tl) if (t >= s[0]) seg = s;
+  const clip = CLIPS[seg[1]]; const lt = t - seg[0];
+  for (const m of a.mixers) { m.stopAllAction(); const act = m.clipAction(clip); act.reset(); act.play(); act.time = seg[2] ? lt % clip.duration : Math.min(lt, clip.duration - 1e-3); m.update(0); }
+  const [x, y, z] = a.path(t); a.holder.position.set(x, y, z); a.holder.rotation.y = a.ry(t);
+}
+window.FRAMES = 240;
+window.renderFrame = f => {
+  const t = f / FPS;
+  for (const a of actors) pose(a, t);
+  man.holder.updateMatrixWorld(true);
+  const pel = man.holder.getObjectByName('pelvis'); const p = new THREE.Vector3(); pel.getWorldPosition(p);
+  const fx = THREE.MathUtils.lerp(p.x, 0.6, 0.35);
+  cam.position.set(fx + 1.0, 1.9, 6.4); cam.lookAt(fx, 0.95, -0.2);
+  renderer.render(scene, cam);
+};
+window.ready = true;
+</script></body></html>

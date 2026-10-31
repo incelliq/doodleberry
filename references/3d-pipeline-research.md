@@ -81,6 +81,25 @@ audiences. They are **static meshes with no armature**, so they suit set dressin
 a crowd) rather than animated actors. Direct download endpoint: `/api/library/<slug>/download`.
 Check each part's source line before use; prefer items marked as Innerscene/MakeHuman-derived.
 
+
+## 3d. Universal Base Characters [Standard] (downloaded 2026-10-31) and Quaternius animal packs
+
+**UBC Standard** (CC0, `License_Standard.txt`): the free tier holds 2 full bodies (Superhero_Male, Superhero_Female; glTF
+for Godot/UE and FBX for Unity) with dark/light skin textures, normal and roughness maps, eye textures, plus 8 hair and
+eyebrow meshes (buzzed, buzzed female, long, buns, simple parted, beard, two eyebrow sets) both "origin at 0" and
+"rigged to head bone". Bone names match the UAL skeleton exactly (pelvis, spine_01…, hand_l, Head…), so every UAL clip
+and every CMU clip retargeted by `cmu_retarget.py` plays on them by name, hair included (each hair glTF carries the
+same skeleton; play the same clip on it). **Tested:** `tools/three/ubc-slip-test.html`, a man walks into a kitchen,
+slips on a banana peel (CMU 90_17) and falls while a woman talks and flinches (UAL clips); 240 frames in 135 s.
+The paid Source tier adds the other 4 bodies (regular and teen proportions).
+
+**Quaternius Ultimate Animated Animals (July 2021), Farm Animals, Ultimate Nature Pack (June 2019)** were shared as
+public Google Drive folders. Listing works (`embeddedfolderview`); file downloads returned Google's
+"Quota exceeded: too many users have viewed or downloaded this file recently" page, so nothing was fetched.
+Contents seen: Animated Animals glTF/FBX/blend for Alpaca, Bull, Cow, Deer, Donkey, Fox, Horse, Horse_White, Husky,
+ShibaInu, Stag, Wolf; Farm Animals FBX/OBJ/blend for Cow, Horse, Llama, Pig, Pug, Sheep, Zebra; Nature Pack blends,
+FBX and OBJ. Fix: download each folder as a zip in a browser and upload it.
+
 ## 4. Recommendation
 
 1. **Blender headless as the asset factory, driven by Claude Code:** generate MPFB humans (or load Quaternius/KayKit), dress them,
