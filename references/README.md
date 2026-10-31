@@ -11,8 +11,9 @@ scripts, layouts and scores.
 | 2 | "Why put straw under watermelons?" | 61 s | character comedy → time-skip card → visible consequence → expert explanation; several voices; weather as the result; blurred foreground layer |
 | 3 | "Why don't farmers chase ducks away in rice fields?" | 57 s | waterline split composition, locked-off acting-driven staging, villain/victim/hero structure, pose-to-pose snaps, persistent damage, off-screen entrance, dense loud mix | 
 | 4 | "This New Farming Machine Kills Weeds With Lasers Without Hurting Crops" | 72 s | skit-then-explainer two-act format, machine-POV HUD shot, motion burst as punctuation, dramatic-irony gag, one-word captions placed on the speaker | 
+| 5 | eggplant grafted onto potato (other channel, hashtag-only title, ~12M views) | 56 s | action-first hook, misconception voiced by a character then disproved, two-harvest reveal across the soil line, parody time card as a joke beat, background gags in the soil, 15 s explainer | 
 
-See `ref3-rice-ducks.md` and `ref4-laser-weeder.md` for the full studies of refs 3 and 4; refs 1–2 are summarised below.
+See `ref3-rice-ducks.md`, `ref4-laser-weeder.md` and `ref5-eggplant-potato-graft.md` for the full studies of refs 3–5; refs 1–2 are summarised below.
 
 ## Measurements across the three
 
