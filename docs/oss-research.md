@@ -327,3 +327,32 @@ A note on supply: Doodleberry should keep an **asset licence manifest** (source 
   - The Kokoro per-token timestamp feature.
   - Headless operation of tcomposer (OpenToonz), the Glaxnimate CLI and Animated Drawings rendering.
   - resvg, ThorVG and skia-python speed on our frames (not installed, per instructions).
+
+## 9. Addendum: procedural, physics and ecosystem tools (November 2026)
+
+Checked for the procedural brainstorm (`docs/brainstorm/procedural-houdini.md`, which has the full table and the CPU
+probe results). Only the tools now named in `docs/build-plan.md` are listed here. Tags as above.
+
+| Tool | Licence | Plan item | Notes |
+|---|---|---|---|
+| Rapier 2D, deterministic JS build (`@dimforge/rapier2d-deterministic-compat` 0.21.0) | Apache-2.0 [R] | 2.19 | not MIT; keep the NOTICE; measured bit-identical reruns in Node |
+| manifold3d 3.5.4 | Apache-2.0 [R] | 1.7 | 2D `CrossSection` offsets as an alternative to pyclipr |
+| SAM 2 / 2.1 checkpoints | Apache-2.0 [R] | 1.8b | the SA-V dataset has separate terms; CPU is slow, so suggestions only |
+| Poly Haven, ambientCG | CC0 [R] | 1.6 | record each file in the manifest |
+| Depth Anything V2 **Small** | Apache-2.0 [R] | 1.6 | Base, Large and Giant are CC-BY-NC-4.0: **NC**, do not use |
+| music21 10.5.2 | BSD-3 [R] | 2.14 | |
+| FluidSynth | LGPL-2.1 [R] | 2.14 | **COPYLEFT**: run as a separate process |
+| GeneralUser GS 2.0.1 | permissive [R] | 2.14 | sample provenance not guaranteed by its author: review before published films |
+| Tone.js 15.1 | MIT [R] | 2.14 | |
+| React Flow (`@xyflow/react` 12.12) | MIT [R] | 3.10 | |
+| OpenRV | Apache-2.0 [R] | 3.4 | licensed codecs excluded |
+| xSTUDIO | Apache-2.0 [V] | 3.4 | |
+| Typst (core; Python binding 0.15) | Apache-2.0 [R] | 4.8 | |
+| Godot | MIT [R] | 4.8 | |
+| usd-core 26.11 | TOST-1.0 [R] | brainstorm 5.9 | Apache-2.0 with a modified trademark section; not OSI/SPDX-listed |
+| NVIDIA Warp 1.18 | Apache-2.0 [R] | brainstorm 5C | relicensed from a NVIDIA licence in 2025 |
+| Blender (Geometry Nodes, headless) | GPL [R] | brainstorm 5B | already used as a subprocess; keep it that way |
+
+**Add to "explicitly avoid":** ToonCrafter (generative video; licence unclear), Stable Audio Open (Stability Community
+License, revenue-capped, **SRC-AVAIL**), Depth Anything V2 Base/Large/Giant (**NC**), pymeshlab in-process (GPL-3),
+Kitsu in the service (**AGPL**, unverified).
