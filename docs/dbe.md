@@ -78,6 +78,7 @@ frames the composited characters exactly like the set.
 ## Licences
 - `voices/registry.json` gates voices: only `clean` voices build unless a film's script.json sets
   `"allow_restricted_voices": true`, which is for internal tests only.
+- `docs/feature-map.md` is the full feature map and build order.
 - `docs/oss-research.md` lists vetted libraries, models and assets, plus the ones to avoid.
 - Piper itself (piper-tts ≥ 1.3) and espeak-ng are GPL-3.0. They run as a separate process, which is fine for a
   service, but it matters if Doodleberry is distributed as software.
