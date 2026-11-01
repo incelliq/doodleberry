@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<canvas version="1.2" width="540" height="960" xres="2834.645669" yres="2834.645669" gamma-r="1" gamma-g="1" gamma-b="1" view-box="-4.5 8 4.5 -8" antialias="1" fps="24" begin-time="0f" end-time="2s" bgcolor="0.85 0.92 0.97 1">
+  <name>blob test</name>
+  <layer type="rectangle" active="true" version="0.2" desc="floor">
+    <param name="color"><color><r>0.78</r><g>0.68</g><b>0.55</b><a>1</a></color></param>
+    <param name="point1"><vector><x>-5</x><y>-3</y></vector></param>
+    <param name="point2"><vector><x>5</x><y>-9</y></vector></param>
+  </layer>
+  <layer type="circle" active="true" version="0.2" desc="body">
+    <param name="color"><color><r>0.36</r><g>0.72</g><b>0.45</b><a>1</a></color></param>
+    <param name="radius"><real value="1.6"/></param>
+    <param name="origin"><animated type="vector">
+      <waypoint time="0s" before="clamped" after="clamped"><vector><x>-2</x><y>-1.4</y></vector></waypoint>
+      <waypoint time="1s" before="clamped" after="clamped"><vector><x>0</x><y>1.5</y></vector></waypoint>
+      <waypoint time="2s" before="clamped" after="clamped"><vector><x>2</x><y>-1.4</y></vector></waypoint>
+    </animated></param>
+  </layer>
+  <layer type="outline" active="true" version="0.2" desc="smile">
+    <param name="color"><color><r>0.14</r><g>0.09</g><b>0.06</b><a>1</a></color></param>
+    <param name="width"><real value="0.12"/></param>
+    <param name="bline"><bline type="bline_point" loop="false">
+      <entry><composite type="bline_point"><point><vector><x>-0.6</x><y>0.0</y></vector></point><width><real value="1"/></width><origin><real value="0.5"/></origin><split><bool value="false"/></split><t1><vector><x>0.3</x><y>-0.8</y></vector></t1><t2><vector><x>0.3</x><y>-0.8</y></vector></t2><split_radius><bool value="true"/></split_radius><split_angle><bool value="false"/></split_angle></composite></entry>
+      <entry><composite type="bline_point"><point><vector><x>0.6</x><y>0.0</y></vector></point><width><real value="1"/></width><origin><real value="0.5"/></origin><split><bool value="false"/></split><t1><vector><x>0.3</x><y>0.8</y></vector></t1><t2><vector><x>0.3</x><y>0.8</y></vector></t2><split_radius><bool value="true"/></split_radius><split_angle><bool value="false"/></split_angle></composite></entry>
+    </bline></param>
+    <param name="origin"><vector><x>0</x><y>0.8</y></vector></param>
+  </layer>
+</canvas>
