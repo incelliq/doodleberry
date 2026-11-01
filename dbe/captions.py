@@ -24,9 +24,28 @@ def _esc(s):
     return s.replace("\\", "").replace("{", "(").replace("}", ")")
 
 
-def make_ass(timing, size, chunk=3, font="Fredoka", font_size=88, y_from_bottom=300,
+CHAR_W = 0.6  # Fredoka bold caps: average advance as a share of the font size (measured generously)
+
+
+def safe_width(W, H):
+    return 896 if H > W else int(W * 0.9)  # 9:16: x 64-960 (platform rail); 16:9: 5% title-safe
+
+
+def safe_margins(W, H):
+    """left/right margins that centre captions inside the text-safe area (9:16 has a right rail)"""
+    return (64, W - 960) if H > W else (int(W * 0.05), int(W * 0.05))
+
+
+def fit_size(text, font_size, width):
+    return int(min(font_size, width / max(1, len(text) * CHAR_W)))
+
+
+def make_ass(timing, size, chunk=3, font="Fredoka", font_size=88, y_from_bottom=380,
              text="#ffffff", outline="#24160e", highlight="#ffd23f", upper=True):
     W, H = size
+    if W > H and y_from_bottom == 380:  # landscape: keep inside 5% title-safe
+        y_from_bottom, font_size = 90, min(font_size, 64)
+    ml, mr = safe_margins(W, H)
     head = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {W}
@@ -36,7 +55,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Cap,{font},{font_size},{_ass_colour(text)},{_ass_colour(text)},{_ass_colour(outline)},{_ass_colour('#000000', 0x80)},-1,0,0,0,100,100,1,0,1,9,4,2,60,60,{y_from_bottom},1
+Style: Cap,{font},{font_size},{_ass_colour(text)},{_ass_colour(text)},{_ass_colour(outline)},{_ass_colour('#000000', 0x80)},-1,0,0,0,100,100,1,0,1,9,4,2,{ml},{mr},{y_from_bottom},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -59,7 +78,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                     t = re.sub(r"[.,;:]$", "", _esc(g["text"]))
                     t = t.upper() if upper else t
                     parts.append(f"{{\\c{hl}}}{t}{{\\c{_ass_colour(text)}}}" if j == i else t)
-                # a small pop on the first word of each chunk
+                # a small pop on the first word of each chunk; long chunks shrink to fit the text-safe width
                 pop = "{\\fscx92\\fscy92\\t(0,80,\\fscx100\\fscy100)}" if i == 0 else ""
-                events.append(f"Dialogue: 0,{_ts(start)},{_ts(end)},Cap,,0,0,0,,{pop}{' '.join(parts)}")
+                fs = fit_size(" ".join(g["text"] for g in group), font_size, safe_width(W, H))
+                fit = f"{{\\fs{fs}}}" if fs < font_size else ""
+                events.append(f"Dialogue: 0,{_ts(start)},{_ts(end)},Cap,,0,0,0,,{fit}{pop}{' '.join(parts)}")
     return head + "\n".join(events) + "\n"

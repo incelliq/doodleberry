@@ -32,7 +32,19 @@ environment variables below).
 - **film.credits**: credits built from what the film uses (characters, voices and their licences, renderers, fonts).
 - **shot.render**: render one shot with its renderer: `svg` (headless Chromium), `synfig` (Synfig CLI), `grease-pencil` (headless Blender), or `lottie` (lottie-web).
 - **film.render**: render all shots, join them, burn in word-timed captions, mix score, effects and voice (−14 LUFS), mux, then run QA.
-- **qa.run**: the measured quality bar plus contact sheets.
+- **qa.run**: the measured quality bar plus contact sheets, plus layout checks (`dbe/layout_qa.py`):
+  - **frame fill:** bare-ground share per scene, sampled every 3 s on the final encode;
+  - **text:** every word inside the platform-safe area (9:16: x 64–960, y 200–1560; 16:9: 5% title-safe), and minimum type size;
+  - **reading time:** static blocks stay up for at least words ÷ 3 + 1 s; caption flow under 3.2 words/s;
+  - **seams:** frame difference at cuts;
+  - **cold open:** a character in frame one, and the first words by 1.5 s;
+  - **mix:** effects below music; percussive cue onsets within one frame.
+
+  Every film gets the numbers. A layout check fails a film only if the film opts in with
+  `"qa": {"enforce": ["text_in_safe_area", ...], "fill_max": 0.4}` in shots.json; thresholds come from flat-paper
+  explainers and are calibrated per style first.
+- **test**: golden-frame regression test (`tests/golden.json`); `{"update": true}` rewrites the goldens.
+- **film.validate**: schemas plus reference checks; runs automatically on `film.write` and before renders.
 - **export.lottie / export.synfig / export.web**: a Lottie JSON (with the set embedded as an image), an editable Synfig project, or an interactive web player.
 - **film.localize**: copy a film into another language: swap voices, replace lines, re-voice and re-render. Timing re-derives from the new words.
 - **film.retime**: re-derive shot boundaries from line references after a voice change.

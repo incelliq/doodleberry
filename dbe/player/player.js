@@ -37,7 +37,7 @@
     let svg = world;
     if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, t) || [W / 2, H / 2, 1]; svg = `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
-    if (!bgOnly && !only && sh.captions !== false && S.captions !== false) svg += captions(t);
+    if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;
   }
   const only = q.get('shot') ? S.shots.find(s => s.id === q.get('shot')) : null;

@@ -424,15 +424,25 @@ def film_render(name, only=None):
     return {"rendered": done, "final": str(final.relative_to(ROOT)), "qa": qa.get("checks")}
 
 
-@command("qa.run", name=("string", "film"))
-def qa_run(name):
-    """Run the measured quality bar (size, fps, stills, loudness, true peak, fact tracing) and write contact sheets."""
+@command("qa.run", name=("string", "film"), layout=("boolean", "also run the measured layout checks (frame fill, safe zones, type size, reading time, seams, cold open, mix)", True))
+def qa_run(name, layout=True):
+    """Run the measured quality bar (size, fps, stills, loudness, true peak, fact tracing), the layout checks, and
+    write contact sheets. Layout checks fail the film only when shots.json "qa": {"enforce": [...]} lists them."""
     _film(name)
     r = subprocess.run([PY, "engine/qa.py", f"films/{name}"], cwd=ROOT, capture_output=True, text=True)
     try:
-        return json.loads(r.stdout)
+        rep = json.loads(r.stdout)
     except Exception:
         return {"error": (r.stderr or r.stdout)[-800:]}
+    if layout and (FILMS / name / "shots.json").exists():
+        from . import layout_qa
+        lay = layout_qa.run(FILMS / name, page=_player_page(name))
+        rep["layout"] = lay
+        for k in lay["enforced"]:
+            rep["checks"][f"layout:{k}"] = lay["checks"].get(k, True)
+        rep["layout_advisory_failures"] = lay["advisory_failures"]
+        (FILMS / name / "build" / "qa.json").write_text(json.dumps(rep, indent=1))
+    return rep
 
 
 # ---------------- reach ----------------
