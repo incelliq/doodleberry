@@ -22,9 +22,15 @@ import bpy
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = Path(argv[0]); OUT.mkdir(parents=True, exist_ok=True)
 VARIANTS = json.loads(Path(argv[1]).read_text()) if len(argv) > 1 else []
+KEEP = []  # bones that keep the pose saved in the file for the base state (e.g. a tail curled by its controls)
+if isinstance(VARIANTS, dict):
+    KEEP = VARIANTS.get("keep_pose", []); VARIANTS = VARIANTS.get("variants", [])
 
 arm = next((o for o in bpy.data.objects if o.type == "ARMATURE"), None)
 scene = bpy.context.scene
+
+
+SAVED = {pb.name: (tuple(pb.location), tuple(pb.scale), tuple(pb.rotation_quaternion), tuple(pb.rotation_euler)) for pb in arm.pose.bones} if arm else {}
 
 
 def reset_pose():
@@ -33,6 +39,9 @@ def reset_pose():
     if arm.animation_data:
         arm.animation_data.action = None
     for pb in arm.pose.bones:
+        if pb.name in KEEP:
+            pb.location, pb.scale, pb.rotation_quaternion, pb.rotation_euler = SAVED[pb.name]
+            continue
         pb.location = (0, 0, 0); pb.scale = (1, 1, 1)
         pb.rotation_quaternion = (1, 0, 0, 0); pb.rotation_euler = (0, 0, 0)
     for ob in bpy.data.objects:
@@ -103,6 +112,13 @@ def snapshot():
     dg.update()
     return {ob.name: mesh_record(ob, dg) for ob in bpy.data.objects if visible(ob)}
 
+
+# subdivision on skinned meshes changes the vertex count, which loses the per-vertex weights: flatten without it
+for ob in bpy.data.objects:
+    if ob.type == "MESH" and any(m.type == "ARMATURE" for m in ob.modifiers):
+        for m in ob.modifiers:
+            if m.type == "SUBSURF":
+                m.show_viewport = False; m.show_render = False
 
 reset_pose(); bpy.context.view_layer.update()
 base = snapshot()

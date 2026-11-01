@@ -198,12 +198,15 @@ the joint will gap. Measured on Pip through SVG and ORA: mean pivot error 9 unit
   renderer; 2.7x texture slots are matched by name cues and UV alpha coverage, or set in `spec.materials`);
 - meshes land on template parts by the bone that carries them (screen right = template R); skinned meshes are split by
   vertex weights with overlap at the joints; every mesh keeps its own depth as a child layer;
-- chains that are not template parts (hair locks, skirt panels, a ponytail) become spring parts;
+- each deforming bone of a chain that is not a template part (hair locks, skirt panels, a ponytail, a tail) becomes its
+  own spring part, so meshes weighted along the chain bend smoothly; skinned meshes are subdivided once and their
+  weights diffused (`mesh_subdivide`, `mesh_smooth`) so bends are arcs, not kinks;
+- `keep_pose` in a recipe keeps chosen bones in the pose saved in the file (Carrot's tail curl) for the base state;
 - variants (bone poses, actions, shape keys) become swaps: sprite-sheet lips and hands, lid planes and shape-key
   blinks, brow controls. Region patches carry jaw and lid deformation; mouth patches keep only what lies in front of
   the pupils, so gaze still works.
 
 Third-party rigs stay out of git (`assets/external/`, `cast/external/`); the recipe and its credit line are committed,
 and `assets/manifest.json` "external" records licence and source. Pepper and Carrot (Nikolai Mamashev, after David
-Revoy's Pepper&Carrot, CC-BY 4.0) are the showcase. Skinned meshes that span several parts become v0.5 mesh strokes (smooth knees, hips, skirts); single-bone
+Revoy's Pepper&Carrot, CC-BY 4.0) are the showcase (`cast/recipes/pepper.json`, `cast/recipes/carrot.json`). Skinned meshes that span several parts become v0.5 mesh strokes (smooth knees, hips, skirts); single-bone
 meshes stay rigid layers. Limit: raster and mesh parts render in the SVG renderer only.

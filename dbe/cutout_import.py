@@ -151,7 +151,7 @@ def stroke(res, px, crop=None):
             "x": round(x0 + bb[0] / px, 2), "y": round(y0 + bb[1] / px, 2), "w": round((bb[2] - bb[0]) / px, 2), "h": round((bb[3] - bb[1]) / px, 2)}
 
 
-def mesh_stroke(tris, F, img, weights_of, px):
+def mesh_stroke(tris, F, img, weights_of, px, subdivide=1, smooth=3):
     """skinned triangles -> a v0.5 mesh stroke: shared vertices, texture crop, per-vertex part weights"""
     H, W = img.shape[:2]
     keyv, verts, uv, wts, tri_ix = {}, [], [], [], []
@@ -163,13 +163,50 @@ def mesh_stroke(tris, F, img, weights_of, px):
                 keyv[k] = len(verts); verts.append(F.xy(p[0], p[1])); uv.append((p[2] * W, (1 - p[3]) * H)); wts.append(weights_of(w))
             ix.append(keyv[k])
         tri_ix.append(ix)
+    for _ in range(subdivide):  # midpoint subdivision: four triangles per triangle, attributes interpolated
+        mid = {}
+
+        def midpoint(i, j):
+            k = (min(i, j), max(i, j))
+            if k not in mid:
+                mid[k] = len(verts)
+                verts.append(((verts[i][0] + verts[j][0]) / 2, (verts[i][1] + verts[j][1]) / 2))
+                uv.append(((uv[i][0] + uv[j][0]) / 2, (uv[i][1] + uv[j][1]) / 2))
+                acc = {}
+                for q, w in wts[i] + wts[j]:
+                    acc[q] = acc.get(q, 0) + w / 2
+                wts.append([[q, w] for q, w in acc.items()])
+            return mid[k]
+        new = []
+        for a, b, c in tri_ix:
+            ab, bc, ca = midpoint(a, b), midpoint(b, c), midpoint(c, a)
+            new += [[a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]]
+        tri_ix = new
+    if smooth:  # diffuse weights over the mesh so bends become arcs instead of kinks (boundary of the mesh included)
+        nb = [set() for _ in verts]
+        for a, b, c in tri_ix:
+            nb[a] |= {b, c}; nb[b] |= {a, c}; nb[c] |= {a, b}
+        WD = [dict((q, w) for q, w in ws) for ws in wts]
+        for _ in range(smooth):
+            nxt = []
+            for i, ws in enumerate(WD):
+                acc = {q: 0.5 * w for q, w in ws.items()}
+                for j in nb[i]:
+                    for q, w in WD[j].items():
+                        acc[q] = acc.get(q, 0) + 0.5 * w / len(nb[i])
+                nxt.append(acc)
+            WD = nxt
+        wts = []
+        for ws in WD:
+            tot = sum(ws.values()) or 1
+            wts.append([[q, round(w / tot, 3)] for q, w in sorted(ws.items(), key=lambda kv: -kv[1]) if w / tot >= 0.02][:4])
     U = np.array(uv)
     x0, y0 = np.maximum(np.floor(U.min(0)) - 2, 0).astype(int); x1, y1 = np.minimum(np.ceil(U.max(0)) + 2, [W, H]).astype(int)
     crop = Image.fromarray((np.clip(img[y0:y1, x0:x1], 0, 1) * 255).astype(np.uint8), "RGBA")
     buf = io.BytesIO(); crop.save(buf, "PNG", optimize=True)
     return {"mesh": {"image": "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(), "iw": int(x1 - x0), "ih": int(y1 - y0),
                      "verts": [[round(v[0], 2), round(v[1], 2)] for v in verts], "uv": [[round(u - x0, 2), round(v - y0, 2)] for u, v in uv],
-                     "tris": tri_ix, "weights": wts}}
+                     "tris": tri_ix, "weights": wts, "grow": 1.1}}
 
 
 # ---------------- bones -> parts ----------------
@@ -186,7 +223,10 @@ def part_for_bone(name, head_x, cx):
     for pat, part in TEMPLATE_RULES:
         if re.search(pat, low):
             if part in SIDED:
-                return f"{part}_{'R' if head_x >= cx else 'L'}"  # screen right = template R (front)
+                m = re.search(r"[._-]([LR])(?:\.\d+)?$", name)
+                if m:  # Blender .L is the character's left = screen right = template R (front)
+                    return f"{part}_{'R' if m.group(1) == 'L' else 'L'}"
+                return f"{part}_{'R' if head_x >= cx else 'L'}"
             return part
     return None
 
@@ -210,22 +250,28 @@ def build(ext_dir, spec):
             b = bones[b]["parent"]
         return b
 
+    def chainy(b):
+        low = b.lower()
+        return bool((low.startswith("def") or re.match(r"^bone", low) or "hair" in low) and not low.startswith(("ctrl", "mch"))
+                    and bones[b].get("deform", True) and not tpl_of(b))
+
+    def clean(b):
+        nm = re.sub(r"^(ctrl|mch|def)[-_.]?", "", b.lower())
+        return re.sub(r"[^a-z0-9]+", "_", nm).strip("_") or "chain"
+
     def owner(b):
-        """bone -> (part id, extra chain root or None)"""
+        """bone -> (part id, chain bone or None). Each deforming chain bone (hair lock, skirt panel, tail segment) is its
+        own spring part, so meshes weighted along the chain bend smoothly"""
         if not b:
             return "hip", None
         if tpl_of(b):
             return tpl_of(b), None
-        root = chain_root(b)
-        low = b.lower()
-        chainy = (low.startswith("def") or re.match(r"^bone", low) or "hair" in low) and not low.startswith(("ctrl", "mch"))
-        if spec.get("springs", True) and chainy and bones[root]["parent"]:
-            nm = re.sub(r"^(ctrl|mch|def)[-_.]?", "", root.lower()); nm = re.sub(r"[-_.]?loc\b", "", nm)
-            return re.sub(r"[^a-z0-9]+", "_", nm).strip("_") or "chain", root
+        if spec.get("springs", True) and chainy(b):
+            return clean(b), b
         q = b
-        while q and not tpl_of(q):
+        while q and not tpl_of(q) and not (spec.get("springs", True) and chainy(q)):
             q = bones[q]["parent"]
-        return (tpl_of(q) if q else "hip"), None
+        return owner(q) if q else ("hip", None)
 
     # pieces: each mesh, skinned meshes split by the part their vertex weights belong to (overlapping at joints)
     for o in objs:  # Blender only skins with deforming bones: drop weights on control bones, renormalise
@@ -305,15 +351,25 @@ def build(ext_dir, spec):
             drawn.add(q)
             if r:
                 roots[q] = r
-    order = [p["id"] for p in T["parts"]] + sorted(roots)
+    def bdepth(b):
+        d = 0
+        while bones[b]["parent"]:
+            b, d = bones[b]["parent"], d + 1
+        return d
+    order = [p["id"] for p in T["parts"]] + sorted(roots, key=lambda q: (bdepth(roots[q]), q))
     for pid in order:
         if pid not in drawn and pid != "hip":
             continue
         mine = sorted([pc for pc in pieces if pc["part"] == pid and pc["obj"]["name"] not in owned], key=lambda pc: -pc["depth"])
         if pid in roots:
             root = roots[pid]; pv = piv(root)
-            pb = bones[root]["parent"]; par = owner(pb)[0] if pb else "hip"
-            springs[pid] = {"driver": par, "freq": 1.4, "damping": 0.3, "gain": 0.9 if "hair" in pid or pid.startswith("bone_00") else 0.6, "limit": 14}
+            pb, par = bones[root]["parent"], "hip"
+            while pb:  # nearest ancestor that is a part (chain bones without drawings are skipped)
+                q = owner(pb)[0]
+                if q in drawn and q != pid:
+                    par = q; break
+                pb = bones[pb]["parent"]
+            springs[pid] = {"driver": par, "freq": 1.6, "damping": 0.35, "gain": 0.55, "limit": 12}
         else:
             mb = main_bone(pid)
             pv = piv(mb) if mb else [F.W / 2, F.ground]
@@ -339,7 +395,7 @@ def build(ext_dir, spec):
                     k = owner(bn)[0]; acc[k] = acc.get(k, 0) + w
                 tot = sum(acc.values()) or 1
                 return [[k, round(v / tot, 3)] for k, v in sorted(acc.items(), key=lambda kv: -kv[1]) if v / tot >= 0.01]
-            return mesh_stroke(tris, F, img, weights_of, px)
+            return mesh_stroke(tris, F, img, weights_of, px, spec.get("mesh_subdivide", 1), spec.get("mesh_smooth", 3))
         layers = [(zof(pc), piece_stroke(pc)) for pc in mine]
         layers = [(z, s) for z, s in layers if s]
         if not layers:
@@ -359,8 +415,10 @@ def build(ext_dir, spec):
 
     swaps = {}
     pp = [pc for pc in pieces if pc["part"] == "@pupils"]
-    if pp:
-        swaps["pupils"] = {"anchor": "head", "z": min(zof(pc) for pc in pp), "movable": spec.get("movable", 3),
+    if pp:  # drop stray planes parked far behind (alternate eyes), then sit just above the eye whites
+        med = sorted(pc["depth"] for pc in pp)[len(pp) // 2]
+        pp = [pc for pc in pp if abs(pc["depth"] - med) < 0.02]
+        swaps["pupils"] = {"anchor": "head", "z": max(zof(pc) for pc in pp), "movable": spec.get("movable", 3),
                            "shapes": {"default": [s for s in (stroke(raster([pc["obj"]], F, mats, ims, px), px) for pc in sorted(pp, key=lambda pc: -pc["depth"])) if s]}}
 
     def canvas(res, x0, y0, W, H):

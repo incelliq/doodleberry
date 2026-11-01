@@ -258,7 +258,9 @@
   // completeness and sanity checks against a template ("rig linter")
   function lint(p, t) {
     const out = [];
-    for (const pt of t.parts) { const part = p.parts[pt.id]; if (pt.required && (!part || !part.strokes.length)) out.push({ level: 'missing', msg: `${pt.label}: not drawn yet` }); }
+    const weighted = new Set();  // v0.5: parts that carry mesh weights count as drawn
+    for (const part of Object.values(p.parts)) for (const st of part.strokes || []) if (st.mesh) for (const ws of st.mesh.weights) for (const [k] of ws) weighted.add(k);
+    for (const pt of t.parts) { const part = p.parts[pt.id]; if (pt.required && (!part || (!part.strokes.length && !weighted.has(pt.id)))) out.push({ level: 'missing', msg: `${pt.label}: not drawn yet` }); }
     for (const sw of t.swaps) for (const k of sw.required) if (!p.swaps[sw.id] || !(p.swaps[sw.id].shapes[k] || []).length) out.push({ level: 'missing', msg: `${sw.label}: "${k}" not drawn yet` });
     for (const [id, part] of Object.entries(p.parts)) if (part.strokes.some(st => !st.image && /^#/.test(st.fill || '') || /^#/.test(st.stroke || '') && st.stroke !== p.palette.ink)) out.push({ level: 'warn', msg: `${id}: uses raw colours instead of palette slots (can't be recoloured)` });
     return out;

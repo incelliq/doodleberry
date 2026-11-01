@@ -939,7 +939,7 @@ def puppet_from_blend(recipe):
     blender = os.environ.get("DBE_BLENDER", "blender")
     work = ROOT / "cast" / "external" / (Path(R["out"]).stem.split(".")[0] + "_extract")
     work.mkdir(parents=True, exist_ok=True)
-    (work / "variants.json").write_text(json.dumps(R.get("variants", [])))
+    (work / "variants.json").write_text(json.dumps({"variants": R.get("variants", []), "keep_pose": R.get("keep_pose", [])}))
     r = subprocess.run([blender, "-b", "--factory-startup", str(src), "--python", str(ROOT / "dbe" / "blender_cutout.py"), "--", str(work), str(work / "variants.json")],
                        capture_output=True, text=True, timeout=1800)
     line = next((l for l in r.stdout.splitlines() if l.startswith("CUTOUT ")), None)
