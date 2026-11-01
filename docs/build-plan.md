@@ -144,6 +144,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.11 Doodle template | done: template and clip library (hop, wave, tilt, wag, talk, lean, shake) | this commit |
 | 1.12 Native dual-aspect | done: `film.render aspect=16:9 / 1:1`, auto re-staging plus overrides, landscape set designs, aspect-aware bubbles, captions and QA | this commit |
 | 1.13 Explainer scene library | done: card, counter, console, data-bound bars, quote, citation, wordmark, camera float | this commit |
+| 1.14 Brand kit | done: brand.json, brand.check (contrast, CVD, platform distance), brand.assets, opt-in film inheritance | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

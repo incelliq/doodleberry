@@ -124,6 +124,23 @@ Timed with `start` and `end`, line-relative allowed. Sizes default to the aspect
 Fonts: Fredoka (body), Atkinson Hyperlegible Mono (consoles, citations), Patrick Hand (bubbles, signs), all OFL.
 `films/explainer-demo` uses all of these and passes the research gate.
 
+## Brand kit
+- `brand/brand.json` holds the palette, accents, the text pairs the brand uses, fonts, the wordmark, caption colours and
+  exclusion rules.
+- **`brand.check`** measures:
+  - WCAG contrast for every declared text pair;
+  - colour-blind separation of the accents (Machado 2009 simulation, CIEDE2000, checked against the Sharma reference
+    pairs);
+  - distance from Facebook, LinkedIn, YouTube and TikTok interface colours.
+
+  It found the original blue accent nearly identical to LinkedIn's blue (ΔE 2.0) and that a green accent would merge
+  with the berry for colour-blind viewers (ΔE 2.3). The palette now uses violet `#5a3fc0` (separation 20.2, at least
+  15.7 from every platform colour).
+- **`brand.assets`** writes profile tiles (720/400/180) and YouTube, Facebook, LinkedIn and story covers with text
+  inside each platform's safe area, plus QA overlays. It refuses a palette that fails the check.
+- **Films opt in** with `"brand": true` in shots.json: caption colours, the wordmark and explainer accents come from the
+  brand, and explicit values in a film still win.
+
 ## Render speed
 `tools/three/run3d.mjs` runs one browser process per CPU on contiguous frame ranges, uses Chrome's fast capture, and
 encodes with `-tune animation`. It hashes each frame's SVG and links repeats instead of capturing them. Shots animated on

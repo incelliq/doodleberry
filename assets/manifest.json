@@ -97,6 +97,11 @@
    "path": "tests/golden/",
    "license": "CC0-1.0",
    "note": "test fixtures rendered from this repository"
+  },
+  {
+   "path": "puppet/examples/nib_photo.png",
+   "license": "CC0-1.0",
+   "note": "drawn by make_nib_photo.py (a simulated phone photo of an original doodle)"
   }
  ],
  "tools_not_bundled": [

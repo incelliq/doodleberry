@@ -35,10 +35,7 @@
    },
    "overlays": [
     {
-     "type": "wordmark",
-     "text": "doodle",
-     "accent_text": "berry",
-     "accent": "#c43b6b"
+     "type": "wordmark"
     },
     {
      "type": "card",
@@ -76,8 +73,8 @@
      "title": "Render time per frame",
      "colors": [
       "#9aa4ad",
-      "#1a62c2",
-      "#c43b6b"
+      "#5a3fc0",
+      "#b8325f"
      ],
      "start": "after.start-0.1",
      "y": 360,
@@ -134,5 +131,6 @@
     }
    ]
   }
- ]
+ ],
+ "brand": true
 }

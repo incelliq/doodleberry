@@ -40,6 +40,9 @@
 
   // ---------- explainer scene library (plan 1.13): every element is a pure function of t ----------
   const BODY = "'Fredoka',sans-serif", MONO = "'Atkinson Mono',monospace";
+  // brand defaults (films that set "brand": true get window.BRAND); explicit overlay values always win
+  const BR = window.BRAND || null, BP = (BR && BR.palette) || {};
+  const brandColor = (v, d) => v || (BR ? d : undefined);
   const ease = u => (u = Math.min(1, Math.max(0, u)), u * u * (3 - 2 * u));
   const since = (o, t) => t - (o.start ?? 0);
   const fmt = (v, d = 0) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -52,7 +55,7 @@
     if (o.type === 'card') { // a definition card: term in bold, plain-language meaning below
       const w = o.w || (H > W ? 860 : 900), lines = wrapText(o.body || '', Math.floor(w / (fsB * 0.52)));
       const h = fsT * 1.6 + lines.length * fsB * 1.25 + 40, x = o.x ?? (W - w) / 2, y = (o.y ?? H * 0.2) + slide;
-      return `<g opacity="${op}">${plate(x, y, w, h)}<text x="${x + 36}" y="${y + fsT * 1.15}" font-family="${BODY}" font-weight="700" font-size="${fsT}" fill="${o.color || '#1a62c2'}">${esc(o.title || '')}</text>` +
+      return `<g opacity="${op}">${plate(x, y, w, h)}<text x="${x + 36}" y="${y + fsT * 1.15}" font-family="${BODY}" font-weight="700" font-size="${fsT}" fill="${o.color || BP.primary || '#1a62c2'}">${esc(o.title || '')}</text>` +
         lines.map((l, i) => `<text x="${x + 36}" y="${y + fsT * 1.6 + 20 + (i + 0.8) * fsB * 1.25}" font-family="${BODY}" font-size="${fsB}" fill="${INK}">${esc(l)}</text>`).join('') + `</g>`;
     }
     if (o.type === 'counter') { // a number that counts up to its value, with its label
@@ -90,7 +93,8 @@
     }
     if (o.type === 'wordmark') {
       const fs = o.size || (H > W ? 40 : 34), x = o.x ?? (H > W ? 80 : W * 0.05 + 12), y = o.y ?? (H > W ? 262 : H * 0.1);  // inset: glyph bearings stay inside the safe area
-      return `<text x="${x}" y="${y}" font-family="${BODY}" font-weight="700" font-size="${fs}" fill="${o.color || INK}">${esc(o.text)}<tspan fill="${o.accent || '#1a62c2'}">${esc(o.accent_text || '')}</tspan></text>`;
+      const wmk = (BR && BR.wordmark) || {};
+      return `<text x="${x}" y="${y}" font-family="${BODY}" font-weight="700" font-size="${fs}" fill="${o.color || BP.ink || INK}">${esc(o.text || wmk.text || '')}<tspan fill="${o.accent || BP[(BR || {}).wordmark_accent] || '#1a62c2'}">${esc(o.accent_text ?? wmk.accent_text ?? '')}</tspan></text>`;
     }
     return '';
   }

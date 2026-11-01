@@ -341,7 +341,7 @@ def _player_page(name):
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
 {clip_tags}<script src="../../../sets/sets.js"></script>{tags}
-<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};</script>
+<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_json(ROOT / 'brand' / 'brand.json', {}) if _shots(name).get('brand') else None)};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     (d / "build" / "player.html").write_text(page)
     return d / "build" / "player.html"
@@ -497,7 +497,14 @@ def film_render(name, only=None, aspect=""):
         # one caption pass over the joined picture, so every renderer gets the same word-timed captions
         from .captions import make_ass
         ass = d / "build" / "captions.ass"
-        ass.write_text(make_ass(_json(d / "timing.json", {}), s.get("size", [1080, 1920]), **(s.get("caption_style") or {})))
+        cs = dict(s.get("caption_style") or {})
+        if s.get("brand"):  # brand caption colours unless the film overrides them
+            b = _json(ROOT / "brand" / "brand.json", {}); pal = b.get("palette", {}); bc = b.get("captions", {})
+            res = lambda v: pal.get(v, v) if isinstance(v, str) else v
+            for k in ("highlight", "outline", "text"):
+                if bc.get(k) and k not in cs:
+                    cs[k] = res(bc[k])
+        ass.write_text(make_ass(_json(d / "timing.json", {}), s.get("size", [1080, 1920]), **cs))
         capd = d / "build" / "picture_cap.mp4"
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-vf", f"subtitles={ass.relative_to(ROOT)}:fontsdir=engine/fonts",
               "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(capd)])
@@ -924,3 +931,31 @@ def _derive_aspect(name, aspect):
             shutil.copy(src / "build" / f, dst / "build" / f)
     (dst / "shots.json").write_text(json.dumps(restage(_shots(name, resolve=False), aspect), indent=1))
     return dst.name, tag
+
+
+# ---------------- brand (plan 1.14) ----------------
+def _brand(path="brand/brand.json"):
+    b = _json(ROOT / path)
+    if not b:
+        raise FileNotFoundError(f"{path} not found")
+    return b
+
+
+@command("brand.check", path=("string", "brand file", "brand/brand.json"))
+def brand_check(path="brand/brand.json"):
+    """Measure the brand palette: WCAG contrast for every declared text pair, colour-blind separation of the accents
+    (Machado 2009 simulation, CIEDE2000) and distance from each platform's interface colour."""
+    from . import brand
+    return brand.check(_brand(path))
+
+
+@command("brand.assets", path=("string", "brand file", "brand/brand.json"), out=("string", "output folder", "brand/out"))
+def brand_assets(path="brand/brand.json", out="brand/out"):
+    """Generate the profile tile (720/400/180) and covers (YouTube, Facebook, LinkedIn, story) with text inside each
+    platform's safe area, plus safe-area QA overlays. Refuses a palette that fails brand.check."""
+    from . import brand
+    b = _brand(path); chk = brand.check(b)
+    if not chk["ok"]:
+        raise ValueError("brand.check fails: " + "; ".join(chk["errors"]))
+    made = brand.assets(b, ROOT / out, str(ROOT / "engine" / "fonts" / "Fredoka.ttf"))
+    return {"out": out, "files": made, "warnings": chk["warnings"]}

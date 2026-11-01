@@ -1,0 +1,24 @@
+{
+ "name": "doodleberry",
+ "tagline": "Cartoon films, made with code and drawn by hand",
+ "wordmark": {"text": "doodle", "accent_text": "berry"},
+ "wordmark_accent": "primary",
+ "palette": {
+  "paper": "#f6f5ef",
+  "ink": "#24160e",
+  "primary": "#b8325f",
+  "accent": "#5a3fc0",
+  "highlight": "#ffd23f",
+  "mist": "#ece8f4",
+  "secondary_text": "#4a4e57"
+ },
+ "accents": ["primary", "accent", "highlight"],
+ "text_pairs": [
+  ["ink", "paper", "body"], ["secondary_text", "paper", "body"], ["paper", "primary", "body"], ["primary", "paper", "body"],
+  ["paper", "accent", "body"], ["accent", "paper", "body"], ["ink", "highlight", "body"], ["ink", "mist", "body"]
+ ],
+ "fonts": {"headline": "Fredoka", "body": "Fredoka", "mono": "Atkinson Hyperlegible Mono", "hand": "Patrick Hand"},
+ "captions": {"highlight": "highlight", "outline": "ink", "text": "#ffffff"},
+ "exclusions": ["no gradients or glows", "no emoji in titles", "never colour alone for meaning", "highlight is never text on paper"],
+ "notes": "Films inherit this when shots.json sets \"brand\": true: caption colours, wordmark, explainer accents."
+}
