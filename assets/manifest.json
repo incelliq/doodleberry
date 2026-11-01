@@ -144,6 +144,31 @@
    "name": "Kokoro-82M via kokoro-onnx 0.6.1",
    "license": "Apache-2.0 weights; kokoro-onnx MIT; espeak-ng GPL underneath",
    "use": "voice synthesis (kokoro:* voices), separate process"
+  },
+  {
+   "name": "psd-tools 1.26",
+   "license": "MIT",
+   "use": "PSD layer import and export (dbe/drawing_import.py, dbe/layers_export.py)"
+  }
+ ],
+ "external": [
+  {
+   "id": "pepper-rig",
+   "path": "assets/external/pepper/pepper0.3.blend",
+   "in_git": false,
+   "source_url": "https://gum.co/pepper",
+   "license": "CC-BY-4.0",
+   "credit": "Pepper character rig by Nikolai Mamashev (https://gumroad.com/nikolai), based on the original character from the Pepper&Carrot web-comic by David Revoy (https://www.peppercarrot.com). CC-BY 4.0.",
+   "use": "development showcase of cut-out rig import (cast/recipes/pepper.json); rebuilt locally, not committed"
+  },
+  {
+   "id": "carrot-rig",
+   "path": "assets/external/pepper/carrot0.1.blend",
+   "in_git": false,
+   "source_url": "https://gum.co/carrot",
+   "license": "CC-BY-4.0",
+   "credit": "Carrot character rig by Nikolai Mamashev (https://gumroad.com/nikolai), based on the original character from the Pepper&Carrot web-comic by David Revoy (https://www.peppercarrot.com). CC-BY 4.0.",
+   "use": "development showcase; rebuilt locally, not committed"
   }
  ]
 }

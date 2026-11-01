@@ -172,3 +172,38 @@ frames the composited characters exactly like the set.
 - `docs/oss-research.md` lists vetted libraries, models and assets, plus the ones to avoid.
 - Piper itself (piper-tts ≥ 1.3) and espeak-ng are GPL-3.0. They run as a separate process, which is fine for a
   service, but it matters if Doodleberry is distributed as software.
+
+## Drawing import (plan 1.3)
+Three ways in, one way out:
+
+| Command | Takes | Gives |
+|---|---|---|
+| `puppet.import` | a layered `.svg` (Inkscape layers or groups), `.psd` or `.ora` (Krita, GIMP, MyPaint export) | a vector (SVG) or raster-part (PSD/ORA) puppet |
+| `puppet.from_blend` | a recipe (`cast/recipes/*.json`) pointing at a Blender cut-out rig | a raster-part puppet with springs, phonemes, blinks, brows and hand poses |
+| `puppet.export_layers` | any puppet | a layered `.svg`, `.ora` or `.psd` for an artist to repaint (then `puppet.import` it back) |
+
+**Layer names** map to the template: `head`, `upperarm_R`, `Upper arm R`, `lower leg left`; swap shapes as `mouth/closed`
+or a `mouth` group of shape layers (hidden shape layers are kept); `pivot:<part>` and `anchor:<name>` dots; a
+`ground` line; `guide`, `sketch`, `ref`, `background` layers skipped. In SVG, colours become palette slots named after
+the parts they paint (or `data-slot` attributes), and transforms, `<use>`, basic shapes and gradients are flattened.
+
+**Pivots** come from markers when present, else from the drawing: a part that shares its parent's joint in the
+template takes the parent's pivot; otherwise the centre of the rounded cap at the near end of whichever of the two
+shapes is limb-like (checked against their overlap). Parts that do not overlap their parent are reported, because
+the joint will gap. Measured on Pip through SVG and ORA: mean pivot error 9 units on a 1000-unit artboard
+(`python -m dbe test '{"film": "imports"}'` runs both round trips).
+
+**Blender cut-out rigs** (`dbe/blender_cutout.py` inside Blender, scripts off; `dbe/cutout_import.py` outside):
+- every rendered mesh is flattened to front-view triangles with UVs and depth, and rasterised from its texture (no
+  renderer; 2.7x texture slots are matched by name cues and UV alpha coverage, or set in `spec.materials`);
+- meshes land on template parts by the bone that carries them (screen right = template R); skinned meshes are split by
+  vertex weights with overlap at the joints; every mesh keeps its own depth as a child layer;
+- chains that are not template parts (hair locks, skirt panels, a ponytail) become spring parts;
+- variants (bone poses, actions, shape keys) become swaps: sprite-sheet lips and hands, lid planes and shape-key
+  blinks, brow controls. Region patches carry jaw and lid deformation; mouth patches keep only what lies in front of
+  the pupils, so gaze still works.
+
+Third-party rigs stay out of git (`assets/external/`, `cast/external/`); the recipe and its credit line are committed,
+and `assets/manifest.json` "external" records licence and source. Pepper and Carrot (Nikolai Mamashev, after David
+Revoy's Pepper&Carrot, CC-BY 4.0) are the showcase. Limits: raster parts render in the SVG renderer only, and rigid
+pieces show notches past about 30° at knees and hips (mesh deformation for raster parts is next).

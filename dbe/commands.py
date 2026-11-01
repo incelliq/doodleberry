@@ -675,6 +675,21 @@ def test_golden(update=False, film=""):
         d = np.abs(a - b); mean, over = float(d.mean()), float((d.max(-1) > 32).mean()); ok = mean <= tol["mean_abs"] and over <= tol["pixels_over_32"]
         failed += 0 if ok else 1
         results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
+    for case in spec.get("imports", []):  # drawing-import round trips: puppet -> layered file -> puppet, pivots compared
+        if film and film != "imports":
+            continue
+        src = tmp / ("rt_" + Path(case["puppet"]).stem + "." + case.get("format", "svg"))
+        _run([PY, "dbe/layers_export.py", str(ROOT / case["puppet"]), str(src)], timeout=300)
+        back = tmp / "rt.puppet.json"
+        rep = json.loads(_run([PY, "dbe/drawing_import.py", str(src), str(back)], timeout=300)[-1])
+        a, b = _json(ROOT / case["puppet"]), _json(back)
+        errs = {k: round(((v["pivot"][0] - b["parts"][k]["pivot"][0]) ** 2 + (v["pivot"][1] - b["parts"][k]["pivot"][1]) ** 2) ** 0.5, 1)
+                for k, v in a["parts"].items() if k in b["parts"]}
+        worst = max(errs.values()) if errs else 1e9
+        ok = not rep["unmatched"] and len(errs) == len(a["parts"]) and worst <= case.get("max_pivot_error", 30)
+        failed += 0 if ok else 1
+        results.append({"import": f"{case['puppet']} via {case.get('format', 'svg')}", "status": "ok" if ok else "FAIL",
+                        "mean_pivot_error": round(sum(errs.values()) / max(1, len(errs)), 1), "max_pivot_error": worst, "unmatched": rep["unmatched"]})
     for case in spec["cases"]:
         if film and case["film"] != film:
             continue
@@ -876,6 +891,66 @@ def puppet_from_ink(spec, out):
     r = _run([PY, "dbe/ink.py", str(sp), str(op)])
     lint = puppet_lint(str(op.relative_to(ROOT)))
     return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]) if r else None, "lint": lint.get("issues")}
+
+
+# ---------------- drawing import (plan 1.3) ----------------
+def _inside(p, must_exist=False):
+    q = (ROOT / p).resolve()
+    if ROOT not in q.parents or (must_exist and not q.exists()):
+        raise ValueError(f"{p} must be {'an existing file ' if must_exist else ''}inside the repository")
+    return q
+
+
+@command("puppet.import", source=("string", "layered drawing inside the repo: .svg (Inkscape layers or groups), .psd or .ora (Krita/GIMP export)"),
+         out=("string", "where to write the .puppet.json"),
+         template=("string", "humanoid | doodle (default: guessed from the layer names)", ""), name=("string", "character name", ""),
+         z=("string", "document (layer order) | template (template draw order)", "document"),
+         author=("string", "who drew it", ""), license=("string", "licence of the drawing", ""))
+def puppet_import(source, out, template="", name="", z="document", author="", license=""):
+    """Layered drawing to puppet by layer name: parts (`head`, `upperarm_R`, `Upper arm R`), swap shapes (`mouth/closed`
+    or a `mouth` group of shapes), `pivot:<part>` and `anchor:<name>` markers, a `ground` line; guide and sketch layers
+    skipped. Missing pivots are estimated from the drawing (the cap at the near end of each limb). Returns the
+    layer mapping, pivots with the method used, unmatched layers with suggestions, and the lint."""
+    sp, op = _inside(source, True), _inside(out)
+    opts = {k: v for k, v in {"template": template, "name": name, "z": z, "author": author, "license": license}.items() if v}
+    r = _run([PY, "dbe/drawing_import.py", str(sp), str(op), json.dumps(opts)])
+    return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]), "lint": puppet_lint(str(op.relative_to(ROOT))).get("issues")}
+
+
+@command("puppet.export_layers", path=("string", "a .puppet.json"), out=("string", "output .svg, .ora or .psd inside the repo"),
+         pivots=("boolean", "add a pivots layer with a dot per joint", True))
+def puppet_export_layers(path, out, pivots=True):
+    """Hand a puppet to an artist as a layered file (one layer per part, swap sets as groups, palette slots kept in SVG);
+    repaint it and bring it back with puppet.import."""
+    pp, op = _inside(path, True), _inside(out)
+    _run([PY, "dbe/layers_export.py", str(pp), str(op), json.dumps({"pivots": pivots})])
+    return {"out": str(op.relative_to(ROOT)), "bytes": op.stat().st_size}
+
+
+@command("puppet.from_blend", recipe=("string", "a recipe JSON (cast/recipes/*.json): source .blend, variants, spec"))
+def puppet_from_blend(recipe):
+    """Blender cut-out rig to puppet: Blender (headless, scripts off) flattens the rig's textured meshes, bones and
+    sprite/shape-key variants to data; each mesh is rasterised from its UVs, assigned to a template part by its bone,
+    layered by depth; hair and skirt chains become spring parts; phonemes, blinks and hand sprites become swaps."""
+    rp = _inside(recipe, True); R = _json(rp)
+    src = _inside(R["source"])
+    if not src.exists():
+        raise FileNotFoundError(f"{R['source']} is missing: download it from {R.get('source_url', 'its source')} ({R.get('license', '')}) and place it there")
+    blender = os.environ.get("DBE_BLENDER", "blender")
+    work = ROOT / "cast" / "external" / (Path(R["out"]).stem.split(".")[0] + "_extract")
+    work.mkdir(parents=True, exist_ok=True)
+    (work / "variants.json").write_text(json.dumps(R.get("variants", [])))
+    r = subprocess.run([blender, "-b", "--factory-startup", str(src), "--python", str(ROOT / "dbe" / "blender_cutout.py"), "--", str(work), str(work / "variants.json")],
+                       capture_output=True, text=True, timeout=1800)
+    line = next((l for l in r.stdout.splitlines() if l.startswith("CUTOUT ")), None)
+    if not line:
+        raise RuntimeError("Blender extraction failed: " + (r.stderr or r.stdout)[-800:])
+    op = _inside(R["out"]); op.parent.mkdir(parents=True, exist_ok=True)
+    spec = dict(R.get("spec", {})); spec.setdefault("meta", {}).update({"license": R.get("license", ""), "source_url": R.get("source_url", ""), "credit": R.get("credit", "")})
+    (work / "spec.json").write_text(json.dumps(spec))
+    out = _run([PY, "dbe/cutout_import.py", str(work), str(op), str(work / "spec.json")])
+    return {"puppet": str(op.relative_to(ROOT)), "extract": json.loads(line[7:]), "report": json.loads(out[-1]),
+            "lint": puppet_lint(str(op.relative_to(ROOT))).get("issues"), "credit": R.get("credit")}
 
 
 # ---------------- aspect ratios (plan 1.12) ----------------

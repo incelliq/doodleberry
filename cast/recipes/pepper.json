@@ -1,0 +1,524 @@
+{
+ "note": "Rebuilds the Pepper puppet from Nikolai Mamashev's Blender cut-out rig: python -m dbe puppet.from_blend '{\"recipe\": \"cast/recipes/pepper.json\"}'. Place the .blend (free from the source URL) at 'source'.",
+ "source": "assets/external/pepper/pepper0.3.blend",
+ "out": "cast/external/pepper.puppet.json",
+ "source_url": "https://gum.co/pepper",
+ "license": "CC-BY-4.0",
+ "credit": "Pepper character rig by Nikolai Mamashev (https://gumroad.com/nikolai), based on the original character from the Pepper&Carrot web-comic by David Revoy (https://www.peppercarrot.com). CC-BY 4.0.",
+ "variants": [
+  {
+   "name": "mouth/closed",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.0,
+      -0.2222,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.007,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/small",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.3333333333333333,
+      -0.2222,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.037,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/mid",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.6666666666666666,
+      0.0,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.074,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/wide",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.6666666666666666,
+      -0.4444,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.141,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/O",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.3333333333333333,
+      -0.4444,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.089,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/FV",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.3333333333333333,
+      0.0,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.03,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/smile",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.0,
+      -0.6666000000000001,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.01,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/frown",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.3333333333333333,
+      -0.6666000000000001,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.01,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/E",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.0,
+      -0.4444,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.048,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "mouth/pout",
+   "bones": {
+    "lips-offset": {
+     "location": [
+      0.0,
+      0.0,
+      0
+     ]
+    },
+    "CTRL-jaw": {
+     "location": [
+      0,
+      -0.022,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handR/point",
+   "bones": {
+    "hand-offset.L": {
+     "location": [
+      0.0,
+      -0.6666,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handL/point",
+   "bones": {
+    "hand-offset.R": {
+     "location": [
+      0.0,
+      -0.6666,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handR/fist",
+   "bones": {
+    "hand-offset.L": {
+     "location": [
+      0.5,
+      -0.6666,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handL/fist",
+   "bones": {
+    "hand-offset.R": {
+     "location": [
+      0.5,
+      -0.6666,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handR/hold",
+   "bones": {
+    "hand-offset.L": {
+     "location": [
+      0.25,
+      -0.3333,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handL/hold",
+   "bones": {
+    "hand-offset.R": {
+     "location": [
+      0.25,
+      -0.3333,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handR/open",
+   "bones": {
+    "hand-offset.L": {
+     "location": [
+      0.0,
+      -0.3333,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handL/open",
+   "bones": {
+    "hand-offset.R": {
+     "location": [
+      0.0,
+      -0.3333,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handR/spread",
+   "bones": {
+    "hand-offset.L": {
+     "location": [
+      0.25,
+      0.0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "handL/spread",
+   "bones": {
+    "hand-offset.R": {
+     "location": [
+      0.25,
+      0.0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "eyes/half",
+   "bones": {
+    "CTRL-up-eye.L": {
+     "location": [
+      0,
+      -0.6,
+      0
+     ]
+    },
+    "CTRL-up-eye.R": {
+     "location": [
+      0,
+      -0.6,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "eyes/closed",
+   "bones": {
+    "MCH-eyelid": {
+     "location": [
+      0,
+      0,
+      0.012
+     ]
+    },
+    "CTRL-up-eye.L": {
+     "location": [
+      0,
+      -1,
+      0
+     ]
+    },
+    "CTRL-up-eye.R": {
+     "location": [
+      0,
+      -1,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "eyes/lid_only",
+   "bones": {
+    "MCH-eyelid": {
+     "location": [
+      0,
+      0,
+      0.012
+     ]
+    }
+   }
+  },
+  {
+   "name": "brows/raised",
+   "bones": {
+    "CTRL-brow.L.001": {
+     "location": [
+      0,
+      0.055,
+      0
+     ]
+    },
+    "CTRL-brow.R.001": {
+     "location": [
+      0,
+      0.055,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "name": "brows/worried",
+   "bones": {
+    "CTRL-brow.L.001": {
+     "location": [
+      0,
+      0.05,
+      0
+     ],
+     "rotation_quaternion": [
+      0.9781476007338057,
+      0,
+      0,
+      0.20791169081775934
+     ]
+    },
+    "CTRL-brow.R.001": {
+     "location": [
+      0,
+      0.05,
+      0
+     ],
+     "rotation_quaternion": [
+      0.9781476007338057,
+      0,
+      0,
+      -0.20791169081775934
+     ]
+    }
+   }
+  },
+  {
+   "name": "brows/angry",
+   "bones": {
+    "CTRL-brow.L.001": {
+     "location": [
+      0,
+      -0.05,
+      0
+     ],
+     "rotation_quaternion": [
+      0.9743700647852352,
+      0,
+      0,
+      -0.224951054343865
+     ]
+    },
+    "CTRL-brow.R.001": {
+     "location": [
+      0,
+      -0.05,
+      0
+     ],
+     "rotation_quaternion": [
+      0.9743700647852352,
+      0,
+      0,
+      0.224951054343865
+     ]
+    }
+   }
+  }
+ ],
+ "spec": {
+  "name": "Pepper",
+  "template": "humanoid",
+  "height": 900,
+  "px": 2,
+  "pupils": [
+   "CTRL-eye.L",
+   "CTRL-eye.R",
+   "CTRL-eye-spec.L",
+   "CTRL-eye-spec.R"
+  ],
+  "movable": 3,
+  "mouth": {
+   "closed": "mouth/closed",
+   "small": "mouth/small",
+   "mid": "mouth/mid",
+   "wide": "mouth/wide",
+   "O": "mouth/O",
+   "FV": "mouth/FV",
+   "smile": "mouth/smile",
+   "frown": "mouth/frown",
+   "E": "mouth/E",
+   "pout": "mouth/pout"
+  },
+  "eyes": {
+   "half": "eyes/half",
+   "closed": "eyes/closed"
+  },
+  "hands": {
+   "hand_R_pose": {
+    "point": "handR/point",
+    "fist": "handR/fist",
+    "hold": "handR/hold",
+    "open": "handR/open",
+    "spread": "handR/spread"
+   },
+   "hand_L_pose": {
+    "point": "handL/point",
+    "fist": "handL/fist",
+    "hold": "handL/hold",
+    "open": "handL/open",
+    "spread": "handL/spread"
+   }
+  },
+  "meta": {
+   "author": "Nikolai Mamashev (rig and art), after David Revoy's Pepper&Carrot",
+   "license": "CC-BY-4.0",
+   "source_url": "https://gum.co/pepper",
+   "credit": "Pepper character rig by Nikolai Mamashev (https://gumroad.com/nikolai), based on the original character from the Pepper&Carrot web-comic by David Revoy (https://www.peppercarrot.com). CC-BY 4.0."
+  },
+  "object_swaps": {
+   "brows": {
+    "bones": [
+     "CTRL-brow.L.001",
+     "CTRL-brow.R.001"
+    ],
+    "anchor": "head",
+    "shapes": {
+     "neutral": null,
+     "raised": "brows/raised",
+     "worried": "brows/worried",
+     "angry": "brows/angry"
+    }
+   }
+  }
+ }
+}

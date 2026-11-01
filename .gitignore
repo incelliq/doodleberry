@@ -8,3 +8,7 @@ node_modules/
 films/*--*/
 # generated brand assets (python -m dbe brand.assets)
 brand/out/
+# third-party asset packs placed locally (licences recorded in assets/manifest.json "external"); rebuilt puppets
+assets/external/
+cast/external/
+tmp_imp/

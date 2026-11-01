@@ -1,0 +1,2 @@
+# optional tools for drawing import and export (python -m pip install -r requirements-tools.txt)
+psd-tools==1.26.0   # MIT: PSD layers in and out

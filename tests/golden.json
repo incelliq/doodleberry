@@ -58,5 +58,17 @@
  ],
  "poses": [
   "tests/poses/bend_and_turn.json"
+ ],
+ "imports": [
+  {
+   "puppet": "puppet/examples/pip.puppet.json",
+   "format": "svg",
+   "max_pivot_error": 30
+  },
+  {
+   "puppet": "puppet/examples/pip.puppet.json",
+   "format": "ora",
+   "max_pivot_error": 30
+  }
  ]
 }
