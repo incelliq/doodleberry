@@ -252,3 +252,42 @@ These come from stacking primitives we already have. Each one is cheap because t
 10. Layered PSD/SVG import into puppets
 11. Kokoro voices, a voice-over import command and sidecar captions
 12. Render speed: parallel workers, frame reuse, per-shot content hashes
+
+## 16. Build-with map (from `docs/oss-research.md`)
+Which open-source pieces implement which features. Licences were verified by the research pass; see that file for the
+[V]/[R]/[U] tags.
+
+| Feature (section) | Build with | Licence | Status |
+|---|---|---|---|
+| Clean voices (§6) | Piper public-domain voices: kristin, norman, bryce, cori, john, ljspeech | PD | ✅ gate plus 4 installed |
+| More voices and languages, Spanish quality (§6, §8) | Kokoro-82M (or kokoro-onnx) | Apache-2.0 (espeak fallback GPL, as a subprocess) | ⬜ P0 |
+| Expressive lines, consented cloning (§6) | Chatterbox (watermarked) | MIT | ⬜ P2 |
+| Phone-accurate lip-sync (§3) | wav2vec2-espeak CTC + torchaudio `forced_align` (same phone set as our visemes); or MFA | Apache-2.0 / MIT, model CC BY 4.0 | ⬜ P1 |
+| Lip-sync QA cross-check and transcript-free fallback (§3, §9) | Rhubarb Lip Sync | MIT | ⬜ P1 |
+| Steadier word timing on known scripts (§6) | stable-ts `align()` | MIT | ⬜ P1 |
+| N-bone IK (§2) | FABRIK ported in-house (references: fullik, THREE.IK) | MIT refs | ⬜ P1 |
+| Gesture planner (§3) | In-house: pyworld F0 peaks + espeak stress + LLM semantic tags → clip scheduler | none | ⬜ P0 |
+| Seeded idle noise and handheld camera (§3, §4) | opensimplex | MIT | ⬜ P1 |
+| Act it out / webcam performance (§3, §12) | MediaPipe Pose/Holistic/Face; rtmlib RTMPose for accuracy | Apache-2.0 | ⬜ P1 |
+| Auto-rig from a drawing (§1) | Animated Drawings ideas + scikit-image skeletonize/skan | MIT / BSD-3 | ⬜ P2 |
+| Bendy limbs in Synfig output (§2) | Synfig Skeleton Deformation + Switch layers in the `.sif` exporter | GPL (CLI subprocess) | ⬜ P1 |
+| Rig Canvas strokes (§1) | perfect-freehand; simplify-js | MIT / BSD-2 | ⬜ P1 |
+| Scan/sketch import (§1) | VTracer (colour); potrace (mono, subprocess); ImageTracer.js in-browser | MIT / GPL / Unlicense | ⬜ P1 |
+| Part cleanup on import (§1) | picosvg, svgo (safe preset keeping IDs), vpype | Apache-2.0 / MIT / MIT | ⬜ P1 |
+| Cel shadows, rims, outline offsets (§4) | Clipper2 (pyclipr), skia-pathops (keeps curves) | BSL-1.0 / BSD-3 | ⬜ P1 |
+| Render speed (§7) | Worker pool + frame-hash dedupe + static-layer cache + PyAV piping + `-tune animation` | in-house / BSD-3 | ⬜ P0 |
+| Faster rasteriser (§7) | Benchmark resvg and ThorVG behind a pixel-diff gate (harness saved) | Apache/MIT, MIT | ⬜ P1 |
+| Lottie export QA (§7, §9) | ThorVG + lottie-web golden images; schema validation from lottie-docs | MIT / CC BY 4.0 | 🟡 lottie-web renders work |
+| Lottie packaging with palette themes (§7) | dotLottie | MIT | ⬜ P2 |
+| Post effects: grain, LUT, vignette, xfade, motion blur (§4, §7) | ffmpeg filter graphs; accumulation blur in-house; SVT-AV1 film-grain | in stack | ⬜ P1 |
+| 3D pass compositing (§4) | oiiotool; three.js toon stack | Apache-2.0 / MIT | ⬜ P2 |
+| Editor hand-off (§7) | OpenTimelineIO (+ EDL/FCPXML adapters); `melt` for round trips | Apache-2.0 / LGPL | ⬜ P1 |
+| Cast variety (§1, §10) | Open Peeps, Humaaans → puppets | CC0 | ⬜ P0 |
+| Props, icons, SFX (§4, §6) | Kenney, Tabler, Lucide, Phosphor, Fluent Emoji | CC0 / MIT / ISC / MIT | ⬜ P1 |
+| Medical and map shots (§4) | Servier Medical Art; Natural Earth + d3-geo | CC BY 4.0 / PD | ⬜ P1 |
+| Asset licence manifest and credits (§10) | In-house manifest → `film.credits` | none | 🟡 voices and puppets only |
+| Scene DSL reference (§11) | Motion Canvas / Revideo ideas (reference only) | MIT | — |
+
+Avoid: OpenPose, Ultralytics, python-lottie in the service, aeneas, XTTS-v2 and F5-TTS weights, MMS aligner weights,
+EMAGE/BEAT2, audio2photoreal, MakeItTalk, Sapiens, LAFAN1 data, embedding Spine or Remotion, OpenMoji (SA), BBC
+sound effects (NC), Sonniss files in public repos or training sets, Z-Anatomy NC parts.
