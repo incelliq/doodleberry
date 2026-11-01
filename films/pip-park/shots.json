@@ -233,5 +233,19 @@
     "floor": "#f2d39b"
    }
   }
+ },
+ "brief": {
+  "title": "One character, three animation engines",
+  "takeaway": "One puppet, one performance, drawn by three different animation engines in 16 seconds.",
+  "hook": "SVG, Synfig and Blender Grease Pencil take turns drawing Pip.",
+  "hashtags": [
+   "animation",
+   "opensource",
+   "blender",
+   "synfig",
+   "cartoon"
+  ],
+  "cover_text": "3 engines, 1 puppet",
+  "prompt": "Which shot did you prefer: SVG, Synfig or Grease Pencil?"
  }
 }

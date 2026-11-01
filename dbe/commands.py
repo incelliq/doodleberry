@@ -88,8 +88,22 @@ def film_validate(name):
     return validate.film(_film(name))
 
 
+def _rights_errors(name):
+    """client-work characters may appear only in films for that client (shots.json brief.client)"""
+    s = _shots(name, resolve=False); client = (s.get("brief") or {}).get("client", "")
+    cast = {e["path"]: e for e in _json(ROOT / "cast" / "index.json", {"puppets": []})["puppets"]}
+    errs = []
+    for sh in s["shots"]:
+        for c in sh.get("cast", []):
+            r = (cast.get(c["puppet"]) or {}).get("rights") or {}
+            if r.get("type") == "client" and r.get("owner") != client:
+                errs.append(f"shot {sh['id']}: {c['puppet']} is client work for {r.get('owner')!r}; this film's brief.client is {client!r}")
+    return errs
+
+
 def _require_valid(name):
     r = film_validate(name)
+    r["errors"] = r["errors"] + _rights_errors(name)
     if r["errors"]:
         raise ValueError("film data is invalid:\n- " + "\n- ".join(r["errors"][:20]))
     return r
@@ -150,19 +164,31 @@ def cast_list():
 OPEN_LICENSES = {"CC0-1.0", "CC-BY-4.0", "CC-BY-SA-4.0", "MIT", "Apache-2.0", "OFL-1.1", "public-domain"}
 
 
+RIGHTS = ("open", "owner", "client")
+
+
 @command("cast.add", path=("string", "path to a .puppet.json inside the repo"), id=("string", "cast id"),
-         author=("string", "who drew it"), license=("string", "SPDX id, e.g. CC0-1.0 or CC-BY-4.0"),
+         author=("string", "who drew it"), license=("string", "open: an SPDX id (CC0-1.0, CC-BY-4.0...); owner or client: LicenseRef-owner / LicenseRef-client"),
          provenance=("string", "how it was made (drawn in Rig Canvas, traced from own sketch...)"),
-         voice=("object", "optional voice profile {voice, fx}", None), personality=("string", "acting notes", ""))
-def cast_add(path, id, author, license, provenance, voice=None, personality=""):
+         voice=("object", "optional voice profile {voice, fx}", None), personality=("string", "acting notes", ""),
+         rights=("string", "open (openly licensed) | owner (the studio's or a creator's own IP) | client (made for a client)", "open"),
+         owner=("string", "rights holder, required for owner and client rights", ""),
+         terms=("string", "client work: usage and transfer terms (e.g. 'exclusive to ACME films, rights transfer on payment')", ""))
+def cast_add(path, id, author, license, provenance, voice=None, personality="", rights="open", owner="", terms=""):
     """Register a puppet in the cast library: lints it, records author, licence, provenance and a content hash, and
     appends an entry to cast/provenance.jsonl so every change to the library is traceable."""
     import hashlib, datetime
     pp = (ROOT / path).resolve()
     if ROOT not in pp.parents or not pp.exists():
         raise FileNotFoundError(f"{path} is not a puppet file inside the repo")
-    if license not in OPEN_LICENSES:
-        raise ValueError(f"licence {license!r} is not one the library accepts ({', '.join(sorted(OPEN_LICENSES))})")
+    if rights not in RIGHTS:
+        raise ValueError(f"rights must be one of {RIGHTS}")
+    if rights == "open" and license not in OPEN_LICENSES:
+        raise ValueError(f"open rights need an open licence ({', '.join(sorted(OPEN_LICENSES))}); for your own characters use rights=owner")
+    if rights in ("owner", "client") and not owner:
+        raise ValueError(f"{rights} rights need an owner (the rights holder)")
+    if rights == "client" and not terms:
+        raise ValueError("client work needs its usage and transfer terms")
     lint = puppet_lint(path)
     missing = [i for i in lint.get("issues", []) if i["level"] == "missing"]
     if missing:
@@ -174,7 +200,8 @@ def cast_add(path, id, author, license, provenance, voice=None, personality=""):
             raise PermissionError(f"voice {voice['voice']} is not marked clean in voices/registry.json")
     idx = _json(ROOT / "cast" / "index.json", {"puppets": []})
     entry = {"id": id, "name": pup.get("name", id), "path": str(pp.relative_to(ROOT)), "template": pup.get("template"),
-             "author": author, "license": license, "provenance": provenance, "views": sorted((pup.get("views") or {}).keys()),
+             "author": author, "license": license, "provenance": provenance,
+             "rights": {"type": rights, **({"owner": owner} if owner else {}), **({"terms": terms} if terms else {})}, "views": sorted((pup.get("views") or {}).keys()),
              "sha256": hashlib.sha256(pp.read_bytes()).hexdigest()[:16], **({"voice": voice} if voice else {}), **({"personality": personality} if personality else {})}
     idx["puppets"] = [e for e in idx["puppets"] if e["id"] != id] + [entry]
     (ROOT / "cast" / "index.json").write_text(json.dumps(idx, indent=1))
@@ -190,20 +217,24 @@ def film_credits(name):
     d = _film(name); s = _shots(name); sc = _json(d / "script.json", {})
     cast = {e["path"]: e for e in _json(ROOT / "cast" / "index.json", {"puppets": []})["puppets"]}
     reg = _json(ROOT / "voices" / "registry.json", {}).get("voices", {})
-    lines, used = [f"{s.get('title', name)}", ""], set()
+    man = _json(ROOT / "assets" / "manifest.json", {"files": []})
+    lines, used = [f"{(s.get('brief') or {}).get('title') or s.get('title', name)}", ""], set()
     for sh in s["shots"]:
         for c in sh.get("cast", []):
             if c["puppet"] in used:
                 continue
-            used.add(c["puppet"]); e = cast.get(c["puppet"], {})
-            lines.append(f"Character: {e.get('name', c['puppet'])} by {e.get('author', 'unknown')} ({e.get('license', 'licence not recorded')})")
+            used.add(c["puppet"]); e = cast.get(c["puppet"], {}); r = e.get("rights") or {}
+            lic = e.get("license", "licence not recorded") if r.get("type", "open") == "open" else f"© {r.get('owner')}, all rights reserved"
+            lines.append(f"Character: {e.get('name', c['puppet'])} by {e.get('author', 'unknown')} ({lic})")
     for spk, v in (sc.get("speakers") or {}).items():
         r = reg.get(v.get("voice"), {})
         lines.append(f"Voice of {spk}: Piper voice {v.get('voice')} ({r.get('license', 'licence not recorded')})")
     rend = sorted({sh.get("renderer", "svg") for sh in s["shots"]})
     names = {"svg": "Chromium (Playwright)", "synfig": "Synfig (GPL-3.0)", "grease-pencil": "Blender Grease Pencil (GPL)", "lottie": "lottie-web (MIT)"}
+    uses = {"captions", "player"} | {f"renderer:{r}" for r in rend}
+    assets = [f["attribution"] for f in man["files"] if set(f.get("used_by", [])) & uses]
     lines += ["", "Rendered with " + ", ".join(names.get(r, r) for r in rend) + "; speech by Piper; alignment by faster-whisper (MIT); audio by ffmpeg.",
-              "Font: Fredoka (SIL Open Font License 1.1).", "Made with Doodleberry."]
+              *(["Assets: " + "; ".join(dict.fromkeys(assets))] if assets else []), "Made with Doodleberry."]
     out = d / "build" / "credits.txt"; out.parent.mkdir(exist_ok=True); out.write_text("\n".join(lines) + "\n")
     return {"path": str(out.relative_to(ROOT)), "credits": lines}
 
@@ -419,9 +450,19 @@ def film_render(name, only=None):
     score = _json(d / "score.json", {}); score["length_s"] = total; (d / "score.json").write_text(json.dumps(score, indent=1))
     _run([PY, "engine/audio.py", f"films/{name}"])
     final = d / "build" / "final.mp4"
-    _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(d / "build" / "mix.wav"), "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-af", "apad", "-t", f"{total:.3f}", str(final)])
+    M = _json(ROOT / "dbe" / "profiles.json")["master"]
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(d / "build" / "mix.wav"), "-map", "0:v", "-map", "1:a",
+          "-c:v", M["vcodec"], "-profile:v", M["profile"], "-preset", M["preset"], "-crf", str(M["crf"]), "-pix_fmt", M["pix_fmt"],
+          "-c:a", M["acodec"], "-ar", str(M["ar"]), "-b:a", M["ab"], "-af", "apad", "-t", f"{total:.3f}",
+          *(["-movflags", "+faststart"] if M.get("faststart") else []), str(final)])
+    # sidecar subtitles for platforms that take caption files
+    from .captions import make_srt, make_vtt
+    tm = _json(d / "timing.json", {})
+    (d / "build" / "captions.srt").write_text(make_srt(tm)); (d / "build" / "captions.vtt").write_text(make_vtt(tm))
     qa = qa_run(name)
-    return {"rendered": done, "final": str(final.relative_to(ROOT)), "qa": qa.get("checks")}
+    mb = final.stat().st_size / 1e6
+    return {"rendered": done, "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
+            "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures")}
 
 
 @command("qa.run", name=("string", "film"), layout=("boolean", "also run the measured layout checks (frame fill, safe zones, type size, reading time, seams, cold open, mix)", True))
@@ -574,3 +615,104 @@ def test_golden(update=False, film=""):
                 Image.fromarray(np.clip(d * 4, 0, 255).astype(np.uint8)).save(gdir / f"{case['shot']}_{t}.diff.png")
             results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
     return {"passed": failed == 0, "failed": failed, "results": results}
+
+
+# ---------------- packaging ----------------
+def _brief_of(d, s):
+    b = dict(s.get("brief") or {})
+    if not b.get("title"):
+        md = (d / "brief.md").read_text() if (d / "brief.md").exists() else ""
+        m = re.search(r"^#\s*(?:Brief\s*[—:-]\s*)?(.+)$", md, re.M)
+        b["title"] = (m.group(1).strip() if m else s.get("title", d.name))
+    return b
+
+
+@command("film.package", name=("string", "film"),
+         cover_t=("number", "time of the cover frame (default: brief.cover_t, else the end of the first line)", None))
+def film_package(name, cover_t=None):
+    """Posting package for a finished film: per-platform captions (takeaway first, sources in a pinned comment,
+    hashtags last), title, description with chapters, alt text, cover image, subtitles and a 48-hour checklist.
+    Writes build/package/ (posts.md, package.json, cover.png). Wording is a data-filled draft for the editor agent."""
+    from PIL import Image, ImageDraw, ImageFont
+    d = _film(name); s = _shots(name); tm = _json(d / "timing.json", {})
+    final = d / "build" / "final.mp4"
+    if not final.exists():
+        raise FileNotFoundError("render the film first (film.render)")
+    b = _brief_of(d, s); prof = _json(ROOT / "dbe" / "profiles.json")["platforms"]
+    lines = tm.get("lines", [])
+    takeaway = b.get("takeaway") or (lines[0]["text"] if lines else b["title"])
+    hook = b.get("hook") or ""
+    tags = [t if t.startswith("#") else "#" + t for t in b.get("hashtags", [])]
+    part = f" Part {b['part']} of {b['parts']}." if b.get("part") and b.get("parts") else ""
+    facts = _json(d / "facts.json", {"facts": []}).get("facts", [])
+    srcs = sorted({f.get("source") for f in facts if f.get("source")})
+    pinned = ("Sources: " + "; ".join(srcs)) if srcs else ""
+    credits = film_credits(name)["credits"]
+    # chapters: YouTube needs >= 3, the first at 0:00, each >= 10 s
+    shots = s["shots"]; chapters = []
+    if len(shots) >= 3 and all(x["end"] - x["start"] >= 10 for x in shots):
+        for x in shots:
+            nm = x.get("title") or next((l["text"] for l in lines if l["start"] >= x["start"] - 0.3), x["id"])
+            chapters.append(f"{int(x['start'] // 60)}:{int(x['start'] % 60):02d} {nm[:60]}")
+    names = []
+    for x in shots:
+        for c in x.get("cast", []):
+            pz = _json(ROOT / c["puppet"], {}); nm = pz.get("name")
+            if nm and nm not in names:
+                names.append(nm)
+    sets = sorted({x.get("set", "plain") for x in shots})
+    alt = b.get("alt") or f"Animated short: {', '.join(names) or 'characters'} in a {' and '.join(sets)} setting. {takeaway}"
+    # cover: chosen frame (never the platform default), optional cover text inside the safe area
+    pk = d / "build" / "package"; pk.mkdir(parents=True, exist_ok=True)
+    ct = cover_t if cover_t is not None else b.get("cover_t", lines[0]["end"] if lines else 1.0)
+    _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{ct:.3f}", "-i", str(final), "-frames:v", "1", str(pk / "cover.png")])
+    if b.get("cover_text"):
+        im = Image.open(pk / "cover.png").convert("RGB"); W, H = im.size; dr = ImageDraw.Draw(im)
+        txt = b["cover_text"].upper(); x0, y0 = (64, 260) if H > W else (int(W * 0.05), int(H * 0.08))
+        safe_w = (960 - 64) if H > W else int(W * 0.9); fs = 110 if H > W else 90
+        while fs > 30 and ImageFont.truetype(str(ROOT / "engine" / "fonts" / "Fredoka.ttf"), fs).getlength(txt) + 20 > safe_w:
+            fs -= 4  # fit the cover text inside the platform-safe width
+        f = ImageFont.truetype(str(ROOT / "engine" / "fonts" / "Fredoka.ttf"), fs)
+        dr.text((x0, y0), txt, font=f, fill="#ffffff", stroke_width=10, stroke_fill="#24160e")
+        im.save(pk / "cover.png")
+    title = b["title"]
+    checks = {"title_under_50_chars": len(title) <= 50, "has_takeaway": bool(b.get("takeaway")), "has_sources": bool(srcs) or not facts,
+              "cover_chosen": True, "subtitles": (d / "build" / "captions.srt").exists()}
+    posts = {}
+    for k, pf in prof.items():
+        n = pf.get("hashtags", 4)
+        body = f"{takeaway}{part}" + (f" {hook}" if hook else "")
+        posts[k] = {"caption": body + ("\n\n" + " ".join(tags[:n]) if tags else ""), "aspect": pf["aspect"], "captions": pf["captions"],
+                    **({"title": title, "description": body + ("\n\n" + "\n".join(chapters) if chapters else "") + ("\n\n" + pinned if pinned else "")} if k == "youtube" else {})}
+    pkg = {"film": name, "title": title, "takeaway": takeaway, "posts": posts, "pinned_comment": pinned, "alt_text": alt,
+           "chapters": chapters, "cover": "build/package/cover.png", "video": "build/final.mp4", "subtitles": ["build/captions.srt", "build/captions.vtt"],
+           "post_date": b.get("post_date"), "engagement_prompt": b.get("prompt"), "credits": credits, "checks": checks}
+    md = [f"# Posts: {title}", "", f"Video `build/final.mp4` · cover `build/package/cover.png` (upload it; don't use the platform default) · subtitles `build/captions.srt`",
+          f"Post date: {b.get('post_date') or 'not set'}", "", "Draft generated from the film's data. Check every word of the title and captions is literally true of the film.", ""]
+    for k, v in posts.items():
+        md += [f"## {k}", "", *(["**Title:** " + v["title"], ""] if "title" in v else []), "> " + v["caption"].replace("\n", "\n> "), ""]
+        if "description" in v:
+            md += ["**Description:**", "", "```", v["description"], "```", ""]
+    md += ["## Pinned comment", "", "> " + (pinned or "(no sources: add facts.json sources)"), "", "## Alt text", "", alt, ""]
+    if b.get("prompt"):
+        md += ["## Engagement prompt (reply to your own comment)", "", "> " + b["prompt"], ""]
+    md += ["## Credits", "", *credits, "", "## 48-hour checklist", "",
+           "- Views, average view duration and retention at 3 s / 50% / end, per platform",
+           "- Shares and saves per 1,000 views; comments that show a misunderstanding (note them for a follow-up)",
+           "- Which hook and cover were used; whether the title needs a (true) alternative",
+           "- Any factual correction: log it on the film's page with the date, and fix every caption"]
+    (pk / "posts.md").write_text("\n".join(md) + "\n"); (pk / "package.json").write_text(json.dumps(pkg, indent=1))
+    return {"package": str((pk / "posts.md").relative_to(ROOT)), "checks": checks, "chapters": len(chapters)}
+
+
+@command("asset.check")
+def asset_check():
+    """Every tracked third-party file (fonts, vendored scripts, images, sounds, models) must have a row in
+    assets/manifest.json with its licence; reports what is missing."""
+    man = _json(ROOT / "assets" / "manifest.json", {"files": []})
+    known = [f["path"] for f in man["files"]] + [g["path"] for g in man.get("generated", [])]
+    tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout.split()
+    pat = re.compile(r"(^engine/vendor/|\.(ttf|otf|woff2?|png|jpe?g|gif|webp|svg|wav|mp3|ogg|flac|glb|gltf|fbx|onnx)$)", re.I)
+    third = [t for t in tracked if pat.search(t) and not t.startswith(("tests/golden/", "dbe/", "puppet/canvas/")) and not t.endswith(("LICENSE", "LICENSE.md"))]
+    missing = [t for t in third if not any(t == k or (k.endswith("/") and t.startswith(k)) for k in known)]
+    return {"third_party_files": len(third), "missing_from_manifest": missing, "ok": not missing}

@@ -1,0 +1,22 @@
+{
+ "note": "Licence manifest for every third-party file in the repository (plan 0.7). film.credits reads it; asset.check fails if a tracked third-party file is missing here. Add a row before committing any new font, script, image, sound or model.",
+ "files": [
+  {"path": "engine/fonts/Fredoka.ttf", "kind": "font", "name": "Fredoka", "license": "OFL-1.1", "license_file": "engine/fonts/OFL.txt", "source": "https://github.com/hafontia/Fredoka-One (Google Fonts)", "attribution": "Fredoka, The Fredoka Project Authors (SIL Open Font License 1.1)", "used_by": ["captions", "player"]},
+  {"path": "engine/vendor/lottie/lottie.min.js", "kind": "script", "name": "lottie-web 5.12.2", "license": "MIT", "license_file": "engine/vendor/lottie/LICENSE.md", "source": "https://github.com/airbnb/lottie-web", "attribution": "lottie-web (MIT)", "used_by": ["renderer:lottie"]},
+  {"path": "engine/vendor/three/three.module.min.js", "kind": "script", "name": "three.js r160", "license": "MIT", "license_file": "engine/vendor/three/LICENSE", "source": "https://github.com/mrdoob/three.js", "attribution": "three.js (MIT)", "used_by": ["3d"]},
+  {"path": "engine/vendor/three/jsm/", "kind": "script", "name": "three.js addons (GLTFLoader, OutlineEffect, RoomEnvironment, utils)", "license": "MIT", "license_file": "engine/vendor/three/LICENSE", "source": "https://github.com/mrdoob/three.js", "attribution": "three.js (MIT)", "used_by": ["3d"]}
+ ],
+ "generated": [
+  {"path": "puppet/examples/pip.puppet.json", "license": "CC0-1.0", "note": "drawn in code by make_pip.py / pip_side.py"},
+  {"path": "tests/golden/", "license": "CC0-1.0", "note": "test fixtures rendered from this repository"}
+ ],
+ "tools_not_bundled": [
+  {"name": "Piper TTS (piper-tts 1.8.0)", "license": "GPL-3.0-or-later", "use": "voice synthesis, separate process"},
+  {"name": "espeak-ng", "license": "GPL-3.0", "use": "phonemes, via Piper"},
+  {"name": "faster-whisper", "license": "MIT", "use": "word alignment"},
+  {"name": "Synfig", "license": "GPL-3.0", "use": "renderer, CLI subprocess"},
+  {"name": "Blender", "license": "GPL", "use": "Grease Pencil renderer, subprocess"},
+  {"name": "Chromium (Playwright)", "license": "BSD-3-Clause / Apache-2.0", "use": "SVG renderer"},
+  {"name": "ffmpeg (GPL build)", "license": "GPL", "use": "encoding, mixing, captions, subprocess"}
+ ]
+}

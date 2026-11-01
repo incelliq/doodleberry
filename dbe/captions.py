@@ -84,3 +84,48 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 fit = f"{{\\fs{fs}}}" if fs < font_size else ""
                 events.append(f"Dialogue: 0,{_ts(start)},{_ts(end)},Cap,,0,0,0,,{fit}{pop}{' '.join(parts)}")
     return head + "\n".join(events) + "\n"
+
+
+# ---------------- sidecar subtitles (SRT / WebVTT) ----------------
+def _cues(timing, max_chars=42, max_lines=2):
+    """subtitle cues from word timings: split each spoken line into blocks of at most max_lines x max_chars"""
+    out = []
+    for line in timing.get("lines", []):
+        words = line.get("words") or []
+        block, rows, cur = [], [], ""
+        def flush():
+            nonlocal block, rows, cur
+            if cur:
+                rows.append(cur)
+            if block:
+                out.append((block[0]["start"], block[-1]["end"] + 0.25, "\n".join(rows)))
+            block, rows, cur = [], [], ""
+        for w in words:
+            t = w["text"]
+            if len(cur) + len(t) + 1 > max_chars and cur:
+                rows.append(cur); cur = ""
+                if len(rows) == max_lines:
+                    cur_rows = rows; rows = []
+                    out.append((block[0]["start"], block[-1]["end"] + 0.25, "\n".join(cur_rows))); block = []
+            cur = (cur + " " + t).strip(); block.append(w)
+        flush()
+    # no overlaps
+    fixed = []
+    for i, (a, b, txt) in enumerate(out):
+        nb = out[i + 1][0] if i + 1 < len(out) else b
+        fixed.append((a, min(b, nb - 0.02) if nb > a else b, txt))
+    return fixed
+
+
+def _stamp(t, sep):
+    t = max(0.0, t); ms = int(round(t * 1000))
+    h, ms = divmod(ms, 3600000); m, ms = divmod(ms, 60000); s, ms = divmod(ms, 1000)
+    return f"{h:02d}:{m:02d}:{s:02d}{sep}{ms:03d}"
+
+
+def make_srt(timing):
+    return "".join(f"{i}\n{_stamp(a, ',')} --> {_stamp(b, ',')}\n{txt}\n\n" for i, (a, b, txt) in enumerate(_cues(timing), 1))
+
+
+def make_vtt(timing):
+    return "WEBVTT\n\n" + "".join(f"{_stamp(a, '.')} --> {_stamp(b, '.')}\n{txt}\n\n" for a, b, txt in _cues(timing))

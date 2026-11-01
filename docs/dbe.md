@@ -29,7 +29,15 @@ environment variables below).
 - **cast.list / cast.add / puppet.lint**: the cast library. `cast.add` lints a puppet, accepts only open licences,
   checks its voice is clean, records author, licence, provenance and a content hash in `cast/index.json`, and appends
   to `cast/provenance.jsonl`.
-- **film.credits**: credits built from what the film uses (characters, voices and their licences, renderers, fonts).
+- **film.credits**: credits built from what the film uses (characters with their rights, voices and licences, renderers, and assets from `assets/manifest.json`).
+- **film.package**: posting package in `build/package/`:
+  - `posts.md` with per-platform captions (takeaway first, hashtags last), a YouTube title, description and chapters, a pinned sources comment, alt text, an engagement prompt, credits and a 48-hour checklist;
+  - `cover.png`, a chosen frame with cover text fitted to the safe area.
+
+  It reads `shots.json` `brief` (title, takeaway, hook, hashtags, cover_text, cover_t, prompt, post_date, part/parts, client).
+- **asset.check**: every tracked third-party file must be listed in `assets/manifest.json`.
+- **Rights:** `cast.add` takes `rights` = open (an open licence), owner (your own IP, with the owner named) or client (made for a client, with owner and terms). Client-work characters render only in films whose `brief.client` matches.
+- **Delivery:** finals use `dbe/profiles.json` master (H.264 High, CRF 18, AAC 48 kHz 320 kb/s, faststart, ≤100 MB) and come with `captions.srt` and `captions.vtt`.
 - **shot.render**: render one shot with its renderer: `svg` (headless Chromium), `synfig` (Synfig CLI), `grease-pencil` (headless Blender), or `lottie` (lottie-web).
 - **film.render**: render all shots, join them, burn in word-timed captions, mix score, effects and voice (−14 LUFS), mux, then run QA.
 - **qa.run**: the measured quality bar plus contact sheets, plus layout checks (`dbe/layout_qa.py`):

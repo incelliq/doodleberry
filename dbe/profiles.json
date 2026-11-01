@@ -1,0 +1,12 @@
+{
+ "note": "Delivery encode profiles. The master follows the film playbook spec (H.264 High, yuv420p, CRF 18, faststart, AAC 48 kHz 320 kb/s). Platform entries add size caps, aspect, caption and packaging notes. Caps are conservative; check current platform limits before relying on them.",
+ "master": {"vcodec": "libx264", "profile": "high", "crf": 18, "preset": "slow", "pix_fmt": "yuv420p", "acodec": "aac", "ar": 48000, "ab": "320k", "faststart": true, "max_mb": 100},
+ "platforms": {
+  "tiktok":    {"aspect": "9:16", "max_mb": 100, "captions": "burned-in", "cover": "upload the cover file", "first_line": "takeaway", "hashtags": 5},
+  "reels":     {"aspect": "9:16", "max_mb": 100, "captions": "burned-in", "cover": "upload the cover file", "first_line": "takeaway", "hashtags": 5},
+  "shorts":    {"aspect": "9:16", "max_mb": 100, "captions": "burned-in", "max_s": 180, "first_line": "takeaway", "hashtags": 3},
+  "facebook":  {"aspect": "9:16 or 16:9", "max_mb": 100, "captions": "burned-in + SRT", "first_line": "takeaway"},
+  "linkedin":  {"aspect": "16:9", "max_mb": 100, "captions": "SRT upload", "native_upload": true, "first_line": "takeaway"},
+  "youtube":   {"aspect": "16:9", "max_mb": 100, "captions": "SRT or VTT upload", "chapters": true, "first_line": "takeaway"}
+ }
+}
