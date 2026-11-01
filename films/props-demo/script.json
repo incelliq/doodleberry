@@ -1,0 +1,32 @@
+{
+ "speakers": {
+  "pip": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.15,
+    "formant": 1.05,
+    "range": 1.2
+   }
+  },
+  "nib": {
+   "voice": "kokoro:am_puck"
+  }
+ },
+ "lead_in_s": 2.2,
+ "gap_s": 0.5,
+ "lines": [
+  {
+   "id": "catch",
+   "speaker": "pip",
+   "fact": null,
+   "text": "Nib! Catch!"
+  },
+  {
+   "id": "got",
+   "speaker": "nib",
+   "fact": null,
+   "text": "Got it!",
+   "pause": 1.6
+  }
+ ]
+}

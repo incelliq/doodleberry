@@ -1,4 +1,4 @@
-# Puppet format v0.3 (`.puppet.json`)
+# Puppet format v0.4 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -82,6 +82,24 @@ timelines like the shared presets in `puppet/clips/<template>.json`.
 - **Templates:** `doodle` (hip, body, head, arm_L, arm_R, tail; L/R are image sides) with its own clip library
   (`puppet/clips/doodle.json`: idle, hop, wave_L/R, tilt, lean_in, wag, talk, shake). Each puppet uses the library of
   its template.
+
+## v0.4 additions: smart bones, shifts, constraints
+- **controls (smart bones / driven keys):**
+  `"controls": {"turn": {"range": [-1, 1], "drives": [{"target": "angles.head", "keys": [[-1, -4], [0, 0], [1, 4]]}, {"target": "shift.@eyes", "keys": [[-1, [-16, 0]], [1, [16, 0]]]}, ...]}}`.
+  - One control value drives several targets through piecewise-linear key curves.
+  - Targets: `angles.<part>` (added degrees), `shift.<part>` or `shift.@<swap>` (moves before rotation), `swap.<id>`
+    (discrete), `z.<part>` or `z.@<swap>` (layer order).
+  - Timelines animate the control: `"controls": {"turn": [[t, value], ...]}`.
+  - Pip has a `turn` control that turns the head, slides the face and parallaxes the hair.
+- **Pose shifts and z:** `pose.shifts[part] = [dx, dy]` and `pose.z[part]`. Every renderer and exporter applies shifts;
+  dynamic layer order applies in SVG and Grease Pencil.
+- **lookat constraint (timeline):** `{"part": "head", "target": [x, y] | {"cast": i, "part": "hand_R", "at": [x, y]}, "aim": [0, -1], "limit": 10, "weight": 1}`
+  rotates a part so its aim vector points at a target, clamped. Frame-space points work in every renderer; targets
+  on other characters work in the SVG player.
+
+Shot-level **props** (SVG player): `"props": [{"id", "r", "color" | "svg", "spin", "travel", "arc", "attach": [[t, {"cast": i, "part": "hand_R", "at": [x, y]}], [t2, {"x", "y"}], ...]}]`.
+A prop follows its current parent (a character's part or a fixed point) and travels on an arc when the parent
+changes: hand to hand, a throw to another character, a drop to the floor.
 
 ## Acting timelines (used by `puppet/loader/acting.js`)
 `{clips: [{clip, start, end, weight, fadeIn, additive}], poses: [[t, name]], visemes: [[t, shape]] | visemes_from: speaker,

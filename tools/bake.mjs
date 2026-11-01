@@ -22,14 +22,19 @@ for (const c of spec.cast) {
     let t = out.start + f / out.fps;
     if (spec.step) t = Math.floor(t * spec.step + 1e-6) / spec.step;   // animate on 12s like the player
     const LIB = LIBS[puppet.template] || LIBS.humanoid;
-    const pose = Acting.evaluate(puppet, c.timeline || {}, t, LIB.clips, LIB.presets);
     let [x, y, s, flip] = placeAt(t);
+    const tl = { ...(c.timeline || {}) };
+    if (tl.lookat) {  // frame-space targets [x, y] -> artboard space (targets on other characters are SVG-player only)
+      const hip = (puppet.parts.hip && puppet.parts.hip.pivot) || [puppet.artboard[0] / 2, puppet.ground];
+      tl.lookat = [].concat(tl.lookat).map(la => Array.isArray(la.target) ? { ...la, target_local: [(la.target[0] - x) / (s * flip) + hip[0], (la.target[1] - y) / s + puppet.ground] } : la);
+    }
+    const pose = Acting.evaluate(puppet, tl, t, LIB.clips, LIB.presets);
     if (spec.camera) { // fold the shot camera [cx, cy, zoom] into the placement so every renderer frames it identically
       const [cx, cy, z] = Acting.sampleKeys(spec.camera, t) || [W / 2, H / 2, 1];
       x = W / 2 + (x - cx) * z; y = H / 2 + (y - cy) * z; s *= z;
     }
     frames.push({ x, y, s, flip, angles: pose.angles, offset: pose.offset || [0, 0], mouth: pose.mouth || null, eyes: pose.eyes || null, blink: pose.blink || 0,
-      look: pose.look || null, brows: pose.brows || null, hand_R_pose: pose.hand_R_pose || null, view: pose.view || null, squash: pose.squash || 1 });
+      look: pose.look || null, brows: pose.brows || null, hand_R_pose: pose.hand_R_pose || null, view: pose.view || null, squash: pose.squash || 1, shifts: pose.shifts || null, z: pose.z || null });
   }
   out.cast.push({ puppet: pp, name: puppet.name, frames });
 }

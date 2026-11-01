@@ -62,6 +62,15 @@ swaps = {
     "mouth": {"shapes": {k: moved(v, dx=52, sx=0.6, cx=300) for k, v in P["swaps"]["mouth"]["shapes"].items()}},
 }
 P["views"] = {"side": {"parts": parts, "swaps": swaps}}
+# v0.4 smart bone: one "turn" control (-1 looks to the image left, +1 to the right) drives the head, slides the face
+# features across it and parallaxes the hair, so a head turn is one curve instead of eight
+face = lambda dx: [[-1, [-dx, 0]], [0, [0, 0]], [1, [dx, 0]]]
+P["anchors"] = {"bubble": [300, 150]}  # top of the head: speech bubbles point here
+P["controls"] = {"turn": {"range": [-1, 1], "drives": [
+    {"target": "angles.head", "keys": [[-1, -4], [0, 0], [1, 4]]},
+    {"target": "shift.@eyes", "keys": face(16)}, {"target": "shift.@pupils", "keys": face(19)},
+    {"target": "shift.@brows", "keys": face(15)}, {"target": "shift.@mouth", "keys": face(12)},
+    {"target": "shift.hair_front", "keys": face(7)}, {"target": "shift.hair_back", "keys": face(-9)}]}}
 P["version"] = "0.2"
 (HERE / "pip.puppet.json").write_text(json.dumps(P, indent=1))
 (HERE / "pip.puppet.js").write_text("window.PIP = " + json.dumps(P) + ";\n")

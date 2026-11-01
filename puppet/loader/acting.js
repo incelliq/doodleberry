@@ -76,6 +76,17 @@
     return out;
   }
 
+  // piecewise-linear drive curve: numbers and [x, y] interpolate; strings/null hold the key at or below v
+  function driveAt(keys, v) {
+    if (!keys || !keys.length) return null;
+    if (v <= keys[0][0]) return keys[0][1];
+    for (let i = 0; i < keys.length - 1; i++) { const [a, va] = keys[i], [b, vb] = keys[i + 1];
+      if (v <= b) { if (typeof va === 'number' && typeof vb === 'number') return va + (vb - va) * (v - a) / (b - a);
+        if (Array.isArray(va) && Array.isArray(vb)) return va.map((x, k) => x + (vb[k] - x) * (v - a) / (b - a));
+        return v - a < b - v ? va : vb; } }
+    return keys[keys.length - 1][1];
+  }
+
   // ---------- presets ----------
   function blend(a, b, w) {
     const out = { ...(w < 0.5 ? a : b), angles: {} };
@@ -139,6 +150,30 @@
     // scripted blinks (timed for comedy): half, closed, closed, half over a third of a second
     for (const b of tl.blinks || []) { const d = t - b; if (d >= 0 && d < 0.34) pose.blink = Math.max(pose.blink || 0, d < 0.085 || d >= 0.25 ? 0.45 : 0.95); }
     for (const [k, v] of Object.entries(tl.set || {})) pose[k] = v;
+    // v0.4 controls (smart bones / driven keys): one value drives angles, shifts, swaps and layer order through key curves
+    for (const [name, keys] of Object.entries(tl.controls || {})) {
+      const ctl = (puppet.controls || {})[name]; if (!ctl) continue;
+      const v = sampleKeys(keys, t); if (v == null) continue;
+      for (const dr of ctl.drives || []) {
+        const val = driveAt(dr.keys, v); if (val == null) continue;
+        const [kind, id] = dr.target.split('.');
+        if (kind === 'angles') pose.angles[id] = (pose.angles[id] || 0) + val;
+        else if (kind === 'shift') { pose.shifts = pose.shifts || {}; const o = pose.shifts[id] || [0, 0]; pose.shifts[id] = [o[0] + val[0], o[1] + val[1]]; }
+        else if (kind === 'swap') pose[id] = val;
+        else if (kind === 'z') { pose.z = pose.z || {}; pose.z[id] = val; }
+      }
+    }
+    // look-at constraint: rotate a part so its aim vector points at a target (artboard coordinates), clamped
+    for (const la of [].concat(tl.lookat || [])) {
+      const tgt = la.target_local || la.target; if (!tgt || !puppet.parts[la.part]) continue;
+      const w = la.weight ?? 1, lim = la.limit ?? 30, part = puppet.parts[la.part];
+      const M = P.matrices(puppet, pose), par = part.parent && M[part.parent];
+      const pv = par ? [par[0] * part.pivot[0] + par[2] * part.pivot[1] + par[4], par[1] * part.pivot[0] + par[3] * part.pivot[1] + par[5]] : part.pivot;
+      const aim = la.aim || [1, 0], cur = Math.atan2(aim[1], aim[0]) + (par ? Math.atan2(par[1], par[0]) : 0) + ((pose.angles[la.part] || 0) * Math.PI / 180);
+      let d = (Math.atan2(tgt[1] - pv[1], tgt[0] - pv[0]) - cur) * 180 / Math.PI;
+      while (d > 180) d -= 360; while (d < -180) d += 360;
+      pose.angles[la.part] = (pose.angles[la.part] || 0) + Math.max(-lim, Math.min(lim, d)) * w;
+    }
     // IK reach targets
     for (const [limb, keys] of Object.entries(tl.ik || {})) {
       const tgt = sampleKeys(keys, t); if (!tgt) continue;
@@ -166,5 +201,5 @@
     return pose;
   }
 
-  root.Acting = { evaluate, evalStack, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS };
+  root.Acting = { evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS };
 })(typeof window !== 'undefined' ? window : globalThis);

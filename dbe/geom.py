@@ -137,8 +137,10 @@ def apply(m, p):
     return (m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5])
 
 
-def part_matrices(puppet, angles):
+def part_matrices(puppet, angles, shifts=None):
+    """world matrices per part; shifts[part] = [dx, dy] moves a part in its parent's space before it rotates (v0.4)"""
     parts, M = puppet["parts"], {}
+    shifts = shifts or {}
 
     def visit(pid):
         if pid in M:
@@ -147,7 +149,10 @@ def part_matrices(puppet, angles):
         par = par if par in parts else None
         if par:
             visit(par)
-        M[pid] = mul(M[par] if par else I, rot_about(angles.get(pid, 0) or 0, parts[pid]["pivot"]))
+        local = rot_about(angles.get(pid, 0) or 0, parts[pid]["pivot"])
+        if shifts.get(pid):
+            local = mul([1, 0, 0, 1, shifts[pid][0], shifts[pid][1]], local)
+        M[pid] = mul(M[par] if par else I, local)
     for pid in parts:
         visit(pid)
     return M

@@ -46,8 +46,10 @@
       if (done.has(id)) return; const part = parts[id];
       const par = part.parent && parts[part.parent] ? part.parent : null;
       if (par) visit(par);
+      // v0.4: pose.shifts[part] = [dx, dy] moves a part (and its children) in its parent's space before it rotates
+      const sh = (pose.shifts && pose.shifts[id]) || null;
       const local = rotAbout((pose.angles && pose.angles[id]) || 0, part.pivot);
-      M[id] = mul(par ? M[par] : I, local); done.add(id);
+      M[id] = mul(par ? M[par] : I, sh ? mul([1, 0, 0, 1, sh[0], sh[1]], local) : local); done.add(id);
     };
     order.forEach(visit);
     return M;
@@ -71,7 +73,7 @@
     const items = [];
     for (const [id, part] of Object.entries(p.parts)) {
       const replaced = Object.entries(p.swaps || {}).some(([sid, sw]) => sw.replaces === id && pose[sid] && sw.shapes[pose[sid]] && sw.shapes[pose[sid]].length);
-      if (!replaced) items.push({ z: part.z ?? 0, svg: strokesSVG(part.strokes, pal, M[id]) });
+      if (!replaced) items.push({ z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: strokesSVG(part.strokes, pal, M[id]) });
     }
     for (const [sid, sw] of Object.entries(p.swaps || {})) {
       const m = M[sw.anchor] || I;
@@ -86,8 +88,10 @@
       if ((!strokes || !strokes.length) && sid === 'mouth') strokes = sw.shapes.small && sw.shapes.small.length && (pose.talk || 0) > 0.08 ? sw.shapes.small : sw.shapes.closed;
       if (!strokes || !strokes.length) continue;
       let mm = m;
+      const ssh = pose.shifts && pose.shifts['@' + sid];  // driven offsets for swap sets (e.g. the face moving as the head turns)
+      if (ssh) mm = mul(mm, [1, 0, 0, 1, ssh[0], ssh[1]]);
       if (sid === 'pupils' && pose.look) mm = mul(m, [1, 0, 0, 1, pose.look[0] * (sw.movable || 8), pose.look[1] * (sw.movable || 8) * 0.7]);
-      items.push({ z: sw.z ?? 40, svg: strokesSVG(strokes, pal, mm) });
+      items.push({ z: (pose.z && pose.z['@' + sid] != null) ? pose.z['@' + sid] : (sw.z ?? 40), svg: strokesSVG(strokes, pal, mm) });
     }
     items.sort((a, b) => a.z - b.z);
     const s = pose.s ?? 1, flip = pose.flip ?? 1, [ox, oy] = pose.offset || [0, 0];

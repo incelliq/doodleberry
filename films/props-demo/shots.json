@@ -1,0 +1,202 @@
+{
+ "title": "Catch",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "paper",
+   "start": 0,
+   "end": 5.993,
+   "start_line": "catch",
+   "end_line": "got",
+   "tail": 1.8,
+   "style": {
+    "shadow": false
+   },
+   "bubbles": true,
+   "cast": [
+    {
+     "puppet": "puppet/examples/pip.puppet.json",
+     "speaker": "pip",
+     "place": {
+      "x": 330,
+      "y": 1440,
+      "s": 0.78
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": "catch.start",
+        "additive": true
+       }
+      ],
+      "poses": [
+       [
+        0,
+        "presenting"
+       ],
+       [
+        1.4,
+        "neutral"
+       ]
+      ],
+      "visemes_from": "pip",
+      "springs": true,
+      "controls": {
+       "turn": [
+        [
+         0,
+         -0.4
+        ],
+        [
+         1.2,
+         0.3
+        ],
+        [
+         1.6,
+         -0.3
+        ],
+        [
+         "catch.start",
+         0.2
+        ],
+        [
+         "catch.end",
+         1
+        ],
+        [
+         "got.end+0.6",
+         1
+        ],
+        [
+         "got.end+1.2",
+         0
+        ]
+       ]
+      }
+     }
+    },
+    {
+     "puppet": "puppet/examples/nib.puppet.json",
+     "speaker": "nib",
+     "place": {
+      "x": 810,
+      "y": 1440,
+      "s": 1.0
+     },
+     "timeline": {
+      "blink": false,
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "hop",
+        "start": "got.start-0.25",
+        "additive": true,
+        "weight": 2,
+        "fadeIn": 0,
+        "fadeOut": 0
+       },
+       {
+        "clip": "talk",
+        "start": "got.start",
+        "end": "got.end",
+        "additive": true
+       }
+      ],
+      "poses": [
+       [
+        0,
+        "neutral"
+       ],
+       [
+        "catch.end-0.3",
+        "arms_up"
+       ],
+       [
+        "got.end+0.4",
+        "neutral"
+       ]
+      ],
+      "blinks": [
+       0.8,
+       "catch.end+0.1"
+      ],
+      "lookat": {
+       "part": "head",
+       "target": {
+        "cast": 0,
+        "part": "head"
+       },
+       "aim": [
+        0,
+        -1
+       ],
+       "limit": 9,
+       "weight": 1
+      }
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "ball",
+     "r": 30,
+     "color": "#e8603c",
+     "spin": 240,
+     "travel": 0.45,
+     "arc": 170,
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_R"
+       }
+      ],
+      [
+       1.2,
+       {
+        "cast": 0,
+        "part": "hand_L"
+       }
+      ],
+      [
+       "catch.end-0.1",
+       {
+        "cast": 1,
+        "part": "arm_R",
+        "at": [
+         424,
+         492
+        ]
+       }
+      ],
+      [
+       "got.end+0.8",
+       {
+        "x": 600,
+        "y": 1410
+       }
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

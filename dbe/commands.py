@@ -384,6 +384,8 @@ def shot_render(name, shot, renderer=""):
     own = sh.get("renderer", "svg"); renderer = renderer or own
     if renderer != "svg" and any(st.get("image") for c in baked["cast"] for part in _json(c["puppet"])["parts"].values() for st in part["strokes"]):
         raise ValueError(f"shot {shot} uses raster-part puppets (scanned ink); render it with svg (other renderers draw vector parts only, for now)")
+    if renderer != "svg" and sh.get("props"):
+        raise ValueError(f"shot {shot} has props; render it with svg (props are drawn by the SVG player only, for now)")
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
     out = bdir / (f"{shot}.mp4" if renderer == own else f"{shot}.{renderer}.mp4")
     if renderer == "svg":

@@ -83,7 +83,8 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
             par = part.get("parent")
             lay = {"ddd": 0, "ind": ids[pid], "ty": 4, "nm": pid if not view else f"{pid}@{view}", "parent": ids[par] if par in ids else root, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                    "ks": {"o": kf([100 * o for o in on], hold=True), "r": kf([round(fr["angles"].get(pid, 0) or 0, 2) for fr in frs]),
-                          "p": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "s": {"a": 0, "k": [100, 100, 100]}},
+                          "p": kf([[round(part["pivot"][0] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[0], 2), round(part["pivot"][1] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[1], 2), 0] for fr in frs]),
+                          "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "s": {"a": 0, "k": [100, 100, 100]}},
                    "shapes": shape_group(part["strokes"], pal), "_z": part.get("z", 0)}
             # hidden while a replacing swap shows
             repl = [(sid, sw) for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
@@ -99,7 +100,8 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
                     continue
                 lay = {"ddd": 0, "ind": nid(), "ty": 4, "nm": f"{sid}:{shape}" + (f"@{view}" if view else ""), "parent": ids.get(sw["anchor"], root), "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                        "ks": {"o": kf(vis, hold=True), "r": {"a": 0, "k": 0}, "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
-                              "p": kf([[round((fr["look"] or [0, 0])[0] * sw.get("movable", 8), 2), round((fr["look"] or [0, 0])[1] * sw.get("movable", 8) * 0.7, 2), 0] for fr in frs]) if sid == "pupils" else {"a": 0, "k": [0, 0, 0]}},
+                              "p": kf([[round(((fr["look"] or [0, 0])[0] * sw.get("movable", 8) if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[0], 2),
+                                         round(((fr["look"] or [0, 0])[1] * sw.get("movable", 8) * 0.7 if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[1], 2), 0] for fr in frs])},
                        "shapes": shape_group(strokes, pal), "_z": sw.get("z", 40)}
                 part_layers.append(lay)
         part_layers.sort(key=lambda l: -l["_z"])  # Lottie draws the first layer on top
@@ -209,7 +211,7 @@ def to_synfig(baked, size, bg_png=None, transparent=False):
       items = []
       for view, on in _view_masks(p0, frs):
         p = G.in_view(p0, view); pal = p["palette"]
-        Ms = [G.part_matrices(p, fr["angles"]) for fr in frs]
+        Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts")) for fr in frs]
         Rs = [G.root_matrix(p, fr) for fr in frs]
         for pid, part in p["parts"].items():
             if not part["strokes"]:
@@ -232,6 +234,8 @@ def to_synfig(baked, size, bg_png=None, transparent=False):
                 mats = []
                 for i, fr in enumerate(frs):
                     m = G.mul(Rs[i], Ms[i].get(anchor, G.I))
+                    if (fr.get("shifts") or {}).get("@" + sid):
+                        m = G.mul(m, [1, 0, 0, 1, *fr["shifts"]["@" + sid]])
                     if sid == "pupils" and fr.get("look"):
                         m = G.mul(m, [1, 0, 0, 1, fr["look"][0] * sw.get("movable", 8), fr["look"][1] * sw.get("movable", 8) * 0.7])
                     mats.append(G.mul(F, m))
@@ -250,15 +254,17 @@ def to_gp_frames(baked, size, per=6):
         strokes = []
         for c in baked["cast"]:
             p = pals.setdefault(c["puppet"], _load(c["puppet"])); fr = c["frames"][f]; p = G.in_view(p, fr.get("view")); pal = p["palette"]
-            M = G.part_matrices(p, fr["angles"]); R = G.root_matrix(p, fr)
+            M = G.part_matrices(p, fr["angles"], fr.get("shifts")); R = G.root_matrix(p, fr)
             sw = G.chosen_swaps(p, fr)
             items = []
             for pid, part in p["parts"].items():
                 if any(s.get("replaces") == pid and sw.get(sid) for sid, s in (p.get("swaps") or {}).items()):
                     continue
-                items.append((part.get("z", 0), G.mul(R, M[pid]), part["strokes"]))
+                items.append(((fr.get("z") or {}).get(pid, part.get("z", 0)), G.mul(R, M[pid]), part["strokes"]))
             for sid, shape in sw.items():
                 s = p["swaps"][sid]; m = G.mul(R, M.get(s["anchor"], G.I))
+                if (fr.get("shifts") or {}).get("@" + sid):
+                    m = G.mul(m, [1, 0, 0, 1, *fr["shifts"]["@" + sid]])
                 if sid == "pupils" and fr.get("look"):
                     m = G.mul(m, [1, 0, 0, 1, fr["look"][0] * s.get("movable", 8), fr["look"][1] * s.get("movable", 8) * 0.7])
                 items.append((s.get("z", 40), m, s["shapes"][shape]))

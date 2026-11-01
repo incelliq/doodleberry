@@ -162,12 +162,43 @@
     return out.join('');
   }
 
+  // ---------- constraints and props (plan 1.2) ----------
+  // a target is [x, y] in the frame, or {cast: i, part: "hand_R", at: [x, y]} (a point on another character)
+  function worldOf(tg, t, casts) {
+    if (!tg) return null;
+    if (Array.isArray(tg)) return tg;
+    const c = casts[tg.cast]; if (!c) return null;
+    return Puppet.pointOf(c.p, tg.part, tg.at || null, c.x, c.y, { ...c.pose, s: c.s, flip: c.flip });
+  }
+  function toLocal(p, w, x, y, s, flip) {  // frame point -> the puppet's artboard space (inverse of its root transform)
+    if (!w) return null;
+    const hip = (p.parts.hip && p.parts.hip.pivot) || [p.artboard[0] / 2, p.ground];
+    return [(w[0] - x) / (s * flip) + hip[0], (w[1] - y) / s + (p.ground ?? p.artboard[1])];
+  }
+  // props switch parents over time: attach [[t, {cast, part, at} | {x, y}], ...]; each switch travels on an arc
+  function propSVG(pr, t, casts) {
+    const keys = pr.attach || []; if (!keys.length || t < keys[0][0]) return '';
+    let k = 0; while (k + 1 < keys.length && keys[k + 1][0] <= t) k++;
+    const at = spec => Array.isArray(spec) ? spec : (spec.x != null ? [spec.x, spec.y] : worldOf(spec, t, casts));
+    let pos = at(keys[k][1]);
+    const travel = pr.travel ?? 0.35, since = t - keys[k][0];
+    if (k > 0 && since < travel && pos) {
+      const from = at(keys[k - 1][1]) || pos, u = since / travel, e = u * u * (3 - 2 * u), lift = (pr.arc ?? 140) * 4 * u * (1 - u);
+      pos = [from[0] + (pos[0] - from[0]) * e, from[1] + (pos[1] - from[1]) * e - lift];
+    }
+    if (!pos) return '';
+    const r = pr.r || 34, spin = pr.spin ? t * pr.spin : 0;
+    if (pr.svg) return `<g transform="translate(${pos[0].toFixed(1)} ${pos[1].toFixed(1)}) rotate(${spin.toFixed(1)})">${pr.svg}</g>`;
+    return `<g transform="translate(${pos[0].toFixed(1)} ${pos[1].toFixed(1)}) rotate(${spin.toFixed(1)})"><circle r="${r}" fill="${pr.color || '#e8603c'}" stroke="${INK}" stroke-width="5"/>` +
+      `<path d="M${-r} 0 Q0 ${r * 0.5} ${r} 0 M0 ${-r} Q${r * 0.45} 0 0 ${r}" fill="none" stroke="${INK}" stroke-width="3" opacity="0.55"/></g>`;
+  }
+
   function frameAt(t, bgOnly) {
     const sh = shotAt(t), st = sh.style || {};
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
     let world = set.draw(tq, sh.set_opts || {}, W, H), ink = '';
-    const heads = {};
+    const heads = {}, casts = [];
     for (const c of sh.cast || []) {
       const p = PUP[c.puppet]; if (!p) continue;
       if (bgOnly) { // the set plate for other renderers keeps each character's ground shadow
@@ -176,12 +207,15 @@
       }
       const tl = { ...(c.timeline || {}) }, L = libFor(p);
       if (tl.visemes_from) { tl.visemes = (T.visemes || {})[tl.visemes_from] || []; delete tl.visemes_from; }
-      const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
       const [x, y, s, flip] = placeAt(c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tq);
+      if (tl.lookat) tl.lookat = [].concat(tl.lookat).map(la => ({ ...la, target_local: toLocal(p, worldOf(la.target, tq, casts), x, y, s, flip) }));
+      const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
+      casts.push({ p, x, y, s, flip, pose });
       if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`;
       ink += Puppet.render(p, x, y, { ...pose, s, flip });
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
+    if (!bgOnly) ink += (sh.props || []).map(pr => propSVG(pr, tq, casts)).join('');
     if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('') + bubblesFor(sh, tq, heads); }
     world += st.boil ? `<g filter="url(#boil)">${ink}</g>` : ink;
     let svg = boilDefs(st, t) + world;
