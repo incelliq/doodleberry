@@ -1,20 +1,88 @@
 {
-  "speakers": {
-    "nana":  {"voice": "en_US-amy-medium",  "fx": {"pitch": 0.97, "formant": 0.97, "range": 1.35}},
-    "wiggs": {"voice": "en_GB-alan-medium", "fx": {"pitch": 1.12, "formant": 1.05, "range": 1.3}}
+ "speakers": {
+  "nana": {
+   "voice": "en_US-amy-medium",
+   "fx": {
+    "pitch": 0.97,
+    "formant": 0.97,
+    "range": 1.35
+   }
   },
-  "length_scale": 1.1,
-  "gap_s": 0.35,
-  "lead_in_s": 0.4,
-  "lines": [
-    {"id": "hook",    "speaker": "nana",  "fact": null,            "text": "Everyone calls me a banana tree. But I'm not a tree!"},
-    {"id": "stem",    "speaker": "wiggs", "fact": "pseudostem",    "text": "That trunk is a pseudostem, made of leaf stalks.", "pause": 0.3},
-    {"id": "corm",    "speaker": "wiggs", "fact": "corm",          "text": "And everything above ground grows from this. The corm!", "pause": 0.4},
-    {"id": "coming",  "speaker": "nana",  "fact": null,            "text": "Ooh! I feel a flower coming!"},
-    {"id": "spike",   "speaker": "wiggs", "fact": "inflorescence", "text": "When a banana plant is mature, it stops making leaves, and grows a flower spike.", "pause": 0.3},
-    {"id": "bracts",  "speaker": "wiggs", "fact": ["bracts", "hands"], "text": "Rows of flowers hide between the bracts, and become hands of bananas."},
-    {"id": "nine",    "speaker": "wiggs", "fact": "hands",         "text": "About nine hands to a bunch, with up to twenty bananas each!", "pause": 2.6},
-    {"id": "sucker",  "speaker": "nana",  "fact": "sucker",        "text": "And look! A little sucker, ready to fruit next."},
-    {"id": "herb",    "speaker": "wiggs", "fact": "herb",          "text": "Not a tree at all. A giant herb!"}
-  ]
+  "wiggs": {
+   "voice": "en_GB-alan-medium",
+   "fx": {
+    "pitch": 1.12,
+    "formant": 1.05,
+    "range": 1.3
+   }
+  }
+ },
+ "length_scale": 1.1,
+ "gap_s": 0.35,
+ "lead_in_s": 0.4,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "nana",
+   "fact": null,
+   "text": "Everyone calls me a banana tree. But I'm not a tree!"
+  },
+  {
+   "id": "stem",
+   "speaker": "wiggs",
+   "fact": "pseudostem",
+   "text": "That trunk is a pseudostem, made of leaf stalks.",
+   "pause": 0.3
+  },
+  {
+   "id": "corm",
+   "speaker": "wiggs",
+   "fact": "corm",
+   "text": "And everything above ground grows from this. The corm!",
+   "pause": 0.4
+  },
+  {
+   "id": "coming",
+   "speaker": "nana",
+   "fact": null,
+   "text": "Ooh! I feel a flower coming!"
+  },
+  {
+   "id": "spike",
+   "speaker": "wiggs",
+   "fact": "inflorescence",
+   "text": "When a banana plant is mature, it stops making leaves, and grows a flower spike.",
+   "pause": 0.3
+  },
+  {
+   "id": "bracts",
+   "speaker": "wiggs",
+   "fact": [
+    "bracts",
+    "hands"
+   ],
+   "text": "Rows of flowers hide between the bracts, and become hands of bananas."
+  },
+  {
+   "id": "nine",
+   "speaker": "wiggs",
+   "fact": "hands",
+   "text": "About nine hands to a bunch, with up to twenty bananas each!",
+   "pause": 2.6
+  },
+  {
+   "id": "sucker",
+   "speaker": "nana",
+   "fact": "sucker",
+   "text": "And look! A little sucker, ready to fruit next."
+  },
+  {
+   "id": "herb",
+   "speaker": "wiggs",
+   "fact": "herb",
+   "text": "Not a tree at all. A giant herb!"
+  }
+ ],
+ "allow_restricted_voices": true,
+ "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
 }

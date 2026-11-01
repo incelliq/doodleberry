@@ -1,0 +1,77 @@
+{
+ "note": "Licence gate for Piper voices. voice.build refuses any voice whose status is not 'clean' unless the film's script.json sets \"allow_restricted_voices\": true (for internal tests only). Sources: each voice's MODEL_CARD on huggingface.co/rhasspy/piper-voices, checked November 2026 (see docs/oss-research.md section 0).",
+ "voices": {
+  "en_US-kristin-medium": {
+   "status": "clean",
+   "license": "public domain data (LibriVox), trained from scratch"
+  },
+  "en_US-norman-medium": {
+   "status": "clean",
+   "license": "public domain data (LibriVox), trained from scratch"
+  },
+  "en_US-john-medium": {
+   "status": "clean",
+   "license": "public domain; fine-tuned from kristin"
+  },
+  "en_US-bryce-medium": {
+   "status": "clean",
+   "license": "public domain"
+  },
+  "en_US-ljspeech-high": {
+   "status": "clean",
+   "license": "LJ Speech, public domain"
+  },
+  "en_US-ljspeech-medium": {
+   "status": "clean",
+   "license": "LJ Speech, public domain"
+  },
+  "en_GB-cori-high": {
+   "status": "clean",
+   "license": "public domain data, trained from scratch"
+  },
+  "en_GB-cori-medium": {
+   "status": "clean",
+   "license": "public domain data (LibriVox), trained from scratch"
+  },
+  "en_US-ryan-high": {
+   "status": "restricted",
+   "license": "CC BY-NC-SA 4.0 (non-commercial)"
+  },
+  "en_US-lessac-high": {
+   "status": "restricted",
+   "license": "Blizzard 2013 Lessac data, research licence"
+  },
+  "en_US-lessac-medium": {
+   "status": "restricted",
+   "license": "Blizzard 2013 Lessac data, research licence"
+  },
+  "en_US-amy-medium": {
+   "status": "unclear",
+   "license": "'See URL'; fine-tuned from lessac"
+  },
+  "en_GB-alan-medium": {
+   "status": "restricted",
+   "license": "source voice: Copyright Mycroft AI, All Rights Reserved"
+  },
+  "es_ES-carlfm-x_low": {
+   "status": "clean",
+   "license": "public domain data, trained from scratch (x_low quality)"
+  },
+  "es_MX-claude-high": {
+   "status": "unclear",
+   "license": "apache-2.0 per card, training lineage 'see URL'"
+  },
+  "es_MX-ald-medium": {
+   "status": "unclear",
+   "license": "Unlicense data; fine-tuned from davefx, itself fine-tuned from lessac"
+  },
+  "es_ES-davefx-medium": {
+   "status": "unclear",
+   "license": "CC0 data; fine-tuned from lessac"
+  },
+  "es_AR-daniela-high": {
+   "status": "restricted",
+   "license": "CC BY-SA 4.0 data; fine-tuned from lessac"
+  }
+ }
+}

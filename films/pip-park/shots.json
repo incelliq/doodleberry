@@ -1,0 +1,237 @@
+{
+ "title": "Pip in the park",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "park",
+   "start": 0,
+   "end": 5.712,
+   "start_line": "hi",
+   "cast": [
+    {
+     "puppet": "puppet/examples/pip.puppet.json",
+     "place": [
+      [
+       0,
+       {
+        "x": -80,
+        "y": 1500,
+        "s": 0.95
+       }
+      ],
+      [
+       1.5,
+       {
+        "x": 540,
+        "y": 1500,
+        "s": 0.95
+       }
+      ]
+     ],
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "walk",
+        "start": 0,
+        "end": 1.5,
+        "weight": 1.6,
+        "fadeIn": 0
+       },
+       {
+        "clip": "wave_R",
+        "start": "hi.start-0.2",
+        "end": "hi.start+1.38",
+        "weight": 2
+       },
+       {
+        "clip": "talk_beat",
+        "start": "hi.start+2.08",
+        "additive": true
+       }
+      ],
+      "visemes_from": "pip",
+      "look": [
+       [
+        0,
+        [
+         1,
+         0
+        ]
+       ]
+      ],
+      "springs": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "synfig",
+   "set": "park",
+   "start": 5.712,
+   "end": 11.08,
+   "start_line": "mid",
+   "cast": [
+    {
+     "puppet": "puppet/examples/pip.puppet.json",
+     "place": {
+      "x": 540,
+      "y": 1500,
+      "s": 0.95
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": "mid.start+0.7",
+        "end": "mid.start+2.72",
+        "weight": 2
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": "mid.start+2.62",
+        "weight": 1.5
+       }
+      ],
+      "visemes_from": "pip",
+      "look": [
+       [
+        0,
+        [
+         1,
+         0
+        ]
+       ]
+      ],
+      "springs": true
+     }
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "grease-pencil",
+   "set": "park",
+   "start": 11.08,
+   "end": 16.641,
+   "start_line": "end",
+   "end_line": "end",
+   "cast": [
+    {
+     "puppet": "puppet/examples/pip.puppet.json",
+     "place": {
+      "x": 540,
+      "y": 1500,
+      "s": 0.95
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": "end.start+0.62",
+        "additive": true
+       },
+       {
+        "clip": "nod",
+        "start": "end.start+3.32",
+        "additive": true
+       }
+      ],
+      "visemes_from": "pip",
+      "look": [
+       [
+        0,
+        [
+         1,
+         0
+        ]
+       ],
+       [
+        "end.start+0.15",
+        [
+         1,
+         -0.2
+        ]
+       ],
+       [
+        "end.start+1.9",
+        [
+         0,
+         0
+        ]
+       ]
+      ],
+      "springs": true,
+      "poses": [
+       [
+        0,
+        "neutral"
+       ],
+       [
+        "end.start+2.77",
+        "pip_cheer"
+       ]
+      ],
+      "view": [
+       [
+        0,
+        "front"
+       ],
+       [
+        "end.start+0.15",
+        "side"
+       ],
+       [
+        "end.start+1.9",
+        "front"
+       ]
+      ]
+     }
+    }
+   ],
+   "cues": [
+    {
+     "t": "end.start+2.92",
+     "type": "chime",
+     "gain": 0.8
+    },
+    {
+     "t": "end.start+0.15",
+     "type": "whoosh",
+     "gain": 0.35
+    }
+   ]
+  }
+ ],
+ "hooks": {
+  "question": {
+   "set": "plain",
+   "set_opts": {
+    "color": "#ffe9c7",
+    "floor": "#f2d39b"
+   }
+  }
+ }
+}

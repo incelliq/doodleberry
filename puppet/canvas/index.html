@@ -45,6 +45,8 @@
   <label>Width <input id="width" type="range" min="2" max="14" value="5"></label>
   <button id="undo">Undo</button><button id="clear">Clear slot</button>
   <button id="onion" class="on" title="Show the rest of the character faintly">Onion</button>
+  <label title="Draw another view of the character (side, three-quarter...). Parts you don't redraw are inherited from the front.">View
+    <select id="view" aria-label="View being drawn"></select></label>
   <span style="flex:1"></span>
   <button id="import">Import</button><button id="export">Export .puppet</button>
   <input id="file" type="file" accept=".json,.puppet" hidden>
@@ -54,7 +56,8 @@
   <div id="stageWrap"><svg id="draw" viewBox="0 0 600 1000" aria-label="Drawing canvas"></svg></div>
   <aside class="right">
     <div class="row"><b>Live preview</b>
-      <select id="action" aria-label="Preview action"><option>idle</option><option>wave</option><option>talk</option><option>walk</option><option>point</option></select></div>
+      <select id="action" aria-label="Preview action"></select>
+      <select id="pview" aria-label="Preview view"></select></div>
     <svg id="preview" viewBox="0 0 600 1000" aria-label="Live puppet preview"></svg>
     <h3>Palette (colour by slot)</h3><div id="pal" class="pal"></div>
     <h3>Rig check</h3><ul id="lint" style="padding-left:18px;margin:0"></ul>
@@ -62,6 +65,8 @@
 </main>
 <script src="../loader/puppet.js"></script>
 <script src="../templates/humanoid.js"></script>
+<script src="../loader/acting.js"></script>
+<script src="../clips/humanoid.js"></script>
 <script>
 (function () {
   const T = window.TEMPLATES.humanoid;
@@ -70,15 +75,33 @@
   try { const s = localStorage.getItem(KEY); if (s) P = JSON.parse(s); } catch (e) {}
   if (!P) P = Puppet.fromTemplate(T, 'Untitled');
   const $ = id => document.getElementById(id);
-  let tool = 'fill', fillSlot = 'cloth1', active = { kind: 'part', id: 'head' }, onion = true;
+  let tool = 'fill', fillSlot = 'cloth1', active = { kind: 'part', id: 'head' }, onion = true, view = '';  // '' = the drawn (front) view
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
 
   // ---------- slots ----------
-  const strokesOf = a => a.kind === 'part' ? P.parts[a.id].strokes : P.swaps[a.id].shapes[a.shape];
+  // strokes for a slot in the current view; in another view a slot is inherited until something is drawn in it
+  const ov = (create) => { if (!view) return null; P.views = P.views || {}; const v = P.views[view] = P.views[view] || { parts: {}, swaps: {} }; v.parts = v.parts || {}; v.swaps = v.swaps || {}; return v; };
+  function own(a) { const v = ov(); if (!v) return a.kind === 'part' ? P.parts[a.id].strokes : P.swaps[a.id].shapes[a.shape];
+    return a.kind === 'part' ? (v.parts[a.id] && v.parts[a.id].strokes) || null : ((v.swaps[a.id] || {}).shapes || {})[a.shape] || null; }
+  function strokesOf(a) { // writable list (creates the view override on first use)
+    const o = own(a); if (o) return o; const v = ov();
+    if (a.kind === 'part') { v.parts[a.id] = { ...(v.parts[a.id] || {}), strokes: [] }; return v.parts[a.id].strokes; }
+    v.swaps[a.id] = v.swaps[a.id] || { shapes: {} }; v.swaps[a.id].shapes = v.swaps[a.id].shapes || {}; return (v.swaps[a.id].shapes[a.shape] = []); }
+  const shown = a => own(a) || (a.kind === 'part' ? P.parts[a.id].strokes : P.swaps[a.id].shapes[a.shape]);
+  const pivotOf = id => (view && P.views && P.views[view] && P.views[view].parts[id] && P.views[view].parts[id].pivot) || P.parts[id].pivot;
+  const fresh = () => ({ ...P });  // Puppet caches merged views per object; a fresh shell sees edits immediately
+  function views() {
+    const names = Object.keys(P.views || {});
+    $('view').innerHTML = `<option value="">front (drawn)</option>` + names.map(n => `<option ${n === view ? 'selected' : ''}>${n}</option>`).join('') + `<option value="+">+ new view…</option>`;
+    $('view').value = view;
+    const pv = $('pview').value;
+    $('pview').innerHTML = `<option value="">front</option>` + names.map(n => `<option>${n}</option>`).join('') + (names.length ? `<option value="turn">turn (front ↔ ${names[0]})</option>` : '');
+    if ([...$('pview').options].some(o => o.value === pv)) $('pview').value = pv;
+  }
   function slotList() {
     let h = '<h3>Body parts</h3>';
-    for (const pt of T.parts) { const n = P.parts[pt.id].strokes.length; h += `<div class="slot ${active.kind === 'part' && active.id === pt.id ? 'active' : ''}" data-k="part" data-id="${pt.id}"><span>${pt.label}${pt.required ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; }
-    for (const sw of T.swaps) { h += `<h3>${sw.label}</h3>`; for (const k of sw.shapes) { const n = P.swaps[sw.id].shapes[k].length; h += `<div class="slot ${active.kind === 'swap' && active.id === sw.id && active.shape === k ? 'active' : ''}" data-k="swap" data-id="${sw.id}" data-shape="${k}"><span>${k}${sw.required.includes(k) ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; } }
+    for (const pt of T.parts) { const n = view ? (own({ kind: 'part', id: pt.id }) ? 1 : 0) : P.parts[pt.id].strokes.length; h += `<div class="slot ${active.kind === 'part' && active.id === pt.id ? 'active' : ''}" data-k="part" data-id="${pt.id}"><span>${pt.label}${pt.required ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; }
+    for (const sw of T.swaps) { h += `<h3>${sw.label}</h3>`; for (const k of sw.shapes) { const n = view ? ((own({ kind: 'swap', id: sw.id, shape: k }) || []).length) : P.swaps[sw.id].shapes[k].length; h += `<div class="slot ${active.kind === 'swap' && active.id === sw.id && active.shape === k ? 'active' : ''}" data-k="swap" data-id="${sw.id}" data-shape="${k}"><span>${k}${sw.required.includes(k) ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; } }
     $('slots').innerHTML = h;
     $('slots').querySelectorAll('.slot').forEach(el => el.onclick = () => { active = el.dataset.k === 'part' ? { kind: 'part', id: el.dataset.id } : { kind: 'swap', id: el.dataset.id, shape: el.dataset.shape }; refresh(); });
   }
@@ -113,12 +136,12 @@
   svg.addEventListener('pointerdown', e => {
     svg.setPointerCapture(e.pointerId);
     const p = pt(e);
-    if (tool === 'pivot') { let best = null, bd = 30; for (const [id, part] of Object.entries(P.parts)) { const d = Math.hypot(part.pivot[0] - p[0], part.pivot[1] - p[1]); if (d < bd) { bd = d; best = id; } } dragPivot = best; return; }
+    if (tool === 'pivot') { let best = null, bd = 30; for (const id of Object.keys(P.parts)) { const q = pivotOf(id), d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = id; } } dragPivot = best; return; }
     live = [p];
   });
   svg.addEventListener('pointermove', e => {
     const p = pt(e);
-    if (dragPivot) { P.parts[dragPivot].pivot = [Math.round(p[0]), Math.round(p[1])]; drawStage(); return; }
+    if (dragPivot) { const q = [Math.round(p[0]), Math.round(p[1])]; if (view) { const v = ov(); v.parts[dragPivot] = { ...(v.parts[dragPivot] || {}), pivot: q }; } else P.parts[dragPivot].pivot = q; drawStage(); return; }
     if (!live) return; const last = live[live.length - 1]; if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 2) return;
     live.push(p); drawStage();
   });
@@ -137,34 +160,48 @@
   function drawStage() {
     let s = `<g fill="none" stroke="#c9bba8" stroke-width="2" stroke-dasharray="6 6">${T.guide.map(d => `<path d="${d}"/>`).join('')}</g>`;
     s += `<line x1="0" y1="${T.ground}" x2="600" y2="${T.ground}" stroke="#d8cfc0" stroke-width="2"/>`;
-    if (onion) s += `<g opacity="0.35">${Puppet.render(P, P.parts.hip.pivot[0], P.ground, {})}</g>`;
-    // the active slot at full strength, in rest pose (swap shapes drawn relative to their anchor's rest pose)
-    const strokes = strokesOf(active);
+    if (onion) s += `<g opacity="0.35">${Puppet.render(fresh(), P.parts.hip.pivot[0], P.ground, { view })}</g>`;
+    // the active slot at full strength, in rest pose (swap shapes drawn relative to their anchor's rest pose);
+    // in another view an inherited slot shows dimmed until it is redrawn
+    const inherited = view && !own(active), strokes = shown(active);
+    if (inherited) s += `<text x="300" y="40" text-anchor="middle" font-size="18" fill="#8a7a66">inherited from the front view: draw to replace it in "${view}"</text><g opacity="0.45">`;
     for (const st of strokes) { const fill = st.fill && st.fill[0] !== '#' && st.fill !== 'none' ? P.palette[st.fill] : st.fill; const line = st.stroke ? (P.palette[st.stroke] || st.stroke) : 'none';
       s += `<path d="${st.d}" fill="${fill}" stroke="${line}" stroke-width="${st.width || 0}" stroke-linejoin="round"/>`; }
+    if (inherited) s += '</g>';
     if (live && live.length > 1) s += `<path d="M${live.map(p => `${fx(p[0])} ${fx(p[1])}`).join(' L')}" fill="none" stroke="${tool === 'ink' ? P.palette.ink : P.palette[fillSlot]}" stroke-width="${tool === 'ink' ? $('width').value * 1.4 : 3}" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>`;
     // joints: the active part's pivot is highlighted
-    for (const [id, part] of Object.entries(P.parts)) { const on = active.kind === 'part' && active.id === id;
-      s += `<circle cx="${part.pivot[0]}" cy="${part.pivot[1]}" r="${on ? 9 : 6}" fill="${on ? '#e8743a' : '#fff'}" stroke="#24160e" stroke-width="2"><title>${id}</title></circle>`; }
+    for (const id of Object.keys(P.parts)) { const on = active.kind === 'part' && active.id === id, q = pivotOf(id);
+      s += `<circle cx="${q[0]}" cy="${q[1]}" r="${on ? 9 : 6}" fill="${on ? '#e8743a' : '#fff'}" stroke="#24160e" stroke-width="2"><title>${id}</title></circle>`; }
     svg.innerHTML = s;
   }
-  function refresh() { slotList(); drawStage(); const issues = Puppet.lint(P, T); $('lint').innerHTML = issues.length ? issues.slice(0, 14).map(i => `<li class="${i.level}">${i.msg}</li>`).join('') + (issues.length > 14 ? `<li>…and ${issues.length - 14} more</li>` : '') : '<li style="color:var(--ok)">Ready to animate ✓</li>'; }
+  function refresh() { views(); slotList(); drawStage(); const issues = Puppet.lint(P, T); $('lint').innerHTML = issues.length ? issues.slice(0, 14).map(i => `<li class="${i.level}">${i.msg}</li>`).join('') + (issues.length > 14 ? `<li>…and ${issues.length - 14} more</li>` : '') : '<li style="color:var(--ok)">Ready to animate ✓</li>'; }
 
   // ---------- live preview ----------
-  const ACTIONS = {
-    idle: t => ({ angles: { head: Math.sin(t * 1.3) * 3, torso: Math.sin(t * 1.1) * 1 }, blink: (t % 3.3) < 0.15 ? 1 : 0, look: [Math.sin(t * 0.7), 0] }),
-    wave: t => ({ angles: { upperarm_R: -150 + Math.sin(t * 6) * 12, forearm_R: -30 + Math.sin(t * 6) * 25 }, mouth: 'smile', brows: 'raised' }),
-    talk: t => ({ talk: Math.max(0, Math.sin(t * 9) * 0.6 + Math.sin(t * 13) * 0.4), angles: { upperarm_L: 12 + Math.sin(t * 2) * 6, forearm_L: -50, head: Math.sin(t * 3) * 3 }, blink: (t % 2.9) < 0.15 ? 1 : 0 }),
-    walk: t => { const w = Math.sin(t * 5); return { angles: { thigh_L: 22 * w, shin_L: Math.max(0, -28 * w), thigh_R: -22 * w, shin_R: Math.max(0, 28 * w), upperarm_L: -16 * w, upperarm_R: 16 * w, forearm_L: -10, forearm_R: -10 }, offset: [0, -Math.abs(Math.cos(t * 5)) * 10] }; },
-    point: t => ({ hand_R_pose: 'point', angles: { upperarm_R: -80, forearm_R: -8 }, look: [1, 0], mouth: 'O' }),
-  };
-  function tick(ms) { const t = ms / 1000; $('preview').innerHTML = `<line x1="0" y1="${P.ground}" x2="600" y2="${P.ground}" stroke="#d8cfc0" stroke-width="3"/>` + Puppet.render(P, 300, P.ground, ACTIONS[$('action').value](t)); requestAnimationFrame(tick); }
+  // previews come from the same clip library and acting solver the films use
+  const LIB = window.CLIPLIB.humanoid;
+  const TALK = [[0, 'closed'], [0.12, 'mid'], [0.24, 'wide'], [0.36, 'small'], [0.46, 'O'], [0.6, 'smile'], [0.72, 'FV'], [0.84, 'mid'], [0.98, 'closed'], [1.3, 'closed']];
+  $('action').innerHTML = '<optgroup label="Clips">' + Object.keys(LIB.clips).map(k => `<option value="clip:${k}">${k}</option>`).join('') + '</optgroup>' +
+    '<optgroup label="Presets">' + Object.keys(LIB.presets).map(k => `<option value="pose:${k}">${k}</option>`).join('') + '</optgroup><option value="talk">lip-sync test</option>';
+  function previewPose(t) {
+    const [kind, name] = $('action').value.split(':');
+    const tl = { clips: [{ clip: 'idle', start: 0, fadeIn: 0 }], springs: true, look: [[0, [0.6, 0]]] };
+    if (kind === 'clip' && name !== 'idle') { const c = LIB.clips[name], d = c.duration + (c.loop ? 0 : 0.8); tl.clips.push({ clip: name, start: Math.floor(t / d) * d, weight: 2 }); }
+    if (kind === 'pose') tl.poses = [[0, name]];
+    if (kind === 'talk') tl.visemes = TALK.map(([k, v]) => [Math.floor(t / 1.3) * 1.3 + k, v]);
+    const pv = $('pview').value; if (pv === 'turn') { const n = Object.keys(P.views || {})[0], c = Math.floor(t / 1.5); tl.view = [[c * 1.5, c % 2 ? n : 'front'], [c * 1.5 + 1.5, c % 2 ? 'front' : n]]; } else if (pv) tl.view = [[0, pv]];
+    try { return Acting.evaluate(P, tl, t, LIB.clips, LIB.presets); } catch (e) { return {}; }
+  }
+  function tick(ms) { const t = ms / 1000; $('preview').innerHTML = `<line x1="0" y1="${P.ground}" x2="600" y2="${P.ground}" stroke="#d8cfc0" stroke-width="3"/>` + Puppet.render(fresh(), 300, P.ground, previewPose(t)); requestAnimationFrame(tick); }
 
   // ---------- toolbar ----------
   const setTool = t => { tool = t; ['fill', 'ink', 'pivot'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); };
   $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-pivot').onclick = () => setTool('pivot');
-  $('undo').onclick = () => { strokesOf(active).pop(); save(); refresh(); };
-  $('clear').onclick = () => { if (confirm('Clear everything drawn in this slot?')) { strokesOf(active).length = 0; save(); refresh(); } };
+  $('undo').onclick = () => { const o = own(active); if (o) o.pop(); save(); refresh(); };
+  $('clear').onclick = () => { if (!confirm(view ? `Remove the "${view}" drawing of this slot (it will inherit the front again)?` : 'Clear everything drawn in this slot?')) return;
+    if (view) { const v = ov(); if (active.kind === 'part') delete v.parts[active.id]; else if (v.swaps[active.id]) delete v.swaps[active.id].shapes[active.shape]; } else strokesOf(active).length = 0; save(); refresh(); };
+  $('view').onchange = () => { let v = $('view').value;
+    if (v === '+') { v = (prompt('Name the new view (e.g. side, 3q, back):', 'side') || '').trim().replace(/\W+/g, '_'); if (v) { P.views = P.views || {}; P.views[v] = P.views[v] || { parts: {}, swaps: {} }; P.version = '0.2'; save(); } }
+    view = v === '+' ? view : v; refresh(); };
   $('onion').onclick = () => { onion = !onion; $('onion').classList.toggle('on', onion); drawStage(); };
   $('name').value = P.name; $('name').oninput = () => { P.name = $('name').value; save(); };
   $('export').onclick = () => { P.meta = { ...(P.meta || {}), created: new Date().toISOString().slice(0, 10) };

@@ -1,142 +1,144 @@
 {
-  "speakers": {
-    "mina": {
-      "voice": "en_US-amy-medium",
-      "fx": {
-        "preset": "child"
-      }
-    },
-    "kernel": {
-      "voice": "en_US-ryan-high",
-      "fx": {
-        "pitch": 1.25,
-        "formant": 1.1,
-        "range": 1.2
-      }
-    },
-    "wiggs": {
-      "voice": "en_GB-alan-medium",
-      "fx": {
-        "pitch": 1.12,
-        "formant": 1.05,
-        "range": 1.3
-      }
-    },
-    "clover": {
-      "voice": "en_US-lessac-high",
-      "fx": {
-        "preset": "baby"
-      }
-    },
-    "narrator": {
-      "voice": "en_US-ryan-high",
-      "fx": {
-        "pitch": 0.82,
-        "formant": 0.92,
-        "range": 0.8
-      }
-    }
+ "speakers": {
+  "mina": {
+   "voice": "en_US-amy-medium",
+   "fx": {
+    "preset": "child"
+   }
   },
-  "length_scale": 1.12,
-  "gap_s": 0.35,
-  "lead_in_s": 0.3,
-  "lines": [
-    {
-      "id": "hook",
-      "speaker": "mina",
-      "fact": null,
-      "text": "Clover again? I wanted to plant corn!"
-    },
-    {
-      "id": "hungry",
-      "speaker": "kernel",
-      "fact": null,
-      "text": "Me too. But this soil leaves me hungry."
-    },
-    {
-      "id": "need",
-      "speaker": "wiggs",
-      "fact": "needs_n",
-      "text": "Hungry for nitrogen! Every crop needs it.",
-      "pause": 0.2
-    },
-    {
-      "id": "air",
-      "speaker": "mina",
-      "fact": "air_inert",
-      "text": "But the air is full of nitrogen!"
-    },
-    {
-      "id": "cant",
-      "speaker": "wiggs",
-      "fact": "air_inert",
-      "text": "Plants can't use it like that. Follow me!",
-      "pause": 0.6
-    },
-    {
-      "id": "nodules",
-      "speaker": "wiggs",
-      "fact": "nodules",
-      "text": "Clover roots have little bumps, full of bacteria called rhizobia."
-    },
-    {
-      "id": "fix",
-      "speaker": "wiggs",
-      "fact": "ammonia",
-      "text": "They pull nitrogen from the air, and turn it into ammonia."
-    },
-    {
-      "id": "yum",
-      "speaker": "clover",
-      "fact": "feeds_plant",
-      "text": "Yum! That feeds me!",
-      "pause": 0.5
-    },
-    {
-      "id": "later",
-      "speaker": "narrator",
-      "fact": null,
-      "text": "Months later.",
-      "pause": 0.4
-    },
-    {
-      "id": "release",
-      "speaker": "wiggs",
-      "fact": "released",
-      "text": "When the clover dies, its nitrogen is released into the soil.",
-      "pause": 0.3
-    },
-    {
-      "id": "spring",
-      "speaker": "narrator",
-      "fact": null,
-      "text": "Next spring.",
-      "pause": 0.5
-    },
-    {
-      "id": "plant",
-      "speaker": "mina",
-      "fact": null,
-      "text": "Now, corn on both sides!",
-      "pause": 0.9
-    },
-    {
-      "id": "tall",
-      "speaker": "kernel",
-      "fact": null,
-      "text": "Hey! How did you get so tall?"
-    },
-    {
-      "id": "fed",
-      "speaker": "mina",
-      "fact": "released",
-      "text": "The clover fed the soil, for the next crop!"
-    },
-    {
-      "id": "rotate",
-      "speaker": "wiggs",
-      "fact": "rotation",
-      "text": "That's why many farmers rotate clover through their fields."
-    }
-  ]
+  "kernel": {
+   "voice": "en_US-ryan-high",
+   "fx": {
+    "pitch": 1.25,
+    "formant": 1.1,
+    "range": 1.2
+   }
+  },
+  "wiggs": {
+   "voice": "en_GB-alan-medium",
+   "fx": {
+    "pitch": 1.12,
+    "formant": 1.05,
+    "range": 1.3
+   }
+  },
+  "clover": {
+   "voice": "en_US-lessac-high",
+   "fx": {
+    "preset": "baby"
+   }
+  },
+  "narrator": {
+   "voice": "en_US-ryan-high",
+   "fx": {
+    "pitch": 0.82,
+    "formant": 0.92,
+    "range": 0.8
+   }
+  }
+ },
+ "length_scale": 1.12,
+ "gap_s": 0.35,
+ "lead_in_s": 0.3,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "mina",
+   "fact": null,
+   "text": "Clover again? I wanted to plant corn!"
+  },
+  {
+   "id": "hungry",
+   "speaker": "kernel",
+   "fact": null,
+   "text": "Me too. But this soil leaves me hungry."
+  },
+  {
+   "id": "need",
+   "speaker": "wiggs",
+   "fact": "needs_n",
+   "text": "Hungry for nitrogen! Every crop needs it.",
+   "pause": 0.2
+  },
+  {
+   "id": "air",
+   "speaker": "mina",
+   "fact": "air_inert",
+   "text": "But the air is full of nitrogen!"
+  },
+  {
+   "id": "cant",
+   "speaker": "wiggs",
+   "fact": "air_inert",
+   "text": "Plants can't use it like that. Follow me!",
+   "pause": 0.6
+  },
+  {
+   "id": "nodules",
+   "speaker": "wiggs",
+   "fact": "nodules",
+   "text": "Clover roots have little bumps, full of bacteria called rhizobia."
+  },
+  {
+   "id": "fix",
+   "speaker": "wiggs",
+   "fact": "ammonia",
+   "text": "They pull nitrogen from the air, and turn it into ammonia."
+  },
+  {
+   "id": "yum",
+   "speaker": "clover",
+   "fact": "feeds_plant",
+   "text": "Yum! That feeds me!",
+   "pause": 0.5
+  },
+  {
+   "id": "later",
+   "speaker": "narrator",
+   "fact": null,
+   "text": "Months later.",
+   "pause": 0.4
+  },
+  {
+   "id": "release",
+   "speaker": "wiggs",
+   "fact": "released",
+   "text": "When the clover dies, its nitrogen is released into the soil.",
+   "pause": 0.3
+  },
+  {
+   "id": "spring",
+   "speaker": "narrator",
+   "fact": null,
+   "text": "Next spring.",
+   "pause": 0.5
+  },
+  {
+   "id": "plant",
+   "speaker": "mina",
+   "fact": null,
+   "text": "Now, corn on both sides!",
+   "pause": 0.9
+  },
+  {
+   "id": "tall",
+   "speaker": "kernel",
+   "fact": null,
+   "text": "Hey! How did you get so tall?"
+  },
+  {
+   "id": "fed",
+   "speaker": "mina",
+   "fact": "released",
+   "text": "The clover fed the soil, for the next crop!"
+  },
+  {
+   "id": "rotate",
+   "speaker": "wiggs",
+   "fact": "rotation",
+   "text": "That's why many farmers rotate clover through their fields."
+  }
+ ],
+ "allow_restricted_voices": true,
+ "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
 }

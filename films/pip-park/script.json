@@ -1,0 +1,36 @@
+{
+ "speakers": {
+  "pip": {
+   "voice": "en_US-kristin-medium",
+   "fx": {
+    "pitch": 1.25,
+    "formant": 1.08,
+    "range": 1.3
+   }
+  }
+ },
+ "length_scale": 1.0,
+ "gap_s": 0.4,
+ "lead_in_s": 1.6,
+ "lines": [
+  {
+   "id": "hi",
+   "speaker": "pip",
+   "fact": null,
+   "text": "Hi! I'm Pip, and today I'm three different renderers."
+  },
+  {
+   "id": "mid",
+   "speaker": "pip",
+   "fact": null,
+   "text": "Right now, Synfig is drawing me. Same puppet, same acting.",
+   "pause": 0.4
+  },
+  {
+   "id": "end",
+   "speaker": "pip",
+   "fact": null,
+   "text": "And now I'm Grease Pencil, inside Blender. Ta-da!"
+  }
+ ]
+}

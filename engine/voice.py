@@ -47,16 +47,16 @@ def trim(x, thresh=0.01, pad=0.03):
 
 
 def norm_word(w):
-    return re.sub(r"[^a-z0-9']", "", w.lower())
+    return re.sub(r"[^\w']", "", w.lower()).replace("_", "")
 
 
-def align_words(model, audio, text):
+def align_words(model, audio, text, lang="en"):
     """Word timings for `text` inside `audio` (seconds, relative to audio start).
     Recognised words are mapped back onto the script's own words so captions
     always show the script text; unmatched script words are interpolated."""
     from scipy.signal import resample_poly
     a16 = resample_poly(audio, 1, 3).astype(np.float32)
-    segs, _ = model.transcribe(a16, language="en", word_timestamps=True,
+    segs, _ = model.transcribe(a16, language=lang, word_timestamps=True,
                                initial_prompt=text, beam_size=5)
     rec = [w for s in segs for w in s.words]
     script = text.split()
@@ -120,13 +120,16 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
     voices = {}
     fxmod = load_fx() if any(sp.get("fx") for sp in speakers.values()) else None
     from faster_whisper import WhisperModel
-    model = WhisperModel("small.en", device="cpu", compute_type="int8")
+    # language: script["lang"], else the first voice's prefix (es_ES-carlfm-x_low -> es)
+    lang = script.get("lang") or next(iter(speakers.values()))["voice"].split("_")[0]
+    model = WhisperModel("small.en" if lang == "en" else "small", device="cpu", compute_type="int8")
     fps = script.get("fps", 30)
 
     gap = script.get("gap_s", 0.3)
     t = script.get("lead_in_s", 0.3)
     pieces, lines = [np.zeros(int(t * SR_OUT), np.float32)], []
     mouths = []  # (speaker, start_s, track)
+    vis = {}  # speaker -> [[t, shape], ...]
     for ln in script["lines"]:
         spk = ln.get("speaker", default)
         cfg = speakers[spk]
@@ -139,13 +142,19 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                  **{k: v for k, v in fx.items() if k != "preset"}}
             y, _, _ = fxmod.revoice(a.astype(np.float64), SR_OUT, p["pitch"], p["formant"], p["range"])
             a = (y * (0.9 / (np.max(np.abs(y)) + 1e-9))).astype(np.float32)
-        words = align_words(model, a, ln["text"])
+        words = align_words(model, a, ln["text"], lang)
         d = len(a) / SR_OUT
         lines.append({"id": ln["id"], "speaker": spk, "fact": ln.get("fact"), "text": ln["text"],
                       "start": round(t, 3), "end": round(t + d, 3),
                       "words": [{**w, "start": round(t + w["start"], 3),
                                  "end": round(t + w["end"], 3)} for w in words]})
         mouths.append((spk, t, mouth_track(a, fps)))
+        try:  # sound-based lip-sync cues (visemes) from the same phonemiser that voiced the line
+            import importlib.util as _u
+            _spec = _u.spec_from_file_location("visemes", Path(__file__).with_name("visemes.py")); _vm = _u.module_from_spec(_spec); _spec.loader.exec_module(_vm)
+            vis.setdefault(spk, []).extend(_vm.line_visemes(voices[cfg["voice"]], lines[-1]["words"]))
+        except Exception as e:  # lip-sync falls back to loudness
+            print("visemes skipped:", e)
         pause = gap + ln.get("pause", 0.0)
         pieces += [a, np.zeros(int(pause * SR_OUT), np.float32)]
         t += d + pause
@@ -165,7 +174,8 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
     return {"voice": ",".join(sorted({c["voice"] for c in speakers.values()})), "duration": round(len(audio) / SR_OUT, 3),
             "wpm": round(60 * n_words / (len(audio) / SR_OUT), 1),
             "wpm_speech_only": round(60 * n_words / speech, 1), "lines": lines,
-            "mouth": {k: [round(float(v), 2) for v in tr] for k, tr in mouth.items() if tr.any()}}
+            "mouth": {k: [round(float(v), 2) for v in tr] for k, tr in mouth.items() if tr.any()},
+            "visemes": vis}
 
 
 def main():
@@ -182,7 +192,7 @@ def main():
         return
     r = build(args.film, args.voices_dir)
     timing = {"fps": 30, "voice": r["voice"], "duration": r["duration"],
-              "wpm": r["wpm"], "lines": r["lines"], "mouth": r["mouth"]}
+              "wpm": r["wpm"], "lines": r["lines"], "mouth": r["mouth"], "visemes": r.get("visemes", {})}
     (args.film / "timing.json").write_text(json.dumps(timing, indent=1))
     # file:// pages can't fetch JSON, so the scene loads timing as a script
     (args.film / "build" / "timing.js").write_text(f"window.TIMING = {json.dumps(timing)};\n")

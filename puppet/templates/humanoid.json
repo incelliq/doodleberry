@@ -1,42 +1,313 @@
 {
-  "template": "humanoid",
-  "version": "0.1",
-  "artboard": [600, 1000],
-  "ground": 980,
-  "note": "Pivots are in artboard units (origin top-left). Parts are listed parent-first. z is the default draw order (higher = in front). The guide is a ghost silhouette for the drawing canvas.",
-  "parts": [
-    {"id": "hip",        "parent": null,         "pivot": [300, 560], "z": 20, "required": true,  "label": "Hips"},
-    {"id": "torso",      "parent": "hip",        "pivot": [300, 560], "z": 22, "required": true,  "label": "Torso"},
-    {"id": "neck",       "parent": "torso",      "pivot": [300, 330], "z": 21, "required": false, "label": "Neck"},
-    {"id": "hair_back",  "parent": "head",       "pivot": [300, 300], "z": 8,  "required": false, "label": "Hair (back)"},
-    {"id": "head",       "parent": "neck",       "pivot": [300, 300], "z": 40, "required": true,  "label": "Head (no features)"},
-    {"id": "hair_front", "parent": "head",       "pivot": [300, 300], "z": 48, "required": false, "label": "Hair (front)"},
-    {"id": "upperarm_L", "parent": "torso",      "pivot": [228, 350], "z": 10, "required": true,  "label": "Upper arm (back)"},
-    {"id": "forearm_L",  "parent": "upperarm_L", "pivot": [222, 470], "z": 11, "required": true,  "label": "Forearm (back)"},
-    {"id": "hand_L",     "parent": "forearm_L",  "pivot": [220, 580], "z": 12, "required": true,  "label": "Hand (back)"},
-    {"id": "upperarm_R", "parent": "torso",      "pivot": [372, 350], "z": 30, "required": true,  "label": "Upper arm (front)"},
-    {"id": "forearm_R",  "parent": "upperarm_R", "pivot": [378, 470], "z": 31, "required": true,  "label": "Forearm (front)"},
-    {"id": "hand_R",     "parent": "forearm_R",  "pivot": [380, 580], "z": 32, "required": true,  "label": "Hand (front)"},
-    {"id": "thigh_L",    "parent": "hip",        "pivot": [270, 590], "z": 14, "required": true,  "label": "Thigh (back)"},
-    {"id": "shin_L",     "parent": "thigh_L",    "pivot": [268, 760], "z": 15, "required": true,  "label": "Shin (back)"},
-    {"id": "foot_L",     "parent": "shin_L",     "pivot": [266, 945], "z": 16, "required": true,  "label": "Foot (back)"},
-    {"id": "thigh_R",    "parent": "hip",        "pivot": [330, 590], "z": 17, "required": true,  "label": "Thigh (front)"},
-    {"id": "shin_R",     "parent": "thigh_R",    "pivot": [332, 760], "z": 18, "required": true,  "label": "Shin (front)"},
-    {"id": "foot_R",     "parent": "shin_R",     "pivot": [334, 945], "z": 19, "required": true,  "label": "Foot (front)"}
-  ],
-  "swaps": [
-    {"id": "eyes",   "anchor": "head", "z": 42, "shapes": ["open", "half", "closed"], "required": ["open", "closed"], "label": "Eyes"},
-    {"id": "pupils", "anchor": "head", "z": 43, "shapes": ["default"], "required": [], "movable": 9, "label": "Pupils (move to look)"},
-    {"id": "brows",  "anchor": "head", "z": 44, "shapes": ["neutral", "raised", "worried", "angry"], "required": ["neutral"], "label": "Brows"},
-    {"id": "mouth",  "anchor": "head", "z": 45, "shapes": ["closed", "small", "mid", "wide", "O", "FV", "smile", "frown"], "required": ["closed", "small", "wide"], "label": "Mouth (lip-sync)", "talk": ["closed", "small", "mid", "wide"]},
-    {"id": "hand_R_pose", "anchor": "forearm_R", "z": 33, "shapes": ["point", "fist", "hold"], "required": [], "label": "Hand poses (front)", "replaces": "hand_R"}
-  ],
-  "palette": ["skin", "hair", "cloth1", "cloth2", "cloth3", "shoe", "eye", "ink"],
-  "guide": [
-    "M300 180 C350 180 380 220 380 270 C380 330 345 360 300 360 C255 360 220 330 220 270 C220 220 250 180 300 180 Z",
-    "M228 350 C240 335 360 335 372 350 L360 560 L240 560 Z",
-    "M240 560 L360 560 L350 600 L250 600 Z",
-    "M228 350 L222 470 L220 580", "M372 350 L378 470 L380 580",
-    "M270 590 L268 760 L266 945 L300 960", "M330 590 L332 760 L334 945 L368 960"
-  ]
+ "template": "humanoid",
+ "version": "0.1",
+ "artboard": [
+  600,
+  1000
+ ],
+ "ground": 980,
+ "note": "Pivots are in artboard units (origin top-left). Parts are listed parent-first. z is the default draw order (higher = in front). The guide is a ghost silhouette for the drawing canvas.",
+ "parts": [
+  {
+   "id": "hip",
+   "parent": null,
+   "pivot": [
+    300,
+    560
+   ],
+   "z": 20,
+   "required": true,
+   "label": "Hips"
+  },
+  {
+   "id": "torso",
+   "parent": "hip",
+   "pivot": [
+    300,
+    560
+   ],
+   "z": 22,
+   "required": true,
+   "label": "Torso"
+  },
+  {
+   "id": "neck",
+   "parent": "torso",
+   "pivot": [
+    300,
+    330
+   ],
+   "z": 21,
+   "required": false,
+   "label": "Neck"
+  },
+  {
+   "id": "hair_back",
+   "parent": "head",
+   "pivot": [
+    300,
+    300
+   ],
+   "z": 8,
+   "required": false,
+   "label": "Hair (back)"
+  },
+  {
+   "id": "head",
+   "parent": "neck",
+   "pivot": [
+    300,
+    300
+   ],
+   "z": 40,
+   "required": true,
+   "label": "Head (no features)"
+  },
+  {
+   "id": "hair_front",
+   "parent": "head",
+   "pivot": [
+    300,
+    300
+   ],
+   "z": 48,
+   "required": false,
+   "label": "Hair (front)"
+  },
+  {
+   "id": "upperarm_L",
+   "parent": "torso",
+   "pivot": [
+    228,
+    350
+   ],
+   "z": 10,
+   "required": true,
+   "label": "Upper arm (back)"
+  },
+  {
+   "id": "forearm_L",
+   "parent": "upperarm_L",
+   "pivot": [
+    222,
+    470
+   ],
+   "z": 11,
+   "required": true,
+   "label": "Forearm (back)"
+  },
+  {
+   "id": "hand_L",
+   "parent": "forearm_L",
+   "pivot": [
+    220,
+    580
+   ],
+   "z": 12,
+   "required": true,
+   "label": "Hand (back)"
+  },
+  {
+   "id": "upperarm_R",
+   "parent": "torso",
+   "pivot": [
+    372,
+    350
+   ],
+   "z": 30,
+   "required": true,
+   "label": "Upper arm (front)"
+  },
+  {
+   "id": "forearm_R",
+   "parent": "upperarm_R",
+   "pivot": [
+    378,
+    470
+   ],
+   "z": 31,
+   "required": true,
+   "label": "Forearm (front)"
+  },
+  {
+   "id": "hand_R",
+   "parent": "forearm_R",
+   "pivot": [
+    380,
+    580
+   ],
+   "z": 32,
+   "required": true,
+   "label": "Hand (front)"
+  },
+  {
+   "id": "thigh_L",
+   "parent": "hip",
+   "pivot": [
+    270,
+    590
+   ],
+   "z": 14,
+   "required": true,
+   "label": "Thigh (back)"
+  },
+  {
+   "id": "shin_L",
+   "parent": "thigh_L",
+   "pivot": [
+    268,
+    760
+   ],
+   "z": 15,
+   "required": true,
+   "label": "Shin (back)"
+  },
+  {
+   "id": "foot_L",
+   "parent": "shin_L",
+   "pivot": [
+    266,
+    945
+   ],
+   "z": 16,
+   "required": true,
+   "label": "Foot (back)"
+  },
+  {
+   "id": "thigh_R",
+   "parent": "hip",
+   "pivot": [
+    330,
+    590
+   ],
+   "z": 17,
+   "required": true,
+   "label": "Thigh (front)"
+  },
+  {
+   "id": "shin_R",
+   "parent": "thigh_R",
+   "pivot": [
+    332,
+    760
+   ],
+   "z": 18,
+   "required": true,
+   "label": "Shin (front)"
+  },
+  {
+   "id": "foot_R",
+   "parent": "shin_R",
+   "pivot": [
+    334,
+    945
+   ],
+   "z": 19,
+   "required": true,
+   "label": "Foot (front)"
+  }
+ ],
+ "swaps": [
+  {
+   "id": "eyes",
+   "anchor": "head",
+   "z": 42,
+   "shapes": [
+    "open",
+    "half",
+    "closed"
+   ],
+   "required": [
+    "open",
+    "closed"
+   ],
+   "label": "Eyes"
+  },
+  {
+   "id": "pupils",
+   "anchor": "head",
+   "z": 43,
+   "shapes": [
+    "default"
+   ],
+   "required": [],
+   "movable": 9,
+   "label": "Pupils (move to look)"
+  },
+  {
+   "id": "brows",
+   "anchor": "head",
+   "z": 44,
+   "shapes": [
+    "neutral",
+    "raised",
+    "worried",
+    "angry"
+   ],
+   "required": [
+    "neutral"
+   ],
+   "label": "Brows"
+  },
+  {
+   "id": "mouth",
+   "anchor": "head",
+   "z": 45,
+   "shapes": [
+    "closed",
+    "small",
+    "mid",
+    "wide",
+    "O",
+    "FV",
+    "smile",
+    "frown"
+   ],
+   "required": [
+    "closed",
+    "small",
+    "wide"
+   ],
+   "label": "Mouth (lip-sync)",
+   "talk": [
+    "closed",
+    "small",
+    "mid",
+    "wide"
+   ]
+  },
+  {
+   "id": "hand_R_pose",
+   "anchor": "forearm_R",
+   "z": 33,
+   "shapes": [
+    "point",
+    "fist",
+    "hold"
+   ],
+   "required": [],
+   "label": "Hand poses (front)",
+   "replaces": "hand_R"
+  }
+ ],
+ "palette": [
+  "skin",
+  "hair",
+  "cloth1",
+  "cloth2",
+  "cloth3",
+  "shoe",
+  "eye",
+  "ink",
+  "blush"
+ ],
+ "guide": [
+  "M300 180 C350 180 380 220 380 270 C380 330 345 360 300 360 C255 360 220 330 220 270 C220 220 250 180 300 180 Z",
+  "M228 350 C240 335 360 335 372 350 L360 560 L240 560 Z",
+  "M240 560 L360 560 L350 600 L250 600 Z",
+  "M228 350 L222 470 L220 580",
+  "M372 350 L378 470 L380 580",
+  "M270 590 L268 760 L266 945 L300 960",
+  "M330 590 L332 760 L334 945 L368 960"
+ ]
 }

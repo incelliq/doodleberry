@@ -49,7 +49,7 @@ add("torso", st("M232 352 C236 336 364 336 368 352 L362 470 C360 520 352 556 350
     line("M282 338 L300 362 L318 338", 3.5), line("M250 520 L350 520", 2.5))
 add("neck", st(capsule((300, 318), (300, 352), 17, 18), "skin"))
 add("head", st(ellipse(222, 272, 13, 18), "skin"), st(ellipse(378, 272, 13, 18), "skin"), st(ellipse(300, 262, 80, 90), "skin"),
-    {"d": ellipse(262, 300, 14, 8), "fill": "#ff8f8a", "opacity": 0.35}, {"d": ellipse(338, 300, 14, 8), "fill": "#ff8f8a", "opacity": 0.35},
+    {"d": ellipse(262, 300, 14, 8), "fill": "blush", "opacity": 0.35}, {"d": ellipse(338, 300, 14, 8), "fill": "blush", "opacity": 0.35},
     line("M300 270 Q310 292 298 296", 3.5))
 add("hair_front", st("M218 250 C214 186 258 160 304 162 C352 164 388 196 382 252 C370 220 350 204 322 200 C300 214 262 222 236 214 C226 224 220 238 218 250 Z", "hair"))
 add("hair_back", st("M226 230 C220 300 232 330 250 340 L350 340 C368 330 380 300 374 230 Z", "hair"))
@@ -100,8 +100,10 @@ swaps = {
     "hand_R_pose": {"anchor": "forearm_R", "z": 33, "shapes": hand_point, "replaces": "hand_R"},
 }
 puppet = {"format": "doodleberry.puppet", "version": "0.1", "name": "Pip", "template": "humanoid", "artboard": T["artboard"], "ground": T["ground"],
-          "palette": {"skin": "#e8b48e", "hair": "#4a3020", "cloth1": "#f2a33a", "cloth2": "#3a5a8a", "cloth3": "#ffffff", "shoe": "#e9e9ee", "eye": "#ffffff", "ink": "#24160e"},
-          "parts": parts, "swaps": swaps, "meta": {"author": "doodleberry (generated example)", "license": "CC0-1.0", "created": "2026-11-01"}}
+          "palette": {"skin": "#e8b48e", "hair": "#4a3020", "cloth1": "#f2a33a", "cloth2": "#3a5a8a", "cloth3": "#ffffff", "shoe": "#e9e9ee", "eye": "#ffffff", "ink": "#24160e", "blush": "#ff8f8a"},
+          "parts": parts, "swaps": swaps, "meta": {"author": "doodleberry (generated example)", "license": "CC0-1.0", "created": "2026-11-01"},
+          "springs": {"hair_back": {"driver": "head", "freq": 2.4, "damping": 0.3, "gain": 1.2, "limit": 18}},
+          "poses": {"pip_cheer": {"angles": {"upperarm_L": -150, "upperarm_R": -150, "forearm_L": -20, "forearm_R": -20}, "mouth": "wide"}}}
 (HERE / "pip.puppet.json").write_text(json.dumps(puppet, indent=1))
 (HERE / "pip.puppet.js").write_text("window.PIP = " + json.dumps(puppet) + ";\n")
 print("wrote pip.puppet.json:", sum(len(p["strokes"]) for p in parts.values()), "part strokes,", sum(len(v) for s in swaps.values() for v in s["shapes"].values()), "swap strokes")

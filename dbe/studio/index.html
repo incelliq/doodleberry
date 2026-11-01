@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doodleberry Studio</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; } a { color: var(--accent); }
+  main { display: grid; grid-template-columns: 220px 1fr 380px; gap: 0; min-height: calc(100vh - 52px); }
+  aside, section { padding: 12px; overflow: auto; } aside { background: var(--panel); border-right: 1px solid var(--line); }
+  section.right { border-left: 1px solid var(--line); background: var(--panel); }
+  button, select { font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .film { padding: 5px 8px; border-radius: 6px; cursor: pointer; } .film.on { background: var(--accent); color: #fff; }
+  table { width: 100%; border-collapse: collapse; } td, th { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  textarea { width: 100%; min-height: 260px; font: 12px/1.4 ui-monospace, monospace; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+  video { width: 100%; border-radius: 8px; background: #000; } pre { white-space: pre-wrap; font-size: 12px; background: var(--bg); padding: 8px; border-radius: 8px; max-height: 260px; overflow: auto; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Doodleberry Studio</h1><span id="info" style="color:var(--muted)"></span><span style="flex:1"></span>
+  <a href="/puppet/canvas/index.html" target="_blank">Rig Canvas ↗</a><a href="/api" target="_blank">API ↗</a></header>
+<main>
+  <aside><b>Films</b><div id="films"></div><div class="row"><button id="new">+ New film</button></div></aside>
+  <section>
+    <div class="row"><b id="title">Pick a film</b><span style="flex:1"></span>
+      <button id="voice">🎙 Voice</button><button id="renderAll" class="primary">▶ Render film</button><button id="web">🌐 Web export</button></div>
+    <h3>Shots</h3><table id="shots"></table>
+    <h3>shots.json <button id="save">Save</button></h3><textarea id="json" spellcheck="false"></textarea>
+  </section>
+  <section class="right"><b>Output</b><video id="vid" controls></video><div class="row" id="outs"></div><b>Log</b><pre id="log"></pre></section>
+</main>
+<script>
+const $ = id => document.getElementById(id); let film = null;
+const log = m => { $('log').textContent = (typeof m === 'string' ? m : JSON.stringify(m, null, 1)) + '\n' + $('log').textContent; };
+async function api(cmd, args = {}, async = false) {
+  const r = await fetch('/api/' + cmd + (async ? '?async=1' : ''), { method: 'POST', body: JSON.stringify(args) }); const j = await r.json();
+  if (async && j.job) { log(`${cmd}: started ${j.job}`); for (;;) { await new Promise(s => setTimeout(s, 2000)); const s = await (await fetch('/api/jobs/' + j.job)).json(); if (s.status !== 'running') { log(s); return s.result; } } }
+  if (j.error) { log(j.error); throw new Error(j.error); } return j.result;
+}
+async function loadFilms() { const info = await api('engine.info'); $('info').textContent = Object.entries(info.renderers).filter(([, v]) => v).map(([k]) => k).join(' · ');
+  $('films').innerHTML = info.films.map(f => `<div class="film ${f === film ? 'on' : ''}" data-f="${f}">${f}</div>`).join('');
+  document.querySelectorAll('.film').forEach(el => el.onclick = () => openFilm(el.dataset.f)); }
+async function openFilm(f) { film = f; loadFilms(); const g = await api('film.get', { name: f }); $('title').textContent = f;
+  const shots = g.files['shots.json'] ? JSON.parse(g.files['shots.json']) : { shots: [] }; $('json').value = JSON.stringify(shots, null, 1);
+  $('shots').innerHTML = '<tr><th>id</th><th>time</th><th>renderer</th><th>set</th><th>cast</th><th></th></tr>' + (shots.shots || []).map(s =>
+    `<tr><td>${s.id}</td><td>${s.start}–${s.end} s</td><td><select data-r="${s.id}">${['svg', 'synfig', 'grease-pencil', 'lottie'].map(r => `<option ${r === (s.renderer || 'svg') ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td>${s.set || 'plain'}</td><td>${(s.cast || []).map(c => c.puppet.split('/').pop()).join(', ')}</td><td><button data-s="${s.id}">Render</button></td></tr>`).join('');
+  document.querySelectorAll('[data-s]').forEach(b => b.onclick = async () => { const r = document.querySelector(`[data-r="${b.dataset.s}"]`).value; const res = await api('shot.render', { name: film, shot: b.dataset.s, renderer: r }, true); if (res) { $('vid').src = '/' + res.path + '?t=' + Date.now(); } });
+  $('outs').innerHTML = g.outputs.filter(o => o.endsWith('.mp4') || o.endsWith('.html')).map(o => `<button data-o="${o}">${o.split('/').pop()}</button>`).join('');
+  document.querySelectorAll('[data-o]').forEach(b => b.onclick = () => b.dataset.o.endsWith('.html') ? window.open('/' + b.dataset.o) : ($('vid').src = '/' + b.dataset.o + '?t=' + Date.now())); }
+$('save').onclick = async () => { await api('film.write', { name: film, file: 'shots.json', content: $('json').value }); log('saved'); openFilm(film); };
+$('voice').onclick = async () => log(await api('voice.build', { name: film }, true));
+$('renderAll').onclick = async () => { const r = await api('film.render', { name: film }, true); if (r) { $('vid').src = '/' + r.final + '?t=' + Date.now(); openFilm(film); } };
+$('web').onclick = async () => { const r = await api('export.web', { name: film }); window.open('/' + r.path); };
+$('new').onclick = async () => { const n = prompt('Folder name for the new film'); if (n) { await api('film.create', { name: n }); openFilm(n); } };
+loadFilms();
+</script>
+</body>
+</html>

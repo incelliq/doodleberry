@@ -50,7 +50,19 @@
     return M;
   }
 
+  // v0.2 views: p.views[name] = { parts: {id: {strokes, pivot, z}}, swaps: {id: {shapes: {...}}} } overriding the default view
+  const _viewCache = new WeakMap();
+  function inView(p, view) {
+    if (!view || !p.views || !p.views[view]) return p;
+    let c = _viewCache.get(p); if (!c) { c = {}; _viewCache.set(p, c); }
+    if (c[view]) return c[view];
+    const v = p.views[view], parts = {}, swaps = {};
+    for (const [id, part] of Object.entries(p.parts)) parts[id] = { ...part, ...((v.parts || {})[id] || {}) };
+    for (const [id, sw] of Object.entries(p.swaps || {})) swaps[id] = { ...sw, ...((v.swaps || {})[id] || {}), shapes: { ...sw.shapes, ...(((v.swaps || {})[id] || {}).shapes || {}) } };
+    return (c[view] = { ...p, parts, swaps });
+  }
   function render(p, x, y, pose = {}) {
+    p = inView(p, pose.view);
     const pal = { ...(p.palette || {}), ...(pose.palette || {}) };
     const M = matrices(p, pose);
     const items = [];
@@ -77,12 +89,14 @@
     items.sort((a, b) => a.z - b.z);
     const s = pose.s ?? 1, flip = pose.flip ?? 1, [ox, oy] = pose.offset || [0, 0];
     const hip = (p.parts.hip && p.parts.hip.pivot) || [p.artboard[0] / 2, p.ground];
-    const base = `translate(${f2(x)} ${f2(y)}) scale(${f2(s * flip)} ${f2(s)}) translate(${f2(-hip[0] + ox)} ${f2(-(p.ground ?? p.artboard[1]) + oy)})`;
+    const sq = pose.squash ?? 1;
+    const base = `translate(${f2(x)} ${f2(y)}) scale(${f2(s * flip * sq)} ${f2(s)}) translate(${f2(-hip[0] + ox)} ${f2(-(p.ground ?? p.artboard[1]) + oy)})`;
     return `<g transform="${base}">${items.map(i => i.svg).join('')}</g>`;
   }
 
   // world position of a part's point (e.g. a hand for props), in the same space render() draws into
   function pointOf(p, id, pt, x, y, pose = {}) {
+    p = inView(p, pose.view);
     const M = matrices(p, pose), [px, py] = apply(M[id] || I, pt || p.parts[id].pivot);
     const s = pose.s ?? 1, flip = pose.flip ?? 1, [ox, oy] = pose.offset || [0, 0];
     const hip = (p.parts.hip && p.parts.hip.pivot) || [p.artboard[0] / 2, p.ground];
@@ -93,7 +107,7 @@
   function fromTemplate(t, name = 'Untitled') {
     const parts = {}; for (const pt of t.parts) parts[pt.id] = { parent: pt.parent, pivot: [...pt.pivot], z: pt.z, strokes: [] };
     const swaps = {}; for (const sw of t.swaps) swaps[sw.id] = { anchor: sw.anchor, z: sw.z, shapes: Object.fromEntries(sw.shapes.map(k => [k, []])), ...(sw.talk ? { talk: sw.talk } : {}), ...(sw.movable ? { movable: sw.movable } : {}), ...(sw.replaces ? { replaces: sw.replaces } : {}) };
-    const palette = { skin: '#eebd9a', hair: '#5a3a26', cloth1: '#3f7fd0', cloth2: '#2c2f3a', cloth3: '#ffffff', shoe: '#3a2a20', eye: '#ffffff', ink: '#24160e' };
+    const palette = { skin: '#eebd9a', hair: '#5a3a26', cloth1: '#3f7fd0', cloth2: '#2c2f3a', cloth3: '#ffffff', shoe: '#3a2a20', eye: '#ffffff', ink: '#24160e', blush: '#ff8f8a' };
     return { format: 'doodleberry.puppet', version: '0.1', name, template: t.template, artboard: [...t.artboard], ground: t.ground, palette, parts, swaps, meta: { author: '', license: '', created: '' } };
   }
 
@@ -106,5 +120,5 @@
     return out;
   }
 
-  root.Puppet = { render, pointOf, fromTemplate, lint, matrices };
+  root.Puppet = { render, pointOf, fromTemplate, lint, matrices, inView };
 })(typeof window !== 'undefined' ? window : globalThis);

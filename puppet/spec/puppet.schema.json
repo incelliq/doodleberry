@@ -1,32 +1,206 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://doodleberry.dev/schema/puppet-0.1.json",
-  "title": "Doodleberry puppet v0.1",
-  "type": "object",
-  "required": ["format", "version", "name", "template", "artboard", "ground", "palette", "parts", "swaps"],
-  "properties": {
-    "format": { "const": "doodleberry.puppet" },
-    "version": { "type": "string" },
-    "name": { "type": "string" },
-    "template": { "type": "string" },
-    "artboard": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
-    "ground": { "type": "number" },
-    "palette": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" } },
-    "parts": { "type": "object", "additionalProperties": { "$ref": "#/$defs/part" } },
-    "swaps": { "type": "object", "additionalProperties": { "$ref": "#/$defs/swap" } },
-    "meta": { "type": "object" }
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://doodleberry.dev/schema/puppet-0.1.json",
+ "title": "Doodleberry puppet v0.1",
+ "type": "object",
+ "required": [
+  "format",
+  "version",
+  "name",
+  "template",
+  "artboard",
+  "ground",
+  "palette",
+  "parts",
+  "swaps"
+ ],
+ "properties": {
+  "format": {
+   "const": "doodleberry.puppet"
   },
-  "$defs": {
-    "stroke": { "type": "object", "required": ["d"], "properties": {
-      "d": { "type": "string" }, "fill": { "type": "string" }, "stroke": { "type": "string" },
-      "width": { "type": "number" }, "opacity": { "type": "number" } } },
-    "part": { "type": "object", "required": ["pivot", "strokes"], "properties": {
-      "parent": { "type": ["string", "null"] },
-      "pivot": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
-      "z": { "type": "number" }, "strokes": { "type": "array", "items": { "$ref": "#/$defs/stroke" } } } },
-    "swap": { "type": "object", "required": ["anchor", "shapes"], "properties": {
-      "anchor": { "type": "string" }, "z": { "type": "number" }, "talk": { "type": "array", "items": { "type": "string" } },
-      "movable": { "type": "number" }, "replaces": { "type": "string" },
-      "shapes": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/stroke" } } } } }
+  "version": {
+   "type": "string"
+  },
+  "name": {
+   "type": "string"
+  },
+  "template": {
+   "type": "string"
+  },
+  "artboard": {
+   "type": "array",
+   "items": {
+    "type": "number"
+   },
+   "minItems": 2,
+   "maxItems": 2
+  },
+  "ground": {
+   "type": "number"
+  },
+  "palette": {
+   "type": "object",
+   "additionalProperties": {
+    "type": "string",
+    "pattern": "^#[0-9a-fA-F]{6}$"
+   }
+  },
+  "parts": {
+   "type": "object",
+   "additionalProperties": {
+    "$ref": "#/$defs/part"
+   }
+  },
+  "swaps": {
+   "type": "object",
+   "additionalProperties": {
+    "$ref": "#/$defs/swap"
+   }
+  },
+  "meta": {
+   "type": "object"
+  },
+  "views": {
+   "type": "object",
+   "description": "v0.2: named views overriding parts (strokes/pivot/z) and swap shapes",
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "parts": {
+      "type": "object"
+     },
+     "swaps": {
+      "type": "object"
+     }
+    }
+   }
+  },
+  "springs": {
+   "type": "object",
+   "description": "v0.2: secondary motion per part",
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "driver": {
+      "type": "string"
+     },
+     "freq": {
+      "type": "number"
+     },
+     "damping": {
+      "type": "number"
+     },
+     "gain": {
+      "type": "number"
+     },
+     "limit": {
+      "type": "number"
+     }
+    },
+    "required": [
+     "driver"
+    ]
+   }
+  },
+  "poses": {
+   "type": "object",
+   "description": "v0.2: named key poses",
+   "additionalProperties": {
+    "type": "object"
+   }
   }
+ },
+ "$defs": {
+  "stroke": {
+   "type": "object",
+   "required": [
+    "d"
+   ],
+   "properties": {
+    "d": {
+     "type": "string"
+    },
+    "fill": {
+     "type": "string"
+    },
+    "stroke": {
+     "type": "string"
+    },
+    "width": {
+     "type": "number"
+    },
+    "opacity": {
+     "type": "number"
+    }
+   }
+  },
+  "part": {
+   "type": "object",
+   "required": [
+    "pivot",
+    "strokes"
+   ],
+   "properties": {
+    "parent": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "pivot": {
+     "type": "array",
+     "items": {
+      "type": "number"
+     },
+     "minItems": 2,
+     "maxItems": 2
+    },
+    "z": {
+     "type": "number"
+    },
+    "strokes": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/stroke"
+     }
+    }
+   }
+  },
+  "swap": {
+   "type": "object",
+   "required": [
+    "anchor",
+    "shapes"
+   ],
+   "properties": {
+    "anchor": {
+     "type": "string"
+    },
+    "z": {
+     "type": "number"
+    },
+    "talk": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "movable": {
+     "type": "number"
+    },
+    "replaces": {
+     "type": "string"
+    },
+    "shapes": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/stroke"
+      }
+     }
+    }
+   }
+  }
+ }
 }

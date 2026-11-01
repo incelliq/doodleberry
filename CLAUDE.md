@@ -7,3 +7,7 @@
 - Puppets: keep `puppet/spec/puppet-format.md`, `puppet.schema.json`, the loader and the canvas in step when the format changes; bump `version`.
 - 3D pages fetch GLBs, so serve the repo over HTTP; software WebGL/Vulkan is slow (≈1 s/frame), plan renders in the background.
 - Don't commit downloaded asset packs, renders or voices.
+- The backend is `dbe/` (docs/dbe.md). Add features as `@command` functions in `dbe/commands.py`; they appear in the CLI, HTTP API, Studio and MCP at once. Keep arguments and results JSON-safe.
+- Shot times in `shots.json` should reference lines (`"mid.start+0.9"`) rather than hard seconds, so re-voicing and localisation keep sync.
+- Only voices marked `clean` in `voices/registry.json` go into publishable films. Check licences against `docs/oss-research.md` before adding a library, model or asset.
+- All renderers read the baked animation from `tools/bake.mjs`; a new puppet feature must reach `puppet.js`, `acting.js`, `bake.mjs`, `dbe/geom.py` and the exporters together.

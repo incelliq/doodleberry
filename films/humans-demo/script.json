@@ -1,10 +1,46 @@
 {
-  "speakers": {"patient": {"voice": "en_US-amy-medium"}, "doctor": {"voice": "en_US-ryan-high", "fx": {"pitch": 0.9, "formant": 0.97, "range": 1.1}}},
-  "length_scale": 1.05, "gap_s": 0.35, "lead_in_s": 0.4,
-  "lines": [
-    {"id": "p1", "speaker": "patient", "fact": null, "text": "Thanks for seeing me, doctor. This cough keeps me up at night."},
-    {"id": "d1", "speaker": "doctor", "fact": null, "text": "Let's take a listen. Breathe in slowly for me."},
-    {"id": "p2", "speaker": "patient", "fact": null, "text": "Okay. Like this?"},
-    {"id": "d2", "speaker": "doctor", "fact": null, "text": "Perfect. Now, let it all out."}
-  ]
+ "speakers": {
+  "patient": {
+   "voice": "en_US-amy-medium"
+  },
+  "doctor": {
+   "voice": "en_US-ryan-high",
+   "fx": {
+    "pitch": 0.9,
+    "formant": 0.97,
+    "range": 1.1
+   }
+  }
+ },
+ "length_scale": 1.05,
+ "gap_s": 0.35,
+ "lead_in_s": 0.4,
+ "lines": [
+  {
+   "id": "p1",
+   "speaker": "patient",
+   "fact": null,
+   "text": "Thanks for seeing me, doctor. This cough keeps me up at night."
+  },
+  {
+   "id": "d1",
+   "speaker": "doctor",
+   "fact": null,
+   "text": "Let's take a listen. Breathe in slowly for me."
+  },
+  {
+   "id": "p2",
+   "speaker": "patient",
+   "fact": null,
+   "text": "Okay. Like this?"
+  },
+  {
+   "id": "d2",
+   "speaker": "doctor",
+   "fact": null,
+   "text": "Perfect. Now, let it all out."
+  }
+ ],
+ "allow_restricted_voices": true,
+ "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
 }

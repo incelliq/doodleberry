@@ -1,4 +1,4 @@
-# Puppet format v0.1 (`.puppet.json`)
+# Puppet format v0.2 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -51,6 +51,35 @@ Draw each part a little past its joint so bends never open a gap; colour with pa
 draw facing right (code mirrors for the other side); keep lighting flat (shading is added in code); keep the
 character original.
 
+## v0.2 additions (all optional; v0.1 files stay valid)
+
+### Views
+`views: {name: {parts: {id: {strokes, pivot, z}}, swaps: {id: {shapes: {...}}}}}` overrides the default (drawn) view.
+Only the parts and swap shapes you redraw are listed; everything else is inherited. A timeline turns a character with
+`view: [[t, "side"], [t2, "front"]]` (any name not in `views` means the default view). The loader squashes the
+character horizontally for 0.09 s around each switch, a classic turn smear, so the swap reads as a turn.
+Every renderer and exporter supports views: SVG, Synfig (a layer set per view), Grease Pencil, Lottie (a layer set
+per view gated by opacity).
+Draw side views with arm and leg pivots moved toward the body's centre line and one eye; see
+`puppet/examples/pip_side.py`.
+
+### Springs
+`springs: {part: {driver, freq, damping, gain, limit}}`: secondary motion (hair, ears, coat-tails). The part swings
+after its `driver` part's world angle with a damped spring (`freq` Hz, `damping` 0..1), `gain` × the driver's motion,
+clamped to ±`limit` degrees. Deterministic: it is re-simulated from a short window before each frame, so any frame
+renders on its own.
+
+### Poses
+`poses: {name: {angles, brows, eyes, mouth, hand_R_pose, ...}}`: named key poses for this character, used by
+timelines like the shared presets in `puppet/clips/<template>.json`.
+
+## Acting timelines (used by `puppet/loader/acting.js`)
+`{clips: [{clip, start, end, weight, fadeIn, additive}], poses: [[t, name]], visemes: [[t, shape]] | visemes_from: speaker,
+look: [[t, [x, y]]], view: [[t, name]], ik: {arm_R: [[t, [x, y]]]}, pins: {foot_L, foot_R}, travel, springs: true}`.
+Clips come from the template's library (idle, walk, talk_beat, wave_R, point_R, nod, shrug, think, surprised...).
+In a film's `shots.json`, any time can be written relative to a spoken line: `"mid.start+0.9"`, `"end.end-0.2"`.
+These resolve against `timing.json`, so acting stays on the words after a voice change or translation.
+
 ## Roadmap
-v0.2: multiple views (`views: {"3q": …, "side": …}`) with per-view z-order, IK targets and foot pins, bendy limbs
-(mesh or path warp), springs for hair/coat/tie, per-phoneme visemes, raster parts (PNG with pivot) for painted styles.
+Bendy limbs (mesh or path warp), raster parts (PNG with pivot) for painted styles, 3/4 views drawn from a turnaround
+template, N-bone FABRIK chains (tails, tentacles), Rig Canvas tabs for views and pose previews.

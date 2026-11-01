@@ -1,0 +1,274 @@
+"""Exporters from a baked puppet animation (tools/bake.mjs) to other engines:
+- Lottie JSON (web, apps, After Effects): parented shape layers with rotation keys about each pivot.
+- Synfig .sif (rendered headless by the synfig CLI): one group per part with an animated transformation.
+- Grease Pencil frames JSON (read by dbe/blender_gp.py inside headless Blender).
+"""
+import json
+import math
+from pathlib import Path
+
+from . import geom as G
+
+
+def _load(p):
+    return json.loads(Path(p).read_text())
+
+
+# ======================= Lottie =======================
+def _view_masks(p, frs):
+    """[(view or None, [1/0 per frame])] for every view a cast member uses; None is the default (drawn) view"""
+    views = (p.get("views") or {})
+    key = lambda fr: fr.get("view") if fr.get("view") in views else None
+    used = list(dict.fromkeys(key(fr) for fr in frs))
+    return [(v, [1 if key(fr) == v else 0 for fr in frs]) for v in used]
+
+
+def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
+    """bg: a solid colour layer; bg_image: a PNG data URI embedded as an image asset (the set plate)"""
+    W, H = size
+    fps, n = baked["fps"], baked["frames"]
+    layers, ind = [], [0]
+
+    def nid():
+        ind[0] += 1
+        return ind[0]
+
+    def kf(values, hold=False):
+        """per-frame values -> Lottie animated property (drop repeats)"""
+        ks, last = [], None
+        for f, v in enumerate(values):
+            if v != last or f == n - 1:
+                k = {"t": f, "s": v if isinstance(v, list) else [v]}
+                if hold:
+                    k["h"] = 1
+                else:
+                    k["i"] = {"x": [0.5], "y": [0.5]}; k["o"] = {"x": [0.5], "y": [0.5]}
+                ks.append(k); last = v
+        return {"a": 1, "k": ks} if len(ks) > 1 else {"a": 0, "k": values[0] if isinstance(values[0], list) else values[0]}
+
+    def shape_group(strokes, pal):
+        items = []
+        for st in strokes:
+            for segs, closed in G.parse_path(st["d"]):
+                v = [list(s[0]) for s in segs]
+                o = [[s[1][0] - s[0][0], s[1][1] - s[0][1]] for s in segs]
+                i_ = [[segs[k - 1][2][0] - segs[k - 1][3][0], segs[k - 1][2][1] - segs[k - 1][3][1]] for k in range(len(segs))]
+                if not closed:
+                    v.append(list(segs[-1][3])); o.append([0, 0]); i_[0] = [0, 0]; i_.append([segs[-1][2][0] - segs[-1][3][0], segs[-1][2][1] - segs[-1][3][1]])
+                it = [{"ty": "sh", "ks": {"a": 0, "k": {"i": i_, "o": o, "v": v, "c": closed}}}]
+                fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
+                if fill:
+                    it.append({"ty": "fl", "c": {"a": 0, "k": G.hex_rgb(fill) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 1})
+                if line:
+                    it.append({"ty": "st", "c": {"a": 0, "k": G.hex_rgb(line) + [1]}, "o": {"a": 0, "k": 100}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
+                it.append({"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}})
+                items.append({"ty": "gr", "it": it})
+        return items
+
+    for c in baked["cast"]:
+      p0 = _load(c["puppet"]); frs = c["frames"]
+      root = None
+      for view, on in _view_masks(p0, frs):
+        p = G.in_view(p0, view); pal = p["palette"]
+        hip = p["parts"]["hip"]["pivot"]
+        root = nid()
+        layers.append({"ddd": 0, "ind": root, "ty": 3, "nm": f"{p['name']} root", "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                       "ks": {"o": {"a": 0, "k": 0}, "r": {"a": 0, "k": 0},
+                              "p": kf([[round(fr["x"], 2), round(fr["y"], 2), 0] for fr in frs]),
+                              "a": kf([[round(hip[0] - (fr["offset"] or [0, 0])[0], 2), round(p["ground"] - (fr["offset"] or [0, 0])[1], 2), 0] for fr in frs]),
+                              "s": kf([[round(100 * fr["s"] * fr["flip"] * (fr.get("squash") or 1), 2), round(100 * fr["s"], 2), 100] for fr in frs])}})
+        ids = {pid: nid() for pid in p["parts"]}
+        part_layers = []
+        for pid, part in p["parts"].items():
+            par = part.get("parent")
+            lay = {"ddd": 0, "ind": ids[pid], "ty": 4, "nm": pid if not view else f"{pid}@{view}", "parent": ids[par] if par in ids else root, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                   "ks": {"o": kf([100 * o for o in on], hold=True), "r": kf([round(fr["angles"].get(pid, 0) or 0, 2) for fr in frs]),
+                          "p": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "s": {"a": 0, "k": [100, 100, 100]}},
+                   "shapes": shape_group(part["strokes"], pal), "_z": part.get("z", 0)}
+            # hidden while a replacing swap shows
+            repl = [(sid, sw) for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
+            if repl:
+                lay["ks"]["o"] = kf([0 if any(G.chosen_swaps(p, fr).get(sid) for sid, _ in repl) or not o else 100 for fr, o in zip(frs, on)], hold=True)
+            part_layers.append(lay)
+        for sid, sw in (p.get("swaps") or {}).items():
+            for shape, strokes in sw["shapes"].items():
+                if not strokes:
+                    continue
+                vis = [100 if G.chosen_swaps(p, fr).get(sid) == shape and o else 0 for fr, o in zip(frs, on)]
+                if not any(vis):
+                    continue
+                lay = {"ddd": 0, "ind": nid(), "ty": 4, "nm": f"{sid}:{shape}" + (f"@{view}" if view else ""), "parent": ids.get(sw["anchor"], root), "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                       "ks": {"o": kf(vis, hold=True), "r": {"a": 0, "k": 0}, "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
+                              "p": kf([[round((fr["look"] or [0, 0])[0] * sw.get("movable", 8), 2), round((fr["look"] or [0, 0])[1] * sw.get("movable", 8) * 0.7, 2), 0] for fr in frs]) if sid == "pupils" else {"a": 0, "k": [0, 0, 0]}},
+                       "shapes": shape_group(strokes, pal), "_z": sw.get("z", 40)}
+                part_layers.append(lay)
+        part_layers.sort(key=lambda l: -l["_z"])  # Lottie draws the first layer on top
+        for l in part_layers:
+            l.pop("_z", None)
+        layers = part_layers + layers
+    if bg:
+        layers.append({"ddd": 0, "ind": nid(), "ty": 1, "nm": "background", "sc": bg, "sw": W, "sh": H, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                       "ks": {"o": {"a": 0, "k": 100}, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [W / 2, H / 2, 0]}, "a": {"a": 0, "k": [W / 2, H / 2, 0]}, "s": {"a": 0, "k": [100, 100, 100]}}})
+    assets = []
+    if bg_image:
+        assets.append({"id": "plate", "w": W, "h": H, "u": "", "p": bg_image, "e": 1})
+        layers.append({"ddd": 0, "ind": nid(), "ty": 2, "nm": "set", "refId": "plate", "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                       "ks": {"o": {"a": 0, "k": 100}, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [W / 2, H / 2, 0]}, "a": {"a": 0, "k": [W / 2, H / 2, 0]}, "s": {"a": 0, "k": [100, 100, 100]}}})
+    return {"v": "5.7.4", "fr": fps, "ip": 0, "op": n, "w": W, "h": H, "nm": name, "ddd": 0, "assets": assets, "layers": layers}
+
+
+# ======================= Synfig =======================
+def _sif_color(h, a=1.0):
+    r, g, b = G.hex_rgb(h)
+    lin = lambda c: c  # canvas gamma is 1.0, so colours pass through unchanged
+    return f"<color><r>{lin(r):.6f}</r><g>{lin(g):.6f}</g><b>{lin(b):.6f}</b><a>{a:.3f}</a></color>"
+
+
+def _bline(segs, closed):
+    pts = []
+    n = len(segs)
+    for k, (p0, c1, c2, p1) in enumerate(segs):
+        prev = segs[k - 1] if (k > 0 or closed) else None
+        t1 = (3 * (p0[0] - prev[2][0]), 3 * (p0[1] - prev[2][1])) if prev else (3 * (c1[0] - p0[0]), 3 * (c1[1] - p0[1]))
+        t2 = (3 * (c1[0] - p0[0]), 3 * (c1[1] - p0[1]))
+        pts.append((p0, t1, t2))
+    if not closed:
+        last = segs[-1]
+        pts.append((last[3], (3 * (last[3][0] - last[2][0]), 3 * (last[3][1] - last[2][1])), (3 * (last[3][0] - last[2][0]), 3 * (last[3][1] - last[2][1]))))
+    v = lambda p: f"<vector><x>{p[0]:.4f}</x><y>{p[1]:.4f}</y></vector>"
+    out = f'<bline type="bline_point" loop="{"true" if closed else "false"}">'
+    for p, t1, t2 in pts:
+        out += (f"<entry><composite type=\"bline_point\"><point>{v(p)}</point><width><real value=\"1\"/></width><origin><real value=\"0.5\"/></origin>"
+                f"<split><bool value=\"true\"/></split><t1>{v(t1)}</t1><t2>{v(t2)}</t2><split_radius><bool value=\"true\"/></split_radius><split_angle><bool value=\"true\"/></split_angle></composite></entry>")
+    return out + "</bline>"
+
+
+def _shapes_sif(strokes, pal):
+    out = ""
+    for st in strokes:
+        fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
+        for segs, closed in G.parse_path(st["d"]):
+            if fill and closed:
+                out += f'<layer type="region" active="true" version="0.1"><param name="amount"><real value="{st.get("opacity", 1):.3f}"/></param><param name="color">{_sif_color(fill)}</param><param name="bline">{_bline(segs, True)}</param></layer>'
+            if line:
+                out += f'<layer type="outline" active="true" version="0.2"><param name="color">{_sif_color(line)}</param><param name="width"><real value="{st.get("width", 3):.3f}"/></param><param name="sharp_cusps"><bool value="false"/></param><param name="round_tip[0]"><bool value="true"/></param><param name="round_tip[1]"><bool value="true"/></param><param name="bline">{_bline(segs, closed)}</param></layer>'
+    return out
+
+
+def to_synfig(baked, size, bg_png=None, transparent=False):
+    W, H = size
+    fps, n = baked["fps"], baked["frames"]
+    U = 60.0  # pixels per synfig unit
+    F = [1 / U, 0, 0, -1 / U, -W / 2 / U, H / 2 / U]  # screen px -> synfig units (y up)
+    t = lambda f: f"{f / fps:.5f}s"
+    head = (f'<?xml version="1.0" encoding="UTF-8"?>\n<canvas version="1.2" width="{W}" height="{H}" xres="2834.645669" yres="2834.645669" gamma-r="1" gamma-g="1" gamma-b="1" '
+            f'view-box="{-W / 2 / U:.4f} {H / 2 / U:.4f} {W / 2 / U:.4f} {-H / 2 / U:.4f}" antialias="1" fps="{fps}" begin-time="0f" end-time="{t(n - 1)}" bgcolor="{'0 0 0 0' if transparent else '1 1 1 1'}"><name>doodleberry</name>')
+    body = ""
+    if bg_png:
+        body += (f'<layer type="import" active="true" version="0.1"><param name="tl"><vector><x>{-W / 2 / U:.4f}</x><y>{H / 2 / U:.4f}</y></vector></param>'
+                 f'<param name="br"><vector><x>{W / 2 / U:.4f}</x><y>{-H / 2 / U:.4f}</y></vector></param><param name="filename"><string>{bg_png}</string></param></layer>')
+
+    def decompose(m):
+        a, b, c, d, e, f = m
+        det = a * d - b * c
+        k = math.hypot(a, b)
+        if det < 0:
+            ang, sx, sy = math.atan2(-b, -a), -k, k
+        else:
+            ang, sx, sy = math.atan2(b, a), k, k
+        return e, f, math.degrees(ang), sx, sy
+
+    def anim_transform(mats):
+        wps_o, wps_a, wps_s = "", "", ""
+        last = None
+        for fi, m in enumerate(mats):
+            e, f, ang, sx, sy = decompose(m)
+            # keep angles continuous
+            if last is not None:
+                while ang - last > 180: ang -= 360
+                while ang - last < -180: ang += 360
+            last = ang
+            wps_o += f'<waypoint time="{t(fi)}" before="linear" after="linear"><vector><x>{e:.4f}</x><y>{f:.4f}</y></vector></waypoint>'
+            wps_a += f'<waypoint time="{t(fi)}" before="linear" after="linear"><angle value="{ang:.3f}"/></waypoint>'
+            wps_s += f'<waypoint time="{t(fi)}" before="linear" after="linear"><vector><x>{sx:.5f}</x><y>{sy:.5f}</y></vector></waypoint>'
+        return (f'<param name="transformation"><composite type="transformation"><offset><animated type="vector">{wps_o}</animated></offset>'
+                f'<angle><animated type="angle">{wps_a}</animated></angle><skew_angle><angle value="0"/></skew_angle>'
+                f'<scale><animated type="vector">{wps_s}</animated></scale></composite></param>')
+
+    def amount(vals):
+        if all(v == vals[0] for v in vals):
+            return f'<param name="amount"><real value="{vals[0]}"/></param>'
+        w, last = "", None
+        for fi, v in enumerate(vals):
+            if v != last:
+                w += f'<waypoint time="{t(fi)}" before="constant" after="constant"><real value="{v}"/></waypoint>'; last = v
+        return f'<param name="amount"><animated type="real">{w}</animated></param>'
+
+    for c in baked["cast"]:
+      p0 = _load(c["puppet"]); frs = c["frames"]
+      items = []
+      for view, on in _view_masks(p0, frs):
+        p = G.in_view(p0, view); pal = p["palette"]
+        Ms = [G.part_matrices(p, fr["angles"]) for fr in frs]
+        Rs = [G.root_matrix(p, fr) for fr in frs]
+        for pid, part in p["parts"].items():
+            if not part["strokes"]:
+                continue
+            mats = [G.mul(F, G.mul(Rs[i], Ms[i][pid])) for i in range(n)]
+            repl = [sid for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
+            vis = [0 if any(G.chosen_swaps(p, fr).get(s) for s in repl) else 1 for fr in frs] if repl else [1] * n
+            vis = [v * o for v, o in zip(vis, on)]
+            if not any(vis):
+                continue
+            items.append((part.get("z", 0), f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vis)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats)}<param name="canvas"><canvas>{_shapes_sif(part["strokes"], pal)}</canvas></param></layer>'))
+        for sid, sw in (p.get("swaps") or {}).items():
+            for shape, strokes in sw["shapes"].items():
+                if not strokes:
+                    continue
+                vis = [1 if G.chosen_swaps(p, fr).get(sid) == shape and o else 0 for fr, o in zip(frs, on)]
+                if not any(vis):
+                    continue
+                anchor = sw["anchor"]
+                mats = []
+                for i, fr in enumerate(frs):
+                    m = G.mul(Rs[i], Ms[i].get(anchor, G.I))
+                    if sid == "pupils" and fr.get("look"):
+                        m = G.mul(m, [1, 0, 0, 1, fr["look"][0] * sw.get("movable", 8), fr["look"][1] * sw.get("movable", 8) * 0.7])
+                    mats.append(G.mul(F, m))
+                items.append((sw.get("z", 40), f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vis)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats)}<param name="canvas"><canvas>{_shapes_sif(strokes, pal)}</canvas></param></layer>'))
+      items.sort(key=lambda x: x[0])  # synfig: later layers draw on top
+      body += "".join(s for _, s in items)
+    return head + body + "</canvas>\n"
+
+
+# ======================= Grease Pencil frames =======================
+def to_gp_frames(baked, size, per=6):
+    """per frame, a z-ordered list of world-space strokes (polylines) with fill/line colours, for blender_gp.py"""
+    out = {"fps": baked["fps"], "frames": baked["frames"], "size": list(size), "palette": {}, "data": []}
+    pals = {}
+    for f in range(baked["frames"]):
+        strokes = []
+        for c in baked["cast"]:
+            p = pals.setdefault(c["puppet"], _load(c["puppet"])); fr = c["frames"][f]; p = G.in_view(p, fr.get("view")); pal = p["palette"]
+            M = G.part_matrices(p, fr["angles"]); R = G.root_matrix(p, fr)
+            sw = G.chosen_swaps(p, fr)
+            items = []
+            for pid, part in p["parts"].items():
+                if any(s.get("replaces") == pid and sw.get(sid) for sid, s in (p.get("swaps") or {}).items()):
+                    continue
+                items.append((part.get("z", 0), G.mul(R, M[pid]), part["strokes"]))
+            for sid, shape in sw.items():
+                s = p["swaps"][sid]; m = G.mul(R, M.get(s["anchor"], G.I))
+                if sid == "pupils" and fr.get("look"):
+                    m = G.mul(m, [1, 0, 0, 1, fr["look"][0] * s.get("movable", 8), fr["look"][1] * s.get("movable", 8) * 0.7])
+                items.append((s.get("z", 40), m, s["shapes"][shape]))
+            items.sort(key=lambda x: x[0])
+            for _, m, sts in items:
+                for st in sts:
+                    for segs, closed in G.parse_path(st["d"]):
+                        pts = [G.apply(m, q) for q in G.sample(segs, per)]
+                        strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in pts], "closed": closed,
+                                        "fill": G.colour(st.get("fill"), pal) if closed else None, "line": G.colour(st.get("stroke"), pal),
+                                        "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})
+        out["data"].append(strokes)
+    return out
