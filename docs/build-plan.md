@@ -166,6 +166,9 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 - **Formats (2.15):** the refutation and dialogue evidence comes from introductory university physics; measure retention on
   our own films before treating it as a law for every audience.
 
+## Brainstorm later (not committed)
+- `docs/brainstorm/procedural-houdini.md`: a possible procedural and simulation layer (a Houdini-like Doodleberry or beyond), Gaffer, and open-source tools not yet vetted. It is food for thought, kept out of the phases until we decide to brainstorm it.
+
 ## Never build
 Generative-video characters (they break consistency, editing and the licence trail). A raster frame-by-frame paint
 suite (import from Krita instead). Embedded Spine or Remotion runtimes. Anything on the research "avoid" list:
