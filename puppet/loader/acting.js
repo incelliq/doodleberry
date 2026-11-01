@@ -10,6 +10,7 @@
 //     ik: { arm_R: [[1, [460, 420]]] },                  // reach targets in artboard space over time
 //     pins: { foot_L: 'auto', foot_R: 'auto' },          // keep planted feet planted during walks
 //     springs: true,                                     // hair/tie/coat follow-through (from puppet.springs)
+//     blinks: [t, ...], blink: false,                   // scripted blinks; false turns off automatic blinking
 //   }, t, CLIPS);
 (function (root) {
   const P = root.Puppet;
@@ -64,11 +65,13 @@
       const tgt = L.additive ? add : base;
       for (const [k, v] of Object.entries(s.angles)) tgt.angles[k] = (tgt.angles[k] || 0) + v * w;
       if (!L.additive) { wsum += w; if (s.offset) offs.push([s.offset, w]); for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) base[k] = v; }
-      else for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) add[k] = v;
+      else { if (s.offset) add.offset = [(add.offset || [0, 0])[0] + s.offset[0] * w, (add.offset || [0, 0])[1] + s.offset[1] * w];  // additive moves (hops) stack on the base
+        for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) add[k] = v; }
     }
     if (wsum > 1) for (const k of Object.keys(base.angles)) base.angles[k] /= wsum;
     if (offs.length) { const ws = offs.reduce((a, [, w]) => a + w, 0); base.offset = [0, 1].map(i => offs.reduce((a, [o, w]) => a + o[i] * w, 0) / Math.max(1, ws)); }
     const out = { ...base, ...add, angles: { ...base.angles } };
+    if (add.offset) out.offset = [(base.offset || [0, 0])[0] + add.offset[0], (base.offset || [0, 0])[1] + add.offset[1]];
     for (const [k, v] of Object.entries(add.angles)) out.angles[k] = (out.angles[k] || 0) + v;
     return out;
   }
@@ -133,6 +136,8 @@
     if (tl.look) pose.look = sampleKeys(tl.look, t);
     if (tl.view) { pose.view = sampleKeys(tl.view, t); for (const [ts] of tl.view.slice(1)) { const d = Math.abs(t - ts); if (d < 0.09) pose.squash = Math.min(pose.squash ?? 1, 1 - 0.35 * (1 - d / 0.09)); } }
     if (tl.blink !== false) pose.blink = Math.max(pose.blink || 0, blinkAt(t, tl.seed || 0));
+    // scripted blinks (timed for comedy): half, closed, closed, half over a third of a second
+    for (const b of tl.blinks || []) { const d = t - b; if (d >= 0 && d < 0.34) pose.blink = Math.max(pose.blink || 0, d < 0.085 || d >= 0.25 ? 0.45 : 0.95); }
     for (const [k, v] of Object.entries(tl.set || {})) pose[k] = v;
     // IK reach targets
     for (const [limb, keys] of Object.entries(tl.ik || {})) {

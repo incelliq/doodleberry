@@ -1,9 +1,41 @@
 {
  "note": "Golden frames: each case renders a shot at the listed times (seconds from the shot's start) and compares with tests/golden/<film>/<shot>_<t>.png at 270x480 (or 480x270). Run `python -m dbe test`; after an intended visual change, `python -m dbe test '{\"update\": true}'` and review the diff.",
- "tolerance": {"mean_abs": 1.5, "pixels_over_32": 0.004},
+ "tolerance": {
+  "mean_abs": 1.5,
+  "pixels_over_32": 0.004
+ },
  "cases": [
-  {"film": "pip-park", "shot": "s1", "times": [0.5, 2.0, 4.5]},
-  {"film": "pip-park", "shot": "s3", "times": [0.6, 3.2]},
-  {"film": "pip-park-es", "shot": "s2", "times": [1.0]}
+  {
+   "film": "pip-park",
+   "shot": "s1",
+   "times": [
+    0.5,
+    2.0,
+    4.5
+   ]
+  },
+  {
+   "film": "pip-park",
+   "shot": "s3",
+   "times": [
+    0.6,
+    3.2
+   ]
+  },
+  {
+   "film": "pip-park-es",
+   "shot": "s2",
+   "times": [
+    1.0
+   ]
+  },
+  {
+   "film": "nib-hello",
+   "shot": "s1",
+   "times": [
+    1.6,
+    5.4
+   ]
+  }
  ]
 }

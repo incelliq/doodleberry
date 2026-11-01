@@ -10,6 +10,7 @@
 //     eyes: 'open' | 'half' | 'closed', blink: 0..1, brows: 'worried', look: [-1..1, -1..1],
 //     hand_R_pose: 'point',                // swap sets that replace a part
 //     palette: { cloth1: '#d23c3c' },      // recolour any palette slot
+//   Strokes are vector ({d, fill, stroke, width}) or, from v0.3, raster ({image, x, y, w, h}: e.g. scanned pen ink).
 //   });
 //
 // Origin of (x, y) is the puppet's ground point under the hips (artboard [pivot.hip.x, ground]).
@@ -28,6 +29,8 @@
     if (!strokes || !strokes.length) return '';
     let s = `<g transform="matrix(${m.map(f2).join(' ')})" ${extra}>`;
     for (const st of strokes) {
+      // v0.3 raster part: original ink or paint as an image placed in artboard units
+      if (st.image) { s += `<image href="${st.image}" x="${st.x}" y="${st.y}" width="${st.w}" height="${st.h}" preserveAspectRatio="none"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`; continue; }
       const fill = colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
       s += `<path d="${st.d}" fill="${fill}"${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
     }
@@ -116,7 +119,7 @@
     const out = [];
     for (const pt of t.parts) { const part = p.parts[pt.id]; if (pt.required && (!part || !part.strokes.length)) out.push({ level: 'missing', msg: `${pt.label}: not drawn yet` }); }
     for (const sw of t.swaps) for (const k of sw.required) if (!p.swaps[sw.id] || !(p.swaps[sw.id].shapes[k] || []).length) out.push({ level: 'missing', msg: `${sw.label}: "${k}" not drawn yet` });
-    for (const [id, part] of Object.entries(p.parts)) if (part.strokes.some(st => /^#/.test(st.fill || '') || /^#/.test(st.stroke || '') && st.stroke !== p.palette.ink)) out.push({ level: 'warn', msg: `${id}: uses raw colours instead of palette slots (can't be recoloured)` });
+    for (const [id, part] of Object.entries(p.parts)) if (part.strokes.some(st => !st.image && /^#/.test(st.fill || '') || /^#/.test(st.stroke || '') && st.stroke !== p.palette.ink)) out.push({ level: 'warn', msg: `${id}: uses raw colours instead of palette slots (can't be recoloured)` });
     return out;
   }
 

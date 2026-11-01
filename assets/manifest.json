@@ -49,6 +49,30 @@
    "used_by": [
     "3d"
    ]
+  },
+  {
+   "path": "engine/fonts/PatrickHand-latin.woff2",
+   "kind": "font",
+   "name": "Patrick Hand (latin, woff2)",
+   "license": "OFL-1.1",
+   "license_file": "engine/fonts/PatrickHand-OFL.txt",
+   "source": "npm @fontsource/patrick-hand 5.3.0 (Google Fonts)",
+   "attribution": "Patrick Hand, Patrick Wagesreiter (SIL Open Font License 1.1)",
+   "used_by": [
+    "bubbles"
+   ]
+  },
+  {
+   "path": "engine/fonts/PatrickHand-latin-ext.woff2",
+   "kind": "font",
+   "name": "Patrick Hand (latin-ext, woff2)",
+   "license": "OFL-1.1",
+   "license_file": "engine/fonts/PatrickHand-OFL.txt",
+   "source": "npm @fontsource/patrick-hand 5.3.0 (Google Fonts)",
+   "attribution": "Patrick Hand, Patrick Wagesreiter (SIL Open Font License 1.1)",
+   "used_by": [
+    "bubbles"
+   ]
   }
  ],
  "generated": [

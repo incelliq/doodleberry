@@ -139,6 +139,10 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 0.8 / 0.13 Subtitles, encode profiles, posting package | done | f6a03f4 |
 | 0.10 / 0.12 Research gates and critic loop | done | f77ba03 |
 | 0.11 Measured layout QA | done (advisory until calibrated per style) | 0a1b167 |
+| 1.8 Ink import and raster parts | core done: `puppet.from_ink`, raster parts in the SVG renderer. Open: auto cut and pivot suggestions, multi-character pages, raster parts in other renderers | this commit |
+| 1.9 Hand-made look | done: boil, stepped timing, paper set, ink signs and overlays | this commit |
+| 1.11 Doodle template | done: template and clip library (hop, wave, tilt, wag, talk, lean, shake) | this commit |
+| 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates
 - **After 0.2:** keep Chromium unless resvg or ThorVG is at least 2× faster on our frames with near-identical pixels.

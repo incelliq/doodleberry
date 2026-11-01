@@ -1,4 +1,4 @@
-# Puppet format v0.2 (`.puppet.json`)
+# Puppet format v0.3 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -73,9 +73,19 @@ renders on its own.
 `poses: {name: {angles, brows, eyes, mouth, hand_R_pose, ...}}`: named key poses for this character, used by
 timelines like the shared presets in `puppet/clips/<template>.json`.
 
+## v0.3 additions
+- **Raster parts:** a stroke can be `{"image": "data:image/png;base64,...", "x", "y", "w", "h"}` in artboard units, for
+  scanned pen ink or painted parts. `dbe/ink.py` (`puppet.from_ink`) makes these from a photo of a drawing. Raster
+  puppets render with the SVG renderer; the other renderers still draw vector parts only.
+- **anchors:** named points in artboard units, e.g. `{"bubble": [x, y]}` (top of the head, where speech bubbles
+  point). Read with `Puppet.pointOf(p, "head", p.anchors.bubble, ...)`.
+- **Templates:** `doodle` (hip, body, head, arm_L, arm_R, tail; L/R are image sides) with its own clip library
+  (`puppet/clips/doodle.json`: idle, hop, wave_L/R, tilt, lean_in, wag, talk, shake). Each puppet uses the library of
+  its template.
+
 ## Acting timelines (used by `puppet/loader/acting.js`)
 `{clips: [{clip, start, end, weight, fadeIn, additive}], poses: [[t, name]], visemes: [[t, shape]] | visemes_from: speaker,
-look: [[t, [x, y]]], view: [[t, name]], ik: {arm_R: [[t, [x, y]]]}, pins: {foot_L, foot_R}, travel, springs: true}`.
+look: [[t, [x, y]]], view: [[t, name]], blinks: [t, ...] (scripted), blink: false (no automatic blinks), ik: {arm_R: [[t, [x, y]]]}, pins: {foot_L, foot_R}, travel, springs: true}`.
 Clips come from the template's library (idle, walk, talk_beat, wave_R, point_R, nod, shrug, think, surprised...).
 In a film's `shots.json`, any time can be written relative to a spoken line: `"mid.start+0.9"`, `"end.end-0.2"`.
 These resolve against `timing.json`, so acting stays on the words after a voice change or translation.

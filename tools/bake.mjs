@@ -8,7 +8,7 @@ const here = path.dirname(fileURLToPath(import.meta.url)), root = path.resolve(h
 globalThis.window = globalThis;
 const load = p => new Function(fs.readFileSync(p, 'utf8'))();
 load(path.join(root, 'puppet/loader/puppet.js')); load(path.join(root, 'puppet/loader/acting.js'));
-const LIB = JSON.parse(fs.readFileSync(path.join(root, 'puppet/clips/humanoid.json'), 'utf8'));
+const LIBS = Object.fromEntries(fs.readdirSync(path.join(root, 'puppet/clips')).filter(f => f.endsWith('.json')).map(f => [f.replace('.json', ''), JSON.parse(fs.readFileSync(path.join(root, 'puppet/clips', f), 'utf8'))]));
 const [specPath, outPath] = process.argv.slice(2);
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const base = path.dirname(path.resolve(specPath));
@@ -20,7 +20,8 @@ for (const c of spec.cast) {
   const frames = [];
   for (let f = 0; f < spec.frames; f++) {
     let t = out.start + f / out.fps;
-    if (spec.step) t = Math.floor(t * spec.step + 1e-6) / spec.step;   // stepped timing, same as the player
+    if (spec.step) t = Math.floor(t * spec.step + 1e-6) / spec.step;   // animate on 12s like the player
+    const LIB = LIBS[puppet.template] || LIBS.humanoid;
     const pose = Acting.evaluate(puppet, c.timeline || {}, t, LIB.clips, LIB.presets);
     let [x, y, s, flip] = placeAt(t);
     if (spec.camera) { // fold the shot camera [cx, cy, zoom] into the placement so every renderer frames it identically

@@ -1,0 +1,125 @@
+{
+ "photo": "nib_photo.png",
+ "name": "Nib",
+ "template": "doodle",
+ "ink": "#1c1e24",
+ "rest": "body",
+ "parts": {
+  "head": {
+   "poly": [
+    [
+     150,
+     100
+    ],
+    [
+     370,
+     100
+    ],
+    [
+     370,
+     316
+    ],
+    [
+     150,
+     316
+    ]
+   ],
+   "pivot": [
+    260,
+    300
+   ],
+   "parent": "body",
+   "z": 20,
+   "overlap": 3
+  },
+  "arm_L": {
+   "poly": [
+    [
+     86,
+     390
+    ],
+    [
+     156,
+     390
+    ],
+    [
+     156,
+     512
+    ],
+    [
+     86,
+     512
+    ]
+   ],
+   "pivot": [
+    150,
+    402
+   ],
+   "parent": "body",
+   "z": 12
+  },
+  "arm_R": {
+   "poly": [
+    [
+     364,
+     390
+    ],
+    [
+     436,
+     390
+    ],
+    [
+     436,
+     504
+    ],
+    [
+     364,
+     504
+    ]
+   ],
+   "pivot": [
+    370,
+    402
+   ],
+   "parent": "body",
+   "z": 12
+  }
+ },
+ "swaps": {
+  "eyes": {
+   "anchor": "head",
+   "z": 30,
+   "open": {
+    "poly": [
+     [
+      202,
+      196
+     ],
+     [
+      316,
+      196
+     ],
+     [
+      316,
+      248
+     ],
+     [
+      202,
+      248
+     ]
+    ]
+   },
+   "blink": "squash"
+  }
+ },
+ "anchors": {
+  "bubble": [
+   260,
+   140
+  ]
+ },
+ "meta": {
+  "author": "doodleberry (generated example)",
+  "license": "CC0-1.0"
+ }
+}

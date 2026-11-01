@@ -1,0 +1,26 @@
+{
+ "speakers": {
+  "nib": {
+   "voice": "kokoro:am_puck"
+  }
+ },
+ "lead_in_s": 1.0,
+ "gap_s": 0.4,
+ "lines": [
+  {
+   "id": "hi",
+   "speaker": "nib",
+   "fact": null,
+   "text": "Hi! I'm Nib. Someone drew me on paper.",
+   "bubble": "Hi! I'm Nib.\nSomeone drew me\non paper."
+  },
+  {
+   "id": "wobble",
+   "speaker": "nib",
+   "fact": null,
+   "text": "That's why I wobble. It's on purpose!",
+   "style": "shout",
+   "bubble": "IT'S ON\nPURPOSE!"
+  }
+ ]
+}

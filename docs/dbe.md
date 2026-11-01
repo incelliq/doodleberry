@@ -79,6 +79,22 @@ environment variables below).
 - Captions are one film-level pass (`dbe/captions.py`, ASS through libass): chunks of 3 words with the spoken word
   highlighted. `caption_style` in shots.json overrides font size, colours and position.
 
+## Hand-made look, bubbles and ink puppets
+- **`puppet.from_ink`:** a photo or scan of a drawing plus a parts spec (polygons, pivots, swaps) becomes a raster-part
+  puppet in the artist's own line (`dbe/ink.py`). See `puppet/examples/make_nib_photo.py` for a full example.
+- **Shot `style`:**
+  - `{"boil": {"fps": 12, "amount": 5, "freq": 0.022}}` makes characters, bubbles and signs shimmer like redrawn frames;
+  - `{"step": 12}` animates on 12s;
+  - `{"shadow": false}` drops ground shadows.
+- **Sets:** `paper` (ruled notebook) alongside plain, park, clinic and cutaway.
+- **Overlays:** `[{"type": "sign" | "text", "text", "x", "y", "size", "start", "end"}]`, drawn in the same ink.
+- **Speech bubbles:**
+  - `"bubbles": true` turns each voiced line into a bubble from its speaker (cast `speaker` ids);
+  - script lines can set `style` (say, shout, whisper) and `bubble` (on-screen wording, revealed over the spoken line);
+  - placement avoids signs, overlays and the characters;
+  - `extra_bubbles: [{who, text, start, end, slow}]` adds silent bubbles.
+- Fonts: Fredoka (captions) and Patrick Hand (bubbles, signs), both OFL.
+
 ## Render speed
 `tools/three/run3d.mjs` runs one browser process per CPU on contiguous frame ranges, uses Chrome's fast capture, and
 encodes with `-tune animation`. It hashes each frame's SVG and links repeats instead of capturing them. Shots animated on

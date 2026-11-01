@@ -336,11 +336,12 @@ def _player_page(name):
     puppets = sorted({c["puppet"] for sh in _shots(name)["shots"] for c in sh.get("cast", [])})
     (d / "build").mkdir(exist_ok=True)
     tags = "".join(f'<script>window.PUPPETS=window.PUPPETS||{{}};window.PUPPETS[{json.dumps(p)}]={(ROOT / p).read_text()};</script>' for p in puppets)
-    page = f"""<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
+    clip_tags = "".join(f'<script src="../../../puppet/clips/{c.name}"></script>' for c in sorted((ROOT / "puppet" / "clips").glob("*.js")))
+    page = f"""<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
-<script src="../../../puppet/clips/humanoid.js"></script><script src="../../../sets/sets.js"></script>{tags}
-<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};</script>
+{clip_tags}<script src="../../../sets/sets.js"></script>{tags}
+<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     (d / "build" / "player.html").write_text(page)
     return d / "build" / "player.html"
@@ -381,6 +382,8 @@ def shot_render(name, shot, renderer=""):
     _require_valid(name)
     s, sh, bdir, baked = _bake(name, shot)
     own = sh.get("renderer", "svg"); renderer = renderer or own
+    if renderer != "svg" and any(st.get("image") for c in baked["cast"] for part in _json(c["puppet"])["parts"].values() for st in part["strokes"]):
+        raise ValueError(f"shot {shot} uses raster-part puppets (scanned ink); render it with svg (other renderers draw vector parts only, for now)")
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
     out = bdir / (f"{shot}.mp4" if renderer == own else f"{shot}.{renderer}.mp4")
     if renderer == "svg":
@@ -825,3 +828,17 @@ def critic_pack(name, step=3.0):
         sh.copy(ROOT / "dbe" / "critic" / f"{r}.md", out / f"prompt_{r}.md"); roles[r] = str((out / f"prompt_{r}.md").relative_to(ROOT))
     return {"packet": str(out.relative_to(ROOT)), "stills": len(list((out / "stills").glob("*.png"))), "prompts": roles,
             "next": "give each prompt to a fresh agent with the packet; record each verdict with ledger.add"}
+
+
+@command("puppet.from_ink", spec=("string", "path to an ink spec JSON (photo, crop, parts polygons and pivots, swaps); see dbe/ink.py"),
+         out=("string", "where to write the .puppet.json"))
+def puppet_from_ink(spec, out):
+    """Ink-fidelity import: a photo or scan of a drawing becomes a raster-part puppet in the artist's own line
+    (lighting flattened, ink thresholded, specks removed, parts cut by polygons with hidden overlaps, blink shapes
+    squashed with the line weight kept)."""
+    sp, op = (ROOT / spec).resolve(), (ROOT / out).resolve()
+    if ROOT not in sp.parents or ROOT not in op.parents:
+        raise ValueError("spec and out must be inside the repository")
+    r = _run([PY, "dbe/ink.py", str(sp), str(op)])
+    lint = puppet_lint(str(op.relative_to(ROOT)))
+    return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]) if r else None, "lint": lint.get("issues")}

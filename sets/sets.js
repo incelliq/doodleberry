@@ -25,6 +25,15 @@
       for (let i = -4; i < 12; i++) s += `<path d="M${540 + i * 140} 1506 L${540 + i * 240} 1920" stroke="#bfb3a3" stroke-width="3"/>`;
       return s; } },
 
+    // ruled notebook page (the Sheep & Pig look): rules every 78 px, a pink margin, fine grain, soft page shading
+    paper: { floor: 1440, draw: (t, o = {}) => {
+      let s = `<defs><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0"/></filter>` +
+        `<radialGradient id="pageshade" cx="50%" cy="50%" r="75%"><stop offset="0.6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.09"/></radialGradient></defs>`;
+      s += `<rect width="1080" height="1920" fill="${o.color || '#f3f3ee'}"/>`;
+      for (let y = 140; y < 1920; y += 78) s += `<rect x="0" y="${y}" width="1080" height="2" fill="#d6e0e8"/>`;
+      if (o.margin !== false) s += `<rect x="86" y="0" width="2" height="1920" fill="#e2d0d0"/>`;
+      return s + `<rect width="1080" height="1920" filter="url(#grain)"/><rect width="1080" height="1920" fill="url(#pageshade)"/>`; } },
+
     cutaway: { floor: 1100, draw: (t) => {
       let s = `<rect width="1080" height="1920" fill="#bfe3f2"/><rect y="1100" width="1080" height="820" fill="#8a5c3c"/><rect y="1100" width="1080" height="60" fill="#6fae4f"/>`;
       for (let i = 0; i < 40; i++) s += `<circle cx="${(i * 197) % 1080}" cy="${1200 + (i * 131) % 700}" r="${6 + (i % 4) * 3}" fill="#74492e"/>`;
