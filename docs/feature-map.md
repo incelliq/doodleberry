@@ -1,6 +1,6 @@
 # Programmable cartoon studio: the full feature map
 
-This is every feature a programmable cartoon studio needs (updated with abilities learned from the Sheep & Pig doodle toolkit), from character drawing to delivery and governance. It
+This is every feature a programmable cartoon studio needs (updated with abilities learned from the Sheep & Pig doodle toolkit and the bioinformatics.lk film playbook), from character drawing to delivery and governance. It
 covers what professional platforms already do, what an agent-native studio needs that they don't, new ideas, and
 features that **emerge** when Doodleberry's primitives combine. Status is checked against this repo as of November 2026.
 
@@ -119,6 +119,11 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | **Speech and thought bubbles inside the art:** say, shout (spiky, shaking letters), whisper (dashed), thought clouds, narration boxes. The tail tracks the speaker; placement avoids collisions; bubbles wobble and pop in and out | NEW | ⬜ | P0 | comics grammar for short-form |
 | Typewriter text: word by word in sync with the voice, or letter by letter with punctuation pauses when silent | NEW | ⬜ | P1 | |
 | Handwriting fonts per character, including the artist's own handwriting generated from samples | IDEA | ⬜ | P2 | OFL fonts until then |
+| **Explainer scene library:** teaching cards for definitions, counters, typed consoles, data walls, heatmaps, maps, quote plates, a citation line and wordmark as overlays on soft plates | NEW | 🟡 | P1 | proven across 25 bioinformatics.lk films |
+| **Data-bound visuals:** every plotted number comes from an analysis script's output (`data.js`), never typed by hand; the analysis and its cached inputs live with the film | NEW | 🟡 | P1 | the facts ledger extends to charts |
+| **Beat grid:** one BPM grid (e.g. 100 BPM at 30 fps = 18 frames per beat, 72 per bar); scene starts and key events snap to beats; picture and sound read the same `timing.json` | PRO/NEW | 🟡 | P1 | score already has a bpm |
+| Camera float: a slow constant drift on the scene layer, so no frame is ever dead | NEW | ⬜ | P1 | cured 39 frozen stretches in one film |
+| Cold-open rule: frame one shows the subject and the hook is readable by 1.5 s | NEW | ⬜ | P0 | enforced by QA |
 | 2.5D: 2D layers placed in 3D space with a real camera | PRO | 🟡 | P2 | three.js exists |
 
 ## 5. Story and pre-production
@@ -134,6 +139,13 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | **Series format:** an episode is a data template (lines, moves, beats, blinks, stares). A new episode means editing data only | NEW | 🟡 | P1 | `shots.json` already does this |
 | Rig-aware writing: the writer agent drafts jokes the characters' rigs can actually perform, and flags lines that need a new pose | IDEA | ⬜ | P1 | uses the rig ability inventory |
 | Daily-series planner: batch episodes, recurring gags, a posting calendar | IDEA | ⬜ | P2 | consistency builds an audience |
+| **Content planner:** research sweeps (dated hooks, recent developments, evergreen stories, tools, original analyses, a local angle) feed an idea bank and a dated calendar | NEW | ⬜ | P1 | the bioinformatics.lk plan: 61 posts and 211 ideas from six sweeps |
+| Spread rules: topic diversity per week, a local-story quota, analysis cadence, series cadence, lead times ("start by"), and an empty field getting the next slot | NEW | ⬜ | P1 | |
+| **Brief template:** hook (draft), angle, why now, sources (starting points only), research leads, cautions. Research may overturn the premise; the session then escalates to the planner | NEW | 🟡 | P0 | |
+| **Format templates:** Myth vs Data (myth as people hold it → prediction → data → rule), Dialogue (a learner and an expert character), Anniversary, We re-ran it, Wonder story, multi-part series | NEW | ⬜ | P1 | refutation and dialogue designs beat plain exposition (d ≈ 0.8, intro physics) |
+| Prediction prompts: the viewer commits to an answer (an on-screen pause or poll) before the reveal | IDEA | ⬜ | P1 | "force a prediction" is the strongest lever in the evidence |
+| Original-analysis films: real public data, its terms and version, an access date, and a sanity check against a published figure | NEW | 🟡 | P1 | |
+| Companion artefacts from one film: a guide with runnable code that reproduces the numbers, a carousel, a LinkedIn post | NEW | ⬜ | P2 | |
 | JSON Schema for `shots.json` and `script.json` | NEW | ⬜ | P0 | agents validate before rendering |
 
 ## 6. Audio
@@ -152,6 +164,8 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Spatial mix: pan by screen position | EMG | ⬜ | P1 | see §13 |
 | Cartoon SFX accents bound to moves: a boing per hop, pen-scratch ambience, a single "baa" sting | NEW | ⬜ | P1 | extends automatic foley (E3) |
 | **Sound-off mode:** bubble-only dialogue paced by reading time, for feeds watched on mute, built from the same film as the voiced version | IDEA | ⬜ | P1 | see E21 |
+| **Narration slots:** per-line start time and maximum length at a target pace (125–145 wpm), with short alternates, so a human or synthetic voice can be added later without re-cutting | NEW | ⬜ | P1 | the sound-off cut is the master; voice is a layer |
+| Mix rules: effects sit below music; effect onsets land within one frame of timing events | NEW | 🟡 | P1 | measured in the ledger |
 
 ## 7. Rendering and output
 | Feature | Source | Status | Priority | Notes |
@@ -172,6 +186,10 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ⬜ | P1 | |
 | Merch- and print-ready stills: high resolution, transparent, using the original ink | NEW | ⬜ | P2 | |
 | Interactive toy pages: a character with live boil, wobble and fps sliders, for audiences or for artists tuning a look | IDEA | ⬜ | P2 | |
+| **Master to many cuts:** edit lists assemble one master render plus inserts (cards) into a full film, an episode series, teasers and recaps. Cuts fall on beats and inserts are whole bars, so the music keeps its phase | NEW | ⬜ | P0 | one production, a week of posts |
+| **Native dual-aspect composition:** 16:9 and 9:16 are laid out separately with the same story and timings, never cropped or letterboxed | NEW | ⬜ | P0 | pulls aspect re-staging (E18) forward |
+| Deliberate covers per cut and platform (chosen frame plus cover text), never the platform default | NEW | ⬜ | P1 | |
+| Encoding profiles per platform: H.264 High CRF 18, AAC 48 kHz 320 kb/s, faststart, size caps | NEW | 🟡 | P0 | |
 
 ## 8. Localisation, accessibility, reach
 | Feature | Source | Status | Priority | Notes |
@@ -188,6 +206,11 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Sign-language inset presenter | IDEA | ⬜ | P2 | needs Deaf community partners |
 | Platform packs: safe zones, thumbnails, titles, descriptions | NEW | 🟡 | P1 | caption safe zone only |
 | Interactive web films: branching, quizzes, click-to-explore | EMG | ⬜ | P2 | live web player exists |
+| **Posting package generator:** per-platform captions (takeaway in the first line, sources in a pinned comment, hashtags last), YouTube title, description and chapters, alt text, an engagement prompt, playlists, post dates | NEW | ⬜ | P0 | every film shipped with one |
+| **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | ⬜ | P1 | packaging is "at least half the job"; YouTube's tests pick on watch time, not Shorts |
+| Publishing connectors and scheduler: upload and schedule per platform, always with human approval per post | IDEA | ⬜ | P2 | |
+| 48-hour metrics checklist and analytics ingestion per platform | NEW | ⬜ | P2 | feeds E11 and E31 |
+| Multi-language audio tracks on the main channel vs separate dubbed channels, with revenue per geography considered | NEW | ⬜ | P2 | dubbed views can earn far less |
 
 ## 9. QA and review
 | Feature | Source | Status | Priority | Notes |
@@ -200,6 +223,16 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Visual diff between film versions | NEW | ⬜ | P1 | |
 | Health and claims risk review | NEW | ⬜ | P1 | flags claims a reviewer must sign |
 | Retention analytics fed back into hooks and pacing | EMG | ⬜ | P2 | |
+| **Frame-fill metric:** share of bare background below 40% per scene, measured every 3 s on the final encode; tallest bare band; a 360 px look test | NEW | ⬜ | P0 | reference code in the playbook |
+| **Safe-zone text check:** every word's box inside the platform-safe area (9:16: x 64–960, y 200–1560), with platform UI mock overlays (right rail, caption block, top bar) | NEW | ⬜ | P0 | |
+| Minimum type sizes per aspect (9:16: headline 64, body 40, label 30, floor 26 px; 16:9: 56/34/24) | NEW | ⬜ | P0 | |
+| **Reading-time rule:** each text block visible ≥ words ÷ 3 + 1 s; a new line starts only after the outgoing one clears | NEW | ⬜ | P0 | also paces bubbles |
+| Seam smoothness: mean frame difference at cuts ≤ 3.5, with 12-frame dissolves or motivated moves | NEW | ⬜ | P1 | |
+| Generic-AI-look lint: rounded shadow cards, gradient blobs, emoji, neon glow, centred-everything layouts | IDEA | ⬜ | P1 | |
+| **Research gates:** two independent sources per on-screen number, a counter-evidence agent, official-page checks for names and dates, a research log, and a fact-check gate before the storyboard | NEW | 🟡 | P0 | facts tracing exists; the gates don't |
+| Honest on-screen labels: "re-analysis", "illustration", "preliminary" | NEW | ⬜ | P1 | |
+| **Critic loop roles:** fresh agents (sound-off reader, fact checker, director) get stills and facts, not the builder's conclusions; at least two rounds; ledger with before/after numbers | NEW | ⬜ | P0 | |
+| Content-safety gate at brief time, with narrow-and-relaunch instead of forcing a blocked topic | NEW | ⬜ | P0 | |
 
 ## 10. Collaboration, ecosystem, governance
 | Feature | Source | Status | Priority | Notes |
@@ -215,6 +248,11 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Rights model per asset: open licence, owner-proprietary, client work (with transfer terms), with usage permissions enforced at render | NEW | ⬜ | P0 | pairs with owner-IP characters |
 | Creator monetisation outputs: sticker packs, merch stills, loop packs, rig and boil-preset templates for sale, client explainer packages | IDEA | ⬜ | P2 | |
 | Teaching mode: turn a character's pipeline (photo → cutout → rig → episode) into a step-by-step tutorial | IDEA | ⬜ | P2 | |
+| **Brand kit:** palette with measured contrast, colour-blind separation and distance from platform UI colours; type system; exclusion rules ("nothing like competitor X"); generated profile pictures, covers, flyers and print with safe-zone overlays; templates that films inherit | NEW | ⬜ | P1 | |
+| **Public corrections log:** dated, on the original page; covers titles, thumbnails and social cards; credits critics; separates "what we got wrong" | NEW | ⬜ | P1 | turns accuracy into a reason to share |
+| Independence rules: no sponsor that makes what a film assesses; disclose access without payment; disclose ownership changes the day they happen | NEW | ⬜ | P2 | written before the first offer |
+| Community intake: send-a-myth, challenges, early-preview reviewers, paired collaborations with other creators | IDEA | ⬜ | P2 | |
+| Business dashboard: revenue by platform and geography, RPM, catalogue value, pre-sale readiness | IDEA | ⬜ | P2 | ad revenue alone is about half a model |
 
 ## 11. Agent and developer platform
 | Feature | Source | Status | Priority | Notes |
@@ -227,6 +265,9 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Natural-language editing ("make Pip turn when she says Blender") | NEW | 🟡 | P0 | line-relative times make it a one-field edit |
 | Python and JS SDKs, recipes, templates | NEW | ⬜ | P2 | |
 | Multi-tenant sandboxing and quotas | NEW | ⬜ | P2 | |
+| **Production orchestrator:** a planning agent spawns one production session per film (own workspace and branch), receives checkpoint reports (research done, first render, final metrics), keeps a session registry, can stop, narrow or relaunch a film, and merges finished work | NEW | ⬜ | P1 | how 25 films shipped in a month |
+| Escalation protocol: research that contradicts the brief goes to the planner; blockers don't stop other work; a late film finishes its primary cut first | NEW | ⬜ | P1 | |
+| Per-film workspace isolation: a production session works only inside its film folder | NEW | 🟡 | P1 | |
 
 ## 12. Human interfaces
 | Feature | Source | Status | Priority | Notes |
@@ -241,6 +282,8 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Tablet and pencil support | PRO | 🟡 | P1 | pointer pressure works |
 | **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ⬜ | P1 | the on-ramp for hobbyist artists |
 | Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ⬜ | P1 | see E20 |
+| **Production board:** calendar, per-film status, checkpoints, measurements and critic verdicts, with approve and stop controls | NEW | ⬜ | P1 | the owner's view of the studio |
+| Live plan tracker shared with collaborators | NEW | ⬜ | P2 | |
 
 ---
 
@@ -272,6 +315,14 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ⬜ P1 |
 | E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | ⬜ P1 |
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 |
+| E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | ⬜ P1 |
+| E25 | Beat grid + edit lists + native aspect layouts | **One production, a week of posts:** a full film, an episode series, teasers and both aspect ratios, without re-animating. | ⬜ P0 |
+| E26 | Facts ledger + posting generator + corrections log | **One source of truth for every word.** Captions, pinned sources, alt text and pages all derive from the same claims, so a correction reaches every surface. | ⬜ P1 |
+| E27 | Narration slots + sound-off master + voices | **Ship silent, voice later, dub anywhere:** any voice or language drops into the same timed slots. | ⬜ P1 |
+| E28 | Misconception and dialogue formats + the cast | **Characters as learner and expert:** the format with the strongest published learning gains, natural for cartoons. | ⬜ P1 |
+| E29 | Measured layout rules + films as data | **Layout auto-repair:** the agent moves and resizes text and pictures until frame fill, safe zones, type sizes and reading time all pass (extends E10). | ⬜ P1 |
+| E30 | Brand kit + templates + deterministic renders | **Rebrand the whole catalogue:** a new identity re-renders every film, cover and post. | ⬜ P2 |
+| E31 | Analytics + idea bank + calendar | **A plan that re-ranks itself** on what actually performs, per platform. | ⬜ P2 |
 
 ## 14. What not to build
 - Photoreal or generative-video characters: they break consistency, editability and the licence trail. Use
@@ -320,6 +371,10 @@ Which open-source pieces implement which features. Licences were verified by the
 | Line boil (§4) | SVG `feTurbulence` + `feDisplacementMap` with cycled seeds (SVG renderer); numpy displacement fields for raster paths | built in | ⬜ P1 |
 | Bubbles and typewriter (§4) | in-house; Patrick Hand and other OFL hand fonts | OFL | ⬜ P0 |
 | Line-art GIFs and stickers (§7) | ffmpeg `palettegen`/`paletteuse` (Bayer); libwebp; Lottie for TGS | in stack / BSD | ⬜ P1 |
+| Frame fill, seams (§9) | numpy box filters and frame differences on ffmpeg grey frames (playbook reference code) | BSD | ⬜ P0 |
+| Safe-zone text and type sizes (§9) | Playwright: each text element's bounding box in the rendered page; platform UI mock overlays | Apache-2.0 | ⬜ P0 |
+| Palette checks (§10) | colour-science (CIEDE2000, Machado 2009 CVD simulation) | BSD-3 | ⬜ P1 |
+| Master to many cuts (§7) | in-house edit lists on the beat grid; OpenTimelineIO for export | Apache-2.0 | ⬜ P0 |
 
 Avoid: OpenPose, Ultralytics, python-lottie in the service, aeneas, XTTS-v2 and F5-TTS weights, MMS aligner weights,
 EMAGE/BEAT2, audio2photoreal, MakeItTalk, Sapiens, LAFAN1 data, embedding Spine or Remotion, OpenMoji (SA), BBC

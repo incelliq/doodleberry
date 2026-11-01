@@ -8,6 +8,9 @@ This plan combines the feature map (`docs/feature-map.md`: what the studio needs
 - Then the biggest visible gap (character deformation and look).
 - Then acting intelligence, then human interfaces, then reach and ecosystem.
 - Emergent features (E-numbers in the feature map) land in the phase where they become cheap.
+- Studio operations learned from the bioinformatics.lk film playbook (research and safety gates, measured layout QA, the
+  critic loop, master-to-many cuts, packaging, orchestration, planning, brand and corrections) follow the same rule:
+  gates and measurements first, because they make every later film safer and cheaper.
 - Creator abilities learned from the Sheep & Pig doodle toolkit (ink-fidelity import, boil, bubbles, comedy timing,
   owner rights, stickers) sit in the phase whose groundwork they share.
 
@@ -35,6 +38,10 @@ Goal: faster renders, regression safety, clean voices everywhere, credits for ev
 | 0.7 | **Asset licence manifest** covering sets, SFX, music, fonts, icons and props; `film.credits` reads it | in-house | S | credits list every third-party file a film uses |
 | 0.8 | **Sidecar captions:** SRT/VTT next to every final | in-house (from timing.json) | S | `film.render` writes `.srt` and `.vtt` |
 | 0.9 | **Rights model:** owner-IP characters and per-asset rights (open, owner-proprietary, client work), enforced at render and in credits | in-house | S | a creator's own hand-drawn character registers through `cast.add` with owner rights |
+| 0.10 | **Research and safety gates:** brief template; two independent sources per on-screen number; counter-evidence agent; official-page checks; research log; fact-check gate before the storyboard; honest on-screen labels; content-safety gate at brief time with narrow-and-relaunch | registry + agents | M | a film can't reach storyboard until its facts pass the gate, and the log shows searches, verdicts and rejections |
+| 0.11 | **Measured layout QA:** frame fill (bare share < 40% per scene), safe-zone text with platform UI mocks, minimum type sizes, reading time (words ÷ 3 + 1 s), seam smoothness, cold open (subject in frame one, hook by 1.5 s), AV sync within a frame, effects below music | numpy, Playwright, ffmpeg (playbook reference code) | M | `qa.run` reports every metric with the worst scene and frame, on the final encode |
+| 0.12 | **Critic loop:** fresh sound-off reader, fact checker and director agents given stills and facts only; at least two rounds; ledger with before/after numbers | agents | S | every final ships with a ledger like the playbook's |
+| 0.13 | **Encoding profiles and posting package:** per-platform encodes and size caps; captions (takeaway first, sources pinned, hashtags last), title, description, chapters, alt text, engagement prompt, playlists | in-house | S | `film.package` writes `posts.md` and platform files for every final |
 
 ## Phase 1: The look (weeks 4–8)
 Goal: close the biggest visual gap with professional tools, and make drawing in, importing and casting easy.
@@ -52,6 +59,9 @@ Goal: close the biggest visual gap with professional tools, and make drawing in,
 | 1.9 | **Hand-made look:** line boil (cycled seeds, deterministic), stepped timing on 12s/8s/6s, paper and medium sets (notebook, sketchbook, whiteboard, chalkboard), ink props and signs | SVG filters; in-house | M | the Sheep & Pig episode re-renders in Doodleberry matching the toolkit's look |
 | 1.10 | **Drawing coach:** pre-import checks and advice (limb length, joint gaps, separate eyes, scale) | in-house + agent | S | a drawing that would rig badly gets specific, visual advice before import |
 | 1.11 | **Doodle template:** minimal rigs (head, body, arms, tail), with hop, wave, tilt, wag, lean and talk clips | in-house | S | any simple character gets a working clip set without humanoid parts |
+| 1.12 | **Native dual-aspect composition:** 16:9 and 9:16 laid out separately from one shot list, same story and timings (pulled forward from 4.4) | in-house | M | both cuts pass frame fill and safe zones with no crop or letterbox |
+| 1.13 | **Explainer scene library:** teaching cards, counters, typed consoles, data walls, heatmaps, maps, quote and citation plates, wordmark overlay, camera float | in-house | M | a Myth vs Data film can be built from library scenes plus data |
+| 1.14 | **Brand kit:** measured palette (contrast, colour-blind separation, distance from platform UI colours), type system, exclusion rules; generated profile pictures, covers, flyers and print; film templates inherit it | colour-science (BSD-3), Playwright | M | a palette that fails contrast or CVD separation is refused with numbers; a brand change re-themes templates |
 
 ## Phase 2: Acting intelligence (weeks 9–13)
 Goal: characters that act on their own, from the script and the voice, and do it in character.
@@ -71,6 +81,11 @@ Goal: characters that act on their own, from the script and the voice, and do it
 | 2.11 | **Comedy timing toolkit and gag library:** scripted blinks, holds, double-takes, the long stare, button moves, rule of three; reusable beat patterns agents can compose | in-house | M | the director agent stages a gag from a one-line description and a reviewer rates the timing as landing |
 | 2.12 | **Rig ability inventory and rig-aware writing:** characters declare free and costly moves; the writer agent writes within them and files drawing requests for new poses | in-house + agent | M | a script for a minimal rig needs no new drawings, or lists exactly which ones it needs |
 | 2.13 | **Sound-off cut** (E21) and move-bound SFX accents (a boing per hop, pen-scratch ambience) | in-house; Kenney CC0 | S | every film ships a voiced cut and a bubble-only cut paced for reading |
+| 2.14 | **Beat grid and master-to-many cuts:** one BPM grid for picture and sound; edit lists assemble a master render plus inserts into a full film, an episode series, teasers and recaps, with cuts on beats and whole-bar inserts (E25) | in-house; OTIO export | M | one production yields a full 16:9 film and four 9:16 parts with continuous music |
+| 2.15 | **Format templates:** Myth vs Data, Dialogue (learner and expert characters, E28), Anniversary, We re-ran it, Wonder story, multi-part series; prediction prompts before reveals | in-house + agent | M | a template plus a brief gives a storyboard that passes the cold-open and reading-time rules |
+| 2.16 | **Narration slots:** per-line start and maximum length at 125–145 wpm, with short alternates; the sound-off cut is the master and voices fill slots later (E27) | in-house | S | a voice recorded after release drops in without re-cutting picture |
+| 2.17 | **Data-bound visuals and original-analysis films:** analysis scripts in the film folder write the data every chart reads; cached inputs; terms, version and access date recorded | in-house | M | changing the input data re-renders every chart and caption number that depends on it |
+| 2.18 | **Layout auto-repair** (E29): the agent fixes frame-fill, safe-zone, type-size and reading-time failures by moving and resizing elements | agent + 0.11 metrics | M | a seeded layout failure is fixed without a human |
 
 ## Phase 3: Human interfaces (weeks 14–18)
 Goal: artists, directors and reviewers work alongside the agent, and every UI action is a command.
@@ -83,6 +98,9 @@ Goal: artists, directors and reviewers work alongside the agent, and every UI ac
 | 3.4 | **Review room:** frame comments become data edits; a critic re-checks before closing | registry + agent | M | "raise the arm earlier" on frame 120 is fixed and verified |
 | 3.5 | **Act it out:** phone or webcam video → body and face keypoints → joint angles, IK targets, mouth and eye swaps → an action clip | MediaPipe Pose/Holistic/Face (Apache-2.0); rtmlib RTMPose (Apache-2.0) for accuracy | M | a 5-second take becomes a reusable clip in under a minute |
 | 3.6 | **Phone-first creator flow:** snap a doodle → confirm cuts and pivots → see it move and talk; plus the drawing request queue (E20) with ghost guides | Rig Canvas, ink import | M | a first-time user goes from photo to a talking clip in about a minute |
+| 3.7 | **Production orchestrator and board:** a planning agent spawns one session per film (own workspace and branch), receives checkpoint reports (research, first render, final metrics), keeps the registry, can stop, narrow or relaunch, and merges finished work; escalation when research contradicts the brief; the board shows calendar, status, measurements and verdicts with approve and stop | session tools; registry | L | ten films run in parallel to their posting dates with checkpoint reports and owner approvals (E24) |
+| 3.8 | **Content planner:** research sweeps (dated hooks, recent developments, evergreen, tools, original analyses, local) → idea bank → dated calendar with spread rules and lead times; live tracker | agents + registry | M | a quarter's calendar is produced with every spread rule satisfied and every row marked for fact-lock |
+| 3.9 | **Title and thumbnail lab and covers:** newcomer-oriented, literally true titles; double-barrel thumbnail text; candidates and polls between true options; deliberate cover frames per cut; back-catalogue retitling | agent + brand kit | M | every film has two true title options, a cover per cut and platform, and passes the packaging truth check |
 
 ## Phase 4: Reach and ecosystem (weeks 19–23)
 Goal: every format, every audience, and a trustworthy library others can contribute to.
@@ -100,6 +118,10 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 4.9 | **Creator outputs:** line-art GIFs, sticker and emoji packs (Telegram, WhatsApp, Giphy, iMessage), merch- and print-ready stills (E23), interactive toy pages | ffmpeg palettegen, libwebp, Lottie/TGS | M | one character exports to four sticker platforms and a print-ready PNG |
 | 4.10 | **Series production:** daily-series planner, recurring gags, continuity memory, a posting calendar; teaching mode that turns a pipeline into a tutorial | in-house | M | ten episodes of a series are planned, rendered and scheduled from data |
 | 4.11 | **Creator monetisation:** rig and boil-preset templates, loop packs, client explainer packages, with handwriting fonts from the artist's samples | in-house | M | a creator can package and sell a rig template |
+| 4.12 | **Trust in public:** a dated corrections log on each film's page (covering titles, thumbnails and social cards, crediting critics) that propagates to every caption (E26); written independence and sponsorship rules | in-house | M | a correction updates the page, the captions and the credits in one command |
+| 4.13 | **Analytics loop:** 48-hour metrics checklist, ingestion per platform, a plan that re-ranks itself (E31); a business dashboard (revenue by platform and geography, RPM, catalogue value) | platform APIs where terms allow | M | the next calendar reflects measured performance |
+| 4.14 | **Companions and community:** runnable guides that reproduce a film's numbers, carousels, send-a-myth intake, challenges, early-preview reviewers, paired collaborations | in-house | M | each film can ship with a guide; myths sent in reach the idea bank |
+| 4.15 | **Publishing connectors and scheduler**, human approval per post; multi-language audio tracks on the main channel | platform APIs | M | a week of approved posts goes out on schedule |
 
 ---
 
@@ -110,6 +132,12 @@ Goal: every format, every audience, and a trustworthy library others can contrib
   `thorvg-python` binding, sherpa-onnx's espeak code, and the C2PA SDK licence.
 - **Before any distribution of Doodleberry as software:** Piper and espeak-ng are GPL. Keep them behind a process or
   service boundary, or replace them.
+
+- **Before enforcing 0.11 as a hard gate:** calibrate the thresholds (frame fill, seams, reading time) on a reference film
+  in each style. The playbook's numbers come from flat-paper science films; doodle and cartoon styles may need their own.
+- **Publishing (4.15):** never post without a human approval per post; connectors only where platform terms allow automation.
+- **Formats (2.15):** the refutation and dialogue evidence comes from introductory university physics; measure retention on
+  our own films before treating it as a law for every audience.
 
 ## Never build
 Generative-video characters (they break consistency, editing and the licence trail). A raster frame-by-frame paint
