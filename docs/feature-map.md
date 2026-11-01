@@ -239,19 +239,8 @@ These come from stacking primitives we already have. Each one is cheap because t
 - A full raster frame-by-frame paint suite (TVPaint territory). Import from Krita instead.
 - Proprietary runtimes we can't redistribute: no Spine runtime embedding and no Remotion. See `oss-research.md`.
 
-## 15. Next 12 (P0, in order)
-1. Mesh and warp deformation with bendy limbs (biggest visual-quality gap)
-2. Smart bones / driven keys, and constraints (prop hand-offs, look-at)
-3. Gesture planner from prosody, plus listener behaviour
-4. Natural-language acting direction compiled to timelines
-5. Clip library to about 30 clips; set library to about 10 sets
-6. Camera grammar: follow, auto-framing, punch-ins
-7. Visual lint and golden-frame regression tests (E1)
-8. Automatic foley from contacts (E3)
-9. Storyboard strip and timeline editor in Studio, plus IK posing in Rig Canvas
-10. Layered PSD/SVG import into puppets
-11. Kokoro voices, a voice-over import command and sidecar captions
-12. Render speed: parallel workers, frame reuse, per-shot content hashes
+## 15. Build order
+The phased plan, which combines this map with the open-source research, lives in `docs/build-plan.md`.
 
 ## 16. Build-with map (from `docs/oss-research.md`)
 Which open-source pieces implement which features. Licences were verified by the research pass; see that file for the

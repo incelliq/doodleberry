@@ -40,6 +40,13 @@ node tools/three/run3d.mjs http://127.0.0.1:8766/films/screwworm-3d/index.html o
 Requirements: Node + Playwright (Chromium), ffmpeg, Python 3.11+ with `piper-tts faster-whisper numpy scipy soundfile pyloudnorm pyworld`,
 a Piper voice with a clean licence (`python -m dbe voices.list`); optional Blender 5.x, Synfig CLI, Mesa (`mesa-vulkan-drivers libegl1`) for software 3D.
 
+## Docs
+- `docs/dbe.md`: the backend (CLI, HTTP, Studio, MCP) and renderers.
+- `docs/feature-map.md`: every feature, tagged by source and status, plus emergent features.
+- `docs/build-plan.md`: the phased build plan.
+- `docs/oss-research.md`: vetted open-source libraries, models and assets, and licence warnings.
+- `docs/director-prompt.md` and `docs/product-vision.md`.
+
 ## Ground rules
 Original characters only (no recreations of existing ones); every factual line in a film traces to a source in its
 `facts.json`; third-party assets stay out of git (CC0 packs are downloaded locally; see `references/3d-pipeline-research.md`).

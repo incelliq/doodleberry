@@ -1,5 +1,7 @@
 # Doodleberry Studio: the most powerful version (brainstorm)
 
+> **Status note (November 2026):** this is the original brainstorm, and its status columns are out of date. For current status see `docs/feature-map.md`; for the build order see `docs/build-plan.md`.
+
 **One line:** an agent-native animation studio where humans make the taste calls (story, characters, look) and an
 agent does the production: research with sources, script, voices, rigging, acting, rendering across 2D and 3D
 engines, QA and delivery. Every film is data, so it can be versioned, re-voiced, re-timed and re-rendered.
