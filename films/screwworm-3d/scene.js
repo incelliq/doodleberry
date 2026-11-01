@@ -5,6 +5,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from '../../engine/vendor/three/jsm/loaders/GLTFLoader.js';
 import { RoomEnvironment } from '../../engine/vendor/three/jsm/environments/RoomEnvironment.js';
+import { OutlineEffect } from '../../engine/vendor/three/jsm/effects/OutlineEffect.js';
+const TOON = new URLSearchParams(location.search).has('toon'); // ?toon=1 draws the same 3D scene as a 2D cartoon
 
 const W = 1080, H = 1920, FPS = 30;
 const TIMING = window.TIMING;
@@ -294,7 +296,7 @@ function frame(f) {
     const off = camPos.clone().sub(camLook).applyAxisAngle(new THREE.Vector3(0, 1, 0), a).multiplyScalar(Math.max(0.8, 1 - push));
     camPos = camLook.clone().add(off); }
   cam.fov = fov; cam.updateProjectionMatrix(); cam.position.copy(camPos); cam.lookAt(camLook);
-  renderer.render(scene, cam);
+  (TOON ? outline : renderer).render(scene, cam);
   overlay(t, sh);
 }
 
@@ -351,6 +353,21 @@ const lib = await load(A + 'converted/ual_cmu.glb');
 CLIPS = Object.fromEntries(lib.animations.map(c => [c.name, c]));
 const HR = UBC + 'Hairstyles/Rigged to Head Bone/glTF (Godot -Unreal)/';
 man = await person([UBC + 'Base Characters/Godot - UE/Superhero_Male_FullBody.gltf', HR + 'Hair_SimpleParted.gltf', HR + 'Eyebrows_Regular.gltf', HR + 'Hair_Beard.gltf']);
+// toon mode: swap every lit material for a 3-band cel material (keeping colour, texture and transparency) and draw ink outlines
+const outline = new OutlineEffect(renderer, { defaultThickness: 0.012, defaultColor: [0.1, 0.06, 0.04], defaultAlpha: 1 });
+if (TOON) {
+  const ramp = new THREE.DataTexture(new Uint8Array([140, 140, 140, 255, 255, 255, 255, 255]), 2, 1); ramp.minFilter = ramp.magFilter = THREE.NearestFilter; ramp.needsUpdate = true;
+  const toonOf = m => { if (!m || !(m.isMeshStandardMaterial || m.isMeshPhysicalMaterial)) return m;
+    const t = new THREE.MeshToonMaterial({ color: m.color, map: m.map, gradientMap: ramp, transparent: m.transparent, opacity: m.opacity, side: m.side, emissive: m.emissive, emissiveIntensity: m.emissiveIntensity, depthWrite: m.depthWrite, polygonOffset: m.polygonOffset, polygonOffsetFactor: m.polygonOffsetFactor });
+    if (m.transparent && m.opacity < 0.6) t.userData.outlineParameters = { visible: false }; return t; };
+  scene.traverse(o => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(toonOf) : toonOf(o.material); if (o.userData.mat0) o.userData.mat0 = o.material; } });
+  // characters: drop painted texture detail for flat cartoon fills (skin, hair, briefs)
+  // (the body texture carries the swimwear, so it keeps its map; only hair is flattened)
+  for (const m of man.meshes) { const nm = ((m.material.name || '') + m.name + (m.parent ? m.parent.name : '')).toLowerCase();
+    if (/hair|beard|brow/.test(nm) && m.material.map) { m.material.map = null; m.material.color = new THREE.Color('#d8d4cc'); m.material.needsUpdate = true; } }
+  sky.material.userData.outlineParameters = { visible: false }; water.material.userData.outlineParameters = { visible: false };
+  scene.environment = null; hemi.intensity = 1.1;
+}
 window.renderFrame = frame;
 window.FRAMES = Math.round(END * FPS);
 window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
