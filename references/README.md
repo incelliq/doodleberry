@@ -13,8 +13,9 @@ scripts, layouts and scores.
 | 4 | "This New Farming Machine Kills Weeds With Lasers Without Hurting Crops" | 72 s | skit-then-explainer two-act format, machine-POV HUD shot, motion burst as punctuation, dramatic-irony gag, one-word captions placed on the speaker | 
 | 5 | eggplant grafted onto potato (other channel, hashtag-only title, ~12M views) | 56 s | action-first hook, misconception voiced by a character then disproved, two-harvest reveal across the soil line, parody time card as a joke beat, background gags in the soil, 15 s explainer | 
 | 6 | "This Method Could Help Straighten a Bent Tree" | 63 s | tool-as-character with misread intent, 8 s wordless action beat mid-reel, payoff → new worry → fix, black time card, explainer duo | 
+| 7 | "Why Does She Pee When She Coughs?" (health channel, ~8.4M views) | 56 s | relatable body-question title, organs as characters in a medical cross-section, the argument as the mechanism, one cut to the clinic | 
 
-See `ref3-rice-ducks.md`, `ref4-laser-weeder.md` and `ref5-eggplant-potato-graft.md`, `ref6-bent-tree.md` for the full studies of refs 3–6; refs 1–2 are summarised below.
+See `ref3-rice-ducks.md`, `ref4-laser-weeder.md` and `ref5-eggplant-potato-graft.md`, `ref6-bent-tree.md`, `ref7-bladder-leak.md` for the full studies of refs 3–7; refs 1–2 are summarised below.
 
 ## Measurements across the three
 
