@@ -1,6 +1,6 @@
 # Programmable cartoon studio: the full feature map
 
-This is every feature a programmable cartoon studio needs, from character drawing to delivery and governance. It
+This is every feature a programmable cartoon studio needs (updated with abilities learned from the Sheep & Pig doodle toolkit), from character drawing to delivery and governance. It
 covers what professional platforms already do, what an agent-native studio needs that they don't, new ideas, and
 features that **emerge** when Doodleberry's primitives combine. Status is checked against this repo as of November 2026.
 
@@ -33,6 +33,12 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Auto-rig: detect parts and pivots from a whole drawing | IDEA (Meta Animated Drawings) | ⬜ | P2 | segmentation plus pose estimation on the drawing |
 | Character DNA: shape language, proportions and line weight as parameters for generating relatives (siblings, crowds) | IDEA | ⬜ | P2 | keeps a family look without redrawing |
 | Character bible: personality, voice, gesture tendencies, continuity notes | NEW | 🟡 | P1 | cast registry has personality and voice |
+| **Ink-fidelity import:** a photo or scan of any medium (pen, pencil, marker, crayon, watercolour) becomes a clean line that keeps the artist's real texture. Lighting is flattened by dividing by a blurred copy, ink is thresholded to alpha, and specks are removed | NEW | ⬜ | P0 | the doodle toolkit proved it on a phone photo; complements vector tracing |
+| Multi-character page detection: find each character on a page and ignore sums, spirals, hands, pens and shadows | IDEA | ⬜ | P2 | one notebook page can hold a whole cast |
+| Mask-based part cutting over one ink layer, with overlap seams that hide cuts (for example at the neck) and suggested cuts at narrow joints | NEW | ⬜ | P1 | parts share one line, so joints match |
+| Pivot and cut suggestions: an overlay proposes cut lines and pivots; the artist confirms with a tap | IDEA | ⬜ | P1 | replaces reading ASCII pixel maps |
+| **Drawing coach:** checks a drawing before import and explains how to draw for animation (longer limbs, small gaps at joints, separate eyes, a consistent scale, one character per area) | IDEA | ⬜ | P1 | turns hobbyists into riggable artists |
+| Owner-IP characters: register characters the creator owns (not openly licensed), with rights metadata | NEW | ⬜ | P0 | `cast.add` currently accepts open licences only |
 
 ## 2. Rigging
 | Feature | Source | Status | Priority | Notes |
@@ -55,6 +61,9 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Spring chains, cloth strips | PRO | ⬜ | P2 | |
 | Z-order switching (arm in front of or behind the body) | PRO | 🟡 | P1 | per view only; needs per-pose |
 | Rig retargeting across characters on one template | PRO | ✅ | – | clips are template-level |
+| Line-weight-preserving squash for blinks and squints: area-averaged resampling with re-inking, so a closed eye stays one solid line; dot eyes flatten to dashes | NEW | ⬜ | P1 | works for raster and vector eyes |
+| Rig ability inventory: each character declares what it can do without new drawings (hop, blink, tilt, wave, wag) and what needs a drawing | IDEA | ⬜ | P1 | feeds rig-aware writing (§5) and drawing requests (E20) |
+| Doodle template: minimal rigs (head, body, arms, tail) for simple characters, with clips that fit them | NEW | ⬜ | P1 | not every character is a humanoid |
 
 ## 3. Animation and acting
 | Feature | Source | Status | Priority | Notes |
@@ -82,6 +91,10 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Crowds with variation | PRO | ⬜ | P2 | |
 | Prop physics: drops, bounces, rolls | PRO | ⬜ | P2 | deterministic, simulated at bake time |
 | Frame-by-frame drawn effects layer (hand-drawn splashes, smoke) | PRO (TVPaint, GP) | ⬜ | P2 | |
+| **Comedy timing toolkit:** scripted blinks on cue (one per dot of "..."), holds, double-takes, the long stare, the button move after the last line, rule-of-three escalation | NEW | ⬜ | P1 | timing is the part audiences pay for |
+| Gag library: reusable beat patterns, e.g. stare plus slow push-in, shout plus camera shake, silent "..." bubble with blinks, tiny hop as a button | IDEA | ⬜ | P1 | composable by agents |
+| Hand-made timing per character or shot: animate on 12s, 8s or 6s while the film runs at 30 | PRO | ⬜ | P1 | 6 fps feels handmade, 18 nervous, 10–12 is the sweet spot |
+| Cheap expressive moves for minimal rigs: hops with squash, startle jumps, tail wags faster when excited, lean-ins | NEW | ⬜ | P1 | |
 
 ## 4. Staging, camera, effects
 | Feature | Source | Status | Priority | Notes |
@@ -99,6 +112,13 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Transitions: whoosh cut, match cut, wipes | PRO | 🟡 | P1 | whoosh sound on cuts |
 | Infographics layer: charts, maps, labels, callouts, cutaways bound to facts | NEW | 🟡 | P0 | legacy films do this by hand |
 | Kinetic typography | PRO (AE) | 🟡 | P1 | word-highlight captions |
+| **Line boil:** cycled smooth displacement fields (about 8, at 12 fps) so line art shimmers like redrawn frames. Per-layer seeds; bubbles and props boil too | PRO (AE turbulent displace) | ⬜ | P1 | deterministic, so frames still cache |
+| Paper and medium sets: ruled notebook, sketchbook, napkin, whiteboard, chalkboard, kraft paper, with grain and page shading | NEW | ⬜ | P1 | |
+| Medium simulation for vector characters: pencil, marker or crayon line textures, so vector puppets match scanned doodles | IDEA | ⬜ | P2 | |
+| Ink props and signs: handwritten labels, hanging signs and arrows drawn in the same ink and boil as the characters | NEW | ⬜ | P1 | |
+| **Speech and thought bubbles inside the art:** say, shout (spiky, shaking letters), whisper (dashed), thought clouds, narration boxes. The tail tracks the speaker; placement avoids collisions; bubbles wobble and pop in and out | NEW | ⬜ | P0 | comics grammar for short-form |
+| Typewriter text: word by word in sync with the voice, or letter by letter with punctuation pauses when silent | NEW | ⬜ | P1 | |
+| Handwriting fonts per character, including the artist's own handwriting generated from samples | IDEA | ⬜ | P2 | OFL fonts until then |
 | 2.5D: 2D layers placed in 3D space with a real camera | PRO | 🟡 | P2 | three.js exists |
 
 ## 5. Story and pre-production
@@ -111,6 +131,9 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Hook and title variants | NEW | ✅ | – | `variants.hooks` |
 | Beat sheet and retention-curve planning | NEW | ⬜ | P1 | |
 | Series bible and episode continuity (outfits, props, running gags) | NEW | ⬜ | P2 | |
+| **Series format:** an episode is a data template (lines, moves, beats, blinks, stares). A new episode means editing data only | NEW | 🟡 | P1 | `shots.json` already does this |
+| Rig-aware writing: the writer agent drafts jokes the characters' rigs can actually perform, and flags lines that need a new pose | IDEA | ⬜ | P1 | uses the rig ability inventory |
+| Daily-series planner: batch episodes, recurring gags, a posting calendar | IDEA | ⬜ | P2 | consistency builds an audience |
 | JSON Schema for `shots.json` and `script.json` | NEW | ⬜ | P0 | agents validate before rendering |
 
 ## 6. Audio
@@ -127,6 +150,8 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Loudness and intelligibility QA | NEW | ✅ | – | |
 | Footsteps, cloth and impact foley from the animation | EMG | ⬜ | P0 | see §13 |
 | Spatial mix: pan by screen position | EMG | ⬜ | P1 | see §13 |
+| Cartoon SFX accents bound to moves: a boing per hop, pen-scratch ambience, a single "baa" sting | NEW | ⬜ | P1 | extends automatic foley (E3) |
+| **Sound-off mode:** bubble-only dialogue paced by reading time, for feeds watched on mute, built from the same film as the voiced version | IDEA | ⬜ | P1 | see E21 |
 
 ## 7. Rendering and output
 | Feature | Source | Status | Priority | Notes |
@@ -142,6 +167,11 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Incremental re-render (only changed shots) | NEW | 🟡 | P0 | `only=`; next: content hashes per shot |
 | Style passes: paper texture, grain, line boil, watercolour | PRO | 🟡 | P2 | toon mode in 3D |
 | Vector resolution independence (4K for free) | NEW | ✅ | – | |
+| 12-fps-native rendering: render only unique stepped frames and encode at 24 or 30 | EMG | ⬜ | P1 | halves render cost for doodle styles |
+| Line-art GIFs: a 32-colour palette with Bayer dithering, sized for messaging | PRO | ⬜ | P1 | |
+| Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ⬜ | P1 | |
+| Merch- and print-ready stills: high resolution, transparent, using the original ink | NEW | ⬜ | P2 | |
+| Interactive toy pages: a character with live boil, wobble and fps sliders, for audiences or for artists tuning a look | IDEA | ⬜ | P2 | |
 
 ## 8. Localisation, accessibility, reach
 | Feature | Source | Status | Priority | Notes |
@@ -182,6 +212,9 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Likeness and consent rules for characters and voices | NEW | ⬜ | P1 | |
 | Versioning, branching, review in git | NEW | ✅ | – | films are text |
 | Roles and permissions (artist, director, reviewer) | PRO | ⬜ | P2 | |
+| Rights model per asset: open licence, owner-proprietary, client work (with transfer terms), with usage permissions enforced at render | NEW | ⬜ | P0 | pairs with owner-IP characters |
+| Creator monetisation outputs: sticker packs, merch stills, loop packs, rig and boil-preset templates for sale, client explainer packages | IDEA | ⬜ | P2 | |
+| Teaching mode: turn a character's pipeline (photo → cutout → rig → episode) into a step-by-step tutorial | IDEA | ⬜ | P2 | |
 
 ## 11. Agent and developer platform
 | Feature | Source | Status | Priority | Notes |
@@ -206,6 +239,8 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Director's desk: chat beside a storyboard strip and animatic | IDEA | ⬜ | P1 | |
 | Review room on mobile: approve, comment on a frame | NEW | ⬜ | P1 | |
 | Tablet and pencil support | PRO | 🟡 | P1 | pointer pressure works |
+| **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ⬜ | P1 | the on-ramp for hobbyist artists |
+| Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ⬜ | P1 | see E20 |
 
 ---
 
@@ -232,6 +267,11 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E16 | Series data across films | **Continuity memory.** The bible knows outfits, props and running gags, and the critic flags breaks. | ⬜ P2 |
 | E17 | Same acting → many renderers | **Style A/B tests.** Render one performance flat, Synfig-smooth or Grease Pencil-sketchy, then pick per audience or platform. | ✅ |
 | E18 | Data films + aspect ratios | **Re-blocked formats.** A 16:9 version re-stages characters and camera rather than cropping a 9:16 film. | ⬜ P1 |
+| E19 | Ink-fidelity import + rigging + voice + shot data | **Doodle to series.** Any notebook doodle becomes a talking, acting series character in minutes, in the artist's own line. | ⬜ P1 |
+| E20 | Rig ability inventory + writer agent + Rig Canvas | **Human-in-the-loop production queue.** Scripts stay within what rigs can do; a missing pose becomes a drawing request; the new drawing joins the rig and the shot re-renders. | ⬜ P1 |
+| E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ⬜ P1 |
+| E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | ⬜ P1 |
+| E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 |
 
 ## 14. What not to build
 - Photoreal or generative-video characters: they break consistency, editability and the licence trail. Use
@@ -276,6 +316,10 @@ Which open-source pieces implement which features. Licences were verified by the
 | Medical and map shots (§4) | Servier Medical Art; Natural Earth + d3-geo | CC BY 4.0 / PD | ⬜ P1 |
 | Asset licence manifest and credits (§10) | In-house manifest → `film.credits` | none | 🟡 voices and puppets only |
 | Scene DSL reference (§11) | Motion Canvas / Revideo ideas (reference only) | MIT | — |
+| Ink-fidelity import (§1) | numpy, scipy (ndimage), Pillow: blur-divide, threshold, connected components | BSD / BSD / HPND | ⬜ P0 |
+| Line boil (§4) | SVG `feTurbulence` + `feDisplacementMap` with cycled seeds (SVG renderer); numpy displacement fields for raster paths | built in | ⬜ P1 |
+| Bubbles and typewriter (§4) | in-house; Patrick Hand and other OFL hand fonts | OFL | ⬜ P0 |
+| Line-art GIFs and stickers (§7) | ffmpeg `palettegen`/`paletteuse` (Bayer); libwebp; Lottie for TGS | in stack / BSD | ⬜ P1 |
 
 Avoid: OpenPose, Ultralytics, python-lottie in the service, aeneas, XTTS-v2 and F5-TTS weights, MMS aligner weights,
 EMAGE/BEAT2, audio2photoreal, MakeItTalk, Sapiens, LAFAN1 data, embedding Spine or Remotion, OpenMoji (SA), BBC
