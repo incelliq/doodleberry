@@ -150,7 +150,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.14 Brand kit | done: brand.json, brand.check (contrast, CVD, platform distance), brand.assets, opt-in film inheritance | this commit |
 | 1.2 Smart bones and constraints | done: controls with driven keys (angles, shifts, swaps, z), look-at, props with parent switching and arcs; shifts in every exporter | this commit |
 | 1.1 Bendy limbs | done for vector limbs: arc bend with thickness kept and an attachment correction, in SVG and Grease Pencil; Synfig and Lottie stay rigid. Raster mesh warp done in v0.5 (mesh strokes) | this commit |
-| 1.3 Drawing import | done: `puppet.import` (layered SVG, PSD, ORA by layer name; pivots estimated, 9-unit mean error), `puppet.export_layers` (round trip for repainting), `puppet.from_blend` (Blender cut-out rigs: Pepper and Carrot showcase, CC-BY). Mesh deformation for raster parts done (puppet v0.5 mesh strokes, smooth skinning). Open: Krita .kra direct | this commit |
+| 1.3 Drawing import | done: `puppet.import` (layered SVG, PSD, ORA by layer name; pivots estimated, 9-unit mean error), `puppet.export_layers` (round trip for repainting), `puppet.from_blend` (Blender cut-out rigs: Pepper and Carrot showcase, CC-BY; demo film `pepper-carrot` passes QA). Mesh deformation for raster parts done (puppet v0.5 mesh strokes, smooth skinning). Open: Krita .kra direct | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

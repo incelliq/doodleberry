@@ -1,0 +1,13 @@
+{
+ "speakers": {
+  "pepper": {"voice": "kokoro:af_heart", "fx": {"pitch": 1.08}},
+  "carrot": {"voice": "kokoro:am_puck", "fx": {"pitch": 1.35, "formant": 1.12}}
+ },
+ "lead_in_s": 1.0,
+ "gap_s": 0.45,
+ "lines": [
+  {"id": "ready", "speaker": "pepper", "fact": null, "text": "Carrot! The potion is ready."},
+  {"id": "mrrow", "speaker": "carrot", "fact": null, "text": "Mrrrow?"},
+  {"id": "fly", "speaker": "pepper", "fact": null, "text": "One sip, and we can fly!", "pause": 1.6}
+ ]
+}

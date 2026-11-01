@@ -1,0 +1,169 @@
+{
+ "title": "Potion Ready",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "brief": {
+  "title": "Potion Ready",
+  "audience": "internal",
+  "note": "development showcase of imported cut-out rigs (CC-BY 4.0 characters)"
+ },
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "park",
+   "start": 0,
+   "start_line": "ready",
+   "end_line": "fly",
+   "tail": 1.6,
+   "style": {
+    "shadow": true
+   },
+   "bubbles": true,
+   "cast": [
+    {
+     "puppet": "cast/external/pepper.puppet.json",
+     "speaker": "pepper",
+     "place": {
+      "x": 350,
+      "y": 1660,
+      "s": 1.5
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": "ready.start",
+        "end": "ready.end",
+        "additive": true
+       },
+       {
+        "clip": "point_R",
+        "start": "ready.start+0.2",
+        "end": "ready.end+0.3"
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": "fly.start",
+        "end": "fly.end+0.6"
+       }
+      ],
+      "poses": [
+       [
+        0,
+        "neutral"
+       ]
+      ],
+      "visemes_from": "pepper",
+      "springs": true,
+      "look": [
+       [
+        0,
+        [
+         0.2,
+         0
+        ]
+       ],
+       [
+        "ready.start",
+        [
+         1,
+         0.1
+        ]
+       ],
+       [
+        "mrrow.end+0.2",
+        [
+         1,
+         0.2
+        ]
+       ],
+       [
+        "fly.start",
+        [
+         0,
+         -0.3
+        ]
+       ]
+      ],
+      "blinks": [
+       0.6,
+       "mrrow.start+0.1",
+       "fly.end+0.3"
+      ],
+      "set": {
+       "brows": "neutral"
+      }
+     }
+    },
+    {
+     "puppet": "cast/external/carrot.puppet.json",
+     "speaker": "carrot",
+     "place": {
+      "x": 800,
+      "y": 1660,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "surprised",
+        "start": "mrrow.start-0.1",
+        "end": "mrrow.end+0.4"
+       },
+       {
+        "clip": "nod",
+        "start": "fly.end-0.2",
+        "additive": true
+       }
+      ],
+      "poses": [
+       [
+        0,
+        "neutral"
+       ]
+      ],
+      "visemes_from": "carrot",
+      "springs": true,
+      "look": [
+       [
+        0,
+        [
+         -1,
+         0.1
+        ]
+       ],
+       [
+        "fly.start",
+        [
+         -1,
+         -0.2
+        ]
+       ]
+      ],
+      "blinks": [
+       1.4,
+       "ready.end",
+       "fly.end+0.5"
+      ]
+     }
+    }
+   ],
+   "end": 7.31
+  }
+ ]
+}

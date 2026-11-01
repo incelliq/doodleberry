@@ -22,6 +22,38 @@
     }
    },
    "personality": "curious, upbeat kid; big gestures"
+  },
+  {
+   "id": "pepper",
+   "name": "Pepper",
+   "path": "cast/external/pepper.puppet.json",
+   "template": "humanoid",
+   "author": "Nikolai Mamashev (rig and art), after David Revoy's Pepper&Carrot",
+   "license": "CC-BY-4.0",
+   "provenance": "imported from the Blender cut-out rig with puppet.from_blend (cast/recipes/pepper.json); source https://gum.co/pepper; built locally, not in git",
+   "rights": {
+    "type": "open",
+    "owner": "David Revoy (character), Nikolai Mamashev (rig)"
+   },
+   "views": [],
+   "sha256": "83fe561d2a794ce5",
+   "personality": "young witch of Chaosah: eager, curious, a little clumsy"
+  },
+  {
+   "id": "carrot",
+   "name": "Carrot",
+   "path": "cast/external/carrot.puppet.json",
+   "template": "humanoid",
+   "author": "Nikolai Mamashev (rig and art), after David Revoy's Pepper&Carrot",
+   "license": "CC-BY-4.0",
+   "provenance": "imported from the Blender cut-out rig with puppet.from_blend (cast/recipes/carrot.json); source https://gum.co/carrot; built locally, not in git",
+   "rights": {
+    "type": "open",
+    "owner": "David Revoy (character), Nikolai Mamashev (rig)"
+   },
+   "views": [],
+   "sha256": "0b19bb7142fb6bdc",
+   "personality": "her orange cat: expressive, mischievous, speaks in meows"
   }
  ]
 }

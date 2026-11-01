@@ -244,15 +244,28 @@ def film_credits(name):
                 continue
             used.add(c["puppet"]); e = cast.get(c["puppet"], {}); r = e.get("rights") or {}
             lic = e.get("license", "licence not recorded") if r.get("type", "open") == "open" else f"© {r.get('owner')}, all rights reserved"
-            lines.append(f"Character: {e.get('name', c['puppet'])} by {e.get('author', 'unknown')} ({lic})")
+            meta = _json(ROOT / c["puppet"], {}).get("meta", {}) if (ROOT / c["puppet"]).exists() else {}
+            if meta.get("credit"):  # attribution licences: the creator's own credit line, licence link, and what changed
+                lic_url = {"CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/", "CC-BY-SA-4.0": "https://creativecommons.org/licenses/by-sa/4.0/"}.get(e.get("license", ""), "")
+                lines.append(f"Character: {meta['credit']}{' ' + lic_url if lic_url else ''} Source: {meta.get('source_url', 'n/a')}. "
+                             "Changes: imported into Doodleberry as a puppet (parts re-rasterised, swaps and springs derived from the rig).")
+            else:
+                lines.append(f"Character: {e.get('name', c['puppet'])} by {e.get('author', 'unknown')} ({lic})")
+    vreg = {**reg, **{k: v for k, v in _voice_registry().items() if k not in reg}} if "_voice_registry" in globals() else reg
+    engines = set()
     for spk, v in (sc.get("speakers") or {}).items():
-        r = reg.get(v.get("voice"), {})
-        lines.append(f"Voice of {spk}: Piper voice {v.get('voice')} ({r.get('license', 'licence not recorded')})")
+        vid = v.get("voice", ""); r = vreg.get(vid, {})
+        if vid.startswith("kokoro:"):
+            engines.add("Kokoro-82M (Apache-2.0)")
+            lines.append(f"Voice of {spk}: Kokoro-82M voice {vid.split(':', 1)[1]} ({r.get('license', 'Apache-2.0')})")
+        else:
+            engines.add("Piper")
+            lines.append(f"Voice of {spk}: Piper voice {vid} ({r.get('license', 'licence not recorded')})")
     rend = sorted({sh.get("renderer", "svg") for sh in s["shots"]})
     names = {"svg": "Chromium (Playwright)", "synfig": "Synfig (GPL-3.0)", "grease-pencil": "Blender Grease Pencil (GPL)", "lottie": "lottie-web (MIT)"}
     uses = {"captions", "player"} | {f"renderer:{r}" for r in rend}
     assets = [f["attribution"] for f in man["files"] if set(f.get("used_by", [])) & uses]
-    lines += ["", "Rendered with " + ", ".join(names.get(r, r) for r in rend) + "; speech by Piper; alignment by faster-whisper (MIT); audio by ffmpeg.",
+    lines += ["", "Rendered with " + ", ".join(names.get(r, r) for r in rend) + f"; speech by {', '.join(sorted(engines)) or 'Piper'}; alignment by faster-whisper (MIT); audio by ffmpeg.",
               *(["Assets: " + "; ".join(dict.fromkeys(assets))] if assets else []), "Made with Doodleberry."]
     out = d / "build" / "credits.txt"; out.parent.mkdir(exist_ok=True); out.write_text("\n".join(lines) + "\n")
     return {"path": str(out.relative_to(ROOT)), "credits": lines}

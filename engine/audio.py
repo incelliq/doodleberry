@@ -154,6 +154,8 @@ def music(score, total, speaking=lambda t: False):
             beats.append(round(t, 3))
             bar_beat = (b - b0) % 4
             ch = prog[((b - b0) // 4) % len(prog)]
+            if ch not in CHORDS:
+                raise SystemExit(f"score.json: chord {ch!r} is not in the palette ({', '.join(CHORDS)})")
             root, tri = CHORDS[ch]
             kind = sec['kind']
             if kind in ('main', 'finale', 'intro'):
