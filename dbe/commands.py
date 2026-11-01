@@ -102,8 +102,9 @@ def _rights_errors(name):
 
 
 def _require_valid(name):
+    from . import research
     r = film_validate(name)
-    r["errors"] = r["errors"] + _rights_errors(name)
+    r["errors"] = r["errors"] + _rights_errors(name) + research.check(FILMS / name)["errors"]
     if r["errors"]:
         raise ValueError("film data is invalid:\n- " + "\n- ".join(r["errors"][:20]))
     return r
@@ -716,3 +717,66 @@ def asset_check():
     third = [t for t in tracked if pat.search(t) and not t.startswith(("tests/golden/", "dbe/", "puppet/canvas/")) and not t.endswith(("LICENSE", "LICENSE.md"))]
     missing = [t for t in third if not any(t == k or (k.endswith("/") and t.startswith(k)) for k in known)]
     return {"third_party_files": len(third), "missing_from_manifest": missing, "ok": not missing}
+
+
+# ---------------- research gates and critic loop ----------------
+@command("research.check", name=("string", "film"))
+def research_check(name):
+    """Research gate: sources and trace excerpts for every fact, two independent sources for numbers, the research
+    log's sections, a recorded fact-check clearance, and a safety clearance for sensitive briefs. Renders refuse to
+    start while it reports errors."""
+    from . import research
+    return research.check(_film(name))
+
+
+@command("ledger.add", name=("string", "film"), role=("string", "fact_gate | safety | sound_off_reader | fact_checker | director | counter_evidence | builder"),
+         verdict=("string", "cleared | blocked | ready | one more pass | ..."), notes=("string", "findings and fixes", ""),
+         round=("integer", "critic round (default: the current one; pass a new number to open a round)", None),
+         snapshot=("boolean", "attach the film's current QA numbers as this entry's metrics", True))
+def ledger_add(name, role, verdict, notes="", round=None, snapshot=True):
+    """Record a gate verdict or critic round in ledger.json and ledger.md, with before/after QA numbers."""
+    from . import research
+    d = _film(name); metrics = {}
+    q = _json(d / "build" / "qa.json", {}) if snapshot else {}
+    if q:
+        L = q.get("layout", {})
+        metrics = {"duration_s": q.get("duration"), "loudness_lufs": q.get("loudness_lufs"), "true_peak": q.get("true_peak_dbtp"),
+                   "frozen_stretches": len(q.get("frozen_stretches_over_0.5s", [])),
+                   "worst_bare": (L.get("frame_fill") or {}).get("worst_bare"), "text_outside_safe": len((L.get("text") or {}).get("outside_safe", [])),
+                   "type_too_small": len((L.get("text") or {}).get("too_small", [])), "advisory_failures": ",".join(L.get("advisory_failures", [])) or "none"}
+        metrics = {k: v for k, v in metrics.items() if v is not None}
+    return research.add(d, role, verdict, notes, metrics, round)
+
+
+@command("critic.pack", name=("string", "film"), step=("number", "seconds between stills", 3.0))
+def critic_pack(name, step=3.0):
+    """Review packet for fresh critic agents (they get the film's evidence, not the builder's conclusions):
+    stills every few seconds from the final encode, contact sheets, transcript with times and fact ids, facts.json,
+    the QA and layout report, and a prompt per role (sound-off reader, fact checker, director)."""
+    import shutil as sh
+    d = _film(name); final = d / "build" / "final.mp4"
+    if not final.exists():
+        raise FileNotFoundError("render the film first")
+    out = d / "build" / "critic"; sh.rmtree(out, ignore_errors=True); (out / "stills").mkdir(parents=True)
+    _run(["ffmpeg", "-v", "error", "-i", str(final), "-vf", f"fps=1/{step},scale=540:-2", str(out / "stills" / "t%03d.png")])
+    for f in sorted((out / "stills").glob("t*.png")):  # name stills by time
+        k = int(f.stem[1:]) - 1; f.rename(out / "stills" / f"{k * step:06.1f}s.png")
+    qa = d / "build" / "qa.json"
+    if not qa.exists():
+        qa_run(name)
+    for f in (d / "build" / "qa").glob("*.jpg"):
+        sh.copy(f, out / f.name)
+    sh.copy(qa, out / "qa.json")
+    if (d / "facts.json").exists():
+        sh.copy(d / "facts.json", out / "facts.json")
+    tm = _json(d / "timing.json", {}); sc = {l["id"]: l for l in _json(d / "script.json", {}).get("lines", [])}
+    tr = ["# Transcript", "", "| time | speaker | line | facts |", "|---|---|---|---|"]
+    for l in tm.get("lines", []):
+        fct = sc.get(l["id"], {}).get("fact")
+        tr.append(f"| {l['start']:.2f}–{l['end']:.2f} | {l.get('speaker', '')} | {l['text']} | {', '.join(fct) if isinstance(fct, list) else (fct or '')} |")
+    (out / "transcript.md").write_text("\n".join(tr) + "\n")
+    roles = {}
+    for r in ("sound_off_reader", "fact_checker", "director"):
+        sh.copy(ROOT / "dbe" / "critic" / f"{r}.md", out / f"prompt_{r}.md"); roles[r] = str((out / f"prompt_{r}.md").relative_to(ROOT))
+    return {"packet": str(out.relative_to(ROOT)), "stills": len(list((out / "stills").glob("*.png"))), "prompts": roles,
+            "next": "give each prompt to a fresh agent with the packet; record each verdict with ledger.add"}
