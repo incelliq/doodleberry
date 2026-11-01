@@ -18,8 +18,10 @@
     return `<g transform="translate(${W / 2} ${H - 300})"><rect x="${-pw / 2}" y="${-size * 0.95}" width="${pw}" height="${size * 1.25}" rx="${size * 0.62}" fill="#1a0f08" fill-opacity="0.82"/>` +
       `<text x="0" y="0" font-size="${size}" font-weight="700" text-anchor="middle" fill="#fff" stroke="#24160e" stroke-width="12" paint-order="stroke" stroke-linejoin="round">${text}</text></g>`;
   }
-  function frameAt(t, bgOnly) {
-    const sh = shotAt(t);
+  function frameAt(t0, bgOnly) {
+    const sh = shotAt(t0);
+    // style.step: animate on 12s / 8s / 6s like hand-drawn work (the film still runs at its own fps)
+    const st = sh.style || {}, t = st.step ? Math.floor(t0 * st.step + 1e-6) / st.step : t0;
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
     let world = set.draw(t, sh.set_opts || {});
     for (const c of sh.cast || []) {

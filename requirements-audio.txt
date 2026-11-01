@@ -8,3 +8,7 @@ numpy
 scipy
 soundfile
 pyloudnorm
+# Kokoro-82M second TTS backend (Apache-2.0 weights). Model files go in $DBE_VOICES/kokoro/:
+#   kokoro-v1.0.onnx, voices-v1.0.bin from https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0
+# kokoro-onnx itself is MIT; its phonemizer and espeakng-loader pull espeak-ng (GPL): keep it a separate process.
+kokoro-onnx==0.6.1

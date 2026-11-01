@@ -23,6 +23,9 @@ SR_OUT = 48000
 
 
 def synth_line(voice, text, length_scale, noise_scale=0.5, noise_w=0.6):
+    if hasattr(voice, "synth"):  # Kokoro backend
+        audio, sr = voice.synth(text, length_scale)
+        return resample(audio, sr, SR_OUT)
     cfg = SynthesisConfig(length_scale=length_scale, noise_scale=noise_scale,
                           noise_w_scale=noise_w, normalize_audio=True)
     chunks = list(voice.synthesize(text, syn_config=cfg))
@@ -121,7 +124,9 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
     fxmod = load_fx() if any(sp.get("fx") for sp in speakers.values()) else None
     from faster_whisper import WhisperModel
     # language: script["lang"], else the first voice's prefix (es_ES-carlfm-x_low -> es)
-    lang = script.get("lang") or next(iter(speakers.values()))["voice"].split("_")[0]
+    v0 = next(iter(speakers.values()))["voice"]
+    _kl = {"a": "en", "b": "en", "e": "es", "f": "fr", "h": "hi", "i": "it", "j": "ja", "p": "pt", "z": "zh"}
+    lang = script.get("lang") or (_kl.get(v0.split(":", 1)[1][:1], "en") if v0.startswith("kokoro:") else v0.split("_")[0])
     model = WhisperModel("small.en" if lang == "en" else "small", device="cpu", compute_type="int8")
     fps = script.get("fps", 30)
 
@@ -134,7 +139,12 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
         spk = ln.get("speaker", default)
         cfg = speakers[spk]
         if cfg["voice"] not in voices:
-            voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"))
+            if cfg["voice"].startswith("kokoro:"):
+                _ku = __import__("importlib.util").util; _ks = _ku.spec_from_file_location("kokoro_voice", Path(__file__).with_name("kokoro_voice.py"))
+                _km = _ku.module_from_spec(_ks); _ks.loader.exec_module(_km)
+                voices[cfg["voice"]] = _km.KokoroVoice(cfg["voice"], voices_dir)
+            else:
+                voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"))
         a = trim(synth_line(voices[cfg["voice"]], ln["text"], ln.get("length_scale", script.get("length_scale", 1.0))))
         if cfg.get("fx") and fxmod:
             fx = cfg["fx"] if isinstance(cfg["fx"], dict) else {"preset": cfg["fx"]}

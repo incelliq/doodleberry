@@ -139,7 +139,7 @@ def voice_build(name):
 
 def voice_check(name):
     script = _json(FILMS / name / "script.json", {})
-    reg = _json(ROOT / "voices" / "registry.json", {}).get("voices", {})
+    reg = _voice_registry()
     bad = {spk: (v.get("voice"), reg.get(v.get("voice"), {"status": "unknown", "license": "not in voices/registry.json"}))
            for spk, v in (script.get("speakers") or {}).items() if reg.get(v.get("voice"), {}).get("status") != "clean"}
     if bad and not script.get("allow_restricted_voices"):
@@ -148,11 +148,29 @@ def voice_check(name):
     return bad
 
 
-@command("voices.list")
-def voices_list():
-    """Piper voices with licence status (clean / restricted / unclear) and whether each is installed."""
-    reg = _json(ROOT / "voices" / "registry.json", {}).get("voices", {})
-    return {vid: {**r, "installed": (Path(VOICES) / f"{vid}.onnx").exists()} for vid, r in reg.items()}
+def _voice_registry():
+    """registry voices plus every installed Kokoro voice (Apache-2.0 weights; listed as clean)"""
+    reg = dict(_json(ROOT / "voices" / "registry.json", {}).get("voices", {}))
+    kdir = Path(VOICES) / "kokoro"
+    if (kdir / "voices-v1.0.bin").exists():
+        import numpy as np
+        try:
+            names = sorted(np.load(kdir / "voices-v1.0.bin").files)
+        except Exception:
+            names = []
+        lang = {"a": "US English", "b": "UK English", "e": "Spanish", "f": "French", "h": "Hindi", "i": "Italian", "j": "Japanese", "p": "Brazilian Portuguese", "z": "Mandarin"}
+        for n in names:
+            reg.setdefault(f"kokoro:{n}", {"status": "clean", "license": "Apache-2.0 (Kokoro-82M weights)", "language": lang.get(n[:1], "?"),
+                                          "gender": {"f": "female", "m": "male"}.get(n[1:2], "?")})
+    return reg
+
+
+@command("voices.list", language=("string", "filter by language name, e.g. Spanish", ""))
+def voices_list(language=""):
+    """Voices (Piper and Kokoro) with licence status (clean / restricted / unclear) and whether each is installed."""
+    reg = _voice_registry()
+    inst = lambda vid: (Path(VOICES) / "kokoro" / "kokoro-v1.0.onnx").exists() if vid.startswith("kokoro:") else (Path(VOICES) / f"{vid}.onnx").exists()
+    return {vid: {**r, "installed": inst(vid)} for vid, r in reg.items() if not language or language.lower() in str(r.get("language", vid)).lower()}
 
 
 # ---------------- cast ----------------
@@ -304,7 +322,7 @@ def _bake(name, shot_id):
         if "visemes_from" in tl:
             tl["visemes"] = (timing.get("visemes") or {}).get(tl.pop("visemes_from"), [])
         cast.append({"puppet": str((ROOT / c["puppet"]).resolve()), "place": c.get("place", {"x": 540, "y": 1500, "s": 1}), "timeline": tl})
-    spec = {"fps": fps, "frames": round((sh["end"] - sh["start"]) * fps), "start": sh["start"], "cast": cast,
+    spec = {"fps": fps, "frames": round((sh["end"] - sh["start"]) * fps), "start": sh["start"], "cast": cast, "step": (sh.get("style") or {}).get("step"),
             "size": s.get("size", [1080, 1920]), **({"camera": sh["camera"]} if sh.get("camera") else {})}
     bdir = d / "build" / "shots"; bdir.mkdir(parents=True, exist_ok=True)
     (bdir / f"{shot_id}.spec.json").write_text(json.dumps(spec))
@@ -419,16 +437,43 @@ def export_synfig(name, shot):
 
 
 # ---------------- whole film ----------------
-@command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default all", None))
+ENGINE_FILES = ["dbe/player/player.js", "puppet/loader/puppet.js", "puppet/loader/acting.js", "sets/sets.js", "tools/bake.mjs",
+                "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs"]
+
+
+def _shot_hash(name, sh, s):
+    """content hash of everything a shot's picture depends on: the resolved shot, film size/fps, puppets and clip
+    libraries, lip-sync data for its speakers, and the renderer code. Unchanged hash = the old render is still right."""
+    import hashlib
+    h = hashlib.sha256()
+    h.update(json.dumps({"shot": sh, "size": s.get("size"), "fps": s.get("fps"), "captions": s.get("captions")}, sort_keys=True).encode())
+    for c in sh.get("cast", []):
+        h.update((ROOT / c["puppet"]).read_bytes())
+        sp = (c.get("timeline") or {}).get("visemes_from") or c.get("speaker")
+        if sp:
+            h.update(json.dumps((_json(FILMS / name / "timing.json", {}).get("visemes") or {}).get(sp, [])).encode())
+    h.update(json.dumps(_json(FILMS / name / "timing.json", {}).get("lines", []), sort_keys=True).encode())  # bubbles, line-relative times
+    for f in sorted((ROOT / "puppet" / "clips").glob("*.json")) + [ROOT / x for x in ENGINE_FILES]:
+        if f.exists():
+            h.update(f.read_bytes())
+    return h.hexdigest()[:20]
+
+
+@command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default: only shots whose inputs changed", None))
 def film_render(name, only=None):
     """Render every shot with its renderer, assemble, score and mix the audio, mux, and run QA."""
     _require_valid(name)
     d = _film(name); s = _shots(name); fps = s.get("fps", 30)
     done = []
+    skipped = []
     for sh in s["shots"]:
-        mp4 = d / "build" / "shots" / f"{sh['id']}.mp4"
-        if only is None or sh["id"] in only or not mp4.exists():
-            done.append(shot_render(name, sh["id"]))
+        mp4 = d / "build" / "shots" / f"{sh['id']}.mp4"; hf = d / "build" / "shots" / f"{sh['id']}.hash"
+        hsh = _shot_hash(name, sh, s)
+        stale = not mp4.exists() or not hf.exists() or hf.read_text().strip() != hsh
+        if (only is None and stale) or (only is not None and (sh["id"] in only or not mp4.exists())):
+            done.append(shot_render(name, sh["id"])); hf.write_text(hsh)
+        else:
+            skipped.append(sh["id"])
     lst = d / "build" / "shots" / "concat.txt"
     lst.write_text("".join(f"file '{(d / 'build' / 'shots' / (sh['id'] + '.mp4')).resolve()}'\n" for sh in s["shots"]))
     pic = d / "build" / "picture.mp4"
@@ -462,7 +507,7 @@ def film_render(name, only=None):
     (d / "build" / "captions.srt").write_text(make_srt(tm)); (d / "build" / "captions.vtt").write_text(make_vtt(tm))
     qa = qa_run(name)
     mb = final.stat().st_size / 1e6
-    return {"rendered": done, "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
+    return {"rendered": done, "unchanged": skipped, "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
             "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures")}
 
 

@@ -19,7 +19,8 @@ for (const c of spec.cast) {
   const placeAt = t => Array.isArray(c.place) ? Acting.sampleKeys(c.place.map(([k, v]) => [k, [v.x, v.y, v.s ?? 1, v.flip ?? 1]]), t) : [c.place.x, c.place.y, c.place.s ?? 1, c.place.flip ?? 1];
   const frames = [];
   for (let f = 0; f < spec.frames; f++) {
-    const t = out.start + f / out.fps;
+    let t = out.start + f / out.fps;
+    if (spec.step) t = Math.floor(t * spec.step + 1e-6) / spec.step;   // stepped timing, same as the player
     const pose = Acting.evaluate(puppet, c.timeline || {}, t, LIB.clips, LIB.presets);
     let [x, y, s, flip] = placeAt(t);
     if (spec.camera) { // fold the shot camera [cx, cy, zoom] into the placement so every renderer frames it identically

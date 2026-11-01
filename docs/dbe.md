@@ -25,7 +25,7 @@ environment variables below).
 - **engine.info**: versions of every tool found (node, ffmpeg, synfig, blender, piper...).
 - **film.create / film.get / film.write**: make a film folder, read it, write brief.md, facts.json, script.json, shots.json or score.json.
 - **voice.build**: Piper TTS, Whisper word alignment and viseme lip-sync; writes `timing.json`. Passes the voice licence gate first.
-- **voices.list**: Piper voices with licence status from `voices/registry.json` and whether they are installed.
+- **voices.list**: voices with licence status and install state: Piper voices from `voices/registry.json`, plus every installed Kokoro voice (`kokoro:<name>`, Apache-2.0, 54 voices in 9 languages). Filter with `{"language": "Spanish"}`. Use a Kokoro voice in script.json like any other: `"voice": "kokoro:ef_dora"`.
 - **cast.list / cast.add / puppet.lint**: the cast library. `cast.add` lints a puppet, accepts only open licences,
   checks its voice is clean, records author, licence, provenance and a content hash in `cast/index.json`, and appends
   to `cast/provenance.jsonl`.
@@ -41,7 +41,7 @@ environment variables below).
 - **Rights:** `cast.add` takes `rights` = open (an open licence), owner (your own IP, with the owner named) or client (made for a client, with owner and terms). Client-work characters render only in films whose `brief.client` matches.
 - **Delivery:** finals use `dbe/profiles.json` master (H.264 High, CRF 18, AAC 48 kHz 320 kb/s, faststart, ≤100 MB) and come with `captions.srt` and `captions.vtt`.
 - **shot.render**: render one shot with its renderer: `svg` (headless Chromium), `synfig` (Synfig CLI), `grease-pencil` (headless Blender), or `lottie` (lottie-web).
-- **film.render**: render all shots, join them, burn in word-timed captions, mix score, effects and voice (−14 LUFS), mux, then run QA.
+- **film.render**: render the shots whose inputs changed (a content hash per shot covers the shot, puppets, clips, lip-sync data and renderer code; `only` forces a list), join them, burn in word-timed captions, mix score, effects and voice (−14 LUFS), mux, then run QA.
 - **qa.run**: the measured quality bar plus contact sheets, plus layout checks (`dbe/layout_qa.py`):
   - **frame fill:** bare-ground share per scene, sampled every 3 s on the final encode;
   - **text:** every word inside the platform-safe area (9:16: x 64–960, y 200–1560; 16:9: 5% title-safe), and minimum type size;
@@ -78,6 +78,12 @@ environment variables below).
 - Sets live in `sets/sets.js` (plain, park, clinic, cutaway); `set_opts` recolours them.
 - Captions are one film-level pass (`dbe/captions.py`, ASS through libass): chunks of 3 words with the spoken word
   highlighted. `caption_style` in shots.json overrides font size, colours and position.
+
+## Render speed
+`tools/three/run3d.mjs` runs one browser process per CPU on contiguous frame ranges, uses Chrome's fast capture, and
+encodes with `-tune animation`. It hashes each frame's SVG and links repeats instead of capturing them. Shots animated on
+12s (`style.step: 12`) reuse about 60% of frames. Measured on pip-park shot 1 (171 frames, 4 CPUs): 116 → 82 ms/frame,
+and 62 ms/frame when stepped.
 
 ## Renderer notes
 The set is always drawn by the SVG player, so clouds drift, the camera works and characters keep a ground shadow.
