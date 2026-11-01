@@ -1,0 +1,4 @@
+{"size": [900, 700], "items": [
+ {"puppet": "puppet/examples/pip.puppet.json", "x": 230, "y": 680, "pose": {"angles": {"upperarm_R": -70, "forearm_R": -95, "upperarm_L": 20, "forearm_L": -80, "thigh_L": -40, "shin_L": 75}}},
+ {"puppet": "puppet/examples/pip_bendy.puppet.json", "x": 670, "y": 680, "pose": {"angles": {"upperarm_R": -70, "forearm_R": -95, "upperarm_L": 20, "forearm_L": -80, "thigh_L": -40, "shin_L": 75}},
+  "timeline": {"controls": {"turn": [[0, 1]]}, "blink": false}}]}

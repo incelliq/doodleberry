@@ -146,6 +146,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.13 Explainer scene library | done: card, counter, console, data-bound bars, quote, citation, wordmark, camera float | this commit |
 | 1.14 Brand kit | done: brand.json, brand.check (contrast, CVD, platform distance), brand.assets, opt-in film inheritance | this commit |
 | 1.2 Smart bones and constraints | done: controls with driven keys (angles, shifts, swaps, z), look-at, props with parent switching and arcs; shifts in every exporter | this commit |
+| 1.1 Bendy limbs | done for vector limbs: arc bend with thickness kept and an attachment correction, in SVG and Grease Pencil; Synfig and Lottie stay rigid. Open: mesh warp for raster parts | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

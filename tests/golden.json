@@ -55,5 +55,8 @@
     3.6
    ]
   }
+ ],
+ "poses": [
+  "tests/poses/bend_and_turn.json"
  ]
 }

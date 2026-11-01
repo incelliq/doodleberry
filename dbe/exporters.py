@@ -260,6 +260,12 @@ def to_gp_frames(baked, size, per=6):
             for pid, part in p["parts"].items():
                 if any(s.get("replaces") == pid and sw.get(sid) for sid, s in (p.get("swaps") or {}).items()):
                     continue
+                if part.get("bend") and part.get("parent") in M and not (fr.get("shifts") or {}).get(pid):
+                    # bendy limb: points follow the arc bend in the parent's space (rigid exporters can't do this)
+                    ax = part.setdefault("_axis", G.part_axis(part)); th = fr["angles"].get(pid, 0) or 0
+                    Mp = G.mul(R, M[part["parent"]])
+                    items.append(((fr.get("z") or {}).get(pid, part.get("z", 0)), ("bend", Mp, part["pivot"], ax, part["bend"].get("width", 40), th), part["strokes"]))
+                    continue
                 items.append(((fr.get("z") or {}).get(pid, part.get("z", 0)), G.mul(R, M[pid]), part["strokes"]))
             for sid, shape in sw.items():
                 s = p["swaps"][sid]; m = G.mul(R, M.get(s["anchor"], G.I))
@@ -272,7 +278,11 @@ def to_gp_frames(baked, size, per=6):
             for _, m, sts in items:
                 for st in sts:
                     for segs, closed in G.parse_path(st["d"]):
-                        pts = [G.apply(m, q) for q in G.sample(segs, per)]
+                        if isinstance(m, tuple) and m and m[0] == "bend":
+                            _, Mp, piv, ax, wd, th = m
+                            pts = [G.apply(Mp, G.bend_point(q, piv, ax, wd, th)) for q in G.sample(segs, per)]
+                        else:
+                            pts = [G.apply(m, q) for q in G.sample(segs, per)]
                         strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in pts], "closed": closed,
                                         "fill": G.colour(st.get("fill"), pal) if closed else None, "line": G.colour(st.get("stroke"), pal),
                                         "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})

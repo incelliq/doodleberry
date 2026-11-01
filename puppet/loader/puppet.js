@@ -37,6 +37,93 @@
     return s + '</g>';
   }
 
+  // ---------- v0.4 bendy joints: points near a joint blend between the parent's and the child's transforms ----------
+  // part.bend = {width}: this part curves out of its parent over `width` artboard units (rubber-hose limbs) instead of
+  // hinging rigidly at its pivot. Angle blending keeps the limb's thickness.
+  const TOK = /[MLHVCQAZmlhvcqaz]|-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi;
+  function arcToCubics(x1, y1, rx, ry, phi, fa, fs, x2, y2) {  // SVG arc -> cubic segments (same maths as dbe/geom.py)
+    if (!rx || !ry) return [[x1, y1, x2, y2, x2, y2]];
+    const cp = Math.cos(phi * Math.PI / 180), sp = Math.sin(phi * Math.PI / 180);
+    const dx = (x1 - x2) / 2, dy = (y1 - y2) / 2, x1p = cp * dx + sp * dy, y1p = -sp * dx + cp * dy;
+    rx = Math.abs(rx); ry = Math.abs(ry); const lam = x1p * x1p / (rx * rx) + y1p * y1p / (ry * ry);
+    if (lam > 1) { rx *= Math.sqrt(lam); ry *= Math.sqrt(lam); }
+    const num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p, den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
+    let co = den ? Math.sqrt(Math.max(0, num / den)) : 0; if (fa === fs) co = -co;
+    const cxp = co * rx * y1p / ry, cyp = -co * ry * x1p / rx, cx = cp * cxp - sp * cyp + (x1 + x2) / 2, cy = sp * cxp + cp * cyp + (y1 + y2) / 2;
+    const ang = (ux, uy, vx, vy) => Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+    const t1 = ang(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry); let dt = ang((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
+    if (!fs && dt > 0) dt -= 2 * Math.PI; else if (fs && dt < 0) dt += 2 * Math.PI;
+    const n = Math.max(1, Math.ceil(Math.abs(dt) / (Math.PI / 2))), d = dt / n, k = 4 / 3 * Math.tan(d / 4), out = [];
+    const pt = a => [cx + rx * Math.cos(a) * cp - ry * Math.sin(a) * sp, cy + rx * Math.cos(a) * sp + ry * Math.sin(a) * cp];
+    const der = a => [-rx * Math.sin(a) * cp - ry * Math.cos(a) * sp, -rx * Math.sin(a) * sp + ry * Math.cos(a) * cp];
+    for (let i = 0, a = t1; i < n; i++, a += d) { const b = a + d, pa = pt(a), pb = pt(b), da = der(a), db = der(b);
+      out.push([pa[0] + k * da[0], pa[1] + k * da[1], pb[0] - k * db[0], pb[1] - k * db[1], pb[0], pb[1]]); }
+    return out;
+  }
+  function parsePath(d) {  // -> [[cmd, x1, y1, ...]] absolute M/L/C/Q/Z (arcs become cubics), or null for unsupported commands
+    if (/[SsTt]/.test(d)) return null;
+    const t = d.match(TOK) || [], out = []; let i = 0, cmd = null, cx = 0, cy = 0, sx = 0, sy = 0;
+    const num = () => parseFloat(t[i++]);
+    while (i < t.length) {
+      if (/[A-Za-z]/.test(t[i])) cmd = t[i++];
+      const rel = cmd === cmd.toLowerCase(), C = cmd.toUpperCase(), ox = rel ? cx : 0, oy = rel ? cy : 0;
+      if (C === 'Z') { out.push(['Z']); cx = sx; cy = sy; continue; }
+      if (C === 'M') { cx = num() + ox; cy = num() + oy; sx = cx; sy = cy; out.push(['M', cx, cy]); cmd = rel ? 'l' : 'L'; }
+      else if (C === 'L') { cx = num() + ox; cy = num() + oy; out.push(['L', cx, cy]); }
+      else if (C === 'H') { cx = num() + (rel ? cx : 0); out.push(['L', cx, cy]); }
+      else if (C === 'V') { cy = num() + (rel ? cy : 0); out.push(['L', cx, cy]); }
+      else if (C === 'C') { const a = [num() + ox, num() + oy, num() + ox, num() + oy, num() + ox, num() + oy]; cx = a[4]; cy = a[5]; out.push(['C', ...a]); }
+      else if (C === 'Q') { const a = [num() + ox, num() + oy, num() + ox, num() + oy]; cx = a[2]; cy = a[3]; out.push(['Q', ...a]); }
+      else if (C === 'A') { const rx = num(), ry = num(), phi = num(), fa = num(), fs = num(), x2 = num() + ox, y2 = num() + oy;
+        for (const seg of arcToCubics(cx, cy, rx, ry, phi, fa, fs, x2, y2)) out.push(['C', ...seg]); cx = x2; cy = y2; }
+      else return null;
+    }
+    return out;
+  }
+  const _pathCache = new Map();
+  const parsed = d => { if (!_pathCache.has(d)) _pathCache.set(d, parsePath(d)); return _pathCache.get(d); };
+  const smooth01 = u => (u = Math.max(0, Math.min(1, u)), u * u * (3 - 2 * u));
+  // joints[k] = {pivot, axis (unit, into the child), width, Mp, Mc}; a point blends toward Mc by how far past the pivot it lies
+  function bentD(d, joints, Mown) {
+    const P = parsed(d); if (!P) return null;
+    const tf = (x, y) => {
+      for (const j of joints) {
+        const ax = j.axis, nx = [-ax[1], ax[0]], dx = x - j.pivot[0], dy = y - j.pivot[1];
+        const s = dx * ax[0] + dy * ax[1], n = dx * nx[0] + dy * nx[1], L = j.width, h = L / 2;
+        if (s <= -h) return apply(j.Mp, [x, y]);
+        const th = j.theta * Math.PI / 180, c = Math.cos(th), si = Math.sin(th);
+        const rigid = (px, py) => [j.pivot[0] + c * (px - j.pivot[0]) - si * (py - j.pivot[1]), j.pivot[1] + si * (px - j.pivot[0]) + c * (py - j.pivot[1])];
+        if (s >= h) return apply(j.Mp, rigid(x, y));
+        // bend zone: the centre line follows a circular arc of the joint angle; cross-sections stay perpendicular to it
+        const k = th / L, u = s + h, phi = k * u;
+        const arc = uu => { const f = k * uu, A = Math.abs(k) < 1e-6 ? uu : Math.sin(f) / k, B = Math.abs(k) < 1e-6 ? 0 : (1 - Math.cos(f)) / k;
+          return [j.pivot[0] - h * ax[0] + A * ax[0] + B * nx[0], j.pivot[1] - h * ax[1] + A * ax[1] + B * nx[1]]; };
+        const cu = arc(u), cp = Math.cos(phi), sp = Math.sin(phi);
+        const nr = [cp * nx[0] - sp * ax[0], cp * nx[1] - sp * ax[1]];     // the normal turned by phi
+        let lx = cu[0] + n * nr[0], ly = cu[1] + n * nr[1];
+        // blend in the small difference between the arc's end and the rigid child, so the hand stays attached
+        const end = arc(L), want = rigid(j.pivot[0] + h * ax[0], j.pivot[1] + h * ax[1]), w = smooth01(u / L);
+        lx -= (end[0] - want[0]) * w; ly -= (end[1] - want[1]) * w;
+        return apply(j.Mp, [lx, ly]);
+      }
+      return apply(Mown, [x, y]);
+    };
+    return P.map(c => { if (c[0] === 'Z') return 'Z'; const v = []; for (let k = 1; k < c.length; k += 2) { const q = tf(c[k], c[k + 1]); v.push(f2(q[0]), f2(q[1])); } return c[0] + v.join(' '); }).join(' ');
+  }
+  function jointsFor(p, M, id, pose) {  // bendy joints touching part `id`: at its own pivot (with its parent) and at its children's pivots
+    const out = [], parts = p.parts;
+    const axisOf = cid => { const c = parts[cid], bb = c._center || (c._center = centerOf(c)); const dx = bb[0] - c.pivot[0], dy = bb[1] - c.pivot[1], L = Math.hypot(dx, dy) || 1; return [dx / L, dy / L]; };
+    const add = cid => { const c = parts[cid]; if (!c || !c.bend || !c.parent || !M[c.parent]) return; if (pose.shifts && pose.shifts[cid]) return;  // shifted joints stay rigid
+      out.push({ pivot: c.pivot, axis: axisOf(cid), width: c.bend.width || 40, Mp: M[c.parent], theta: (pose.angles && pose.angles[cid]) || 0 }); };
+    add(id);  // only the child limb deforms: it leaves the parent in the parent's direction and curves into its own
+    return out;
+  }
+  function centerOf(part) {  // rough centre of a part's drawing (from path coordinates)
+    let sx = 0, sy = 0, n = 0;
+    for (const st of part.strokes || []) { const P = st.d ? parsed(st.d) : null; if (!P) continue; for (const c of P) for (let k = 1; k < c.length; k += 2) { sx += c[k]; sy += c[k + 1]; n++; } }
+    return n ? [sx / n, sy / n] : [part.pivot[0], part.pivot[1] + 1];
+  }
+
   // world matrices for every part (parents first)
   function matrices(p, pose) {
     const parts = p.parts, M = {};
@@ -66,14 +153,27 @@
     for (const [id, sw] of Object.entries(p.swaps || {})) swaps[id] = { ...sw, ...((v.swaps || {})[id] || {}), shapes: { ...sw.shapes, ...(((v.swaps || {})[id] || {}).shapes || {}) } };
     return (c[view] = { ...p, parts, swaps });
   }
+  function bentSVG(strokes, pal, M, J) {  // strokes deformed in world space (no group matrix); falls back to rigid per stroke
+    let s = '';
+    for (const st of strokes) {
+      const d2 = st.d && bentD(st.d, J, M);
+      if (!d2) { s += strokesSVG([st], pal, M); continue; }
+      const fill = colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
+      s += `<path d="${d2}" fill="${fill}"${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
+    }
+    return s;
+  }
   function render(p, x, y, pose = {}) {
     p = inView(p, pose.view);
+    if (p._bendy === undefined) p._bendy = Object.values(p.parts).some(pt => pt.bend);
     const pal = { ...(p.palette || {}), ...(pose.palette || {}) };
     const M = matrices(p, pose);
     const items = [];
     for (const [id, part] of Object.entries(p.parts)) {
       const replaced = Object.entries(p.swaps || {}).some(([sid, sw]) => sw.replaces === id && pose[sid] && sw.shapes[pose[sid]] && sw.shapes[pose[sid]].length);
-      if (!replaced) items.push({ z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: strokesSVG(part.strokes, pal, M[id]) });
+      const J = p._bendy ? jointsFor(p, M, id, pose) : [];
+      const svgPart = J.length ? bentSVG(part.strokes, pal, M[id], J) : strokesSVG(part.strokes, pal, M[id]);
+      if (!replaced) items.push({ z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: svgPart });
     }
     for (const [sid, sw] of Object.entries(p.swaps || {})) {
       const m = M[sw.anchor] || I;

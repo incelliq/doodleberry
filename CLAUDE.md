@@ -11,5 +11,5 @@
 - Shot times in `shots.json` should reference lines (`"mid.start+0.9"`) rather than hard seconds, so re-voicing and localisation keep sync.
 - Only voices marked `clean` in `voices/registry.json` go into publishable films. Check licences against `docs/oss-research.md` before adding a library, model or asset.
 - All renderers read the baked animation from `tools/bake.mjs`; a new puppet feature must reach `puppet.js`, `acting.js`, `bake.mjs`, `dbe/geom.py` and the exporters together.
-- Before committing engine, loader, player or puppet changes, run `python -m dbe test` (golden frames). After an intended visual change, run it with `{"update": true}` and check the new frames. `tests/golden/` holds small reference PNGs (fixtures, not renders).
+- Before committing engine, loader, player or puppet changes, run `python -m dbe test` (golden frames). After an intended visual change, run it with `{"update": true}` and check the new frames. `tests/golden/` holds small reference PNGs (fixtures, not renders); `tests/poses/*.json` are loader-level cases (puppets in given poses).
 - Film data is validated against `dbe/schemas/*.schema.json` on `film.write` and before every render (`film.validate`).

@@ -662,6 +662,19 @@ def test_golden(update=False, film=""):
     tol = spec.get("tolerance", {"mean_abs": 1.5, "pixels_over_32": 0.004})
     results, failed = [], 0
     tmp = Path(tempfile.mkdtemp(prefix="golden_"))
+    for case in spec.get("poses", []):  # loader-level cases: puppets in given poses (bends, controls, views)
+        if film and film != "poses":
+            continue
+        img = tmp / (Path(case).stem + ".png")
+        _run(["node", "tools/pose_still.mjs", str(ROOT / case), str(img)], timeout=300)
+        g = ROOT / "tests" / "golden" / "poses" / img.name; g.parent.mkdir(parents=True, exist_ok=True)
+        im = Image.open(img).convert("RGB"); im = im.resize((450, round(450 * im.height / im.width)), Image.LANCZOS)
+        if update or not g.exists():
+            im.save(g, optimize=True); results.append({"frame": str(g.relative_to(ROOT)), "status": "written"}); continue
+        a = np.asarray(im, np.float32); b = np.asarray(Image.open(g).convert("RGB"), np.float32)
+        d = np.abs(a - b); mean, over = float(d.mean()), float((d.max(-1) > 32).mean()); ok = mean <= tol["mean_abs"] and over <= tol["pixels_over_32"]
+        failed += 0 if ok else 1
+        results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
     for case in spec["cases"]:
         if film and case["film"] != film:
             continue

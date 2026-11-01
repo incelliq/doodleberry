@@ -97,6 +97,14 @@ timelines like the shared presets in `puppet/clips/<template>.json`.
   rotates a part so its aim vector points at a target, clamped. Frame-space points work in every renderer; targets
   on other characters work in the SVG player.
 
+- **bend (bendy limbs):** `"bend": {"width": 90}` on a part makes it curve out of its parent instead of hinging:
+  - the centre line follows a circular arc of the joint angle over a zone `width` wide, centred on the joint;
+  - cross-sections stay perpendicular, so the limb keeps its thickness;
+  - a small correction is blended in so the curve meets the rigid child (hands and feet stay attached).
+
+  Works in the SVG renderer and Grease Pencil; Synfig and Lottie stay rigid (they transform whole layers).
+  `puppet/examples/pip_bendy.py` makes a rubber-hose Pip.
+
 Shot-level **props** (SVG player): `"props": [{"id", "r", "color" | "svg", "spin", "travel", "arc", "attach": [[t, {"cast": i, "part": "hand_R", "at": [x, y]}], [t2, {"x", "y"}], ...]}]`.
 A prop follows its current parent (a character's part or a fixed point) and travels on an arc when the parent
 changes: hand to hand, a throw to another character, a drop to the floor.

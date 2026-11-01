@@ -218,3 +218,38 @@ def in_view(puppet, view):
         o = (v.get("swaps") or {}).get(k, {})
         swaps[k] = {**sw, **o, "shapes": {**sw["shapes"], **o.get("shapes", {})}}
     return {**puppet, "parts": parts, "swaps": swaps}
+
+
+# ---------- v0.4 bendy joints (mirrors puppet.js bentD: arc bend with an attachment correction) ----------
+def part_axis(part):
+    pts = [q for st in part.get("strokes", []) if st.get("d") for segs, _ in parse_path(st["d"]) for q in sample(segs, 2)]
+    if not pts:
+        return (0.0, 1.0)
+    cx = sum(q[0] for q in pts) / len(pts); cy = sum(q[1] for q in pts) / len(pts)
+    dx, dy = cx - part["pivot"][0], cy - part["pivot"][1]; L = math.hypot(dx, dy) or 1
+    return (dx / L, dy / L)
+
+
+def bend_point(q, pivot, axis, width, theta_deg):
+    """artboard point of a bendy child part -> its position in the parent's space (apply the parent matrix after)"""
+    ax = axis; nx = (-ax[1], ax[0]); dx, dy = q[0] - pivot[0], q[1] - pivot[1]
+    s = dx * ax[0] + dy * ax[1]; n = dx * nx[0] + dy * nx[1]; L = width; h = L / 2
+    if s <= -h:
+        return q
+    th = math.radians(theta_deg); c, si = math.cos(th), math.sin(th)
+    rigid = lambda px, py: (pivot[0] + c * (px - pivot[0]) - si * (py - pivot[1]), pivot[1] + si * (px - pivot[0]) + c * (py - pivot[1]))
+    if s >= h:
+        return rigid(*q)
+    k = th / L; u = s + h; phi = k * u
+
+    def arc(uu):
+        f = k * uu
+        A = uu if abs(k) < 1e-6 else math.sin(f) / k
+        B = 0 if abs(k) < 1e-6 else (1 - math.cos(f)) / k
+        return (pivot[0] - h * ax[0] + A * ax[0] + B * nx[0], pivot[1] - h * ax[1] + A * ax[1] + B * nx[1])
+    cu = arc(u); cp, sp = math.cos(phi), math.sin(phi)
+    nr = (cp * nx[0] - sp * ax[0], cp * nx[1] - sp * ax[1])
+    lx, ly = cu[0] + n * nr[0], cu[1] + n * nr[1]
+    end = arc(L); want = rigid(pivot[0] + h * ax[0], pivot[1] + h * ax[1])
+    w = max(0.0, min(1.0, u / L)); w = w * w * (3 - 2 * w)
+    return (lx - (end[0] - want[0]) * w, ly - (end[1] - want[1]) * w)
