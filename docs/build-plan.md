@@ -125,8 +125,26 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 
 ---
 
+
+## Status (updated as items land)
+| Item | State | Commit |
+|---|---|---|
+| 0.1 Render speed | done: browser per worker, fast capture, frame dedupe, `-tune animation` (116 → 82 ms/frame; 62 when stepped). Static-layer cache still open | 0315203 |
+| 0.2 Renderer benchmark | done: keep Chromium (see the gate) | this file |
+| 0.3 Schemas and golden tests | done | c06754f |
+| 0.4 Incremental re-render | done (6m11s → 32s unchanged) | 0315203 |
+| 0.5 Kokoro backend | done: 54 voices, Spanish film re-voiced | 16cf74b |
+| 0.6 Re-voice legacy films | open: the seven older films still use restricted voices (flagged internal-only) | – |
+| 0.7 / 0.9 Asset manifest and rights | done | f6a03f4 |
+| 0.8 / 0.13 Subtitles, encode profiles, posting package | done | f6a03f4 |
+| 0.10 / 0.12 Research gates and critic loop | done | f77ba03 |
+| 0.11 Measured layout QA | done (advisory until calibrated per style) | 0a1b167 |
+
 ## Decision gates
 - **After 0.2:** keep Chromium unless resvg or ThorVG is at least 2× faster on our frames with near-identical pixels.
+  **Result (November 2026): keep Chromium.** On pip-park frames, resvg-py 0.5 took 148 ms/frame against Chromium's 68 ms
+  (single process, render plus capture), with near-identical pixels (mean difference 0.05). ThorVG was not tested,
+  pending the licence check on its Python binding.
 - **After 0.5:** if Kokoro has no word timestamps, keep Whisper alignment for Kokoro voices; plan 2.1 as the fix.
 - **Before 1.6 and 4.6:** resolve the open licence questions: BodyParts3D, BBC/Pixabay/incompetech, the
   `thorvg-python` binding, sherpa-onnx's espeak code, and the C2PA SDK licence.
