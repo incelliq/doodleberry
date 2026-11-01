@@ -1,0 +1,6 @@
+# generated renders and intermediates (final films are copied out of build/)
+films/*/build/
+out/
+__pycache__/
+*.pyc
+node_modules/

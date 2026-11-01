@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Puppet Loader Demo</title>
+<style>@font-face { font-family: 'Fredoka'; src: url('../../engine/fonts/Fredoka.ttf') format('truetype'); font-weight: 300 700; }
+html, body { margin: 0; background: #000; overflow: hidden; } #stage { width: 1080px; height: 1920px; display: block; } text { font-family: 'Fredoka', sans-serif; }</style></head>
+<body><svg id="stage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920"></svg>
+<script src="../../engine/timeline.js"></script>
+<script src="../../puppet/loader/puppet.js"></script>
+<script src="../../puppet/examples/pip.puppet.js"></script>
+<script>
+// Six poses of the example puppet through the loader: rest, wave, talk, point, worried look, walk step.
+(function () {
+  const P = window.PIP, { blink } = M;
+  const POSES = [
+    ['rest', t => ({ blink: blink(t, 1) })],
+    ['wave', t => ({ angles: { upperarm_R: -150 + Math.sin(t * 6) * 12, forearm_R: -30 + Math.sin(t * 6) * 25 }, brows: 'raised', mouth: 'smile' })],
+    ['talk', t => ({ talk: 0.5 + 0.5 * Math.sin(t * 9), angles: { upperarm_L: 15, forearm_L: -60, head: 4 } })],
+    ['point', t => ({ hand_R_pose: 'point', angles: { upperarm_R: -80, forearm_R: -10 }, look: [1, 0], mouth: 'O' })],
+    ['worried', t => ({ brows: 'worried', mouth: 'frown', look: [-1, 0.5], angles: { head: -6, upperarm_L: 10, upperarm_R: -10, forearm_R: -100, forearm_L: 30 } })],
+    ['walk', t => { const w = Math.sin(t * 5); return { angles: { thigh_L: 20 * w, shin_L: Math.max(0, -25 * w), thigh_R: -20 * w, shin_R: Math.max(0, 25 * w), upperarm_L: -15 * w, upperarm_R: 15 * w, torso: 2 }, offset: [0, -Math.abs(Math.cos(t * 5)) * 8], talk: 0 }; }],
+  ];
+  function frame(f) {
+    const t = f / 30 + 0.3;
+    let s = '<rect width="1080" height="1920" fill="#e6eef3"/>';
+    POSES.forEach(([name, pose], i) => {
+      const x = 200 + (i % 3) * 340, y = 860 + Math.floor(i / 3) * 900;
+      s += `<rect x="${x - 160}" y="${y}" width="320" height="14" fill="#b9c6cf"/>`;
+      s += Puppet.render(P, x, y, { s: 0.72, ...pose(t) });
+      s += `<text x="${x}" y="${y + 70}" font-size="44" font-weight="700" text-anchor="middle" fill="#24160e">${name}</text>`;
+    });
+    return s;
+  }
+  const stage = document.getElementById('stage');
+  window.renderFrame = f => { stage.innerHTML = frame(f); };
+  window.FILM = { width: 1080, height: 1920, fps: 30, frames: 90, ready: false };
+  document.fonts.load('700 40px Fredoka').then(() => { window.FILM.ready = true; });
+})();
+</script></body></html>

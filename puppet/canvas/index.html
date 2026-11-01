@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rig Canvas</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #ffffff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --ok: #3f9a5a; --warn: #c9821c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--ink); height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+  header { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 16px; margin: 0 12px 0 0; }
+  button, select, input[type=text] { font: inherit; padding: 5px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { display: grid; grid-template-columns: 230px 1fr 300px; min-height: 0; }
+  aside { background: var(--panel); border-right: 1px solid var(--line); overflow: auto; padding: 8px; }
+  aside.right { border-right: 0; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+  .slot { display: flex; justify-content: space-between; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+  .slot:hover { background: var(--line); } .slot.active { background: var(--accent); color: #fff; }
+  .slot .tick { color: var(--ok); } .slot.active .tick { color: #fff; }
+  h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 4px 4px; }
+  #stageWrap { display: flex; align-items: center; justify-content: center; min-height: 0; padding: 10px; }
+  #draw { height: 100%; max-height: calc(100vh - 80px); aspect-ratio: 600 / 1000; background: #fffdf8; border: 1px solid var(--line); border-radius: 8px; touch-action: none; }
+  #preview { width: 100%; aspect-ratio: 600 / 1000; background: #fffdf8; border: 1px solid var(--line); border-radius: 8px; }
+  .pal { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sw { display: flex; flex-direction: column; align-items: center; font-size: 11px; cursor: pointer; }
+  .sw input { width: 34px; height: 26px; border: 2px solid var(--line); border-radius: 6px; padding: 0; cursor: pointer; }
+  .sw.active input { border-color: var(--accent); }
+  #lint li { margin: 2px 0; } #lint .missing { color: var(--warn); } #lint .warn { color: var(--accent); }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } aside { max-height: 30vh; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🫐 Rig Canvas</h1>
+  <input id="name" type="text" value="Untitled" size="12" aria-label="Character name">
+  <span class="row" role="group" aria-label="Tool">
+    <button id="t-fill" class="on" title="Draw a closed shape filled with the selected palette slot">Fill shape</button>
+    <button id="t-ink" title="Draw an ink line (pressure sets width)">Ink line</button>
+    <button id="t-pivot" title="Drag joint dots to set pivots">Pivots</button>
+  </span>
+  <label>Width <input id="width" type="range" min="2" max="14" value="5"></label>
+  <button id="undo">Undo</button><button id="clear">Clear slot</button>
+  <button id="onion" class="on" title="Show the rest of the character faintly">Onion</button>
+  <span style="flex:1"></span>
+  <button id="import">Import</button><button id="export">Export .puppet</button>
+  <input id="file" type="file" accept=".json,.puppet" hidden>
+</header>
+<main>
+  <aside id="slots" aria-label="Parts and swap shapes"></aside>
+  <div id="stageWrap"><svg id="draw" viewBox="0 0 600 1000" aria-label="Drawing canvas"></svg></div>
+  <aside class="right">
+    <div class="row"><b>Live preview</b>
+      <select id="action" aria-label="Preview action"><option>idle</option><option>wave</option><option>talk</option><option>walk</option><option>point</option></select></div>
+    <svg id="preview" viewBox="0 0 600 1000" aria-label="Live puppet preview"></svg>
+    <h3>Palette (colour by slot)</h3><div id="pal" class="pal"></div>
+    <h3>Rig check</h3><ul id="lint" style="padding-left:18px;margin:0"></ul>
+  </aside>
+</main>
+<script src="../loader/puppet.js"></script>
+<script src="../templates/humanoid.js"></script>
+<script>
+(function () {
+  const T = window.TEMPLATES.humanoid;
+  const KEY = 'rigcanvas.puppet';
+  let P = null;
+  try { const s = localStorage.getItem(KEY); if (s) P = JSON.parse(s); } catch (e) {}
+  if (!P) P = Puppet.fromTemplate(T, 'Untitled');
+  const $ = id => document.getElementById(id);
+  let tool = 'fill', fillSlot = 'cloth1', active = { kind: 'part', id: 'head' }, onion = true;
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
+
+  // ---------- slots ----------
+  const strokesOf = a => a.kind === 'part' ? P.parts[a.id].strokes : P.swaps[a.id].shapes[a.shape];
+  function slotList() {
+    let h = '<h3>Body parts</h3>';
+    for (const pt of T.parts) { const n = P.parts[pt.id].strokes.length; h += `<div class="slot ${active.kind === 'part' && active.id === pt.id ? 'active' : ''}" data-k="part" data-id="${pt.id}"><span>${pt.label}${pt.required ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; }
+    for (const sw of T.swaps) { h += `<h3>${sw.label}</h3>`; for (const k of sw.shapes) { const n = P.swaps[sw.id].shapes[k].length; h += `<div class="slot ${active.kind === 'swap' && active.id === sw.id && active.shape === k ? 'active' : ''}" data-k="swap" data-id="${sw.id}" data-shape="${k}"><span>${k}${sw.required.includes(k) ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; } }
+    $('slots').innerHTML = h;
+    $('slots').querySelectorAll('.slot').forEach(el => el.onclick = () => { active = el.dataset.k === 'part' ? { kind: 'part', id: el.dataset.id } : { kind: 'swap', id: el.dataset.id, shape: el.dataset.shape }; refresh(); });
+  }
+  function palette() {
+    $('pal').innerHTML = T.palette.map(k => `<label class="sw ${k === fillSlot ? 'active' : ''}" data-k="${k}"><input type="color" value="${P.palette[k]}" aria-label="${k} colour"><span>${k}</span></label>`).join('');
+    $('pal').querySelectorAll('.sw').forEach(el => { const inp = el.querySelector('input');
+      el.onclick = () => { fillSlot = el.dataset.k; palette(); };
+      inp.oninput = () => { P.palette[el.dataset.k] = inp.value; save(); drawStage(); }; });
+  }
+
+  // ---------- drawing ----------
+  const svg = $('draw');
+  const pt = e => { const r = svg.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 600, (e.clientY - r.top) / r.height * 1000, e.pressure || 0.5]; };
+  const smooth = pts => pts.map((p, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)]; return [(a[0] + p[0] * 2 + b[0]) / 4, (a[1] + p[1] * 2 + b[1]) / 4, p[2]]; });
+  const fx = n => n.toFixed(1);
+  function closedPath(pts) { // Catmull-Rom → cubic Béziers, closed
+    const n = pts.length; if (n < 3) return '';
+    let d = `M${fx(pts[0][0])} ${fx(pts[0][1])}`;
+    for (let i = 0; i < n; i++) { const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+      d += ` C${fx(p1[0] + (p2[0] - p0[0]) / 6)} ${fx(p1[1] + (p2[1] - p0[1]) / 6)} ${fx(p2[0] - (p3[0] - p1[0]) / 6)} ${fx(p2[1] - (p3[1] - p1[1]) / 6)} ${fx(p2[0])} ${fx(p2[1])}`; }
+    return d + ' Z';
+  }
+  function inkPath(pts, w) { // pressure-tapered filled outline
+    const n = pts.length; if (n < 2) return '';
+    const L = [], R = [];
+    for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)]; let nx = -(b[1] - a[1]), ny = b[0] - a[0]; const m = Math.hypot(nx, ny) || 1; nx /= m; ny /= m;
+      const taper = Math.min(1, i / 4, (n - 1 - i) / 4) * 0.7 + 0.3, hw = w * (0.35 + 0.65 * pts[i][2]) * taper / 2;
+      L.push([pts[i][0] + nx * hw, pts[i][1] + ny * hw]); R.push([pts[i][0] - nx * hw, pts[i][1] - ny * hw]); }
+    return 'M' + L.map(p => `${fx(p[0])} ${fx(p[1])}`).join(' L') + ' L' + R.reverse().map(p => `${fx(p[0])} ${fx(p[1])}`).join(' L') + ' Z';
+  }
+  let live = null, dragPivot = null;
+  svg.addEventListener('pointerdown', e => {
+    svg.setPointerCapture(e.pointerId);
+    const p = pt(e);
+    if (tool === 'pivot') { let best = null, bd = 30; for (const [id, part] of Object.entries(P.parts)) { const d = Math.hypot(part.pivot[0] - p[0], part.pivot[1] - p[1]); if (d < bd) { bd = d; best = id; } } dragPivot = best; return; }
+    live = [p];
+  });
+  svg.addEventListener('pointermove', e => {
+    const p = pt(e);
+    if (dragPivot) { P.parts[dragPivot].pivot = [Math.round(p[0]), Math.round(p[1])]; drawStage(); return; }
+    if (!live) return; const last = live[live.length - 1]; if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 2) return;
+    live.push(p); drawStage();
+  });
+  svg.addEventListener('pointerup', () => {
+    if (dragPivot) { dragPivot = null; save(); refresh(); return; }
+    if (!live) return; const pts = smooth(live); live = null;
+    if (pts.length > 2) {
+      const w = +$('width').value;
+      const st = tool === 'ink' ? { d: inkPath(pts, w * 1.6), fill: 'ink' } : { d: closedPath(pts.filter((_, i) => i % 2 === 0 || i === pts.length - 1)), fill: fillSlot, stroke: 'ink', width: w };
+      strokesOf(active).push(st); save();
+    }
+    refresh();
+  });
+
+  // ---------- stage ----------
+  function drawStage() {
+    let s = `<g fill="none" stroke="#c9bba8" stroke-width="2" stroke-dasharray="6 6">${T.guide.map(d => `<path d="${d}"/>`).join('')}</g>`;
+    s += `<line x1="0" y1="${T.ground}" x2="600" y2="${T.ground}" stroke="#d8cfc0" stroke-width="2"/>`;
+    if (onion) s += `<g opacity="0.35">${Puppet.render(P, P.parts.hip.pivot[0], P.ground, {})}</g>`;
+    // the active slot at full strength, in rest pose (swap shapes drawn relative to their anchor's rest pose)
+    const strokes = strokesOf(active);
+    for (const st of strokes) { const fill = st.fill && st.fill[0] !== '#' && st.fill !== 'none' ? P.palette[st.fill] : st.fill; const line = st.stroke ? (P.palette[st.stroke] || st.stroke) : 'none';
+      s += `<path d="${st.d}" fill="${fill}" stroke="${line}" stroke-width="${st.width || 0}" stroke-linejoin="round"/>`; }
+    if (live && live.length > 1) s += `<path d="M${live.map(p => `${fx(p[0])} ${fx(p[1])}`).join(' L')}" fill="none" stroke="${tool === 'ink' ? P.palette.ink : P.palette[fillSlot]}" stroke-width="${tool === 'ink' ? $('width').value * 1.4 : 3}" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>`;
+    // joints: the active part's pivot is highlighted
+    for (const [id, part] of Object.entries(P.parts)) { const on = active.kind === 'part' && active.id === id;
+      s += `<circle cx="${part.pivot[0]}" cy="${part.pivot[1]}" r="${on ? 9 : 6}" fill="${on ? '#e8743a' : '#fff'}" stroke="#24160e" stroke-width="2"><title>${id}</title></circle>`; }
+    svg.innerHTML = s;
+  }
+  function refresh() { slotList(); drawStage(); const issues = Puppet.lint(P, T); $('lint').innerHTML = issues.length ? issues.slice(0, 14).map(i => `<li class="${i.level}">${i.msg}</li>`).join('') + (issues.length > 14 ? `<li>…and ${issues.length - 14} more</li>` : '') : '<li style="color:var(--ok)">Ready to animate ✓</li>'; }
+
+  // ---------- live preview ----------
+  const ACTIONS = {
+    idle: t => ({ angles: { head: Math.sin(t * 1.3) * 3, torso: Math.sin(t * 1.1) * 1 }, blink: (t % 3.3) < 0.15 ? 1 : 0, look: [Math.sin(t * 0.7), 0] }),
+    wave: t => ({ angles: { upperarm_R: -150 + Math.sin(t * 6) * 12, forearm_R: -30 + Math.sin(t * 6) * 25 }, mouth: 'smile', brows: 'raised' }),
+    talk: t => ({ talk: Math.max(0, Math.sin(t * 9) * 0.6 + Math.sin(t * 13) * 0.4), angles: { upperarm_L: 12 + Math.sin(t * 2) * 6, forearm_L: -50, head: Math.sin(t * 3) * 3 }, blink: (t % 2.9) < 0.15 ? 1 : 0 }),
+    walk: t => { const w = Math.sin(t * 5); return { angles: { thigh_L: 22 * w, shin_L: Math.max(0, -28 * w), thigh_R: -22 * w, shin_R: Math.max(0, 28 * w), upperarm_L: -16 * w, upperarm_R: 16 * w, forearm_L: -10, forearm_R: -10 }, offset: [0, -Math.abs(Math.cos(t * 5)) * 10] }; },
+    point: t => ({ hand_R_pose: 'point', angles: { upperarm_R: -80, forearm_R: -8 }, look: [1, 0], mouth: 'O' }),
+  };
+  function tick(ms) { const t = ms / 1000; $('preview').innerHTML = `<line x1="0" y1="${P.ground}" x2="600" y2="${P.ground}" stroke="#d8cfc0" stroke-width="3"/>` + Puppet.render(P, 300, P.ground, ACTIONS[$('action').value](t)); requestAnimationFrame(tick); }
+
+  // ---------- toolbar ----------
+  const setTool = t => { tool = t; ['fill', 'ink', 'pivot'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); };
+  $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-pivot').onclick = () => setTool('pivot');
+  $('undo').onclick = () => { strokesOf(active).pop(); save(); refresh(); };
+  $('clear').onclick = () => { if (confirm('Clear everything drawn in this slot?')) { strokesOf(active).length = 0; save(); refresh(); } };
+  $('onion').onclick = () => { onion = !onion; $('onion').classList.toggle('on', onion); drawStage(); };
+  $('name').value = P.name; $('name').oninput = () => { P.name = $('name').value; save(); };
+  $('export').onclick = () => { P.meta = { ...(P.meta || {}), created: new Date().toISOString().slice(0, 10) };
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(P, null, 1)], { type: 'application/json' })); a.download = (P.name || 'puppet').replace(/\W+/g, '_') + '.puppet.json'; a.click(); };
+  $('import').onclick = () => $('file').click();
+  $('file').onchange = async () => { const f = $('file').files[0]; if (!f) return; try { P = JSON.parse(await f.text()); $('name').value = P.name || ''; save(); palette(); refresh(); } catch (e) { alert('Not a puppet file'); } };
+
+  palette(); refresh(); requestAnimationFrame(tick);
+  window.RIG = { get puppet() { return P; }, load(p) { P = p; $('name').value = P.name || ''; palette(); refresh(); } }; // handle for scripted tests
+})();
+</script>
+</body>
+</html>
