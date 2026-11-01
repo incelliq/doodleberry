@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-11-01T11:51:58+00:00",
+  "round": 1,
+  "role": "fact_gate",
+  "verdict": "cleared",
+  "notes": "Builder self-check, not a fresh reviewer: F01-F03 match the measurements in docs/build-plan.md (Status 0.1) and docs/dbe.md (Render speed). Internal engine demo.",
+  "metrics": {}
+ }
+]

@@ -1,0 +1,30 @@
+{
+ "sources": {
+  "plan": {
+   "url": "docs/build-plan.md (Status, 0.1) and docs/dbe.md (Render speed): measured on pip-park shot 1, 171 frames, 4 CPUs"
+  }
+ },
+ "facts": [
+  {
+   "id": "F01",
+   "claim": "116 ms per frame before the speed work",
+   "src": "plan",
+   "source_sentence": "116 \u2192 82 ms/frame; 62 when stepped",
+   "single_source_reason": "the studio's own measurement; the source is the measurement log"
+  },
+  {
+   "id": "F02",
+   "claim": "82 ms per frame with one browser per worker",
+   "src": "plan",
+   "source_sentence": "116 \u2192 82 ms/frame",
+   "single_source_reason": "the studio's own measurement"
+  },
+  {
+   "id": "F03",
+   "claim": "62 ms per frame when animated on 12s (frame reuse)",
+   "src": "plan",
+   "source_sentence": "62 ms/frame when stepped",
+   "single_source_reason": "the studio's own measurement"
+  }
+ ]
+}

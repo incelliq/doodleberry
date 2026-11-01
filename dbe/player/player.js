@@ -30,11 +30,68 @@
     return `<defs><filter id="boil" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="${b.freq || 0.022}" numOctaves="2" seed="${k + 1}"/>` +
       `<feDisplacementMap in="SourceGraphic" scale="${b.amount ?? 5}" xChannelSelector="R" yChannelSelector="G"/></filter></defs>`;
   }
-  function overlay(o) {
+  function overlay(o, t) {
     if (o.type === 'sign') { const fs = o.size || 56, w = o.text.length * fs * 0.52 + 50, h = fs * 1.5, x = o.x, y = o.y;
       return `<g stroke="${INK}" stroke-width="4" stroke-linecap="round" fill="none"><path d="M${x - w * 0.32} ${y - h * 1.1} L${x - w * 0.28} ${y}"/><path d="M${x + w * 0.32} ${y - h * 1.1} L${x + w * 0.28} ${y}"/>` +
         `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" rx="6" fill="#f6f5ef"/></g><text x="${x}" y="${y + h * 0.7}" font-family="${HAND}" font-size="${fs}" text-anchor="middle" fill="${INK}">${esc(o.text)}</text>`; }
     if (o.type === 'text') return `<text x="${o.x}" y="${o.y}" font-family="${HAND}" font-size="${o.size || 58}" text-anchor="middle" fill="${o.color || '#707a84'}">${esc(o.text)}</text>`;
+    return explainer(o, t);
+  }
+
+  // ---------- explainer scene library (plan 1.13): every element is a pure function of t ----------
+  const BODY = "'Fredoka',sans-serif", MONO = "'Atkinson Mono',monospace";
+  const ease = u => (u = Math.min(1, Math.max(0, u)), u * u * (3 - 2 * u));
+  const since = (o, t) => t - (o.start ?? 0);
+  const fmt = (v, d = 0) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const dataOf = o => o.data || (o.data_from ? String(o.data_from).split('.').reduce((a, k) => (a || {})[k], window.DATA || {}) : []) || [];
+  const plate = (x, y, w, h, fill = '#fbfaf5') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${fill}" stroke="${INK}" stroke-width="3"/>`;
+  function wrapText(text, maxChars) { const out = []; let cur = ''; for (const w of String(text).split(/\s+/)) { if ((cur + ' ' + w).trim().length > maxChars && cur) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); } if (cur) out.push(cur); return out; }
+  function explainer(o, t) {
+    const u = ease(since(o, t) / 0.35), slide = (1 - u) * 40, op = u.toFixed(3);
+    const fsT = o.title_size || (H > W ? 64 : 56), fsB = o.size || (H > W ? 42 : 36);
+    if (o.type === 'card') { // a definition card: term in bold, plain-language meaning below
+      const w = o.w || (H > W ? 860 : 900), lines = wrapText(o.body || '', Math.floor(w / (fsB * 0.52)));
+      const h = fsT * 1.6 + lines.length * fsB * 1.25 + 40, x = o.x ?? (W - w) / 2, y = (o.y ?? H * 0.2) + slide;
+      return `<g opacity="${op}">${plate(x, y, w, h)}<text x="${x + 36}" y="${y + fsT * 1.15}" font-family="${BODY}" font-weight="700" font-size="${fsT}" fill="${o.color || '#1a62c2'}">${esc(o.title || '')}</text>` +
+        lines.map((l, i) => `<text x="${x + 36}" y="${y + fsT * 1.6 + 20 + (i + 0.8) * fsB * 1.25}" font-family="${BODY}" font-size="${fsB}" fill="${INK}">${esc(l)}</text>`).join('') + `</g>`;
+    }
+    if (o.type === 'counter') { // a number that counts up to its value, with its label
+      const v = (o.from ?? 0) + ((o.to ?? 0) - (o.from ?? 0)) * ease(since(o, t) / (o.duration ?? 1.2)), fs = o.size || (H > W ? 150 : 120);
+      return `<g opacity="${op}"><text x="${o.x ?? W / 2}" y="${o.y ?? H * 0.4}" text-anchor="middle" font-family="${BODY}" font-weight="700" font-size="${fs}" fill="${o.color || INK}">${esc((o.prefix || '') + fmt(v, o.decimals || 0) + (o.suffix || ''))}</text>` +
+        (o.label ? `<text x="${o.x ?? W / 2}" y="${(o.y ?? H * 0.4) + fsB * 1.6}" text-anchor="middle" font-family="${BODY}" font-size="${fsB}" fill="#4a4e57">${esc(o.label)}</text>` : '') + `</g>`;
+    }
+    if (o.type === 'console') { // typed terminal lines; lines starting with "!" are output in the error colour
+      const fs = o.size || (H > W ? 34 : 30), w = o.w || (H > W ? 900 : 1100), lh = fs * 1.4, x = o.x ?? (W - w) / 2, y = o.y ?? H * 0.3, cps = o.cps || 28;
+      let budget = Math.max(0, since(o, t)) * cps, rowsOut = '';
+      (o.lines || []).forEach((ln, i) => { const isOut = ln.startsWith('!') || ln.startsWith('>'); const txt = isOut ? ln.slice(1) : ln;
+        const n = isOut ? (budget > 0 ? txt.length : 0) : Math.min(txt.length, Math.floor(budget)); budget -= isOut ? 0 : txt.length + 6;
+        if (n > 0 || (!isOut && budget > -6)) rowsOut += `<text x="${x + 28}" y="${y + 44 + (i + 0.7) * lh}" font-family="${MONO}" font-size="${fs}" fill="${ln.startsWith('!') ? '#b8560f' : isOut ? '#9fb0c0' : '#e8ecef'}"${ln.startsWith('!') ? ' font-weight="700"' : ''}>${esc((isOut ? '' : '$ ') + txt.slice(0, n))}</text>`; });
+      return `<g opacity="${op}"><rect x="${x}" y="${y}" width="${w}" height="${44 + (o.lines || []).length * lh + 24}" rx="12" fill="#1d201a"/>` +
+        `<circle cx="${x + 26}" cy="${y + 22}" r="7" fill="#e0584a"/><circle cx="${x + 48}" cy="${y + 22}" r="7" fill="#e8b33a"/><circle cx="${x + 70}" cy="${y + 22}" r="7" fill="#5aae5a"/>${rowsOut}</g>`;
+    }
+    if (o.type === 'bars') { // a bar chart from data ([[label, value], ...] or data_from: "key.path" in data.json)
+      const data = dataOf(o), w = o.w || (H > W ? 900 : 1300), h = o.h || (H > W ? 700 : 560), x = o.x ?? (W - w) / 2, y = o.y ?? H * 0.25;
+      const max = o.max || Math.max(...data.map(d => d[1]), 1), n = data.length || 1, bw = w / n * 0.62, g = ease(since(o, t) / (o.duration ?? 1.0));
+      let svg = `<g opacity="${op}"><path d="M${x} ${y + h} L${x + w} ${y + h}" stroke="${INK}" stroke-width="3"/>`;
+      data.forEach(([lab, v], i) => { const bh = (v / max) * (h - 90) * g, bx = x + (i + 0.19) * (w / n);
+        svg += `<rect x="${bx}" y="${y + h - bh}" width="${bw}" height="${bh}" fill="${(o.colors || [])[i] || o.color || '#1a62c2'}" stroke="${INK}" stroke-width="2"/>` +
+          `<text x="${bx + bw / 2}" y="${y + h + fsB * 1.1}" text-anchor="middle" font-family="${BODY}" font-size="${fsB * 0.8}" fill="${INK}">${esc(lab)}</text>` +
+          (g > 0.98 ? `<text x="${bx + bw / 2}" y="${y + h - bh - 14}" text-anchor="middle" font-family="${BODY}" font-weight="700" font-size="${fsB * 0.8}" fill="${INK}">${esc((o.prefix || '') + fmt(v, o.decimals || 0) + (o.unit || ''))}</text>` : ''); });
+      return svg + (o.title ? `<text x="${x + 12}" y="${y - 20}" font-family="${BODY}" font-weight="700" font-size="${fsB}" fill="${INK}">${esc(o.title)}</text>` : '') + `</g>`;
+    }
+    if (o.type === 'quote') {
+      const w = o.w || (H > W ? 880 : 1200), lines = wrapText(o.text || '', Math.floor(w / (fsB * 0.5))), x = o.x ?? (W - w) / 2, y = (o.y ?? H * 0.25) + slide, h = lines.length * fsB * 1.3 + (o.by ? fsB * 1.6 : 0) + 60;
+      return `<g opacity="${op}">${plate(x, y, w, h, '#fffdf4')}` + lines.map((l, i) => `<text x="${x + 40}" y="${y + 50 + (i + 0.6) * fsB * 1.3}" font-family="${BODY}" font-size="${fsB}" font-style="italic" fill="${INK}">${esc((i ? '' : '“') + l + (i === lines.length - 1 ? '”' : ''))}</text>`).join('') +
+        (o.by ? `<text x="${x + w - 40}" y="${y + h - 30}" text-anchor="end" font-family="${MONO}" font-size="${Math.max(H > W ? 30 : 24, fsB * 0.7)}" fill="#4a4e57">${esc('— ' + o.by)}</text>` : '') + `</g>`;
+    }
+    if (o.type === 'citation') { // small mono source line on a soft plate (inside the safe area by default)
+      const fs = o.size || (H > W ? 30 : 24), w = String(o.text).length * fs * 0.6 + 40, x = o.x ?? (H > W ? 64 : W * 0.05), y = o.y ?? (H > W ? 1490 : H * 0.88);
+      return `<g opacity="${op}"><rect x="${x}" y="${y}" width="${w}" height="${fs * 1.7}" rx="8" fill="#f4f3ee" fill-opacity="0.92"/><text x="${x + 20}" y="${y + fs * 1.15}" font-family="${MONO}" font-size="${fs}" fill="#4a4e57">${esc(o.text)}</text></g>`;
+    }
+    if (o.type === 'wordmark') {
+      const fs = o.size || (H > W ? 40 : 34), x = o.x ?? (H > W ? 80 : W * 0.05 + 12), y = o.y ?? (H > W ? 262 : H * 0.1);  // inset: glyph bearings stay inside the safe area
+      return `<text x="${x}" y="${y}" font-family="${BODY}" font-weight="700" font-size="${fs}" fill="${o.color || INK}">${esc(o.text)}<tspan fill="${o.accent || '#1a62c2'}">${esc(o.accent_text || '')}</tspan></text>`;
+    }
     return '';
   }
   // rows for a bubble: explicit \n wins, else greedy wrap
@@ -49,15 +106,17 @@
     const step = 1 / 12, f = Math.floor(t / step), f0 = Math.floor(b.t0 / step), f1 = Math.floor(b.t1 / step);
     if (f < f0 || f > f1) return '';
     const i = f - f0, j = f1 - f, pop = i === 0 ? 0.55 : i === 1 ? 1.12 : j === 0 ? 0.5 : j === 1 ? 0.85 : 1;
-    const style = b.style || 'say', base = { say: 72, shout: 118, whisper: 50 }[style] || 72;
+    const style = b.style || 'say', base = ({ say: 72, shout: 118, whisper: 50 }[style] || 72) * Math.min(1, H / 1920 * 1.4);  // landscape: smaller type, still >= the 16:9 minimum
     const R = rows(b.text, { say: 13, shout: 9, whisper: 18 }[style] || 13), lh = base * 1.08;
     const bw = Math.max(...R.map(r => r.length)) * base * 0.5, bh = lh * R.length;
     let rx = (bw / 2 + 60) * pop, ry = (bh / 2 + 46) * pop; if (style === 'shout') { rx *= 1.2; ry *= 1.3; }
     // placement: above the speaker toward the frame centre, then the other side, then higher or lower, avoiding
     // signs, overlays and earlier bubbles; inside the platform-safe area where possible
-    const side = anchor[0] < W / 2 ? 1 : -1, clampX = x => Math.min(Math.max(x, rx + 70), W - rx - 130), clampY = y => Math.max(y, ry + 210);
+    const SAFE = H > W ? [64, 200, 960] : [W * 0.05, H * 0.05, W * 0.95];  // platform-safe text area (9:16 rail and top bar; 16:9 title-safe)
+    const side = anchor[0] < W / 2 ? 1 : -1, clampX = x => Math.min(Math.max(x, rx + SAFE[0] + 6), SAFE[2] - rx - 6), clampY = y => Math.max(y, ry + SAFE[1] + 10);
     const cands = [];
-    for (const dy of [0, -80, 60, -160]) for (const dx of [90, -90, 230, -230, 0]) cands.push([clampX(anchor[0] + dx * side), clampY(anchor[1] - 70 - ry + dy)]);
+    const u = H / 1920 * (H > W ? 1 : 1.6);
+    for (const dy of [0, -80, 60, -160].map(v => v * u)) for (const dx of [90, -90, 230, -230, 330, -330, 0].map(v => v * (H > W ? 1 : 2))) cands.push([clampX(anchor[0] + dx * side), clampY(anchor[1] - 70 - ry + dy)]);
     const overlap = (a, r) => Math.max(0, Math.min(a[2], r[2]) - Math.max(a[0], r[0])) * Math.max(0, Math.min(a[3], r[3]) - Math.max(a[1], r[1]));
     const cost = ([x, y], k) => AVOID.reduce((acc, r) => acc + overlap([x - rx, y - ry, x + rx, y + ry], r), 0) + k * 40;  // prefer earlier (closer) spots
     let [cx, cy] = cands.map((c, k) => [c, cost(c, k)]).sort((a, b) => a[1] - b[1])[0][0];
@@ -89,7 +148,7 @@
   function bubblesFor(sh, t, heads) {
     const out = []; let idx = 0;
     AVOID = (sh.overlays || []).filter(o => (o.start == null || t >= o.start) && (o.end == null || t <= o.end)).map(overlayBox).filter(Boolean);
-    for (const a of Object.values(heads)) AVOID.push([a[0] - 150, a[1] - 10, a[0] + 150, a[1] + H * 0.22]);  // keep bubbles off the characters' heads and bodies
+    for (const a of Object.values(heads)) AVOID.push([a[0] - 150 * H / 1920 * (H > W ? 1 : 1.5), a[1] - 10, a[0] + 150 * H / 1920 * (H > W ? 1 : 1.5), a[1] + H * 0.22]);  // keep bubbles off the characters' heads and bodies
     if (sh.bubbles !== false) for (const ln of T.lines || []) { // voiced lines become bubbles for speakers in the shot
       const who = heads[ln.speaker]; if (!who || !sh.bubbles) continue;
       const sl = (SCRIPT.lines || []).find(l => l.id === ln.id) || {};
@@ -103,25 +162,27 @@
     const sh = shotAt(t), st = sh.style || {};
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
-    let world = set.draw(tq, sh.set_opts || {}), ink = '';
+    let world = set.draw(tq, sh.set_opts || {}, W, H), ink = '';
     const heads = {};
     for (const c of sh.cast || []) {
       const p = PUP[c.puppet]; if (!p) continue;
       if (bgOnly) { // the set plate for other renderers keeps each character's ground shadow
-        const [x, y, s] = placeAt(c.place || { x: W / 2, y: set.floor }, tq);
+        const [x, y, s] = placeAt(c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tq);
         if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`; continue;
       }
       const tl = { ...(c.timeline || {}) }, L = libFor(p);
       if (tl.visemes_from) { tl.visemes = (T.visemes || {})[tl.visemes_from] || []; delete tl.visemes_from; }
       const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
-      const [x, y, s, flip] = placeAt(c.place || { x: W / 2, y: set.floor }, tq);
+      const [x, y, s, flip] = placeAt(c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tq);
       if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`;
       ink += Puppet.render(p, x, y, { ...pose, s, flip });
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
-    if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(overlay).join('') + bubblesFor(sh, tq, heads); }
+    if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('') + bubblesFor(sh, tq, heads); }
     world += st.boil ? `<g filter="url(#boil)">${ink}</g>` : ink;
     let svg = boilDefs(st, t) + world;
+    if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)
+      svg = boilDefs(st, t) + `<g transform="translate(${W / 2 + 6 * Math.cos(a)} ${H / 2 + 6 * Math.sin(a)}) scale(${z.toFixed(4)}) translate(${-W / 2} ${-H / 2})">${world}</g>`; }
     if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
@@ -135,5 +196,5 @@
   window.renderFrame = f => window.frameAtTime(t0 + f / FPS);
   window.FRAMES = Math.round((t1 - t0) * FPS);
   window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
-  (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
+  (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
 })();

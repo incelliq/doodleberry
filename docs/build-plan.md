@@ -142,6 +142,8 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.8 Ink import and raster parts | core done: `puppet.from_ink`, raster parts in the SVG renderer. Open: auto cut and pivot suggestions, multi-character pages, raster parts in other renderers | this commit |
 | 1.9 Hand-made look | done: boil, stepped timing, paper set, ink signs and overlays | this commit |
 | 1.11 Doodle template | done: template and clip library (hop, wave, tilt, wag, talk, lean, shake) | this commit |
+| 1.12 Native dual-aspect | done: `film.render aspect=16:9 / 1:1`, auto re-staging plus overrides, landscape set designs, aspect-aware bubbles, captions and QA | this commit |
+| 1.13 Explainer scene library | done: card, counter, console, data-bound bars, quote, citation, wordmark, camera float | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

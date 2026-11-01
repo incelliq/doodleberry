@@ -4,3 +4,5 @@ out/
 __pycache__/
 *.pyc
 node_modules/
+# derived aspect-ratio cuts (films/<name>--16x9), rebuilt by film.render aspect=...
+films/*--*/

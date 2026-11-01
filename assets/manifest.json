@@ -73,6 +73,18 @@
    "used_by": [
     "bubbles"
    ]
+  },
+  {
+   "path": "engine/fonts/AtkinsonMono-400.woff2",
+   "kind": "font",
+   "name": "Atkinson Hyperlegible Mono 400 (latin, woff2)",
+   "license": "OFL-1.1",
+   "license_file": "engine/fonts/AtkinsonMono-OFL.txt",
+   "source": "npm @fontsource/atkinson-hyperlegible-mono 5.3.0 (Google Fonts)",
+   "attribution": "Atkinson Hyperlegible Mono, The Atkinson Hyperlegible Mono Project Authors (SIL Open Font License 1.1)",
+   "used_by": [
+    "explainer"
+   ]
   }
  ],
  "generated": [

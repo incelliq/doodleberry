@@ -76,7 +76,7 @@ def main():
     a = ap.parse_args()
     v = a.film / a.video
     p = probe(v)
-    d = frame_diffs(v)
+    d = frame_diffs(v, *((192, 108) if p['width'] > p['height'] else (108, 192)))  # same pixel density in any aspect
     frozen = frozen_stretches(d, p['fps'])
     I, tp = loudness(v)
     timing = json.loads((a.film / 'timing.json').read_text())
@@ -86,6 +86,8 @@ def main():
     untraced = [l['id'] for l in timing['lines'] if 'fact' in l and l['fact'] is not None and any(c not in facts for c in cites(l))]
     untraced += [l['id'] for l in timing['lines'] if 'fact' not in l]
     frozen_total = sum(f['len'] for f in frozen)
+    shots_p = a.film / 'shots.json'  # the film's own frame size (9:16, 16:9 or 1:1); legacy films are 1080x1920
+    want = json.loads(shots_p.read_text()).get('size', [1080, 1920]) if shots_p.exists() else [1080, 1920]
     report = {
         **p,
         'frozen_stretches_over_0.5s': frozen,
@@ -93,7 +95,7 @@ def main():
         'loudness_lufs': I, 'true_peak_dbtp': tp,
         'untraced_lines': untraced,
         'checks': {
-            'size_1080x1920': (p['width'], p['height']) == (1080, 1920),
+            f'size_{want[0]}x{want[1]}': (p['width'], p['height']) == tuple(want),
             'fps_30': abs(p['fps'] - 30) < 0.01,
             'no_still_over_0.5s': not frozen,
             'loudness_-14±1': abs(I + 14) <= 1,

@@ -95,6 +95,35 @@ environment variables below).
   - `extra_bubbles: [{who, text, start, end, slow}]` adds silent bubbles.
 - Fonts: Fredoka (captions) and Patrick Hand (bubbles, signs), both OFL.
 
+## Aspect ratios (one film, several native cuts)
+- `film.render {"name": ..., "aspect": "16:9"}` (or "1:1") renders the same film for another frame: same script,
+  voice, timings and acting.
+- Re-staging recomposes each shot: characters keep their share of the frame height (1.3× in wide frames) and spread
+  wider; off-screen entrances stay off-screen; overlays and camera keys are mapped too.
+- Every set has its own landscape design rather than a crop.
+- Fix any shot by hand in shots.json:
+  `"aspects": {"16:9": {"shots": {"s1": {"cast": [{"place": {...}}], "overlays": [...]}}}}`
+  (cast entries merge by index).
+- Output goes to `build/final_16x9.mp4` and `captions_16x9.srt`. The derived film folder `films/<name>--16x9/` is
+  rebuilt each time and is not committed.
+- Bubbles, captions and QA use the right safe area for each aspect.
+
+## Explainer scene library (overlays)
+Timed with `start` and `end`, line-relative allowed. Sizes default to the aspect's type minimums.
+- **`card`:** `{title, body, x, y, w}`, a definition card.
+- **`counter`:** `{from, to, prefix, suffix, decimals, label, duration}`, a number counting up.
+- **`console`:** `{lines, cps}`, typed commands. Lines starting with `>` are output and `!` errors.
+- **`bars`:** `{data | data_from: "key" in the film's data.json, unit, title, colors, max}`, an animated bar chart
+  whose numbers come from data.
+- **`quote`:** `{text, by}`.
+- **`citation`:** `{text}`, small mono on a soft plate, inside the safe area.
+- **`wordmark`:** `{text, accent_text, accent}`.
+- **Signs and text:** as before.
+- **`style.float: true`:** a slow camera drift and breath, so no frame is dead.
+
+Fonts: Fredoka (body), Atkinson Hyperlegible Mono (consoles, citations), Patrick Hand (bubbles, signs), all OFL.
+`films/explainer-demo` uses all of these and passes the research gate.
+
 ## Render speed
 `tools/three/run3d.mjs` runs one browser process per CPU on contiguous frame ranges, uses Chrome's fast capture, and
 encodes with `-tune animation`. It hashes each frame's SVG and links repeats instead of capturing them. Shots animated on

@@ -1,0 +1,138 @@
+{
+ "title": "How fast is a Doodleberry frame?",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "brief": {
+  "title": "How fast is one cartoon frame?",
+  "takeaway": "One cartoon frame went from 116 to 62 milliseconds with three render tricks.",
+  "hashtags": [
+   "animation",
+   "opensource",
+   "rendering"
+  ],
+  "cover_text": "116 \u2192 62 ms"
+ },
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "plain",
+   "set_opts": {
+    "color": "#eef2f5",
+    "floor": "#dde3e8"
+   },
+   "start": 0,
+   "end": 15.476,
+   "start_line": "hook",
+   "end_line": "after",
+   "tail": 1.6,
+   "style": {
+    "float": true
+   },
+   "overlays": [
+    {
+     "type": "wordmark",
+     "text": "doodle",
+     "accent_text": "berry",
+     "accent": "#c43b6b"
+    },
+    {
+     "type": "card",
+     "title": "Frame-pure",
+     "body": "Each frame is computed from its number alone, so any frame can be rendered, cached or reused on its own.",
+     "start": 0.3,
+     "end": "hook.end+0.8",
+     "y": 330
+    },
+    {
+     "type": "console",
+     "lines": [
+      "python -m dbe film.render '{\"name\": \"pip-park\"}'",
+      ">171 frames (102 reused) in 10.5 s"
+     ],
+     "start": "before.start-0.2",
+     "end": "before.end+0.3",
+     "y": 330
+    },
+    {
+     "type": "counter",
+     "from": 0,
+     "to": 116,
+     "suffix": " ms",
+     "label": "per frame, before",
+     "start": "before.start+0.3",
+     "end": "before.end+0.3",
+     "y": 900,
+     "duration": 0.7
+    },
+    {
+     "type": "bars",
+     "data_from": "render_ms",
+     "unit": " ms",
+     "title": "Render time per frame",
+     "colors": [
+      "#9aa4ad",
+      "#1a62c2",
+      "#c43b6b"
+     ],
+     "start": "after.start-0.1",
+     "y": 360,
+     "h": 600,
+     "x": 80,
+     "w": 700
+    },
+    {
+     "type": "citation",
+     "text": "Measured on pip-park, 171 frames, 4 CPUs",
+     "start": "before.start"
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "puppet/examples/pip.puppet.json",
+     "speaker": "pip",
+     "place": {
+      "x": 880,
+      "y": 1500,
+      "s": 0.62
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": "hook.start",
+        "additive": true
+       },
+       {
+        "clip": "point_R",
+        "start": "after.start+0.2",
+        "end": "after.start+2.4",
+        "weight": 2
+       }
+      ],
+      "visemes_from": "pip",
+      "look": [
+       [
+        0,
+        [
+         -1,
+         -0.2
+        ]
+       ]
+      ],
+      "springs": true
+     }
+    }
+   ]
+  }
+ ]
+}

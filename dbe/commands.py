@@ -337,11 +337,11 @@ def _player_page(name):
     (d / "build").mkdir(exist_ok=True)
     tags = "".join(f'<script>window.PUPPETS=window.PUPPETS||{{}};window.PUPPETS[{json.dumps(p)}]={(ROOT / p).read_text()};</script>' for p in puppets)
     clip_tags = "".join(f'<script src="../../../puppet/clips/{c.name}"></script>' for c in sorted((ROOT / "puppet" / "clips").glob("*.js")))
-    page = f"""<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
+    page = f"""<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}@font-face{{font-family:'Atkinson Mono';src:url('../../../engine/fonts/AtkinsonMono-400.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
 {clip_tags}<script src="../../../sets/sets.js"></script>{tags}
-<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};</script>
+<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     (d / "build" / "player.html").write_text(page)
     return d / "build" / "player.html"
@@ -462,9 +462,21 @@ def _shot_hash(name, sh, s):
     return h.hexdigest()[:20]
 
 
-@command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default: only shots whose inputs changed", None))
-def film_render(name, only=None):
+@command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default: only shots whose inputs changed", None),
+         aspect=("string", "render another aspect ratio from the same film: 16:9 | 9:16 | 1:1 (default: the film's own)", ""))
+def film_render(name, only=None, aspect=""):
     """Render every shot with its renderer, assemble, score and mix the audio, mux, and run QA."""
+    if aspect:
+        W0, H0 = _shots(name, resolve=False).get("size", [1080, 1920])
+        if ASPECT_SIZE.get(aspect) != [W0, H0]:
+            if aspect not in ASPECT_SIZE:
+                raise ValueError(f"aspect must be one of {list(ASPECT_SIZE)}")
+            dname, tag = _derive_aspect(name, aspect)
+            r = film_render(dname, only)
+            for f, to in (("final.mp4", f"final_{tag}.mp4"), ("captions.srt", f"captions_{tag}.srt"), ("captions.vtt", f"captions_{tag}.vtt")):
+                if (FILMS / dname / "build" / f).exists():
+                    shutil.copy(FILMS / dname / "build" / f, FILMS / name / "build" / to)
+            return {**r, "aspect": aspect, "final": f"films/{name}/build/final_{tag}.mp4", "derived_film": dname}
     _require_valid(name)
     d = _film(name); s = _shots(name); fps = s.get("fps", 30)
     done = []
@@ -842,3 +854,73 @@ def puppet_from_ink(spec, out):
     r = _run([PY, "dbe/ink.py", str(sp), str(op)])
     lint = puppet_lint(str(op.relative_to(ROOT)))
     return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]) if r else None, "lint": lint.get("issues")}
+
+
+# ---------------- aspect ratios (plan 1.12) ----------------
+SET_FLOOR = {"plain": 1500, "park": 1500, "clinic": 1500, "paper": 1440, "cutaway": 1100}
+SET_FLOOR_FRAC = {"plain": 0.8, "park": 0.8, "clinic": 0.8, "paper": 0.8, "cutaway": 0.55}
+ASPECT_SIZE = {"16:9": [1920, 1080], "9:16": [1080, 1920], "1:1": [1080, 1080]}
+
+
+def _floor_of(set_name, W, H):
+    return SET_FLOOR.get(set_name, 1500) if H >= W and (W, H) == (1080, 1920) else round(H * SET_FLOOR_FRAC.get(set_name, 0.8))
+
+
+def restage(s, aspect):
+    """Re-block a portrait film for another frame: same shots, timings and acting; placements, overlays and camera
+    recomposed (characters keep their share of the frame height and spread wider; off-screen entrances stay
+    off-screen). shots.json "aspects": {"16:9": {"shots": {id: {...}}}} overrides any shot (cast entries merge by
+    index)."""
+    import copy
+    Wo, Ho = s.get("size", [1080, 1920]); Wn, Hn = ASPECT_SIZE[aspect]
+    k = Hn / Ho; spread = 1.6 if Wn > Wo else 1.0
+    grow = 1.3 if Wn > Hn else 1.0  # a wide frame has room: characters take a bigger share of its height
+    out = copy.deepcopy(s); out["size"] = [Wn, Hn]
+    out.pop("aspects", None)
+    mapx = lambda x: x * k if x < 0 else (Wn + (x - Wo) * k if x > Wo else Wn / 2 + (x - Wo / 2) * k * spread)
+    for sh in out["shots"]:
+        fo, fn = _floor_of(sh.get("set", "plain"), Wo, Ho), _floor_of(sh.get("set", "plain"), Wn, Hn)
+        def place(p):
+            return {**p, "x": round(mapx(p["x"]), 1), "y": round(fn + (p["y"] - fo) * k, 1), "s": round(p.get("s", 1) * k * grow, 4)}
+        for c in sh.get("cast", []):
+            pl = c.get("place")
+            if isinstance(pl, list):
+                c["place"] = [[t, place(p)] for t, p in pl]
+            elif isinstance(pl, dict):
+                c["place"] = place(pl)
+        for o in sh.get("overlays", []):
+            if "x" in o:
+                o["x"] = round(o["x"] / Wo * Wn, 1)
+            if "y" in o:
+                o["y"] = round(o["y"] * k, 1) if o.get("type") != "sign" else round(max(70, o["y"] * k), 1)
+            if "size" in o:
+                o["size"] = round(o["size"] * 0.8)
+        if sh.get("camera"):
+            sh["camera"] = [[t, [round(mapx(c[0]), 1), round(c[1] * k, 1), c[2]]] for t, c in sh["camera"]]
+    for sid, ov in ((s.get("aspects") or {}).get(aspect, {}).get("shots") or {}).items():
+        sh = next((x for x in out["shots"] if x["id"] == sid), None)
+        if not sh:
+            continue
+        for key, val in ov.items():
+            if key == "cast" and isinstance(val, list):
+                for i, cv in enumerate(val):
+                    if i < len(sh.get("cast", [])) and cv:
+                        sh["cast"][i].update(cv)
+            else:
+                sh[key] = val
+    return out
+
+
+def _derive_aspect(name, aspect):
+    """films/<name>--<tag>: the same film data with re-staged shots (build artefacts reused where possible)"""
+    tag = aspect.replace(":", "x")
+    src = _film(name); dst = FILMS / f"{name}--{tag}"
+    (dst / "build").mkdir(parents=True, exist_ok=True)
+    for f in ("script.json", "timing.json", "facts.json", "score.json", "ledger.json", "ledger.md", "research_log.md", "brief.md"):
+        if (src / f).exists():
+            shutil.copy(src / f, dst / f)
+    for f in ("voice.wav", "voice_fx.wav"):
+        if (src / "build" / f).exists():
+            shutil.copy(src / "build" / f, dst / "build" / f)
+    (dst / "shots.json").write_text(json.dumps(restage(_shots(name, resolve=False), aspect), indent=1))
+    return dst.name, tag
