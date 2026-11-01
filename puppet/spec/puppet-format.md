@@ -1,4 +1,4 @@
-# Puppet format v0.4 (`.puppet.json`)
+# Puppet format v0.5 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -109,6 +109,28 @@ Shot-level **props** (SVG player): `"props": [{"id", "r", "color" | "svg", "spin
 A prop follows its current parent (a character's part or a fixed point) and travels on an arc when the parent
 changes: hand to hand, a throw to another character, a drop to the floor.
 
+## v0.5 additions: mesh strokes (skinned raster parts)
+A stroke can be a texture on a triangle mesh whose vertices follow several parts:
+
+```jsonc
+{"mesh": {"image": "data:image/png;base64,...", "iw": 278, "ih": 1312,   // texture and its pixel size
+          "verts": [[x, y], ...],          // artboard units, rest pose
+          "uv": [[px, py], ...],           // texture pixels per vertex
+          "tris": [[a, b, c], ...],
+          "weights": [[["thigh_L", 0.7], ["shin_L", 0.3]], ...],   // per vertex, parts and weights
+          "grow": 0.6}}                    // optional: grow each clip triangle to hide seams (artboard units)
+```
+
+- Vertices are skinned with the parts' world matrices (linear blend skinning), so a leg bends smoothly at the knee and
+  a skirt follows the hips and its spring panels. The stroke sits in its part's layer (its `z`), but its own part's
+  matrix is not applied: only the weights move it.
+- Every part named in the weights must exist (it may have no strokes of its own).
+- The SVG renderer draws each triangle as the shared texture under its affine map, clipped to the (slightly grown)
+  triangle. Ids hash the content, so frames stay pure functions of time and identical frames still dedupe.
+- `dbe/cutout_import.py` makes these from skinned meshes in Blender cut-out rigs. Like raster parts, mesh strokes
+  render in the SVG renderer only; the other exporters skip them.
+- Linear blend skinning pinches at very sharp bends (beyond about 90°); subdivide the mesh for smoother arcs.
+
 ## Acting timelines (used by `puppet/loader/acting.js`)
 `{clips: [{clip, start, end, weight, fadeIn, additive}], poses: [[t, name]], visemes: [[t, shape]] | visemes_from: speaker,
 look: [[t, [x, y]]], view: [[t, name]], blinks: [t, ...] (scripted), blink: false (no automatic blinks), ik: {arm_R: [[t, [x, y]]]}, pins: {foot_L, foot_R}, travel, springs: true}`.
@@ -117,5 +139,5 @@ In a film's `shots.json`, any time can be written relative to a spoken line: `"m
 These resolve against `timing.json`, so acting stays on the words after a voice change or translation.
 
 ## Roadmap
-Bendy limbs (mesh or path warp), raster parts (PNG with pivot) for painted styles, 3/4 views drawn from a turnaround
+Mesh subdivision for very sharp bends, 3/4 views drawn from a turnaround
 template, N-bone FABRIK chains (tails, tentacles), Rig Canvas tabs for views and pose previews.

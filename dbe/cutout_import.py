@@ -151,6 +151,27 @@ def stroke(res, px, crop=None):
             "x": round(x0 + bb[0] / px, 2), "y": round(y0 + bb[1] / px, 2), "w": round((bb[2] - bb[0]) / px, 2), "h": round((bb[3] - bb[1]) / px, 2)}
 
 
+def mesh_stroke(tris, F, img, weights_of, px):
+    """skinned triangles -> a v0.5 mesh stroke: shared vertices, texture crop, per-vertex part weights"""
+    H, W = img.shape[:2]
+    keyv, verts, uv, wts, tri_ix = {}, [], [], [], []
+    for t in tris:
+        ix = []
+        for p, w in zip(t["p"], t["w"]):
+            k = (round(p[0], 4), round(p[1], 4), round(p[2], 4), round(p[3], 4))
+            if k not in keyv:
+                keyv[k] = len(verts); verts.append(F.xy(p[0], p[1])); uv.append((p[2] * W, (1 - p[3]) * H)); wts.append(weights_of(w))
+            ix.append(keyv[k])
+        tri_ix.append(ix)
+    U = np.array(uv)
+    x0, y0 = np.maximum(np.floor(U.min(0)) - 2, 0).astype(int); x1, y1 = np.minimum(np.ceil(U.max(0)) + 2, [W, H]).astype(int)
+    crop = Image.fromarray((np.clip(img[y0:y1, x0:x1], 0, 1) * 255).astype(np.uint8), "RGBA")
+    buf = io.BytesIO(); crop.save(buf, "PNG", optimize=True)
+    return {"mesh": {"image": "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(), "iw": int(x1 - x0), "ih": int(y1 - y0),
+                     "verts": [[round(v[0], 2), round(v[1], 2)] for v in verts], "uv": [[round(u - x0, 2), round(v - y0, 2)] for u, v in uv],
+                     "tris": tri_ix, "weights": wts}}
+
+
 # ---------------- bones -> parts ----------------
 TEMPLATE_RULES = [(r"hand", "hand"), (r"fore.?arm|lower.?arm", "forearm"), (r"upper.?arm|^(def-)?arm", "upperarm"),
                   (r"leg\.0*1\b|shin|calf|lower.?leg", "shin"), (r"leg\.0*0\b|thigh|upper.?leg", "thigh"), (r"foot|toe", "foot"),
@@ -207,10 +228,25 @@ def build(ext_dir, spec):
         return (tpl_of(q) if q else "hip"), None
 
     # pieces: each mesh, skinned meshes split by the part their vertex weights belong to (overlapping at joints)
+    for o in objs:  # Blender only skins with deforming bones: drop weights on control bones, renormalise
+        for t in o["tris"]:
+            if "w" in t:
+                t["w"] = [[[bn, w] for bn, w in vw if bones.get(bn, {}).get("deform")] or vw for vw in t["w"]]
     pieces = []  # {"obj", "tris", "part", "root", "depth"}
     for o in objs:
         if o["bone"] in pupil_bones:
             pieces.append({"obj": o, "tris": o["tris"], "part": "@pupils", "root": None, "depth": o["depth"]}); continue
+        if o["how"] == "skin" and o["tris"] and "w" in o["tris"][0] and spec.get("meshes", True):
+            tot = {}
+            for t in o["tris"]:
+                for vw in t["w"]:
+                    for bn, w in vw:
+                        pid_ = owner(bn)
+                        tot[pid_] = tot.get(pid_, 0) + w
+            if len(tot) > 1:  # smooth skinning across parts: one deforming mesh stroke on the dominant part
+                (pid, root) = max(tot, key=tot.get)
+                pieces.append({"obj": o, "tris": o["tris"], "part": pid, "root": root, "depth": o["depth"], "mesh": True, "parts_used": sorted(tot)})
+                continue
         if o["how"] == "skin" and o["tris"] and "w" in o["tris"][0]:
             by = {}
             for t in o["tris"]:
@@ -263,8 +299,13 @@ def build(ext_dir, spec):
 
     parts, springs = {}, {}
     drawn = {pc["part"] for pc in pieces if pc["part"] != "@pupils"}
-    order = [p["id"] for p in T["parts"]] + sorted({pc["part"] for pc in pieces if pc["root"]})
     roots = {pc["part"]: pc["root"] for pc in pieces if pc["root"]}
+    for pc in pieces:  # parts that only carry mesh weights (thighs, feet, skirt chains) must exist too
+        for (q, r) in pc.get("parts_used", []):
+            drawn.add(q)
+            if r:
+                roots[q] = r
+    order = [p["id"] for p in T["parts"]] + sorted(roots)
     for pid in order:
         if pid not in drawn and pid != "hip":
             continue
@@ -281,7 +322,25 @@ def build(ext_dir, spec):
                 par = tparts[par].get("parent")
         if pid == "torso" and "hip" in parts:
             pv = parts["hip"]["pivot"]
-        layers = [(zof(pc), stroke(raster([dict(pc["obj"], tris=pc["tris"])], F, mats, ims, px), px)) for pc in mine]
+        def piece_stroke(pc):
+            if not pc.get("mesh"):
+                return stroke(raster([dict(pc["obj"], tris=pc["tris"])], F, mats, ims, px), px)
+            by_mat = {}
+            for t in pc["tris"]:
+                by_mat.setdefault(t["mat"], []).append(t)
+            mat, tris = max(by_mat.items(), key=lambda kv: len(kv[1]))
+            img = ims.get(mats.get(mat, {}).get("image"))
+            if img is None:
+                return None
+
+            def weights_of(vws):
+                acc = {}
+                for bn, w in vws:
+                    k = owner(bn)[0]; acc[k] = acc.get(k, 0) + w
+                tot = sum(acc.values()) or 1
+                return [[k, round(v / tot, 3)] for k, v in sorted(acc.items(), key=lambda kv: -kv[1]) if v / tot >= 0.01]
+            return mesh_stroke(tris, F, img, weights_of, px)
+        layers = [(zof(pc), piece_stroke(pc)) for pc in mine]
         layers = [(z, s) for z, s in layers if s]
         if not layers:
             parts[pid] = {"parent": None if pid == "hip" else par, "pivot": pv, "z": 10, "strokes": []}

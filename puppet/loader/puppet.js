@@ -37,6 +37,42 @@
     return s + '</g>';
   }
 
+  // ---------- v0.5 mesh strokes: a texture on a triangle mesh whose vertices follow several parts ----------
+  // {mesh: {image, iw, ih, verts: [[x, y]...] (artboard, rest pose), uv: [[px, py]...] (texture pixels), tris: [[a, b, c]...],
+  //         weights: [[[part, w]...]...] per vertex}}: linear blend skinning with the parts' world matrices, so knees, hips,
+  // skirts and hair bend smoothly. Each triangle is the shared texture under its own affine map, clipped to the triangle
+  // (grown by `grow` artboard units to hide anti-aliasing seams). Ids hash the content, so a frame stays a pure function.
+  const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+  function meshSVG(st, M) {
+    const m = st.mesh;
+    if (!m._id) m._id = 'mt' + hashStr(m.image.length + ':' + m.image.slice(22, 400) + m.image.slice(-400) + m.verts.length);
+    const P = m.verts.map((v, i) => {
+      let x = 0, y = 0, ws = 0;
+      for (const [pid, w] of m.weights[i] || []) { const q = apply(M[pid] || I, v); x += w * q[0]; y += w * q[1]; ws += w; }
+      return ws > 0 ? [x / ws, y / ws] : v;
+    });
+    const grow = m.grow ?? 0.6;
+    let s = `<defs><image id="${m._id}" href="${m.image}" width="${m.iw}" height="${m.ih}"/></defs>`;
+    let body = '';
+    for (const [a, b, c] of m.tris) {
+      const [x0, y0] = P[a], [x1, y1] = P[b], [x2, y2] = P[c], [u0, v0] = m.uv[a], [u1, v1] = m.uv[b], [u2, v2] = m.uv[c];
+      const den = (u1 - u0) * (v2 - v0) - (u2 - u0) * (v1 - v0);
+      if (Math.abs(den) < 1e-9) continue;
+      // affine T with T(u, v) = (x, y) for the three corners
+      const A = ((x1 - x0) * (v2 - v0) - (x2 - x0) * (v1 - v0)) / den, C = ((x2 - x0) * (u1 - u0) - (x1 - x0) * (u2 - u0)) / den;
+      const B = ((y1 - y0) * (v2 - v0) - (y2 - y0) * (v1 - v0)) / den, D = ((y2 - y0) * (u1 - u0) - (y1 - y0) * (u2 - u0)) / den;
+      const E = x0 - A * u0 - C * v0, F = y0 - B * u0 - D * v0;
+      const cx = (x0 + x1 + x2) / 3, cy = (y0 + y1 + y2) / 3;
+      const g = ([x, y]) => { const dx = x - cx, dy = y - cy, l = Math.hypot(dx, dy) || 1; return [x + dx / l * grow, y + dy / l * grow]; };
+      const q = [g(P[a]), g(P[b]), g(P[c])];
+      const d = `M${f2(q[0][0])} ${f2(q[0][1])}L${f2(q[1][0])} ${f2(q[1][1])}L${f2(q[2][0])} ${f2(q[2][1])}Z`;
+      const cid = 'mc' + hashStr(m._id + d);
+      s += `<clipPath id="${cid}"><path d="${d}"/></clipPath>`;
+      body += `<g clip-path="url(#${cid})"><use href="#${m._id}" transform="matrix(${[A, B, C, D, E, F].map(v => (+v).toFixed(5)).join(' ')})"/></g>`;
+    }
+    return s + `<g${st.opacity != null ? ` opacity="${st.opacity}"` : ''}>${body}</g>`;
+  }
+
   // ---------- v0.4 bendy joints: points near a joint blend between the parent's and the child's transforms ----------
   // part.bend = {width}: this part curves out of its parent over `width` artboard units (rubber-hose limbs) instead of
   // hinging rigidly at its pivot. Angle blending keeps the limb's thickness.
@@ -172,7 +208,8 @@
     for (const [id, part] of Object.entries(p.parts)) {
       const replaced = Object.entries(p.swaps || {}).some(([sid, sw]) => sw.replaces === id && pose[sid] && sw.shapes[pose[sid]] && sw.shapes[pose[sid]].length);
       const J = p._bendy ? jointsFor(p, M, id, pose) : [];
-      const svgPart = J.length ? bentSVG(part.strokes, pal, M[id], J) : strokesSVG(part.strokes, pal, M[id]);
+      const meshes = part.strokes.filter(st => st.mesh), flat = meshes.length ? part.strokes.filter(st => !st.mesh) : part.strokes;
+      const svgPart = (J.length ? bentSVG(flat, pal, M[id], J) : strokesSVG(flat, pal, M[id])) + meshes.map(st => meshSVG(st, M)).join('');
       if (!replaced) items.push({ z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: svgPart });
     }
     for (const [sid, sw] of Object.entries(p.swaps || {})) {
@@ -190,7 +227,7 @@
       let mm = m;
       const ssh = pose.shifts && pose.shifts['@' + sid];  // driven offsets for swap sets (e.g. the face moving as the head turns)
       if (ssh) mm = mul(mm, [1, 0, 0, 1, ssh[0], ssh[1]]);
-      if (sid === 'pupils' && pose.look) mm = mul(m, [1, 0, 0, 1, pose.look[0] * (sw.movable || 8), pose.look[1] * (sw.movable || 8) * 0.7]);
+      if (sid === 'pupils' && pose.look) mm = mul(mm, [1, 0, 0, 1, pose.look[0] * (sw.movable || 8), pose.look[1] * (sw.movable || 8) * 0.7]);
       items.push({ z: (pose.z && pose.z['@' + sid] != null) ? pose.z['@' + sid] : (sw.z ?? 40), svg: strokesSVG(strokes, pal, mm) });
     }
     items.sort((a, b) => a.z - b.z);

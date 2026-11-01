@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "$id": "https://doodleberry.dev/schema/puppet-0.1.json",
- "title": "Doodleberry puppet v0.1",
+ "$id": "https://doodleberry.dev/schema/puppet-0.5.json",
+ "title": "Doodleberry puppet v0.5",
  "type": "object",
  "required": [
   "format",
@@ -112,27 +112,17 @@
  },
  "$defs": {
   "stroke": {
-   "type": "object",
-   "required": [
-    "d"
-   ],
-   "properties": {
-    "d": {
-     "type": "string"
+   "oneOf": [
+    {
+     "$ref": "#/$defs/vector"
     },
-    "fill": {
-     "type": "string"
+    {
+     "$ref": "#/$defs/raster"
     },
-    "stroke": {
-     "type": "string"
-    },
-    "width": {
-     "type": "number"
-    },
-    "opacity": {
-     "type": "number"
+    {
+     "$ref": "#/$defs/mesh"
     }
-   }
+   ]
   },
   "part": {
    "type": "object",
@@ -197,6 +187,148 @@
       "type": "array",
       "items": {
        "$ref": "#/$defs/stroke"
+      }
+     }
+    }
+   }
+  },
+  "vector": {
+   "type": "object",
+   "required": [
+    "d"
+   ],
+   "properties": {
+    "d": {
+     "type": "string"
+    },
+    "fill": {
+     "type": "string"
+    },
+    "stroke": {
+     "type": "string"
+    },
+    "width": {
+     "type": "number"
+    },
+    "opacity": {
+     "type": "number"
+    }
+   }
+  },
+  "raster": {
+   "type": "object",
+   "description": "v0.3: an image placed in artboard units",
+   "required": [
+    "image",
+    "x",
+    "y",
+    "w",
+    "h"
+   ],
+   "properties": {
+    "image": {
+     "type": "string"
+    },
+    "x": {
+     "type": "number"
+    },
+    "y": {
+     "type": "number"
+    },
+    "w": {
+     "type": "number"
+    },
+    "h": {
+     "type": "number"
+    },
+    "opacity": {
+     "type": "number"
+    }
+   }
+  },
+  "mesh": {
+   "type": "object",
+   "description": "v0.5: a texture on a skinned triangle mesh",
+   "required": [
+    "mesh"
+   ],
+   "properties": {
+    "opacity": {
+     "type": "number"
+    },
+    "mesh": {
+     "type": "object",
+     "required": [
+      "image",
+      "iw",
+      "ih",
+      "verts",
+      "uv",
+      "tris",
+      "weights"
+     ],
+     "properties": {
+      "image": {
+       "type": "string"
+      },
+      "iw": {
+       "type": "number"
+      },
+      "ih": {
+       "type": "number"
+      },
+      "grow": {
+       "type": "number"
+      },
+      "verts": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+       }
+      },
+      "uv": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+       }
+      },
+      "tris": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "integer"
+        },
+        "minItems": 3,
+        "maxItems": 3
+       }
+      },
+      "weights": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "array",
+         "prefixItems": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "number"
+          }
+         ]
+        }
+       }
       }
      }
     }

@@ -49,7 +49,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
     def shape_group(strokes, pal):
         items = []
         for st in strokes:
-            for segs, closed in G.parse_path(st["d"]):
+            for segs, closed in G.parse_path(st.get("d") or ""):
                 v = [list(s[0]) for s in segs]
                 o = [[s[1][0] - s[0][0], s[1][1] - s[0][1]] for s in segs]
                 i_ = [[segs[k - 1][2][0] - segs[k - 1][3][0], segs[k - 1][2][1] - segs[k - 1][3][1]] for k in range(len(segs))]
@@ -149,7 +149,7 @@ def _shapes_sif(strokes, pal):
     out = ""
     for st in strokes:
         fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
-        for segs, closed in G.parse_path(st["d"]):
+        for segs, closed in G.parse_path(st.get("d") or ""):
             if fill and closed:
                 out += f'<layer type="region" active="true" version="0.1"><param name="amount"><real value="{st.get("opacity", 1):.3f}"/></param><param name="color">{_sif_color(fill)}</param><param name="bline">{_bline(segs, True)}</param></layer>'
             if line:
@@ -277,7 +277,7 @@ def to_gp_frames(baked, size, per=6):
             items.sort(key=lambda x: x[0])
             for _, m, sts in items:
                 for st in sts:
-                    for segs, closed in G.parse_path(st["d"]):
+                    for segs, closed in G.parse_path(st.get("d") or ""):
                         if isinstance(m, tuple) and m and m[0] == "bend":
                             _, Mp, piv, ax, wd, th = m
                             pts = [G.apply(Mp, G.bend_point(q, piv, ax, wd, th)) for q in G.sample(segs, per)]

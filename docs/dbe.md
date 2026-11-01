@@ -205,5 +205,5 @@ the joint will gap. Measured on Pip through SVG and ORA: mean pivot error 9 unit
 
 Third-party rigs stay out of git (`assets/external/`, `cast/external/`); the recipe and its credit line are committed,
 and `assets/manifest.json` "external" records licence and source. Pepper and Carrot (Nikolai Mamashev, after David
-Revoy's Pepper&Carrot, CC-BY 4.0) are the showcase. Limits: raster parts render in the SVG renderer only, and rigid
-pieces show notches past about 30° at knees and hips (mesh deformation for raster parts is next).
+Revoy's Pepper&Carrot, CC-BY 4.0) are the showcase. Skinned meshes that span several parts become v0.5 mesh strokes (smooth knees, hips, skirts); single-bone
+meshes stay rigid layers. Limit: raster and mesh parts render in the SVG renderer only.
