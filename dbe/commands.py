@@ -81,15 +81,33 @@ def film_get(name):
     return {"film": name, "files": src, "outputs": outs}
 
 
+@command("film.validate", name=("string", "film"))
+def film_validate(name):
+    """Check a film's data against the schemas and its own references (lines, puppets, clips, shot order)."""
+    from . import validate
+    return validate.film(_film(name))
+
+
+def _require_valid(name):
+    r = film_validate(name)
+    if r["errors"]:
+        raise ValueError("film data is invalid:\n- " + "\n- ".join(r["errors"][:20]))
+    return r
+
+
 @command("film.write", name=("string", "film"), file=("string", "brief.md | facts.json | script.json | shots.json | score.json"), content=("string", "full file content (JSON as text for .json)"))
 def film_write(name, file, content):
     """Write one source file of a film (validated as JSON for .json files)."""
     if file not in ("brief.md", "facts.json", "script.json", "shots.json", "score.json"):
         raise ValueError("file not allowed")
-    if file.endswith(".json"):
-        json.loads(content)
+    data = json.loads(content) if file.endswith(".json") else None
+    if file in ("script.json", "shots.json"):
+        from . import validate
+        bad = validate.schema_errors(file[:-5], data)
+        if bad:
+            raise ValueError("not written; schema errors:\n- " + "\n- ".join(bad[:20]))
     (_film(name) / file).write_text(content)
-    return {"ok": True}
+    return {"ok": True, **({"check": film_validate(name)} if file in ("script.json", "shots.json") else {})}
 
 
 # ---------------- voice ----------------
@@ -310,6 +328,7 @@ await p.goto('file://{page}?shot={sh["id"]}&bg=1');await p.waitForFunction(()=>w
 def shot_render(name, shot, renderer=""):
     """Render one shot to build/shots/<id>.mp4 with its renderer (all renderers read the same baked acting).
     Overriding the renderer writes <id>.<renderer>.mp4 instead, for side-by-side comparison."""
+    _require_valid(name)
     s, sh, bdir, baked = _bake(name, shot)
     own = sh.get("renderer", "svg"); renderer = renderer or own
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
@@ -371,6 +390,7 @@ def export_synfig(name, shot):
 @command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default all", None))
 def film_render(name, only=None):
     """Render every shot with its renderer, assemble, score and mix the audio, mux, and run QA."""
+    _require_valid(name)
     d = _film(name); s = _shots(name); fps = s.get("fps", 30)
     done = []
     for sh in s["shots"]:
@@ -506,3 +526,41 @@ def variants_hooks(name):
         _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-i", str(d / "build" / "mix.wav"), "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", str(out)])
         outs.append(str(out.relative_to(ROOT)))
     return {"variants": outs}
+
+
+# ---------------- tests ----------------
+@command("test", update=("boolean", "rewrite the golden frames instead of comparing", False),
+         film=("string", "only cases for this film", ""))
+def test_golden(update=False, film=""):
+    """Golden-frame regression test: render key frames of benchmark films (SVG player) and compare with tests/golden.
+    Frames are pure functions of time, so any difference is a real change."""
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    spec = _json(ROOT / "tests" / "golden.json")
+    tol = spec.get("tolerance", {"mean_abs": 1.5, "pixels_over_32": 0.004})
+    results, failed = [], 0
+    tmp = Path(tempfile.mkdtemp(prefix="golden_"))
+    for case in spec["cases"]:
+        if film and case["film"] != film:
+            continue
+        page = _player_page(case["film"])
+        prefix = tmp / f"{case['film']}_{case['shot']}"
+        _run(["node", "tools/stills.mjs", str(page), f"shot={case['shot']}", str(prefix), *[str(t) for t in case["times"]]], timeout=600)
+        gdir = ROOT / "tests" / "golden" / case["film"]; gdir.mkdir(parents=True, exist_ok=True)
+        for t in case["times"]:
+            im = Image.open(f"{prefix}_{t}.png").convert("RGB")
+            im = im.resize((270, round(270 * im.height / im.width)), Image.LANCZOS)
+            g = gdir / f"{case['shot']}_{t}.png"
+            if update or not g.exists():
+                im.save(g, optimize=True); results.append({"frame": str(g.relative_to(ROOT)), "status": "written"}); continue
+            a = np.asarray(im, np.float32); b = np.asarray(Image.open(g).convert("RGB"), np.float32)
+            if a.shape != b.shape:
+                failed += 1; results.append({"frame": str(g.relative_to(ROOT)), "status": "FAIL", "why": f"size {a.shape} vs {b.shape}"}); continue
+            d = np.abs(a - b); mean, over = float(d.mean()), float((d.max(-1) > 32).mean())
+            ok = mean <= tol["mean_abs"] and over <= tol["pixels_over_32"]
+            if not ok:
+                failed += 1
+                Image.fromarray(np.clip(d * 4, 0, 255).astype(np.uint8)).save(gdir / f"{case['shot']}_{t}.diff.png")
+            results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
+    return {"passed": failed == 0, "failed": failed, "results": results}

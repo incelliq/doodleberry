@@ -1,0 +1,44 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "doodleberry/shots.schema.json",
+ "title": "Doodleberry shot list (shots.json)",
+ "type": "object",
+ "required": ["shots"],
+ "$defs": {
+  "time": {"description": "seconds, or a time relative to a spoken line: \"mid.start+0.9\", \"end.end-0.2\"",
+           "oneOf": [{"type": "number", "minimum": 0}, {"type": "string", "pattern": "^\\s*[\\w-]+\\.(start|end)\\s*([+-]\\s*[0-9.]+)?\\s*$"}]},
+  "key": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"$ref": "#/$defs/time"}, {}]},
+  "keys": {"type": "array", "items": {"$ref": "#/$defs/key"}},
+  "place": {"type": "object", "required": ["x", "y"], "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "s": {"type": "number", "exclusiveMinimum": 0}, "flip": {"enum": [1, -1]}}},
+  "clip": {"type": "object", "required": ["clip"], "properties": {
+    "clip": {"type": "string"}, "start": {"$ref": "#/$defs/time"}, "end": {"$ref": "#/$defs/time"}, "weight": {"type": "number"},
+    "fadeIn": {"type": "number", "minimum": 0}, "fadeOut": {"type": "number", "minimum": 0}, "additive": {"type": "boolean"}, "speed": {"type": "number", "exclusiveMinimum": 0}}},
+  "timeline": {"type": "object", "properties": {
+    "clips": {"type": "array", "items": {"$ref": "#/$defs/clip"}}, "poses": {"$ref": "#/$defs/keys"}, "look": {"$ref": "#/$defs/keys"},
+    "view": {"$ref": "#/$defs/keys"}, "visemes_from": {"type": "string"}, "springs": {"type": "boolean"}, "blink": {"type": "boolean"},
+    "blinks": {"type": "array", "items": {"$ref": "#/$defs/time"}}, "ik": {"type": "object"}, "pins": {"type": "object"}, "travel": {"type": "number"},
+    "set": {"type": "object"}, "seed": {"type": "number"}}},
+  "cast": {"type": "object", "required": ["puppet"], "properties": {
+    "puppet": {"type": "string", "pattern": "\\.puppet\\.json$"}, "speaker": {"type": "string"},
+    "place": {"oneOf": [{"$ref": "#/$defs/place"}, {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"$ref": "#/$defs/time"}, {"$ref": "#/$defs/place"}]}}]},
+    "timeline": {"$ref": "#/$defs/timeline"}}},
+  "shot": {"type": "object", "required": ["id", "start", "end"], "properties": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "renderer": {"enum": ["svg", "synfig", "grease-pencil", "lottie"]},
+    "set": {"type": "string"}, "set_opts": {"type": "object"},
+    "start": {"$ref": "#/$defs/time"}, "end": {"$ref": "#/$defs/time"},
+    "start_line": {"type": "string"}, "end_line": {"type": "string"}, "lead": {"type": "number"}, "tail": {"type": "number"},
+    "cast": {"type": "array", "items": {"$ref": "#/$defs/cast"}},
+    "camera": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"$ref": "#/$defs/time"}, {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number"}}]}},
+    "cues": {"type": "array", "items": {"type": "object", "required": ["t", "type"], "properties": {"t": {"$ref": "#/$defs/time"}, "type": {"type": "string"}, "gain": {"type": "number"}}}},
+    "captions": {"type": "boolean"}, "style": {"type": "object"}, "overlays": {"type": "array"}, "bubbles": {}, "extra_bubbles": {"type": "array"}}}
+ },
+ "properties": {
+  "title": {"type": "string"},
+  "size": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer", "minimum": 64}},
+  "fps": {"type": "integer", "minimum": 1, "maximum": 120},
+  "captions": {"type": "boolean"}, "caption_style": {"type": "object"},
+  "shots": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/shot"}},
+  "hooks": {"type": "object"}, "aspects": {"type": "object"}, "brief": {"type": "object"}
+ }
+}
