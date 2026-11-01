@@ -12,7 +12,7 @@
    "renderer": "svg",
    "set": "park",
    "start": 0,
-   "end": 5.251,
+   "end": 5.014,
    "start_line": "hi",
    "cast": [
     {
@@ -80,8 +80,8 @@
    "id": "s2",
    "renderer": "svg",
    "set": "park",
-   "start": 5.251,
-   "end": 9.758,
+   "start": 5.014,
+   "end": 9.77,
    "start_line": "mid",
    "cast": [
     {
@@ -129,8 +129,8 @@
    "id": "s3",
    "renderer": "svg",
    "set": "park",
-   "start": 9.758,
-   "end": 14.599,
+   "start": 9.77,
+   "end": 14.544,
    "start_line": "end",
    "end_line": "end",
    "cast": [
@@ -233,5 +233,19 @@
     "floor": "#f2d39b"
    }
   }
+ },
+ "brief": {
+  "title": "One character, three animation engines",
+  "takeaway": "One puppet, one performance, drawn by three different animation engines in 16 seconds.",
+  "hook": "SVG, Synfig and Blender Grease Pencil take turns drawing Pip.",
+  "hashtags": [
+   "animation",
+   "opensource",
+   "blender",
+   "synfig",
+   "cartoon"
+  ],
+  "cover_text": "3 engines, 1 puppet",
+  "prompt": "Which shot did you prefer: SVG, Synfig or Grease Pencil?"
  }
 }

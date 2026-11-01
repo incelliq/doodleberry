@@ -1,7 +1,7 @@
 {
  "speakers": {
   "pip": {
-   "voice": "es_ES-carlfm-x_low",
+   "voice": "kokoro:ef_dora",
    "fx": {
     "pitch": 1.25,
     "formant": 1.08,
