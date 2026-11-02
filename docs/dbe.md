@@ -430,9 +430,10 @@ narrow, open, round; fails below 50% agreement).
 ## Self-healing and layout auto-repair (plans 2.9, 2.18)
 `python -m dbe film.heal '{"name": "FILM"}'` renders the film, reads every failure (the QA bar, all measured layout
 checks including the advisory ones, and visual-lint errors), applies the known repair for each to shots.json,
-re-renders what changed (incremental shot hashes) and repeats, up to `rounds` (3). The shots.json from before the
-first round stays in `build/shots.before_heal.json`; the result lists each round's failures and edits, what still
-fails, and which failures have no automatic repair (cold open, seams, mix, fact tracing, lip-sync). Repairs
+re-renders what changed (incremental shot hashes) and repeats, up to `rounds` (3). Before re-voicing it anchors
+hard shot times to their lines, so the picture follows the slower voice. The shots.json from before the
+first round stays in `build/shots.before_heal.json`; the result lists each round's failures and edits, and what still
+fails with the reason a person is needed (for example cold open, or bare frames with no character to enlarge). Repairs
 (`dbe/heal.py`):
 - frozen stretch: low `style.step` goes back to 12; a shot with no camera gets the float camera; cast get idle;
 - text outside the safe area: moved in by exactly the overshoot plus 8 px (`x`/`y` of the kit element);

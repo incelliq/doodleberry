@@ -702,14 +702,23 @@ def film_heal(name, rounds=3, revoice=False):
         log.append({"round": rnd, "failing": fails, "repairs": [{k: r[k] for k in ("check", "shot", "what")} for r in reps]})
         (d / "shots.json").write_text(json.dumps(new, indent=1, ensure_ascii=False))
         if slow:
+            # anchor hard shot times to their lines first, so the picture follows the slower voice
+            old = {l["id"]: l for l in _json(d / "timing.json", {}).get("lines", [])}; cur = _json(d / "shots.json"); resd = {x["id"]: x for x in res["shots"]}
+            for sh in cur["shots"]:
+                for key, lk, edge in (("start", "start_line", "start"), ("end", "end_line", "end")):
+                    ln = old.get(sh.get(lk))
+                    if ln and isinstance(sh.get(key), (int, float)) and not (key == "start" and sh[key] == 0):
+                        off = round(resd[sh["id"]][key] - ln[edge], 3)
+                        sh[key] = f"{ln['id']}.{edge}{'+' if off >= 0 else '-'}{abs(off)}"
+            (d / "shots.json").write_text(json.dumps(cur, indent=1, ensure_ascii=False))
+            log[-1]["repairs"].append({"check": "reading_time", "shot": "*", "what": "hard shot times anchored to their lines before re-voicing"})
             sc = _json(d / "script.json"); sc["length_scale"] = round(sc.get("length_scale", 1.0) * slow, 3)
             (d / "script.json").write_text(json.dumps(sc, indent=1, ensure_ascii=False))
             voice_build(name)
             if any(c.get("speaker") for sh in new["shots"] for c in sh.get("cast", [])):
                 acting_plan(name)
     still = HL.failures(rep, lint)
-    return {"passes": not still, "still_failing": still, "rounds": log,
-            "unrepaired": [f for f in still if f in ("cold_open", "seams", "effects_below_music", "cue_sync", "every_line_traced", "lipsync")]}
+    return {"passes": not still, "rounds": log, "still_failing": {f: HL.HINTS.get(f, "no automatic repair yet") for f in still}}
 
 
 @command("lipsync.check", name=("string", "film"))

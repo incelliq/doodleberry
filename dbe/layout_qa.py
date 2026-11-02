@@ -124,6 +124,7 @@ def reading_time(shots_resolved, timing):
         blocks = [(o.get("text", ""), o.get("start"), o.get("end")) for o in s.get("overlays", []) if o.get("start") is not None and o.get("end") is not None]
         blocks += [(b.get("text", ""), b.get("start"), b.get("end")) for b in s.get("extra_bubbles", [])]
         for text, a, b in blocks:
+            text = " ".join(map(str, text)) if isinstance(text, list) else str(text or "")   # kit signs take a list of lines
             n = len(re.findall(r"[\w']+", text)); need = n / 3 + 1
             if n and b - a < need - 1e-6:
                 short.append({"shot": s["id"], "text": text[:50], "on_screen_s": round(b - a, 2), "needs_s": round(need, 2)})

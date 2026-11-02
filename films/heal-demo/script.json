@@ -1,3 +1,28 @@
-{"speakers": {"sprout": {"voice": "kokoro:af_heart", "fx": {"pitch": 1.12}}}, "lead_in_s": 0.8, "gap_s": 0.4,
- "lines": [{"id": "wait", "speaker": "sprout", "fact": null, "text": "Five years of nothing to see."},
-           {"id": "then", "speaker": "sprout", "fact": null, "text": "Then, the roots pay off!", "pause": 1.4}]}
+{
+ "speakers": {
+  "sprout": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.12
+   }
+  }
+ },
+ "lead_in_s": 0.8,
+ "gap_s": 0.4,
+ "lines": [
+  {
+   "id": "wait",
+   "speaker": "sprout",
+   "fact": null,
+   "text": "Five years of nothing to see."
+  },
+  {
+   "id": "then",
+   "speaker": "sprout",
+   "fact": null,
+   "text": "Then, the roots pay off!",
+   "pause": 1.4
+  }
+ ],
+ "length_scale": 1.267
+}

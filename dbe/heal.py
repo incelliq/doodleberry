@@ -22,6 +22,16 @@ import copy
 import json
 import re
 
+HINTS = {  # why a failure is left for a person (or a later repair)
+    "frame_fill": "too much bare ground and no characters in that shot to enlarge: add a character, set dressing or kit elements",
+    "reading_time": "captions flow faster than 3.2 words/s: run film.heal with revoice true (slower voice), or shorten the lines",
+    "cold_open": "put a character in frame one and the first words by 1.5 s (lead_in_s in script.json)",
+    "seams": "a cut changes too much at once: add a transition or match the framing",
+    "effects_below_music": "effects louder than music: lower cue gains",
+    "cue_sync": "an effect lands off its cue: check the cue times",
+    "every_line_traced": "a narrated line has no fact in facts.json",
+    "lipsync": "mouths out of sync with the voice: rebuild the voice (voice.build)",
+}
 SAFE = {"9:16": (64, 200, 960, 1560), "16:9": (96, 54, 1824, 1026)}
 MIN_PX = {"9:16": 26, "16:9": 24}
 
