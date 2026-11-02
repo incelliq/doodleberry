@@ -394,6 +394,10 @@
      "type": "object"
     }
    ]
+  },
+  "beat_cuts": {
+   "description": "plan 2.14: move each shot change onto the bar line (else beat) of the score in the pause it falls in",
+   "type": "boolean"
   }
  }
 }

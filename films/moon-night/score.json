@@ -1,0 +1,50 @@
+{
+ "length_s": 31.304,
+ "bpm": 96,
+ "offset_s": 0,
+ "sections": [
+  {
+   "kind": "intro",
+   "from_beat": 0,
+   "to_beat": 8,
+   "chords": [
+    "F",
+    "Dm"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 8,
+   "to_beat": 24,
+   "chords": [
+    "F",
+    "Am",
+    "Dm",
+    "C"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 24,
+   "to_beat": 40,
+   "chords": [
+    "Dm",
+    "Bb",
+    "F",
+    "C"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 40,
+   "to_beat": 52,
+   "chords": [
+    "F",
+    "Am",
+    "Bb",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
+}

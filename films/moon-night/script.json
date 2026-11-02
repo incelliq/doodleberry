@@ -1,0 +1,97 @@
+{
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  },
+  "priya": {
+   "voice": "kokoro:af_bella"
+  }
+ },
+ "lead_in_s": 1.0,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "m1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "I can't sleep. The moon is too bright!"
+  },
+  {
+   "id": "m2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "I want to see it up close.",
+   "pause": 1.6
+  },
+  {
+   "id": "r1",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Good morning, Momo! Looking for a book?"
+  },
+  {
+   "id": "m3",
+   "speaker": "momo",
+   "fact": null,
+   "text": "No. I'm looking for the moon."
+  },
+  {
+   "id": "r2",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Then you need a telescope. Here you go!",
+   "pause": 1.6
+  },
+  {
+   "id": "p1",
+   "speaker": "priya",
+   "fact": null,
+   "text": "Momo! Where are you going with that?"
+  },
+  {
+   "id": "m4",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Up the hill. Want to come?"
+  },
+  {
+   "id": "p2",
+   "speaker": "priya",
+   "fact": null,
+   "text": "Yes! Let's bring Ravi too.",
+   "pause": 1.6
+  },
+  {
+   "id": "r3",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Point it up. A little more."
+  },
+  {
+   "id": "m5",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Whoa. I can see the craters!"
+  },
+  {
+   "id": "p3",
+   "speaker": "priya",
+   "fact": null,
+   "text": "It looks like a giant cookie."
+  },
+  {
+   "id": "m6",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Now I really can't sleep."
+  }
+ ]
+}

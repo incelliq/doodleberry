@@ -257,7 +257,8 @@ def acting_plan(name):
     d = _film(name)
     if not (d / "timing.json").exists():
         raise FileNotFoundError("no timing.json: run voice.build first")
-    r = _run([PY, "dbe/gestures.py", str(d)], timeout=600)
+    spans = {sh["id"]: [sh["start"], sh["end"]] for sh in _shots(name)["shots"]}   # resolved (line-relative) shot times
+    r = _run([PY, "dbe/gestures.py", str(d), json.dumps(spans)], timeout=600)
     return {"film": name, "plan": json.loads(r[-1])}
 
 
@@ -345,7 +346,19 @@ def _shots(name, resolve=True):
     s = _json(FILMS / name / "shots.json")
     if not s:
         raise FileNotFoundError("shots.json missing")
-    return resolve_times(s, _json(FILMS / name / "timing.json", {})) if resolve else s
+    if not resolve:
+        return s
+    tm = _json(FILMS / name / "timing.json", {})
+    r = resolve_times(s, tm)
+    if r.get("beat_cuts") and (FILMS / name / "score.json").exists() and tm.get("lines"):
+        # cuts on the music (plan 2.14): each shot change moves to the bar line (else beat) in the pause it falls in
+        from . import edit as E
+        g = E.grid(FILMS / name); fps = r.get("fps", 30); lines = {l["id"]: l for l in tm["lines"]}
+        for a_, b_ in zip(r["shots"], r["shots"][1:]):
+            if abs(a_["end"] - b_["start"]) < 1e-3:
+                t, _ = E.snap(b_["start"], "start", lines, g, r["shots"][-1]["end"])
+                a_["end"] = b_["start"] = round(round(t * fps) / fps, 4)
+    return r
 
 
 def _shot(name, shot_id):
@@ -1357,6 +1370,78 @@ def film_soundoff(name, wpm=170, max_stretch=2.5, render=True):
     r = film_render(dst.name)
     shutil.copy(dst / "build" / "final.mp4", src / "build" / "final_soundoff.mp4")
     return {**out, "final": f"films/{name}/build/final_soundoff.mp4", "qa": r.get("qa"), "lint": r.get("lint")}
+
+
+# ---------------- beat grid and master-to-many cuts (plan 2.14) ----------------
+@command("film.beats", name=("string", "film"))
+def film_beats(name):
+    """The film's beat grid from its score (bpm, offset): beats and bars, and where each shot change and line start
+    falls relative to it (how far from the nearest beat and bar), for cutting picture on the music."""
+    from . import edit as E
+    d = _film(name); g = E.grid(d); s = _shots(name); tm = _json(d / "timing.json", {})
+    near = lambda t, pts: round(min((t - p for p in pts), key=abs), 3) if pts else None
+    return {"bpm": g["bpm"], "beat_s": round(g["beat"], 4), "bar_s": round(g["bar"], 4), "bars": len(g["bars"]),
+            "shot_changes": [{"shot": sh["id"], "t": round(sh["start"], 3), "from_beat": near(sh["start"], g["beats"]), "from_bar": near(sh["start"], g["bars"])} for sh in s["shots"][1:]],
+            "lines": [{"line": l["id"], "start": l["start"], "from_beat": near(l["start"], g["beats"])} for l in tm.get("lines", [])]}
+
+
+def _cut_source(film, aspect):
+    """the build folder holding a film's master render in this aspect (film.render aspect=... makes it)"""
+    W0, H0 = _shots(film, resolve=False).get("size", [1080, 1920])
+    if not aspect or ASPECT_SIZE.get(aspect) == [W0, H0]:
+        b = FILMS / film / "build"
+    else:
+        b = FILMS / f"{film}--{aspect.replace(':', 'x')}" / "build"
+    if not (b / "final.mp4").exists() or not (b / "stems" / "voice.wav").exists():
+        raise FileNotFoundError(f"no {aspect or 'master'} render of {film} with stems: run film.render" + (f" with aspect {aspect}" if aspect else ""))
+    return b
+
+
+@command("film.cuts", name=("string", "film"), only=("array", "cut ids to make (default: all in edit.json)", None),
+         plan_only=("boolean", "only resolve the edit list (cut points on the grid), make no files", False))
+def film_cuts(name, only=None, plan_only=False):
+    """Master to many (plan 2.14): assemble the cuts in films/<name>/edit.json (full film, episodes from "split",
+    teasers, recaps, inserts from other films) from the master renders, every cut point on a bar line or beat in a
+    pause and never inside a line. Audio comes from the master's mixed stems, crossfaded at joins and levelled to
+    -14 LUFS. Writes build/cuts/<cut>.mp4 with .srt captions and an OpenTimelineIO .otio edit."""
+    from . import edit as E
+    d = _film(name)
+    if not (d / "edit.json").exists():
+        raise FileNotFoundError("no edit.json (see docs/dbe.md, master-to-many cuts)")
+    cuts = E.plan(name, _shots(name), _json(d / "edit.json"))
+    if only:
+        cuts = {k: v for k, v in cuts.items() if k in only or re.sub(r"\d+$", "", k) in only}
+    if plan_only:
+        return {"cuts": cuts}
+    out_dir = d / "build" / "cuts"; out_dir.mkdir(parents=True, exist_ok=True)
+    fps = _shots(name).get("fps", 30); M = _json(ROOT / "dbe" / "profiles.json")["master"]; made = {}
+    for cid, cut in cuts.items():
+        srcs = {s["film"]: _cut_source(s["film"], cut["aspect"]) for s in cut["segments"]}
+        tmp = out_dir / f"_{cid}"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir()
+        parts = []
+        for i, sg in enumerate(cut["segments"]):
+            pv = tmp / f"v{i}.mp4"
+            _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{sg['t0']:.4f}", "-i", str(srcs[sg['film']] / "final.mp4"), "-t", f"{sg['t1'] - sg['t0']:.4f}", "-an",
+                  "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), str(pv)])
+            parts.append(pv)
+        (tmp / "list.txt").write_text("".join(f"file '{p.resolve()}'\n" for p in parts))
+        pic = tmp / "picture.mp4"
+        _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(tmp / "list.txt"), "-c", "copy", str(pic)])
+        spec = {"segments": [{"build": str(srcs[s["film"]].relative_to(ROOT)), "t0": s["t0"], "t1": s["t1"]} for s in cut["segments"]], "out": str(tmp / "mix.wav")}
+        (tmp / "spec.json").write_text(json.dumps(spec))
+        au = json.loads(_run([PY, "dbe/cut_audio.py", str(tmp / "spec.json")])[-1])
+        mp4 = out_dir / f"{cid}.mp4"
+        _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(tmp / "mix.wav"), "-map", "0:v", "-map", "1:a",
+              "-c:v", "copy", "-c:a", M["acodec"], "-ar", str(M["ar"]), "-b:a", M["ab"], "-t", f"{cut['length']:.3f}",
+              *(["-movflags", "+faststart"] if M.get("faststart") else []), str(mp4)])
+        timings = {f: _json(FILMS / f / "timing.json", {}).get("lines", []) for f in srcs}
+        (out_dir / f"{cid}.srt").write_text(E.srt(cut, timings))
+        (out_dir / f"{cid}.otio").write_text(json.dumps(E.otio(cid, cut, fps, {f: str((b / "final.mp4").relative_to(ROOT)) for f, b in srcs.items()}), indent=1))
+        shutil.rmtree(tmp, ignore_errors=True)
+        made[cid] = {"file": str(mp4.relative_to(ROOT)), "aspect": cut["aspect"] or "master", "length_s": cut["length"],
+                     "segments": [[s["film"], s["t0"], s["t1"], "/".join(s["snapped"])] for s in cut["segments"]],
+                     "lufs": au["lufs"], "true_peak_db": au["true_peak_db"], "loudness_ok": abs(au["lufs"] + 14) <= 1 and au["true_peak_db"] <= -1}
+    return {"cuts": made}
 
 
 # ---------------- brand (plan 1.14) ----------------

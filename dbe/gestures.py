@@ -109,7 +109,7 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0):
     return clips, look, blinks
 
 
-def plan_film(film_dir):
+def plan_film(film_dir, spans=None):
     d = Path(film_dir); shots = json.loads((d / "shots.json").read_text()); timing = json.loads((d / "timing.json").read_text())
     lines = timing.get("lines", []); wav = d / "build" / "voice.wav"
     cache = {}
@@ -127,7 +127,7 @@ def plan_film(film_dir):
             pl = c.get("place") or {}
             if c.get("speaker") and isinstance(pl, dict):
                 xs[c["speaker"]] = pl.get("x", 540)
-        s0, s1 = sh.get("start", 0), sh.get("end", 1e9)
+        s0, s1 = (spans or {}).get(sh["id"], (sh.get("start", 0), sh.get("end", 1e9)))
         in_shot = [l for l in lines if l["end"] > (s0 if isinstance(s0, (int, float)) else 0) and l["start"] < (s1 if isinstance(s1, (int, float)) else 1e9)]
         for c in cast:
             me = c.get("speaker")
@@ -153,4 +153,4 @@ def plan_film(film_dir):
 
 
 if __name__ == "__main__":
-    print(json.dumps(plan_film(sys.argv[1])))
+    print(json.dumps(plan_film(sys.argv[1], json.loads(sys.argv[2]) if len(sys.argv) > 2 else None)))

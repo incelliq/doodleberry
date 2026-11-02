@@ -1,0 +1,771 @@
+{
+ "title": "Moon Night",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "foley": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "bedroom",
+   "start": 0,
+   "end": "m2.end+0.9",
+   "start_line": "m1",
+   "end_line": "m2",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 520,
+      "y": 1520,
+      "s": 1.15
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "sad",
+        "start": 0.2,
+        "end": "m1.end"
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 1.0,
+        "end": 2.4,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 2.06,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 3.493,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        0,
+        "sad"
+       ],
+       [
+        "m2.start",
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        1.0,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        3.493,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       9.518,
+       14.182,
+       18.103,
+       22.086,
+       25.549,
+       29.436
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Library",
+     "Telescopes",
+     "to borrow!"
+    ]
+   },
+   "start": "m2.end+0.9",
+   "end": "r2.end+0.9",
+   "start_line": "r1",
+   "end_line": "r2",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 280,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "present_R",
+        "start": "r2.start+1.0",
+        "weight": 1
+       },
+       {
+        "clip": "talk_beat",
+        "start": 6.931,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 8.711,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 11.172,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 13.252,
+        "end": 14.132,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        6.871,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        9.468,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        11.572,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       3.393,
+       5.171,
+       11.472,
+       18.103,
+       19.925,
+       22.086,
+       27.554,
+       29.436,
+       31.204
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 790,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 9.218,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 9.618,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 13.882,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        6.721,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        9.618,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        11.422,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       9.518,
+       14.182,
+       18.103,
+       22.086,
+       25.549,
+       29.436
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "street",
+   "start": "r2.end+0.9",
+   "end": "p2.end+0.9",
+   "start_line": "p1",
+   "end_line": "p2",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/priya.puppet.json",
+     "speaker": "priya",
+     "place": {
+      "x": 280,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 16.712,
+        "end": 17.612,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 17.342,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 19.625,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 20.025,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "priya",
+      "look": [
+       [
+        15.882,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        18.053,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        20.025,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       3.393,
+       5.171,
+       9.518,
+       11.472,
+       14.182,
+       19.925,
+       25.549,
+       27.554,
+       31.204
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 790,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 17.803,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 18.203,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 19.243,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 21.786,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        15.732,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        18.203,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        19.875,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       9.518,
+       14.182,
+       18.103,
+       22.086,
+       25.549,
+       29.436
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "renderer": "svg",
+   "set": "night",
+   "start": "p2.end+0.9",
+   "end": "m6.end+1.2",
+   "start_line": "r3",
+   "end_line": "m6",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 200,
+      "y": 1520,
+      "s": 0.9
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 24.046,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 27.254,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 29.136,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 30.904,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        23.786,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        25.499,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        27.504,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        29.386,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       3.393,
+       5.171,
+       11.472,
+       18.103,
+       19.925,
+       22.086,
+       27.554,
+       29.436,
+       31.204
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1520,
+      "s": 0.95
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "celebrate",
+        "start": "m5.start",
+        "end": "m5.end+0.3"
+       },
+       {
+        "clip": "nod",
+        "start": 25.249,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 25.649,
+        "end": 27.049,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 29.136,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 29.636,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        0,
+        "neutral"
+       ],
+       [
+        "m5.start",
+        "happy"
+       ]
+      ],
+      "chains": {
+       "tail": [
+        [
+         "m5.start",
+         [
+          640,
+          250
+         ]
+        ],
+        [
+         "m5.end",
+         [
+          640,
+          250
+         ]
+        ]
+       ]
+      },
+      "look": [
+       [
+        23.636,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        25.649,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        27.504,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        29.536,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       9.518,
+       14.182,
+       18.103,
+       22.086,
+       25.549,
+       29.436
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/priya.puppet.json",
+     "speaker": "priya",
+     "place": {
+      "x": 880,
+      "y": 1520,
+      "s": 0.9
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 25.249,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 27.254,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 27.654,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 30.904,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "priya",
+      "look": [
+       [
+        23.636,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        25.499,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        27.654,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        29.386,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       3.393,
+       5.171,
+       9.518,
+       11.472,
+       14.182,
+       19.925,
+       25.549,
+       27.554,
+       31.204
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "beat_cuts": true
+}

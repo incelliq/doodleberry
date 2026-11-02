@@ -1,0 +1,6 @@
+{"about": "One production, many cuts (plan 2.14): the full film in 16:9, four 9:16 episodes split at the scene changes, and a teaser.",
+ "cuts": {
+  "full": {"aspect": "16:9", "ranges": "all"},
+  "ep": {"aspect": "9:16", "split": 4},
+  "teaser": {"aspect": "9:16", "ranges": [["m1.start", "m1.end"], ["m5.start", "p3.end"]]}
+ }}

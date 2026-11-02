@@ -376,3 +376,30 @@ Momo (cast/generated/momo) wears a dino hoodie with a six-segment tail. In a sho
 Clip blending changed: a gesture at weight 1 now plays at full size over idle (foreground clips override the base
 layer per track) instead of being averaged with it. The gesture planner's weight 3 still works. `films/clips-demo`
 shows all of it and renders the same in SVG, Lottie and Synfig.
+
+## Beat grid and master-to-many cuts (plan 2.14)
+A production is rendered once per aspect (the master: `film.render`, plus `film.render` with `"aspect": "16:9"`) and
+cut many ways from it.
+- **Grid:** `python -m dbe film.beats '{"name": "FILM"}'` gives the score's beats and bars (from `score.json` bpm and
+  offset) and how far each shot change and line start sits from them. `"beat_cuts": true` in shots.json moves every
+  shot change onto the bar line in the pause it falls in (else the nearest beat, never into a line), so scene
+  changes, episode splits and music phrases coincide.
+- **Edit list:** `films/FILM/edit.json` declares the cuts:
+  ```json
+  {"cuts": {"full": {"aspect": "16:9", "ranges": "all"},
+            "ep": {"aspect": "9:16", "split": 4},
+            "teaser": {"aspect": "9:16", "ranges": [["m1.start", "m1.end"], ["m5.start", "p3.end"]]},
+            "recap": {"ranges": [{"film": "other-film", "from": "bar:2", "to": "l3.end"}]}}}
+  ```
+  Range ends are seconds, `bar:N` or line-relative times. Each is snapped outward: out of any spoken line, then onto a
+  bar line in that pause, else a beat, else the middle of the pause. `split` makes N episodes at the scene changes
+  (or the longest pauses nearest to equal parts). A range from another film is an insert, cut on that film's grid.
+- **Assembly:** `python -m dbe film.cuts '{"name": "FILM"}'` (`plan_only` to see the cut points, `only` for some
+  cuts) writes `build/cuts/<cut>.mp4`, a `.srt` on the cut's clock and an OpenTimelineIO `.otio` edit (Timeline.1
+  JSON, no library needed) for finishing in an NLE. Picture comes from the master render. Audio comes from the
+  master's mixed stems (voice, music, effects at their mixed levels, so each segment sounds as it does in the master),
+  with equal-power crossfades at joins, the music faded in when a cut starts mid-score and out over the last 0.9 s,
+  levelled to -14 LUFS with the master limiter. Each cut reports its loudness and true peak.
+
+`films/moon-night` is the test production: a four-scene story made once, cut into the full film at 16:9, four 9:16
+episodes and a teaser.
