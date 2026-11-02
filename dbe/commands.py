@@ -2351,6 +2351,7 @@ def test_golden(update=False, film=""):
     if not film or film == "levels":   # drawn levels (WP-35): exposure sheets, compiled clips, the loader, Pencil2D import
         from . import levels as LVL
         bad, meas = LVL.self_test(ROOT / "out" / "leveltest")
+        pb, pm = LVL.page_check(ROOT / "out" / "drawcheck"); bad += pb; meas["draw_page"] = pm
         failed += 1 if bad else 0
         results.append({"levels": "timings, compiled clips, drawings over time in the loader, Pencil2D import", "status": "FAIL" if bad else "ok",
                         "measured": {k: v for k, v in meas.items() if k != "cells"}, **({"cases": bad} if bad else {})})
@@ -3025,6 +3026,88 @@ def level_from_pencil2d(name, file, fps=24, end="last"):
         raise ValueError(f"level does not validate: {errs[:3]}")
     out = _level_path(name); out.parent.mkdir(parents=True, exist_ok=True); out.write_text(json.dumps(p, separators=(",", ":")))
     return {"puppet": str(out.relative_to(ROOT)), "drawings": len(ds), "frames": len(cells), "xsheet": LV.runs(cells)}
+
+
+@command("level.list")
+def level_list():
+    """Drawn levels in cast/levels (WP-35): name, size, drawings, frames, fps."""
+    out = []
+    for f in sorted((ROOT / "cast" / "levels").glob("*.puppet.json")):
+        p = _json(f); x = p["swaps"]["level"].get("xsheet") or {}
+        out.append({"name": f.name[:-len(".puppet.json")], "size": p["artboard"], "drawings": len(p["swaps"]["level"]["shapes"]),
+                    "frames": len(x.get("cells", [])), "fps": x.get("fps")})
+    return out
+
+
+@command("level.new", name=("string", "level name"), size=("array", "[width, height] in pixels", [720, 720]), fps=("integer", "", 24))
+def level_new(name, size=None, fps=24):
+    """Start an empty drawn level (WP-35) to draw on the Studio drawing page: one blank drawing on one frame."""
+    from . import levels as LV
+    f = _level_path(name)
+    if f.exists():
+        raise FileExistsError(f"level {name} exists")
+    W, H = size or [720, 720]
+    p = LV.make(name, [{"name": "d01", "strokes": []}], (W, H), 1, fps, ground=H)
+    f.parent.mkdir(parents=True, exist_ok=True); f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"puppet": str(f.relative_to(ROOT)), "size": [W, H], "fps": fps}
+
+
+@command("level.get", name=("string", "level"))
+def level_get(name):
+    """A drawn level for the Studio drawing page (WP-35): size, fps, the exposure cells and every drawing (its raster
+    strokes, positioned in the level's pixels)."""
+    p = _json(_level_path(name)); sw = p["swaps"]["level"]
+    return {"name": name, "size": p["artboard"], "ground": p.get("ground"), "fps": sw["xsheet"]["fps"], "cells": sw["xsheet"]["cells"],
+            "loop": sw["xsheet"].get("loop", True), "drawings": {k: [st for st in v if "image" in st] for k, v in sw["shapes"].items()}}
+
+
+@command("level.draw", name=("string", "level"), drawing=("string", "drawing name (a new name adds a drawing)"),
+         png=("string", "the whole drawing as a PNG data URI at the level's size (transparent background)", ""),
+         place_after=("string", "for a new drawing: expose it after this drawing's run in the sheet (default: at the end)", ""),
+         hold=("integer", "frames to expose a new drawing", 2))
+def level_draw(name, drawing, png="", place_after="", hold=2):
+    """Save one drawing of a drawn level (WP-35), as the Studio drawing page sends it; a new drawing is exposed in
+    the sheet after the given drawing (or at the end) for `hold` frames; the level's clip is recompiled."""
+    import base64
+    import io
+    import numpy as np
+    from PIL import Image
+    from . import levels as LV
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,40}", drawing):
+        raise ValueError("drawing names are letters, digits, - and _")
+    f = _level_path(name); p = _json(f); sw = p["swaps"]["level"]; W, H = p["artboard"]
+    st = []
+    if png:
+        a = np.asarray(Image.open(io.BytesIO(base64.b64decode(png.split(",", 1)[1]))).convert("RGBA"))
+        if a.shape[1] != W or a.shape[0] != H:
+            raise ValueError(f"the drawing is {a.shape[1]}x{a.shape[0]}; the level is {W}x{H}")
+        r = LV.raster_stroke(a); st = [r] if r else []
+    new = drawing not in sw["shapes"]
+    sw["shapes"][drawing] = st
+    cells = list(sw["xsheet"]["cells"])
+    if new:
+        at = len(cells)
+        if place_after and place_after in cells:
+            at = max(i for i, c in enumerate(cells) if c == place_after) + 1
+        cells[at:at] = [drawing] * max(1, hold)
+    lows = [s_["y"] + s_["h"] for sh in sw["shapes"].values() for s_ in sh if "h" in s_]
+    p["ground"] = max(lows) if lows else H
+    LV.set_xsheet(p, cells=cells)
+    f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"drawing": drawing, "new": new, "drawings": len(sw["shapes"]), "frames": len(cells), "inked": bool(st)}
+
+
+@command("level.delete_drawing", name=("string", "level"), drawing=("string", "drawing to remove (and its cells)"))
+def level_delete_drawing(name, drawing):
+    """Remove a drawing from a drawn level and from its exposure sheet (WP-35)."""
+    from . import levels as LV
+    f = _level_path(name); p = _json(f); sw = p["swaps"]["level"]
+    if drawing not in sw["shapes"] or len(sw["shapes"]) == 1:
+        raise ValueError("no such drawing, or it is the last one")
+    del sw["shapes"][drawing]
+    LV.set_xsheet(p, cells=[c for c in sw["xsheet"]["cells"] if c != drawing])
+    f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"drawings": len(sw["shapes"]), "frames": len(sw["xsheet"]["cells"])}
 
 
 @command("level.onion", name=("string", "level"), frame=("integer", "frame of the level (0-based)"),

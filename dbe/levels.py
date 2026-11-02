@@ -223,3 +223,45 @@ console.log(JSON.stringify(out));
         got["pencil2d"] = "skipped"
     shutil.rmtree(tmp, ignore_errors=True)
     return fails, got
+
+
+def page_check(tmp, port=8794):
+    """the Studio drawing page, driven like an animator would: three pen drawings with the onion skin on, a MyPaint
+    brush stroke, the sheet set on twos, played back (tools/draw_check.mjs against a local server)"""
+    import shutil
+    import socket
+    import subprocess
+    import sys
+    import time
+    fails, got = [], {}
+    tmp = Path(tmp); tmp.mkdir(parents=True, exist_ok=True)
+    name = "zz-drawcheck"; f = ROOT / "cast" / "levels" / f"{name}.puppet.json"
+    f.unlink(missing_ok=True)
+    subprocess.run([sys.executable, "-m", "dbe", "level.new", json.dumps({"name": name, "size": [400, 300], "fps": 12})], cwd=ROOT, check=True, capture_output=True)
+    srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(50):
+            with socket.socket() as s_:
+                if s_.connect_ex(("127.0.0.1", port)) == 0:
+                    break
+            time.sleep(0.2)
+        r = subprocess.run(["node", "tools/draw_check.mjs", str(port), name, str(tmp)], cwd=ROOT, capture_output=True, text=True, timeout=300)
+        try:
+            out = json.loads(r.stdout.strip().splitlines()[-1])
+        except Exception:
+            return [f"draw page: {(r.stderr or r.stdout)[-400:]}"], got
+        got = {"cells": out["cells"], "drawings": len(out["drawings"]), "onion_px": out["onion"], "errors": out["errs"]}
+        if out["cells"] != ["d01", "d01", "d02", "d02", "d03", "d03"] or len(out["drawings"]) != 3:
+            fails.append(f"sheet after drawing three on twos: {out['cells']}")
+        xs = [out["drawings"][k][0][0] for k in ("d01", "d02") if out["drawings"].get(k)]
+        if len(xs) != 2 or not xs[0] < xs[1]:
+            fails.append(f"drawings not where they were drawn: {out['drawings']}")
+        if not out["drawings"].get("d03") or out["drawings"]["d03"][0][3] < 100:
+            fails.append("the brush stroke did not land on the last drawing")
+        if not (out["onion"][0] > 0 and out["onion"][1] > out["onion"][0]):
+            fails.append(f"onion skin: {out['onion']}")
+        if out["errs"]:
+            fails.append(f"page errors: {out['errs'][:3]}")
+    finally:
+        srv.terminate(); f.unlink(missing_ok=True); shutil.rmtree(tmp, ignore_errors=True)
+    return fails, got

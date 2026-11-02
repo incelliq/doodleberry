@@ -36,6 +36,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "board.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/doodle":     # plan 3.6: phone-first creator flow (snap, confirm cuts, see it talk) and drawing requests
             return self._send(200, (STUDIO.parent / "doodle.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/draw":       # WP-35: drawn levels: draw frame by frame with onion skins and an exposure sheet
+            return self._send(200, (STUDIO.parent / "draw.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
             return self._send(200, (STUDIO.parent / "actout.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/api":

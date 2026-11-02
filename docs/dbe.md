@@ -75,7 +75,14 @@ environment variables below).
   brings in a Pencil2D animation with its holds; `level.onion` gives the onion-skin drawings around a frame. A shot
   casts a level like a character and starts its clip `play`. `films/level-demo` plays a 12-drawing campfire and a
   12-drawing walk cycle on twos beside Ravi (golden frames in `python -m dbe test`); its drawings are stand-ins made
-  by `tools/make_level_demo.py` with MyPaint strokes until the Studio drawing page exists.
+  by `tools/make_level_demo.py` with MyPaint strokes.
+  **Studio drawing page** (http://127.0.0.1:8770/draw, linked from Studio): draw a level frame by frame with a
+  pressure pen (perfect-freehand), a MyPaint brush (each stroke painted by libmypaint on the server) or the eraser,
+  with onion skins (the two drawings before in red, the next in green) and the exposure sheet beside it: click a
+  frame, add a drawing after the current one, hold it a frame longer or shorter, put the whole sheet on ones, twos or
+  threes, and play it at the level's rate. `level.new`, `level.get`, `level.draw` (one drawing from the page, a new
+  name placed in the sheet), `level.delete_drawing` and `level.list` serve it; `python -m dbe test` (levels) drives
+  the page with a pointer like an animator (`tools/draw_check.mjs`).
 - **Open-source parts** (WP-34, decisions in `docs/oss-integration.md`): `brush.paint` and `brush.list` (libmypaint
   linked through ctypes, any MyPaint brush preset, pressure strokes onto a transparent PNG), `pencil2d.write` and
   `pencil2d.render` (a drawn level to and from a Pencil2D project, rendered headless with its holds),
