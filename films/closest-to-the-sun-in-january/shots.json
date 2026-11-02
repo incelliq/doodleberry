@@ -1,0 +1,1884 @@
+{
+ "title": "Closest to the Sun in January",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "brand": "brand",
+ "brief": {
+  "title": "Closest to the Sun in January",
+  "takeaway": "Earth is closest to the Sun in early January; the seasons come from Earth's tilt, not its distance.",
+  "hook": "Seasons happen because Earth swings closer to the Sun, then farther away. Right?",
+  "hashtags": [
+   "#science",
+   "#space",
+   "#seasons",
+   "#SriLanka"
+  ],
+  "post_date": "2027-01-02",
+  "prompt": "Did you think it was the distance?"
+ },
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "night",
+   "start": 0,
+   "end": "closest.start-0.15",
+   "start_line": "myth",
+   "end_line": "myth",
+   "bubbles": false,
+   "style": {
+    "float": true
+   },
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M210 690 A330 330 0 1 1 870 690 A330 330 0 1 1 210 690"
+     ],
+     "stroke": "#7f8fc0",
+     "width": 4,
+     "start": -5,
+     "duration": 1,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M639.5 690 L674.5 690",
+      "M625.4 742.5 L655.7 760",
+      "M587 780.9 L604.5 811.2",
+      "M534.5 795 L534.5 830",
+      "M482 780.9 L464.5 811.2",
+      "M443.6 742.5 L413.3 760",
+      "M429.5 690 L394.5 690",
+      "M443.6 637.5 L413.3 620",
+      "M482 599.1 L464.5 568.8",
+      "M534.5 585 L534.5 550",
+      "M587 599.1 L604.5 568.8",
+      "M625.4 637.5 L655.7 620"
+     ],
+     "stroke": "#f6c445",
+     "width": 8,
+     "start": -5,
+     "duration": 0.5,
+     "stagger": 0,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M444.5 690 a90 90 0 1 0 180 0 a90 90 0 1 0 -180 0"
+     ],
+     "fill": "#f6c445",
+     "stroke": "#181e26",
+     "width": 5,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "face",
+     "x": 534.5,
+     "y": 682,
+     "s": 1.0,
+     "mood": "happy",
+     "seed": 3,
+     "look": [
+      [
+       0,
+       [
+        -1,
+        0
+       ]
+      ],
+      [
+       "myth.start+2.4",
+       [
+        0,
+        -1
+       ]
+      ],
+      [
+       "myth.end",
+       [
+        1,
+        0
+       ]
+      ]
+     ]
+    }
+   ],
+   "props": [
+    {
+     "id": "earth",
+     "r": 46,
+     "arc": 330,
+     "svg": "<circle r='46' fill='#2a62b0' stroke='#181e26' stroke-width='5'/><path d='M-30 -16 q12 -16 28 -6 q10 8 -4 16 q-14 6 -24 -10z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M6 12 q16 -6 24 4 q4 12 -10 18 q-14 0 -14 -22z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M-27.8 -64.2 L27.8 64.2' stroke='#f4f1c9' stroke-width='5' stroke-linecap='round'/><circle cx='-27.8' cy='-64.2' r='7' fill='#d0402c' stroke='#181e26' stroke-width='2'/>",
+     "attach": [
+      [
+       0,
+       [
+        210,
+        690
+       ]
+      ],
+      [
+       0.05,
+       {
+        "x": 870,
+        "y": 690,
+        "arrive": "myth.end"
+       }
+      ]
+     ]
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 200,
+      "y": 1580,
+      "s": 0.82
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 0.3,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 2.987,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 1.337,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 4.532,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "seed": 2,
+      "look": [
+       [
+        0.3,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "paper",
+     "text": [
+      "Seasons come from [distance]?"
+     ],
+     "y": 225,
+     "size": 50,
+     "start": -1
+    },
+    {
+     "type": "text",
+     "text": "sizes not to scale",
+     "x": 540,
+     "y": 1075,
+     "size": 30,
+     "color": "#9fb0d8",
+     "start": -1
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "night",
+   "start": "closest.start-0.15",
+   "end": "km.start-0.15",
+   "start_line": "closest",
+   "end_line": "closest",
+   "bubbles": false,
+   "style": {
+    "float": true
+   },
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M210 690 A330 330 0 1 1 870 690 A330 330 0 1 1 210 690"
+     ],
+     "stroke": "#7f8fc0",
+     "width": 4,
+     "start": -5,
+     "duration": 1,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M639.5 690 L674.5 690",
+      "M625.4 742.5 L655.7 760",
+      "M587 780.9 L604.5 811.2",
+      "M534.5 795 L534.5 830",
+      "M482 780.9 L464.5 811.2",
+      "M443.6 742.5 L413.3 760",
+      "M429.5 690 L394.5 690",
+      "M443.6 637.5 L413.3 620",
+      "M482 599.1 L464.5 568.8",
+      "M534.5 585 L534.5 550",
+      "M587 599.1 L604.5 568.8",
+      "M625.4 637.5 L655.7 620"
+     ],
+     "stroke": "#f6c445",
+     "width": 8,
+     "start": -5,
+     "duration": 0.5,
+     "stagger": 0,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M444.5 690 a90 90 0 1 0 180 0 a90 90 0 1 0 -180 0"
+     ],
+     "fill": "#f6c445",
+     "stroke": "#181e26",
+     "width": 5,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "face",
+     "x": 534.5,
+     "y": 682,
+     "s": 1.0,
+     "seed": 3,
+     "mood": [
+      [
+       "closest.start",
+       "happy"
+      ],
+      [
+       "closest.start+0.1",
+       "surprised"
+      ],
+      [
+       "closest.start+3.6",
+       "happy"
+      ]
+     ],
+     "look": [
+      [
+       "closest.start-0.15",
+       [
+        1,
+        0
+       ]
+      ],
+      [
+       "closest.start+1.9",
+       [
+        0,
+        1
+       ]
+      ],
+      [
+       "closest.start+3.4",
+       [
+        -1,
+        0
+       ]
+      ]
+     ]
+    }
+   ],
+   "props": [
+    {
+     "id": "earth",
+     "r": 46,
+     "arc": -330,
+     "svg": "<circle r='46' fill='#2a62b0' stroke='#181e26' stroke-width='5'/><path d='M-30 -16 q12 -16 28 -6 q10 8 -4 16 q-14 6 -24 -10z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M6 12 q16 -6 24 4 q4 12 -10 18 q-14 0 -14 -22z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M-27.8 -64.2 L27.8 64.2' stroke='#f4f1c9' stroke-width='5' stroke-linecap='round'/><circle cx='-27.8' cy='-64.2' r='7' fill='#d0402c' stroke='#181e26' stroke-width='2'/>",
+     "attach": [
+      [
+       "closest.start-0.15",
+       [
+        870,
+        690
+       ]
+      ],
+      [
+       "closest.start+0.4",
+       {
+        "x": 210,
+        "y": 690,
+        "arrive": "closest.start+3.4"
+       }
+      ]
+     ]
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 200,
+      "y": 1580,
+      "s": 0.82
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "surprised",
+        "start": "closest.start+0.1"
+       },
+       {
+        "clip": "nod",
+        "start": 11.4,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "seed": 2,
+      "emotion": [
+       [
+        "closest.start",
+        "surprised"
+       ],
+       [
+        "closest.start+3.6",
+        "happy"
+       ]
+      ],
+      "blinks": [
+       11.7
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": [
+      [
+       "closest.start-0.15",
+       {
+        "x": 1200,
+        "y": 1580,
+        "s": 0.82
+       }
+      ],
+      [
+       "closest.start+0.75",
+       {
+        "x": 880,
+        "y": 1580,
+        "s": 0.82
+       }
+      ]
+     ],
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "walk",
+        "start": "closest.start-0.15",
+        "end": "closest.start+0.75"
+       },
+       {
+        "clip": "present_L",
+        "start": "closest.start+3.2"
+       },
+       {
+        "clip": "point_L",
+        "start": 6.838,
+        "end": 7.738,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 8.443,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 10.143,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "seed": 7,
+      "emotion": [
+       [
+        "closest.start",
+        "happy"
+       ]
+      ],
+      "look": [
+       [
+        5.55,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "paper",
+     "text": [
+      "Seasons come from [distance]?"
+     ],
+     "y": 225,
+     "size": 50,
+     "start": 0,
+     "end": "closest.start+1.5"
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M170 275 Q540 225 910 240"
+     ],
+     "stroke": "#d0402c",
+     "width": 12,
+     "start": "closest.start+0.1",
+     "duration": 0.3,
+     "end": "closest.start+1.5"
+    },
+    {
+     "type": "title",
+     "text": "MYTH",
+     "x": 820,
+     "y": 400,
+     "size": 80,
+     "color": "#d0402c",
+     "outline": "#f4f1c9",
+     "tilt": 8,
+     "start": "closest.start+0.1",
+     "end": "closest.start+1.6"
+    },
+    {
+     "type": "paper",
+     "text": [
+      "Closest: [3 Jan 2027]",
+      "08:03 in Sri Lanka"
+     ],
+     "y": 225,
+     "size": 46,
+     "seed": 11,
+     "start": "closest.start+1.6"
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M250 365 Q190 470 205 625"
+     ],
+     "stroke": "#f4f1c9",
+     "width": 6,
+     "start": "closest.start+3.4",
+     "duration": 0.4,
+     "sound": false
+    },
+    {
+     "type": "text",
+     "text": "sizes not to scale",
+     "x": 540,
+     "y": 1075,
+     "size": 30,
+     "color": "#9fb0d8",
+     "start": -1
+    }
+   ],
+   "cues": [
+    {
+     "t": "closest.start+3.4",
+     "type": "chime"
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "night",
+   "start": "km.start-0.15",
+   "end": "ask.start-0.2",
+   "start_line": "km",
+   "end_line": "km",
+   "bubbles": false,
+   "style": {
+    "float": true
+   },
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M210 690 A330 330 0 1 1 870 690 A330 330 0 1 1 210 690"
+     ],
+     "stroke": "#7f8fc0",
+     "width": 4,
+     "start": -5,
+     "duration": 1,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M639.5 690 L674.5 690",
+      "M625.4 742.5 L655.7 760",
+      "M587 780.9 L604.5 811.2",
+      "M534.5 795 L534.5 830",
+      "M482 780.9 L464.5 811.2",
+      "M443.6 742.5 L413.3 760",
+      "M429.5 690 L394.5 690",
+      "M443.6 637.5 L413.3 620",
+      "M482 599.1 L464.5 568.8",
+      "M534.5 585 L534.5 550",
+      "M587 599.1 L604.5 568.8",
+      "M625.4 637.5 L655.7 620"
+     ],
+     "stroke": "#f6c445",
+     "width": 8,
+     "start": -5,
+     "duration": 0.5,
+     "stagger": 0,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M444.5 690 a90 90 0 1 0 180 0 a90 90 0 1 0 -180 0"
+     ],
+     "fill": "#f6c445",
+     "stroke": "#181e26",
+     "width": 5,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "face",
+     "x": 534.5,
+     "y": 682,
+     "s": 1.0,
+     "mood": "happy",
+     "seed": 3,
+     "look": [
+      [
+       "km.start-0.15",
+       [
+        -1,
+        0
+       ]
+      ],
+      [
+       "km.start+2.6",
+       [
+        0,
+        -1
+       ]
+      ],
+      [
+       "km.start+3.4",
+       [
+        1,
+        0
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M150 1100 L150 1330"
+     ],
+     "stroke": "#f4f1c9",
+     "width": 5,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M150 1150 L811 1150"
+     ],
+     "stroke": "#f6c445",
+     "width": 46,
+     "start": "km.start",
+     "duration": 0.8,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M150 1290 L834 1290"
+     ],
+     "stroke": "#f6c445",
+     "width": 46,
+     "start": "km.start+4.0",
+     "duration": 0.8,
+     "sound": false
+    }
+   ],
+   "props": [
+    {
+     "id": "earth",
+     "r": 46,
+     "arc": 330,
+     "svg": "<circle r='46' fill='#2a62b0' stroke='#181e26' stroke-width='5'/><path d='M-30 -16 q12 -16 28 -6 q10 8 -4 16 q-14 6 -24 -10z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M6 12 q16 -6 24 4 q4 12 -10 18 q-14 0 -14 -22z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M-27.8 -64.2 L27.8 64.2' stroke='#f4f1c9' stroke-width='5' stroke-linecap='round'/><circle cx='-27.8' cy='-64.2' r='7' fill='#d0402c' stroke='#181e26' stroke-width='2'/>",
+     "attach": [
+      [
+       "km.start-0.15",
+       [
+        210,
+        690
+       ]
+      ],
+      [
+       "km.start+2.7",
+       {
+        "x": 870,
+        "y": 690,
+        "arrive": "km.start+4.0"
+       }
+      ]
+     ]
+    }
+   ],
+   "overlays": [
+    {
+     "type": "paper",
+     "text": [
+      "Distance to the [Sun]"
+     ],
+     "y": 225,
+     "size": 50,
+     "seed": 5,
+     "start": "km.start-0.15"
+    },
+    {
+     "type": "text",
+     "text": "January",
+     "x": 140,
+     "y": 775,
+     "size": 40,
+     "color": "#f4f1c9",
+     "start": "km.start-0.15"
+    },
+    {
+     "type": "text",
+     "text": "January: 147 million km",
+     "x": 400,
+     "y": 1110,
+     "size": 44,
+     "color": "#f4f1c9",
+     "start": "km.start+0.2"
+    },
+    {
+     "type": "text",
+     "text": "July",
+     "x": 900,
+     "y": 775,
+     "size": 40,
+     "color": "#f4f1c9",
+     "start": "km.start+3.3"
+    },
+    {
+     "type": "text",
+     "text": "July: 152 million km",
+     "x": 380,
+     "y": 1250,
+     "size": 44,
+     "color": "#f4f1c9",
+     "start": "km.start+4.1"
+    },
+    {
+     "type": "text",
+     "text": "Gap: about 5 million km",
+     "x": 540,
+     "y": 1395,
+     "size": 42,
+     "color": "#f6c445",
+     "start": "km.start+4.6"
+    }
+   ],
+   "cues": [
+    {
+     "t": "km.start",
+     "type": "pop_small"
+    },
+    {
+     "t": "km.start+4.0",
+     "type": "pop_small"
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "renderer": "svg",
+   "set": "night",
+   "start": "ask.start-0.2",
+   "end": "tilt.start-0.25",
+   "start_line": "ask",
+   "end_line": "ask",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1580,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "think",
+        "start": "ask.start+0.1"
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.178,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 19.698,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "seed": 2,
+      "emotion": [
+       [
+        "ask.start-0.2",
+        "surprised"
+       ]
+      ],
+      "look": [
+       [
+        19.05,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "cues": [
+    {
+     "t": "ask.start-0.2",
+     "type": "whoosh"
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "renderer": "svg",
+   "set": "night",
+   "start": "tilt.start-0.25",
+   "end": "seven.start-0.25",
+   "start_line": "tilt",
+   "end_line": "tilt",
+   "bubbles": false,
+   "camera": [
+    [
+     "tilt.start-0.25",
+     [
+      540,
+      960,
+      1
+     ]
+    ],
+    [
+     "seven.start-0.25",
+     [
+      540,
+      960,
+      1.05
+     ]
+    ]
+   ],
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M70 700 L270 700 M242 680 L270 700 L242 720",
+      "M70 820 L270 820 M242 800 L270 820 L242 840",
+      "M70 940 L270 940 M242 920 L270 940 L242 960"
+     ],
+     "stroke": "#f6c445",
+     "width": 7,
+     "start": "tilt.start-0.2",
+     "duration": 0.7,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M310 820 a230 230 0 1 0 460 0 a230 230 0 1 0 -460 0"
+     ],
+     "fill": "#2a62b0",
+     "stroke": "#181e26",
+     "width": 6,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M420 700 q60 -70 140 -30 q50 40 -10 90 q-60 40 -110 10 q-40 -30 -20 -70z",
+      "M560 860 q70 -30 120 20 q20 60 -40 100 q-70 20 -90 -40 q-10 -50 10 -80z",
+      "M380 900 q30 -20 50 10 q0 40 -30 40 q-30 -10 -20 -50z"
+     ],
+     "fill": "#5fb85a",
+     "stroke": "#181e26",
+     "width": 4,
+     "start": -5,
+     "duration": 0.5,
+     "stagger": 0,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M540 590 a230 230 0 0 1 0 460 z"
+     ],
+     "fill": "#0e1633",
+     "fill_opacity": 0.45,
+     "stroke": "#181e26",
+     "width": 1,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M328.9 911.3 L751.1 728.7"
+     ],
+     "stroke": "#f4f1c9",
+     "width": 4,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    }
+   ],
+   "overlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M409 517 L671 1123"
+     ],
+     "stroke": "#f4f1c9",
+     "width": 9,
+     "start": "tilt.start+0.4",
+     "duration": 0.6
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M540 470 L540 1170"
+     ],
+     "stroke": "#9fb0d8",
+     "width": 4,
+     "start": "tilt.start+1.9",
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M540 670 A150 150 0 0 0 480.4 682.3"
+     ],
+     "stroke": "#f6c445",
+     "width": 9,
+     "start": "tilt.start+2.5",
+     "duration": 0.4,
+     "sound": false
+    },
+    {
+     "type": "title",
+     "text": "Tilt",
+     "y": 340,
+     "size": 140,
+     "color": "#f6c445",
+     "outline": "#1d2a50",
+     "start": "tilt.start+0.4",
+     "end": "tilt.start+4.4"
+    },
+    {
+     "type": "counter",
+     "from": 23.4,
+     "to": 23.4,
+     "decimals": 1,
+     "suffix": "°",
+     "x": 780,
+     "y": 560,
+     "size": 110,
+     "color": "#f6c445",
+     "start": "tilt.start+2.6",
+     "duration": 0.7
+    },
+    {
+     "type": "text",
+     "text": "axis tilt",
+     "x": 780,
+     "y": 625,
+     "size": 40,
+     "color": "#f4f1c9",
+     "start": "tilt.start+3.0"
+    },
+    {
+     "type": "paper",
+     "text": [
+      "Seasons come from",
+      "the [tilt]"
+     ],
+     "y": 250,
+     "size": 58,
+     "seed": 9,
+     "start": "tilt.start+4.5"
+    }
+   ],
+   "cues": [
+    {
+     "t": "tilt.start-0.25",
+     "type": "whoosh"
+    },
+    {
+     "t": "tilt.start+2.6",
+     "type": "pop_small"
+    }
+   ]
+  },
+  {
+   "id": "s6",
+   "renderer": "svg",
+   "set": "night",
+   "start": "seven.start-0.25",
+   "end": "lanka.start-0.2",
+   "start_line": "seven",
+   "end_line": "seven",
+   "bubbles": false,
+   "style": {
+    "float": true
+   },
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M210 690 A330 330 0 1 1 870 690 A330 330 0 1 1 210 690"
+     ],
+     "stroke": "#7f8fc0",
+     "width": 4,
+     "start": -5,
+     "duration": 1,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M639.5 690 L674.5 690",
+      "M625.4 742.5 L655.7 760",
+      "M587 780.9 L604.5 811.2",
+      "M534.5 795 L534.5 830",
+      "M482 780.9 L464.5 811.2",
+      "M443.6 742.5 L413.3 760",
+      "M429.5 690 L394.5 690",
+      "M443.6 637.5 L413.3 620",
+      "M482 599.1 L464.5 568.8",
+      "M534.5 585 L534.5 550",
+      "M587 599.1 L604.5 568.8",
+      "M625.4 637.5 L655.7 620"
+     ],
+     "stroke": "#f6c445",
+     "width": 8,
+     "start": -5,
+     "duration": 0.5,
+     "stagger": 0,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M444.5 690 a90 90 0 1 0 180 0 a90 90 0 1 0 -180 0"
+     ],
+     "fill": "#f6c445",
+     "stroke": "#181e26",
+     "width": 5,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "face",
+     "x": 534.5,
+     "y": 682,
+     "s": 1.0,
+     "mood": "happy",
+     "seed": 3,
+     "look": [
+      [
+       "seven.start-0.25",
+       [
+        -1,
+        0
+       ]
+      ],
+      [
+       "seven.start+2.5",
+       [
+        -1,
+        0.3
+       ]
+      ],
+      [
+       "seven.start+3.4",
+       [
+        0,
+        -0.6
+       ]
+      ]
+     ]
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M380 660 L270 660",
+      "M380 720 L270 720"
+     ],
+     "stroke": "#f6c445",
+     "width": 6,
+     "start": "seven.start+1.0",
+     "duration": 0.5,
+     "sound": false
+    }
+   ],
+   "props": [
+    {
+     "id": "earth",
+     "r": 46,
+     "svg": "<circle r='46' fill='#2a62b0' stroke='#181e26' stroke-width='5'/><path d='M-30 -16 q12 -16 28 -6 q10 8 -4 16 q-14 6 -24 -10z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M6 12 q16 -6 24 4 q4 12 -10 18 q-14 0 -14 -22z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M-27.8 -64.2 L27.8 64.2' stroke='#f4f1c9' stroke-width='5' stroke-linecap='round'/><circle cx='-27.8' cy='-64.2' r='7' fill='#d0402c' stroke='#181e26' stroke-width='2'/>",
+     "attach": [
+      [
+       "seven.start-0.25",
+       [
+        210,
+        690
+       ]
+      ]
+     ]
+    }
+   ],
+   "overlays": [
+    {
+     "type": "text",
+     "text": "January",
+     "x": 140,
+     "y": 775,
+     "size": 40,
+     "color": "#f4f1c9",
+     "start": "seven.start-0.25"
+    },
+    {
+     "type": "counter",
+     "from": 7,
+     "to": 7,
+     "prefix": "≈+",
+     "suffix": "%",
+     "x": 330,
+     "y": 1200,
+     "size": 130,
+     "color": "#f6c445",
+     "start": "seven.start+1.25",
+     "duration": 0.5
+    },
+    {
+     "type": "text",
+     "text": "more sunlight than in July",
+     "x": 340,
+     "y": 1275,
+     "size": 40,
+     "color": "#f4f1c9",
+     "start": "seven.start+1.6"
+    },
+    {
+     "type": "paper",
+     "text": [
+      "The [tilt] makes the seasons"
+     ],
+     "y": 225,
+     "size": 50,
+     "seed": 13,
+     "start": "seven.start+3.2"
+    },
+    {
+     "type": "text",
+     "text": "sizes not to scale",
+     "x": 540,
+     "y": 1075,
+     "size": 30,
+     "color": "#9fb0d8",
+     "start": -1
+    }
+   ],
+   "cues": [
+    {
+     "t": "seven.start-0.25",
+     "type": "whoosh"
+    },
+    {
+     "t": "seven.start+1.25",
+     "type": "pop_small"
+    }
+   ]
+  },
+  {
+   "id": "s7",
+   "renderer": "svg",
+   "set": "night",
+   "start": "lanka.start-0.2",
+   "end": "warm.start-0.2",
+   "start_line": "lanka",
+   "end_line": "lanka",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3,
+    "ease": 0.01
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 330,
+      "y": 1580,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 35.2,
+        "end": 36.1,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 35.847,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "seed": 2,
+      "emotion": [
+       [
+        "lanka.start-0.2",
+        "surprised"
+       ]
+      ],
+      "look": [
+       [
+        35.2,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 760,
+      "y": 1580,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 36.75,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "seed": 7,
+      "emotion": [
+       [
+        "lanka.start-0.2",
+        "happy"
+       ]
+      ],
+      "look": [
+       [
+        35.05,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       37.05
+      ]
+     }
+    }
+   ],
+   "cues": [
+    {
+     "t": "lanka.start-0.2",
+     "type": "whoosh"
+    }
+   ]
+  },
+  {
+   "id": "s8",
+   "renderer": "svg",
+   "set": "night",
+   "start": "warm.start-0.2",
+   "end": "monsoon.start-0.2",
+   "start_line": "warm",
+   "end_line": "warm",
+   "bubbles": false,
+   "style": {
+    "float": true
+   },
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M240 760 a300 300 0 1 0 600 0 a300 300 0 1 0 -600 0"
+     ],
+     "fill": "#2a62b0",
+     "stroke": "#181e26",
+     "width": 6,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M245 708 L835 708 L835 729 L245 729 Z"
+     ],
+     "fill": "#f6c445",
+     "fill_opacity": 0.6,
+     "stroke": "#f6c445",
+     "width": 2,
+     "start": "warm.start+0.4",
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M240 760 L840 760"
+     ],
+     "stroke": "#f4f1c9",
+     "width": 5,
+     "start": "warm.start+0.6",
+     "duration": 0.6
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M526 718 a14 14 0 1 0 28 0 a14 14 0 1 0 -28 0"
+     ],
+     "fill": "#d0402c",
+     "stroke": "#181e26",
+     "width": 3,
+     "start": "warm.start-0.1",
+     "duration": 0.3,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M540 495 L540 700"
+     ],
+     "stroke": "#f4f1c9",
+     "width": 4,
+     "start": "warm.start+0.1",
+     "duration": 0.4,
+     "sound": false
+    }
+   ],
+   "overlays": [
+    {
+     "type": "paper",
+     "text": [
+      "[Sri Lanka] 6–10° N"
+     ],
+     "y": 380,
+     "size": 58,
+     "seed": 17,
+     "start": "warm.start-0.2"
+    },
+    {
+     "type": "text",
+     "text": "Equator",
+     "x": 720,
+     "y": 800,
+     "size": 44,
+     "color": "#ffffff",
+     "start": "warm.start+1.0"
+    },
+    {
+     "type": "icon",
+     "name": "thermometer-sun",
+     "x": 170,
+     "y": 1000,
+     "size": 140,
+     "color": "#d0402c",
+     "badge": "#fbfaf5",
+     "start": "warm.start+2.4"
+    },
+    {
+     "type": "card",
+     "title": "Colombo",
+     "body": "January: only about 2 °C below the warmest month.",
+     "y": 1120,
+     "w": 820,
+     "x": 130,
+     "start": "warm.start+3.1"
+    }
+   ],
+   "cues": [
+    {
+     "t": "warm.start-0.2",
+     "type": "whoosh"
+    },
+    {
+     "t": "warm.start+3.1",
+     "type": "pop_small"
+    }
+   ]
+  },
+  {
+   "id": "s9",
+   "renderer": "svg",
+   "set": "night",
+   "start": "monsoon.start-0.2",
+   "end": "button.start-0.2",
+   "start_line": "monsoon",
+   "end_line": "monsoon",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 200,
+      "y": 1580,
+      "s": 0.82
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 49.85,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "seed": 2,
+      "emotion": [
+       [
+        "monsoon.start",
+        "happy"
+       ]
+      ],
+      "look": [
+       [
+        46.25,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       50.15
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 880,
+      "y": 1580,
+      "s": 0.82
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "present_R",
+        "start": "monsoon.start+0.3"
+       },
+       {
+        "clip": "point_L",
+        "start": 46.4,
+        "end": 47.3,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 48.23,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "seed": 7,
+      "emotion": [
+       [
+        "monsoon.start",
+        "happy"
+       ]
+      ],
+      "look": [
+       [
+        46.4,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "paper",
+     "text": [
+      "Mar–Apr: inter-monsoon"
+     ],
+     "y": 260,
+     "size": 46,
+     "seed": 21,
+     "rotate": -1.5,
+     "start": "monsoon.start-0.1"
+    },
+    {
+     "type": "paper",
+     "text": [
+      "May–Sep: [southwest monsoon]"
+     ],
+     "y": 385,
+     "size": 46,
+     "seed": 22,
+     "rotate": 1.5,
+     "start": "monsoon.start+0.3"
+    },
+    {
+     "type": "paper",
+     "text": [
+      "Oct–Nov: inter-monsoon"
+     ],
+     "y": 510,
+     "size": 46,
+     "seed": 23,
+     "rotate": -1,
+     "start": "monsoon.start+0.7"
+    },
+    {
+     "type": "paper",
+     "text": [
+      "Dec–Feb: [northeast monsoon]"
+     ],
+     "y": 635,
+     "size": 46,
+     "seed": 24,
+     "rotate": 1,
+     "start": "monsoon.start+1.1"
+    }
+   ],
+   "cues": [
+    {
+     "t": "monsoon.start-0.2",
+     "type": "whoosh"
+    }
+   ]
+  },
+  {
+   "id": "s10",
+   "renderer": "svg",
+   "set": "night",
+   "start": "button.start-0.2",
+   "end": "button.end+1.6",
+   "start_line": "button",
+   "end_line": "button",
+   "bubbles": false,
+   "style": {
+    "float": true
+   },
+   "underlays": [
+    {
+     "type": "draw",
+     "paths": [
+      "M210 690 A330 330 0 1 1 870 690 A330 330 0 1 1 210 690"
+     ],
+     "stroke": "#7f8fc0",
+     "width": 4,
+     "start": -5,
+     "duration": 1,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M639.5 690 L674.5 690",
+      "M625.4 742.5 L655.7 760",
+      "M587 780.9 L604.5 811.2",
+      "M534.5 795 L534.5 830",
+      "M482 780.9 L464.5 811.2",
+      "M443.6 742.5 L413.3 760",
+      "M429.5 690 L394.5 690",
+      "M443.6 637.5 L413.3 620",
+      "M482 599.1 L464.5 568.8",
+      "M534.5 585 L534.5 550",
+      "M587 599.1 L604.5 568.8",
+      "M625.4 637.5 L655.7 620"
+     ],
+     "stroke": "#f6c445",
+     "width": 8,
+     "start": -5,
+     "duration": 0.5,
+     "stagger": 0,
+     "sound": false
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M444.5 690 a90 90 0 1 0 180 0 a90 90 0 1 0 -180 0"
+     ],
+     "fill": "#f6c445",
+     "stroke": "#181e26",
+     "width": 5,
+     "start": -5,
+     "duration": 0.5,
+     "sound": false
+    },
+    {
+     "type": "face",
+     "x": 534.5,
+     "y": 682,
+     "s": 1.0,
+     "seed": 3,
+     "mood": "happy",
+     "look": [
+      [
+       "button.start-0.2",
+       [
+        -1,
+        0
+       ]
+      ],
+      [
+       "button.start+2.0",
+       [
+        0,
+        1
+       ]
+      ],
+      [
+       "button.start+2.8",
+       [
+        -1,
+        0
+       ]
+      ]
+     ]
+    }
+   ],
+   "props": [
+    {
+     "id": "earth",
+     "r": 46,
+     "svg": "<circle r='46' fill='#2a62b0' stroke='#181e26' stroke-width='5'/><path d='M-30 -16 q12 -16 28 -6 q10 8 -4 16 q-14 6 -24 -10z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M6 12 q16 -6 24 4 q4 12 -10 18 q-14 0 -14 -22z' fill='#5fb85a' stroke='#181e26' stroke-width='3'/><path d='M-27.8 -64.2 L27.8 64.2' stroke='#f4f1c9' stroke-width='5' stroke-linecap='round'/><circle cx='-27.8' cy='-64.2' r='7' fill='#d0402c' stroke='#181e26' stroke-width='2'/>",
+     "attach": [
+      [
+       "button.start-0.2",
+       [
+        210,
+        690
+       ]
+      ]
+     ]
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 200,
+      "y": 1580,
+      "s": 0.82
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "celebrate",
+        "start": "button.start+1.6"
+       },
+       {
+        "clip": "talk_beat",
+        "start": 54.123,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 52.15,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 53.048,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 54.143,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "seed": 2,
+      "emotion": [
+       [
+        "button.start-0.2",
+        "happy"
+       ]
+      ],
+      "look": [
+       [
+        52.15,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 880,
+      "y": 1580,
+      "s": 0.82
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": "button.start+2.2"
+       },
+       {
+        "clip": "nod",
+        "start": 54.9,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "seed": 7,
+      "emotion": [
+       [
+        "button.start-0.2",
+        "happy"
+       ]
+      ],
+      "look": [
+       [
+        52.0,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       55.2
+      ]
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "citation",
+     "text": "Sources: USNO, NASA, NOAA, Wikipedia,",
+     "x": 64,
+     "y": 225,
+     "size": 26,
+     "start": "button.start-0.2"
+    },
+    {
+     "type": "citation",
+     "text": "Dayananda, Sri Lanka Dept. of Meteorology (2010),",
+     "x": 64,
+     "y": 272,
+     "size": 26,
+     "start": "button.start-0.2"
+    },
+    {
+     "type": "citation",
+     "text": "Climates to Travel",
+     "x": 64,
+     "y": 319,
+     "size": 26,
+     "start": "button.start-0.2"
+    },
+    {
+     "type": "text",
+     "text": "3 Jan 2027",
+     "x": 165,
+     "y": 775,
+     "size": 40,
+     "color": "#f6c445",
+     "start": "button.start-0.2"
+    },
+    {
+     "type": "text",
+     "text": "sizes not to scale",
+     "x": 540,
+     "y": 1075,
+     "size": 30,
+     "color": "#9fb0d8",
+     "start": -1
+    }
+   ],
+   "cues": [
+    {
+     "t": "button.start-0.2",
+     "type": "whoosh"
+    }
+   ]
+  }
+ ]
+}

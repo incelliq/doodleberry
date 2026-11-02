@@ -1,0 +1,97 @@
+{
+ "title": "Closest to the Sun in January",
+ "format": "myth_vs_data",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.3,
+ "gap_s": 0.35,
+ "lines": [
+  {
+   "id": "myth",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Seasons happen because Earth swings closer to the Sun, then farther away. Right?",
+   "slot": [0.3, 4.9]
+  },
+  {
+   "id": "closest",
+   "speaker": "ravi",
+   "fact": ["F01", "F02"],
+   "text": "Nope, not quite. This January third, Earth is the closest it gets to the Sun all year.",
+   "slot": [5.55, 5.8]
+  },
+  {
+   "id": "km",
+   "speaker": "ravi",
+   "fact": ["F03", "F02", "F04"],
+   "text": "147 million kilometres. And in July, 152 million.",
+   "slot": [11.7, 6.0]
+  },
+  {
+   "id": "ask",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Then what makes the seasons?",
+   "pause": 0.5,
+   "slot": [19.05, 1.6]
+  },
+  {
+   "id": "tilt",
+   "speaker": "ravi",
+   "fact": ["F06", "F05"],
+   "text": "It's the tilt. Earth's axis leans about 23.4 degrees, and that tilt causes the seasons.",
+   "slot": [21.5, 7.2]
+  },
+  {
+   "id": "seven",
+   "speaker": "ravi",
+   "fact": ["F10", "F05"],
+   "text": "Being closer gives about 7 percent more sunlight, but the tilt is what makes the seasons.",
+   "slot": [29.05, 5.8]
+  },
+  {
+   "id": "lanka",
+   "speaker": "momo",
+   "fact": null,
+   "text": "And here in Sri Lanka?",
+   "slot": [35.2, 1.5]
+  },
+  {
+   "id": "warm",
+   "speaker": "ravi",
+   "fact": ["F07", "F09"],
+   "text": "We're near the equator, so it's warm all year. In Colombo, January is about 2 degrees cooler than the warmest month.",
+   "slot": [37.05, 9.0]
+  },
+  {
+   "id": "monsoon",
+   "speaker": "ravi",
+   "fact": ["F08"],
+   "text": "Here, the year has four seasons, named for the monsoons.",
+   "pause": 2.0,
+   "slot": [46.4, 3.4]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": ["F02"],
+   "text": "Closest to the Sun, in January. Who knew?",
+   "slot": [52.15, 2.7]
+  }
+ ],
+ "slots": {
+  "wpm": 165,
+  "note": "slots set by hand from measured natural speech lengths (numbers are spoken long), 2026-11-02"
+ }
+}

@@ -258,6 +258,9 @@ def tick(reg):
         if s.get("pid") and not s.get("ended") and not alive(s["pid"]):
             s["ended"] = now()
             c = session_cost(s.get("log", "")) if s.get("runner") == "claude" else None
+            if c and s.get("started"):   # the result's own duration covers only its last turn: use the wall clock
+                c["api_minutes"] = c["minutes"]
+                c["minutes"] = round((dt.datetime.fromisoformat(s["ended"]) - dt.datetime.fromisoformat(s["started"])).total_seconds() / 60, 1)
             if c:
                 e.setdefault("costs", []).append({"at": now(), **c}); e["cost_usd"] = round(sum(x["usd"] for x in e["costs"]), 4)
                 if str(c.get("stopped", "")).startswith("error_max_budget") or "budget" in str(c.get("stopped", "")):
@@ -347,6 +350,9 @@ def measure(e, stage, report):
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", str(fd / "build" / "final.mp4"), "-frames:v", "1", "-vf", "scale=270:-2", str(reg_dir() / f / "poster.jpg")], capture_output=True)
         if failing:
             return "fail", [f"QA fails: {', '.join(failing)}"], measured, False
+        dv = str((director or {}).get("verdict") or "").lower()
+        if "one more pass" in dv or dv in ("fail", "needs work", "redo"):   # WP-03: the film's own director has the last word on readiness
+            return "fail", [f"the director asks for one more pass: {(director.get('notes') or '')[:200]}"], measured, False
         return "ready", ([f"expert review pending ({rv['why']}): approval waits for it"] if exp == "pending" else []), measured, False
     raise ValueError(f"stage is one of {STAGES}")
 
@@ -503,6 +509,15 @@ def self_test(scratch):
         got["final"] = [a.get("verdict"), b.get("verdict")]
         if a.get("verdict") != "fail" or "error" not in no or b.get("verdict") != "ready":
             fails.append(f"final and approval gate: {a.get('verdict')}, approve-before-pass {no}, {b.get('verdict')}")
+        led = json.loads((fd / "ledger.json").read_text())   # WP-03: the director's "one more pass" holds the final
+        led.append({"at": now(), "round": 2, "role": "director", "verdict": "one more pass", "notes": "the counters land late"})
+        (fd / "ledger.json").write_text(json.dumps(led))
+        dm = run("prod.checkpoint", {"film": film, "stage": "final", "report": {}})
+        led.append({"at": now(), "round": 3, "role": "director", "verdict": "ship", "notes": "fixed"}); (fd / "ledger.json").write_text(json.dumps(led))
+        ds = run("prod.checkpoint", {"film": film, "stage": "final", "report": {}})
+        got["director_gate"] = [dm.get("verdict"), ds.get("verdict")]
+        if dm.get("verdict") != "fail" or "director" not in " ".join(dm.get("reasons", [])) or ds.get("verdict") != "ready":
+            fails.append(f"director gate: {got['director_gate']}")
         ok_ = run("prod.approve", {"film": film, "by": "owner"})
         if ok_.get("state") != "approved":
             fails.append(f"approval after the expert review: {ok_}")

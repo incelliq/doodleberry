@@ -781,7 +781,8 @@ counter-evidence entry that contradicts or blocks (or contradictions the session
 stops until the owner decides with `prod.decide`. Proceed carries on as briefed; narrow appends the owner's change of
 scope to the film's brief and delivers it with the next answer; stop ends the film. The first shot must exist at the
 film's frame size, and a still goes to the board. The final reads `qa.json` and the director's ledger verdict, then
-copies the render, QA report and a poster for the board. The answer carries the verdict (ok, ready, fail, blocked,
+copies the render, QA report and a poster for the board; it is not ready while the film's own director (its latest
+`director` ledger entry) asks for "one more pass" (WP-03). The answer carries the verdict (ok, ready, fail, blocked,
 escalate), the reasons, the owner's pending instructions and `continue`: a stopped or escalated film's session ends.
 
 Owner controls: `prod.stop` (the session's process group), `prod.narrow`, `prod.relaunch` (renders in the workspace

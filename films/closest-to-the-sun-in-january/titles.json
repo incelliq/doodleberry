@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "Earth is closest to the Sun in January",
+   "by": "Claude (WP-03 film)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Closest to the Sun in January. So why the seasons?",
+   "by": "Claude (WP-03 film)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "CLOSEST",
+   "bottom": "IN JANUARY?",
+   "by": "Claude (WP-03 film)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "IT IS",
+   "bottom": "THE TILT",
+   "by": "Claude (WP-03 film)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}
