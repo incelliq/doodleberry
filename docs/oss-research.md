@@ -3,6 +3,13 @@
 Scope: OSS libraries, models, formats and assets that could strengthen Doodleberry, a headless, CPU-only animation backend (SVG frames rendered in Chromium, a cut-out puppet system, Lottie/Synfig/Grease Pencil exporters, three.js 3D, Piper/WORLD audio, and a command registry exposed through a CLI, HTTP and MCP).
 This list leaves out what Doodleberry already does.
 
+> **Policy update (2 November 2026):** Doodleberry is an in-house R&D platform, not a distributed product, so every
+> licence below is usable in-house: GPL and AGPL code may be linked and modified, and NC or research-only models and
+> data may be used for in-house work. The flags below now matter only for what ends up in a publicly posted film, where
+> the posting gate flags NC, research-only and share-alike inputs for the owner. "Avoid" verdicts in this file were
+> made under the old rule; read them as "flag at posting", not "do not use". See the licence rule in
+> `docs/build-plan.md`.
+
 ## How to read this
 
 **Licence verification tags**

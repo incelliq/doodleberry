@@ -35,61 +35,66 @@ order, in which bundles, and how we know each is finished.
    film versions; director's desk and specialist agents; templates beyond humanoid and doodle (quadruped, bird,
    object with a face); character bible.
 5. **"Done when" sharpened** for 3.9, 3.10 and every Phase 4 item (several read "as each lands" or "exists").
-6. **Two new directions from the owner (2 November):** run several series with different content and branding
-   (WP-32, in M2, before a second series is planned), and close the gap with professional cartoon software by
-   integrating open-source codebases inside Doodleberry (M9, WP-33 to WP-41). Permissive code (MIT, BSD, Apache-2.0,
-   ISC) may be vendored and modified; GPL programs stay separate processes; AGPL and non-commercial weights or data
-   stay out. M9 also reopens one "Never build" entry (a frame-by-frame drawing suite) as a decision for the owner.
+6. **New directions from the owner (2 November):**
+   - **Several series** with different content and branding: WP-32, in M2, before a second series is planned.
+   - **Professional 2D+ parity is a must**, and beyond it: it becomes the main development lane from December (about
+     two thirds of development sessions), not a late milestone.
+   - **All open-source code may be used**, because Doodleberry is in-house R&D and is not distributed: GPL and AGPL
+     code may be vendored, modified and linked in, and non-commercial or research-only models and data may be used
+     in-house. The licence ledger (WP-33) records every component's class, and the posting gate flags a public film
+     that used a restricted input. The frame-by-frame drawing suite leaves the Never build list (WP-35).
 7. **Sizing recalibrated:** the build plan's S/M/L assumed a developer working with an agent. In practice an agent
    session finished one M item (3.5, 3.6, 3.8) or one L item (3.7) in a few hours, including tests and docs. Each WP
    below also gives **sessions**: the expected number of such working sessions.
 
 ## At a glance
-| WP | Package | Milestone | Size | Sessions |
-|---|---|---|---|---|
-| 01 | Reconcile the plan and the feature map | M1 | S | 1 session |
-| 02 | Environment doctor and one-step setup | M1 | S-M | 1 session |
-| 03 | Agent sessions end to end | M1 | M | 1-2 sessions |
-| 04 | Calibrate layout QA per style | M1 | S-M | 1 session |
-| 05 | Health and claims review gate | M1 | S | 1 session |
-| 06 | From calendar to production | M2 | M | 1 session |
-| 07 | Title, thumbnail and cover lab | M2 | M | 1 session |
-| 08 | Posting with a human approval per post | M2 | M | 1-2 sessions |
-| 32 | Channels and brands: several series side by side | M2 | S-M | 1 session |
-| 09 | Motion effects and physics, finished | M3 | M-L | 2 sessions |
-| 10 | Acting intelligence 2 | M3 | M | 1-2 sessions |
-| 11 | Interaction and locomotion | M3 | M-L | 2 sessions |
-| 12 | Act it out 2 | M3 | M | 1-2 sessions |
-| 13 | Sound depth | M3 | M | 1-2 sessions |
-| 14 | Renderer parity | M4 | L | 2-3 sessions |
-| 15 | Post, transitions and stepped rendering | M4 | M | 1-2 sessions |
-| 16 | Sets, props, cast and templates | M4 | M-L | 2 sessions |
-| 17 | Bubbles and text, finished | M4 | S | 1 session |
-| 18 | Rig Canvas and doodle tools 2 | M5 | L | 2-3 sessions |
-| 19 | Timeline and review room 2 | M5 | M | 1-2 sessions |
-| 20 | Graph view, estimates and events | M5 | M | 1-2 sessions |
-| 21 | Director's desk and specialist agents | M5 | M | 1-2 sessions |
-| 22 | Editor hand-off | M6 | M | 1 session |
-| 23 | Outputs for every format | M6 | M-L | 2 sessions |
-| 24 | Accessibility and aspect | M6 | M | 1-2 sessions |
-| 25 | Localisation depth | M6 | M | 1-2 sessions |
-| 26 | Provenance, disclosure and consent | M7 | M | 1 session |
-| 27 | Corrections, companions and living films | M7 | M | 1-2 sessions |
-| 28 | Series production | M7 | M | 1 session |
-| 29 | Library economics and creator packages | M7 | M-L | 2 sessions |
-| 30 | Other mediums | M7 | M each | 1 session |
-| 31 | Analytics and a plan that re-ranks itself | M8 | M-L | 2 sessions |
-| 33 | Vendoring rules and tooling | M9 | S | 1 session |
-| 34 | OpenToonz study and decision | M9 | M | 1 session |
-| 35 | Hand-drawn animation | M9 | L | 3+ sessions |
-| 36 | Compositor and multiplane camera | M9 | L | 2-3 sessions |
-| 37 | Film-grade colour and delivery | M9 | M-L | 2 sessions |
-| 38 | Long-form and render farm | M9 | L | 2-3 sessions |
-| 39 | Team roles and permissions | M9 | M | 1 session |
-| 40 | Sound editing in Studio | M9 | M | 1-2 sessions |
-| 41 | Professional tools sweep | M9 | S-M | 1 session of parallel research agents |
+| WP | Package | Lane | When | Size | Sessions |
+|---|---|---|---|---|---|
+| 01 | Reconcile the plan and the feature map | studio | now to 4 Dec | S | 1 session |
+| 02 | Environment doctor and one-step setup | studio | now to 4 Dec | S-M | 1 session |
+| 03 | Agent sessions end to end | studio | now to 4 Dec | M | 1-2 sessions |
+| 04 | Calibrate layout QA per style | studio | now to 4 Dec | S-M | 1 session |
+| 05 | Health and claims review gate | studio | now to 4 Dec | S | 1 session |
+| 33 | Licence ledger and vendoring | parity | now to 4 Dec | S | 1 session |
+| 41 | Parity matrix (professional tools sweep) | parity | now to 4 Dec | S-M | 1 session of parallel research agents |
+| 06 | From calendar to production | studio | 4 to 11 Dec | M | 1 session |
+| 07 | Title, thumbnail and cover lab | studio | 4 to 11 Dec | M | 1 session |
+| 32 | Channels and brands: several series side by side | studio | 4 to 11 Dec | S-M | 1 session |
+| 34 | Open-source integration map | parity | 4 to 11 Dec | M | 1-2 sessions |
+| 08 | Posting with a human approval per post | studio | by 1 Jan | M | 1-2 sessions |
+| 09 | Motion effects and physics, finished | parity | Dec to Feb | M-L | 2 sessions |
+| 11 | Interaction and locomotion | parity | Dec to Feb | M-L | 2 sessions |
+| 14 | Renderer parity | parity | Dec to Feb | L | 2-3 sessions |
+| 35 | Hand-drawn animation | parity | Dec to Feb | L | 3+ sessions |
+| 36 | Compositor and multiplane camera | parity | Dec to Feb | L | 2-3 sessions |
+| 22 | Editor hand-off | studio | Feb to Apr | M | 1 session |
+| 23 | Outputs for every format | studio | Feb to Apr | M-L | 2 sessions |
+| 24 | Accessibility and aspect | studio | Feb to Apr | M | 1-2 sessions |
+| 25 | Localisation depth | studio | Feb to Apr | M | 1-2 sessions |
+| 31 | Analytics and a plan that re-ranks itself | studio | Feb to Apr | M-L | 2 sessions |
+| 15 | Post, transitions and stepped rendering | parity | Feb to Apr | M | 1-2 sessions |
+| 18 | Rig Canvas and doodle tools 2 | parity | Feb to Apr | L | 2-3 sessions |
+| 19 | Timeline and review room 2 | parity | Feb to Apr | M | 1-2 sessions |
+| 20 | Graph view, estimates and events | parity | Feb to Apr | M | 1-2 sessions |
+| 37 | Film-grade colour and delivery | parity | Feb to Apr | M-L | 2 sessions |
+| 40 | Sound editing in Studio | parity | Feb to Apr | M | 1-2 sessions |
+| 42 | Procedural and 3D layer (2D+) | parity | Feb to Apr | L | 3 sessions |
+| 43 | ML assists, in-house | parity | Feb to Apr | M-L | 2 sessions |
+| 26 | Provenance, disclosure and consent | studio | Apr to Jun | M | 1 session |
+| 27 | Corrections, companions and living films | studio | Apr to Jun | M | 1-2 sessions |
+| 28 | Series production | studio | Apr to Jun | M | 1 session |
+| 29 | Library economics and creator packages | studio | Apr to Jun | M-L | 2 sessions |
+| 30 | Other mediums | studio | Apr to Jun | M each | 1 session |
+| 10 | Acting intelligence 2 | parity | Apr to Jun | M | 1-2 sessions |
+| 12 | Act it out 2 | parity | Apr to Jun | M | 1-2 sessions |
+| 13 | Sound depth | parity | Apr to Jun | M | 1-2 sessions |
+| 16 | Sets, props, cast and templates | parity | Apr to Jun | M-L | 2 sessions |
+| 17 | Bubbles and text, finished | parity | Apr to Jun | S | 1 session |
+| 21 | Director's desk and specialist agents | parity | Apr to Jun | M | 1-2 sessions |
+| 38 | Long-form and render farm | parity | Apr to Jun | L | 2-3 sessions |
+| 39 | Team roles and permissions | parity | Apr to Jun | M | 1 session |
 
-41 packages, about 54 to 71 agent working sessions in all (WP-30 counts once; it is M per medium).
+43 packages, about 59 to 78 agent working sessions in all; the parity lane is 24 packages and 37 to 51 sessions. WP-30 counts once (it is M per medium).
 
 ## Definition of done (every WP)
 - Features are `@command` functions in `dbe/commands.py` (CLI, HTTP, Studio and MCP at once), with JSON-safe
@@ -97,27 +102,29 @@ order, in which bundles, and how we know each is finished.
 - A self-test in `python -m dbe test` that fails when the feature breaks (synthetic inputs where real ones are
   external), and the whole suite green before commit; golden frames updated only for intended visual changes.
 - A measured demonstration of the "done when" (numbers in the commit message and the plan's status row).
-- `docs/dbe.md` section, build-plan status row, feature-map rows updated; every new dependency or asset in
-  `assets/manifest.json` and checked against `docs/oss-research.md`; puppet-format changes bump `version` and reach
+- `docs/dbe.md` section, build-plan status row, feature-map rows updated; every new dependency, model or asset
+  recorded in the licence ledger (`assets/manifest.json`) with its licence class (no class is refused; the posting
+  gate reads it), and vendored code kept under `vendor/` with its upstream and notices (WP-33); puppet-format changes bump `version` and reach
   `puppet.js`, `acting.js`, `bake.mjs`, `dbe/geom.py` and the exporters together.
 - Nothing downloaded (asset packs, renders, voices, models) committed; anything that spends money, posts publicly
   or runs paid sessions waits for the owner's go-ahead.
 
-## Milestones
-| Milestone | When | WPs | Why this order |
-|---|---|---|---|
-| **M1 Ready to produce** | now to 4 Dec | 01-05 | reliable environment, agent sessions proved, gates calibrated, before Q1 production starts |
-| **M2 First quarter on air** | 4 Dec to 11 Dec, then runs through Q1 | 06-08, 32 | the first start-by is 11 Dec; titles, covers and posting must exist before the first post on 1 Jan; channels before a second series |
-| **M3 Acting and motion depth** | Dec to Jan | 09-13 | the biggest quality gains for Q1 films still in production |
-| **M4 Look and renderer parity** | Jan | 14-17 | parity first, so new looks reach every renderer at once |
-| **M5 Artist and director tools** | Jan to Feb | 18-21 | interfaces over a stable core |
-| **M6 Reach** | Feb | 22-25 | outputs, accessibility and languages for a catalogue that now exists |
-| **M7 Trust, community, economy** | Feb to Mar | 26-30 | needs published films and their facts ledgers |
-| **M8 Learning loop** | from mid-Feb (six weeks of posts) | 31 | needs real performance data |
-| **M9 Professional parity through open source** | Mar to Jun | 33-41 | vendoring rules first, then the largest gaps, each behind a licence check and the owner's decisions |
-| Gated, unscheduled | | procedural layer 5A/5B/5C | each behind its gate in the build plan |
+## Order of work: two lanes
+Development runs in two lanes. The **parity lane** is the main one (about two thirds of development sessions): it
+closes every gap with professional 2D+ software and goes beyond it. The **studio lane** keeps the Q1 2027 calendar
+on track and grows reach and trust. Until 11 December the studio lane has priority, because of the calendar's first
+start-by date.
 
-Work-package IDs are stable labels, not an order: the milestones give the order.
+| When | Studio lane (about one third) | Parity lane (about two thirds) |
+|---|---|---|
+| now to 4 Dec | **M1** ready to produce: 01, 02, 03, 04, 05 | 41 parity matrix, 33 licence ledger and vendoring |
+| 4 to 11 Dec | **M2** first quarter on air: 06, 07, 32 (08 before the first post on 1 Jan) | 34 open-source integration map |
+| Dec to Feb | 08; Q1 production runs on the board | 35 hand-drawn animation, 36 compositor and multiplane camera, 14 renderer parity, 09 effects and physics, 11 interaction and locomotion |
+| Feb to Apr | **M6** reach: 22, 23, 24, 25; **M8** learning loop 31 from mid-February | 42 procedural and 3D layer, 43 ML assists, 37 film-grade colour and delivery, 40 sound editing, 18 drawing tools 2, 15 post and transitions, 19 timeline and review 2, 20 graph view |
+| Apr to Jun | **M7** trust, community, economy: 26 to 30 | 38 farm and long-form, 39 team roles, 21 director's desk, 12 act it out 2, 10 acting 2, 13 sound depth, 16 sets, cast and templates, 17 bubbles and text |
+
+Work-package IDs are stable labels, not an order: this table gives the order. The section headings below (M3 to M5)
+group packages by theme; their dates follow this table.
 
 ```mermaid
 graph LR
@@ -126,19 +133,25 @@ graph LR
   WP04[04 QA calibration] --> WP06
   WP05[05 health gate] --> WP06
   WP06 --> WP07[07 titles and covers] --> WP08[08 posting]
-  WP08 --> WP31[31 analytics]
   WP32[32 channels and brands] --> WP08
+  WP08 --> WP31[31 analytics]
+  WP27[27 corrections] --> WP31
+  WP41[41 parity matrix] --> WP34[34 integration map]
+  WP33[33 licence ledger] --> WP34
+  WP34 --> WP35[35 hand-drawn]
+  WP34 --> WP36[36 compositor]
+  WP34 --> WP42[42 procedural and 3D]
   WP14[14 renderer parity] --> WP15[15 post and transitions]
   WP14 --> WP23[23 outputs]
-  WP12[12 act it out 2] --> WP11[11 interaction]
+  WP14 --> WP37[37 film-grade output]
+  WP36 --> WP37
+  WP35 --> WP18[18 drawing tools 2]
+  WP43[43 ML assists] --> WP12[12 act it out 2] --> WP11[11 interaction]
+  WP43 --> WP10[10 acting 2]
   WP22[22 OTIO] --> WP19[19 timeline and review 2]
   WP20[20 graph view] --> WP21[21 director's desk]
-  WP27[27 corrections] --> WP31
-  WP33[33 vendoring] --> WP34[34 OpenToonz study] --> WP35[35 hand-drawn]
-  WP33 --> WP36[36 compositor]
-  WP41[41 pro tools sweep] --> WP35
-  WP14 --> WP37[37 film-grade output]
   WP20 --> WP38[38 farm and long-form]
+  WP33 --> WP08
 ```
 
 ## M1 Ready to produce (now to 4 December)
@@ -215,7 +228,7 @@ graph LR
 - Done when: two channels with different audiences, fields, rules and brands each get a quarter that passes its own
   rules, films from each render in their own brand, and the board shows both apart.
 
-## M3 Acting and motion depth (December to January)
+## M3 Acting and motion depth (parity lane)
 
 **WP-09 Motion effects and physics, finished** (M-L, 2 sessions; open from 2.19, 2.20)
 - Scope: smear frames and motion arcs; multi-body scenes with deterministic Rapier; squash on impact; contacts
@@ -237,8 +250,9 @@ graph LR
   hands meeting within 2 px, and every renderer plays it.
 
 **WP-12 Act it out 2** (M, 1-2 sessions; open from 3.5)
-- Scope: head turn (yaw) into the `turn` control (clip control tracks, a puppet-format change); rtmlib RTMPose as a
-  second detector; multi-person takes (one clip per person); camera-motion compensation from the background; live
+- Scope: head turn (yaw) into the `turn` control (clip control tracks, a puppet-format change); more detectors, now
+  that their licences allow in-house use: rtmlib RTMPose, OpenPose, Ultralytics pose and Sapiens (chosen by measured
+  accuracy on our takes, WP-43); multi-person takes (one clip per person); camera-motion compensation from the background; live
   tracking (E9) as a P2 follow-on.
 - Done when: a take with a head turn and a camera pan becomes a clip whose head turns and whose root does not drift,
   and two people in one take become two clips.
@@ -250,7 +264,7 @@ graph LR
 - Done when: a recorded human line drops into a slot with visemes within 40 ms of a hand check, and footsteps sound
   different on grass and tile.
 
-## M4 Look and renderer parity (January)
+## M4 Look and renderer parity (parity lane)
 
 **WP-14 Renderer parity** (L, 2-3 sessions; open from 1.1, 1.7, 1.8, 2.13, 2.20 and 3.5)
 - Scope: raster parts, toon shading, motion effects, clip-driven z order, props and the sound-off time warp in Synfig,
@@ -264,7 +278,7 @@ graph LR
 - Done when: a doodle film on twos renders in at most 60% of today's time with identical frames, and each transition
   passes the seam check.
 
-**WP-16 Sets, props, cast and templates** (M-L, 2 sessions; open from 1.5, 1.6; licence gate before 1.6)
+**WP-16 Sets, props, cast and templates** (M-L, 2 sessions; open from 1.5, 1.6)
 - Scope: map board (Natural Earth plus d3-geo), anatomy plates (Servier, CC BY), Kenney prop packs; Open Peeps and
   Humaaans converted; outfits as swap sets; templates for a quadruped, a bird and an object with a face, each with a
   clip library; a character bible (personality, voice, gesture tendencies, continuity notes) in the cast registry.
@@ -275,7 +289,7 @@ graph LR
 - Scope: thought clouds, narration boxes, letter-by-letter typewriter with punctuation pauses.
 - Done when: the sound-off cut of a dialogue film uses all three and passes the reading-time rule.
 
-## M5 Artist and director tools (January to February)
+## M5 Artist and director tools (parity lane)
 
 **WP-18 Rig Canvas and doodle tools 2** (L, 2-3 sessions; open from 1.3, 1.4, 1.8, 3.6)
 - Scope: expression and mouth-chart boards side by side with onion skin; model sheet and turnaround board; polygon
@@ -303,14 +317,14 @@ graph LR
 - Done when: a director edits a film by chat alone through five kinds of change, and each role is refused commands
   outside its subset.
 
-## M6 Reach (February)
+## M6 Reach (studio lane, February to April)
 
 **WP-22 Editor hand-off** (M, 1 session; plan 4.1)
 - Scope: OTIO, FCPXML and EDL with stems and captions; a round trip through `melt`.
 - Done when: a film opens in Kdenlive (and Resolve, where available) with shots, stems and captions in place, and the
   `melt` round trip renders frames identical to ours.
 
-**WP-23 Outputs for every format** (M-L, 2 sessions; plans 4.2 and 4.9; ThorVG licence gate)
+**WP-23 Outputs for every format** (M-L, 2 sessions; plans 4.2 and 4.9)
 - Scope: WebM and ProRes with alpha; GIF and APNG; line-art GIFs (32 colours, Bayer dithering); sticker and emoji packs
   (Telegram WebM and TGS, WhatsApp WebP, Giphy GIF, iMessage APNG); print-ready stills; dotLottie with palette
   themes; Lottie QA in two independent renderers.
@@ -325,13 +339,14 @@ graph LR
 
 **WP-25 Localisation depth** (M, 1-2 sessions; plan 4.5; open from 1.15)
 - Scope: translated on-screen text in sets and kit elements; right-to-left and complex scripts; cultural swaps of sets
-  and props; a clean Sinhala voice (search and licence check first; none is known today).
+  and props; a Sinhala voice (any open model may be used in-house; a voice not marked clean is flagged at
+  posting).
 - Done when: an Arabic version renders correctly end to end, and a Sinhala version ships with captions and, if a clean
   voice exists, voice.
 
-## M7 Trust, community, economy (February to March)
+## M7 Trust, community, economy (studio lane, April to June)
 
-**WP-26 Provenance, disclosure and consent** (M, 1 session; plan 4.6; C2PA licence gate)
+**WP-26 Provenance, disclosure and consent** (M, 1 session; plan 4.6)
 - Scope: C2PA content credentials on finals; AI-disclosure labels per platform; likeness and consent records for
   characters and voices.
 - Done when: finals carry signed provenance that verifies with a reference tool, and a voice without a consent
@@ -351,7 +366,7 @@ graph LR
 
 **WP-29 Library economics and creator packages** (M-L, 2 sessions; plans 4.7 and 4.11)
 - Scope: usage accounting from `shots.json` (screen time per asset, E15); contributor flow through `cast.add`; rig,
-  boil-preset and loop-pack templates; handwriting fonts from an artist's samples (font-tool licence check).
+  boil-preset and loop-pack templates; handwriting fonts from an artist's samples.
 - Done when: a per-asset screen-time report covers the whole catalogue, and a creator packages a rig template that
   installs into another project.
 
@@ -360,7 +375,7 @@ graph LR
   Godot export.
 - Done when (each): a film becomes a printable comic, or an interactive web film, from its data alone.
 
-## M8 Learning loop (from mid-February)
+## M8 Learning loop (studio lane, from mid-February)
 
 **WP-31 Analytics and a plan that re-ranks itself** (M-L, 2 sessions; plan 4.13, E11, E31; open from 3.8)
 - Scope: the 48-hour metrics checklist; ingestion per platform where terms allow (manual import otherwise);
@@ -369,91 +384,126 @@ graph LR
 - Done when: Q2 2027's calendar is planned with measured Q1 performance and the change it made is explained row by
   row.
 
-## M9 Professional parity through open source (March to June)
-Where Doodleberry still trails professional cartoon tools (Toon Boom Harmony, Moho, TVPaint, Blender's Grease Pencil,
-After Effects): hand-drawn frame-by-frame animation, a compositor, film-grade colour and delivery, long-form scale,
-team features and sound editing. The owner's direction is to close these by bringing open-source codebases inside
-Doodleberry and modifying them. Every component below passes WP-33's rules first.
+## M9 Professional parity core (the main lane, December to June)
+Where Doodleberry still trails professional 2D+ software (Toon Boom Harmony, Moho, TVPaint, Blender's Grease Pencil,
+OpenToonz, After Effects, Nuke): hand-drawn frame-by-frame animation, painting tools, a compositor, a 2D multiplane
+camera, film-grade colour and delivery, long-form scale, team features and sound editing; and the procedural and 3D
+side of "2D+". The way to close it is to bring open-source codebases inside Doodleberry and build on them. For each
+part, WP-34 chooses one of three ways: drive the program headless (fastest to start), link or vendor its libraries,
+or fork it (when we need to change its internals). Every result sits behind `@command`s with self-tests, so agents
+drive it like everything else.
 
-**WP-33 Vendoring rules and tooling** (S, 1 session; first in M9)
-- Scope: `vendor/<name>/` with `UPSTREAM.json` (repository, version or commit, licence, files taken, local patches as
-  small commits) and the original licence and notices; a `vendor.check` command that refuses a vendored component
-  whose licence class is not allowed inside (GPL and AGPL code, non-commercial weights or data), whose notices are
-  missing, or that has no manifest row; each vendored component wrapped behind `@command`s with a self-test, so an
-  upstream update cannot silently break films.
-- Done when: one existing dependency is vendored this way end to end, and `vendor.check` fails a seeded GPL file.
+**WP-41 Parity matrix (professional tools sweep)** (S-M, 1 session of parallel research agents; first in the lane)
+- Scope: agents read the manuals and release notes of Harmony, Moho, TVPaint, Blender Grease Pencil, OpenToonz,
+  Synfig, After Effects and Nuke, and write a structured inventory: each capability in our own words, how
+  professionals use it, and our match (a command, a data field, a metric, or a gap with its WP). No copied text,
+  icons or UI.
+- Done when: the matrix covers every chapter of each manual, every gap names a WP, and the feature map is updated
+  from it. It is re-run at the end of each parity phase to measure coverage.
 
-**WP-41 Professional tools sweep** (S-M, 1 session of parallel research agents; owner go-ahead for the spend)
-- Scope: agents read the manuals and release notes of Harmony, Moho, TVPaint, Blender Grease Pencil, After Effects,
-  OpenToonz and Synfig, and write a structured inventory: each capability in our own words, how professionals use it,
-  and our match (a command, a field, a metric, or a gap with a WP). No copied text, icons or UI.
-- Done when: the inventory covers every chapter of each manual, each gap names a WP or "won't build", and the feature
-  map is updated from it.
+**WP-33 Licence ledger and vendoring** (S, 1 session)
+- Scope: `vendor/<name>/` with `UPSTREAM.json` (repository, version or commit, licence, files taken, local patches
+  kept as small commits so upstream fixes can be pulled) and the original notices; a licence class for every
+  component in the ledger (permissive, copyleft, network copyleft, source-available, non-commercial, research-only,
+  share-alike); each render records which classed components shaped it (models, voices, data, assets, vendored code
+  in its path); the posting gate (WP-08) flags a film that used a non-commercial, research-only or share-alike input
+  for the owner's decision; `vendor.check` verifies notices, upstream records and ledger rows. No class is refused.
+- Done when: one GPL codebase and one permissive one are vendored and built from `vendor/`, and a film voiced with a
+  non-clean voice is flagged at posting with the reason.
 
-**WP-34 OpenToonz study and decision** (M, 1 session)
-- OpenToonz is the main BSD-3-Clause codebase in this space (some third-party parts carry their own licences).
-- Scope: confirm the licence of each part we would take; build it headless; identify reusable parts (exposure-sheet
-  model, level formats, drawing and fill tools, `tcomposer` rendering); decide per part: vendor and modify, call as a
-  program, or reimplement from the idea.
-- Done when: a written decision per part with its licence, and one part working behind a command (for example
-  rendering a scene from data with `tcomposer`).
+**WP-34 Open-source integration map** (M, 1-2 sessions; after WP-41)
+- Scope: for each parity gap, the codebases that close it, built and run headless in our container, and a decision
+  per part (drive, link or vendor, fork), with a first part working behind a command. Candidates:
+  - frame-by-frame, exposure sheet, levels: OpenToonz (and its fork Tahoma2D), Pencil2D;
+  - painting and brushes: Krita's brush engines, libmypaint (MyPaint brushes);
+  - vector editing and deformers: Synfig core, Inkscape;
+  - compositing: Natron and its OpenFX plugins, Blender's compositor;
+  - colour and image formats: OpenColorIO, OpenImageIO, OpenEXR;
+  - editing and review: Kdenlive and MLT, Olive, OpenRV, xSTUDIO;
+  - sound: Audacity, Ardour;
+  - farm: OpenCue, Flamenco, CGRU Afanasy;
+  - 3D and procedural: Blender (`bpy` in-process), Rapier, Bullet, Manifold, OpenUSD.
+- Done when: a written decision per part with its licence class, and one part from each of the first three groups
+  working behind a command (for example a scene rendered from data by OpenToonz's `tcomposer`).
 
-**WP-35 Hand-drawn animation** (L, 3+ sessions; needs the owner to move "a frame-by-frame drawing suite" off the
-Never build list)
-- Scope: drawn levels as a new part type (a sequence of drawings with exposures, puppet format change); onion skins;
-  an exposure sheet (X-sheet) for timing on ones, twos and threes; key poses with in-between assistance; cleanup of
-  rough lines; hand-drawn effects (fire, water, smoke) as drawn levels; built on WP-34's decisions and the Rig
-  Canvas's brush.
+**WP-35 Hand-drawn animation** (L, 3+ sessions; after WP-34)
+- Scope: drawn levels as a new part type (a sequence of drawings with exposures; a puppet-format change); onion skins;
+  an exposure sheet (X-sheet) for timing on ones, twos and threes; key poses with in-between assistance (WP-43);
+  cleanup of rough lines; colour styles applied across every frame; hand-drawn effects (fire, water, smoke) as drawn
+  levels; built on OpenToonz's level and X-sheet model where WP-34 chose it.
 - Done when: an animator draws a 2-second hand-drawn effect and a 12-drawing walk on twos in Studio, and both play in
-  a film beside rigged puppets, with golden frames.
+  a film beside rigged puppets, with golden frames, on every renderer that accepts drawn levels.
 
-**WP-36 Compositor and multiplane camera** (L, 2-3 sessions)
-- Scope: a per-shot node compositor (masks, mattes, blend modes, glows, light wraps) rendered deterministically;
-  true 2D multiplane depth (layers on planes, parallax, depth of field) in the SVG and WebGL path; the graph view
-  (WP-20) as its editor.
+**WP-36 Compositor and multiplane camera** (L, 2-3 sessions; after WP-34)
+- Scope: a per-shot node compositor (masks, mattes, blend modes, glows, light wraps, blurs, colour corrections)
+  rendered deterministically, on Natron or Blender's compositor or in-house WebGL nodes as WP-34 decides; true 2D
+  multiplane depth (layers on planes, parallax, depth of field) in the SVG and WebGL path; the graph view (WP-20) as
+  its editor.
 - Done when: a night shot with three depth planes, a glow and a mask renders identically on rerun and matches its
   golden frames.
 
 **WP-37 Film-grade colour and delivery** (M-L, 2 sessions)
-- Scope: colour management (OpenColorIO, ACES), OpenEXR multi-pass output (beauty, line, shadow, mattes), 4K and
-  higher-frame-rate masters, an HDR master where the pipeline allows it, and a cinema-style package as a delivery
-  profile (external tools as separate programs if GPL).
+- Scope: colour management (OpenColorIO, ACES); OpenEXR multi-pass output (beauty, line, shadow, mattes); 4K and
+  higher-frame-rate masters; an HDR master where the pipeline allows it; a cinema-style package as a delivery profile.
 - Done when: a film renders a 4K ACES EXR multi-pass master that a reference tool reads, and the social encodes are
   derived from it.
 
+**WP-40 Sound editing in Studio** (M, 1-2 sessions)
+- Scope: waveform lanes for voice, music, foley and effects in the timeline; moving, trimming and replacing cues;
+  stems; Audacity or Ardour driven (or linked) for deeper edits, and a vendored waveform component in Studio.
+- Done when: a sound designer moves a foley hit and swaps a music cue in Studio, and the mix re-renders with the
+  change at the right frame.
+
+**WP-42 Procedural and 3D layer (2D+)** (L, 3 sessions; the brainstorm's 5A and 5B)
+- Scope: procedural 2D (scatter, instancing, growth, crowds of props and characters as data, rules on the beat grid);
+  Blender in-process (`bpy`) for 3D sets, Geometry Nodes, Grease Pencil 3 and EEVEE passes composited with 2D;
+  physics beyond Rapier 2D (Bullet for 3D props); OpenUSD as the scene interchange. GPU solvers (5C) wait for a GPU.
+- Done when: a shot mixes a procedural crowd, a Geometry Nodes 3D set and 2D puppets with one camera, renders
+  deterministically, and re-cooks only the changed node.
+
+**WP-43 ML assists, in-house** (M-L, 2 sessions)
+- Scope: models the old rule kept out, used as assistants whose output is data that a person or the critic accepts:
+  pose detectors for Act it out (OpenPose, Ultralytics, Sapiens; compared on our takes); expressive and own-voice TTS
+  (XTTS-v2, F5-TTS; cloning only with recorded consent); co-speech gesture models (EMAGE/BEAT2, audio2photoreal) as
+  suggestions for the gesture planner; in-between proposals for drawn levels; depth estimates (Depth Anything, larger
+  models) for parallax; sound sketches (Stable Audio Open). Each output carries its licence class into the film's
+  record, so the posting gate can flag it.
+- Done when: each assist improves a measured baseline (pose accuracy, gesture rating, in-between acceptance rate) on
+  our own material, and its outputs are flagged correctly at posting.
+
 **WP-38 Long-form and render farm** (L, 2-3 sessions; after WP-20)
-- Scope: distributed render workers across machines (OpenCue, Apache-2.0, or in-house queue), shared cache by content
-  hash, scheduling by cost estimate; a long-form test (a 20-minute episode) for memory, cache and assembly limits.
+- Scope: distributed render workers (OpenCue, Flamenco or an in-house queue), a shared cache by content hash,
+  scheduling by cost estimate; a long-form test (a 20-minute episode) for memory, cache and assembly limits.
 - Done when: a 20-minute episode renders on three workers in a third of one machine's time, with frames identical to
   a single-machine render.
 
 **WP-39 Team roles and permissions** (M, 1 session)
 - Scope: people and roles (owner, director, artist, reviewer, editor) with the command subsets of WP-21; assignments
-  and locks on films and characters; an audit log of who changed what.
-- Done when: an artist can edit a character but not approve a film, and every change appears in the audit log.
-
-**WP-40 Sound editing in Studio** (M, 1-2 sessions)
-- Scope: waveform lanes for voice, music, foley and effects in the timeline; moving, trimming and replacing cues;
-  stems; a permissively licensed waveform component (licence checked) vendored through WP-33.
-- Done when: a sound designer moves a foley hit and swaps a music cue in Studio, and the mix re-renders with the
-  change at the right frame.
+  and locks on films and characters; an audit log of who changed what. Useful even for one person and many agents:
+  each agent session gets a role.
+- Done when: an artist session can edit a character but not approve a film, and every change appears in the audit
+  log.
 
 ## Decisions for the owner
-- **Frame-by-frame drawing** (WP-35): today it is on the Never build list ("import from Krita instead"). Building it
-  through WP-34 and WP-35 needs the owner to move it off that list.
-- **GPL code inside Doodleberry:** merging GPL code (Blender, Synfig, Krita, Inkscape, Piper, espeak-ng) would make
-  Doodleberry GPL. The plan keeps them as separate programs unless the owner decides to license Doodleberry under
-  the GPL.
-- **Spend:** WP-03 (Claude Code film sessions) and WP-41 (research agents) cost model usage; each waits for a
-  go-ahead with an estimate.
+- **Resolved on 2 November 2026:** all open-source code may be used in-house, GPL and AGPL included, and vendored,
+  modified or linked; non-commercial and research-only models and data may be used in-house; frame-by-frame drawing
+  is in scope (WP-35); professional 2D+ parity is a must.
+- **Still yours, per case:**
+  - Posting a film the gate flags because a non-commercial, research-only or share-alike input shaped it.
+  - Model spend for agent sessions (WP-03 film sessions, WP-41 research agents), each with an estimate first.
+  - Hardware: a GPU for 5C solvers and for heavy models (Sapiens, F5-TTS and diffusion models run slowly on CPU).
+  - Consent before cloning any real person's voice or likeness, including your own (WP-26, WP-43).
 
 ## Risks and how the plan handles them
-- **Licences:** each WP that adds a library or asset passes `docs/oss-research.md` first; the open questions
-  (BodyParts3D, `thorvg-python`, the C2PA SDK, sherpa-onnx's espeak code, sound libraries) sit in WP-16, WP-23 and
-  WP-26 as gates, not afterthoughts.
+- **Publishing with restricted inputs:** the ledger tracks every component's class into each film's record; the
+  posting gate flags, the owner decides. Characters stay original designs, whatever the code's licence.
+- **Integration weight:** OpenToonz, Natron, Synfig and Krita are large C++ codebases, slow to build headless. WP-34
+  starts by driving programs, and vendors or forks only the parts we must change; upstream records keep forks
+  mergeable.
 - **Platform terms:** posting and analytics automate only where terms allow; otherwise exports and manual import.
 - **CPU contention:** the container has four cores; production sessions (renders) and development sessions compete.
-  During Q1, keep `max_parallel` at 2 while a development WP is running.
+  During Q1, keep `max_parallel` at 2 while a development WP is running. Heavy builds (C++ codebases) run outside
+  production hours.
 - **Session spend:** WP-03 measures the cost per film before the claude runner is used at volume.
 - **Research quality:** sweeps and sessions may cite pages they could not fully read; the fact gate, the expert review
   (WP-05) and the URL check stay mandatory, and research that contradicts a brief escalates to the owner.

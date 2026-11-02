@@ -5,8 +5,8 @@ This plan combines the feature map (`docs/feature-map.md`: what the studio needs
 
 **Execution plan:** `docs/work-packages.md` turns everything still open here (3.9, 3.10, Phase 4, the "Open:"
 remainders of built items, feature-map rows no item covered, and the owner's requests for several series and for
-professional parity through open-source code) into 41 work packages in nine milestones, each with a measurable "done
-when". This file stays the list of items and their status.
+professional 2D+ parity, which is a must, through open-source code) into 43 work packages in two lanes, parity being
+the main one, each with a measurable "done when". This file stays the list of items and their status.
 
 **How it's ordered**
 - Multipliers first: speed, tests and clean inputs make every later step cheaper and safer.
@@ -24,8 +24,14 @@ when". This file stays the list of items and their status.
 - **Weeks** are a sequence, not dates.
 - **Benchmark films:** `pip-park` (three renderers), `acting-demo`, `pip-park-es`, plus a two-character dialogue film
   added in Phase 2.
-- **Licence rule:** only components the research marked permissive, or GPL tools run as separate processes. Never use
-  NC weights or data, or AGPL code inside the service. Each new dependency gets a row in the asset/licence manifest.
+- **Licence rule (from 2 November 2026):** Doodleberry is an in-house R&D platform, not a distributed product, so any
+  open-source code can be used, vendored, modified and linked in, GPL and AGPL included (their obligations attach to
+  distribution and to serving other users, which we do not do). Source-available and non-commercial or research-only
+  models and data may be used for in-house work too. Every component gets a row in the licence ledger
+  (`assets/manifest.json`) with its licence class. Licences still matter at one point: **what ends up in a publicly
+  posted film.** The posting gate flags a film that used non-commercial or research-only inputs (weights, data,
+  voices, sound or art), or a share-alike asset, and the owner decides per post. If Doodleberry is ever distributed
+  or offered to others as a service, this rule must be reviewed first.
 
 ---
 
@@ -195,23 +201,26 @@ Goal: every format, every audience, and a trustworthy library others can contrib
   (single process, render plus capture), with near-identical pixels (mean difference 0.05). ThorVG was not tested,
   pending the licence check on its Python binding.
 - **After 0.5:** if Kokoro has no word timestamps, keep Whisper alignment for Kokoro voices; plan 2.1 as the fix.
-- **Before 1.6 and 4.6:** resolve the open licence questions: BodyParts3D, BBC/Pixabay/incompetech, the
-  `thorvg-python` binding, sherpa-onnx's espeak code, and the C2PA SDK licence.
-- **Before any distribution of Doodleberry as software:** Piper and espeak-ng are GPL. Keep them behind a process or
-  service boundary, or replace them.
+- **Open licence questions** (BodyParts3D, BBC/Pixabay/incompetech, `thorvg-python`, sherpa-onnx's espeak code, the C2PA
+  SDK) no longer block use: record each component's licence class in the ledger, and let the posting gate flag
+  published films that used a non-commercial or research-only one.
+- **Before any distribution of Doodleberry, or serving it to other people:** review the licence rule (GPL and AGPL code
+  is now linked in, and non-commercial components may be in use).
 
 - **Before enforcing 0.11 as a hard gate:** calibrate the thresholds (frame fill, seams, reading time) on a reference film
   in each style. The playbook's numbers come from flat-paper science films; doodle and cartoon styles may need their own.
 - **Publishing (4.15):** never post without a human approval per post; connectors only where platform terms allow automation.
-- **Procedural layer (brainstorm 5A/5B/5C):** 5A starts only after 2.19 and 2.20 are used in two films; 5B only when a
-  film needs a 3D set or effect the 2D kit cannot make, with Blender kept behind its process boundary; 5C only with a
-  confirmed GPU budget and each solver proved small on CPU first. Avoid: ToonCrafter (generative video), Stable Audio
-  Open (revenue-capped licence), Depth Anything Base/Large/Giant (NC), pymeshlab in-process (GPL-3).
+- **Procedural layer (brainstorm 5A/5B/5C):** now part of the professional-parity lane in `docs/work-packages.md`
+  (WP-42). Blender may run in-process (`bpy`) as well as as a program. 5C (GPU solvers) still waits for a confirmed GPU
+  budget, and each solver is proved small on CPU first. ToonCrafter, Stable Audio Open, Depth Anything Base/Large/Giant
+  and pymeshlab are now allowed in-house; outputs that reach a posted film are flagged by the posting gate where their
+  terms restrict that.
 - **Formats (2.15):** the refutation and dialogue evidence comes from introductory university physics; measure retention on
   our own films before treating it as a law for every audience.
 
 ## Brainstorm later (not committed)
 - `docs/brainstorm/procedural-houdini.md`: a procedural and simulation layer (Houdini-like, or beyond, for cartoons).
+  **Update (2 November 2026): scheduled as WP-42 in the professional-parity lane.**
   Researched in November 2026: licences checked, and the building blocks tried headless on CPU (Geometry Nodes from
   code, deterministic Rapier 2D, Bullet, Manifold, OpenUSD, music21; all worked, with hash-equal reruns where tested).
   Outcome: 2.19 cartoon physics, 2.20 motion effects and 3.10 graph view joined the plan, and tool candidates were
@@ -219,12 +228,18 @@ Goal: every format, every audience, and a trustworthy library others can contrib
   Blender, 5C in-house solvers), each behind a gate below. It stays unscheduled.
 
 ## Never build
-Generative-video characters (they break consistency, editing and the licence trail). A raster frame-by-frame paint
-suite (import from Krita instead; under review: WP-35 in `docs/work-packages.md` asks the owner to
-reconsider this, now that open-source codebases such as OpenToonz may be integrated). Embedded Spine or Remotion runtimes. Anything on the research "avoid" list:
-OpenPose, Ultralytics, python-lottie in the service, aeneas, XTTS-v2 and F5-TTS weights, MMS aligner weights,
-EMAGE/BEAT2, audio2photoreal, MakeItTalk, Sapiens, LAFAN1 data, OpenMoji (SA), BBC sound effects (NC), Sonniss files
-in public repos or training sets, Z-Anatomy NC parts.
+Updated 2 November 2026, when the licence rule changed: nothing is ruled out for licence reasons any more, and a
+frame-by-frame drawing suite is now part of professional parity (WP-35), built on open-source code such as OpenToonz.
+What stays out, for technical reasons:
+- **Generative video as the character pipeline.** It breaks character consistency, frame-exact editing and the data
+  model every renderer reads. Generative models may assist (proposing in-betweens, keys, drawings or textures as data
+  an animator or the critic accepts), but a film's characters stay rigs and drawings.
+
+Formerly avoided for licence reasons, now usable in-house (licence class recorded; flagged at posting where their
+terms restrict a public film): OpenPose, Ultralytics, python-lottie, aeneas, XTTS-v2 and F5-TTS weights, MMS aligner
+weights, EMAGE/BEAT2, audio2photoreal, MakeItTalk, Sapiens, LAFAN1 data, OpenMoji (SA), BBC sound effects (NC),
+Sonniss files, Z-Anatomy NC parts, and embedded Spine or Remotion runtimes (check each one's own terms for an
+individual's use).
 
 ## Done so far (for reference)
 - **Backend:** the dbe registry (CLI, HTTP, Studio, MCP); shot routing across SVG, Synfig, Grease Pencil and Lottie;
