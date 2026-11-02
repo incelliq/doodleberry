@@ -1,0 +1,41 @@
+{
+ "monthly": [
+  [
+   "January",
+   4
+  ],
+  [
+   "February",
+   6
+  ],
+  [
+   "March",
+   9
+  ],
+  [
+   "April",
+   8
+  ]
+ ],
+ "total": 27,
+ "best": {
+  "month": "March",
+  "nights": 9
+ },
+ "months": 4,
+ "_provenance": {
+  "scripts": {
+   "summarise.py": "1727a793fd0d1aa4"
+  },
+  "sources": [
+   {
+    "id": "club-log",
+    "file": "log.csv",
+    "url": null,
+    "terms": "illustrative data written for this demo (CC0)",
+    "version": "1",
+    "sha256": "092797081f30070ad3fdba4b9925328e383bc16722260d1259bd2be3bcdf64db"
+   }
+  ]
+ }
+}

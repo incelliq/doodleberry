@@ -1,0 +1,12 @@
+{
+ "sources": [
+  {
+   "id": "club-log",
+   "file": "log.csv",
+   "url": null,
+   "terms": "illustrative data written for this demo (CC0)",
+   "version": "1",
+   "sha256": "092797081f30070ad3fdba4b9925328e383bc16722260d1259bd2be3bcdf64db"
+  }
+ ]
+}

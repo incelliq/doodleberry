@@ -378,6 +378,9 @@ def _shots(name, resolve=True):
         return s
     tm = _json(FILMS / name / "timing.json", {})
     r = resolve_times(s, tm)
+    if (FILMS / name / "data.json").exists():   # data-bound text and charts (plan 2.17)
+        from .databind import bind
+        r = bind(r, _json(FILMS / name / "data.json", {}))
     if r.get("beat_cuts") and (FILMS / name / "score.json").exists() and tm.get("lines"):
         # cuts on the music (plan 2.14): each shot change moves to the bar line (else beat) in the pause it falls in
         from . import edit as E
@@ -538,12 +541,16 @@ def _shot_hash(name, sh, s):
     import hashlib
     h = hashlib.sha256()
     h.update(json.dumps({"shot": sh, "size": s.get("size"), "fps": s.get("fps"), "captions": s.get("captions")}, sort_keys=True).encode())
+    # lines and mouth cues the shot can show; the auto camera also looks at lines up to 0.5 s around the shot
+    mg = 0.5 if sh.get("camera_auto") else 0.0
+    tm = _json(FILMS / name / "timing.json", {}); a0, a1 = sh.get("start", 0) - mg, sh.get("end", 1e9) + mg
     for c in sh.get("cast", []):
         h.update((ROOT / c["puppet"]).read_bytes())
         sp = (c.get("timeline") or {}).get("visemes_from") or c.get("speaker")
-        if sp:
-            h.update(json.dumps((_json(FILMS / name / "timing.json", {}).get("visemes") or {}).get(sp, [])).encode())
-    h.update(json.dumps(_json(FILMS / name / "timing.json", {}).get("lines", []), sort_keys=True).encode())  # bubbles, line-relative times
+        if sp:   # only the mouth cues inside this shot
+            h.update(json.dumps([v for v in (tm.get("visemes") or {}).get(sp, []) if a0 <= v[0] <= a1]).encode())
+    # only the lines this shot shows (bubbles, words); line-relative times are already resolved into the shot itself
+    h.update(json.dumps([l for l in tm.get("lines", []) if l["start"] < a1 - 1e-6 and l["end"] > a0 + 1e-6], sort_keys=True).encode())
     for f in sorted((ROOT / "puppet" / "clips").glob("*.json")) + [ROOT / x for x in ENGINE_FILES]:
         if f.exists():
             h.update(f.read_bytes())
@@ -840,6 +847,64 @@ def script_rigcheck(name):
             "ok": all(not v["needs_drawings"] for v in per.values())}
 
 
+# ---------------- data-bound visuals and original analysis (plan 2.17) ----------------
+@command("film.data", name=("string", "film"), refresh=("boolean", "download every source again (default: use the cached copy)", False),
+         revoice=("boolean", "re-voice the lines whose bound numbers changed", False), render=("boolean", "re-render what changed (incremental)", False))
+def film_data(name, refresh=False, revoice=False, render=False):
+    """Run the film's analysis (plan 2.17): fetch each source in analysis/sources.json once into analysis/cache/
+    (url, terms, version, access date and sha256 recorded), run analysis/*.py in order with DBE_PY (they read the cache
+    and write data.json), then report what the new data changes: which shots' pictures (charts, bound text) and which
+    narrated lines (bound numbers). With revoice/render it re-voices those lines and re-renders only those shots."""
+    import datetime
+    import hashlib
+    import urllib.request
+    d = _film(name); an = d / "analysis"
+    if not an.exists():
+        raise FileNotFoundError("no analysis/ folder (scripts that write data.json, sources.json for inputs)")
+    cache = an / "cache"; cache.mkdir(exist_ok=True)
+    srcs = _json(an / "sources.json", {"sources": []})
+    for src in srcs.get("sources", []):
+        f = cache / src["file"]
+        if src.get("url") and (refresh or not f.exists()):
+            with urllib.request.urlopen(src["url"], timeout=120) as r:
+                f.write_bytes(r.read())
+            src["accessed"] = datetime.date.today().isoformat()
+        if f.exists():
+            src["sha256"] = hashlib.sha256(f.read_bytes()).hexdigest()
+    (an / "sources.json").write_text(json.dumps(srcs, indent=1, ensure_ascii=False))
+    old_data = _json(d / "data.json", {})
+    def hashes():
+        try:
+            res = _shots(name); return {sh["id"]: _shot_hash(name, sh, res) for sh in res["shots"]}
+        except (ValueError, KeyError, FileNotFoundError):   # no voice yet (line-relative times unresolved) or data missing
+            return {}
+    old_hash = hashes()
+    from .databind import bind_text
+    sc = _json(d / "script.json", {})
+    old_lines = {ln["id"]: bind_text(ln["text"], old_data) for ln in sc.get("lines", []) if "{{" in ln.get("text", "")} if old_data else {}
+    ran = []
+    for py in sorted(an.glob("*.py")):
+        subprocess.run([PY, py.name], cwd=an, check=True, capture_output=True, text=True, timeout=1800)
+        ran.append(py.name)
+    data = _json(d / "data.json", {})
+    data["_provenance"] = {"scripts": {p: hashlib.sha256((an / p).read_bytes()).hexdigest()[:16] for p in ran},
+                           "sources": [{k: v for k, v in x.items() if k in ("id", "url", "terms", "version", "accessed", "sha256", "file")} for x in srcs.get("sources", [])]}
+    (d / "data.json").write_text(json.dumps(data, indent=1, ensure_ascii=False))
+    new_hash = hashes()
+    shots_changed = [k for k in new_hash if old_hash.get(k) != new_hash[k]]
+    lines_changed = [{"line": ln["id"], "was": old_lines.get(ln["id"]), "now": bind_text(ln["text"], data)}
+                     for ln in sc.get("lines", []) if "{{" in ln.get("text", "") and old_lines.get(ln["id"]) != bind_text(ln["text"], data)]
+    changed_keys = sorted(k for k in set(data) | set(old_data) if not k.startswith("_") and data.get(k) != old_data.get(k))
+    out = {"ran": ran, "data_keys_changed": changed_keys, "shots_to_rerender": shots_changed, "lines_to_revoice": lines_changed}
+    if revoice and lines_changed:
+        voice_build(name); out["revoiced"] = True
+        if any(c.get("speaker") for sh in _shots(name, resolve=False)["shots"] for c in sh.get("cast", [])):
+            acting_plan(name)
+    if render:
+        r = film_render(name); out["rendered"] = r.get("rendered"); out["unchanged"] = r.get("unchanged"); out["qa"] = r.get("qa")
+    return out
+
+
 @command("film.heal", name=("string", "film"), rounds=("integer", "most render-and-repair rounds", 3),
          revoice=("boolean", "allow re-voicing slower when captions flow too fast", False))
 def film_heal(name, rounds=3, revoice=False):
@@ -853,15 +918,33 @@ def film_heal(name, rounds=3, revoice=False):
     (d / "build").mkdir(exist_ok=True)
     if not (d / "build" / "shots.before_heal.json").exists():
         (d / "build" / "shots.before_heal.json").write_text(json.dumps(raw0, indent=1, ensure_ascii=False))
-    log = []
+    log, tried = [], {}
     for rnd in range(1, rounds + 2):
-        film_render(name)
+        film_render(name); dirty = False
         rep = _json(d / "build" / "qa.json", {}); lint = _json(d / "build" / "lint.json", {})
         fails = HL.failures(rep, lint)
         if not fails or rnd > rounds:
             break
         res = _shots(name); size = res.get("size", [1080, 1920])
         reps = HL.diagnose(rep, lint, res, size, _json(d / "script.json", {}) if revoice else None)
+        # a repair that did not help is undone and not tried again (frame fill: scaling the cast up must cut the bare
+        # share by at least 3 points, else the shot needs new content, not a bigger character)
+        ff = ((rep.get("layout") or {}).get("frame_fill") or {}).get("per_shot_mean") or {}
+        for (sid, kind), (before, saved) in list(tried.items()):
+            if kind == "grow" and ff.get(sid, 0) > before - 0.03:
+                cur = _json(d / "shots.json")
+                for sh_ in cur["shots"]:
+                    if sh_["id"] == sid:
+                        sh_["cast"] = saved
+                (d / "shots.json").write_text(json.dumps(cur, indent=1, ensure_ascii=False))
+                log.append({"round": rnd, "undone": f"cast scale-up in {sid}: bare ground {before:.0%} -> {ff.get(sid, 0):.0%}, not enough to keep"})
+                dirty = True
+                tried[(sid, kind)] = (before, None)
+        reps = [r for r in reps if not (r["edit"][0] == "grow" and ((r["shot"], "grow") in tried or rnd >= rounds))]   # needs a round left to measure it
+        for r in reps:
+            if r["edit"][0] == "grow":
+                sh_ = next(x for x in _json(d / "shots.json")["shots"] if x["id"] == r["shot"])
+                tried[(r["shot"], "grow")] = (ff.get(r["shot"], 1), json.loads(json.dumps(sh_.get("cast"))))
         if not reps:
             break
         new, slow = HL.apply(_json(d / "shots.json"), reps, res, size)
@@ -883,6 +966,8 @@ def film_heal(name, rounds=3, revoice=False):
             voice_build(name)
             if any(c.get("speaker") for sh in new["shots"] for c in sh.get("cast", [])):
                 acting_plan(name)
+    if dirty:   # an undo came after the last render
+        film_render(name); rep = _json(d / "build" / "qa.json", {}); lint = _json(d / "build" / "lint.json", {})
     still = HL.failures(rep, lint)
     return {"passes": not still, "rounds": log, "still_failing": {f: HL.HINTS.get(f, "no automatic repair yet") for f in still}}
 

@@ -13,7 +13,8 @@ Known repairs (diagnose() maps failure -> repairs; apply() edits the raw shots.j
 - type too small: the element's size is raised to the platform minimum;
 - reading time: a timed text block stays up for words / 3 + 1 s (within its shot);
 - caption flow too fast (words per second): with revoice=True the script is re-voiced slower (length_scale);
-- frame fill (too much bare ground): the cast in that shot is scaled up (feet stay on the floor), up to 1.6x;
+- frame fill (too much bare ground): the cast in that shot is scaled up once (feet stay on the floor, at most 1.3x),
+  and the scale-up is undone if it does not cut the bare share by 3 points;
 - lint "head cut by the frame": an auto camera frames singles less tight; a static shot scales the character down
   and moves it in;
 - lint "bubble over face": an auto camera leaves more headroom; otherwise the shot's lines go back to captions.
@@ -110,7 +111,7 @@ def diagnose(rep, lint, shots_res, size, script=None):
         if bare > 0.40:
             sh = next(s for s in shots if s["id"] == sid)
             if sh.get("cast"):
-                out.append({"check": "frame_fill", "shot": sid, "what": f"bare ground {bare:.0%}: cast scaled up", "edit": ("grow", min(1.25, 1 + (bare - 0.38)))})
+                out.append({"check": "frame_fill", "shot": sid, "what": f"bare ground {bare:.0%}: cast scaled up", "edit": ("grow", min(1.3, 1 + (bare - 0.38)))})
     # visual lint errors
     for it in (lint or {}).get("issues", []):
         if it.get("level") != "error":

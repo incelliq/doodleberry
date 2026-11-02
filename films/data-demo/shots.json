@@ -1,0 +1,160 @@
+{
+ "title": "Data demo",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Science club",
+     "Telescope log"
+    ]
+   },
+   "start": 0,
+   "end": "l1.end+0.4",
+   "start_line": "l1",
+   "end_line": "l1",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 540,
+      "y": 1560,
+      "s": 1.1
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.6,
+        "end": 1.5,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "paper",
+   "start": "l1.end+0.4",
+   "end": "l2.end+0.5",
+   "start_line": "l2",
+   "end_line": "l2",
+   "bubbles": false,
+   "overlays": [
+    {
+     "type": "bars",
+     "data_from": "monthly",
+     "title": "Telescope nights per month",
+     "y": 420,
+     "h": 760,
+     "start": "l2.start",
+     "duration": 1.2
+    },
+    {
+     "type": "title",
+     "text": "{{total}} NIGHTS",
+     "y": 1420,
+     "size": 110,
+     "start": "l2.start+0.6"
+    },
+    {
+     "type": "citation",
+     "text": "Illustrative club log (demo data)",
+     "start": "l2.start",
+     "y": 1240
+    }
+   ],
+   "cast": [],
+   "style": {
+    "float": true
+   }
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "night",
+   "start": "l2.end+0.5",
+   "end": "l3.end+1.0",
+   "start_line": "l3",
+   "end_line": "l3",
+   "bubbles": false,
+   "overlays": [
+    {
+     "type": "title",
+     "text": "BEST: {{best.month|upper}}",
+     "y": 420,
+     "size": 110,
+     "start": "l3.start+0.3"
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1560,
+      "s": 1.1
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 7.662,
+        "end": 8.91,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        6.508,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

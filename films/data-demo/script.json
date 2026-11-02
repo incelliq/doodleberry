@@ -1,0 +1,7 @@
+{"speakers": {"momo": {"voice": "kokoro:af_heart", "fx": {"pitch": 1.2, "formant": 1.08, "range": 1.25}}, "ravi": {"voice": "kokoro:am_michael"}},
+ "lead_in_s": 0.6, "gap_s": 0.45,
+ "lines": [
+  {"id": "l1", "speaker": "ravi", "fact": null, "text": "Here is how often the club used the telescope."},
+  {"id": "l2", "speaker": "ravi", "fact": null, "text": "{{total}} nights in {{months|word}} months.", "pause": 0.4},
+  {"id": "l3", "speaker": "momo", "fact": null, "text": "And {{best.month}} was the best, with {{best.nights}} nights!"}
+ ]}

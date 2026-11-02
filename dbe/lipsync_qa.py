@@ -10,7 +10,8 @@ whether they move with it. With Rhubarb Lip Sync installed (DBE_RHUBARB=/path/to
 also read by Rhubarb from the audio and text, and its Preston Blair cues (A-H, X) are compared shape class by class.
 
     report = check(film_dir)  ->  {"speakers": {...}, "ok": bool, "lag_ms": worst, "corr": worst}
-Pass: every speaker within +-2 frames of the voice and correlation >= 0.2 (and Rhubarb agreement >= 0.5 when it ran).
+Pass: the film's mouths within +-2 frames of the voice (one lag from all speakers pooled, searched over +-6 frames)
+and correlation >= 0.2 pooled and for every speaker with at least 90 frames of speech (shorter parts are too noisy alone) (and Rhubarb agreement >= 0.5 when it ran).
 Tested by fault injection on dialogue-demo: visemes 200 ms late or 150 ms early, speakers swapped and a mouth stuck
 open all fail; the built track passes at 0 ms.
 """
@@ -25,6 +26,8 @@ OPEN = {"closed": 0.0, "FV": 0.2, "small": 0.35, "smile": 0.45, "mid": 0.65, "O"
 RHUBARB = {"A": "closed", "B": "small", "C": "mid", "D": "wide", "E": "O", "F": "O", "G": "FV", "H": "small", "X": "closed"}
 CLASS = {"closed": "closed", "FV": "closed", "small": "narrow", "smile": "narrow", "mid": "open", "wide": "open", "O": "round"}
 MAX_LAG, MIN_CORR, MIN_RHUBARB = 2, 0.2, 0.5
+SEARCH, PRIOR = 6, 0.04   # lag search (frames) and the preference for small lags
+MIN_FRAMES = 90           # a speaker with less speech than this is judged only through the pooled correlation
 
 
 def _shape_at(cues, t):
@@ -98,28 +101,35 @@ def check(film_dir):
     jaw = jaw_track(d / "build" / "voice.wav", int(max(l["end"] for l in lines) * fps) + 20, fps)
     mouth = {spk: jaw for spk in vis}   # speakers never overlap: each one is read only inside their own lines
     rh = _rhubarb(d, lines, fps)
-    out, ok = {}, True
+    per = {}
     for spk, cues in vis.items():
         track = mouth.get(spk)
-        if not track:
-            continue
         frames = sorted({f for l in lines if l["speaker"] == spk for f in range(int(l["start"] * fps), int(l["end"] * fps) + 1)})
-        frames = [f for f in frames if MAX_LAG + 1 <= f < len(track) - MAX_LAG - 1]
-        if len(frames) < 10:
-            continue
-        ours = {f: OPEN.get(_shape_at(cues, f / fps), 0.35) for f in range(frames[0] - 12, frames[-1] + 12)}
-        best = max(range(-10, 11), key=lambda L: _corr([ours[f + L] for f in frames], [track[f] for f in frames]))
+        frames = [f for f in frames if SEARCH + 1 <= f < len(track) - SEARCH - 1]
+        if len(frames) >= 10:
+            per[spk] = (frames, {f: OPEN.get(_shape_at(cues, f / fps), 0.35) for f in range(frames[0] - SEARCH - 1, frames[-1] + SEARCH + 2)}, track)
+    if not per:
+        return {"ok": True, "skipped": "not enough speech to judge"}
+    # one lag for the film, from all speakers pooled (speech rhythm makes short samples peak at the wrong lag);
+    # small lags are slightly preferred, so a near-tie goes to the plainer explanation
+    def pooled(L):
+        a = [o[f + L] for fr, o, tr in per.values() for f in fr]; b = [tr[f] for fr, o, tr in per.values() for f in fr]
+        return _corr(a, b)
+    best = max(range(-SEARCH, SEARCH + 1), key=lambda L: pooled(L) * (1 - PRIOR * abs(L)))
+    out, ok = {}, abs(best) <= MAX_LAG and pooled(best) >= MIN_CORR
+    for spk, (frames, ours, track) in per.items():
         corr = _corr([ours[f + best] for f in frames], [track[f] for f in frames])
-        r = {"frames": len(frames), "lag_frames": int(best), "lag_ms": int(round(1000 * best / fps)), "corr": round(float(corr), 3)}
-        # positive lag: our mouths move after the voice
-        good = abs(best) <= MAX_LAG and corr >= MIN_CORR
+        r = {"frames": len(frames), "corr": round(float(corr), 3)}
+        good = corr >= MIN_CORR or len(frames) < MIN_FRAMES   # a short part is judged by the pooled correlation only
+        if len(frames) < MIN_FRAMES:
+            r["short"] = True
         if rh and rh.get(spk):
-            agree = sum(CLASS[_shape_at(cues, f / fps)] == CLASS[_shape_at(rh[spk], f / fps)] for f in frames) / len(frames)
+            agree = sum(CLASS[_shape_at(vis[spk], f / fps)] == CLASS[_shape_at(rh[spk], f / fps)] for f in frames) / len(frames)
             r["rhubarb_agreement"] = round(agree, 3); good = good and agree >= MIN_RHUBARB
         r["ok"] = bool(good); ok = bool(ok and good); out[spk] = r
-    worst = max(out.values(), key=lambda r: (abs(r["lag_frames"]), -r["corr"]), default=None)
-    return {"ok": ok, "speakers": out, "rhubarb": bool(rh), "thresholds": {"max_lag_frames": MAX_LAG, "min_corr": MIN_CORR, "min_rhubarb": MIN_RHUBARB},
-            **({"worst_lag_ms": worst["lag_ms"], "worst_corr": min(r["corr"] for r in out.values())} if worst else {})}
+    # positive lag: the mouths move after the voice
+    return {"ok": ok, "lag_frames": int(best), "lag_ms": int(round(1000 * best / fps)), "pooled_corr": round(float(pooled(best)), 3),
+            "speakers": out, "rhubarb": bool(rh), "thresholds": {"max_lag_frames": MAX_LAG, "min_corr": MIN_CORR, "min_rhubarb": MIN_RHUBARB, "search_frames": SEARCH}}
 
 
 if __name__ == "__main__":

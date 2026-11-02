@@ -440,7 +440,8 @@ fails with the reason a person is needed (for example cold open, or bare frames 
 - type too small: size raised to the platform minimum (26 px for 9:16, 24 px for 16:9);
 - reading time: a timed text block stays up words / 3 + 1 s, within its shot; captions flowing faster than 3.2
   words/s re-voice the script slower when `revoice` is true (then the gestures are re-planned);
-- frame fill: the shot's cast is scaled up (feet stay on the floor, at most 1.6x);
+- frame fill: the shot's cast is scaled up once (feet stay on the floor, at most 1.3x); if the next render shows
+  the bare share down by less than 3 points the scale-up is undone (the shot needs content, not a bigger character);
 - lint, head cut by the frame: an auto camera frames singles less tight; a static shot scales the character down
   and moves it in; lint, bubble over a face: an auto camera leaves more headroom, else that shot goes back to
   captions.
@@ -491,3 +492,20 @@ into the following pause and is reported (`overflow_s`; `fit` says what was done
 used). `films/slots-demo` was cut on slots, then voiced twice with different casts (the second slowed 35% so line l3
 falls back to its alternate and l4 speeds up 1.18x): the shot changes are identical in all three states
 (s1 0-7.283 s, s2 7.283-17.338 s).
+
+## Data-bound visuals and original analysis (plan 2.17)
+Every number on screen or in the narration can come from `data.json`, written by the film's own analysis:
+- `films/FILM/analysis/sources.json` lists the inputs: `{"id", "file", "url", "terms", "version"}`. `film.data`
+  downloads each `url` once into `analysis/cache/` (again only with `refresh`), and records the access date and
+  sha256; local inputs just get their hash.
+- `analysis/*.py` run in name order with DBE_PY, from the analysis folder, reading the cache and writing
+  `../data.json`. `film.data` adds `_provenance` (script hashes, sources with terms, version, access date, sha256).
+- Bindings: any text in shots.json or in script lines may hold `{{path}}` or `{{path|format}}` (`1` decimals,
+  `comma`, `int`, `pct`, `pct1`, `word`, `upper`); paths walk data.json (`best.month`, `monthly.2.1`). A chart's
+  `data_from` is inlined. Bindings are filled when shots are resolved and when the script is voiced (voice.build
+  refuses unresolved bindings).
+- `python -m dbe film.data '{"name": "FILM", "revoice": true, "render": true}'` reruns the analysis and reports which
+  data keys changed, which shots' pictures change and which narrated lines' words change, then re-voices those
+  lines and re-renders only those shots (shot hashes cover only the lines and mouth cues a shot shows).
+`films/data-demo` charts an illustrative club log (labelled as demo data). Changing one month in `analysis/cache/log.csv`
+re-rendered the chart shot and the "best month" shot and re-voiced their two lines; the intro shot stayed as it was.

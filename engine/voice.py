@@ -119,6 +119,17 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
     script["speakers"] = {id: {"voice": ..., "fx": preset name or {pitch, formant, range}}}
     and give each line a "speaker". Per-line "pause" adds silence after a line."""
     script = json.loads((film / "script.json").read_text())
+    if any("{{" in ln.get("text", "") + ln.get("alt", "") for ln in script["lines"]) and not (film / "data.json").exists():
+        raise SystemExit("script lines hold {{...}} data bindings but there is no data.json: run film.data first")
+    if (film / "data.json").exists() and any("{{" in ln.get("text", "") + ln.get("alt", "") for ln in script["lines"]):
+        import sys as _sys   # data-bound narration (plan 2.17): numbers come from data.json
+        _sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dbe"))
+        from databind import bind_text
+        _data = json.loads((film / "data.json").read_text())
+        for ln in script["lines"]:
+            for k in ("text", "alt"):
+                if "{{" in ln.get(k, ""):
+                    ln[k] = bind_text(ln[k], _data)
     speakers = script.get("speakers") or {"narrator": {"voice": voice_name or script["voice"]}}
     default = next(iter(speakers))
     voices = {}
