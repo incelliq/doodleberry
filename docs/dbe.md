@@ -543,3 +543,12 @@ the preview reloads. A time written line-relative stays line-relative (`l2.start
 the clip now sits by when it moves away from its old one, so re-voicing still carries the edit; a planned clip that
 is edited by hand loses its `auto` tag, so `acting.plan` keeps it. `timeline.get` returns what the page draws;
 `film.preview` writes the player page. `tools/timeline_check.mjs` drags a gesture in a headless browser.
+
+## Storyboard strip and animatic (plan 3.2)
+`python -m dbe film.storyboard '{"name": "FILM"}'` takes one still per shot from the player (a moment into the
+shot's first line, so the auto camera is on the speaker; the middle of the shot when nobody speaks; drawn without
+captions) and writes to `build/storyboard/`: `strip.png` (every shot in a grid with its id, times, set and lines),
+`contact.pdf` (three shots a page with notes: times and length, set, cast, the lines, and any directions), and the
+stills (`s1.png`, ...). `python -m dbe film.animatic '{"name": "FILM"}'` holds those stills for their shots' lengths
+over the film's sound (the mix if rendered, else the voice) as `build/animatic.mp4`, in seconds, for judging pacing
+before a render. Studio has Storyboard and Animatic buttons; the timeline has Animatic.

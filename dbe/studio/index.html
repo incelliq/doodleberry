@@ -30,7 +30,7 @@
   <aside><b>Films</b><div id="films"></div><div class="row"><button id="new">+ New film</button></div></aside>
   <section>
     <div class="row"><b id="title">Pick a film</b><span style="flex:1"></span>
-      <button id="voice">🎙 Voice</button><button id="renderAll" class="primary">▶ Render film</button><button id="web">🌐 Web export</button></div>
+      <button id="voice">🎙 Voice</button><button id="renderAll" class="primary">▶ Render film</button><button id="web">🌐 Web export</button><button id="board">🎞 Storyboard</button><button id="anim">🎬 Animatic</button></div>
     <h3>Shots</h3><table id="shots"></table>
     <h3>shots.json <button id="save">Save</button></h3><textarea id="json" spellcheck="false"></textarea>
   </section>
@@ -57,6 +57,8 @@ async function openFilm(f) { film = f; loadFilms(); $('tlink').href = '/timeline
 $('save').onclick = async () => { await api('film.write', { name: film, file: 'shots.json', content: $('json').value }); log('saved'); openFilm(film); };
 $('voice').onclick = async () => log(await api('voice.build', { name: film }, true));
 $('renderAll').onclick = async () => { const r = await api('film.render', { name: film }, true); if (r) { $('vid').src = '/' + r.final + '?t=' + Date.now(); openFilm(film); } };
+$('board').onclick = async () => { const r = await api('film.storyboard', { name: film }, true); if (r) { window.open('/' + r.strip); window.open('/' + r.pdf); } };
+$('anim').onclick = async () => { const r = await api('film.animatic', { name: film }, true); if (r) $('vid').src = '/' + r.animatic + '?t=' + Date.now(); };
 $('web').onclick = async () => { const r = await api('export.web', { name: film }); window.open('/' + r.path); };
 $('new').onclick = async () => { const n = prompt('Folder name for the new film'); if (n) { await api('film.create', { name: n }); openFilm(n); } };
 loadFilms();

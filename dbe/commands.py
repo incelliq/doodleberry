@@ -1005,6 +1005,94 @@ def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="",
     return {"stored": stored, "shot": shot, "cast": cast, "op": op}
 
 
+# ---------------- storyboard strip and animatic (plan 3.2) ----------------
+def _board_frames(name):
+    """one representative moment per shot: a moment into its first line (the picture as it speaks), else its middle"""
+    d = _film(name); res = _shots(name); tm = _json(d / "timing.json", {}); sc = _json(d / "script.json", {})
+    dirs = {l["id"]: l.get("direction") for l in sc.get("lines", []) if l.get("direction")}
+    rows = []
+    for sh in res["shots"]:
+        ls = [l for l in tm.get("lines", []) if sh["start"] - 0.01 <= l["start"] < sh["end"]]
+        t = (ls[0]["start"] + min(1.0, (ls[0]["end"] - ls[0]["start"]) / 2)) if ls else (sh["start"] + sh["end"]) / 2
+        rows.append({"shot": sh["id"], "t": round(min(t, sh["end"] - 0.05), 3), "start": sh["start"], "end": sh["end"], "set": sh.get("set", "plain"),
+                     "cast": [c.get("speaker") or Path(c["puppet"]).stem.split(".")[0] for c in sh.get("cast") or []],
+                     "lines": [f"{l.get('speaker', '')}: {l['text']}" for l in ls],
+                     "notes": [x for x in [sh.get("direction"), sh.get("notes")] + [dirs.get(l["id"]) for l in ls] if x]})
+    return rows
+
+
+@command("film.storyboard", name=("string", "film"), width=("integer", "still width in px", 360))
+def film_storyboard(name, width=360):
+    """Storyboard (plan 3.2): one still per shot from the player (a moment into its first line, else its middle),
+    with notes (shot, times, set, cast, its lines, directions). Writes build/storyboard/strip.png (all shots in a grid)
+    and build/storyboard/contact.pdf (six shots a page, notes beside each), plus the stills."""
+    from PIL import Image, ImageDraw, ImageFont
+    d = _film(name); out = d / "build" / "storyboard"; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+    rows = _board_frames(name); page = _player_page(name)
+    _run(["node", "tools/stills.mjs", str(page), str(out), str(width), *[str(r["t"]) for r in rows]], timeout=900)
+    font = lambda n, bold=False: ImageFont.truetype(str(ROOT / "engine" / "fonts" / "Fredoka.ttf"), n)
+    def wrap(txt, f, w, draw):
+        lines, cur = [], ""
+        for word in str(txt).split():
+            if draw.textlength((cur + " " + word).strip(), font=f) > w and cur:
+                lines.append(cur); cur = word
+            else:
+                cur = (cur + " " + word).strip()
+        return lines + ([cur] if cur else [])
+    stills = []
+    for i, r in enumerate(rows):
+        im = Image.open(out / f"still_{i}.png").convert("RGB"); h = round(width * im.height / im.width)
+        im = im.resize((width, h), Image.LANCZOS); im.save(out / f"{r['shot']}.png"); (out / f"still_{i}.png").unlink(); stills.append(im)
+    # strip: a grid with a caption block under each still
+    cols = min(len(rows), 6); cap = 150; pad = 16; h = stills[0].height
+    strip = Image.new("RGB", (pad + cols * (width + pad), pad + -(-len(rows) // cols) * (h + cap + pad)), "#f4f1ea"); dr = ImageDraw.Draw(strip)
+    for i, (r, im) in enumerate(zip(rows, stills)):
+        x, y = pad + (i % cols) * (width + pad), pad + (i // cols) * (h + cap + pad)
+        strip.paste(im, (x, y)); dr.rectangle([x, y, x + width - 1, y + h - 1], outline="#24160e", width=2)
+        dr.text((x, y + h + 8), f"{r['shot']}  {r['start']:.1f}-{r['end']:.1f} s  ·  {r['set']}", font=font(17), fill="#24160e")
+        ty = y + h + 34
+        for ln in (wrap(" / ".join(r["lines"]) or "(no lines)", font(14), width, dr))[:5]:
+            dr.text((x, ty), ln, font=font(14), fill="#5a4a3a"); ty += 18
+    strip.save(out / "strip.png", optimize=True)
+    # contact PDF: A4 portrait at 100 dpi, six shots per page, notes beside each still
+    W, H = 827, 1169; per = 3; pages = []
+    title = _shots(name, resolve=False).get("title", name)
+    for p0 in range(0, len(rows), per):
+        pg = Image.new("RGB", (W, H), "white"); dr = ImageDraw.Draw(pg)
+        dr.text((40, 30), f"{title} · storyboard · page {p0 // per + 1}", font=font(22), fill="#24160e")
+        for j, (r, im) in enumerate(zip(rows[p0:p0 + per], stills[p0:p0 + per])):
+            y = 80 + j * 360; th = 340; tw = round(th * im.width / im.height); pg.paste(im.resize((tw, th), Image.LANCZOS), (40, y))
+            dr.rectangle([40, y, 40 + tw - 1, y + th - 1], outline="#24160e", width=2); x = 40 + tw + 24; ty = y
+            dr.text((x, ty), f"{r['shot']}   {r['start']:.2f} - {r['end']:.2f} s   ({r['end'] - r['start']:.1f} s)", font=font(18), fill="#24160e"); ty += 28
+            dr.text((x, ty), f"set: {r['set']}   cast: {', '.join(r['cast']) or '-'}", font=font(14), fill="#5a4a3a"); ty += 26
+            for ln in [*r["lines"], *[f"direction: {n}" for n in r["notes"]]]:
+                for wl in wrap(ln, font(14), W - x - 40, dr):
+                    if ty < y + th - 18:
+                        dr.text((x, ty), wl, font=font(14), fill="#24160e" if not ln.startswith("direction") else "#7a5cc4"); ty += 19
+                ty += 6
+        pages.append(pg)
+    pages[0].save(out / "contact.pdf", save_all=True, append_images=pages[1:], resolution=100)
+    return {"strip": str((out / "strip.png").relative_to(ROOT)), "pdf": str((out / "contact.pdf").relative_to(ROOT)), "shots": len(rows), "pages": len(pages),
+            "stills": [str((out / f"{r['shot']}.png").relative_to(ROOT)) for r in rows]}
+
+
+@command("film.animatic", name=("string", "film"))
+def film_animatic(name):
+    """Animatic (plan 3.2): the storyboard stills held for their shots' lengths over the film's sound (the mix if
+    rendered, else the voice), as build/animatic.mp4. Seconds to make; use it to judge pacing before a render."""
+    d = _film(name); sb = d / "build" / "storyboard"; rows = _board_frames(name)
+    if not all((sb / f"{r['shot']}.png").exists() for r in rows):
+        film_storyboard(name)
+    lst = d / "build" / "animatic.txt"
+    lst.write_text("".join(f"file '{(sb / (r['shot'] + '.png')).resolve()}'\nduration {r['end'] - r['start']:.3f}\n" for r in rows) + f"file '{(sb / (rows[-1]['shot'] + '.png')).resolve()}'\n")
+    audio = next((p for p in (d / "build" / "mix.wav", d / "build" / "voice.wav") if p.exists()), None)
+    out = d / "build" / "animatic.mp4"; total = rows[-1]["end"]
+    _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), *(["-i", str(audio)] if audio else []),
+          "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=30,format=yuv420p", "-c:v", "libx264", "-crf", "20", *(["-c:a", "aac", "-b:a", "160k"] if audio else []),
+          "-t", f"{total:.3f}", "-movflags", "+faststart", str(out)])
+    return {"animatic": str(out.relative_to(ROOT)), "length_s": round(total, 2), "sound": audio.name if audio else None}
+
+
 # ---------------- format templates (plan 2.15) ----------------
 @command("storyboard.check", name=("string", "film"))
 def storyboard_check(name):

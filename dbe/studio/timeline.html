@@ -43,7 +43,7 @@
   <button id="play" class="primary">▶ Play</button><span id="time">0.00 s</span>
   <label>zoom <input id="zoom" type="range" min="40" max="400" value="110"></label>
   <label><input id="snap" type="checkbox" checked> snap to words</label>
-  <button id="undo" title="Ctrl+Z">↶ Undo</button><span id="msg"></span><span style="flex:1"></span><a href="/">Studio ↗</a></header>
+  <button id="undo" title="Ctrl+Z">↶ Undo</button><button id="anim" title="stills held for each shot over the sound">🎬 Animatic</button><span id="msg"></span><span style="flex:1"></span><a href="/">Studio ↗</a></header>
 <div id="top"><div id="pv"><iframe id="frame" title="preview"></iframe></div>
   <div id="inspect"><h3>Select a clip</h3><div class="kv">Drag a gesture to re-time it, drag its right edge to change its length, double-click a character's lane to add a clip, Delete removes the selected one, ← → nudge one frame (Shift: ten). Every edit is written to shots.json; times anchored to a line stay anchored to it.</div>
     <div class="legend" style="margin-top:8px"><span style="background:var(--hand)"></span>hand-placed<span style="background:var(--auto)"></span>planned from the voice<span style="background:var(--directed)"></span>from directions<span style="background:var(--say)"></span>dialogue<span style="background:var(--shot)"></span>shots</div></div></div>
@@ -122,6 +122,7 @@ async function load(reloadFrame = true) {
     const ready = () => w.ready ? seek(now) : setTimeout(ready, 100); ready(); }; }
   const a = T.film; $('aud').src = `/films/${a}/build/mix.wav?t=${Date.now()}`; render(); inspect();
 }
+$('anim').onclick = async () => { msg('making the animatic…'); const r = await api('film.animatic', { name: film }); msg(`animatic ${r.length_s} s`); window.open('/' + r.animatic); };
 $('zoom').oninput = e => { pps = +e.target.value; render(); };
 $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? '⏸ Pause' : '▶ Play';
   if (playing) { const a = $('aud'); a.currentTime = now; a.play().catch(() => {}); const t0 = performance.now(), n0 = now;
