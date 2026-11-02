@@ -2341,6 +2341,11 @@ def test_golden(update=False, film=""):
         bad, meas = LQ.self_test(ROOT / "out" / "layouttest")
         failed += 1 if bad else 0
         results.append({"layout": "AI-look lint, style thresholds, seeded failures per style", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "oss":   # open-source parts behind commands (WP-34): Pencil2D, libmypaint, Inkscape
+        from . import oss as OSS
+        bad, meas = OSS.self_test(ROOT / "out" / "osstest")
+        failed += 1 if bad else 0
+        results.append({"oss": "MyPaint brushes, Pencil2D round trip, Inkscape booleans", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -2940,6 +2945,58 @@ def post_status(state=""):
         ps = sorted(q["posts"].values(), key=lambda p: (p["post_at"], p["film"], p["platform"]))
     rows = [{k: p.get(k) for k in ("id", "film", "platform", "post_at", "state", "approval", "flags", "blocked", "url", "export", "row", "cover")} for p in ps if not state or p["state"] == state]
     return {"counts": dict(Counter(p["state"] for p in ps)), "posts": rows}
+
+
+# ---------------- open-source parts behind commands (WP-34; docs/oss-integration.md) ----------------
+@command("brush.list")
+def brush_list():
+    """MyPaint brush presets installed (WP-34): name -> file; brush.paint draws with any of them."""
+    from . import oss
+    return {"available": oss.available(), "brushes": oss.brushes()}
+
+
+@command("brush.paint", brush=("string", "a MyPaint brush (brush.list name like deevad/2B_pencil, or a .myb path)"),
+         strokes=("array", "strokes: lists of [x, y, pressure 0-1, seconds since the last point]"), size=("array", "[width, height]"),
+         out=("string", "PNG to write (transparent background)"), colour=("string", "ink colour", "#24160e"),
+         radius_scale=("number", "scale the brush radius", 1.0))
+def brush_paint(brush, strokes, size, out, colour="#24160e", radius_scale=1.0):
+    """Paint pressure strokes with a MyPaint brush (WP-34: libmypaint linked in-process): pencils, inks, charcoal,
+    watercolour and the rest of the MyPaint presets, onto a transparent PNG for a set, a drawn level or a puppet part."""
+    from PIL import Image
+    from . import oss
+    a = oss.paint(brush, strokes, tuple(size), colour, radius_scale)
+    o = ROOT / out if not Path(out).is_absolute() else Path(out); o.parent.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(a, "RGBA").save(o)
+    ink = a[..., 3] > 20
+    return {"file": str(o), "inked_px": int(ink.sum())}
+
+
+@command("pencil2d.write", frames=("array", "drawings: [{frame, png}] (each held until the next, as on an exposure sheet)"),
+         out=("string", ".pclx to write"), size=("array", "[width, height]", [1080, 1920]), fps=("integer", "", 24))
+def pencil2d_write(frames, out, size=None, fps=24):
+    """Write a drawn level as a Pencil2D project (WP-34) that an artist can open and keep drawing in."""
+    from . import oss
+    o = ROOT / out if not Path(out).is_absolute() else Path(out); o.parent.mkdir(parents=True, exist_ok=True)
+    return oss.pencil2d_write(frames, o, tuple(size or [1080, 1920]), fps)
+
+
+@command("pencil2d.render", file=("string", "a Pencil2D project (.pclx)"), out_dir=("string", "folder for the frames"),
+         start=("integer", "", 1), end=("string", "last frame, or last / last-sound", "last"))
+def pencil2d_render(file, out_dir, start=1, end="last"):
+    """Render a Pencil2D project headless with Pencil2D's own exporter (WP-34): PNG frames with transparency, holds
+    included, so hand-drawn animation from Pencil2D comes into a film as a frame sequence."""
+    from . import oss
+    fr = oss.pencil2d_render(ROOT / file if not Path(file).is_absolute() else Path(file), ROOT / out_dir if not Path(out_dir).is_absolute() else Path(out_dir), start, end)
+    return {"frames": len(fr), "first": str(fr[0]), "last": str(fr[-1])}
+
+
+@command("vector.boolean", shapes=("array", "SVG elements in drawing order (path, rect, circle, ellipse, polygon)"),
+         op=("string", "union | difference | intersection | exclusion | division"), size=("array", "canvas [width, height]", [1080, 1920]))
+def vector_boolean(shapes, op, size=None):
+    """Path boolean operations with Inkscape's own engine, headless (WP-34): unite shapes, cut one from another,
+    keep their overlap. Returns the resulting path data, for puppet parts, set pieces and masks."""
+    from . import oss
+    return {"paths": oss.boolean(shapes, op, tuple(size or [1080, 1920]))}
 
 
 # ---------------- parity matrix (WP-41) ----------------

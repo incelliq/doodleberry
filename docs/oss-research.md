@@ -1,5 +1,8 @@
 # Doodleberry: open-source research (November 2026)
 
+> WP-34 (2 November 2026): the decision per part, with licence class and status, is `docs/oss-integration.md`.
+
+
 Scope: OSS libraries, models, formats and assets that could strengthen Doodleberry, a headless, CPU-only animation backend (SVG frames rendered in Chromium, a cut-out puppet system, Lottie/Synfig/Grease Pencil exporters, three.js 3D, Piper/WORLD audio, and a command registry exposed through a CLI, HTTP and MCP).
 This list leaves out what Doodleberry already does.
 

@@ -30,7 +30,7 @@ covered, now added to their packages' scopes.
 | Feature | Source | Status | Priority | Notes |
 |---|---|---|---|---|
 | Vector drawing: pressure ink, filled shapes, palette slots | PRO | ✅ | – | Rig Canvas |
-| Brush engine: stabiliser, tapered and textured brushes, gap-closing fill, eraser, lasso, transform | PRO | 🟡 | P1 | pressure strokes, simplify, gap-closing fill in the Rig Canvas (1.4); stabiliser, textured brushes, lasso, transform: WP-18, WP-34 |
+| Brush engine: stabiliser, tapered and textured brushes, gap-closing fill, eraser, lasso, transform | PRO | 🟡 | P1 | pressure strokes, simplify, gap-closing fill in the Rig Canvas (1.4); stabiliser, textured brushes, lasso, transform: WP-18, WP-34; textured natural-media brushes as a command: `brush.paint` with the MyPaint presets (WP-34) |
 | Raster parts (PNG/painted) with pivots | PRO (Moho, Spine, Live2D) | ✅ | – | puppet v0.3 raster parts (`puppet.from_ink`, `doodle.snap`); SVG renderer only, others: WP-14 |
 | Import layered PSD/Krita/SVG/AI, auto-splitting parts by layer name | PRO (Character Animator, Moho) | 🟡 | P0 | `puppet.import` reads layered SVG, PSD and ORA (1.3); Krita .kra and AI: WP-18 |
 | Paper sketch → vector (scan or photo, then trace) | NEW | ⬜ | P1 | vector tracing (VTracer, potrace): WP-18 |

@@ -237,6 +237,48 @@
    "name": "MediaPipe models pose_landmarker_full.task and face_landmarker.task",
    "license": "Apache-2.0 (model cards)",
    "use": "fetched on first use into DBE_MODELS (~/.cache/doodleberry/models), pinned by sha256 in dbe/actout.py; not in git"
+  },
+  {
+   "name": "Pencil2D 0.6.6 (Ubuntu package)",
+   "license": "GPL-2.0",
+   "class": "copyleft",
+   "use": "drawn levels: render .pclx headless, separate process (pencil2d.render, WP-34)"
+  },
+  {
+   "name": "Inkscape 1.2 (Ubuntu package)",
+   "license": "GPL-2.0-or-later",
+   "class": "copyleft",
+   "use": "path booleans headless, separate process (vector.boolean, WP-34)"
+  },
+  {
+   "name": "Synfig 1.5 (Ubuntu package)",
+   "license": "GPL-3.0-or-later",
+   "class": "copyleft",
+   "use": "Synfig renderer for shot.render, separate process"
+  },
+  {
+   "name": "libmypaint 1.6 (Ubuntu package libmypaint-1.5-1)",
+   "license": "ISC",
+   "class": "permissive",
+   "use": "brush engine linked in-process through ctypes (brush.paint, WP-34)"
+  },
+  {
+   "name": "mypaint-brushes 2.0 (Ubuntu package)",
+   "license": "CC0-1.0 and GPL-2.0-or-later (per brush set)",
+   "class": "public-domain",
+   "use": "MyPaint brush presets read by brush.paint (some sets GPL-2+: copyleft data, fine in-house)"
+  },
+  {
+   "name": "OpenColorIO 2.1 tools (Ubuntu package)",
+   "license": "BSD-3-Clause",
+   "class": "permissive",
+   "use": "colour management tools, for WP-37"
+  },
+  {
+   "name": "OpenImageIO 2.4 tools (Ubuntu package)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "use": "image conversion and EXR tools, for WP-37"
   }
  ],
  "external": [

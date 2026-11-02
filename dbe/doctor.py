@@ -82,6 +82,8 @@ def check(deep=True):
                                        ("node", "core", True, "install Node.js 20 or newer"), ("git", "core", True, "apt-get install -y git"),
                                        ("synfig", "tools", False, "apt-get install -y synfig   (Synfig renderer)"),
                                        ("blender", "tools", False, "install Blender 4.x and set DBE_BLENDER   (Grease Pencil renderer)"),
+                                       ("pencil2d", "tools", False, "bash tools/setup.sh oss   (Pencil2D: drawn levels, WP-34)"),
+                                       ("inkscape", "tools", False, "bash tools/setup.sh oss   (Inkscape: path booleans, WP-34)"),
                                        ("melt", "tools", False, "apt-get install -y melt   (editor round trips)")):
         p = shutil.which(tool)
         add(f"program {tool}", group, p, required, p or "not on PATH", fix)

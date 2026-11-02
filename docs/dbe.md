@@ -69,6 +69,11 @@ environment variables below).
   `reminder.ics` for the person who posts it. Unapproved posts that are due are held, never sent. `post.done` records
   the published link; when all of a row's posts are out, the row is marked posted in the plan with every link.
   `post.status` and the board's Posting section show the queue, with Approve, Revoke and Posted buttons.
+- **Open-source parts** (WP-34, decisions in `docs/oss-integration.md`): `brush.paint` and `brush.list` (libmypaint
+  linked through ctypes, any MyPaint brush preset, pressure strokes onto a transparent PNG), `pencil2d.write` and
+  `pencil2d.render` (a drawn level to and from a Pencil2D project, rendered headless with its holds),
+  `vector.boolean` (Inkscape's path union, difference, intersection, exclusion and division, headless). Optional:
+  `bash tools/setup.sh oss` installs them.
 - **research.check**: the research gate (sources, two independent sources for numbers, research log, fact-check clearance, safety clearance for sensitive briefs); renders refuse to start while it reports errors. See `docs/research-standard.md`.
 - **critic.pack / ledger.add**: review packets for fresh critic agents (role prompts in `dbe/critic/`), and the ledger of gates and critic rounds with before/after QA numbers.
 - **asset.check**: every tracked third-party file must be listed in `assets/manifest.json`.

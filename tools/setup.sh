@@ -5,6 +5,8 @@
 #   bash tools/setup.sh python     core, audio and tools requirements (large wheels fetched with plain HTTP first)
 #   bash tools/setup.sh models     Kokoro voice model files (+ the timed model) and MediaPipe models, checked by sha256
 #   bash tools/setup.sh node       Playwright and its Chromium, only if `require('playwright')` fails
+#   bash tools/setup.sh oss        optional open-source parts (WP-34): Pencil2D, Inkscape, Synfig, libmypaint and the
+#                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
 # Then: python -m dbe engine.doctor
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -65,12 +67,21 @@ node_deps() {
   fi
 }
 
+oss_deps() {
+  local need="" pkgs="pencil2d inkscape synfig libmypaint-1.5-1 mypaint-brushes opencolorio-tools openimageio-tools"
+  for p in $pkgs; do dpkg -s "$p" >/dev/null 2>&1 || need="$need $p"; done
+  if [ -z "$need" ]; then echo "oss: all installed"; return; fi
+  echo "oss: installing$need"
+  DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need)
+}
+
 case "$what" in
   system) system ;;
   python) python_deps ;;
   models) models ;;
   node) node_deps ;;
+  oss) oss_deps ;;
   all) system; python_deps; models; node_deps ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node]"; exit 2 ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"
