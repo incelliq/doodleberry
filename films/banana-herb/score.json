@@ -1,12 +1,49 @@
 {
-  "length_s": 43.6,
-  "bpm": 100,
-  "offset_s": 0.2,
-  "note": "offset puts beat 7 on Wiggs popping out (4.4 s); the reflective section is the day/night ripening montage",
-  "sections": [
-    {"kind": "intro",   "from_beat": 0,  "to_beat": 7,  "chords": ["C", "Am"]},
-    {"kind": "main",    "from_beat": 7,  "to_beat": 54, "chords": ["F", "C", "Dm", "Bb"]},
-    {"kind": "reflect", "from_beat": 54, "to_beat": 59, "chords": ["Dm", "Bb"]},
-    {"kind": "finale",  "from_beat": 59, "to_beat": 71, "chords": ["F", "C", "Bb", "C"], "end_chord": "F"}
-  ]
+ "length_s": 40.747,
+ "bpm": 100,
+ "offset_s": 0.2,
+ "note": "offset puts beat 7 on Wiggs popping out (4.4 s); the reflective section is the day/night ripening montage",
+ "sections": [
+  {
+   "kind": "intro",
+   "from_beat": 0,
+   "to_beat": 7,
+   "chords": [
+    "C",
+    "Am"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 7,
+   "to_beat": 54,
+   "chords": [
+    "F",
+    "C",
+    "Dm",
+    "Bb"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 54,
+   "to_beat": 59,
+   "chords": [
+    "Dm",
+    "Bb"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 59,
+   "to_beat": 71,
+   "chords": [
+    "F",
+    "C",
+    "Bb",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
 }

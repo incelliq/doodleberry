@@ -1,10 +1,10 @@
 {
  "speakers": {
   "patient": {
-   "voice": "en_US-amy-medium"
+   "voice": "kokoro:af_bella"
   },
   "doctor": {
-   "voice": "en_US-ryan-high",
+   "voice": "kokoro:am_michael",
    "fx": {
     "pitch": 0.9,
     "formant": 0.97,

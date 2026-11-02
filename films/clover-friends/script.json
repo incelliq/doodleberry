@@ -1,13 +1,13 @@
 {
  "speakers": {
   "mina": {
-   "voice": "en_US-amy-medium",
+   "voice": "kokoro:af_bella",
    "fx": {
     "preset": "child"
    }
   },
   "kernel": {
-   "voice": "en_US-ryan-high",
+   "voice": "kokoro:am_michael",
    "fx": {
     "pitch": 1.25,
     "formant": 1.1,
@@ -15,7 +15,7 @@
    }
   },
   "wiggs": {
-   "voice": "en_GB-alan-medium",
+   "voice": "kokoro:bm_george",
    "fx": {
     "pitch": 1.12,
     "formant": 1.05,
@@ -23,13 +23,13 @@
    }
   },
   "clover": {
-   "voice": "en_US-lessac-high",
+   "voice": "kokoro:af_sarah",
    "fx": {
     "preset": "baby"
    }
   },
   "narrator": {
-   "voice": "en_US-ryan-high",
+   "voice": "kokoro:am_michael",
    "fx": {
     "pitch": 0.82,
     "formant": 0.92,

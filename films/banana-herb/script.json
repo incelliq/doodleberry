@@ -1,7 +1,7 @@
 {
  "speakers": {
   "nana": {
-   "voice": "en_US-amy-medium",
+   "voice": "kokoro:af_bella",
    "fx": {
     "pitch": 0.97,
     "formant": 0.97,
@@ -9,7 +9,7 @@
    }
   },
   "wiggs": {
-   "voice": "en_GB-alan-medium",
+   "voice": "kokoro:bm_george",
    "fx": {
     "pitch": 1.12,
     "formant": 1.05,

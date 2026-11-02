@@ -1,1 +1,20 @@
-{"length_s": 14, "bpm": 92, "offset_s": 0.0, "note": "light bed", "sections": [{"kind": "reflect", "from_beat": 0, "to_beat": 22, "chords": ["F", "C", "Dm", "Bb"], "end_chord": "F"}]}
+{
+ "length_s": 12.786,
+ "bpm": 92,
+ "offset_s": 0.0,
+ "note": "light bed",
+ "sections": [
+  {
+   "kind": "reflect",
+   "from_beat": 0,
+   "to_beat": 22,
+   "chords": [
+    "F",
+    "C",
+    "Dm",
+    "Bb"
+   ],
+   "end_chord": "F"
+  }
+ ]
+}

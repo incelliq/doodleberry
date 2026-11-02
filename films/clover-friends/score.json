@@ -1,12 +1,51 @@
 {
-  "length_s": 50.7,
-  "bpm": 104,
-  "offset_s": 0.341,
-  "note": "offset puts beat 10 on Wiggs popping out of the ground (6.11 s); the reflective section covers the time card and the rain",
-  "sections": [
-    {"kind": "intro",   "from_beat": 0,  "to_beat": 10, "chords": ["F", "Dm"]},
-    {"kind": "main",    "from_beat": 10, "to_beat": 48, "chords": ["F", "Dm", "Bb", "C"]},
-    {"kind": "reflect", "from_beat": 48, "to_beat": 60, "chords": ["Dm", "Bb", "Gm", "C"]},
-    {"kind": "finale",  "from_beat": 60, "to_beat": 84, "chords": ["F", "C", "Bb", "C"], "end_chord": "F"}
-  ]
+ "length_s": 49.282,
+ "bpm": 104,
+ "offset_s": 0.341,
+ "note": "offset puts beat 10 on Wiggs popping out of the ground (6.11 s); the reflective section covers the time card and the rain",
+ "sections": [
+  {
+   "kind": "intro",
+   "from_beat": 0,
+   "to_beat": 10,
+   "chords": [
+    "F",
+    "Dm"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 10,
+   "to_beat": 48,
+   "chords": [
+    "F",
+    "Dm",
+    "Bb",
+    "C"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 48,
+   "to_beat": 60,
+   "chords": [
+    "Dm",
+    "Bb",
+    "Gm",
+    "C"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 60,
+   "to_beat": 84,
+   "chords": [
+    "F",
+    "C",
+    "Bb",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
 }
