@@ -177,5 +177,14 @@
     return out + '</g>';
   }
 
-  window.KIT = { draw, title, paper, roots, section, water, face, sinhala, fontFor };
+  // ---------- icon: any Lucide icon (ISC, assets/icons/lucide.js), popping in, optional badge circle ----------
+  function icon(o, t) {
+    const body = (window.ICONS || {})[o.name]; if (!body) return '';
+    const size = o.size || 140, k = pop((t - (o.start ?? 0)) / 0.3) * (1 + 0.02 * Math.sin(t * 2.6 + (o.x || 0)));
+    const sc = size / 24, x = o.x ?? 540, y = o.y ?? 900;
+    const badge = o.badge ? `<circle cx="12" cy="12" r="15" fill="${o.badge}" stroke="${INK}" stroke-width="${f1(3 / sc)}"/>` : '';
+    return `<g transform="translate(${f1(x)} ${f1(y)}) scale(${f3(k * sc)}) translate(-12 -12)">${badge}<g fill="none" stroke="${o.color || INK}" stroke-width="${o.stroke_width || 2}" stroke-linecap="round" stroke-linejoin="round">${body}</g></g>`;
+  }
+
+  window.KIT = { draw, title, paper, roots, section, water, face, icon, sinhala, fontFor };
 })();

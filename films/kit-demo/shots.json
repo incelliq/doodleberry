@@ -155,6 +155,25 @@
      "size": 118,
      "start": "then.start+0.3",
      "color": "#9bd23c"
+    },
+    {
+     "type": "icon",
+     "name": "droplets",
+     "x": 165,
+     "y": 1080,
+     "size": 110,
+     "color": "#1d5f8a",
+     "badge": "#e8f6ff",
+     "start": "then.start"
+    },
+    {
+     "type": "icon",
+     "name": "sun",
+     "x": 900,
+     "y": 560,
+     "size": 150,
+     "color": "#c98a0a",
+     "start": "then.start+0.4"
     }
    ],
    "cast": []

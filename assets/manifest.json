@@ -111,6 +111,18 @@
    "kind": "font",
    "name": "Noto Sans Sinhala",
    "license_file": "engine/fonts/NotoSansSinhala-OFL.txt"
+  },
+  {
+   "path": "assets/icons/lucide.js",
+   "kind": "icons",
+   "name": "Lucide icons (2015 icons, lucide-static 1.66.0)",
+   "license": "ISC",
+   "license_file": "assets/icons/LUCIDE-LICENSE.txt",
+   "source": "npm lucide-static 1.66.0 (icon-nodes.json)",
+   "attribution": "Lucide Icons and Contributors (ISC)",
+   "used_by": [
+    "player"
+   ]
   }
  ],
  "generated": [

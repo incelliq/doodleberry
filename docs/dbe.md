@@ -269,3 +269,12 @@ it automatically and returns the advice with the puppet.
   joined picture before captions, so text stays crisp; grain uses a fixed seed. Grain costs file size (fx-demo: 2 MB
   to 10 MB).
 Open: cross-dissolves between shots (they change timing), sub-frame motion blur (needs a second render pass).
+
+## Sets and icons (plan 1.6)
+`sets/more.js` adds eleven sets drawn in code, each aspect-independent (`draw(t, opts, W, H)`, `floorAt(W, H)`), with a
+little ambient life: `kitchen` (kettle steam), `classroom` (`opts.board`: chalkboard lines, any script), `office` (city
+window), `street`, `farm` (crop rows, for plant explainers), `bedroom` (`opts.night`), `forest` (parallax depths), `lab`
+(bubbling flasks, live monitor), `night` (twinkling stars), `reservoir` (an earthen bund in cross-section,
+`opts.level` 0-1, `opts.paper` for an ink-on-paper look) and `stage` (presenter spotlight). With the five originals
+that is 16 sets. Icons: every Lucide icon (2015, ISC, `assets/icons/lucide.js`) as a kit element
+`{"type": "icon", "name": "droplets", "x", "y", "size", "color", "badge"}` that pops in.
