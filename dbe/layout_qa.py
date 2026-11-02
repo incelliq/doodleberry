@@ -8,8 +8,12 @@
 - cold open: a character on screen in frame one, and the first words by 1.5 s
 - mix: effects below music; effect onsets within one frame of their cues
 
-Thresholds come from flat-paper explainer films. Every film gets the measurements; a check fails the film only if the
-film opts in (shots.json "qa": {"enforce": [...]}) because cartoon styles need their own calibration first.
+- AI look: drop shadows, gradient blobs, blur glows, emoji and everything centred (gradients and filters of the house
+  set library are ours and exempt)
+
+Thresholds were calibrated per style (WP-04: explainer, doodle, cartoon) on reference films and live in
+dbe/profiles.json "layout_styles", with the checks each style enforces. A film's style is inferred from its cast (or set
+with shots.json "style"); shots.json "qa" may add thresholds and enforced checks of its own.
 """
 import json
 import re
@@ -190,51 +194,144 @@ def mix_checks(build, cues):
 
 
 # ---------------- report ----------------
+def style_of(shots_all):
+    """explainer (kit and paper, no cast), doodle (doodle-template characters) or cartoon (the humanoid cast in
+    illustrated sets); a film may say so itself with shots.json "style": "<name>" """
+    if isinstance(shots_all.get("style"), str):
+        return shots_all["style"]
+    tpls = set()
+    for sh in shots_all.get("shots", []):
+        for c in sh.get("cast", []):
+            try:
+                tpls.add(json.loads((ROOT / c["puppet"]).read_text()).get("template", "humanoid"))
+            except Exception:
+                pass
+    return "doodle" if "doodle" in tpls else "cartoon" if tpls else "explainer"
+
+
+def style_config(style):
+    """thresholds and enforced checks calibrated for a style (dbe/profiles.json layout_styles, WP-04)"""
+    prof = json.loads((ROOT / "dbe" / "profiles.json").read_text()).get("layout_styles", {})
+    return prof.get(style, {})
+
+
+def house_ids():
+    """gradient and filter ids defined by the house set library: part of our sets, not AI-look habits"""
+    ids = set()
+    for f in (ROOT / "sets").glob("*.js"):
+        ids |= set(re.findall(r"<(?:linearGradient|radialGradient|filter)[^>]*\sid=\"([A-Za-z0-9_-]+)\"", f.read_text()))
+    return sorted(ids)
+
+
+def ai_look(page, step=1.0):
+    r = subprocess.run(["node", "tools/ailook.mjs", str(page), str(step), ",".join(house_ids())], cwd=ROOT, capture_output=True, text=True, timeout=900)
+    return json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {"error": r.stderr[-400:]}
+
+
+def config_for(shots_all):
+    """the style's calibrated thresholds, then the film's own shots.json "qa" overrides; enforced checks are the union"""
+    style = style_of(shots_all); sc = style_config(style)
+    film_qa = shots_all.get("qa") or {}
+    cfg = {**DEFAULTS, **{k: v for k, v in sc.items() if k != "enforce"}, **{k: v for k, v in film_qa.items() if k != "enforce"}}
+    cfg["enforce"] = sorted(set(sc.get("enforce", [])) | set(film_qa.get("enforce", [])))
+    return style, cfg
+
+
+def judge(rep, cfg):
+    """checks from measurements (a pure function, so seeded reports can be judged without rendering)"""
+    checks = {}
+    ff = rep.get("frame_fill")
+    if ff:
+        checks["frame_fill"] = max(ff["per_shot_mean"].values() or [0]) <= cfg["fill_max"]
+    if rep.get("seams") is not None:
+        checks["seams"] = all(x["change"] <= cfg["seam_max"] for x in rep["seams"]["seams"])
+    al = rep.get("ai_look")
+    if al and "error" not in al:
+        checks["ai_look"] = not any(al[k]["frames"] for k in ("shadow", "gradient", "glow", "emoji")) and al["centred_share"] <= cfg.get("centred_max", 0.5)
+    if rep.get("text"):
+        checks["text_in_safe_area"] = not rep["text"]["outside_safe"]
+        checks["type_size"] = not rep["text"]["too_small"]
+    if rep.get("reading"):
+        checks["reading_time"] = not rep["reading"]["too_short"] and rep["reading"]["caption_words_per_s"] <= cfg["caption_wps_max"]
+    co = rep.get("cold_open")
+    if co:
+        checks["cold_open"] = co["character_in_frame_one"] and co["first_text_s"] is not None and co["first_text_s"] <= cfg["hook_by_s"]
+    m = rep.get("mix") or {}
+    if m.get("sfx_lufs") is not None and m.get("music_lufs") is not None:
+        checks["effects_below_music"] = m["sfx_lufs"] < m["music_lufs"]
+    if m.get("cue_onset_offsets_ms"):
+        checks["cue_sync"] = max(abs(o) for o in m["cue_onset_offsets_ms"]) <= cfg["sync_ms"]
+    checks = {k: bool(v) for k, v in checks.items()}
+    enforce = set(cfg.get("enforce", []))
+    return {"checks": checks, "enforced": sorted(enforce),
+            "failed_enforced": sorted(k for k in enforce if checks.get(k) is False),
+            "advisory_failures": sorted(k for k, v in checks.items() if v is False and k not in enforce)}
+
+
 def run(film_dir, page=None):
     from .commands import _shots, _json  # resolved times
     d = Path(film_dir); name = d.name
     shots_all = _shots(name); shots = shots_all["shots"]
-    cfg = {**DEFAULTS, **(shots_all.get("qa") or {})}
+    style, cfg = config_for(shots_all)
     size = shots_all.get("size", [1080, 1920]); fps = shots_all.get("fps", 30)
     timing = _json(d / "timing.json", {})
     video = d / "build" / "final.mp4"
-    rep, checks = {"config": cfg}, {}
+    rep = {"config": cfg, "style": style}
     if video.exists():
         rep["frame_fill"] = frame_fill(video, shots, cfg.get("ground"))
-        worst = (rep["frame_fill"]["worst_frame"] or {}).get("bare", 0)
-        checks["frame_fill"] = max(rep["frame_fill"]["per_shot_mean"].values() or [0]) <= cfg["fill_max"]
-        rep["frame_fill"]["worst_bare"] = worst
-        cuts = [s["start"] for s in shots[1:]]
-        rep["seams"] = seams(video, cuts, fps)
-        checks["seams"] = all(x["change"] <= cfg["seam_max"] for x in rep["seams"]["seams"])
+        rep["frame_fill"]["worst_bare"] = (rep["frame_fill"]["worst_frame"] or {}).get("bare", 0)
+        rep["seams"] = seams(video, [s["start"] for s in shots[1:]], fps)
     boxes = []
     if page:
         tb = text_boxes(page); boxes += tb.get("boxes", [])
         if tb.get("error"):
             rep["text_probe_error"] = tb["error"]
+        al = ai_look(page)   # generic-AI-look lint (WP-04)
+        if "error" not in al:
+            n = max(1, al["frames"])
+            rep["ai_look"] = {k: {"frames": len({x["t"] for x in al[k]}), "first": al[k][:3]} for k in ("shadow", "gradient", "glow", "emoji", "centred")}
+            rep["ai_look"]["centred_share"] = round(len(al["centred"]) / n, 3)
+        else:
+            rep["ai_look"] = al
     if shots_all.get("captions", True):
         boxes += caption_boxes(timing, size, shots_all.get("caption_style") or {})
     rep["text"] = safe_and_size(boxes, size)
-    checks["text_in_safe_area"] = not rep["text"]["outside_safe"]
-    checks["type_size"] = not rep["text"]["too_small"]
     rep["reading"] = reading_time(shots, timing)
-    checks["reading_time"] = not rep["reading"]["too_short"] and rep["reading"]["caption_words_per_s"] <= cfg["caption_wps_max"]
     rep["cold_open"] = cold_open(shots, timing, size)
-    checks["cold_open"] = rep["cold_open"]["character_in_frame_one"] and rep["cold_open"]["first_text_s"] is not None and rep["cold_open"]["first_text_s"] <= cfg["hook_by_s"]
     cues = _json(d / "build" / "cues.json", [])
     try:
         rep["mix"] = mix_checks(d / "build", cues)
     except Exception as e:  # soundfile missing etc.
         rep["mix"] = {"error": str(e)[:200]}
-    m = rep["mix"]
-    if m.get("sfx_lufs") is not None and m.get("music_lufs") is not None:
-        checks["effects_below_music"] = m["sfx_lufs"] < m["music_lufs"]
-    if m.get("cue_onset_offsets_ms"):
-        checks["cue_sync"] = max(abs(o) for o in m["cue_onset_offsets_ms"]) <= cfg["sync_ms"]
-    enforce = set(cfg.get("enforce", []))
-    checks = {k: bool(v) for k, v in checks.items()}
-    rep["checks"] = checks
-    rep["enforced"] = sorted(enforce)
-    rep["failed_enforced"] = sorted(k for k in enforce if checks.get(k) is False)
-    rep["advisory_failures"] = sorted(k for k, v in checks.items() if v is False and k not in enforce)
+    rep.update(judge(rep, cfg))
     return rep
+
+
+def self_test(tmp):
+    """the AI-look probe flags a seeded page (shadow, gradient blob, glow, emoji, all centred) and passes a house set
+    gradient; style inference and style configs read right"""
+    fails, got = [], {}
+    tmp = Path(tmp); tmp.mkdir(parents=True, exist_ok=True)
+    page = tmp / "ailook_case.html"
+    frame = ('<defs><filter id="sh"><feDropShadow dx="4" dy="6" stdDeviation="8"/></filter><filter id="neon"><feGaussianBlur stdDeviation="9"/></filter>'
+             '<linearGradient id="blob"><stop offset="0" stop-color="#7f5af0"/><stop offset="1" stop-color="#2cb67d"/></linearGradient>'
+             '<linearGradient id="skyg"><stop offset="0" stop-color="#9cf"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>'
+             '<rect width="1080" height="600" fill="url(#skyg)"/><rect x="100" y="700" width="880" height="500" rx="40" fill="url(#blob)" filter="url(#sh)"/>'
+             '<text x="540" y="400" text-anchor="middle" font-size="60" filter="url(#neon)">Big idea \u2728</text>'
+             '<text x="540" y="900" text-anchor="middle" font-size="50">Centred</text><text x="540" y="1300" text-anchor="middle" font-size="50">Also centred</text>')
+    page.write_text("<!doctype html><html><body style='margin:0'><svg id='stage' xmlns='http://www.w3.org/2000/svg' width='1080' height='1920'></svg><script>"
+                    "window.FILM={width:1080,height:1920};window.FILMTIME={start:0,end:2};window.frameAtTime=t=>{document.getElementById('stage').innerHTML=%s};"
+                    "window.ready=true;</script></body></html>" % json.dumps(frame))
+    r = ai_look(page, step=1.0)
+    got["seeded"] = {k: len(r.get(k, [])) for k in ("shadow", "gradient", "glow", "emoji", "centred")} if "error" not in r else r
+    if "error" in r or not all(r[k] for k in ("shadow", "gradient", "glow", "emoji", "centred")):
+        fails.append(f"seeded AI look not caught: {got['seeded']}")
+    elif any(x.get("id") == "skyg" for x in r["gradient"]):
+        fails.append("a house set gradient was flagged")
+    st = {"shots": [{"cast": [{"puppet": "cast/generated/ravi.puppet.json"}]}]}
+    if style_of(st) != "cartoon" or style_of({"shots": [{}]}) != "explainer" or style_of({"style": "doodle", "shots": []}) != "doodle":
+        fails.append("style inference")
+    for sty in ("explainer", "doodle", "cartoon"):
+        if not style_config(sty):
+            fails.append(f"no calibrated config for {sty}")
+    return fails, got
