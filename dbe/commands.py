@@ -674,6 +674,144 @@ def qa_run(name, layout=True):
     return rep
 
 
+# ---------------- acting from prose, gags, rig abilities (plans 2.4, 2.11, 2.12) ----------------
+DIRECTED_FIELDS = ("look", "emotion", "blinks", "place")
+
+
+def _clip_lib(template):
+    return _json(ROOT / "puppet" / "clips" / f"{template}.json", {"clips": {}})
+
+
+@command("acting.direct", name=("string", "film"), text=("string", "directions in plain English (default: the script lines' and shots' \"direction\" fields)", ""),
+         shot=("string", "shot id for text (default: the shot each direction falls in)", ""))
+def acting_direct(name, text="", shot=""):
+    """Acting from prose (plans 2.4, 2.11): "Momo is nervous and glances at Ravi", "When Ravi says 'telescope', Momo
+    does a double take", "After her line Priya shrugs, then nods slowly". Each sentence becomes clips, emotion, gaze,
+    blinks, moves or a gag (double take, long stare, slow burn, deadpan, button, rule of three) on the right
+    character at the right moment, written line-relative into shots.json and tagged so directing again replaces it.
+    Reports how each sentence was read and anything it could not stage."""
+    from . import director as DR
+    d = _film(name); raw = _json(d / "shots.json"); res = _shots(name); tm = _json(d / "timing.json", {}); lines = tm.get("lines", [])
+    script = _json(d / "script.json", {})
+    jobs = []   # (shot index, line id, text)
+    if text:
+        si = next((i for i, x in enumerate(res["shots"]) if x["id"] == shot), 0) if shot else 0
+        jobs.append((si, None, text))
+    else:
+        for i, sh in enumerate(raw["shots"]):
+            if sh.get("direction"):
+                jobs.append((i, None, sh["direction"]))
+        for sl in script.get("lines", []):
+            if sl.get("direction"):
+                ln = next((l for l in lines if l["id"] == sl["id"]), None)
+                if ln:
+                    si = next((i for i, x in enumerate(res["shots"]) if x["start"] - 0.01 <= ln["start"] < x["end"]), 0)
+                    jobs.append((si, sl["id"], sl["direction"]))
+    # undo earlier directing
+    for sh in raw["shots"]:
+        for c in sh.get("cast") or []:
+            tl = c.get("timeline") or {}
+            if "undirected" in tl:
+                for k, v in tl.pop("undirected").items():
+                    if v is None:
+                        tl.pop(k, None)
+                    else:
+                        tl[k] = v
+                if "place_undirected" in c:
+                    c["place"] = c.pop("place_undirected")
+            if tl.get("clips"):
+                tl["clips"] = [k for k in tl["clips"] if not k.get("directed")]
+    report = []
+    for si, lid, txt in sorted(jobs, key=lambda j: (j[0], [l["id"] for l in lines].index(j[1]) if j[1] in [l["id"] for l in lines] else -1)):
+        ctx = DR.Ctx(res["shots"][si], lines, lid); sh = raw["shots"][si]
+        for sent in [x for x in re.split(r"(?<=[.!?;])\s+|\s+(?=then\b)", txt) if x.strip()]:
+            acts = DR.parse(ctx, sent)
+            edits, end = DR.compile_actions(ctx, acts, sent)
+            if end is not None:
+                ctx.cursor = round(end, 3)
+                for a_ in acts:
+                    if a_.get("who"):
+                        ctx.cursors[a_["who"]] = round(end, 3)
+            for ci, E in edits.items():
+                c = sh["cast"][ci]; tl = c.setdefault("timeline", {})
+                if "undirected" not in tl:
+                    tl["undirected"] = {k: (json.loads(json.dumps(tl[k])) if k in tl else None) for k in DIRECTED_FIELDS if k != "place"}
+                for k in E.get("clips", []):
+                    tl.setdefault("clips", []).append({**k, "directed": True})
+                if E.get("look"):
+                    tl["look"] = (tl.get("look") or []) + E["look"]; tl["look_manual"] = True
+                if E.get("emotion"):
+                    tl["emotion"] = (tl.get("emotion") or []) + E["emotion"]
+                if E.get("blinks"):
+                    tl["blinks"] = sorted(set((tl.get("blinks") or []) + E["blinks"]))
+                for mv in E.get("place", []):
+                    if "place_undirected" not in c:
+                        c["place_undirected"] = json.loads(json.dumps(c.get("place")))
+                    pl = c.get("place")
+                    keys = pl if isinstance(pl, list) else [[0, dict(pl or {"x": mv["from"], "y": 1500})]]
+                    last = dict(keys[-1][1])
+                    keys = keys + [[mv["t0"], {**last, "x": mv["from"]}], [mv["t1"], {**last, "x": mv["to"]}]]
+                    c["place"] = keys
+            report.append({"shot": sh["id"], "line": lid, "sentence": sent.strip(),
+                           "read": [{k: v for k, v in a.items() if k in ("who", "when", "kind", "clip", "emotion", "gag", "target", "manner", "t", "error", "text")} for a in acts]})
+    # keys sorted by time (line-relative keys sort by their resolved time)
+    for i, sh in enumerate(raw["shots"]):
+        for c in sh.get("cast") or []:
+            tl = c.get("timeline") or {}
+            for k in ("look", "emotion"):
+                if tl.get(k):
+                    rv = resolve_times({"k": tl[k]}, tm)["k"]
+                    tl[k] = [x for _, x in sorted(zip([r[0] for r in rv], tl[k]), key=lambda z: z[0])]
+            if isinstance(c.get("place"), list):
+                rv = resolve_times({"k": c["place"]}, tm)["k"]
+                c["place"] = [x for _, x in sorted(zip([r[0] for r in rv], c["place"]), key=lambda z: z[0])]
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    unstaged = [r["sentence"] for r in report if any(a.get("kind") in ("unknown", None) or a.get("error") for a in r["read"])]
+    return {"directions": len(report), "staged": report, "not_understood": unstaged}
+
+
+@command("puppet.abilities", puppet=("string", "puppet file"))
+def puppet_abilities(puppet):
+    """Rig ability inventory (plan 2.12): what this character does for free (clips whose parts it has, emotions whose
+    mouths and brows are drawn, glances, blinks, lip-sync, turn, tail) and what each costly move would need drawn."""
+    from . import director as DR
+    p = _json(ROOT / puppet)
+    return DR.abilities(p, _clip_lib(p.get("template", "humanoid")))
+
+
+@command("script.rigcheck", name=("string", "film"))
+def script_rigcheck(name):
+    """Rig-aware writing (plan 2.12): read every direction in the film (script lines and shots), work out what each
+    character is asked to do, and list per character the moves that are free and exactly which drawings the rest
+    would need. A script written within the rigs returns no drawing requests."""
+    from . import director as DR
+    d = _film(name); raw = _json(d / "shots.json"); res = _shots(name); tm = _json(d / "timing.json", {}); lines = tm.get("lines", [])
+    script = _json(d / "script.json", {})
+    jobs = [(i, None, sh["direction"]) for i, sh in enumerate(raw["shots"]) if sh.get("direction")]
+    for sl in script.get("lines", []):
+        ln = next((l for l in lines if l["id"] == sl["id"]), None)
+        if sl.get("direction") and ln:
+            jobs.append((next((i for i, x in enumerate(res["shots"]) if x["start"] - 0.01 <= ln["start"] < x["end"]), 0), sl["id"], sl["direction"]))
+    per = {}
+    for si, lid, txt in jobs:
+        ctx = DR.Ctx(res["shots"][si], lines, lid)
+        for sent in [x for x in re.split(r"(?<=[.!?;])\s+|\s+(?=then\b)", txt) if x.strip()]:
+            for a in DR.parse(ctx, sent):
+                if a.get("error") or a.get("kind") == "unknown":
+                    continue
+                c = res["shots"][si]["cast"][ctx.cast[a["who"]]]; p = _json(ROOT / c["puppet"]); lib = _clip_lib(p.get("template", "humanoid"))
+                need = DR.needs_of(a, p, lib)
+                e = per.setdefault(a["who"], {"puppet": c["puppet"], "free": [], "needs_drawings": {}})
+                label = a.get("clip") or a.get("gag") or a.get("emotion") or a["kind"]
+                if need:
+                    for n in need:
+                        e["needs_drawings"].setdefault(n, []).append(sent.strip())
+                elif label not in e["free"]:
+                    e["free"].append(label)
+    return {"characters": per, "drawings_needed": sum(len(v["needs_drawings"]) for v in per.values()),
+            "ok": all(not v["needs_drawings"] for v in per.values())}
+
+
 @command("film.heal", name=("string", "film"), rounds=("integer", "most render-and-repair rounds", 3),
          revoice=("boolean", "allow re-voicing slower when captions flow too fast", False))
 def film_heal(name, rounds=3, revoice=False):

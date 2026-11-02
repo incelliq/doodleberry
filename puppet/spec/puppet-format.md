@@ -156,7 +156,7 @@ template, N-bone FABRIK chains (tails, tentacles), Rig Canvas tabs for views and
   `chains: {name: [[t, [x, y]]]}` gives reach targets in artboard space, solved by FABRIK with the root fixed and
   written back as local angles (then limited). Springs on chain parts add follow-through on top.
 - **`swaps.mouth.charts`** `{emotion: {shape: drawn shape}}`: the emotion-aware mouth chart. A timeline
-  `emotion: [[t, "happy" | "sad" | "angry" | "surprised" | "neutral"]]` maps the viseme through the chart (default:
+  `emotion: [[t, "happy" | "sad" | "angry" | "surprised" | "worried" | "neutral"]]` maps the viseme through the chart (default:
   happy and sad/angry turn the closed mouth into `smile`/`frown`, surprised into `O`), uses a drawn
   `<shape>_<emotion>` when the puppet has one, and sets brows (raised, worried, angry) unless a clip sets them.
 - **`acting.principles`** `{snap, window}` (or timeline `principles`): anticipation and overshoot as an unsharp mask

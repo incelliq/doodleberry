@@ -446,3 +446,36 @@ fails with the reason a person is needed (for example cold open, or bare frames 
   captions.
 `films/heal-demo` is the kit demo with failures seeded on purpose (animation once a second, a 20 px sign up for
 0.8 s, the title below the safe area).
+
+## Acting from prose, gags and rig-aware writing (plans 2.4, 2.11, 2.12)
+**Directions.** A script line can carry `"direction"` (anchored to that line), a shot can carry one too, or text can
+be passed straight to `python -m dbe acting.direct '{"name": "FILM", "text": "...", "shot": "s1"}'`. One action per
+sentence (or clause after "then"):
+- who: a speaker in the shot; he, she, they = the last one named;
+- when: `when Ravi says 'back'` (that word), `after/before/during the line` or `after Priya's line`, `at the start`,
+  `at the end`, `then` (after that character's previous action), else with the line (or right after the same
+  character's last action);
+- what: an emotion (happy, sad, angry, surprised, worried/nervous, neutral and synonyms), a gaze (`glances at` is
+  brief, `looks at` holds), `walks to` someone (moving placement plus the walk clip), or one of the clip verbs: nod,
+  shake their head, shrug, clap, jump, celebrate/cheer, facepalm, cross their arms, think, scratch their head,
+  stomp, slump/sigh, wave, point, present/show, run (wave, point and present turn toward their target);
+- at whom: another character, or the camera, up, down, left, right, the sky, the moon, the board, the door;
+- how: slowly, quickly, a little, hugely (speed and size).
+The result is written into shots.json line-relative where it was anchored to a line, so re-voicing keeps it on the
+words. Directed clips are tagged and the earlier gaze, emotion, blinks and placement are kept under `undirected`, so
+running `acting.direct` again replaces the last direction instead of piling up. With exactly two characters, an
+untargeted gaze goes to the other one. `acting.plan` (talk gestures from the voice) and `acting.direct` combine: run
+the planner first.
+
+**Gags** (`dbe/director.py`): `does a double take` (look, look away as if nothing happened, a beat, snap back
+surprised with a blink), `gives a long stare` (2.6 s held look, blinks on a slow count, idle damped), `slow burn`
+(neutral to the camera, then angry, arms crossed), `deadpan` / `looks at the camera`, `button` (a small happy nod),
+`rule of three` (three times / three verbs: twice as set-up, the third bigger and later).
+
+**Rig abilities.** `python -m dbe puppet.abilities '{"puppet": "cast/generated/momo.puppet.json"}'` lists what a
+character does for free (clips whose parts it has, emotions whose mouths and brows are drawn, glances, blinks,
+lip-sync, turn, tail) and what each costly move needs drawn. `python -m dbe script.rigcheck '{"name": "FILM"}'` reads
+every direction in the film and lists per character the moves that are free and exactly which drawings are missing,
+with the sentences that need them. `films/direct-demo` is staged from its directions alone; with Momo recast as the
+doodle Nib, the same script asks for seven drawings (pupils, two brows, two mouths, a shrug and a head-scratch clip for
+the doodle template).

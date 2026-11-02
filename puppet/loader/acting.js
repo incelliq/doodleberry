@@ -189,10 +189,10 @@
   }
 
   // ---------- v0.6: emotion-aware mouth chart ----------
-  // timeline emotion = [[t, "happy" | "sad" | "angry" | "surprised" | "neutral"]]: the resting mouth (and any shape with
+  // timeline emotion = [[t, "happy" | "sad" | "angry" | "surprised" | "worried" | "neutral"]]: the resting mouth (and any shape with
   // an "<shape>_<emotion>" drawing) follows the emotion, and brows follow it unless something else sets them.
-  const MOUTH_CHARTS = { happy: { closed: 'smile' }, sad: { closed: 'frown' }, angry: { closed: 'frown' }, surprised: { closed: 'O' } };
-  const EMO_BROWS = { happy: 'raised', sad: 'worried', angry: 'angry', surprised: 'raised' };
+  const MOUTH_CHARTS = { happy: { closed: 'smile' }, sad: { closed: 'frown' }, angry: { closed: 'frown' }, surprised: { closed: 'O' }, worried: { closed: 'small' } };
+  const EMO_BROWS = { happy: 'raised', sad: 'worried', angry: 'angry', surprised: 'raised', worried: 'worried' };
   function emotionalMouth(puppet, shape, emo) {
     if (!emo || emo === 'neutral') return shape;
     const sw = (puppet.swaps || {}).mouth || {}, shapes = sw.shapes || {};
