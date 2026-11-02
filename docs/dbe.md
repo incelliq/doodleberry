@@ -322,3 +322,18 @@ below for captions. Explicit `camera` keys always win.
 character lands (hips decelerating after a drop) and on each bounce of a dropped prop (quieter each time), a swish when a
 hand passes 1400 px/s, and a small pop where a prop is caught. Each cue is panned by its screen position. New
 synthesised sounds in `engine/audio.py`: `step`, `thud`, `swish`; any cue may carry `pan` (-1 left .. 1 right).
+
+## Visual lint (plan 2.8)
+`python -m dbe film.lint '{"name": "FILM"}'` plays the film in the player (`window.LINT`, run by `tools/lint.mjs`,
+every 3rd frame) and reports picture problems in screen space, camera included, as frame ranges in `build/lint.json`:
+- **error**: a head cut by the frame while the body is in shot; a speech bubble covering a face;
+- **warn**: a hand leaving the frame; feet cropped in a wide shot (camera zoom under 1.05, where nothing should be
+  cropped); a face in the caption band; an arm locked straight because its IK target is out of reach; a prop inside
+  the head of someone who is not holding it;
+- **info**: a silhouette just touching the frame edge, or two characters just touching.
+
+Characters who are wholly out of shot (the camera is on the other speaker) are skipped, and one-sample warnings
+(a camera move passing by) are dropped. `qa.run` (so also `film.render`) runs the lint and reports the counts as
+`lint`; it is advisory unless shots.json says `"qa": {"enforce": ["lint"]}`, which fails the film on any error.
+`python -m dbe test` includes `tests/lint/broken_staging.json`: the dialogue demo staged badly on purpose, and each
+listed check must fire.

@@ -616,7 +616,7 @@ def film_render(name, only=None, aspect=""):
     qa = qa_run(name)
     mb = final.stat().st_size / 1e6
     return {"rendered": done, "unchanged": skipped, "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
-            "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures")}
+            "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures"), "lint": qa.get("lint")}
 
 
 @command("qa.run", name=("string", "film"), layout=("boolean", "also run the measured layout checks (frame fill, safe zones, type size, reading time, seams, cold open, mix)", True))
@@ -636,8 +636,33 @@ def qa_run(name, layout=True):
         for k in lay["enforced"]:
             rep["checks"][f"layout:{k}"] = lay["checks"].get(k, True)
         rep["layout_advisory_failures"] = lay["advisory_failures"]
+        # visual lint (plan 2.8): advisory unless shots.json "qa": {"enforce": ["lint"]}, which fails the film on lint errors
+        li = film_lint(name)
+        if "issues" in li:
+            rep["lint"] = li["summary"]
+            if "lint" in ((_json(FILMS / name / "shots.json", {}).get("qa") or {}).get("enforce") or []):
+                rep["checks"]["lint"] = li["summary"]["error"] == 0
         (FILMS / name / "build" / "qa.json").write_text(json.dumps(rep, indent=1))
     return rep
+
+
+@command("film.lint", name=("string", "film"), step=("integer", "sample every Nth frame", 3))
+def film_lint(name, step=3):
+    """Visual lint (plan 2.8): play the film in the player and flag picture problems with frame ranges. Heads cut by
+    the frame (error), speech bubbles over faces (error), hands leaving the frame or feet cropped in a wide shot,
+    faces under the caption band, arms locked straight by an unreachable IK target, props through someone else's
+    head (warn), and silhouettes tangent to the frame edge or to each other (info). Writes build/lint.json."""
+    d = _film(name)
+    if not (d / "shots.json").exists():
+        return {"error": "film.lint needs a shots.json film"}
+    page = _player_page(name)
+    r = subprocess.run(["node", "tools/lint.mjs", str(page), str(int(step))], cwd=ROOT, capture_output=True, text=True, timeout=1800)
+    if r.returncode != 0 or not r.stdout.strip():
+        return {"error": (r.stderr or r.stdout)[-800:]}
+    issues = json.loads(r.stdout.strip().splitlines()[-1])
+    summary = {lv: sum(1 for i in issues if i.get("level") == lv) for lv in ("error", "warn", "info")}
+    (d / "build" / "lint.json").write_text(json.dumps({"summary": summary, "issues": issues}, indent=1))
+    return {"summary": summary, "issues": issues}
 
 
 # ---------------- reach ----------------
@@ -759,6 +784,32 @@ def test_golden(update=False, film=""):
         d = np.abs(a - b); mean, over = float(d.mean()), float((d.max(-1) > 32).mean()); ok = mean <= tol["mean_abs"] and over <= tol["pixels_over_32"]
         failed += 0 if ok else 1
         results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
+    for case in spec.get("lint", []):  # visual-lint cases: a film staged badly on purpose; the expected checks must fire
+        if film and film != "lint":
+            continue
+        import shutil
+        c = _json(ROOT / case); tmpname = "_lint_case"; dst = FILMS / tmpname
+        shutil.rmtree(dst, ignore_errors=True); shutil.copytree(FILMS / c["film"], dst, ignore=shutil.ignore_patterns("build"))
+        try:
+            sj = _json(dst / "shots.json")
+            for path, val in c.get("set", []):
+                o = sj
+                for k in path[:-1]:
+                    o = o[k]
+                if val is None:
+                    o.pop(path[-1], None)
+                else:
+                    o[path[-1]] = val
+            (dst / "shots.json").write_text(json.dumps(sj))
+            li = film_lint(tmpname)
+        finally:
+            shutil.rmtree(dst, ignore_errors=True)
+        got = {(i["check"], i["who"], i["level"]) for i in li.get("issues", [])}
+        missing = [e for e in c["expect"] if tuple(e) not in got]
+        extra = sorted({g for g in got if g[2] == "error" and list(g) not in c["expect"]})
+        ok = "issues" in li and not missing and not extra
+        failed += 0 if ok else 1
+        results.append({"lint": case, "status": "ok" if ok else "FAIL", **({"missing": missing, "unexpected_errors": extra, "error": li.get("error")} if not ok else {})})
     for case in spec.get("imports", []):  # drawing-import round trips: puppet -> layered file -> puppet, pivots compared
         if film and film != "imports":
             continue

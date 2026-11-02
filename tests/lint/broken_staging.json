@@ -1,0 +1,18 @@
+{
+ "about": "Visual-lint case (plan 2.8): the dialogue demo staged badly on purpose. Each listed check must fire, and nothing at level error beyond them.",
+ "film": "dialogue-demo",
+ "set": [
+  [["shots", 0, "camera_auto"], null],
+  [["shots", 0, "bubbles"], true],
+  [["shots", 0, "cast", 0, "place"], {"x": 300, "y": 1950, "s": 2.4}],
+  [["shots", 0, "cast", 1, "place"], {"x": 800, "y": 2350, "s": 1.1}],
+  [["shots", 0, "cast", 1, "timeline", "ik"], {"arm_R": [[0, [-900, -600]]]}]
+ ],
+ "expect": [
+  ["off-screen", "ravi", "error"],
+  ["bubble over face", "ravi", "error"],
+  ["face under captions", "priya", "warn"],
+  ["ik overextended", "priya", "warn"],
+  ["off-screen", "priya", "warn"]
+ ]
+}

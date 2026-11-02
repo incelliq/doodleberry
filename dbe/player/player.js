@@ -125,7 +125,7 @@
     const overlap = (a, r) => Math.max(0, Math.min(a[2], r[2]) - Math.max(a[0], r[0])) * Math.max(0, Math.min(a[3], r[3]) - Math.max(a[1], r[1]));
     const cost = ([x, y], k) => AVOID.reduce((acc, r) => acc + overlap([x - rx, y - ry, x + rx, y + ry], r), 0) + k * 40;  // prefer earlier (closer) spots
     let [cx, cy] = cands.map((c, k) => [c, cost(c, k)]).sort((a, b) => a[1] - b[1])[0][0];
-    AVOID.push([cx - rx, cy - ry, cx + rx, cy + ry]);
+    AVOID.push([cx - rx, cy - ry, cx + rx, cy + ry]); BUBBLES.push([cx - rx, cy - ry, cx + rx, cy + ry]);
     const n = 64, pts = [], k = Math.floor(t * 12) % 8;
     for (let q = 0; q < n; q++) { const th = 2 * Math.PI * q / n;
       let r = 1 + 0.018 * (Math.sin(3 * th + 6.28 * hash(k, idx)) + Math.sin(5 * th + 6.28 * hash(k + 9, idx)) + 0.6 * Math.sin(9 * th + 6.28 * hash(k + 17, idx)));
@@ -150,8 +150,9 @@
       else tspans += `<text x="${cx}" y="${y.toFixed(1)}" font-size="${base * pop}" text-anchor="middle"${style === 'whisper' ? ' fill="#59636d"' : ''}>${esc(txt)}</text>`; });
     return svg + `<g font-family="${HAND}" fill="${INK}">${tspans}</g>`;
   }
+  let BUBBLES = [], VIEW = [0, 0, 1];   // for visual lint: bubble boxes and the camera of the last frame drawn
   function bubblesFor(sh, t, heads) {
-    const out = []; let idx = 0;
+    const out = []; let idx = 0; BUBBLES = [];
     AVOID = (sh.overlays || []).filter(o => (o.start == null || t >= o.start) && (o.end == null || t <= o.end)).map(overlayBox).filter(Boolean);
     for (const a of Object.values(heads)) AVOID.push([a[0] - 150 * H / 1920 * (H > W ? 1 : 1.5), a[1] - 10, a[0] + 150 * H / 1920 * (H > W ? 1 : 1.5), a[1] + H * 0.22]);  // keep bubbles off the characters' heads and bodies
     if (sh.bubbles !== false) for (const ln of T.lines || []) { // voiced lines become bubbles for speakers in the shot
@@ -300,9 +301,11 @@
     let svg = boilDefs(st, t) + world;
     if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2 + 6 * Math.cos(a)} ${H / 2 + 6 * Math.sin(a)}) scale(${z.toFixed(4)}) translate(${-W / 2} ${-H / 2})">${world}</g>`; }
-    if (sh.camera_auto && !sh.camera && !bgOnly) { const [cx, cy, z] = autoCam(sh, tq, casts);   // camera grammar (plan 2.6)
+    VIEW = [W / 2, H / 2, 1];
+    if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20; VIEW = [W / 2 - 6 * Math.cos(a), H / 2 - 6 * Math.sin(a), 1.012 + 0.008 * Math.sin(a * 0.7)]; }
+    if (sh.camera_auto && !sh.camera && !bgOnly) { const [cx, cy, z] = autoCam(sh, tq, casts); VIEW = [cx, cy, z];   // camera grammar (plan 2.6)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z.toFixed(4)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})">${world}</g>`; }
-    if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
+    if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; VIEW = [cx, cy, z]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;
@@ -349,6 +352,64 @@
     return ev.sort((a, b) => a.t - b.t);
   }
   window.FOLEY = foleyEvents;
+
+  // ---------- visual lint (plan 2.8): problems in the picture, with frame ranges ----------
+  // off-screen limbs and heads, bubbles over faces, faces under the caption band, arms locked straight by IK,
+  // silhouettes tangent to the frame edge or to each other, props passing through someone who is not holding them.
+  function visualLint(step = 3) {
+    const hits = [], dt = 1 / FPS;
+    const scr = ([x, y]) => [W / 2 + (x - VIEW[0]) * VIEW[2], H / 2 + (y - VIEW[1]) * VIEW[2]];
+    const capTop = H - (H > W ? 420 : 260);   // where burned-in captions sit
+    for (const sh of S.shots) {
+      for (let f = Math.ceil(sh.start * FPS); f < sh.end * FPS; f += step) {
+        const t = f / FPS; frameAt(t, false);
+        const faces = [];
+        CASTS.forEach((cc, ci) => {
+          const P = (part, at) => cc.p.parts[part] ? scr(Puppet.pointOf(cc.p, part, at || null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip })) : null;
+          const k = cc.s * VIEW[2], name = cc.c.speaker || cc.p.name || 'cast ' + ci;
+          // head box (around the head pivot, up to the bubble anchor)
+          const hb = cc.p.anchors && cc.p.anchors.bubble ? P('head', cc.p.anchors.bubble) : null, hp = P('head');
+          if (hp) { const top = hb ? hb[1] : hp[1] - 180 * k; faces.push({ ci, name, box: [hp[0] - 85 * k, top, hp[0] + 85 * k, hp[1] + 20 * k] }); }
+          // off-screen, only for someone who is in the shot (their body is on screen): a head cut by the frame is an error;
+          // a hand leaving the frame is a warning; feet out of frame only matter in a wide shot (z near 1), where nothing should be cropped
+          const out = q => q && (q[0] < -10 || q[0] > W + 10 || q[1] < -10 || q[1] > H + 10), body = P('body') || P('hip');
+          if (body && !out(body)) {
+            const hd = P('head'); if (hd && (out(hd) || hd[1] - 150 * k < -10)) hits.push({ f, shot: sh.id, check: 'off-screen', level: 'error', who: name, msg: 'the head is cut by the frame' });
+            for (const part of ['hand_R', 'hand_L']) if (out(P(part))) hits.push({ f, shot: sh.id, check: 'off-screen', level: 'warn', who: name, msg: `${part} leaves the frame` });
+            if (VIEW[2] < 1.05) for (const part of ['foot_R', 'foot_L']) if (out(P(part))) hits.push({ f, shot: sh.id, check: 'off-screen', level: 'warn', who: name, msg: `${part} is cropped in a wide shot` });
+          }
+          // IK over-extension: the arm is straight while an IK target is set for it
+          for (const side of ['R', 'L']) { const ik = (cc.tl.ik || {})['arm_' + side]; if (!ik) continue;
+            const a = P('upperarm_' + side), b = P('forearm_' + side), c = P('hand_' + side); if (!a || !b || !c) continue;
+            const full = Math.hypot(b[0] - a[0], b[1] - a[1]) + Math.hypot(c[0] - b[0], c[1] - b[1]), reach = Math.hypot(c[0] - a[0], c[1] - a[1]);
+            if (reach > full * 0.997) hits.push({ f, shot: sh.id, check: 'ik overextended', level: 'warn', who: name, msg: `arm_${side} is locked straight: its target is out of reach` }); }
+        });
+        // bubbles over faces (any face but the speaker's own anchor region below the bubble)
+        for (const bb of BUBBLES) for (const fc of faces) { const ix = Math.min(bb[2], fc.box[2]) - Math.max(bb[0], fc.box[0]), iy = Math.min(bb[3], fc.box[3]) - Math.max(bb[1], fc.box[1]);
+          if (ix > 12 && iy > 12 && ix * iy > 0.12 * (fc.box[2] - fc.box[0]) * (fc.box[3] - fc.box[1])) hits.push({ f, shot: sh.id, check: 'bubble over face', level: 'error', who: fc.name, msg: 'a speech bubble covers the face' }); }
+        // faces under the caption band (captions on)
+        if (S.captions !== false) for (const fc of faces) if (Math.min(fc.box[3], H) - Math.max(fc.box[1], capTop) > 0.3 * (fc.box[3] - fc.box[1])) hits.push({ f, shot: sh.id, check: 'face under captions', level: 'warn', who: fc.name, msg: 'the face sits where captions are burned in' });
+        // tangents: a silhouette edge within 6 px of the frame edge, or two characters' boxes almost touching
+        const boxes = CASTS.map((cc, ci) => { const pts = ['head', 'hand_R', 'hand_L', 'foot_R', 'foot_L', 'arm_R', 'arm_L', 'body'].filter(p => cc.p.parts[p]).map(p => scr(Puppet.pointOf(cc.p, p, null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip })));
+          if (!pts.length) return null; const pad = 30 * cc.s * VIEW[2]; return [Math.min(...pts.map(q => q[0])) - pad, Math.min(...pts.map(q => q[1])) - pad, Math.max(...pts.map(q => q[0])) + pad, Math.max(...pts.map(q => q[1])) + pad, cc.c.speaker || cc.p.name || 'cast ' + ci]; });
+        boxes.forEach(b => { if (b && ((b[0] > 0 && b[0] < 6) || (b[2] < W && b[2] > W - 6))) hits.push({ f, shot: sh.id, check: 'tangent', level: 'info', who: b[4], msg: 'the silhouette just touches the frame edge (move it in or crop it clearly)' }); });
+        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) { const a = boxes[i], b = boxes[j]; if (!a || !b) continue;
+          const gap = Math.max(b[0] - a[2], a[0] - b[2]); if (gap > -4 && gap < 4 && Math.min(a[3], b[3]) > Math.max(a[1], b[1])) hits.push({ f, shot: sh.id, check: 'tangent', level: 'info', who: a[4] + ' / ' + b[4], msg: 'two characters just touch: overlap them clearly or separate them' }); }
+        // props through bodies: a prop inside a head that is not its current parent
+        for (const pr of sh.props || []) { const pos0 = propPos(pr, t, CASTS); if (!pos0) continue; const pos = scr(pos0), r = (pr.r || 34) * VIEW[2];
+          const keys = pr.attach || []; let kk = 0; while (kk + 1 < keys.length && keys[kk + 1][0] <= t) kk++; const holder = (keys[kk] && keys[kk][1] || {}).cast;
+          for (const fc of faces) if (fc.ci !== holder && pos[0] > fc.box[0] - r * 0.5 && pos[0] < fc.box[2] + r * 0.5 && pos[1] > fc.box[1] && pos[1] < fc.box[3]) hits.push({ f, shot: sh.id, check: 'prop through body', level: 'warn', who: fc.name, msg: `prop ${pr.id || ''} passes through the head` }); }
+      }
+    }
+    // group consecutive frames of the same problem into ranges
+    const runs = [], key = h => h.shot + '|' + h.check + '|' + h.who + '|' + h.msg;
+    hits.sort((a, b) => key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : a.f - b.f);
+    for (const h of hits) { const r = runs[runs.length - 1];
+      if (r && key(r) === key(h) && h.f - r.to <= step) r.to = h.f; else runs.push({ ...h, from: h.f, to: h.f }); }
+    // one-sample flickers (a camera move passing by) are noise unless they are errors
+    return runs.filter(r => r.level === 'error' || r.to > r.from).map(({ f, ...r }) => ({ ...r, t0: +(r.from / FPS).toFixed(2), t1: +(r.to / FPS).toFixed(2) })).sort((a, b) => a.from - b.from);
+  }
+  window.LINT = visualLint;
   window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
   (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
 })();

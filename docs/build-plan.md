@@ -162,6 +162,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 2.3 Gesture planner | done: `acting.plan` (prosody-driven beats, aimed points, exclamations, questions, listener gaze/nods/blinks); dialogue-demo acted with no hand-placed clips. Open: semantic gestures from LLM tags, personality profiles (E13), a critic rating against hand-keyed acting | this commit |
 | 2.6 Camera grammar | done: `camera_auto` (speaker medium shots, wide shots between, eased; punch-ins on emphasis; handheld; clamped to the set; caption headroom) | this commit |
 | 2.7 Foley and spatial mix | done: `foley` (footsteps on contacts, landing and bounce thuds, swishes on fast hands, catch pops), panned by screen position; new step/thud/swish sounds. Open: surface types, Kenney CC0 samples, room reverb per set | this commit |
+| 2.8 Visual lint | done: `film.lint` (inside `qa.run`): heads cut by the frame and bubbles over faces (error); hands off-screen, feet cropped in wide shots, faces under captions, IK locked straight, props through heads (warn); tangents (info); frame ranges; `"qa": {"enforce": ["lint"]}` fails the film on errors; regression case `tests/lint/`. Open: true silhouette tangents from the rendered alpha | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

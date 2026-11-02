@@ -71,5 +71,8 @@
    "format": "ora",
    "max_pivot_error": 30
   }
+ ],
+ "lint": [
+  "tests/lint/broken_staging.json"
  ]
 }
