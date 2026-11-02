@@ -25,7 +25,7 @@
 </head>
 <body>
 <header><h1>🫐 Doodleberry Studio</h1><span id="info" style="color:var(--muted)"></span><span style="flex:1"></span>
-  <a id="tlink" href="/timeline" target="_blank">Timeline ↗</a><a href="/puppet/canvas/index.html" target="_blank">Rig Canvas ↗</a><a href="/api" target="_blank">API ↗</a></header>
+  <a id="tlink" href="/timeline" target="_blank">Timeline ↗</a><a id="rlink" href="/review" target="_blank">Review ↗</a><a href="/puppet/canvas/index.html" target="_blank">Rig Canvas ↗</a><a href="/api" target="_blank">API ↗</a></header>
 <main>
   <aside><b>Films</b><div id="films"></div><div class="row"><button id="new">+ New film</button></div></aside>
   <section>
@@ -47,7 +47,7 @@ async function api(cmd, args = {}, async = false) {
 async function loadFilms() { const info = await api('engine.info'); $('info').textContent = Object.entries(info.renderers).filter(([, v]) => v).map(([k]) => k).join(' · ');
   $('films').innerHTML = info.films.map(f => `<div class="film ${f === film ? 'on' : ''}" data-f="${f}">${f}</div>`).join('');
   document.querySelectorAll('.film').forEach(el => el.onclick = () => openFilm(el.dataset.f)); }
-async function openFilm(f) { film = f; loadFilms(); $('tlink').href = '/timeline?film=' + encodeURIComponent(f); const g = await api('film.get', { name: f }); $('title').textContent = f;
+async function openFilm(f) { film = f; loadFilms(); $('tlink').href = '/timeline?film=' + encodeURIComponent(f); $('rlink').href = '/review?film=' + encodeURIComponent(f); const g = await api('film.get', { name: f }); $('title').textContent = f;
   const shots = g.files['shots.json'] ? JSON.parse(g.files['shots.json']) : { shots: [] }; $('json').value = JSON.stringify(shots, null, 1);
   $('shots').innerHTML = '<tr><th>id</th><th>time</th><th>renderer</th><th>set</th><th>cast</th><th></th></tr>' + (shots.shots || []).map(s =>
     `<tr><td>${s.id}</td><td>${s.start}–${s.end} s</td><td><select data-r="${s.id}">${['svg', 'synfig', 'grease-pencil', 'lottie'].map(r => `<option ${r === (s.renderer || 'svg') ? 'selected' : ''}>${r}</option>`).join('')}</select></td><td>${s.set || 'plain'}</td><td>${(s.cast || []).map(c => c.puppet.split('/').pop()).join(', ')}</td><td><button data-s="${s.id}">Render</button></td></tr>`).join('');

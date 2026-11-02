@@ -434,6 +434,12 @@
     return runs.filter(r => r.level === 'error' || r.to > r.from).map(({ f, ...r }) => ({ ...r, t0: +(r.from / FPS).toFixed(2), t1: +(r.to / FPS).toFixed(2) })).sort((a, b) => a.from - b.from);
   }
   window.LINT = visualLint;
+  // motion probe (plan 3.4): a part's position on screen over a span, for the review critic's before/after checks
+  window.PROBE = (ci, part, t0, t1, fps = FPS) => { const out = [];
+    for (let f = Math.ceil(t0 * fps); f <= t1 * fps; f++) { const t = f / fps; frameAt(t, false); const cc = CASTS[ci]; if (!cc || !cc.p.parts[part]) { out.push([+t.toFixed(3), null, null]); continue; }
+      const q = Puppet.pointOf(cc.p, part, null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip });
+      out.push([+t.toFixed(3), +(W / 2 + (q[0] - VIEW[0]) * VIEW[2]).toFixed(1), +(H / 2 + (q[1] - VIEW[1]) * VIEW[2]).toFixed(1)]); }
+    return out; };
   window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
   (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
 })();

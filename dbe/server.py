@@ -27,6 +27,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, STUDIO.read_bytes(), "text/html; charset=utf-8")
         if p == "/timeline":   # plan 3.1: lanes, live scrub, drag to re-time
             return self._send(200, (STUDIO.parent / "timeline.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/review":     # plan 3.4: notes pinned to frames, fixed and checked by the critic
+            return self._send(200, (STUDIO.parent / "review.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/api":
             return self._send(200, describe())
         if p.startswith("/api/jobs/"):

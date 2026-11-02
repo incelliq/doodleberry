@@ -1,0 +1,12 @@
+{"speakers": {"momo": {"voice": "kokoro:af_heart", "fx": {"pitch": 1.2, "formant": 1.08, "range": 1.25}}, "ravi": {"voice": "kokoro:am_michael"}},
+ "lead_in_s": 0.8, "gap_s": 0.6,
+ "lines": [
+  {"id": "l1", "speaker": "ravi", "fact": null, "text": "Momo, have you seen my telescope?",
+   "direction": "Ravi looks at Momo. Momo is nervous and glances at the sky."},
+  {"id": "l2", "speaker": "momo", "fact": null, "text": "Telescope? What telescope?",
+   "direction": "Momo shrugs, then looks at the camera."},
+  {"id": "l3", "speaker": "ravi", "fact": null, "text": "The one sticking out behind your back.", "pause": 0.6,
+   "direction": "Ravi points at Momo. When Ravi says 'back', Momo does a double take."},
+  {"id": "l4", "speaker": "momo", "fact": null, "text": "Oh. That telescope.",
+   "direction": "After the line Momo scratches their head, then Ravi gives a long stare."}
+ ]}

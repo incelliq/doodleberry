@@ -1,0 +1,143 @@
+{
+ "notes": [
+  {
+   "id": "n1",
+   "frame": 120,
+   "t": 4.0,
+   "text": "raise the arm earlier",
+   "who": "director",
+   "status": "verified",
+   "intent": {
+    "verb": "earlier",
+    "amount": null,
+    "part": "arm",
+    "who": null,
+    "side": null,
+    "clip_word": null
+   },
+   "target": "momo's shrug (3.39-4.69 s)",
+   "watch": "hand_L",
+   "edit": {
+    "op": "move_clip",
+    "start": 3.062
+   },
+   "measured": {
+    "before": {
+     "peak_px": 138.6,
+     "rise_t": 3.567,
+     "rise_s": 0.167,
+     "held_s": 1.782
+    },
+    "after": {
+     "peak_px": 138.6,
+     "rise_t": 3.233,
+     "rise_s": 0.2,
+     "held_s": 1.947
+    }
+   },
+   "check": "the move now reaches half-way at 3.23 s (was 3.57 s): 0.33 s earlier, asked 0.33 s",
+   "reviewer": "critic: measured motion + QA",
+   "still_after": "films/review-demo/build/review/n1_after.png"
+  },
+  {
+   "id": "n2",
+   "frame": 180,
+   "t": 6.0,
+   "text": "Ravi should point bigger",
+   "who": "director",
+   "status": "verified",
+   "intent": {
+    "verb": "bigger",
+    "amount": null,
+    "part": "point",
+    "who": "ravi",
+    "side": null,
+    "clip_word": "point"
+   },
+   "target": "ravi's point_R (5.82-6.82 s)",
+   "watch": "hand_R",
+   "edit": {
+    "op": "set_clip",
+    "props": {
+     "gain": 1.35
+    }
+   },
+   "measured": {
+    "before": {
+     "peak_px": 299.5,
+     "rise_t": 6,
+     "rise_s": 0.167,
+     "held_s": 1.972
+    },
+    "after": {
+     "peak_px": 379.3,
+     "rise_t": 6,
+     "rise_s": 0.167,
+     "held_s": 1.904
+    }
+   },
+   "check": "the part travels 379.3 px (was 299.5 px)",
+   "reviewer": "critic: measured motion + QA",
+   "still_after": "films/review-demo/build/review/n2_after.png"
+  },
+  {
+   "id": "n3",
+   "frame": 300,
+   "t": 10.0,
+   "text": "this bit feels off somehow",
+   "who": "director",
+   "status": "needs_human",
+   "intent": {
+    "verb": null,
+    "amount": null,
+    "part": null,
+    "who": null,
+    "side": null,
+    "clip_word": null
+   },
+   "reason": "could not tell what to change (earlier, later, faster, slower, bigger, smaller, longer, shorter, remove)"
+  },
+  {
+   "id": "n4",
+   "frame": 312,
+   "t": 10.4,
+   "text": "hold the scratch head longer",
+   "who": "director",
+   "status": "verified",
+   "intent": {
+    "verb": "longer",
+    "amount": null,
+    "part": "head",
+    "who": null,
+    "side": null,
+    "clip_word": "scratch"
+   },
+   "target": "momo's scratch_head (10.38-11.78 s)",
+   "watch": "hand_R",
+   "edit": {
+    "op": "set_clip",
+    "props": {
+     "speed": 0.7
+    }
+   },
+   "measured": {
+    "before": {
+     "peak_px": 298.2,
+     "rise_t": 10.533,
+     "rise_s": 0.133,
+     "held_s": 1.155
+    },
+    "after": {
+     "peak_px": 296.1,
+     "rise_t": 10.567,
+     "rise_s": 0.2,
+     "held_s": 1.65
+    }
+   },
+   "check": "held 1.65 s (was 1.16 s)",
+   "reason": "the edit did not change the motion as asked: held 1.62 s (was 1.62 s) (reverted)",
+   "reviewer": "critic: measured motion + QA",
+   "still_after": "films/review-demo/build/review/n4_after.png"
+  }
+ ]
+}

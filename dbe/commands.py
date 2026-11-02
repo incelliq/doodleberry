@@ -933,7 +933,7 @@ def timeline_get(name):
                 end = kk.get("end") if kk.get("end") is not None else (rr["end"] if cl.get("loop") else kk.get("start", 0) + dur)
                 clips.append({"i": ki, "clip": kk.get("clip"), "start": kk.get("start", 0), "end": round(min(end, rr["end"]), 3), "raw_start": rk.get("start", 0),
                               "raw_end": rk.get("end"), "loop": bool(cl.get("loop")), "additive": bool(kk.get("additive")), "auto": bool(kk.get("auto")),
-                              "directed": bool(kk.get("directed")), "weight": kk.get("weight", 1)})
+                              "directed": bool(kk.get("directed")), "weight": kk.get("weight", 1), "speed": kk.get("speed", 1), "gain": kk.get("gain", 1)})
             tl = cc.get("timeline") or {}
             cast.append({"i": ci, "who": cc.get("speaker") or p.get("name") or f"cast {ci}", "puppet": cc["puppet"], "clips": clips,
                          "emotion": tl.get("emotion") or [], "look": tl.get("look") or []})
@@ -961,11 +961,12 @@ def _retime(raw_value, new_t, timing):
     return round(max(0.0, new_t), 3)
 
 
-@command("timeline.edit", name=("string", "film"), op=("string", "move_clip | resize_clip | add_clip | delete_clip"),
+@command("timeline.edit", name=("string", "film"), op=("string", "move_clip | resize_clip | add_clip | delete_clip | set_clip"),
          shot=("string", "shot id"), cast=("integer", "cast index in the shot"), index=("integer", "clip layer index (move, resize, delete)", -1),
          start=("number", "new start in film seconds (move, add)", None), end=("number", "new end in film seconds (resize; null = the clip's own length)", None),
-         clip=("string", "clip name (add)", ""), anchor=("string", "for add: a line id to anchor the start to (line-relative)", ""))
-def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="", anchor=""):
+         clip=("string", "clip name (add)", ""), anchor=("string", "for add: a line id to anchor the start to (line-relative)", ""),
+         props=("object", "set_clip: speed, gain, weight, additive", None))
+def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="", anchor="", props=None):
     """One timeline edit from the Studio (plan 3.1), written into shots.json: move a clip layer (its end moves with
     it), resize its end, add a clip at a time (anchored to a line if given, so re-voicing keeps it on the words) or
     delete one. Line-relative times stay line-relative. Returns the clip as stored."""
@@ -999,6 +1000,11 @@ def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="",
                 k["end"] = _retime(k.get("end") if k.get("end") is not None else k.get("start", 0), max(float(end), float(rk.get("start", 0)) + 0.1), tm)
         elif op == "delete_clip":
             clips.pop(index)
+        elif op == "set_clip":
+            for kk, vv in (props or {}).items():
+                if kk not in ("speed", "gain", "weight", "additive"):
+                    raise ValueError(f"set_clip cannot set {kk}")
+                k[kk] = vv
         else:
             raise ValueError(f"unknown op {op}")
         k.pop("auto", None)   # a hand edit: the gesture planner keeps it from now on
@@ -1026,6 +1032,82 @@ def puppet_save(path, puppet):
     if new:
         cast_add(str(f.relative_to(ROOT)), f.stem.split(".")[0], (puppet.get("meta") or {}).get("author", "Rig Canvas"), (puppet.get("meta") or {}).get("license", "CC0-1.0"), "drawn in the Rig Canvas", rights="open")
     return {"path": str(f.relative_to(ROOT)), "new": new, "poses": len(puppet.get("poses") or {}), "clips": len(puppet.get("clips") or {})}
+
+
+# ---------------- review room (plan 3.4) ----------------
+def _review(name):
+    return _json(_film(name) / "review.json", {"notes": []})
+
+
+@command("review.add", name=("string", "film"), frame=("integer", "frame number (at the film's fps)"), text=("string", "the note, in plain English"),
+         who=("string", "reviewer", "director"))
+def review_add(name, frame, text, who="director"):
+    """Pin a review note to a frame (plan 3.4), e.g. "raise the arm earlier" on frame 120. Stored in review.json."""
+    rv = _review(name); fps = _shots(name).get("fps", 30)
+    note = {"id": f"n{len(rv['notes']) + 1}", "frame": int(frame), "t": round(frame / fps, 3), "text": text, "who": who, "status": "open"}
+    rv["notes"].append(note); (_film(name) / "review.json").write_text(json.dumps(rv, indent=1, ensure_ascii=False))
+    return note
+
+
+@command("review.list", name=("string", "film"))
+def review_list(name):
+    """All review notes with their status (open, verified, needs_human) and what was done."""
+    return _review(name)
+
+
+@command("review.fix", name=("string", "film"), id=("string", "note id (default: every open note)", ""))
+def review_fix(name, id=""):
+    """Turn review notes into data edits and check them (plan 3.4): read the note (verb, amount, part, character),
+    find the clip making that motion at that frame, edit it (timeline.edit), re-render, then the critic measures the
+    part's motion before and after over the same window (an earlier move must start sooner by most of the asked
+    amount; bigger must travel further; ...) and re-runs QA. Verified notes close; others are reverted and marked
+    needs_human with the reason. Before/after stills go to build/review/."""
+    from . import review as RV
+    d = _film(name); rv = _review(name); out = []
+    todo = [n for n in rv["notes"] if (n["id"] == id if id else n["status"] == "open")]
+    for n in todo:
+        tlg = timeline_get(name); t = n["t"]
+        shot = next((s_ for s_ in tlg["shots"] if s_["start"] <= t < s_["end"]), tlg["shots"][-1])
+        intent = RV.interpret(n["text"], [c["who"] for c in shot["cast"]])
+        n["intent"] = intent
+        if not intent["verb"]:
+            n.update(status="needs_human", reason="could not tell what to change (earlier, later, faster, slower, bigger, smaller, longer, shorter, remove)"); out.append(n); continue
+        libs = {c["i"]: {**_json(ROOT / "puppet" / "clips" / f"{_json(ROOT / c['puppet']).get('template', 'humanoid')}.json", {"clips": {}})["clips"], **(_json(ROOT / c["puppet"]).get("clips") or {})} for c in shot["cast"]}
+        hit = RV.locate(intent, shot, t, libs)
+        if not hit:
+            n.update(status="needs_human", reason="no clip near that frame makes that motion"); out.append(n); continue
+        ci, ki, watch, why = hit
+        k = next(x for x in next(c for c in shot["cast"] if c["i"] == ci)["clips"] if x["i"] == ki)
+        edit, amount = RV.plan_edit(intent, k, k["end"] - k["start"], libs[ci].get(k["clip"]))
+        page = _player_page(name)
+        w0, w1 = max(shot["start"], min(k["start"], (edit or {}).get("start", k["start"])) - 0.6), min(shot["end"], k["end"] + 1.2 + (amount if intent["verb"] in ("later", "longer") and amount else 0))
+        probe = lambda: json.loads(_run(["node", "tools/probe.mjs", str(page), str(ci), watch, f"{w0:.3f}", f"{w1:.3f}"], timeout=600)[-1])
+        before = probe(); qa_before = (_json(d / "build" / "qa.json", {}).get("checks") or {})
+        raw_before = (d / "shots.json").read_text()
+        timeline_edit(name, shot=shot["id"], cast=ci, index=ki, **edit)
+        page = _player_page(name); after = probe()
+        ok, msg, mb, ma = RV.verify(intent, amount or 0, before, after)
+        n.update(target=why, watch=watch, edit=edit, measured={"before": mb, "after": ma}, check=msg)
+        if ok:
+            r = film_render(name); qa_after = r.get("qa") or {}
+            worse = [k_ for k_, v in qa_after.items() if v is False and qa_before.get(k_) is not False]
+            if worse:
+                (d / "shots.json").write_text(raw_before); film_render(name)
+                n.update(status="needs_human", reason=f"the edit broke QA ({', '.join(worse)}); reverted")
+            else:
+                sdir = d / "build" / "review"; sdir.mkdir(parents=True, exist_ok=True)
+                n.update(status="verified", reviewer="critic: measured motion + QA")
+                try:   # after-still at the note's frame
+                    _run(["node", "tools/board_stills.mjs", str(page), str(sdir), "360", str(t)], timeout=300); (sdir / "still_0.png").rename(sdir / f"{n['id']}_after.png")
+                    n["still_after"] = str((sdir / f"{n['id']}_after.png").relative_to(ROOT))
+                except Exception:
+                    pass
+        else:
+            (d / "shots.json").write_text(raw_before); _player_page(name)
+            n.update(status="needs_human", reason="the edit did not change the motion as asked: " + msg + " (reverted)")
+        out.append(n)
+    (d / "review.json").write_text(json.dumps(rv, indent=1, ensure_ascii=False))
+    return {"fixed": [n["id"] for n in out if n["status"] == "verified"], "needs_human": [n["id"] for n in out if n["status"] == "needs_human"], "notes": out}
 
 
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------
@@ -1383,6 +1465,18 @@ def test_golden(update=False, film=""):
         d = np.abs(a - b); mean, over = float(d.mean()), float((d.max(-1) > 32).mean()); ok = mean <= tol["mean_abs"] and over <= tol["pixels_over_32"]
         failed += 0 if ok else 1
         results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
+    if not film or film == "review":   # review room (plan 3.4): notes read right, the critic measures right
+        from . import review as RV
+        notes = {"raise the arm earlier": "earlier", "Ravi's nod should be bigger": "bigger", "make the wave a bit slower": "slower",
+                 "hold the shrug longer": "longer", "lose the point": "remove", "the jump starts too late": "earlier", "this feels off": None}
+        bad = [(t, RV.interpret(t, ["ravi"])["verb"], v) for t, v in notes.items() if RV.interpret(t, ["ravi"])["verb"] != v]
+        rise = lambda t0: [[i / 30, 100.0, 500.0 - (200.0 if i / 30 >= t0 else 0.0)] for i in range(90)]
+        ok_early, _, _, _ = RV.verify({"verb": "earlier"}, 0.33, rise(1.5), rise(1.17))
+        ok_wrong, _, _, _ = RV.verify({"verb": "earlier"}, 0.33, rise(1.5), rise(1.5))
+        if not ok_early or ok_wrong:
+            bad.append(("critic earlier", ok_early, ok_wrong))
+        failed += 1 if bad else 0
+        results.append({"review": "notes and critic", "status": "FAIL" if bad else "ok", **({"cases": bad} if bad else {})})
     if not film or film == "timeline":   # Studio timeline re-timing (plan 3.1): anchored edits stay anchored
         tmx = {"lines": [{"id": "a", "start": 1.0, "end": 2.0}, {"id": "b", "start": 4.0, "end": 5.5}]}
         cases = [(("a.start+0.2", 1.5), "a.start+0.5"), (("a.end", 2.4), "a.end+0.4"), (("a.start", 4.3), "b.start+0.3"), ((0.7, 3.0), 3.0)]

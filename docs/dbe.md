@@ -565,3 +565,25 @@ renderer play it. Saved poses and clips also appear in the live preview menu. Op
 `python -m dbe serve`), **Save to cast** writes the character through `puppet.save` (schema-checked, only under
 `cast/`, new files registered in the cast library). `tools/pose_check.mjs` does the whole round in a headless
 browser; the golden case `tests/poses/rig_canvas_pose.json` plays the saved pose and clip.
+
+## Review room (plan 3.4)
+http://127.0.0.1:8770/review?film=FILM (linked from Studio): the render with frame stepping (`,` `.`), a bar with
+every note pinned at its frame, and a box to pin a note at the current frame. (Where the browser cannot decode the
+render, the page shows the live player at the same frame instead.) **Fix open notes with the critic** runs
+`review.fix`:
+- the note is read (`dbe/review.py interpret`): what to change (earlier, later, faster, slower, bigger, smaller,
+  longer/hold, shorter, remove), by how much ("by 10 frames", "by 0.5 s", "a bit", "a lot"), which body part,
+  character, side and gesture it names;
+- the clip making that motion at that frame is found (`locate`): the named character, a clip whose tracks move that
+  part, active at the frame or the move just before or after it; the part to measure is what that clip moves most;
+- the edit goes through `timeline.edit` (move, resize, `set_clip` speed/gain, delete); gestures that come back to
+  rest are slowed or sped up to hold longer or shorter, poses that hold are extended;
+- the critic probes the part's on-screen path over the same window before and after (`window.PROBE`,
+  `tools/probe.mjs`): an earlier move must reach half-way sooner by at least 60% of the asked amount, a bigger one
+  must travel 10% further, a slower one must take 10% longer, a longer hold must last 0.15 s more, a removed one must
+  all but stop; then the film is re-rendered and QA must not get worse. Verified notes close with an after-still in
+  `build/review/`; anything else is reverted and marked `needs_human` with the reason.
+Notes live in `films/FILM/review.json` (`review.add`, `review.list`, `review.fix`). `films/review-demo`: "raise
+the arm earlier" on frame 120 moved Momo's shrug 0.33 s earlier (measured 0.33 s), "Ravi should point bigger" on
+frame 180 (379 px, was 300), "hold the scratch head longer" (held 1.65 s, was 1.16 s); "this bit feels off somehow"
+went to a person.

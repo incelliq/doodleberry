@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Room</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --ok: #3f9a5a; --warn: #c9821c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select, input { font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { display: grid; grid-template-columns: minmax(260px, 420px) 1fr; gap: 16px; padding: 16px; }
+  video { width: 100%; border-radius: 10px; background: #000; display: block; }
+  #bar { position: relative; height: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; margin-top: 8px; cursor: pointer; }
+  #bar .pin { position: absolute; top: 2px; width: 8px; height: 16px; border-radius: 3px; transform: translateX(-4px); }
+  #bar .head { position: absolute; top: 0; bottom: 0; width: 2px; background: #d33; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  .note { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--muted); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .note.verified { border-left-color: var(--ok); } .note.needs_human { border-left-color: var(--warn); } .note.open { border-left-color: var(--accent); }
+  .note .meta { color: var(--muted); font-size: 12px; } .note img { width: 120px; border-radius: 6px; float: right; margin-left: 10px; }
+  #text { flex: 1; min-width: 180px; } #msg { color: var(--muted); }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Review Room</h1><select id="film" aria-label="Film"></select><span id="msg"></span><span style="flex:1"></span><a id="tl" href="/timeline">Timeline ↗</a><a href="/">Studio ↗</a></header>
+<main>
+  <div><video id="vid" controls preload="auto"></video>
+    <div id="pv" hidden style="width:100%;aspect-ratio:9/16;overflow:hidden;border-radius:10px;background:#000;position:relative"><iframe id="frame" title="preview" style="width:1080px;height:1920px;border:0;transform-origin:0 0;pointer-events:none"></iframe></div>
+    <div id="bar" title="click to jump; pins are notes"></div>
+    <div class="row"><button id="back" title="one frame back (,)">◀ frame</button><span id="fr">frame 0</span><button id="fwd" title="one frame on (.)">frame ▶</button></div>
+    <div class="row"><input id="text" placeholder="Note at this frame, e.g. raise the arm earlier" aria-label="Note"><button id="add" class="primary">Pin note</button></div></div>
+  <div><div class="row"><b>Notes</b><span style="flex:1"></span><button id="fixall" class="primary" title="Each open note becomes an edit; the critic measures the motion before and after and re-runs QA">Fix open notes with the critic</button></div><div id="notes"></div></div>
+</main>
+<script>
+const $ = id => document.getElementById(id); let film = null, fps = 30, R = { notes: [] }, cur = 0, length = 1, live = false;
+const msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}, wait = false) {
+  const r = await fetch('/api/' + cmd + (wait ? '?async=1' : ''), { method: 'POST', body: JSON.stringify(args) }); const j = await r.json();
+  if (wait && j.job) { for (;;) { await new Promise(s => setTimeout(s, 2000)); const s = await (await fetch('/api/jobs/' + j.job)).json(); if (s.status !== 'running') { if (s.error) msg(s.error); return s.result; } } }
+  if (j.error) { msg(j.error); throw new Error(j.error); } return j.result;
+}
+// the current time is the page's own; the video follows it when it can play, else the live player shows the frame
+const frame = () => Math.round(cur * fps);
+function seek(t) { cur = Math.max(0, Math.min(length, t)); if (!live) { try { $('vid').currentTime = cur; } catch (e) {} }
+  else { const w = $('frame').contentWindow; if (w && w.frameAtTime) try { w.frameAtTime(cur); } catch (e) {} } bar(); }
+function useLive(page) { if (live) return; live = true; $('vid').hidden = true; $('pv').hidden = false; $('frame').src = '/' + page + '?captions=1&t=' + Date.now();
+  const fit = () => { $('frame').style.transform = `scale(${$('pv').clientWidth / 1080})`; }; fit(); window.onresize = fit;
+  $('frame').onload = () => { const w = $('frame').contentWindow; const ready = () => w.ready ? seek(cur) : setTimeout(ready, 100); ready(); }; msg('this browser cannot play the render; showing the live player'); }
+function bar() { const d = length || 1;
+  $('bar').innerHTML = R.notes.map(n => `<span class="pin" style="left:${n.t / d * 100}%;background:${n.status === 'verified' ? 'var(--ok)' : n.status === 'needs_human' ? 'var(--warn)' : 'var(--accent)'}" title="${n.id} · frame ${n.frame}: ${n.text}"></span>`).join('') +
+    `<span class="head" style="left:${cur / d * 100}%"></span>`; $('fr').textContent = `frame ${frame()} · ${cur.toFixed(2)} s`; }
+function list() {
+  $('notes').innerHTML = R.notes.slice().reverse().map(n => `<div class="note ${n.status}">${n.still_after ? `<img src="/${n.still_after}?t=${Date.now()}" alt="after the fix">` : ''}
+    <div><b>${n.text}</b></div><div class="meta">${n.id} · frame ${n.frame} (${n.t} s) · ${n.who} · <b>${n.status.replace('_', ' ')}</b> <a href="#" data-go="${n.t}">go</a></div>
+    ${n.target ? `<div class="meta">changed: ${n.target} → ${JSON.stringify(n.edit)}</div>` : ''}${n.check ? `<div class="meta">critic: ${n.check}</div>` : ''}${n.reason ? `<div class="meta">${n.reason}</div>` : ''}</div>`).join('') || '<div class="meta">No notes yet. Pause on a frame, write what should change, pin it.</div>';
+  document.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); seek(+a.dataset.go); }); bar();
+}
+async function load() { R = await api('review.list', { name: film }); const tl = await api('timeline.get', { name: film }); fps = tl.fps; length = tl.length;
+  const page = (await api('film.preview', { name: film })).page; live = false; $('vid').hidden = false; $('pv').hidden = true;
+  $('vid').onerror = () => useLive(page); $('vid').src = `/films/${film}/build/final.mp4?t=${Date.now()}`;
+  setTimeout(() => { if ($('vid').readyState < 1) useLive(page); }, 3000); $('tl').href = '/timeline?film=' + film; list(); }
+$('vid').ontimeupdate = () => { if (!live && !$('vid').paused) { cur = $('vid').currentTime; bar(); } };   // paused: the page's own time stands $('vid').onloadedmetadata = bar;
+$('bar').onclick = e => { const r = $('bar').getBoundingClientRect(); seek((e.clientX - r.left) / r.width * length); };
+const step = k => { $('vid').pause(); seek((frame() + k) / fps + 0.001); };
+$('back').onclick = () => step(-1); $('fwd').onclick = () => step(1);
+document.onkeydown = e => { if (e.target.tagName === 'INPUT') return; if (e.key === ',') step(-1); if (e.key === '.') step(1); };
+$('add').onclick = async () => { const text = $('text').value.trim(); if (!text) return; $('vid').pause();
+  await api('review.add', { name: film, frame: frame(), text }); $('text').value = ''; msg(`pinned at frame ${frame()}`); R = await api('review.list', { name: film }); list(); };
+$('text').onkeydown = e => { if (e.key === 'Enter') $('add').onclick(); };
+$('fixall').onclick = async () => { msg('fixing: edit, re-render, measure, QA…'); const r = await api('review.fix', { name: film }, true);
+  if (r) msg(`verified ${r.fixed.length}, needs a person ${r.needs_human.length}`); await load(); };
+(async () => { const info = await api('engine.info'); const q = new URLSearchParams(location.search).get('film');
+  $('film').innerHTML = info.films.map(f => `<option ${f === q ? 'selected' : ''}>${f}</option>`).join(''); film = q || $('film').value;
+  $('film').onchange = e => { film = e.target.value; history.replaceState(null, '', '?film=' + film); load(); }; load(); })();
+</script>
+</body>
+</html>

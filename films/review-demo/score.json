@@ -1,0 +1,19 @@
+{
+ "length_s": 14.43,
+ "bpm": 96,
+ "offset_s": 0,
+ "sections": [
+  {
+   "kind": "main",
+   "from_beat": 0,
+   "to_beat": 32,
+   "chords": [
+    "F",
+    "Am",
+    "Dm",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
+}
