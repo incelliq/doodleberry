@@ -49,8 +49,20 @@ DEFAULT_CHANNEL = {
         "dated_hook_tolerance_days": 1,
         "lead_days": {"dated_hook": 14, "recent": 10, "evergreen": 10, "tool": 10, "analysis": 21, "local": 14},
         "fact_lock_days": {"default": 4, "analysis": 6},
+        "expert_review": {"fields": ["life & health"], "keywords": ["disease", "medicine", "medical", "drug", "dose", "treatment",
+                          "vaccine", "cancer", "diagnos", "symptom", "antivenom", "law", "legal", "court", "invest", "loan", "tax"]},
     },
 }
+
+
+def needs_expert(idea, ch):
+    """WP-05: health, legal and finance claims get an expert reviewer -> the reason, or None"""
+    rule = (ch.get("rules") or {}).get("expert_review") or DEFAULT_CHANNEL["rules"]["expert_review"]
+    if idea.get("field") in rule["fields"]:
+        return f"health: {idea['field']}"
+    text = " ".join(str(idea.get(k, "")) for k in ("title", "angle", "hook")).lower()
+    hit = next((k for k in rule["keywords"] if re.search(rf"\b{k}", text)), None)
+    return f"keyword: {hit}" if hit else None
 
 
 def channel():
@@ -198,7 +210,7 @@ def schedule(q, bank, ch, planned_on):
                    "local": bool(idea.get("local")), "role": role, "format": idea.get("format", "explainer"),
                    "start_by": (d - dt.timedelta(days=lead(r, idea["sweep"]))).isoformat(),
                    "fact_lock": {"by": (d - dt.timedelta(days=fact_lock_days(r, idea["sweep"]))).isoformat(), "status": "open"},
-                   "status": "planned"}
+                   "review": "expert" if needs_expert(idea, ch) else "standard", "status": "planned"}
         used.add(idea["id"]); by_field_dates[idea["field"]].append(d)
 
     def field_ok(field, d):
@@ -341,6 +353,7 @@ def check(cal, bank, ch):
     rule("no_repeats", None, [k for k, n in Counter(x["idea"] for x in filled).items() if n > 1])
     ids = [x["idea"] for x in filled if x["idea"] in ideas]
     rule("distinct_topics", None, [f"{a} and {b}" for k, a in enumerate(ids) for b in ids[k + 1:] if same_topic(ideas[a], ideas[b])])
+    rule("expert_review_marked", None, [x["date"] for x in filled if x["idea"] in ideas and (x.get("review") == "expert") != bool(needs_expert(ideas[x["idea"]], ch))])
     rule("starting_points", None, [x["date"] for x in filled if not ideas.get(x["idea"], {}).get("sources")])
     return {"ok": all(v["ok"] for v in res.values()), "rules": res,
             "summary": {"posts": len(filled), "slots": len(rows), "fields": dict(Counter(x["field"] for x in filled)),
@@ -369,6 +382,7 @@ by {row['fact_lock']['by']} (fact gate cleared in the ledger).
 | hook      | {idea['hook']} (draft) |
 | angle     | {idea['angle']} |
 | why now   | {idea['why_now']} |
+| review    | {('expert (' + needs_expert(idea, ch) + ')') if needs_expert(idea, ch) else 'standard'} |
 
 ## Sources (starting points only: research may overturn the premise; if it does, escalate)
 {src}
@@ -378,6 +392,19 @@ by {row['fact_lock']['by']} (fact gate cleared in the ledger).
 
 ## Cautions
 {chr(10).join('- ' + x for x in idea['cautions'])}
+{_expert_note(idea, ch)}"""
+
+
+def _expert_note(idea, ch):
+    why = needs_expert(idea, ch)
+    if not why:
+        return ""
+    return f"""
+## Expert review ({why})
+Every fact in facts.json records what its source leaves out (`omits`, e.g. first-line treatments, or "nothing
+material"). Before approval, a qualified reviewer reads the script and facts and records
+`ledger.add role=expert_review verdict=cleared` with their name and qualification in the notes. The production board
+will not approve the film without it.
 """
 
 

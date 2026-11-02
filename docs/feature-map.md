@@ -221,7 +221,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Golden-frame regression tests | NEW | ✅ | – | `test` (0.3) |
 | Frame comments that become data edits | IDEA | ✅ | – | `review.add`, `review.fix` (3.4) |
 | Visual diff between film versions | NEW | ⬜ | P1 | WP-19 |
-| Health and claims risk review | NEW | ⬜ | P1 | WP-05 |
+| Health and claims risk review | NEW | ✅ | – | expert review in `research.check` (omits per fact) and the approval gate on the board (WP-05) |
 | Retention analytics fed back into hooks and pacing | EMG | ⬜ | P2 | WP-31 |
 | **Frame-fill metric:** share of bare background below 40% per scene, measured every 3 s on the final encode; tallest bare band; a 360 px look test | NEW | ✅ | – | `qa.run` (0.11) |
 | **Safe-zone text check:** every word's box inside the platform-safe area (9:16: x 64–960, y 200–1560), with platform UI mock overlays (right rail, caption block, top bar) | NEW | ✅ | – | `qa.run` (0.11) |
@@ -230,7 +230,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Seam smoothness: mean frame difference at cuts ≤ 3.5, with 12-frame dissolves or motivated moves | NEW | ✅ | – | `qa.run` (0.11) |
 | Generic-AI-look lint: rounded shadow cards, gradient blobs, emoji, neon glow, centred-everything layouts | IDEA | ⬜ | P1 | style-aware lint: WP-04 |
 | **Research gates:** two independent sources per on-screen number, a counter-evidence agent, official-page checks for names and dates, a research log, and a fact-check gate before the storyboard | NEW | ✅ | – | `research.check` and `ledger.add` (0.10) |
-| Honest on-screen labels: "re-analysis", "illustration", "preliminary" | NEW | 🟡 | P1 | labels in facts.json; checked on screen: WP-05 |
+| Honest on-screen labels: "re-analysis", "illustration", "preliminary" | NEW | ✅ | – | facts.json labels shown with the captions while a citing line plays (WP-05) |
 | **Critic loop roles:** fresh agents (sound-off reader, fact checker, director) get stills and facts, not the builder's conclusions; at least two rounds; ledger with before/after numbers | NEW | ✅ | – | `critic.pack` (0.12) |
 | Content-safety gate at brief time, with narrow-and-relaunch instead of forcing a blocked topic | NEW | ✅ | – | sensitive briefs need a safety clearance in `research.check` (0.10) |
 

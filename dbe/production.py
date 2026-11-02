@@ -249,14 +249,19 @@ def measure(e, stage, report):
         failing = sorted(k for k, v in checks.items() if v is False)
         ledger = json.loads((fd / "ledger.json").read_text()) if (fd / "ledger.json").exists() else []
         director = next((x for x in reversed(ledger) if x.get("role") == "director"), None)
-        measured = {"duration_s": q.get("duration"), "loudness_lufs": q.get("loudness_lufs"), "true_peak_dbtp": q.get("true_peak_dbtp"),
+        from . import research as RS
+        rv = RS.review_level(fd)
+        exp = None
+        if rv["level"] == "expert":
+            exp = "cleared" if any(x.get("role") == "expert_review" and x.get("verdict") == "cleared" for x in RS.ledger(fd)) else "pending"
+        measured = {"expert_review": exp, "duration_s": q.get("duration"), "loudness_lufs": q.get("loudness_lufs"), "true_peak_dbtp": q.get("true_peak_dbtp"),
                     "checks_passed": sum(v is True for v in checks.values()), "checks": len(checks), "failing": failing,
                     "layout_advisory": (q.get("layout") or {}).get("advisory_failures", []), "director": director and director.get("verdict")}
         _keep(e, fd / "build" / "final.mp4", "final.mp4"); _keep(e, qf, "qa.json")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", str(fd / "build" / "final.mp4"), "-frames:v", "1", "-vf", "scale=270:-2", str(reg_dir() / f / "poster.jpg")], capture_output=True)
         if failing:
             return "fail", [f"QA fails: {', '.join(failing)}"], measured, False
-        return "ready", [], measured, False
+        return "ready", ([f"expert review pending ({rv['why']}): approval waits for it"] if exp == "pending" else []), measured, False
     raise ValueError(f"stage is one of {STAGES}")
 
 
@@ -382,11 +387,22 @@ def self_test(scratch):
         a = run("prod.checkpoint", {"film": film, "stage": "final", "report": {}})
         no = run("prod.approve", {"film": film, "by": "owner"})
         (fd / "build" / "qa.json").write_text(json.dumps({"duration": 3.0, "loudness_lufs": -14.0, "true_peak_dbtp": -1.3, "checks": {"size": True, "loudness": True}}))
+        with open(fd / "brief.md", "a") as fh:   # WP-05: a health film waits for an expert review before approval
+            fh.write("\n| review    | expert (health: test) |\n")
         b = run("prod.checkpoint", {"film": film, "stage": "final", "report": {}})
+        held = run("prod.approve", {"film": film, "by": "owner"})
+        got["expert_gate"] = {"measured": (b.get("measured") or {}).get("expert_review"), "approve_before_review": held.get("error", "allowed")[:60]}
+        if (b.get("measured") or {}).get("expert_review") != "pending" or "expert review" not in held.get("error", ""):
+            fails.append(f"expert gate: {b.get('measured')}, {held}")
+        led = json.loads((fd / "ledger.json").read_text()) if (fd / "ledger.json").exists() else []
+        led.append({"at": now(), "round": 1, "role": "expert_review", "verdict": "cleared", "notes": "test reviewer"})
+        (fd / "ledger.json").write_text(json.dumps(led))
         got["final"] = [a.get("verdict"), b.get("verdict")]
         if a.get("verdict") != "fail" or "error" not in no or b.get("verdict") != "ready":
             fails.append(f"final and approval gate: {a.get('verdict')}, approve-before-pass {no}, {b.get('verdict')}")
-        run("prod.approve", {"film": film, "by": "owner"})
+        ok_ = run("prod.approve", {"film": film, "by": "owner"})
+        if ok_.get("state") != "approved":
+            fails.append(f"approval after the expert review: {ok_}")
         un = run("prod.merge", {"film": film})   # the narrowed brief is not committed yet
         if "error" not in un or "not committed" not in un["error"]:
             fails.append(f"merge with uncommitted work: {un}")

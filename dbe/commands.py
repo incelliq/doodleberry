@@ -652,7 +652,9 @@ def film_render(name, only=None, aspect=""):
             for k in ("highlight", "outline", "text"):
                 if bc.get(k) and k not in cs:
                     cs[k] = res(bc[k])
-        ass.write_text(make_ass(_cut_timing(s, _json(d / "timing.json", {}), s.get("caption_lines")), s.get("size", [1080, 1920]), **cs))
+        from .research import labels_for
+        ctm = _cut_timing(s, _json(d / "timing.json", {}), s.get("caption_lines"))
+        ass.write_text(make_ass(ctm, s.get("size", [1080, 1920]), labels=labels_for(d, ctm.get("lines", [])), **cs))   # honest labels (WP-05)
         capd = d / "build" / "picture_cap.mp4"
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-vf", f"subtitles={ass.relative_to(ROOT)}:fontsdir=engine/fonts",
               "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(capd)])
@@ -1592,6 +1594,11 @@ def prod_approve(film, by, note=""):
         fin = [c for c in e.get("checkpoints", []) if c["stage"] == "final"]
         if e["state"] != "waiting_owner" or not fin or fin[-1]["verdict"] != "ready":
             raise ValueError(f"{film} has no passing final render to approve (state {e['state']})")
+        if (fin[-1].get("measured") or {}).get("expert_review") == "pending":   # WP-05
+            from . import research as RS
+            led = RS.ledger(Path(e["workspace"]) / "films" / film) if e.get("workspace") else []
+            if not any(x.get("role") == "expert_review" and x.get("verdict") == "cleared" for x in led):
+                raise PermissionError(f"{film} needs an expert review before approval: a qualified reviewer records ledger.add role expert_review verdict cleared")
         e.setdefault("approvals", []).append({"by": by, "at": PR.now(), "note": note}); e["state"] = "approved"; PR.event(e, "approved", by=by)
         return {"film": film, "state": "approved"}
 
@@ -2154,6 +2161,11 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "research":   # research gates (0.10) and the expert review gate (WP-05)
+        from . import research as RSH
+        bad, meas = RSH.self_test(ROOT / "out")
+        failed += 1 if bad else 0
+        results.append({"research": "expert review, omissions, honest labels", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "docs":   # the docs agree with each other and with the registry (WP-01)
         from . import docscheck as DC
         r = DC.check()

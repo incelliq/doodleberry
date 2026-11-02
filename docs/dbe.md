@@ -818,3 +818,16 @@ The feature map was reconciled against the code on 2 November 2026. 238 open row
 name the command or plan item that built them, partial rows say what is left and where, and every open row points
 at its work package. The map went from about 90 rows marked built to 162 built, 53 partial and 72 open (P2 and
 emergent rows included).
+
+## Expert review and honest labels (WP-05)
+Health, legal and finance films get an expert reviewer. The channel's rules (`plan.channel`, `rules.expert_review`:
+fields such as "life & health" and keywords such as disease, drug, dose, treatment, law, invest) decide which calendar
+rows are marked `review: expert`; `plan.brief` writes the review row and an "Expert review" section into the brief.
+`research.check` then requires `omits` on every fact and reports `expert_review: pending` until a reviewer records
+`ledger.add role=expert_review verdict=cleared`; the final checkpoint carries the status to the board, and
+`prod.approve` refuses the film until it is cleared. `plan.check` gained a rule, `expert_review_marked`. In Q1 2027 the
+ten health posts are marked.
+
+Facts labelled "re-analysis", "illustration" or "preliminary" show that label on screen while a line citing them plays
+(a tag at the top of the text-safe area, drawn with the captions by `film.render`). No existing film has labelled
+facts, so no golden frame changed.

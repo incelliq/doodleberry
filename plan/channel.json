@@ -44,6 +44,30 @@
   "fact_lock_days": {
    "default": 4,
    "analysis": 6
+  },
+  "expert_review": {
+   "fields": [
+    "life & health"
+   ],
+   "keywords": [
+    "disease",
+    "medicine",
+    "medical",
+    "drug",
+    "dose",
+    "treatment",
+    "vaccine",
+    "cancer",
+    "diagnos",
+    "symptom",
+    "antivenom",
+    "law",
+    "legal",
+    "court",
+    "invest",
+    "loan",
+    "tax"
+   ]
   }
  }
 }

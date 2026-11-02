@@ -21,6 +21,15 @@ enforces the process (`research.check`), and agents do the judging.
    waits for a reviewer to record `ledger.add role=safety verdict=cleared`. If a topic is blocked, narrow the brief
    and relaunch rather than forcing it.
 
+10. **Expert review (health, legal, finance):** a brief with `| review | expert (...) |` (written by `plan.brief` for the
+   channel's expert fields and keywords) or `shots.json` `brief.review: "expert"` needs, for every fact, what its source
+   leaves out (`omits`: e.g. first-line treatments, or "nothing material"), and a qualified reviewer's
+   `ledger.add role=expert_review verdict=cleared` (name and qualification in the notes). `research.check` reports it
+   pending until then, and the production board refuses approval.
+11. **Honest labels:** a fact may carry `label`: "re-analysis", "illustration" or "preliminary". While a line citing it
+   plays, the captions show the label in a tag at the top of the text-safe area; a labelled fact no line cites is
+   reported.
+
 If the research changes the story, follow the research and say so in the brief.
 
 ## facts.json

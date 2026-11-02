@@ -33,6 +33,30 @@
   "fact_lock_days": {
    "default": 4,
    "analysis": 6
+  },
+  "expert_review": {
+   "fields": [
+    "life & health"
+   ],
+   "keywords": [
+    "disease",
+    "medicine",
+    "medical",
+    "drug",
+    "dose",
+    "treatment",
+    "vaccine",
+    "cancer",
+    "diagnos",
+    "symptom",
+    "antivenom",
+    "law",
+    "legal",
+    "court",
+    "invest",
+    "loan",
+    "tax"
+   ]
   }
  },
  "rows": [
@@ -50,6 +74,7 @@
     "by": "2026-12-26",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -66,6 +91,7 @@
     "by": "2026-12-29",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -82,6 +108,7 @@
     "by": "2026-12-31",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -98,6 +125,7 @@
     "by": "2027-01-02",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -114,6 +142,7 @@
     "by": "2027-01-04",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -130,6 +159,7 @@
     "by": "2027-01-05",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -146,6 +176,7 @@
     "by": "2027-01-07",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -162,6 +193,7 @@
     "by": "2027-01-07",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -178,6 +210,7 @@
     "by": "2027-01-11",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -194,6 +227,7 @@
     "by": "2027-01-12",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -210,6 +244,7 @@
     "by": "2027-01-14",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -226,6 +261,7 @@
     "by": "2027-01-16",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -242,6 +278,7 @@
     "by": "2027-01-18",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -258,6 +295,7 @@
     "by": "2027-01-19",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -274,6 +312,7 @@
     "by": "2027-01-21",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -290,6 +329,7 @@
     "by": "2027-01-21",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -306,6 +346,7 @@
     "by": "2027-01-25",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -322,6 +363,7 @@
     "by": "2027-01-26",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -338,6 +380,7 @@
     "by": "2027-01-28",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -354,6 +397,7 @@
     "by": "2027-01-30",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -370,6 +414,7 @@
     "by": "2027-02-01",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -386,6 +431,7 @@
     "by": "2027-02-02",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -402,6 +448,7 @@
     "by": "2027-02-04",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -418,6 +465,7 @@
     "by": "2027-02-06",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -434,6 +482,7 @@
     "by": "2027-02-06",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -450,6 +499,7 @@
     "by": "2027-02-09",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -466,6 +516,7 @@
     "by": "2027-02-11",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -482,6 +533,7 @@
     "by": "2027-02-13",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -498,6 +550,7 @@
     "by": "2027-02-15",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -514,6 +567,7 @@
     "by": "2027-02-16",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -530,6 +584,7 @@
     "by": "2027-02-18",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -546,6 +601,7 @@
     "by": "2027-02-18",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -562,6 +618,7 @@
     "by": "2027-02-22",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -578,6 +635,7 @@
     "by": "2027-02-23",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -594,6 +652,7 @@
     "by": "2027-02-25",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -610,6 +669,7 @@
     "by": "2027-02-27",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -626,6 +686,7 @@
     "by": "2027-03-01",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -642,6 +703,7 @@
     "by": "2027-03-02",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -658,6 +720,7 @@
     "by": "2027-03-04",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -674,6 +737,7 @@
     "by": "2027-03-06",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -690,6 +754,7 @@
     "by": "2027-03-06",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -706,6 +771,7 @@
     "by": "2027-03-09",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -722,6 +788,7 @@
     "by": "2027-03-11",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -738,6 +805,7 @@
     "by": "2027-03-13",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -754,6 +822,7 @@
     "by": "2027-03-15",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -770,6 +839,7 @@
     "by": "2027-03-16",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -786,6 +856,7 @@
     "by": "2027-03-18",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -802,6 +873,7 @@
     "by": "2027-03-20",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   },
   {
@@ -818,6 +890,7 @@
     "by": "2027-03-22",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -834,6 +907,7 @@
     "by": "2027-03-21",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -850,6 +924,7 @@
     "by": "2027-03-25",
     "status": "open"
    },
+   "review": "standard",
    "status": "planned"
   },
   {
@@ -866,6 +941,7 @@
     "by": "2027-03-27",
     "status": "open"
    },
+   "review": "expert",
    "status": "planned"
   }
  ]

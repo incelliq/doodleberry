@@ -41,7 +41,9 @@ def fit_size(text, font_size, width):
 
 
 def make_ass(timing, size, chunk=3, font="Fredoka", font_size=88, y_from_bottom=380,
-             text="#ffffff", outline="#24160e", highlight="#ffd23f", upper=True):
+             text="#ffffff", outline="#24160e", highlight="#ffd23f", upper=True, labels=None):
+    """labels: [(start, end, text)]: honest on-screen labels ("re-analysis", "illustration", "preliminary") shown in a
+    small tag at the top of the text-safe area while a line citing a labelled fact plays (WP-05)"""
     W, H = size
     if W > H and y_from_bottom == 380:  # landscape: keep inside 5% title-safe
         y_from_bottom, font_size = 90, min(font_size, 64)
@@ -56,6 +58,7 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Cap,{font},{font_size},{_ass_colour(text)},{_ass_colour(text)},{_ass_colour(outline)},{_ass_colour('#000000', 0x80)},-1,0,0,0,100,100,1,0,1,9,4,2,{ml},{mr},{y_from_bottom},1
+Style: Label,{font},{max(30, font_size * 2 // 5)},{_ass_colour(outline)},{_ass_colour(outline)},{_ass_colour(text)},{_ass_colour(text)},-1,0,0,0,100,100,2,0,3,10,0,7,{ml},{mr},{max(60, H // 9)},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -83,6 +86,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 fs = fit_size(" ".join(g["text"] for g in group), font_size, safe_width(W, H))
                 fit = f"{{\\fs{fs}}}" if fs < font_size else ""
                 events.append(f"Dialogue: 0,{_ts(start)},{_ts(end)},Cap,,0,0,0,,{fit}{pop}{' '.join(parts)}")
+    for (a, b, lab) in labels or []:
+        events.append(f"Dialogue: 1,{_ts(a)},{_ts(b)},Label,,0,0,0,,{_esc(lab.upper())}")
     return head + "\n".join(events) + "\n"
 
 
