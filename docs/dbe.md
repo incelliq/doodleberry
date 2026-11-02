@@ -634,7 +634,7 @@ files are fetched once into `DBE_MODELS` and checked against pinned hashes.
 
 Measured: a 5-second phone take (waist up, Pexels test clip) became a 184-key clip on Ravi in 17 s from upload
 through the page (decode 3 s, detection 8 s, retarget under 0.1 s), legs left to idle; a full-body take with a
-camera zoom was flagged. `python -m dbe test` runs `actout.self_test`: takes made by forward kinematics through a
+camera zoom was flagged. `python -m dbe test` runs the Act it out self-test (in `dbe/actout.py`): takes made by forward kinematics through a
 character must come back as the clips that made them (wave, celebrate, shrug under 1.5° mean), a jump's contacts
 within 0.08 s with planted soles within 5 units of the ground, a waist-up take must not guess legs, `reach` must
 keep a long-armed performer's clap together (0.035 torso lengths, against 0.17 for angles), and face keys must
@@ -804,3 +804,17 @@ ARM or macOS build is never picked; the Kokoro files (verified by hash), the tim
 and Playwright only if `require('playwright')` fails. For a cloud environment, put `bash tools/setup.sh` in its setup
 script. Models live in `DBE_VOICES` (default `~/voices`) and `DBE_MODELS` (default `~/.cache/doodleberry/models`),
 wheels in `DBE_WHEELS`; none of them go in git.
+
+## Keeping the docs true (WP-01)
+`python -m dbe docs.check` (also in `python -m dbe test`) checks that the build plan, the feature map, the work
+packages and the command registry agree:
+- every command named in backticks in the docs is registered;
+- every feature-map row marked ⬜ or 🟡 names its work package (WP-nn) or says "not planned";
+- every WP-nn mentioned exists in `docs/work-packages.md`;
+- every item in the build plan's phase tables has a status row or a work package covering it;
+- every work package is in the at-a-glance table and the order of work.
+
+The feature map was reconciled against the code on 2 November 2026. 238 open rows were reviewed: built rows now
+name the command or plan item that built them, partial rows say what is left and where, and every open row points
+at its work package. The map went from about 90 rows marked built to 162 built, 53 partial and 72 open (P2 and
+emergent rows included).

@@ -51,6 +51,15 @@ def engine_doctor(deep=True):
     return doctor.check(deep)
 
 
+@command("docs.check")
+def docs_check():
+    """The build plan, feature map, work packages and command registry agree (WP-01): commands named in the docs
+    exist, open feature rows name a work package, work-package references exist, every plan item has a status row
+    or a work package, and every work package is scheduled."""
+    from . import docscheck
+    return docscheck.check()
+
+
 @command("engine.info")
 def engine_info():
     """Report which renderers and tools are available in this environment."""
@@ -2145,6 +2154,12 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "docs":   # the docs agree with each other and with the registry (WP-01)
+        from . import docscheck as DC
+        r = DC.check()
+        failed += 0 if r["ok"] else 1
+        results.append({"docs": "plan, feature map, work packages, registry", "status": "ok" if r["ok"] else "FAIL", "measured": r["counts"],
+                        **({"cases": {k: v for k, v in r["problems"].items() if v}} if not r["ok"] else {})})
     if not film or film == "doctor":   # environment doctor (WP-02): every required check passes on this machine
         from . import doctor as DOC
         d = DOC.check(deep=False)

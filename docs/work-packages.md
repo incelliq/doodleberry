@@ -99,6 +99,7 @@ order, in which bundles, and how we know each is finished.
 ## Progress
 | WP | Result | Date |
 |---|---|---|
+| 01 | done: feature map reconciled against the code (238 open rows reviewed; now 162 built, 53 partial, 72 open, each open row naming its WP), package scopes extended for the rows they now own, `docs.check` (commands named exist, open rows point at WPs, WP references exist, plan items covered, packages scheduled) in `python -m dbe test` | 2 Nov 2026 |
 | 02 | done: `engine.doctor` (core, audio, tools; fixes for every gap; doctor self-test), `tools/setup.sh` (idempotent; 1 min 49 s here with the big wheels, 11 s when nothing is missing), `tools/fetch_wheels.py`, `requirements-core.txt` (the core packages were in no requirements file). Not verified on a truly fresh container: this one already had most tools | 2 Nov 2026 |
 
 ## Definition of done (every WP)
@@ -187,7 +188,8 @@ graph LR
   approved and merged, and the owner was notified at each stop; cost per film is in the board's measurements.
 
 **WP-04 Calibrate layout QA per style** (S-M, 1 session; the build plan's gate before enforcing 0.11)
-- Scope: run frame fill, seams and reading time on reference films in each style (flat paper explainer, doodle,
+- Scope: a generic-AI-look lint (shadow cards, gradient blobs, emoji, neon glow, centred everything); run frame fill,
+  seams and reading time on reference films in each style (flat paper explainer, doodle,
   cartoon cast); set per-style thresholds in `dbe/profiles.json`; enforce the calibrated checks.
 - Done when: every benchmark film passes its style's thresholds, and a seeded failure in each style fails QA.
 
@@ -248,7 +250,8 @@ graph LR
   planner at or above the hand-keyed version on a blind pair.
 
 **WP-11 Interaction and locomotion** (M-L, 2 sessions; new from the feature map)
-- Scope: handshake, hug, hand-off and eye contact (IK targets on another character's parts); walking along a path
+- Scope: IK/FK switching and blending; copy-rotation and follow-path constraints; handshake, hug, hand-off and eye
+  contact (IK targets on another character's parts); walking along a path
   with foot planting; per-part squash and stretch; drawing substitution driven by angle; per-pose z-order. Puppet
   format v0.8 if new fields are needed.
 - Done when: two characters walk to each other along a curved path without foot sliding (measured), shake hands with
@@ -257,7 +260,7 @@ graph LR
 **WP-12 Act it out 2** (M, 1-2 sessions; open from 3.5)
 - Scope: head turn (yaw) into the `turn` control (clip control tracks, a puppet-format change); more detectors, now
   that their licences allow in-house use: rtmlib RTMPose, OpenPose, Ultralytics pose and Sapiens (chosen by measured
-  accuracy on our takes, WP-43); multi-person takes (one clip per person); camera-motion compensation from the background; live
+  accuracy on our takes, WP-43); multi-person takes (one clip per person); BVH and CMU motion capture retargeted to 2D clips; camera-motion compensation from the background; live
   tracking (E9) as a P2 follow-on.
 - Done when: a take with a head turn and a camera pan becomes a clip whose head turns and whose root does not drift,
   and two people in one take become two clips.
@@ -278,13 +281,15 @@ graph LR
 - Done when: the parity test passes for every benchmark shot on every renderer that accepts it.
 
 **WP-15 Post, transitions and stepped rendering** (M, 1-2 sessions; open from 1.7; feature map §4, §7)
-- Scope: cross-dissolves, match cuts and wipes; sub-frame motion blur on fast shots only; kinetic typography beyond
+- Scope: cross-dissolves, match cuts and wipes; medium simulation for vector lines (pencil, marker, crayon) and a
+  watercolour pass; the static-layer cache left from 0.1; sub-frame motion blur on fast shots only; kinetic typography beyond
   word highlights; parallax and multiplane set layers; 12-fps-native rendering (render only unique stepped frames).
 - Done when: a doodle film on twos renders in at most 60% of today's time with identical frames, and each transition
   passes the seam check.
 
 **WP-16 Sets, props, cast and templates** (M-L, 2 sessions; open from 1.5, 1.6)
-- Scope: map board (Natural Earth plus d3-geo), anatomy plates (Servier, CC BY), Kenney prop packs; Open Peeps and
+- Scope: palette variants per scene (night, sick, cold); a character family look as parameters on top of
+  `cast.generate`; map board (Natural Earth plus d3-geo), anatomy plates (Servier, CC BY), Kenney prop packs; Open Peeps and
   Humaaans converted; outfits as swap sets; templates for a quadruped, a bird and an object with a face, each with a
   clip library; a character bible (personality, voice, gesture tendencies, continuity notes) in the cast registry.
 - Done when: a Q1 analysis film uses the map board; three new templates each pass a clip set on every renderer;
@@ -304,7 +309,8 @@ graph LR
   drawing requests alone.
 
 **WP-19 Timeline and review room 2** (M, 1-2 sessions; open from 3.1, 3.4; after WP-22)
-- Scope: dragging lines and shots; a camera-keys lane; review notes about gaze, placement, camera and the timing of
+- Scope: dragging lines and shots; a camera-keys lane; a curve (graph) editor for keys; named shot sizes and
+  over-the-shoulder framing; continuity checks in lint (180-degree rule, screen direction, eyeline); review notes about gaze, placement, camera and the timing of
   lines; review on a phone; a visual diff between two versions of a film; OpenRV or xSTUDIO through OTIO.
 - Done when: "Ravi should look at Momo when she answers" is fixed and verified by the critic, and the diff view
   shows exactly the frames that changed.
@@ -461,7 +467,7 @@ drive it like everything else.
 
 **WP-42 Procedural and 3D layer (2D+)** (L, 3 sessions; the brainstorm's 5A and 5B)
 - Scope: procedural 2D (scatter, instancing, growth, crowds of props and characters as data, rules on the beat grid);
-  Blender in-process (`bpy`) for 3D sets, Geometry Nodes, Grease Pencil 3 and EEVEE passes composited with 2D;
+  particles (rain, sparks, snow), crowds with variation, cloth strips; Blender in-process (`bpy`) for 3D sets, Geometry Nodes, Grease Pencil 3 and EEVEE passes composited with 2D;
   physics beyond Rapier 2D (Bullet for 3D props); OpenUSD as the scene interchange. GPU solvers (5C) wait for a GPU.
 - Done when: a shot mixes a procedural crowd, a Geometry Nodes 3D set and 2D puppets with one camera, renders
   deterministically, and re-cooks only the changed node.
@@ -470,7 +476,7 @@ drive it like everything else.
 - Scope: models the old rule kept out, used as assistants whose output is data that a person or the critic accepts:
   pose detectors for Act it out (OpenPose, Ultralytics, Sapiens; compared on our takes); expressive and own-voice TTS
   (XTTS-v2, F5-TTS; cloning only with recorded consent); co-speech gesture models (EMAGE/BEAT2, audio2photoreal) as
-  suggestions for the gesture planner; in-between proposals for drawn levels; depth estimates (Depth Anything, larger
+  suggestions for the gesture planner; in-between proposals for drawn levels and morphs between views (front to three-quarter to side); depth estimates (Depth Anything, larger
   models) for parallax; sound sketches (Stable Audio Open). Each output carries its licence class into the film's
   record, so the posting gate can flag it.
 - Done when: each assist improves a measured baseline (pose accuracy, gesture rating, in-between acceptance rate) on
