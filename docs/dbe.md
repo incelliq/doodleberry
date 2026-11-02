@@ -426,3 +426,22 @@ speaker's viseme track with how open the jaw should be, read from `build/voice.w
 correlation there, and fails beyond +-2 frames or below 0.2. With `DBE_RHUBARB` pointing at a Rhubarb Lip Sync
 binary (MIT), each line is also read by Rhubarb and its Preston Blair cues are compared class by class (closed,
 narrow, open, round; fails below 50% agreement).
+
+## Self-healing and layout auto-repair (plans 2.9, 2.18)
+`python -m dbe film.heal '{"name": "FILM"}'` renders the film, reads every failure (the QA bar, all measured layout
+checks including the advisory ones, and visual-lint errors), applies the known repair for each to shots.json,
+re-renders what changed (incremental shot hashes) and repeats, up to `rounds` (3). The shots.json from before the
+first round stays in `build/shots.before_heal.json`; the result lists each round's failures and edits, what still
+fails, and which failures have no automatic repair (cold open, seams, mix, fact tracing, lip-sync). Repairs
+(`dbe/heal.py`):
+- frozen stretch: low `style.step` goes back to 12; a shot with no camera gets the float camera; cast get idle;
+- text outside the safe area: moved in by exactly the overshoot plus 8 px (`x`/`y` of the kit element);
+- type too small: size raised to the platform minimum (26 px for 9:16, 24 px for 16:9);
+- reading time: a timed text block stays up words / 3 + 1 s, within its shot; captions flowing faster than 3.2
+  words/s re-voice the script slower when `revoice` is true (then the gestures are re-planned);
+- frame fill: the shot's cast is scaled up (feet stay on the floor, at most 1.6x);
+- lint, head cut by the frame: an auto camera frames singles less tight; a static shot scales the character down
+  and moves it in; lint, bubble over a face: an auto camera leaves more headroom, else that shot goes back to
+  captions.
+`films/heal-demo` is the kit demo with failures seeded on purpose (animation once a second, a 20 px sign up for
+0.8 s, the title below the safe area).

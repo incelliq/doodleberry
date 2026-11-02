@@ -674,6 +674,44 @@ def qa_run(name, layout=True):
     return rep
 
 
+@command("film.heal", name=("string", "film"), rounds=("integer", "most render-and-repair rounds", 3),
+         revoice=("boolean", "allow re-voicing slower when captions flow too fast", False))
+def film_heal(name, rounds=3, revoice=False):
+    """Self-healing (plans 2.9, 2.18): render, read every failure (QA bar, layout checks including advisory ones,
+    visual lint errors), apply the known repair for each to shots.json (frozen stretches, text outside the safe area
+    or too small, short reading time, bare frames, heads cut by the frame, bubbles over faces; slower voice with
+    revoice), re-render what changed and repeat until the film passes or nothing more can be repaired. Keeps the
+    original as build/shots.before_heal.json and returns the log of every failure and edit."""
+    from . import heal as HL
+    d = _film(name); raw0 = _json(d / "shots.json")
+    (d / "build").mkdir(exist_ok=True)
+    if not (d / "build" / "shots.before_heal.json").exists():
+        (d / "build" / "shots.before_heal.json").write_text(json.dumps(raw0, indent=1, ensure_ascii=False))
+    log = []
+    for rnd in range(1, rounds + 2):
+        film_render(name)
+        rep = _json(d / "build" / "qa.json", {}); lint = _json(d / "build" / "lint.json", {})
+        fails = HL.failures(rep, lint)
+        if not fails or rnd > rounds:
+            break
+        res = _shots(name); size = res.get("size", [1080, 1920])
+        reps = HL.diagnose(rep, lint, res, size, _json(d / "script.json", {}) if revoice else None)
+        if not reps:
+            break
+        new, slow = HL.apply(_json(d / "shots.json"), reps, res, size)
+        log.append({"round": rnd, "failing": fails, "repairs": [{k: r[k] for k in ("check", "shot", "what")} for r in reps]})
+        (d / "shots.json").write_text(json.dumps(new, indent=1, ensure_ascii=False))
+        if slow:
+            sc = _json(d / "script.json"); sc["length_scale"] = round(sc.get("length_scale", 1.0) * slow, 3)
+            (d / "script.json").write_text(json.dumps(sc, indent=1, ensure_ascii=False))
+            voice_build(name)
+            if any(c.get("speaker") for sh in new["shots"] for c in sh.get("cast", [])):
+                acting_plan(name)
+    still = HL.failures(rep, lint)
+    return {"passes": not still, "still_failing": still, "rounds": log,
+            "unrepaired": [f for f in still if f in ("cold_open", "seams", "effects_below_music", "cue_sync", "every_line_traced", "lipsync")]}
+
+
 @command("lipsync.check", name=("string", "film"))
 def lipsync_check(name):
     """Lip-sync cross-check (plan 2.2): each speaker's viseme track against their own voice (first-formant energy of
