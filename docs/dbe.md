@@ -676,3 +676,62 @@ film that asked. Pupils, a turn view and chains are rigged rather than drawn, so
 Drawn shapes are raster strokes (SVG renderer). `python -m dbe test` cuts three synthetic doodles (head and body,
 blob, cat with a tail and ears; pivots within 11 px), snaps the cat, builds its queue, draws raised brows into the box
 and checks happy and surprised become free, and voices a line when Kokoro is installed.
+
+## Production orchestrator and board (plan 3.7)
+http://127.0.0.1:8770/board (linked from Studio): a posting calendar by week, and a card per film with its state,
+where it stands against its posting date, the checkpoints (research, first shot, final, approved, merged) with the
+orchestrator's verdicts, the final's measurements (length, loudness, true peak, QA checks passed, layout advisories,
+the director's verdict), escalations, narrowings and the owner's buttons: Approve, Merge, Stop, Relaunch, Narrow, and
+Proceed / Narrow / Stop on an escalation. The page reads `prod.status` every 4 s.
+
+    python -m dbe prod.plan '{"film": "kit-demo", "post_on": "2026-11-10"}'          # runner: pipeline | claude | manual
+    python -m dbe prod.launch '{"max_parallel": 3}'                                    # every planned film
+
+Each film gets a git worktree next to the repository (`<repo>-films/<film>`, branch `film/<film>`) and a session:
+- **pipeline**: `tools/film_agent.py` rebuilds an existing film through every gate: research gate, voice (when the
+  workspace has none), the first shot, the full render with QA (one round of `film.heal` if QA fails), a builder
+  entry in the ledger, a commit on the branch. This is how every film is re-made after an engine change.
+- **claude**: Claude Code headless (`claude -p`, command in the registry's `runners.claude`) with the protocol and
+  `docs/director-prompt.md`, allowed to run `python -m dbe` and commit, for new films from a brief (`prod.plan` with
+  `brief` writes it into the workspace).
+- **manual**: nothing is started; the protocol is written to `.production/PRODUCTION.md` in the workspace for any
+  agent, such as a cloud session, to follow.
+
+The protocol is three checkpoint calls, `prod.checkpoint {film, stage, report}`, which a session in its workspace
+sends to the shared registry (`DBE_PRODUCTION`, set by the launcher). The orchestrator never takes the report's word:
+it measures for itself in the film's workspace. Research runs `research.check` there and reads the ledger; a
+counter-evidence entry that contradicts or blocks (or contradictions the session lists) **escalates**: the film
+stops until the owner decides with `prod.decide`. Proceed carries on as briefed; narrow appends the owner's change of
+scope to the film's brief and delivers it with the next answer; stop ends the film. The first shot must exist at the
+film's frame size, and a still goes to the board. The final reads `qa.json` and the director's ledger verdict, then
+copies the render, QA report and a poster for the board. The answer carries the verdict (ok, ready, fail, blocked,
+escalate), the reasons, the owner's pending instructions and `continue`: a stopped or escalated film's session ends.
+
+Owner controls: `prod.stop` (the session's process group), `prod.narrow`, `prod.relaunch` (renders in the workspace
+are reused), `prod.approve` (only a final that passed QA), `prod.merge`. Merge needs approval and refuses a branch
+that changes anything outside `films/<film>/` (new characters may go in `cast/drawn/`); it merges `--no-ff` and puts
+the approved render next to the film data. `prod.status` also starts queued films as running ones finish (at most
+`max_parallel` sessions), and marks a film failed when its session ends without a final checkpoint, or
+`needs_work` when its final still fails QA after the session's own repair round.
+
+Schedule: each milestone is due a number of days before posting (`lead_days`: research 10, first shot 6, final 3,
+approval 1); a film is on_track, due_soon (within a day), late, or needs_owner while escalated.
+
+The registry (`productions/registry.json`, git-ignored, with session logs and render copies for the board) is
+written under a file lock, because sessions report concurrently. `python -m dbe test` runs `production.self_test`
+on a throwaway clone of the working tree with a manual session. It covers launch into a worktree, research ok, an
+escalation from a counter-evidence entry, narrowing, a first shot at the wrong size, a failing then passing final,
+approval refused before a pass, a merge refused for a stray edit outside the film, a clean merge, and the schedule
+states.
+
+Measured (a scratch clone of the repository, 4 CPU cores, `max_parallel` 3, a simulated owner acting through the
+same commands as the board): ten films (nib-hello, kit-demo, fx-demo, props-demo, heal-demo, clips-demo, data-demo,
+direct-demo, review-demo, dialogue-demo) posting between 9 and 27 November went from planned to merged in 19.5
+minutes, never more than three sessions at once. Every final passed QA 7 of 7 at -14.0 LUFS. The run also covered:
+fx-demo's seeded session crash, which was caught as "ended before the final checkpoint" and relaunched; kit-demo,
+stopped by the owner after its first shot and relaunched, which reused its renders; and data-demo, whose
+counter-evidence escalated it at research, was narrowed by the owner, and merged with the narrowing in its brief.
+Each merge touched only its own film's folder. The run found two bugs, both fixed: the merge did not check that the
+session had committed, and a hand-written ledger entry without metrics broke the ledger writer. A merge now refuses
+while the session runs or while the film's work is uncommitted. The claude runner is wired, but no Claude Code
+session was run in this test.

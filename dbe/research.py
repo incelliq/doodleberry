@@ -90,13 +90,13 @@ def add(d, role, verdict, notes="", metrics=None, round_no=None):
 
 def _write_md(d, led):
     out = ["# Ledger", "", "Generated from ledger.json: critic rounds, gates and measured numbers.", ""]
-    rounds = sorted({e["round"] for e in led})
+    rounds = sorted({e.get("round", 1) for e in led})   # entries written by hand may lack round, notes or metrics
     prev = {}
     for r in rounds:
         out += [f"## Round {r}", ""]
-        for e in [x for x in led if x["round"] == r]:
-            out += [f"- **{e['role']}** ({e['at']}): {e['verdict']}" + (f". {e['notes']}" if e["notes"] else "")]
-            if e["metrics"]:
+        for e in [x for x in led if x.get("round", 1) == r]:
+            out += [f"- **{e['role']}** ({e.get('at', '')}): {e['verdict']}" + (f". {e['notes']}" if e.get("notes") else "")]
+            if e.get("metrics"):
                 out += ["", "| metric | before | now |", "|---|---|---|"]
                 for k, v in e["metrics"].items():
                     out.append(f"| {k} | {prev.get(k, '–')} | {v} |")

@@ -265,7 +265,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Natural-language editing ("make Pip turn when she says Blender") | NEW | 🟡 | P0 | line-relative times make it a one-field edit |
 | Python and JS SDKs, recipes, templates | NEW | ⬜ | P2 | |
 | Multi-tenant sandboxing and quotas | NEW | ⬜ | P2 | |
-| **Production orchestrator:** a planning agent spawns one production session per film (own workspace and branch), receives checkpoint reports (research done, first render, final metrics), keeps a session registry, can stop, narrow or relaunch a film, and merges finished work | NEW | ⬜ | P1 | how 25 films shipped in a month |
+| **Production orchestrator:** a planning agent spawns one production session per film (own workspace and branch), receives checkpoint reports (research done, first render, final metrics), keeps a session registry, can stop, narrow or relaunch a film, and merges finished work | NEW | ✅ | P1 | `prod.*` and Studio /board (plan 3.7): worktree and branch per film, pipeline, Claude Code or manual sessions, measured checkpoints, escalation, scoped merge |
 | Escalation protocol: research that contradicts the brief goes to the planner; blockers don't stop other work; a late film finishes its primary cut first | NEW | ⬜ | P1 | |
 | Per-film workspace isolation: a production session works only inside its film folder | NEW | 🟡 | P1 | |
 
@@ -282,7 +282,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Tablet and pencil support | PRO | 🟡 | P1 | pointer pressure works |
 | **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ✅ | P1 | Studio /doodle and `doodle.snap/cut/say/keep` (plan 3.6): photo to talking in about 11 s |
 | Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ✅ | P1 | `drawing.requests` / `drawing.fulfil` (plan 3.6): swap shapes and parts drawn over a ghost; pupils, views and chains go to the Rig Canvas |
-| **Production board:** calendar, per-film status, checkpoints, measurements and critic verdicts, with approve and stop controls | NEW | ⬜ | P1 | the owner's view of the studio |
+| **Production board:** calendar, per-film status, checkpoints, measurements and critic verdicts, with approve and stop controls | NEW | ✅ | P1 | Studio /board (plan 3.7): calendar, schedule against posting dates, checkpoints, measurements, approve, stop, narrow, merge |
 | Live plan tracker shared with collaborators | NEW | ⬜ | P2 | |
 
 ---

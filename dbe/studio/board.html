@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Production Board</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --ok: #3f9a5a; --warn: #c9821c; --bad: #c2413b; --idle: #b9ad9f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; --idle: #5a5048; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; --idle: #5a5048; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); } .muted { color: var(--muted); }
+  button { font: inherit; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { padding: 16px; }
+  .cal { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(150px, 1fr); gap: 8px; overflow-x: auto; margin-bottom: 16px; }
+  .wk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+  .wk h3 { margin: 0 0 6px; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; margin: 2px 2px 0 0; border: 1px solid var(--line); }
+  .s-on_track { border-color: var(--ok); color: var(--ok); } .s-due_soon { border-color: var(--warn); color: var(--warn); } .s-late, .s-needs_owner { border-color: var(--bad); color: var(--bad); }
+  .s-done { background: var(--ok); color: #fff; border-color: var(--ok); } .s-stopped { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--idle); border-radius: 10px; padding: 10px 12px; display: flow-root; }
+  .card.running { border-left-color: var(--accent); } .card.waiting_owner, .card.approved { border-left-color: var(--ok); } .card.escalated, .card.failed, .card.needs_work { border-left-color: var(--bad); } .card.merged { border-left-color: var(--ok); opacity: .85; }
+  .card img { width: 56px; float: right; border-radius: 6px; margin-left: 8px; }
+  .card h2 { font-size: 15px; margin: 0; } .steps { display: flex; gap: 4px; margin: 8px 0; }
+  .step { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; font-size: 11px; padding: 3px 2px; border-radius: 6px; background: var(--bg); color: var(--muted); }
+  .steps { clear: both; }
+  .step.ok, .step.ready { background: var(--ok); color: #fff; } .step.fail, .step.blocked, .step.escalate { background: var(--bad); color: #fff; } .step.now { outline: 2px solid var(--accent); }
+  .m { font-size: 12px; color: var(--muted); } .why { font-size: 12px; color: var(--bad); } .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  @media (max-width: 600px) { main { padding: 12px 16px; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Production board</h1><span id="sum" class="muted"></span><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/">Studio ↗</a></header>
+<main>
+  <div class="cal" id="cal" aria-label="posting calendar"></div>
+  <div class="grid" id="grid"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id); const msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
+const STEPS = [['research', 'research'], ['first_render', 'first shot'], ['final', 'final'], ['approved', 'approved'], ['merged', 'merged']];
+const fmt = (v, d = 1) => v == null ? '–' : typeof v === 'number' ? v.toFixed(d) : v;
+function card(f) {
+  const cps = f.checkpoints, sch = f.schedule, fin = (cps.final || {}).measured || {};
+  const steps = STEPS.map(([k, label]) => { let cls = '';
+    if (cps[k]) cls = cps[k].verdict; else if (k === 'approved' && (f.state === 'approved' || f.state === 'merged')) cls = 'ok'; else if (k === 'merged' && f.state === 'merged') cls = 'ok';
+    if (sch.next === k) cls += ' now'; return `<span class="step ${cls}" title="${cps[k] ? cps[k].verdict + ' ' + cps[k].at : label}">${label}</span>`; }).join('');
+  const reasons = Object.values(cps).flatMap(c => c.verdict === 'ok' || c.verdict === 'ready' ? [] : c.reasons || []);
+  const acts = [];
+  if (f.state === 'escalated') acts.push(`<button class="primary" data-a="decide" data-d="proceed">Proceed</button><button data-a="decide" data-d="narrow">Narrow…</button><button data-a="decide" data-d="stop">Stop</button>`);
+  if (f.state === 'waiting_owner') acts.push(`<button class="primary" data-a="approve">Approve</button>`);
+  if (f.state === 'approved') acts.push(`<button class="primary" data-a="merge">Merge</button>`);
+  if (['running', 'queued'].includes(f.state)) acts.push(`<button data-a="narrow">Narrow…</button><button data-a="stop">Stop</button>`);
+  if (['stopped', 'failed', 'needs_work'].includes(f.state)) acts.push(`<button data-a="relaunch">Relaunch</button>`);
+  if (f.state === 'planned') acts.push(`<button class="primary" data-a="launch">Launch</button>`);
+  return `<div class="card ${f.state}" data-film="${f.film}">${f.media.poster ? `<img src="/${f.media.poster}?t=${Date.now()}" alt="">` : f.media.first ? `<img src="/${f.media.first}?t=${Date.now()}" alt="">` : ''}
+    <h2>${f.film}</h2><div class="m">posts ${f.post_on} · ${f.runner} · <b>${f.state.replace('_', ' ')}</b></div>
+    <span class="pill s-${sch.status}">${sch.status.replace('_', ' ')}${sch.next ? ` · ${sch.next.replace('_', ' ')} by ${sch.due}` : ''}</span>
+    <div class="steps">${steps}</div>
+    ${cps.final ? `<div class="m">${fmt(fin.duration_s)} s · ${fmt(fin.loudness_lufs)} LUFS · peak ${fmt(fin.true_peak_dbtp)} dBTP · QA ${fin.checks_passed}/${fin.checks}${fin.layout_advisory && fin.layout_advisory.length ? ' · layout: ' + fin.layout_advisory.join(', ') : ''}${fin.director ? ' · director: ' + fin.director : ''}</div>` : ''}
+    ${f.escalation ? `<div class="why">⚠ ${f.escalation.reasons.join('; ')}</div>` : ''}${reasons.length && !f.escalation ? `<div class="why">${reasons.join('; ')}</div>` : ''}
+    ${f.narrowed.length ? `<div class="m">narrowed: ${f.narrowed.join('; ')}</div>` : ''}${f.approved ? `<div class="m">approved by ${f.approved.by}</div>` : ''}
+    ${f.media.final ? `<div class="m"><a href="/${f.media.final}" target="_blank">watch the final ↗</a></div>` : ''}
+    <div class="m">${(f.events.slice(-1)[0] || {}).what || ''}</div><div class="acts">${acts.join('')}</div></div>`;
+}
+async function load() {
+  const s = await api('prod.status'); window.STATUS = s;
+  $('sum').textContent = `${s.today} · ${Object.entries(s.counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`).join(' · ')} · up to ${s.max_parallel} at once`;
+  $('cal').innerHTML = s.calendar.map(w => `<div class="wk"><h3>week of ${w.week_of}</h3>${w.films.map(f => `<span class="pill s-${f.status}" title="${f.post_on}">${f.post_on.slice(5)} ${f.film}</span>`).join('')}</div>`).join('') || '<span class="muted">Nothing planned: python -m dbe prod.plan</span>';
+  $('grid').innerHTML = s.films.map(card).join('');
+  document.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => { const film = b.closest('.card').dataset.film, a = b.dataset.a;
+    try {
+      if (a === 'approve') { const by = prompt('Approved by'); if (!by) return; await api('prod.approve', { film, by }); }
+      else if (a === 'merge') { const r = await api('prod.merge', { film }); msg(`merged ${film}: ${r.files.length} files`); }
+      else if (a === 'stop') { if (!confirm(`Stop ${film}?`)) return; await api('prod.stop', { film, reason: 'from the board' }); }
+      else if (a === 'relaunch') await api('prod.relaunch', { film });
+      else if (a === 'launch') await api('prod.launch', { film });
+      else if (a === 'narrow') { const text = prompt('Narrow the scope to…'); if (!text) return; await api('prod.narrow', { film, text }); }
+      else if (a === 'decide') { const d = b.dataset.d, note = d === 'narrow' ? prompt('Narrow the scope to…') : ''; if (d === 'narrow' && !note) return; await api('prod.decide', { film, decision: d, note }); }
+    } catch (e) { return; } load(); });
+}
+load(); setInterval(load, 4000);
+</script>
+</body>
+</html>

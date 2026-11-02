@@ -12,3 +12,7 @@ brand/out/
 assets/external/
 cast/external/
 tmp_imp/
+# production registry, session logs and render copies for the board (plan 3.7; machine-local)
+productions/
+# per-film session notes in workspaces
+.production/

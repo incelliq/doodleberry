@@ -503,6 +503,8 @@ window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);a
         _render_page(page, "", out)
     else:
         raise ValueError(f"unknown renderer {renderer}")
+    if renderer == own:   # record what was rendered, so film.render reuses this shot while it is unchanged
+        (bdir / f"{shot}.hash").write_text(_shot_hash(name, next(x for x in _shots(name)["shots"] if x["id"] == shot), _shots(name)))
     return {"shot": shot, "renderer": renderer, "frames": baked["frames"], "path": str(out.relative_to(ROOT))}
 
 
@@ -1396,6 +1398,200 @@ def drawing_fulfil(puppet, id, image, render=False):
     return out
 
 
+# ---------------- production orchestrator and board (plan 3.7) ----------------
+def _today(today=""):
+    import datetime as _dt
+    return _dt.date.fromisoformat(today) if today else _dt.date.today()
+
+
+@command("prod.plan", film=("string", "film folder name (it may not exist yet for claude or manual runners)"),
+         post_on=("string", "posting date, YYYY-MM-DD"), runner=("string", "pipeline | claude | manual", "pipeline"),
+         priority=("integer", "lower goes first among films posting the same day", 1),
+         brief=("string", "for a new film: the brief (written to films/<film>/brief.md in its workspace)", ""))
+def prod_plan(film, post_on, runner="pipeline", priority=1, brief=""):
+    """Put a film on the production board (plan 3.7) with its posting date and the kind of session that makes it:
+    pipeline (tools/film_agent.py rebuilds an existing film through every gate), claude (a Claude Code session with
+    the director prompt), manual (any agent, given the written protocol)."""
+    import datetime as _dt
+    from . import production as PR
+    _dt.date.fromisoformat(post_on)
+    if runner not in ("pipeline", "claude", "manual"):
+        raise ValueError("runner is pipeline, claude or manual")
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,60}", film):
+        raise ValueError("film names are lower-case letters, digits and -")
+    if runner == "pipeline" and not (FILMS / film).is_dir():
+        raise FileNotFoundError(f"the pipeline runner rebuilds an existing film; {film} does not exist")
+    with PR.registry() as reg:
+        e = reg["films"].get(film) or {"film": film, "state": "planned", "checkpoints": [], "events": []}
+        if e["state"] not in ("planned", "queued", "stopped", "failed", "needs_work"):
+            raise ValueError(f"{film} is {e['state']}; stop it first to re-plan")
+        e.update(post_on=post_on, runner=runner, priority=priority, **({"brief": brief} if brief else {}))
+        PR.event(e, "planned", post_on=post_on, runner=runner); reg["films"][film] = e
+        return {k: e[k] for k in ("film", "post_on", "runner", "state")}
+
+
+@command("prod.launch", film=("string", "one film, or empty for every planned film", ""), max_parallel=("integer", "sessions at once (0: keep the board's setting)", 0))
+def prod_launch(film="", max_parallel=0):
+    """Start production sessions (plan 3.7): each film gets a git worktree on branch film/<name> and a session that
+    reports at checkpoints; beyond max_parallel, films queue and start as others finish (prod.status starts them)."""
+    from . import production as PR
+    with PR.registry() as reg:
+        if max_parallel:
+            reg["max_parallel"] = int(max_parallel)
+        todo = [reg["films"][film]] if film else [e for e in reg["films"].values() if e["state"] == "planned"]
+        for e in todo:
+            if e["state"] not in ("planned", "stopped", "failed", "needs_work"):
+                continue
+            if e.get("brief") and e["runner"] != "pipeline":   # a new film's brief goes into its workspace
+                ws = PR.workspace(e["film"]); bd = ws / "films" / e["film"]; bd.mkdir(parents=True, exist_ok=True)
+                if not (bd / "brief.md").exists():
+                    (bd / "brief.md").write_text(e["brief"] + "\n")
+            e["state"] = "queued"; PR.event(e, "queued")
+        PR.tick(reg)
+        return {"running": [k for k, e in reg["films"].items() if e["state"] == "running"], "queued": [k for k, e in reg["films"].items() if e["state"] == "queued"],
+                "max_parallel": reg["max_parallel"]}
+
+
+@command("prod.checkpoint", film=("string", "film"), stage=("string", "research | first_render | final"),
+         report=("object", "the session's report: research {contradictions: [...]}, first_render {shot}, final {}", None))
+def prod_checkpoint(film, stage, report=None):
+    """A film session reports a checkpoint (plan 3.7). The orchestrator measures for itself in the film's workspace
+    (research: research.check and counter-evidence in the ledger; first_render: the shot file's size; final: qa.json
+    checks, loudness, layout, the director's verdict) and answers with a verdict (ok, ready, fail, blocked,
+    escalate), the owner's pending instructions, and whether to continue. Research that contradicts the brief
+    escalates to the owner and pauses the film."""
+    from . import production as PR
+    if stage not in PR.STAGES:
+        raise ValueError(f"stage is one of {PR.STAGES}")
+    return PR.checkpoint(film, stage, report or {})
+
+
+@command("prod.status", today=("string", "date for the schedule (YYYY-MM-DD; default today)", ""))
+def prod_status(today=""):
+    """The production board (plan 3.7): every film with its state, checkpoints and verdicts, latest measurements,
+    escalations, and where it stands against its posting date (on_track, due_soon, late, needs_owner); starts queued
+    films when sessions finish. Also a calendar of posting dates by week."""
+    import datetime as _dt
+    from . import production as PR
+    d = _today(today)
+    with PR.registry() as reg:
+        PR.tick(reg)
+        films = []
+        for e in sorted(reg["films"].values(), key=lambda e: (e["post_on"], e.get("priority", 1))):
+            cps = e.get("checkpoints", [])
+            last = {}
+            for c in cps:
+                last[c["stage"]] = {k: c[k] for k in ("verdict", "reasons", "measured", "at")}
+            media = {k: str((PR.reg_dir() / e["film"] / f).relative_to(ROOT)) for k, f in (("poster", "poster.jpg"), ("first", "first.jpg"), ("final", "final.mp4"))
+                     if (PR.reg_dir() / e["film"] / f).exists() and ROOT in (PR.reg_dir() / e["film"] / f).resolve().parents}
+            films.append({"film": e["film"], "post_on": e["post_on"], "runner": e["runner"], "state": e["state"], "schedule": PR.schedule(e, reg["lead_days"], d),
+                          "checkpoints": last, "escalation": e.get("escalation") if e["state"] == "escalated" else None,
+                          "approved": (e.get("approvals") or [None])[-1], "narrowed": e.get("narrowed", []), "media": media,
+                          "session": {k: v for k, v in (e.get("session") or {}).items() if k in ("runner", "started", "pid", "log")},
+                          "events": e.get("events", [])[-5:]})
+        weeks = {}
+        for f in films:
+            p = _dt.date.fromisoformat(f["post_on"]); wk = (p - _dt.timedelta(days=p.weekday())).isoformat()
+            weeks.setdefault(wk, []).append({"film": f["film"], "post_on": f["post_on"], "status": f["schedule"]["status"]})
+        counts = {}
+        for f in films:
+            counts[f["state"]] = counts.get(f["state"], 0) + 1
+        return {"today": d.isoformat(), "max_parallel": reg["max_parallel"], "lead_days": reg["lead_days"], "counts": counts,
+                "calendar": [{"week_of": k, "films": v} for k, v in sorted(weeks.items())], "films": films}
+
+
+def _prod_entry(reg, film):
+    e = reg["films"].get(film)
+    if not e:
+        raise KeyError(f"{film} is not in the production registry")
+    return e
+
+
+@command("prod.stop", film=("string", "film"), reason=("string", "why", ""))
+def prod_stop(film, reason=""):
+    """Stop a film's session (plan 3.7); its workspace and branch stay, so it can be relaunched."""
+    from . import production as PR
+    with PR.registry() as reg:
+        e = _prod_entry(reg, film); PR.kill(e); e["state"] = "stopped"; PR.event(e, "stopped by the owner", reason=reason)
+        return {"film": film, "state": "stopped"}
+
+
+@command("prod.narrow", film=("string", "film"), text=("string", "the change of scope, in plain words (e.g. drop the dosage claim; 30 s cut only)"))
+def prod_narrow(film, text):
+    """Narrow a film's scope (plan 3.7): the change is added to its brief in the workspace and delivered to the
+    session with its next checkpoint answer."""
+    from . import production as PR
+    with PR.registry() as reg:
+        e = _prod_entry(reg, film)
+        e.setdefault("inbox", []).append({"at": PR.now(), "text": text}); e.setdefault("narrowed", []).append(text)
+        if e.get("workspace"):
+            PR.narrow_brief(e, text)
+        PR.event(e, "narrowed", text=text)
+        return {"film": film, "narrowed": e["narrowed"]}
+
+
+@command("prod.relaunch", film=("string", "film"))
+def prod_relaunch(film):
+    """Start a stopped, failed, needs_work or escalated film's session again in its workspace (renders there are reused)."""
+    from . import production as PR
+    with PR.registry() as reg:
+        e = _prod_entry(reg, film); PR.kill(e)
+        if e["state"] == "escalated" and not e.get("decisions"):
+            raise ValueError(f"{film} waits for the owner's decision on its research (prod.decide)")
+        e["state"] = "queued"; PR.event(e, "relaunched"); PR.tick(reg)
+        return {"film": film, "state": e["state"]}
+
+
+@command("prod.decide", film=("string", "escalated film"), decision=("string", "proceed | narrow | stop"), note=("string", "for narrow: the change of scope; otherwise why", ""))
+def prod_decide(film, decision, note=""):
+    """The owner's decision on research that contradicts a film's brief (plan 3.7): proceed as briefed, narrow the
+    scope (the note is added to the brief) and continue, or stop. Proceed and narrow relaunch the session."""
+    from . import production as PR
+    if decision not in ("proceed", "narrow", "stop"):
+        raise ValueError("decision is proceed, narrow or stop")
+    if decision == "narrow" and not note:
+        raise ValueError("say how to narrow it")
+    with PR.registry() as reg:
+        e = _prod_entry(reg, film)
+        if e["state"] != "escalated":
+            raise ValueError(f"{film} is not waiting for a decision")
+        e.setdefault("decisions", []).append({"at": PR.now(), "decision": decision, "note": note})
+        PR.event(e, f"owner decided: {decision}", note=note)
+        if decision == "stop":
+            e["state"] = "stopped"; return {"film": film, "state": "stopped"}
+        if decision == "narrow":
+            e.setdefault("inbox", []).append({"at": PR.now(), "text": note}); e.setdefault("narrowed", []).append(note); PR.narrow_brief(e, note)
+        e["state"] = "queued"; PR.tick(reg)
+        return {"film": film, "state": e["state"]}
+
+
+@command("prod.approve", film=("string", "film"), by=("string", "who approves (the owner)"), note=("string", "", ""))
+def prod_approve(film, by, note=""):
+    """The owner approves a film whose final render passed QA (plan 3.7); only approved films can be merged."""
+    from . import production as PR
+    with PR.registry() as reg:
+        e = _prod_entry(reg, film)
+        fin = [c for c in e.get("checkpoints", []) if c["stage"] == "final"]
+        if e["state"] != "waiting_owner" or not fin or fin[-1]["verdict"] != "ready":
+            raise ValueError(f"{film} has no passing final render to approve (state {e['state']})")
+        e.setdefault("approvals", []).append({"by": by, "at": PR.now(), "note": note}); e["state"] = "approved"; PR.event(e, "approved", by=by)
+        return {"film": film, "state": "approved"}
+
+
+@command("prod.merge", film=("string", "approved film"))
+def prod_merge(film):
+    """Merge an approved film's branch into the current branch (plan 3.7), refusing a branch that touches anything
+    outside the film's folder (or new characters in cast/drawn/); the approved render and QA report are copied next
+    to the film data."""
+    from . import production as PR
+    with PR.registry() as reg:
+        e = _prod_entry(reg, film)
+        if e["state"] != "approved":
+            raise ValueError(f"{film} is not approved (state {e['state']})")
+        changed = PR.merge(e); e["state"] = "merged"; PR.event(e, "merged", files=len(changed))
+        return {"film": film, "state": "merged", "files": changed}
+
+
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------
 def _board_frames(name):
     """one representative moment per shot: a moment into its first line (the picture as it speaks), else its middle"""
@@ -1768,6 +1964,11 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "production":   # production orchestrator (plan 3.7): worktrees, checkpoints, owner controls, merge
+        from . import production as PRD
+        bad, meas = PRD.self_test(ROOT / "out")
+        failed += 1 if bad else 0
+        results.append({"production": "checkpoints, escalation, approval, scoped merge", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "doodle":   # phone-first creator flow (plan 3.6): cuts, a talking rig, drawing requests
         from . import autorig as AR
         from PIL import ImageDraw

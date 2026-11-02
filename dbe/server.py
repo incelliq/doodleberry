@@ -30,6 +30,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "timeline.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/review":     # plan 3.4: notes pinned to frames, fixed and checked by the critic
             return self._send(200, (STUDIO.parent / "review.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/board":      # plan 3.7: production board (calendar, checkpoints, verdicts, approve and stop)
+            return self._send(200, (STUDIO.parent / "board.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/doodle":     # plan 3.6: phone-first creator flow (snap, confirm cuts, see it talk) and drawing requests
             return self._send(200, (STUDIO.parent / "doodle.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
