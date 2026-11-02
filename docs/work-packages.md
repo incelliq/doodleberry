@@ -261,6 +261,7 @@ graph LR
   contact (IK targets on another character's parts); walking along a path
   with foot planting; per-part squash and stretch; drawing substitution driven by angle; per-pose z-order. Puppet
   format v0.8 if new fields are needed.
+- Added by the parity sweep (WP-41): free per-part attributes in the puppet format; fill winding rules; automatic vertex weights from bone influence.
 - Done when: two characters walk to each other along a curved path without foot sliding (measured), shake hands with
   hands meeting within 2 px, and every renderer plays it.
 
@@ -312,6 +313,7 @@ graph LR
 - Scope: expression and mouth-chart boards side by side with onion skin; model sheet and turnaround board; polygon
   editing of suggested cuts; several characters on one page; pupils, turn views and chains drawn over ghost guides;
   Krita `.kra` import; click-to-mask cut suggestions with SAM 2.1 tiny or small (1.8b).
+- Added by the parity sweep (WP-41): named layer sets switched together; a mirror tool for vertices.
 - Done when: a page with two doodles becomes two puppets, and a doodle gains pupils and a three-quarter view through
   drawing requests alone.
 
@@ -339,6 +341,7 @@ graph LR
 
 **WP-22 Editor hand-off** (M, 1 session; plan 4.1)
 - Scope: OTIO, FCPXML and EDL with stems and captions; a round trip through `melt`.
+- Added by the parity sweep (WP-41): camera track export for editors and compositors.
 - Done when: a film opens in Kdenlive (and Resolve, where available) with shots, stems and captions in place, and the
   `melt` round trip renders frames identical to ours.
 
@@ -450,6 +453,7 @@ drive it like everything else.
   an exposure sheet (X-sheet) for timing on ones, twos and threes; key poses with in-between assistance (WP-43);
   cleanup of rough lines; colour styles applied across every frame; hand-drawn effects (fire, water, smoke) as drawn
   levels; built on OpenToonz's level and X-sheet model where WP-34 chose it.
+- Added by the parity sweep (WP-41): camera capture for stop motion and pencil tests.
 - Done when: an animator draws a 2-second hand-drawn effect and a 12-drawing walk on twos in Studio, and both play in
   a film beside rigged puppets, with golden frames, on every renderer that accepts drawn levels.
 
@@ -458,12 +462,14 @@ drive it like everything else.
   rendered deterministically, on Natron or Blender's compositor or in-house WebGL nodes as WP-34 decides; true 2D
   multiplane depth (layers on planes, parallax, depth of field) in the SVG and WebGL path; the graph view (WP-20) as
   its editor.
+- Added by the parity sweep (WP-41): a region tracker that outputs hooks; deforming a nested group as one; gradient layers, tool and editor; picture analysis driving parameters; per-parameter expressions of the frame.
 - Done when: a night shot with three depth planes, a glow and a mask renders identically on rerun and matches its
   golden frames.
 
 **WP-37 Film-grade colour and delivery** (M-L, 2 sessions)
 - Scope: colour management (OpenColorIO, ACES); OpenEXR multi-pass output (beauty, line, shadow, mattes); 4K and
   higher-frame-rate masters; an HDR master where the pipeline allows it; a cinema-style package as a delivery profile.
+- Added by the parity sweep (WP-41): stereoscopic output; slate frames on renders; scopes (histogram, waveform, vectorscope).
 - Done when: a film renders a 4K ACES EXR multi-pass master that a reference tool reads, and the social encodes are
   derived from it.
 
@@ -477,6 +483,7 @@ drive it like everything else.
 - Scope: procedural 2D (scatter, instancing, growth, crowds of props and characters as data, rules on the beat grid);
   particles (rain, sparks, snow), crowds with variation, cloth strips; Blender in-process (`bpy`) for 3D sets, Geometry Nodes, Grease Pencil 3 and EEVEE passes composited with 2D;
   physics beyond Rapier 2D (Bullet for 3D props); OpenUSD as the scene interchange. GPU solvers (5C) wait for a GPU.
+- Added by the parity sweep (WP-41): animatable parametric primitives; live renders from a game engine into the comp.
 - Done when: a shot mixes a procedural crowd, a Geometry Nodes 3D set and 2D puppets with one camera, renders
   deterministically, and re-cooks only the changed node.
 
