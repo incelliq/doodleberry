@@ -587,3 +587,55 @@ Notes live in `films/FILM/review.json` (`review.add`, `review.list`, `review.fix
 the arm earlier" on frame 120 moved Momo's shrug 0.33 s earlier (measured 0.33 s), "Ravi should point bigger" on
 frame 180 (379 px, was 300), "hold the scratch head longer" (held 1.65 s, was 1.16 s); "this bit feels off somehow"
 went to a person.
+
+## Act it out (plan 3.5)
+http://127.0.0.1:8770/actout (linked from Studio): **Use camera** and **Record 5 s** (a 3-2-1 count, then five seconds
+from the webcam or phone camera), or pick a video file; choose a character and a clip name, then **Make clip**. The
+character plays the new clip in step with the take, and the report says what was captured, what was left out and why.
+The same thing as a command (CLI, HTTP, MCP):
+
+    python -m dbe actout.clip '{"video": "take.mp4", "puppet": "cast/generated/ravi.puppet.json", "name": "thumbs_up", "duration": 5}'
+
+What happens (`dbe/actout.py`):
+- **Detect.** ffmpeg decodes the take at 30 fps (phone rotation applied, `mirror` flips a selfie first); MediaPipe
+  Pose gives 33 body points with visibility and depth, and Face Landmarker, run on a crop around the head, gives 52
+  blendshapes. Keypoints are cached in `out/actout/` by file content and options, so re-targeting the same take onto
+  another character skips detection.
+- **Retarget** onto the character's own rest pose, in image space (the arm on the left of the picture drives the
+  `_L` part, drawn on the left of the artboard). Each bone's world rotation is the take's segment angle minus the
+  same bone's angle in the drawing (pivot to child pivot); the track is that minus the parent's, as `puppet.js`
+  composes angles. The spine comes from hips to shoulders, or from the shoulder line in a waist-up take; the head
+  rolls with the eye and ear lines. Segments pointing at the lens (too short on screen) are bridged, and parts seen
+  in less than 60% of the take are left out (`dropped` in the report), so idle or other clips fill them.
+- **Arms** (`arms`): `angles` (default) copies joint angles, which keeps natural silhouettes on a flat character
+  whose forearm cannot foreshorten toward the lens; `reach` places the hands where the take's hands are relative to
+  the shoulders, scaled to this body, with the elbow on the take's side: claps and hands on the body meet, but a
+  short-armed character wings its elbows out for a hand held near the chest.
+- **Root** (`root`): `move` turns hip travel into the clip's offset; when both legs are seen, ankle height and speed
+  give foot `contacts` and the vertical offset is solved so planted soles sit on the ground line (forward kinematics
+  through the clip's own legs), with the take's jump carried between contacts. A waist-up take never moves the root
+  vertically. `in_place` drops travel.
+- **Face** (`face`): `upper` (default) makes eye (open, half, closed), brow (raised, worried, angry) and gaze keys;
+  `all` adds the mouth (wide, mid, small, O, smile, frown), which overrides lip-sync while the clip plays, so it is
+  for silent reactions. Only drawings the character has are used (with fallbacks), and short flickers are held.
+- **Layer order**: when the take's wrist is clearly nearer the lens than the shoulders, a forearm and hand drawn
+  behind the body come in front (clip `swaps.z`, the existing `pose.z` override; Lottie and Synfig keep their fixed
+  order, as with control-driven z).
+- **Keys** are reduced against the curve `Acting.evaluate` actually plays (smoothstep between keys), seeded with the
+  clear turning points and split where the played curve strays most, to `tolerance` degrees (default 1.5).
+- **Save**: the clip goes into the character's `clips` (puppet format v0.7, version raised to 0.7 if older) through
+  `puppet.save`, with a `source` note. Any shot plays it by name; `film.validate` accepts a character's own clips.
+  `out/actout/<name>_sheet.png` shows six moments of the take above the character.
+
+Warnings in the report: the performer's size on screen changing by more than 25% (a zoom or a moving camera reads
+as travel: use `in_place`), and a face found in under 80% of the take. Takes, keypoints and sheets stay in `out/`
+(git-ignored). MediaPipe (`requirements-tools.txt`) needs libEGL (`apt install libegl1`); its two Apache-2.0 model
+files are fetched once into `DBE_MODELS` and checked against pinned hashes.
+
+Measured: a 5-second phone take (waist up, Pexels test clip) became a 184-key clip on Ravi in 17 s from upload
+through the page (decode 3 s, detection 8 s, retarget under 0.1 s), legs left to idle; a full-body take with a
+camera zoom was flagged. `python -m dbe test` runs `actout.self_test`: takes made by forward kinematics through a
+character must come back as the clips that made them (wave, celebrate, shrug under 1.5° mean), a jump's contacts
+within 0.08 s with planted soles within 5 units of the ground, a waist-up take must not guess legs, `reach` must
+keep a long-armed performer's clap together (0.035 torso lengths, against 0.17 for angles), and face keys must
+follow blendshapes (`upper` never touches the mouth).

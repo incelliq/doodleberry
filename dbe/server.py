@@ -1,4 +1,5 @@
 """HTTP API + Studio UI, and an MCP server over stdio. Both expose exactly the command registry."""
+import hashlib
 import json
 import mimetypes
 import sys
@@ -29,6 +30,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "timeline.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/review":     # plan 3.4: notes pinned to frames, fixed and checked by the critic
             return self._send(200, (STUDIO.parent / "review.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
+            return self._send(200, (STUDIO.parent / "actout.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/api":
             return self._send(200, describe())
         if p.startswith("/api/jobs/"):
@@ -39,6 +42,17 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
+        if self.path.startswith("/upload"):   # raw video body (Act it out takes) -> out/actout/takes/, git-ignored
+            n = int(self.headers.get("Content-Length", 0) or 0)
+            if not 0 < n <= 300 * 1024 * 1024:
+                return self._send(413, {"error": "a take must be under 300 MB"})
+            data = self.rfile.read(n)
+            ext = (self.path.split("ext=", 1)[1].split("&")[0] if "ext=" in self.path else "mp4").lower()
+            if ext not in ("mp4", "webm", "mov", "m4v", "mkv", "avi"):
+                return self._send(400, {"error": f"not a video type: {ext}"})
+            d = ROOT / "out" / "actout" / "takes"; d.mkdir(parents=True, exist_ok=True)
+            f = d / f"{hashlib.sha256(data).hexdigest()[:16]}.{ext}"; f.write_bytes(data)
+            return self._send(200, {"path": str(f.relative_to(ROOT))})
         if not self.path.startswith("/api/"):
             return self._send(404, {"error": "not found"})
         name = self.path[5:].split("?")[0]

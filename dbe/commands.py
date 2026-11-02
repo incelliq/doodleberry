@@ -1110,6 +1110,99 @@ def review_fix(name, id=""):
     return {"fixed": [n["id"] for n in out if n["status"] == "verified"], "needs_human": [n["id"] for n in out if n["status"] == "needs_human"], "notes": out}
 
 
+# ---------------- act it out (plan 3.5) ----------------
+@command("actout.clip", video=("string", "the take: a phone or webcam video (any format ffmpeg reads), path from the project root or absolute"),
+         puppet=("string", "character file, cast/.../x.puppet.json"), name=("string", "name of the new clip on that character"),
+         start=("number", "seconds into the video where the take starts", 0), duration=("number", "seconds to use (0 = to the end, at most 20)", 0),
+         mirror=("boolean", "flip the take first (selfie and webcam previews are mirrored)", False),
+         face=("string", "upper (eyes, brows, gaze; the mouth stays with lip-sync, the default) | all (the take's mouth too: for silent reactions, since it overrides lip-sync while the clip plays) | none", "upper"),
+         root=("string", "move (the take's travel, planted feet kept on the ground) | in_place", "move"),
+         arms=("string", "angles (joint angles copied: natural silhouettes, the default) | reach (hands placed where the take's hands are, scaled to this body: keeps claps and hands-on-body contacts)", "angles"),
+         tolerance=("number", "largest angle error the reduced keys may have, in degrees", 1.5),
+         save=("boolean", "write the clip into the character file (otherwise a copy under out/actout/)", True))
+def actout_clip(video, puppet, name, start=0, duration=0, mirror=False, face="upper", root="move", arms="angles", tolerance=1.5, save=True):
+    """Act it out (plan 3.5): a short take of a person becomes an action clip on a character. MediaPipe Pose and
+    Face Landmarker read body points and face blendshapes per frame; they are retargeted onto the character's own
+    rest pose (joint angles, the root's travel with planted feet held on the ground, foot contacts, mouth, eye and
+    brow drawings, gaze), and keys are reduced against the eased curve the player will actually play. Parts the take
+    cannot see (legs in a waist-up webcam take) are left out, so idle or other clips fill them. The clip is saved in
+    the character (puppet format v0.7 clips), so shots, the bake and every exporter play it by name. Also writes
+    out/actout/<name>_sheet.png: frames of the take above the character at the same moments."""
+    import time
+    from . import actout as AO
+    t0 = time.time()
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,40}", name):
+        raise ValueError("clip names are letters, digits and _ (starting with a letter)")
+    if face not in ("all", "upper", "none") or root not in ("move", "in_place") or arms not in ("reach", "angles"):
+        raise ValueError("face is all, upper or none; root is move or in_place; arms is reach or angles")
+    vid = Path(video) if Path(video).is_absolute() else ROOT / video
+    if not vid.is_file():
+        raise FileNotFoundError(f"no video at {video}")
+    pfile = (ROOT / puppet).resolve()
+    if not pfile.is_file():
+        raise FileNotFoundError(f"no puppet at {puppet}")
+    pz = _json(pfile)
+    dur = min(float(duration) or 20.0, 20.0)
+    cache = ROOT / "out" / "actout"; cache.mkdir(parents=True, exist_ok=True)
+    key = AO.cache_key(vid, start=float(start), duration=dur, mirror=bool(mirror), face=face != "none", fps=30)
+    kpf = cache / f"{key}.keypoints.json"
+    cached = kpf.exists()
+    kp = _json(kpf) if cached else AO.detect(vid, fps=30, start=float(start), duration=dur, mirror=bool(mirror), face=face != "none")
+    if not cached:
+        kpf.write_text(json.dumps(kp))
+    clip, rep = AO.retarget(kp, pz, tol=float(tolerance), face=face, root=root, arms=arms)
+    clip["source"] = {"take": vid.name, "start": float(start), "seconds": rep["seconds"], "mirror": bool(mirror),
+                      "by": "actout.clip (MediaPipe Pose + Face Landmarker, retargeted to this character)"}
+    pz.setdefault("clips", {})[name] = clip
+    if str(pz.get("version", "0")) < "0.7":
+        pz["version"] = "0.7"      # character clips arrived in v0.7
+    if save:
+        out_path = puppet_save(str(pfile.relative_to(ROOT)), pz)["path"]
+    else:
+        out_path = str((cache / f"{name}.puppet.json").relative_to(ROOT)); (ROOT / out_path).write_text(json.dumps(pz))
+    sheet = _actout_sheet(vid, float(start), bool(mirror), out_path, name, clip["duration"], cache / f"{name}_sheet.png", kp)
+    return {"clip": name, "puppet": out_path, "saved": bool(save), "report": rep, "keypoints": str(kpf.relative_to(ROOT)),
+            "reused_keypoints": cached, "timing": {**(kp.get("timing") or {}), "total_s": round(time.time() - t0, 1)},
+            "sheet": str(sheet.relative_to(ROOT)) if sheet else None}
+
+
+def _actout_sheet(vid, start, mirror, puppet_rel, clip, dur, out, kp=None, n=6):
+    """take frames (top, cropped around the performer) over the character playing the new clip (bottom) at the same
+    moments"""
+    import tempfile
+    from PIL import Image
+    tdir = Path(tempfile.mkdtemp(prefix="actout_"))
+    times = [round(dur * (i + 0.5) / n, 3) for i in range(n)]
+    col, h = 240, 400
+    spec = {"size": [col * n, h], "bg": "#f4f3ee", "items": [
+        {"puppet": puppet_rel, "x": col * i + col // 2, "y": h - 12, "s": 0.36, "t": t,
+         "timeline": {"clips": [{"clip": clip, "start": 0, "fadeIn": 0, "fadeOut": 0}], "blink": False, "springs": False}} for i, t in enumerate(times)]}
+    (tdir / "spec.json").write_text(json.dumps(spec))
+    try:
+        _run(["node", "tools/pose_still.mjs", str(tdir / "spec.json"), str(tdir / "pz.png")], timeout=300)
+    except Exception:
+        return None
+    sheet = Image.new("RGB", (col * n, h * 2), "#f4f3ee"); sheet.paste(Image.open(tdir / "pz.png").convert("RGB"), (0, h))
+    for i, t in enumerate(times):
+        f = tdir / f"v{i}.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{start + t:.3f}", "-i", str(vid), "-frames:v", "1"] + (["-vf", "hflip"] if mirror else []) + [str(f)], check=False)
+        if not f.exists():
+            continue
+        im = Image.open(f).convert("RGB")
+        fr = (kp or {}).get("frames") or []
+        pose = fr[min(len(fr) - 1, int(round(t * kp["fps"])))].get("pose") if fr else None
+        if pose:   # crop around the performer (keypoints are in the detection frame's pixels)
+            k = im.width / kp["size"][0]; xs = [q[0] * k for q in pose]; ys = [q[1] * k for q in pose]
+            cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+            bh = max((max(ys) - min(ys)) * 1.15, (max(xs) - min(xs)) * 1.2 * h / col, 40)
+            bw = bh * col / h
+            box = Image.new("RGB", (int(bw), int(bh)), "#f4f3ee"); box.paste(im, (-int(cx - bw / 2), -int(cy - bh / 2))); im = box
+        im.thumbnail((col, h))
+        sheet.paste(im, (col * i + (col - im.width) // 2, (h - im.height) // 2))
+    sheet.save(out); shutil.rmtree(tdir, ignore_errors=True)
+    return out
+
+
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------
 def _board_frames(name):
     """one representative moment per shot: a moment into its first line (the picture as it speaks), else its middle"""
@@ -1477,6 +1570,11 @@ def test_golden(update=False, film=""):
             bad.append(("critic earlier", ok_early, ok_wrong))
         failed += 1 if bad else 0
         results.append({"review": "notes and critic", "status": "FAIL" if bad else "ok", **({"cases": bad} if bad else {})})
+    if not film or film == "actout":   # Act it out (plan 3.5): synthetic takes come back as the clips that made them
+        from . import actout as AO
+        bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
+        failed += 1 if bad else 0
+        results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "timeline":   # Studio timeline re-timing (plan 3.1): anchored edits stay anchored
         tmx = {"lines": [{"id": "a", "start": 1.0, "end": 2.0}, {"id": "b", "start": 4.0, "end": 5.5}]}
         cases = [(("a.start+0.2", 1.5), "a.start+0.5"), (("a.end", 2.4), "a.end+0.4"), (("a.start", 4.3), "b.start+0.3"), ((0.7, 3.0), 3.0)]

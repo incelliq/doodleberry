@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Act It Out</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --ok: #3f9a5a; --warn: #c9821c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select, input { font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); } button:disabled { opacity: .5; cursor: default; }
+  main { display: grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap: 16px; padding: 16px; max-width: 1100px; }
+  .stage { position: relative; aspect-ratio: 9 / 16; max-height: 70vh; background: #000; border-radius: 10px; overflow: hidden; }
+  .stage video { width: 100%; height: 100%; object-fit: contain; display: block; } .stage video.mirror { transform: scaleX(-1); }
+  #count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 96px; color: #fff; text-shadow: 0 2px 12px #000; pointer-events: none; }
+  #char { aspect-ratio: 9 / 16; max-height: 70vh; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; width: 100%; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 8px 0; } label { color: var(--muted); }
+  #msg { color: var(--muted); } #report { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; grid-column: 1 / -1; }
+  #report .warn { color: var(--warn); } #report img { width: 100%; border-radius: 6px; margin-top: 8px; }
+  @media (max-width: 700px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Act It Out</h1><span id="msg">Record or upload a short take (5 seconds is plenty), pick a character, make the clip.</span><span style="flex:1"></span><a href="/">Studio ↗</a><a href="/puppet/canvas/index.html">Rig Canvas ↗</a></header>
+<main>
+  <section>
+    <div class="stage"><video id="take" playsinline muted loop></video><div id="count"></div></div>
+    <div class="row"><button id="cam">Use camera</button><button id="rec" disabled>Record 5 s</button>
+      <label class="row" style="margin:0">or a file <input type="file" id="file" accept="video/*" capture="user"></label></div>
+  </section>
+  <section>
+    <svg id="char" viewBox="0 0 450 800" role="img" aria-label="the character playing the clip"></svg>
+    <div class="row"><label for="who">Character</label><select id="who"></select><label for="name">Clip</label><input id="name" value="acted" size="10"></div>
+    <div class="row"><label><input type="checkbox" id="mirror"> mirror</label>
+      <label for="face">face</label><select id="face" title="upper: eyes, brows and gaze (the mouth stays with lip-sync); all: the take's mouth too, for silent reactions"><option>upper</option><option>all</option><option>none</option></select>
+      <label for="arms">arms</label><select id="arms"><option>angles</option><option>reach</option></select>
+      <label for="root">root</label><select id="root"><option value="move">move</option><option value="in_place">in place</option></select></div>
+    <div class="row"><label for="start">start</label><input id="start" type="number" value="0" step="0.1" min="0" style="width:5em"><label for="dur">seconds</label><input id="dur" type="number" value="0" step="0.5" min="0" max="20" style="width:5em">
+      <button class="primary" id="make" disabled>Make clip</button></div>
+  </section>
+  <div id="report" hidden></div>
+</main>
+<script src="/puppet/loader/puppet.js"></script><script src="/puppet/loader/acting.js"></script>
+<script src="/puppet/clips/humanoid.js"></script><script src="/puppet/clips/doodle.js"></script>
+<script>
+const $ = id => document.getElementById(id); let takePath = null, stream = null, puppet = null, clipName = null, t0 = performance.now();
+const msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}, wait = false) {
+  const r = await fetch('/api/' + cmd + (wait ? '?async=1' : ''), { method: 'POST', body: JSON.stringify(args) }); const j = await r.json();
+  if (wait && j.job) { for (;;) { await new Promise(s => setTimeout(s, 1000)); const s = await (await fetch('/api/jobs/' + j.job)).json(); if (s.status !== 'running') { if (s.error) { msg(s.error); throw new Error(s.error); } return s.result; } } }
+  if (j.error) { msg(j.error); throw new Error(j.error); } return j.result;
+}
+async function upload(blob, ext) {
+  msg('uploading the take…'); const r = await fetch('/upload?ext=' + ext, { method: 'POST', body: blob }); const j = await r.json();
+  if (j.error) { msg(j.error); return; } takePath = j.path; $('make').disabled = false; msg('take ready: make the clip');
+  const v = $('take'); if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } v.srcObject = null; v.src = URL.createObjectURL(blob); v.play();
+}
+$('cam').onclick = async () => {
+  try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: 720, height: 1280, facingMode: 'user' }, audio: false }); }
+  catch (e) { msg('no camera: ' + e.message); return; }
+  const v = $('take'); v.srcObject = stream; v.classList.add('mirror'); $('mirror').checked = true; v.play(); $('rec').disabled = false; msg('step back so your whole body (or at least your waist up) is in the picture');
+};
+$('rec').onclick = async () => {
+  for (const n of [3, 2, 1]) { $('count').textContent = n; await new Promise(s => setTimeout(s, 800)); } $('count').textContent = '●';
+  const type = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm', rec = new MediaRecorder(stream, { mimeType: type }), parts = [];
+  rec.ondataavailable = e => parts.push(e.data); rec.start();
+  await new Promise(s => setTimeout(s, 5000)); rec.stop(); await new Promise(s => rec.onstop = s); $('count').textContent = '';
+  upload(new Blob(parts, { type }), type.includes('mp4') ? 'mp4' : 'webm');
+};
+$('file').onchange = e => { const f = e.target.files[0]; if (!f) return; $('take').classList.remove('mirror'); upload(f, (f.name.split('.').pop() || 'mp4').toLowerCase()); };
+$('mirror').onchange = e => $('take').classList.toggle('mirror', e.target.checked);
+$('make').onclick = async () => {
+  $('make').disabled = true; msg('reading the body and face, then retargeting…'); const name = $('name').value.trim() || 'acted';
+  try {
+    const r = await api('actout.clip', { video: takePath, puppet: $('who').value, name, start: +$('start').value, duration: +$('dur').value,
+      mirror: $('mirror').checked, face: $('face').value, arms: $('arms').value, root: $('root').value, save: true }, true);
+    const rep = r.report; puppet = await (await fetch('/' + r.puppet + '?t=' + Date.now())).json(); clipName = name; t0 = performance.now();
+    $('report').hidden = false;
+    $('report').innerHTML = `<b>${name}</b> saved on ${r.puppet} in ${r.timing.total_s} s${r.reused_keypoints ? ' (keypoints reused)' : ''}: ${rep.seconds} s, ${rep.keys} keys over ${rep.tracks.length} parts`
+      + (Object.keys(rep.dropped).length ? `<div>left to idle: ${Object.entries(rep.dropped).map(([k, v]) => k + ' (' + v + ')').join(', ')}</div>` : '')
+      + `<div>face drawings: ${Object.entries(rep.swaps).map(([k, v]) => k + ' ' + v).join(', ') || 'none'} · arms: ${rep.arms && Object.keys(rep.arms).length ? 'reach' : 'angles'} · spine: ${rep.spine}</div>`
+      + rep.warnings.map(w => `<div class="warn">⚠ ${w}</div>`).join('') + (r.sheet ? `<img src="/${r.sheet}?t=${Date.now()}" alt="the take above the character at the same moments">` : '');
+    msg('done: the clip plays by name in any shot (cast clips: ' + name + ')');
+  } finally { $('make').disabled = false; }
+};
+// the character plays the clip in step with the take when it plays, else on its own loop
+function draw() {
+  if (puppet && clipName) {
+    const c = puppet.clips[clipName], v = $('take'), L = (window.CLIPLIB || {})[puppet.template] || window.CLIPLIB.humanoid;
+    const t = takePath && !v.paused && v.duration ? Math.max(0, v.currentTime - +$('start').value) % c.duration : ((performance.now() - t0) / 1000) % c.duration;
+    const pose = Acting.evaluate(puppet, { clips: [{ clip: clipName, start: 0, fadeIn: 0, fadeOut: 0 }], blink: false, springs: false }, t, L.clips, L.presets);
+    $('char').innerHTML = Puppet.render(puppet, 225, 780, { s: 0.7, ...pose });
+  }
+  requestAnimationFrame(draw);
+}
+(async () => {
+  const cast = await api('cast.list'); const ok = cast.puppets.filter(p => p.path.startsWith('cast/'));
+  $('who').innerHTML = ok.map(p => `<option value="${p.path}">${p.name || p.id}</option>`).join('');
+  draw();
+})();
+</script>
+</body>
+</html>

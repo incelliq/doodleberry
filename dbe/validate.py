@@ -72,11 +72,11 @@ def film(d):
             pp = ROOT / c["puppet"]
             if not pp.exists():
                 errs.append(f"shot {s['id']}: puppet {c['puppet']} not found"); continue
-            tpl = json.loads(pp.read_text()).get("template", "humanoid")
-            have = clips.get(tpl, clips.get("humanoid", set()))
+            pz = json.loads(pp.read_text()); tpl = pz.get("template", "humanoid")
+            have = clips.get(tpl, clips.get("humanoid", set())) | set(pz.get("clips") or {})   # v0.7: the character's own clips
             for cl in (c.get("timeline") or {}).get("clips", []):
                 if cl["clip"] not in have:
-                    errs.append(f"shot {s['id']}: clip {cl['clip']!r} is not in the {tpl} clip library")
+                    errs.append(f"shot {s['id']}: clip {cl['clip']!r} is neither in the {tpl} clip library nor one of {c['puppet']}'s own clips")
             for _, pose in (c.get("timeline") or {}).get("poses", []):
                 if "__presets__:" + str(pose) not in have and pose not in (json.loads(pp.read_text()).get("poses") or {}):
                     warns.append(f"shot {s['id']}: pose {pose!r} is neither a {tpl} preset nor one of the puppet's poses")

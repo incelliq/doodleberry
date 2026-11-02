@@ -199,6 +199,16 @@
    "name": "psd-tools 1.26",
    "license": "MIT",
    "use": "PSD layer import and export (dbe/drawing_import.py, dbe/layers_export.py)"
+  },
+  {
+   "name": "MediaPipe 1.2.0 (mediapipe on PyPI)",
+   "license": "Apache-2.0",
+   "use": "Act it out (dbe/actout.py): body landmarks and face blendshapes from a take; optional, requirements-tools.txt"
+  },
+  {
+   "name": "MediaPipe models pose_landmarker_full.task and face_landmarker.task",
+   "license": "Apache-2.0 (model cards)",
+   "use": "fetched on first use into DBE_MODELS (~/.cache/doodleberry/models), pinned by sha256 in dbe/actout.py; not in git"
   }
  ],
  "external": [

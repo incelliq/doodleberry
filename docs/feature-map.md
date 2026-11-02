@@ -81,8 +81,8 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Emotion-aware mouths (talking while smiling or worried) | IDEA | ⬜ | P1 | mouth chart per emotion |
 | Gestures from speech prosody: beats on stressed syllables, tilts on questions, nods from listeners | NEW | ⬜ | P0 | in-house; open co-speech models are NC |
 | Natural-language acting direction ("Pip is nervous, glances at the door") → timeline | NEW | ⬜ | P0 | agent compiles to clips, poses and gaze |
-| Webcam face performance → puppet | PRO (Character Animator) | ⬜ | P1 | MediaPipe (Apache-2.0) |
-| "Act it out": phone video → body pose → clips and IK targets | NEW | ⬜ | P1 | MediaPipe or rtmlib |
+| Webcam face performance → puppet | PRO (Character Animator) | 🟡 | P1 | MediaPipe (Apache-2.0); recorded takes become eye, brow, gaze and mouth keys in a clip (`actout.clip`, plan 3.5); live tracking open (E9) |
+| "Act it out": phone video → body pose → clips and IK targets | NEW | ✅ | P1 | `actout.clip` and Studio /actout (plan 3.5), MediaPipe; rtmlib open |
 | 3D mocap retargeted to 2D | NEW | 🟡 | P2 | CMU retarget exists for 3D only |
 | Animation principles as filters: anticipation, overshoot, follow-through, arcs | IDEA | ⬜ | P1 | post-process on baked curves |
 | Smears and motion lines on fast moves | PRO | 🟡 | P1 | turn smear only |
@@ -274,7 +274,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 |---|---|---|---|---|
 | Rig Canvas: slots, views, pivots, live previews from the clip library | PRO/NEW | ✅ | – | v0.2 |
 | Posing on the canvas by dragging hands and feet (IK) | PRO | ⬜ | P0 | turns posing into direct manipulation |
-| Clip and pose authoring by recording a drag or a webcam take | IDEA | ⬜ | P1 | |
+| Clip and pose authoring by recording a drag or a webcam take | IDEA | ✅ | P1 | Rig Canvas posing (3.3), Act it out (3.5) |
 | Studio: films, shots, renderer routing, render, log | NEW | ✅ | – | basic |
 | Timeline editor: shots, clips, dialogue lanes, scrub with live preview | PRO | ⬜ | P0 | the web player already renders any frame live |
 | Director's desk: chat beside a storyboard strip and animatic | IDEA | ⬜ | P1 | |
@@ -348,7 +348,7 @@ Which open-source pieces implement which features. Licences were verified by the
 | N-bone IK (§2) | FABRIK ported in-house (references: fullik, THREE.IK) | MIT refs | ⬜ P1 |
 | Gesture planner (§3) | In-house: pyworld F0 peaks + espeak stress + LLM semantic tags → clip scheduler | none | ⬜ P0 |
 | Seeded idle noise and handheld camera (§3, §4) | opensimplex | MIT | ⬜ P1 |
-| Act it out / webcam performance (§3, §12) | MediaPipe Pose/Holistic/Face; rtmlib RTMPose for accuracy | Apache-2.0 | ⬜ P1 |
+| Act it out / webcam performance (§3, §12) | MediaPipe Pose/Holistic/Face; rtmlib RTMPose for accuracy | Apache-2.0 | ✅ P1 (MediaPipe Pose + Face Landmarker) |
 | Auto-rig from a drawing (§1) | Animated Drawings ideas + scikit-image skeletonize/skan | MIT / BSD-3 | ⬜ P2 |
 | Bendy limbs in Synfig output (§2) | Synfig Skeleton Deformation + Switch layers in the `.sif` exporter | GPL (CLI subprocess) | ⬜ P1 |
 | Rig Canvas strokes (§1) | perfect-freehand; simplify-js | MIT / BSD-2 | ⬜ P1 |
