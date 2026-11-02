@@ -137,6 +137,34 @@ def voice_build(name):
     return {"duration": t.get("duration"), "lines": len(t.get("lines", [])), "speakers_with_visemes": list((t.get("visemes") or {}).keys()), "log": out}
 
 
+@command("script.slots", name=("string", "film"), wpm=("number", "narration pace the slots are sized for (125-145)", 135),
+         draft=("boolean", "also write a voiceless timing.json from the slots, so the picture (and the sound-off cut) can be made first", True))
+def script_slots(name, wpm=135, draft=True):
+    """Narration slots (plan 2.16): give every script line a fixed start and a maximum length at `wpm`, before any
+    voice exists. The picture is cut on the slots (the sound-off cut is the master); voice.build then places each line
+    at its slot start and keeps the slot's end, fitting a long line with its short alternate ("alt") or up to 15%
+    faster, so a voice recorded later drops in without moving a single cut. Reports lines that still overflow."""
+    d = _film(name); sc = _json(d / "script.json")
+    gap = sc.get("gap_s", 0.4); t = sc.get("lead_in_s", 0.6); rows = []
+    for ln in sc["lines"]:
+        n = len(re.findall(r"[\w']+", ln["text"])); dur = round(n * 60.0 / wpm + 0.25, 3)
+        ln["slot"] = [round(t, 3), dur]
+        rows.append({"line": ln["id"], "start": round(t, 3), "max_s": dur, "words": n, **({"alt_words": len(re.findall(r"[\w']+", ln["alt"]))} if ln.get("alt") else {})})
+        t += dur + gap + ln.get("pause", 0.0)
+    sc["slots"] = {"wpm": wpm}
+    (d / "script.json").write_text(json.dumps(sc, indent=1, ensure_ascii=False))
+    if draft and not (d / "build" / "voice.wav").exists():
+        lines = []
+        for ln in sc["lines"]:
+            s0, mx = ln["slot"]; ws = ln["text"].split(); L = [max(1, len(re.sub(r"\W", "", w))) for w in ws]; tot = sum(L); acc = 0; words = []
+            for w, l in zip(ws, L):   # words spread over the slot by letters (a stand-in until a voice exists)
+                a_ = s0 + (mx - 0.25) * acc / tot; acc += l; words.append({"text": w, "start": round(a_, 3), "end": round(s0 + (mx - 0.25) * acc / tot, 3)})
+            lines.append({"id": ln["id"], "speaker": ln.get("speaker", "narrator"), "fact": ln.get("fact"), "text": ln["text"], "start": s0, "end": round(s0 + mx, 3),
+                          "slot": ln["slot"], "align": "slot", "words": words})
+        (d / "timing.json").write_text(json.dumps({"fps": sc.get("fps", 30), "duration": round(t, 3), "lines": lines, "visemes": {}, "draft": "slots (no voice yet)"}, indent=1))
+    return {"wpm": wpm, "slots": rows, "length_s": round(t, 3), "draft_timing": bool(draft and not (d / "build" / "voice.wav").exists())}
+
+
 def voice_check(name):
     script = _json(FILMS / name / "script.json", {})
     reg = _voice_registry()

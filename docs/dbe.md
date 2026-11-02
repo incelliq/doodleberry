@@ -479,3 +479,15 @@ every direction in the film and lists per character the moves that are free and 
 with the sentences that need them. `films/direct-demo` is staged from its directions alone; with Momo recast as the
 doodle Nib, the same script asks for seven drawings (pupils, two brows, two mouths, a shrug and a head-scratch clip for
 the doodle template).
+
+## Narration slots (plan 2.16)
+`python -m dbe script.slots '{"name": "FILM", "wpm": 135}'` gives every script line a fixed `"slot": [start, max_s]`
+(words at `wpm` plus 0.25 s, the script's gaps and pauses between) before any voice exists. With no voice yet it also
+writes a draft timing.json from the slots (words spread by letters), so the picture and the sound-off cut can be made
+first: the sound-off cut is the master. From then on `voice.build` places every line at its slot start and keeps the
+slot's end as the line's end, so line-relative shot times never move. A line longer than its slot uses its short
+alternate (`"alt"` in script.json) if that is shorter, then up to 15% faster speech; whatever still overflows runs
+into the following pause and is reported (`overflow_s`; `fit` says what was done; `spoken` when the alternate was
+used). `films/slots-demo` was cut on slots, then voiced twice with different casts (the second slowed 35% so line l3
+falls back to its alternate and l4 speeds up 1.18x): the shot changes are identical in all three states
+(s1 0-7.283 s, s2 7.283-17.338 s).

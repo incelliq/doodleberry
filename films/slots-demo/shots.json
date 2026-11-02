@@ -1,0 +1,266 @@
+{
+ "title": "Slots demo",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "street",
+   "start": 0,
+   "end": "l2.end+0.4",
+   "start_line": "l1",
+   "end_line": "l2",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 300,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 0.6,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 2.6,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 6.933,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        4.261,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       7.233
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 780,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 4.011,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 4.647,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 5.592,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        0.45,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        4.411,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       4.311
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "night",
+   "start": "l2.end+0.4",
+   "end": "l4.end+1.0",
+   "start_line": "l3",
+   "end_line": "l4",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 300,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 8.647,
+        "end": 9.547,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 16.388,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        7.833,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        14.605,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       16.688
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 780,
+      "y": 1520,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 14.355,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 14.755,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        7.683,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        14.755,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       14.655
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

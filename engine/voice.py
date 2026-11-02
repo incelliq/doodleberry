@@ -146,23 +146,45 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                 voices[cfg["voice"]] = _km.KokoroVoice(cfg["voice"], voices_dir)
             else:
                 voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"))
-        a, cut0 = trim(synth_line(voices[cfg["voice"]], ln["text"], ln.get("length_scale", script.get("length_scale", 1.0))), offset=True)
-        # phone timings from the voice model itself (plan 2.1: Kokoro's duration predictor), on the trimmed clock
-        phones = [(ph, s0 - cut0, s1 - cut0) for ph, s0, s1 in (getattr(voices[cfg["voice"]], "last_phones", None) or [])]
-        if cfg.get("fx") and fxmod:
-            fx = cfg["fx"] if isinstance(cfg["fx"], dict) else {"preset": cfg["fx"]}
-            p = {**fxmod.PRESETS.get(fx.get("preset"), {"pitch": 1.0, "formant": 1.0, "range": 1.0}),
-                 **{k: v for k, v in fx.items() if k != "preset"}}
-            y, _, _ = fxmod.revoice(a.astype(np.float64), SR_OUT, p["pitch"], p["formant"], p["range"])
-            a = (y * (0.9 / (np.max(np.abs(y)) + 1e-9))).astype(np.float32)
+        def make(text, ls):
+            """synthesize, trim, phone timings on the trimmed clock (plan 2.1), voice fx"""
+            a_, cut0 = trim(synth_line(voices[cfg["voice"]], text, ls), offset=True)
+            ph_ = [(ph, s0 - cut0, s1 - cut0) for ph, s0, s1 in (getattr(voices[cfg["voice"]], "last_phones", None) or [])]
+            if cfg.get("fx") and fxmod:
+                fx = cfg["fx"] if isinstance(cfg["fx"], dict) else {"preset": cfg["fx"]}
+                p = {**fxmod.PRESETS.get(fx.get("preset"), {"pitch": 1.0, "formant": 1.0, "range": 1.0}),
+                     **{k: v for k, v in fx.items() if k != "preset"}}
+                y, _, _ = fxmod.revoice(a_.astype(np.float64), SR_OUT, p["pitch"], p["formant"], p["range"])
+                a_ = (y * (0.9 / (np.max(np.abs(y)) + 1e-9))).astype(np.float32)
+            return a_, ph_
+        ls0 = ln.get("length_scale", script.get("length_scale", 1.0)); spoken = ln["text"]
+        a, phones = make(spoken, ls0)
+        slot = ln.get("slot")   # plan 2.16: [start_s, max_s] fixed before any voice; the picture is cut on slots
+        fit = None
+        if slot:
+            if len(a) / SR_OUT > slot[1] and ln.get("alt"):   # the short alternate first
+                a2, ph2 = make(ln["alt"], ls0)
+                if len(a2) < len(a):
+                    a, phones, spoken, fit = a2, ph2, ln["alt"], "alt"
+            if len(a) / SR_OUT > slot[1]:   # then a little faster (at most 15%)
+                k = max(0.85, slot[1] / (len(a) / SR_OUT) * 0.98)
+                a, phones = make(spoken, ls0 * k); fit = (fit + "+" if fit else "") + f"speed x{1 / k:.2f}"
+            if t < slot[0]:
+                pieces.append(np.zeros(int(round((slot[0] - t) * SR_OUT)), np.float32)); t = slot[0]
+            elif t > slot[0] + 0.01:   # the previous line ran past this slot's start: say so, never move the slot
+                print(f"slot collision: line {ln['id']} starts {t - slot[0]:.2f} s late (the line before overflowed)")
         import importlib.util as _u
         _spec = _u.spec_from_file_location("visemes", Path(__file__).with_name("visemes.py")); _vm = _u.module_from_spec(_spec); _spec.loader.exec_module(_vm)
-        words = _vm.phone_words(phones, ln["text"].split(), voices[cfg["voice"]].phonemize) if phones else None
+        words = _vm.phone_words(phones, spoken.split(), voices[cfg["voice"]].phonemize) if phones else None
         align = "model" if words else "whisper"
-        words = words or align_words(model, a, ln["text"], lang)
+        words = words or align_words(model, a, spoken, lang)
         d = len(a) / SR_OUT
-        lines.append({"id": ln["id"], "speaker": spk, "fact": ln.get("fact"), "text": ln["text"],
-                      "start": round(t, 3), "end": round(t + d, 3), "align": align,
+        slot_extra = {}
+        if slot:   # the line keeps its slot: start at the slot, end at the slot's end, so nothing in the picture moves
+            slot_extra = {"slot": slot, "voice_end": round(t + d, 3), **({"fit": fit} if fit else {}),
+                          **({"overflow_s": round(d - slot[1], 3)} if d > slot[1] + 0.01 else {}), **({"spoken": spoken} if spoken != ln["text"] else {})}
+        lines.append({"id": ln["id"], "speaker": spk, "fact": ln.get("fact"), "text": spoken,
+                      "start": round(t, 3), "end": round(t + (slot[1] if slot else d), 3), "align": align, **slot_extra,
                       "words": [{**w, "start": round(t + w["start"], 3),
                                  "end": round(t + w["end"], 3)} for w in words]})
         mouths.append((spk, t, mouth_track(a, fps)))
@@ -173,9 +195,15 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                 vis.setdefault(spk, []).extend(_vm.line_visemes(voices[cfg["voice"]], lines[-1]["words"]))
         except Exception as e:  # lip-sync falls back to loudness
             print("visemes skipped:", e)
-        pause = gap + ln.get("pause", 0.0)
-        pieces += [a, np.zeros(int(pause * SR_OUT), np.float32)]
-        t += d + pause
+        if slot:
+            pieces.append(a); t += d
+        else:
+            pause = gap + ln.get("pause", 0.0)
+            pieces += [a, np.zeros(int(pause * SR_OUT), np.float32)]
+            t += d + pause
+    if script["lines"] and script["lines"][-1].get("slot"):   # a tail after the last slot, like the unslotted gap
+        sl = script["lines"][-1]["slot"]; tail = max(0.0, sl[0] + sl[1] + gap - t)
+        pieces.append(np.zeros(int(tail * SR_OUT), np.float32))
     audio = np.concatenate(pieces)
     out = film / "build"
     out.mkdir(exist_ok=True)

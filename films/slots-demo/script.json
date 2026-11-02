@@ -1,0 +1,60 @@
+{
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_nicole"
+  },
+  "ravi": {
+   "voice": "kokoro:bm_george"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "l1",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "The club meets tonight on the roof.",
+   "slot": [
+    0.6,
+    3.361
+   ]
+  },
+  {
+   "id": "l2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I bring the telescope?",
+   "pause": 0.5,
+   "slot": [
+    4.411,
+    2.472
+   ]
+  },
+  {
+   "id": "l3",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Only if you promise, really truly promise, to give it back afterwards this time.",
+   "alt": "Only if you give it back this time.",
+   "slot": [
+    7.833,
+    6.472
+   ]
+  },
+  {
+   "id": "l4",
+   "speaker": "momo",
+   "fact": null,
+   "text": "I promise. Mostly.",
+   "slot": [
+    14.755,
+    1.583
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ },
+ "length_scale": 1.35
+}
