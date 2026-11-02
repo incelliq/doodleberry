@@ -1,0 +1,2227 @@
+{
+ "tool": "Adobe After Effects",
+ "version": "After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked",
+ "sources": [
+  {
+   "url": "https://helpx.adobe.com/after-effects/user-guide.html",
+   "title": "Adobe After Effects User Guide (official, helpx.adobe.com)",
+   "used_for": "Chapter list and structure. Direct fetches returned HTTP 403 (CDN bot block), so chapter and topic titles were taken from search-engine listings of the guide's pages; capability wording is our own."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/what-s-new/whats-new.html",
+   "title": "What's new in After Effects (official)",
+   "used_for": "Release feature summaries for the 25.x line and later."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/using/whats-new/2025-2.html",
+   "title": "After Effects feature summary, April 2025 release (25.2)",
+   "used_for": "New preview engine, HDR monitoring, FBX import, animated environment lights."
+  },
+  {
+   "url": "https://www.cgchannel.com/2025/04/adobe-releases-after-effects-25-2/",
+   "title": "CG Channel: Adobe releases After Effects 25.2",
+   "used_for": "Secondary confirmation of 25.2 features."
+  },
+  {
+   "url": "https://www.cgchannel.com/2025/06/adobe-releases-after-effects-25-3/",
+   "title": "CG Channel: Adobe releases After Effects 25.3",
+   "used_for": "25.3 workflow additions (smooth zoom, reveal project file)."
+  },
+  {
+   "url": "https://digitalproduction.com/2025/08/15/after-effects-25-4-lands-in-august-hdr-metadata-text-format-paste-and-layer-staggering/",
+   "title": "Digital Production: After Effects 25.4",
+   "used_for": "Quick Offset staggering, text-format paste, HDR metadata."
+  },
+  {
+   "url": "https://www.newsshooter.com/2026/01/22/whats-new-in-adobe-after-effects-26-0/",
+   "title": "Newsshooter: What's new in After Effects 26.0",
+   "used_for": "Later features noted for context (parametric meshes, variable font axes, SVG import, audio dynamics)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/animate-in-after-effects/animation-keyframes/keyframe-interpolation.html",
+   "title": "Keyframe interpolation in After Effects",
+   "used_for": "Animation and keyframes chapter."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/using/tracking-stabilizing-motion-cs5.html",
+   "title": "Tracking and stabilization motion workflows",
+   "used_for": "Tracking chapter (also tracking-3d-camera-movement.html, face tracking, keying pages)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/animating-text/text-animation/animating-text.html",
+   "title": "Animating text in After Effects",
+   "used_for": "Text chapter (with creating-motion-graphics-templates.html and variable font axes pages)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/drawing-painting-and-paths/vector-graphics-and-raster-images/overview-shape-layers-paths-vector.html",
+   "title": "Overview of shape layers, paths and vector graphics",
+   "used_for": "Drawing, painting and paths chapter (with paint tools and Roto Brush pages)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/work-with-transparency-and-compositing/work-with-alpha-channels-and-masks/alpha-channels-masks-mattes.html",
+   "title": "Use alpha channels, masks and mattes",
+   "used_for": "Transparency and compositing chapter."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/using/opencolorio-aces-color-management.html",
+   "title": "OpenColorIO and ACES color management",
+   "used_for": "Colour chapter (with color-management.html)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/using/advanced-3d-renderer.html",
+   "title": "Advanced 3D renderer",
+   "used_for": "3D chapter (with image-based-lighting, cast-and-accept-shadows, VR pages)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/using/multi-frame-rendering.html",
+   "title": "Preview and render with Multi-Frame Rendering",
+   "used_for": "Rendering and performance chapters (with memory-storage1.html)."
+  },
+  {
+   "url": "https://helpx.adobe.com/after-effects/desktop/collaboration-with-others/team-projects/collaborate-using-team-projects.html",
+   "title": "Collaborate using Team Projects",
+   "used_for": "Collaboration chapter (with the Frame.io page)."
+  },
+  {
+   "url": "https://aescripts.com/bodymovin",
+   "title": "Bodymovin (third-party Lottie exporter for After Effects)",
+   "used_for": "Lottie export capability, which is a plug-in rather than a built-in feature."
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Getting started: setup, formats and help",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/get-started/understand-after-effects-workflow/workflows.html",
+   "capabilities": [
+    {
+     "id": "ae-start-1",
+     "capability": "Published system, GPU and hardware requirements plus a list of every import and export format and codec the app reads or writes.",
+     "pro_use": "Studios check a workstation or render node against the list before a job, and confirm a client's codec is readable before footage arrives.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor",
+       "engine.info"
+      ],
+      "note": "engine.doctor checks the machine (core, audio, tools) and prints the exact fix for each gap; engine.info reports the renderers and tool versions found. Doodleberry has no general codec matrix because it reads few footage formats."
+     }
+    },
+    {
+     "id": "ae-start-2",
+     "capability": "Preferences for application-wide defaults: auto-save, default interpolation, still-sequence frame rate, import interpretation rules, cache locations.",
+     "pro_use": "A facility sets house defaults once so every artist's comps start the same way.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "dbe/profiles.json",
+       "shots.json defaults (size, fps)"
+      ],
+      "note": "House defaults live in versioned data: dbe/profiles.json (encoding profiles, per-style QA thresholds) and schema defaults. There is no per-user preferences store; it is not needed for agents."
+     }
+    },
+    {
+     "id": "ae-start-3",
+     "capability": "Customisable keyboard shortcuts with a visual keyboard map.",
+     "pro_use": "Animators remap keys to speed up repetitive keyframing and timeline work.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is driven by commands from agents and people (CLI, HTTP, MCP, Studio); there is no keyboard-heavy editing surface whose shortcuts would need mapping."
+     }
+    },
+    {
+     "id": "ae-start-4",
+     "capability": "A built-in AI assistant that answers how-to questions about the app and can carry out some actions in the project.",
+     "pro_use": "Newer artists ask it how to do a task instead of searching the manual; experienced users use it for repetitive setup.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Agent-native by design: engine.commands exposes every command with its input schema as an agent tool (MCP), so an agent can both explain and do. A chat beside the storyboard is WP-21."
+     }
+    },
+    {
+     "id": "ae-start-5",
+     "capability": "Knowledge base of known issues, fixed issues and FAQs per release.",
+     "pro_use": "Teams check known issues before upgrading mid-production.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "In-house tool with its history in git and the docs (docs/build-plan.md, feature map); docs.check keeps the docs and command registry in agreement, but a public issue knowledge base has no role here."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Workspaces and interface",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/get-started/understand-after-effects-workflow/workflows.html",
+   "capabilities": [
+    {
+     "id": "ae-workspace-1",
+     "capability": "Dockable, saveable workspaces made of panels (project, composition viewer, timeline, effect controls, properties) arranged per task.",
+     "pro_use": "Artists keep separate layouts for animation, compositing, review and text work and switch between them per stage.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "film.preview",
+       "WP-21"
+      ],
+      "note": "Studio has fixed pages per task (/timeline, /board, /plan, Rig Canvas, /doodle, /actout) built on timeline.get and the player page from film.preview; user-arranged panels and a director's desk combining storyboard, animatic and chat are WP-21."
+     }
+    },
+    {
+     "id": "ae-workspace-2",
+     "capability": "A context-sensitive Properties panel showing the most-used controls of whatever layer is selected, editable in place.",
+     "pro_use": "Motion designers tweak position, scale, text and shape settings without opening the layer's full property tree.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "film.write",
+       "WP-19"
+      ],
+      "note": "timeline.edit edits clip layers from the Studio timeline and film.write writes any source file with validation; an in-place property inspector for every shot, cast and overlay field is not built (Studio timeline 2, WP-19)."
+     }
+    },
+    {
+     "id": "ae-workspace-3",
+     "capability": "The core workflow: create a project, build compositions from footage and layers, animate, add effects, preview, then render.",
+     "pro_use": "Every job follows this spine, which teams map onto their own stages and checklists.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.write",
+       "film.preview",
+       "film.render"
+      ],
+      "note": "Doodleberry's spine is data-first: film.create, edit brief/facts/script/shots with film.write, preview with film.preview, then film.render (which also mixes and runs QA)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Projects and compositions",
+   "source_url": "https://helpx.adobe.com/after-effects/using/composition-basics.html",
+   "capabilities": [
+    {
+     "id": "ae-projects-1",
+     "capability": "A project file that references (not copies) footage and organises items into folders, with relinking of missing or replaced files.",
+     "pro_use": "Large jobs keep hundreds of assets in a tidy folder structure and swap a placeholder for final art in one step.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ (brief.md, facts.json, script.json, shots.json, score.json)",
+       "cast library (cast/)"
+      ],
+      "note": "A film is a folder of text files referencing cast puppets and sets by path; replacing a puppet file updates every shot that uses it. film.get returns the whole set."
+     }
+    },
+    {
+     "id": "ae-projects-2",
+     "capability": "Composition settings: frame size, pixel aspect ratio, frame rate, duration, background colour, start timecode.",
+     "pro_use": "Deliverable specs (9:16 social, 16:9 broadcast, 24/25/30 fps) are fixed per composition at the start of a job.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json size",
+       "shots.json fps",
+       "shots.json aspects"
+      ],
+      "note": "Size and fps are film fields validated on write; aspects re-stage one film natively for 16:9 and 1:1. Pixel aspect and timecode are not modelled (square pixels only)."
+     }
+    },
+    {
+     "id": "ae-projects-3",
+     "capability": "Nesting and pre-composing: grouping layers into a sub-composition that can be reused, transformed and effected as one layer.",
+     "pro_use": "Character rigs, lower thirds and repeated graphics are built once as precomps and dropped into many shots.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-36"
+      ],
+      "note": "Puppets and kit elements are reusable units and film.cuts can insert segments from other films' renders, but a shot cannot contain another shot or group arbitrary layers; nested scene graphs belong with the per-shot compositor (WP-36)."
+     }
+    },
+    {
+     "id": "ae-projects-4",
+     "capability": "Composition and layer markers holding comments, chapter points, cue points and durations.",
+     "pro_use": "Editors and animators mark beats, sync points and client notes on the timeline.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "script line ids + timing.json (line-relative times)",
+       "shots.json cues",
+       "score.json beat grid"
+      ],
+      "note": "Spoken lines are named time anchors ('hi.start+0.2') that any time field can reference, cues mark sound events and film.beats reports the beat grid; frame notes are review.add (see Collaboration)."
+     }
+    },
+    {
+     "id": "ae-projects-5",
+     "capability": "Composition Profiler showing how much render time each layer, effect and mask costs.",
+     "pro_use": "Compositors find the one expensive effect that is slowing previews and renders.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "No per-element cost breakdown. WP-20 brings a measured cost and time estimate before rendering; per-element profiling should join it."
+     }
+    },
+    {
+     "id": "ae-projects-6",
+     "capability": "Pre-rendering a heavy nested composition and swapping the render in as a proxy.",
+     "pro_use": "Finished background passes are baked once so the rest of the comp previews quickly.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "film.render re-renders only shots whose content hash changed and dedupes identical frames; a static-layer cache for unchanging set layers is WP-15."
+     }
+    },
+    {
+     "id": "ae-projects-7",
+     "capability": "Project and composition templates to start new jobs from a standard structure.",
+     "pro_use": "Studios start every episode of a series from the same template project with naming and render settings in place.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.from_template",
+       "film.create"
+      ],
+      "note": "film.from_template builds a storyboard from a format template (myth vs data, explainer, dialogue) and a brief; film.create makes an empty film."
+     }
+    },
+    {
+     "id": "ae-projects-8",
+     "capability": "Auto-save and incremental versions of the project file.",
+     "pro_use": "Artists recover from crashes and roll back to an earlier version of a shot.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films as text in git"
+      ],
+      "note": "Films are text under version control, so every change is a diffable commit and any old version re-renders exactly (frames are pure functions of time)."
+     }
+    },
+    {
+     "id": "ae-projects-9",
+     "capability": "Scene Edit Detection: finding the cuts inside an imported edited video and splitting it into layers.",
+     "pro_use": "Used when an offline edit or a reference cut arrives as one flat movie.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry builds pictures from shot data, so shot boundaries are always known; it does not ingest flattened edits."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Importing footage",
+   "source_url": "https://helpx.adobe.com/after-effects/using/importing-interpreting-footage-items.html",
+   "capabilities": [
+    {
+     "id": "ae-import-1",
+     "capability": "Importing layered Photoshop and Illustrator files as compositions, keeping each layer separate and editable.",
+     "pro_use": "Illustrators design characters and backgrounds in layered files that animators bring in with layers intact.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "puppet.import reads layered SVG, PSD and ORA and builds a rig from layer names (parts, swaps, pivot markers); Krita .kra and Illustrator .ai import are WP-18."
+     }
+    },
+    {
+     "id": "ae-import-2",
+     "capability": "Importing SVG files directly as editable vector shape layers (added in the 26.0 release).",
+     "pro_use": "Vector assets from design tools come in without a detour through Illustrator.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Layered SVG is a native input of puppet.import (as puppet parts, not free-floating shape layers in a shot)."
+     }
+    },
+    {
+     "id": "ae-import-3",
+     "capability": "Importing video and audio footage and interpreting it: frame rate, field order, pixel aspect, looping, start timecode.",
+     "pro_use": "Live-action plates, stock clips and reference video are conformed to the composition's settings before compositing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Shots have no footage layer; video is only read as performance input (actout.clip). A video or plate layer belongs with the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "ae-import-4",
+     "capability": "Interpreting alpha as straight or premultiplied to avoid fringes on semi-transparent edges.",
+     "pro_use": "Compositors fix halos on rendered elements from other packages.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Internally Synfig and Grease Pencil renders are composited with alpha over the set by ffmpeg; user-supplied footage with alpha needs WP-36 (and alpha outputs WP-23)."
+     }
+    },
+    {
+     "id": "ae-import-5",
+     "capability": "Importing still images and numbered image sequences (PNG, TIFF, EXR) as footage.",
+     "pro_use": "Painted backgrounds, hand-drawn frame sequences and CG passes arrive as stills or sequences.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap",
+       "WP-35"
+      ],
+      "note": "Photos and scans become raster-part puppets (puppet.from_ink, doodle.snap); a sequence of drawings with exposures is the drawn-level part type in WP-35. Painted background plates as set layers would sit in WP-36."
+     }
+    },
+    {
+     "id": "ae-import-6",
+     "capability": "Recorded voice-over and music import, placed on the timeline and synced to picture.",
+     "pro_use": "Productions bring in recorded dialogue and licensed music and cut the picture to them.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "script.slots",
+       "voice.build",
+       "WP-13"
+      ],
+      "note": "Narration slots and word alignment exist (script.slots, voice.build aligns words); fitting recorded human takes into slots with phone-level alignment is WP-13."
+     }
+    },
+    {
+     "id": "ae-import-7",
+     "capability": "Importing 3D models (glTF, GLB, OBJ and, since 25.2, FBX) into a composition.",
+     "pro_use": "Motion designers drop product models or props into 2D designs and light them in place.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-42"
+      ],
+      "note": "puppet.from_blend flattens a Blender cut-out rig into a 2D puppet; GLB models play in the three.js 3D pages (tools/three/run3d.mjs, e.g. films/screwworm-3d) but not through a command. 3D sets and models in films are WP-42."
+     }
+    },
+    {
+     "id": "ae-import-8",
+     "capability": "HDR footage import and export with colour metadata (HLG and PQ, CICP tags; extended in 25.4).",
+     "pro_use": "HDR deliverables for streaming and broadcast keep correct colour tags end to end.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "SDR only today; an HDR master is in WP-37."
+     }
+    },
+    {
+     "id": "ae-import-9",
+     "capability": "Importing Premiere Pro sequences and After Effects projects into a project.",
+     "pro_use": "Editors send a cut to motion graphics, who rebuild it as compositions.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-22"
+      ],
+      "note": "film.cuts writes OTIO per cut for editors; reading timelines back in (FCPXML, EDL, round trips through melt) is WP-22."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers, markers and camera",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/work-with-layers/work-with-layer-and-composition-markers/layer-markers-composition-markers.html",
+   "capabilities": [
+    {
+     "id": "ae-layers-1",
+     "capability": "Many layer types: footage, solids, text, shapes, nulls, adjustment layers, cameras and lights, all stacked in one timeline.",
+     "pro_use": "Everything in a motion graphics shot is a layer, so artists build scenes by stacking and ordering them.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.write",
+       "WP-36"
+      ],
+      "note": "A shot has a fixed stack: set, underlays, cast, overlays (kit elements, signs, text), bubbles, then film-level captions, plus camera keys. No free solids, nulls or adjustment layers; those come with the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "ae-layers-2",
+     "capability": "Layer in and out points, trimming, sliding and splitting layers in time.",
+     "pro_use": "Editors retime when a graphic appears and cut a layer to reuse half of it.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Clip layers move and resize with timeline.edit; shot, overlay and cue times are start/end fields (line-relative allowed). Dragging lines and shots in Studio is WP-19."
+     }
+    },
+    {
+     "id": "ae-layers-3",
+     "capability": "Parenting layers to each other and to null objects so children inherit transforms.",
+     "pro_use": "Rigs and grouped graphics are driven from one controller null.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts parent (bone hierarchy)",
+       "prop attach keys (parent switching)",
+       "kit face attach {cast, part}"
+      ],
+      "note": "Hierarchy exists inside puppets and for props passing from hand to hand; arbitrary parenting between unrelated shot elements does not."
+     }
+    },
+    {
+     "id": "ae-layers-4",
+     "capability": "Transform properties on every layer: anchor point, position, scale, rotation, opacity, each keyframable.",
+     "pro_use": "The basic vocabulary of motion graphics: moves, pops, spins and fades.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.write",
+       "WP-36"
+      ],
+      "note": "Characters have place keys (x, y, scale, flip) and per-part angles via clips; kit elements have position, size and start/end with built-in fades. Whole-element rotation and opacity keys are missing; general layer transforms should land with WP-36."
+     }
+    },
+    {
+     "id": "ae-layers-5",
+     "capability": "Blending modes (multiply, screen, add, overlay, colour dodge and others) per layer.",
+     "pro_use": "Used for light effects, shadows, textures laid over art and colour treatments.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No user-facing blend modes; the node compositor (WP-36) lists them."
+     }
+    },
+    {
+     "id": "ae-layers-6",
+     "capability": "Layer styles such as drop shadow, inner glow, bevel and stroke, editable like Photoshop styles.",
+     "pro_use": "Quick finishing on text and logos.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Only ground shadows and toon cel shading/rims exist; the AI-look lint (WP-04) deliberately flags drop shadows and glows, so styles would be opt-in within WP-36."
+     }
+    },
+    {
+     "id": "ae-layers-7",
+     "capability": "Layer and composition markers that carry comments, durations and cue information.",
+     "pro_use": "Animators note client feedback and sync points directly on layers.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "review.add",
+       "review.list"
+      ],
+      "note": "review.add pins a note to a frame; review.list shows notes with status. Sync points are line-relative times and cues (see Projects)."
+     }
+    },
+    {
+     "id": "ae-layers-8",
+     "capability": "3D layers: any 2D layer can move and rotate in X, Y and Z and be seen through a camera.",
+     "pro_use": "Motion designers build 2.5D parallax scenes from flat artwork.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No 2.5D layers in shot films; true 2D multiplane depth (layers on planes, parallax) is WP-36. Code-built three.js pages exist for full 3D (see 3D chapter)."
+     }
+    },
+    {
+     "id": "ae-layers-9",
+     "capability": "Camera moves on a 2D frame: pan, zoom, push-in, follow a subject, handheld shake.",
+     "pro_use": "Directors add life and emphasis without redrawing art.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json camera [[t, [cx, cy, zoom]]]",
+       "shots.json camera_auto",
+       "style.float"
+      ],
+      "note": "Camera keys are baked into every renderer; camera_auto frames the speaker, eases between shots, punches in on emphasis and adds seeded handheld; float adds slow drift."
+     }
+    },
+    {
+     "id": "ae-layers-10",
+     "capability": "3D cameras (one-node and two-node) with focal length, point of interest, orbit and depth of field.",
+     "pro_use": "Used for dimensional fly-throughs and focus pulls across layered art.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Camera is 2D (centre and zoom). Depth of field is available only as blur filters in hand-coded scene.js films (engine/draw.js); a multiplane camera with depth of field is WP-36."
+     }
+    },
+    {
+     "id": "ae-layers-11",
+     "capability": "Lights (point, spot, parallel, ambient, environment) that shade 3D layers and cast shadows.",
+     "pro_use": "Lighting gives flat art depth and mood and unifies elements from different sources.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "style.toon gives a fixed-direction cel shadow and rim on vector parts, which is the 2D answer; real lights on layers or models come with the 3D layer (WP-42)."
+     }
+    },
+    {
+     "id": "ae-layers-12",
+     "capability": "Continuous rasterisation of vector layers so they stay sharp at any scale.",
+     "pro_use": "Logos and shapes can be pushed in close without softening.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "renderer: svg"
+      ],
+      "note": "Vector puppets, sets and kit elements are drawn as SVG every frame, so they are resolution-independent (4K for free); raster parts are the exception."
+     }
+    },
+    {
+     "id": "ae-layers-13",
+     "capability": "Quick Offset (25.4): staggering the timing of several selected layers or keyframes in one gesture.",
+     "pro_use": "Cascading reveals of lists, letters or icons in seconds.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Staggers exist inside kit elements (title per_word, draw stagger) and acting; a general stagger edit on many selected items in the timeline belongs with timeline 2 (WP-19)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation, keyframes and time",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/animate-in-after-effects/animation-keyframes/keyframe-interpolation.html",
+   "capabilities": [
+    {
+     "id": "ae-anim-1",
+     "capability": "Keyframes on any property, with setting, selecting, copying, pasting and moving keys across layers.",
+     "pro_use": "The base of all hand animation and motion graphics work.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json keys (place, look, view, poses, ik, camera)",
+       "puppet clips tracks",
+       "Rig Canvas Key / Save clip"
+      ],
+      "note": "Keys are [time, value] pairs in film and puppet data, line-relative where useful; the Rig Canvas records keyed poses into clips. Not every field is keyable (e.g. element opacity)."
+     }
+    },
+    {
+     "id": "ae-anim-2",
+     "capability": "Temporal interpolation choices per key: linear, Bezier, auto and continuous Bezier, and hold.",
+     "pro_use": "Animators control whether a move snaps, glides or cushions into a pose.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Clips ease between keys with a smooth curve, views and swaps hold, and the scene.js library (engine/timeline.js) offers named eases (cubic, expo, back). shots.json keys have no per-key interpolation choice; that comes with the curve editor (WP-19)."
+     }
+    },
+    {
+     "id": "ae-anim-3",
+     "capability": "Graph Editor: value and speed graphs with tangent handles for shaping motion.",
+     "pro_use": "Senior animators polish timing and spacing on curves rather than by moving keys.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "No curve editor; WP-19 lists a graph editor for keys."
+     }
+    },
+    {
+     "id": "ae-anim-4",
+     "capability": "Keyframe assistants: Easy Ease in/out, exponential scale, sequence layers, time-reverse keys.",
+     "pro_use": "One-click cushioning and quick sequencing of many layers.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "acting.plan",
+       "WP-19"
+      ],
+      "note": "Ease is the default, the principles filter adds anticipation and overshoot, and acting.plan sequences gestures from the voice; key-level assistants on a selection are WP-19."
+     }
+    },
+    {
+     "id": "ae-anim-5",
+     "capability": "Spatial interpolation and editable motion paths in the viewer, with auto-orient along the path.",
+     "pro_use": "Moves follow designed arcs; a plane or arrow turns to face where it is going.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Travel is straight or ballistic (props); follow-path constraints and walking along a path are WP-11, motion arcs are WP-09."
+     }
+    },
+    {
+     "id": "ae-anim-6",
+     "capability": "Roving keyframes that redistribute timing so speed stays even along a multi-key path.",
+     "pro_use": "Smooth camera and object moves through several positions.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Not available; it is a key-editing feature for the curve editor work in WP-19."
+     }
+    },
+    {
+     "id": "ae-anim-7",
+     "capability": "Puppet tools: pins placed on flat artwork deform it as a mesh (position, starch, bend and advanced pins).",
+     "pro_use": "Flat illustrations get organic, rubbery motion without a full rig.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet mesh strokes with skinning (v0.5)",
+       "bendy limbs",
+       "chains (v0.6, FABRIK)",
+       "springs"
+      ],
+      "note": "Doodleberry's puppets deform by skinned meshes, bendy limbs and N-bone chains with springs: a rig rather than pins, renderers other than SVG pending (WP-14)."
+     }
+    },
+    {
+     "id": "ae-anim-8",
+     "capability": "Animating shape and mask paths by keying the path itself, morphing one outline into another.",
+     "pro_use": "Logo morphs, liquid transitions and shape-changing icons.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "Shapes change by swap (drawing substitution), not by path morph; morphs between views are planned in WP-43, and general path morphing for graphics should join it."
+     }
+    },
+    {
+     "id": "ae-anim-9",
+     "capability": "Motion Sketch: recording a mouse drag in real time as position keyframes.",
+     "pro_use": "Quick organic paths for flies, sparks or a hand-held feel.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.save",
+       "actout.clip"
+      ],
+      "note": "The Rig Canvas records drags into poses and clips that puppet.save stores; actout.clip turns a filmed performance into a clip."
+     }
+    },
+    {
+     "id": "ae-anim-10",
+     "capability": "Wiggler and Smoother assistants: adding seeded random variation to keys, or thinning noisy keys.",
+     "pro_use": "Organic jitter on flickers and handheld moves; cleaning tracked or recorded data.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "camera_auto.handheld",
+       "timeline seed",
+       "boil seeds"
+      ],
+      "note": "Variation comes from seeded noise (camera handheld, idle, boil); actout.clip reduces recorded keys against the played curve."
+     }
+    },
+    {
+     "id": "ae-anim-11",
+     "capability": "Time remapping, time stretch, freeze frames and reverse playback of layers.",
+     "pro_use": "Speed ramps, holds on a pose and slow-motion beats.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.soundoff",
+       "WP-19"
+      ],
+      "note": "Clip layers have a speed field and the sound-off cut warps film time through timewarp knots (film.soundoff); arbitrary per-shot ramps, freezes and reverse are not exposed. Editing them in the timeline fits WP-19."
+     }
+    },
+    {
+     "id": "ae-anim-12",
+     "capability": "Frame blending and pixel-motion interpolation when footage is retimed.",
+     "pro_use": "Smooth slow motion from footage shot at normal speed.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Picture is re-rendered at the warped time (every frame is a pure function of time), so there are no source frames to blend."
+     }
+    },
+    {
+     "id": "ae-anim-13",
+     "capability": "Per-layer motion blur with shutter angle and phase.",
+     "pro_use": "Fast motion graphics read naturally and lose strobing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Speed lines exist (fx); sub-frame motion blur on fast shots is WP-15."
+     }
+    },
+    {
+     "id": "ae-anim-14",
+     "capability": "Posterize-time style stepping so animation plays on twos or threes.",
+     "pro_use": "A hand-made, limited-animation look in motion graphics.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "style.step (12, 8, 6)"
+      ],
+      "note": "Stepped timing per shot or character, with identical frames deduplicated at render."
+     }
+    },
+    {
+     "id": "ae-anim-15",
+     "capability": "Data-driven animation: charts and properties driven from JSON or CSV files.",
+     "pro_use": "Infographics update by swapping the data file instead of re-animating.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.data"
+      ],
+      "note": "film.data fetches cached sources, runs analysis scripts and binds results into text ({{path|format}}) and charts; it reports which shots and lines the new data changes."
+     }
+    },
+    {
+     "id": "ae-anim-16",
+     "capability": "Converting audio amplitude to keyframes to drive animation from sound.",
+     "pro_use": "Visuals that pulse to the music or the voice.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "acting.plan",
+       "film.beats"
+      ],
+      "note": "acting.plan places gestures from loudness, pitch and stress of the voice; film.beats gives the beat grid for cutting and cues. Raw amplitude-to-property mapping is not exposed."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Motion tracking, stabilising and keying",
+   "source_url": "https://helpx.adobe.com/after-effects/using/tracking-stabilizing-motion-cs5.html",
+   "capabilities": [
+    {
+     "id": "ae-track-1",
+     "capability": "Point tracking (one, two or four points, corner pin) and applying the track to another layer or effect.",
+     "pro_use": "Labels, screens and effects are stuck to moving objects in footage.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "kit face attach {cast, part}",
+       "prop attach keys",
+       "bubble tails track the speaker"
+      ],
+      "note": "Doodleberry needs no image tracking: every element's position is known, so attaching to a moving part is exact. Tracking live footage is outside its scope."
+     }
+    },
+    {
+     "id": "ae-track-2",
+     "capability": "Stabilising shaky footage (point stabilise and Warp Stabilizer).",
+     "pro_use": "Handheld plates are smoothed before compositing.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No live-action plates. The related need, compensating camera motion in Act it out takes, is in WP-12."
+     }
+    },
+    {
+     "id": "ae-track-3",
+     "capability": "3D Camera Tracker: solving camera motion from footage and placing 3D elements in the scene.",
+     "pro_use": "Integrating graphics and text into live-action shots with matched perspective.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Films are fully synthetic, so the camera is known exactly; there is nothing to solve."
+     }
+    },
+    {
+     "id": "ae-track-4",
+     "capability": "Planar tracking through the bundled Mocha plug-in.",
+     "pro_use": "Screen replacements and tracking flat surfaces that rotate in perspective.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No footage pipeline."
+     }
+    },
+    {
+     "id": "ae-track-5",
+     "capability": "Face tracking: following face outlines and detailed features (eyes, brows, mouth) to drive effects or animation.",
+     "pro_use": "Retouching, masking faces, or driving a character from a performer's face.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "actout.clip"
+      ],
+      "note": "actout.clip reads face blendshapes (MediaPipe Face Landmarker) and makes eye, brow, gaze and mouth keys on a character; live tracking is WP-12."
+     }
+    },
+    {
+     "id": "ae-track-6",
+     "capability": "Mask tracking: masks that follow an object through footage.",
+     "pro_use": "Isolating a moving region for colour or blur.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No footage to mask; masks themselves are a gap under Drawing and paths (WP-36)."
+     }
+    },
+    {
+     "id": "ae-track-7",
+     "capability": "Keying: Keylight and other colour keys with spill suppression and matte choking.",
+     "pro_use": "Pulling green-screen subjects and compositing them over new backgrounds.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No green-screen footage; Act it out reads pose from ordinary takes and never composites the performer. If live action is ever composited it would come with footage layers in WP-36."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Text and graphics",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/animating-text/text-animation/animating-text.html",
+   "capabilities": [
+    {
+     "id": "ae-text-1",
+     "capability": "Point and paragraph text layers with full typographic control: font, size, tracking, leading, alignment, fill and stroke.",
+     "pro_use": "Titles, lower thirds and on-screen copy set to a brand's type system.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.write",
+       "WP-17"
+      ],
+      "note": "Text comes as overlays (text, sign), kit elements (title, card, paper, quote, citation, wordmark), bubbles and styled captions (caption_style), in pinned OFL fonts with Sinhala fallback; per-character typographic control and narration boxes are WP-17."
+     }
+    },
+    {
+     "id": "ae-text-2",
+     "capability": "Text animators with range, wiggly and expression selectors that animate properties per character, word or line.",
+     "pro_use": "Kinetic typography: words pop, cascade and jitter in designed patterns.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "Word-highlight captions (burned in by film.render), per-word title pop-ins and voice-synced bubble reveals exist; general per-character animators are WP-15 (kinetic typography)."
+     }
+    },
+    {
+     "id": "ae-text-3",
+     "capability": "Text animation presets such as typewriter, fade or blur in by character or word.",
+     "pro_use": "Fast, consistent text reveals across a series.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-17"
+      ],
+      "note": "Bubbles reveal word by word in sync with the voice; letter-by-letter typewriter with punctuation pauses is WP-17."
+     }
+    },
+    {
+     "id": "ae-text-4",
+     "capability": "Text on a path, with characters flowing along a curve.",
+     "pro_use": "Titles that follow a shape, circular badges, text riding a line.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Not available; fits kinetic typography in WP-15."
+     }
+    },
+    {
+     "id": "ae-text-5",
+     "capability": "Source-text expressions and data-driven text that change with other properties or a data file.",
+     "pro_use": "Counters, live numbers and template text filled from data.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.data"
+      ],
+      "note": "Any text in shots.json or script lines can hold {{path|format}} bindings to data.json, and counter elements animate numbers."
+     }
+    },
+    {
+     "id": "ae-text-6",
+     "capability": "Animating variable font axes such as weight and width (added in 26.0).",
+     "pro_use": "Type that breathes or swells for emphasis from one font file.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Not available; would be part of kinetic typography (WP-15)."
+     }
+    },
+    {
+     "id": "ae-text-7",
+     "capability": "Extruded 3D text and shapes with bevels in the Advanced 3D renderer.",
+     "pro_use": "Dimensional titles and logo stings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "No 3D text; the 3D layer (WP-42) would carry it."
+     }
+    },
+    {
+     "id": "ae-text-8",
+     "capability": "Motion Graphics templates: packaging a composition with chosen editable controls for editors in another app.",
+     "pro_use": "Design teams ship branded lower thirds and titles that editors fill in without opening the project.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.from_template",
+       "brand.check",
+       "WP-29"
+      ],
+      "note": "Format templates and kit elements take fields, and brand kits flow into every film that opts in; packaging rigs, boil presets and loop packs as reusable templates for others is WP-29."
+     }
+    },
+    {
+     "id": "ae-text-9",
+     "capability": "Essential Properties: overriding chosen properties on each instance of a nested composition.",
+     "pro_use": "One master graphic used many times with different text, colour or image per instance.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json set_opts",
+       "puppet palette slots (runtime recolour)"
+      ],
+      "note": "Each use of a set or puppet can recolour or reconfigure it without copying the source; arbitrary property overrides would need nested scenes (WP-36)."
+     }
+    },
+    {
+     "id": "ae-text-10",
+     "capability": "Pasting text formatting and character styles between text layers (25.4).",
+     "pro_use": "Keeping type consistent across many titles.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "brand/<id>.json (fonts, caption colours)",
+       "shots.json caption_style"
+      ],
+      "note": "Style is set centrally in the brand kit and caption style, so consistency is by construction rather than copy and paste."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Drawing, painting and paths",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/drawing-painting-and-paths/vector-graphics-and-raster-images/overview-shape-layers-paths-vector.html",
+   "capabilities": [
+    {
+     "id": "ae-draw-1",
+     "capability": "Shape layers: parametric rectangles, ellipses, polygons and stars plus free Bezier paths with fills and strokes.",
+     "pro_use": "Flat-design motion graphics, icons and diagrams drawn inside the app.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "overlays/underlays: draw {paths, stroke, width, fill}",
+       "Rig Canvas vector drawing"
+      ],
+      "note": "Graphics are kit elements, code-drawn sets and Rig Canvas drawings for puppets; there are no parametric primitive shapes to place freely in a shot."
+     }
+    },
+    {
+     "id": "ae-draw-2",
+     "capability": "Shape operators: repeater, merge paths, offset paths, pucker and bloat, twist, round corners, zig zag.",
+     "pro_use": "Procedural patterns, bursts and stylised outlines from one simple shape.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "No path operators; repeaters and instancing fit procedural 2D in WP-42."
+     }
+    },
+    {
+     "id": "ae-draw-3",
+     "capability": "Trim Paths: animating how much of a stroke is drawn, for write-on and line-draw reveals.",
+     "pro_use": "Signature reveals, routes on maps and diagrams that draw themselves.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "overlays: draw (duration/until, stagger)"
+      ],
+      "note": "The kit's draw element makes paths draw themselves and then optionally fill, timed to a line."
+     }
+    },
+    {
+     "id": "ae-draw-4",
+     "capability": "Wiggle paths and turbulent displacement for a hand-drawn, shimmering line.",
+     "pro_use": "Gives clean vector art a boiling, hand-made feel.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "style.boil {fps, amount, freq}"
+      ],
+      "note": "Deterministic line boil on characters, bubbles and signs (cycled seeds)."
+     }
+    },
+    {
+     "id": "ae-draw-5",
+     "capability": "Tapered and wavy strokes on shape paths.",
+     "pro_use": "Expressive, ink-like lines from vector paths.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "Rig Canvas pressure strokes",
+       "engine/draw.js tapered strokes",
+       "fx speed_lines"
+      ],
+      "note": "Pressure ink in the Rig Canvas, tapered strokes in the scene library and tapered speed lines; there is no per-stroke taper control in shots.json."
+     }
+    },
+    {
+     "id": "ae-draw-6",
+     "capability": "Masks: Bezier masks with feather (including variable feather), expansion, opacity and add/subtract/intersect modes.",
+     "pro_use": "Revealing parts of layers, vignettes, wipes and isolating regions for effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "SVG clipping is used internally (toon shading, mesh triangles) and polygons cut parts on import, but there are no user masks in shots; masks and mattes are WP-36."
+     }
+    },
+    {
+     "id": "ae-draw-7",
+     "capability": "Paint tools: Brush, Clone Stamp and Eraser strokes on layers, frame by frame or held.",
+     "pro_use": "Hand-drawn effects, clean-up and quick touch-ups directly on footage.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "No frame-by-frame painting; drawn levels and hand-drawn effects are WP-35, brush engines in WP-34."
+     }
+    },
+    {
+     "id": "ae-draw-8",
+     "capability": "Roto Brush and Object Matte: AI-assisted separation of a subject from its background across frames, with edge refinement.",
+     "pro_use": "Isolating people or objects in footage without hand rotoscoping.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No footage roto. The related need, click-to-mask cutting of drawings into parts (SAM 2.1), is WP-18; doodle.snap already suggests cuts automatically."
+     }
+    },
+    {
+     "id": "ae-draw-9",
+     "capability": "Content-Aware Fill: removing objects from footage by filling from surrounding frames.",
+     "pro_use": "Erasing rigs, signs or crew from live-action shots.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Every element is data, so unwanted things are deleted from the film rather than painted out."
+     }
+    },
+    {
+     "id": "ae-draw-10",
+     "capability": "Auto-trace: creating masks or paths from a layer's alpha or luminance.",
+     "pro_use": "Turning scanned artwork or logos into editable vectors.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-18"
+      ],
+      "note": "puppet.from_ink thresholds ink to alpha and keeps the raster line; vector tracing (VTracer, potrace) is WP-18."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Transparency and compositing",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/work-with-transparency-and-compositing/work-with-alpha-channels-and-masks/alpha-channels-masks-mattes.html",
+   "capabilities": [
+    {
+     "id": "ae-compositing-1",
+     "capability": "Alpha channels throughout: rendering, compositing and outputting with transparency.",
+     "pro_use": "Elements are rendered separately and layered, or delivered with alpha for other tools.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-23"
+      ],
+      "note": "Synfig and Grease Pencil characters render with alpha and are composited over the set; delivering video with alpha (ProRes 4444, WebM) is WP-23."
+     }
+    },
+    {
+     "id": "ae-compositing-2",
+     "capability": "Track mattes (alpha and luma, inverted) using any layer as the matte.",
+     "pro_use": "Text filled with footage, reveals through shapes, holdouts.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Not available; mattes are part of the node compositor (WP-36)."
+     }
+    },
+    {
+     "id": "ae-compositing-3",
+     "capability": "Adjustment layers that apply effects to everything below them for a time range.",
+     "pro_use": "One grade or blur across a group of layers, timed to a section.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "The post finishing pass (grade, LUT, vignette, grain) applies to the whole joined picture before captions; per-shot or per-layer-range adjustment is WP-36."
+     }
+    },
+    {
+     "id": "ae-compositing-4",
+     "capability": "Preserve underlying transparency, stencil and silhouette modes.",
+     "pro_use": "Textures confined to the art beneath, cut-outs through a stack.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Not available; belongs to the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "ae-compositing-5",
+     "capability": "Compositing order and per-element depth switching.",
+     "pro_use": "Arms passing in front of and behind a body, props behind or in front of characters.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "overlays vs underlays",
+       "puppet controls z",
+       "clip swaps.z"
+      ],
+      "note": "Elements stack in fixed bands, and puppets switch part order by control or clip (static in Lottie and Synfig, WP-14)."
+     }
+    },
+    {
+     "id": "ae-compositing-6",
+     "capability": "Glows, light wraps and edge blends to integrate elements from different sources.",
+     "pro_use": "Making graphics and characters sit naturally in a background.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Not available; WP-36 lists glows and light wraps."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Adjusting colour",
+   "source_url": "https://helpx.adobe.com/after-effects/using/color-management.html",
+   "capabilities": [
+    {
+     "id": "ae-colour-1",
+     "capability": "Project bit depth of 8, 16 or 32-bit float, with linear-light blending.",
+     "pro_use": "High-end compositing avoids banding and blends light realistically.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "8-bit sRGB pipeline (Chromium capture to H.264); higher bit depth and EXR are WP-37."
+     }
+    },
+    {
+     "id": "ae-colour-2",
+     "capability": "ICC colour management: a working space, per-footage input profiles and output simulation.",
+     "pro_use": "Colour stays consistent across cameras, design files and deliverables.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Everything is assumed sRGB (Grease Pencil colours are converted to linear internally); colour management is WP-37."
+     }
+    },
+    {
+     "id": "ae-colour-3",
+     "capability": "OpenColorIO and ACES colour management with display and view transforms plus OCIO effects.",
+     "pro_use": "Film and VFX pipelines share one colour space across every app.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Planned in WP-37 (OpenColorIO, ACES)."
+     }
+    },
+    {
+     "id": "ae-colour-4",
+     "capability": "Colour correction effects: curves, levels, hue and saturation, colour balance, Lumetri, and LUT application.",
+     "pro_use": "Grading shots to a look and matching elements to each other.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post {preset, grade, lut, vignette, grain}"
+      ],
+      "note": "Film-wide finishing with presets (crisp, film, warm, cool, paper, noir), arbitrary ffmpeg grade filters and a .cube LUT. Per-shot grades and a colour script are WP-37."
+     }
+    },
+    {
+     "id": "ae-colour-5",
+     "capability": "HDR monitoring of compositions in HLG or PQ on local and external displays (25.2) and HDR metadata on export (25.4).",
+     "pro_use": "HDR deliverables are judged on a real HDR display while working.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "SDR only; an HDR master is in WP-37."
+     }
+    },
+    {
+     "id": "ae-colour-6",
+     "capability": "Colour scopes (waveform, vectorscope, histogram) for judging exposure and colour.",
+     "pro_use": "Graders check legal levels and balance objectively.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "brand.check",
+       "WP-24"
+      ],
+      "note": "brand.check measures palette contrast and colour-blind separation; checks on rendered frames (colour-blind, flash) are WP-24. No scopes."
+     }
+    },
+    {
+     "id": "ae-colour-7",
+     "capability": "Recolouring art consistently across a project.",
+     "pro_use": "Night versions, seasonal variants or a client's new brand colours.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.lint",
+       "WP-16"
+      ],
+      "note": "Puppets use palette slots (puppet.lint flags raw colours) and sets recolour with set_opts; palette variants per scene (night, sick, cold) are WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Effects and animation presets",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/apply-effects-and-animation-presets/effects-and-animation-presets/effects-animation-presets-overview.html",
+   "capabilities": [
+    {
+     "id": "ae-effects-1",
+     "capability": "A large built-in effect library, stacked per layer in any order with every parameter keyframable.",
+     "pro_use": "Most looks in motion graphics are built by stacking a few standard effects.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "A fixed set of looks (toon shading, boil, motion fx, post grade/grain/vignette/LUT, depth-of-field blur in scene.js) with no general effect stack; the node compositor is WP-36."
+     }
+    },
+    {
+     "id": "ae-effects-2",
+     "capability": "Blur and sharpen effects: Gaussian, directional, camera lens blur, sharpen.",
+     "pro_use": "Depth cues, focus pulls and softening backgrounds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Depth-of-field blur filters exist only in hand-coded scene.js films (engine/draw.js); a shot-level blur node is WP-36."
+     }
+    },
+    {
+     "id": "ae-effects-3",
+     "capability": "Distort effects: turbulent displace, warp, bulge, mesh warp, bend.",
+     "pro_use": "Organic wobble, hand-made shimmer and cartoon squish.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "style.boil",
+       "puppet bendy limbs and squash"
+      ],
+      "note": "Turbulent displacement is the boil; squash and bendy limbs come from the rig. General warp effects are not available."
+     }
+    },
+    {
+     "id": "ae-effects-4",
+     "capability": "Generate effects: gradients, fractal noise, grids, fills, audio waveforms, strokes along paths.",
+     "pro_use": "Backgrounds, textures and design elements made without imported art.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "sets (sets/sets.js, sets/more.js)",
+       "shots.json set_opts",
+       "kit elements"
+      ],
+      "note": "Sets and kit elements are drawn in code as functions of time (paper, water, sections, roots and others); there is no general generator library."
+     }
+    },
+    {
+     "id": "ae-effects-5",
+     "capability": "Stylize effects: glow, cartoon, posterize, find edges, roughen edges.",
+     "pro_use": "Stylised and graphic looks from plain art.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "style.toon gives cel shadows and rims; glow and stylize nodes are WP-36, and medium simulation for lines (pencil, marker, crayon) is WP-15."
+     }
+    },
+    {
+     "id": "ae-effects-6",
+     "capability": "Noise and grain effects: add, match and remove grain.",
+     "pro_use": "Film texture and matching grain between elements.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.grain (seeded)"
+      ],
+      "note": "Seeded grain over the joined picture; matching and removal are not needed for synthetic frames."
+     }
+    },
+    {
+     "id": "ae-effects-7",
+     "capability": "Simulation effects: particle systems, shatter, card dance, foam, rain and snow.",
+     "pro_use": "Sparks, dust, weather and explosions in motion graphics.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-42"
+      ],
+      "note": "Motion-derived dust puffs, impact stars and prop physics exist (fx, drop/flight); particle systems (rain, sparks, snow) are WP-42."
+     }
+    },
+    {
+     "id": "ae-effects-8",
+     "capability": "Time effects: echo, posterize time, time displacement, timewarp.",
+     "pro_use": "Trails, stepped motion and time-based distortions.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-09"
+      ],
+      "note": "Stepped timing (style.step) and speed lines exist; smears and motion trails are WP-09."
+     }
+    },
+    {
+     "id": "ae-effects-9",
+     "capability": "Transition effects: dissolves, linear, radial, gradient and block wipes, card wipes.",
+     "pro_use": "Moving between scenes and revealing graphics.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Cuts carry a whoosh and QA checks seam smoothness, but picture transitions (dissolves, match cuts, wipes) are WP-15."
+     }
+    },
+    {
+     "id": "ae-effects-10",
+     "capability": "Perspective effects: drop shadow, bevel alpha, 3D glasses, sphere wrap.",
+     "pro_use": "Depth on flat graphics and quick dimensional looks.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Characters get ground shadows (style.shadow); drop shadows on graphics are deliberately discouraged by the AI-look lint, other perspective effects would be WP-36 nodes."
+     }
+    },
+    {
+     "id": "ae-effects-11",
+     "capability": "Audio effects: EQ, reverb, delay, tone, and (26.0) gate and compressor, with level keyframes.",
+     "pro_use": "Basic sound shaping and level rides without leaving the comp.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "film.render mixes automatically: voice cleanup and compression, ducking of music and effects, seeded room reverb, loudness to -14 LUFS with true-peak limiting, cue gains. Hand editing cues in a waveform lane is WP-40, room reverb per set WP-13."
+     }
+    },
+    {
+     "id": "ae-effects-12",
+     "capability": "Animation presets: saving effects, keyframes and expressions as a reusable preset and browsing a preset library.",
+     "pro_use": "Studios build libraries of reveals, bounces and looks to apply in one step.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "clip library (33 template-level clips)",
+       "puppet poses and clips",
+       "post presets",
+       "acting.direct gags"
+      ],
+      "note": "Clips, poses, finishing presets and gag patterns are reusable presets that apply to any character on a template."
+     }
+    },
+    {
+     "id": "ae-effects-13",
+     "capability": "Effect Manager: seeing which effects and plug-ins are installed and turning them on or off.",
+     "pro_use": "Pipeline teams keep render nodes consistent and troubleshoot plug-in conflicts.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.info",
+       "vendor.check",
+       "WP-34"
+      ],
+      "note": "engine.info lists renderers and tools found; vendor.check lists vendored components. There is no effect plug-in interface to manage yet (open-source integration, WP-34)."
+     }
+    },
+    {
+     "id": "ae-effects-14",
+     "capability": "Detail-preserving upscaling of footage.",
+     "pro_use": "Using low-resolution sources in high-resolution deliverables.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "renderer: svg (vector)"
+      ],
+      "note": "Vector art re-renders at any resolution; raster parts would need upscaling but none is planned."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Expressions and automation",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/work-with-expressions/expression-basics/expression-basics.html",
+   "capabilities": [
+    {
+     "id": "ae-expressions-1",
+     "capability": "JavaScript expressions on any property that compute its value every frame.",
+     "pro_use": "Procedural motion, rigs and automation without hand-placed keys.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/scene.js frame(f)",
+       "engine/timeline.js (eases, springs, seeded noise)"
+      ],
+      "note": "Code films are expressions all the way down: every value is a pure function of the frame number. Shot-based films expose no per-property code; adding it would join WP-36."
+     }
+    },
+    {
+     "id": "ae-expressions-2",
+     "capability": "Pick-whip linking: driving one property from another layer's property.",
+     "pro_use": "Rigging controls, linking a shadow to its object, chaining motion.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls (driven keys)",
+       "timeline look (look-at)",
+       "kit face attach"
+      ],
+      "note": "Driven keys map a control to angles, shifts, swaps and z; look-at and attachment link elements. No general property-to-property links in shots."
+     }
+    },
+    {
+     "id": "ae-expressions-3",
+     "capability": "Expression controls (slider, checkbox, colour, point, angle, layer, dropdown) used as rig controls.",
+     "pro_use": "Animators drive a rig from a few named controls instead of many properties.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls (e.g. turn)",
+       "timeline emotion, view, look"
+      ],
+      "note": "Named controls such as turn drive head three-quarter offsets and swaps; emotion, view and gaze are keyable controls on the acting timeline."
+     }
+    },
+    {
+     "id": "ae-expressions-4",
+     "capability": "Looping and noise functions (loopOut, loopIn, wiggle, time-based maths).",
+     "pro_use": "Cycles, idles and organic jitter set once and left running.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet clips loop",
+       "chains wave",
+       "timeline seed",
+       "idle clip"
+      ],
+      "note": "Looping clips (idle, walk), travelling chain waves and seeded noise give the same results deterministically."
+     }
+    },
+    {
+     "id": "ae-expressions-5",
+     "capability": "An expression editor with syntax checking and clear error messages.",
+     "pro_use": "Catching broken expressions before they reach a render.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.write",
+       "film.validate"
+      ],
+      "note": "Film data is checked against JSON schemas and its own references on every write and before every render, with errors reported; there is no code editor for scene.js."
+     }
+    },
+    {
+     "id": "ae-expressions-6",
+     "capability": "Reading JSON and CSV data inside expressions to drive properties.",
+     "pro_use": "Data-driven graphics and template automation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.data"
+      ],
+      "note": "film.data runs analysis scripts into data.json and binds it into text and charts; it re-voices lines whose numbers change."
+     }
+    },
+    {
+     "id": "ae-expressions-7",
+     "capability": "Scripting (ExtendScript and JavaScript) and script panels to automate project tasks.",
+     "pro_use": "Pipeline tools batch-create comps, rename layers, build renders and integrate with asset systems.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every feature is a command reachable from CLI, HTTP, Studio and MCP; engine.commands lists them with schemas. This is Doodleberry's core strength."
+     }
+    },
+    {
+     "id": "ae-expressions-8",
+     "capability": "Responsive design for time: protecting regions of a composition so stretching it keeps intros and outros intact.",
+     "pro_use": "Templates that change length without breaking their animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.retime",
+       "script.slots"
+      ],
+      "note": "Times reference spoken lines, so film.retime re-derives shots after a voice change; script.slots fixes line slots before voicing."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "3D, immersive video and VR",
+   "source_url": "https://helpx.adobe.com/after-effects/using/advanced-3d-renderer.html",
+   "capabilities": [
+    {
+     "id": "ae-3d-1",
+     "capability": "The Advanced 3D renderer: a GPU renderer for 3D layers and models with realistic shading.",
+     "pro_use": "Motion designers add 3D objects to 2D designs without a separate 3D app.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "A three.js renderer exists for hand-coded 3D pages (tools/three/run3d.mjs, software WebGL, about 1 s per frame) but not as a shot renderer or command; 3D sets and EEVEE passes are WP-42."
+     }
+    },
+    {
+     "id": "ae-3d-2",
+     "capability": "Playing embedded animations in imported 3D models and retiming them.",
+     "pro_use": "Animated product shots and characters from 3D apps used directly.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "The three.js pages play GLB clips deterministically and CMU mocap can be retargeted in Blender (tools/blender), outside the command set; WP-42 brings it in."
+     }
+    },
+    {
+     "id": "ae-3d-3",
+     "capability": "Image-based lighting from HDR images, including animated environment lights (25.2).",
+     "pro_use": "Realistic reflections and ambient light that match a background.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Not available."
+     }
+    },
+    {
+     "id": "ae-3d-4",
+     "capability": "Cast and accept shadows per layer, and shadow catchers for grounding 3D objects on footage.",
+     "pro_use": "Making 3D objects sit in a scene.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "2D ground shadows and toon cel shadows only; 3D shadows come with WP-42."
+     }
+    },
+    {
+     "id": "ae-3d-5",
+     "capability": "Materials on 3D models and layers, including Substance 3D materials (26.0).",
+     "pro_use": "Changing the look of models without re-exporting them.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Not available."
+     }
+    },
+    {
+     "id": "ae-3d-6",
+     "capability": "Native parametric 3D meshes (cubes, spheres, cones; 26.0) created and animated inside a composition.",
+     "pro_use": "Simple 3D design elements without modelling software.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Not available."
+     }
+    },
+    {
+     "id": "ae-3d-7",
+     "capability": "3D navigation and transform gizmos, a 3D design space, and extracting cameras and lights from models.",
+     "pro_use": "Fast staging of 3D scenes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "No 3D staging; scenes are 2D with a 2D camera."
+     }
+    },
+    {
+     "id": "ae-3d-8",
+     "capability": "In-renderer depth of field and depth data extraction.",
+     "pro_use": "Focus pulls and depth-based compositing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Blur-based depth of field exists in scene.js films only; multiplane depth of field is WP-36, depth estimates for drawings in WP-43."
+     }
+    },
+    {
+     "id": "ae-3d-9",
+     "capability": "VR 360 and 180 tools: VR environments, a VR comp editor, immersive effects, cube-map output.",
+     "pro_use": "Producing 360-degree video for headsets and platforms.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry targets flat social and web video; no 360 delivery is planned."
+     }
+    },
+    {
+     "id": "ae-3d-10",
+     "capability": "Stereoscopic 3D camera rigs.",
+     "pro_use": "Stereo deliverables for 3D cinema or headsets.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No stereo deliverables in scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Views and previews",
+   "source_url": "https://helpx.adobe.com/after-effects/using/previewing.html",
+   "capabilities": [
+    {
+     "id": "ae-previews-1",
+     "capability": "Real-time cached playback using RAM and disk (a new high-performance preview engine in 25.2).",
+     "pro_use": "Animators judge timing at full speed while they work.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "export.web"
+      ],
+      "note": "film.preview writes a live player page where every frame is a pure function of time, so it plays and scrubs without a render; export.web packages it as a standalone player."
+     }
+    },
+    {
+     "id": "ae-previews-2",
+     "capability": "Scrubbing, frame stepping and previewing from the current time in a range.",
+     "pro_use": "Checking a pose or a sync point frame by frame.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "timeline.get"
+      ],
+      "note": "Studio /timeline scrubs the live player with clip, emotion, gaze and dialogue lanes from timeline.get."
+     }
+    },
+    {
+     "id": "ae-previews-3",
+     "capability": "Draft preview: lower resolution, skipped frames, region of interest, fast-draft modes.",
+     "pro_use": "Rough timing passes on heavy comps.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic",
+       "film.storyboard"
+      ],
+      "note": "Different mechanism, same purpose: film.animatic holds storyboard stills over the sound in seconds; film.storyboard makes the stills and contact PDF."
+     }
+    },
+    {
+     "id": "ae-previews-4",
+     "capability": "Guides, grids, rulers and title/action-safe overlays in the viewer.",
+     "pro_use": "Keeping text and key action inside safe areas for each platform.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run"
+      ],
+      "note": "qa.run measures every word's box against the platform-safe area and minimum type sizes, with platform UI overlays; brand.assets also writes safe-area overlays."
+     }
+    },
+    {
+     "id": "ae-previews-5",
+     "capability": "Transparency grid and channel views (alpha, individual RGB channels; custom grid colours in 25.2).",
+     "pro_use": "Checking mattes and edges before delivering with alpha.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-23"
+      ],
+      "note": "No alpha deliverables yet, so no alpha views; they come with alpha outputs in WP-23."
+     }
+    },
+    {
+     "id": "ae-previews-6",
+     "capability": "Video preview on an external broadcast monitor (Mercury Transmit), including HDR.",
+     "pro_use": "Colour-critical review on a calibrated display.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Not available; colour-critical and HDR review fit WP-37."
+     }
+    },
+    {
+     "id": "ae-previews-7",
+     "capability": "Snapshots and side-by-side views to compare two states of a frame.",
+     "pro_use": "Before-and-after checks of a tweak.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-19"
+      ],
+      "note": "shot.render with a renderer override writes a second file for side-by-side comparison; a visual diff between two versions of a film is WP-19."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Rendering and exporting",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/render-and-export/basics-of-rendering-and-exporting/basics-rendering-exporting.html",
+   "capabilities": [
+    {
+     "id": "ae-render-1",
+     "capability": "Render Queue with render settings and several output modules per item.",
+     "pro_use": "One render pass writes the master, a review proxy and an alpha version at once.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "film.cuts",
+       "WP-23"
+      ],
+      "note": "film.render writes the master (plus aspects, sound-off cut, captions); film.cuts assembles many cuts from it. Extra formats per render (WebM, ProRes, GIF, APNG) are WP-23."
+     }
+    },
+    {
+     "id": "ae-render-2",
+     "capability": "Saved output-module and render-setting templates.",
+     "pro_use": "House delivery specs applied consistently.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "dbe/profiles.json (encoding profiles)"
+      ],
+      "note": "Encoding profiles per platform (H.264 High CRF 18, AAC 48 kHz, faststart, size caps)."
+     }
+    },
+    {
+     "id": "ae-render-3",
+     "capability": "Codecs with alpha and intermediates (ProRes 4444, PNG sequences), and hand-off to Media Encoder for H.264 or HEVC.",
+     "pro_use": "Handing elements to editors and compositors at full quality.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-23"
+      ],
+      "note": "H.264 masters only; alpha video and intermediates are WP-23."
+     }
+    },
+    {
+     "id": "ae-render-4",
+     "capability": "Rendering still frames and image sequences (PNG, TIFF, EXR) including multi-channel output.",
+     "pro_use": "Posters, thumbnails, print stills and passes for further compositing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "cover.make",
+       "puppet.sheet",
+       "WP-37"
+      ],
+      "note": "Stills come from storyboards, covers and model sheets; print-ready stills are WP-23 and OpenEXR multi-pass output WP-37."
+     }
+    },
+    {
+     "id": "ae-render-5",
+     "capability": "Multi-frame rendering that uses many CPU cores at once.",
+     "pro_use": "Large speed-ups on long or heavy renders.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "Rendering runs a browser per worker on frame ranges and dedupes identical frames."
+     }
+    },
+    {
+     "id": "ae-render-6",
+     "capability": "Command-line rendering (aerender) for unattended and scripted renders.",
+     "pro_use": "Render farms and overnight batches.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "Every render is a command (CLI, HTTP with async jobs, MCP)."
+     }
+    },
+    {
+     "id": "ae-render-7",
+     "capability": "Network rendering and watch-folder rendering across several machines.",
+     "pro_use": "Splitting big jobs across a farm.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-38"
+      ],
+      "note": "Single machine; distributed render workers and a shared cache are WP-38."
+     }
+    },
+    {
+     "id": "ae-render-8",
+     "capability": "Exporting a composition as a Premiere Pro project for editing.",
+     "pro_use": "Moving finished graphics into the edit with structure intact.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-22"
+      ],
+      "note": "film.cuts writes OTIO per cut; FCPXML and EDL with stems and captions are WP-22."
+     }
+    },
+    {
+     "id": "ae-render-9",
+     "capability": "Notifications when a render finishes (desktop or mobile).",
+     "pro_use": "Artists leave long renders running and get pinged.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "Async jobs exist but no progress events or webhooks; WP-20 (and owner notifications in WP-03)."
+     }
+    },
+    {
+     "id": "ae-render-10",
+     "capability": "Rendering audio along with picture and as separate stems.",
+     "pro_use": "Sound teams get clean stems for final mixing.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "The mix writes stems and a music-only version; film.cuts reuses the master's stems."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Working with other applications",
+   "source_url": "https://helpx.adobe.com/after-effects/using/dynamic-link-effects.html",
+   "capabilities": [
+    {
+     "id": "ae-apps-1",
+     "capability": "Dynamic Link: compositions used live in Premiere Pro or Media Encoder without rendering first.",
+     "pro_use": "Editors see graphics updates in the edit immediately.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-22"
+      ],
+      "note": "No live link; hand-off is by rendered cuts and OTIO. Round trips with editors are WP-22."
+     }
+    },
+    {
+     "id": "ae-apps-2",
+     "capability": "Round-trip editing of Photoshop and Illustrator sources, updating in the comp.",
+     "pro_use": "Artists repaint a layer and the animation updates.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.export_layers",
+       "puppet.import"
+      ],
+      "note": "puppet.export_layers hands a puppet to an artist as a layered file; puppet.import brings the repaint back onto the rig."
+     }
+    },
+    {
+     "id": "ae-apps-3",
+     "capability": "Cinema 4D integration through Cineware and the bundled C4D renderer.",
+     "pro_use": "3D elements built in a companion app rendered inside the comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "shot.render",
+       "export.synfig",
+       "WP-42"
+      ],
+      "note": "Doodleberry pairs with Blender (cut-out rigs in, Grease Pencil renderer out) and Synfig (.sif export); Blender 3D sets in films are WP-42."
+     }
+    },
+    {
+     "id": "ae-apps-4",
+     "capability": "Lottie export through the Bodymovin or LottieFiles plug-ins (third-party), for web and app animation.",
+     "pro_use": "UI and web animations made in After Effects play natively in apps.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "export.lottie"
+      ],
+      "note": "export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON. dotLottie, Telegram stickers and Lottie QA in two renderers are WP-23."
+     }
+    },
+    {
+     "id": "ae-apps-5",
+     "capability": "Creative Cloud Libraries: shared colours, character styles and graphics across projects and team members.",
+     "pro_use": "Brand assets stay consistent across a team.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "brand/<id>.json brand kits",
+       "cast library (cast.list)",
+       "sets library"
+      ],
+      "note": "Brand kits, the cast library and the set library are shared, versioned data that every film can inherit."
+     }
+    },
+    {
+     "id": "ae-apps-6",
+     "capability": "A large third-party plug-in ecosystem (effects, rigging and particle tools).",
+     "pro_use": "Studios extend the app with specialised tools for particles, rigging and 3D.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "vendor.check",
+       "vendor.build",
+       "WP-34"
+      ],
+      "note": "Doodleberry vendors open-source code with recorded licences (vendor.check, vendor.build); a plan for driving or linking open tools (Natron, OpenFX, Krita brushes) is WP-34."
+     }
+    },
+    {
+     "id": "ae-apps-7",
+     "capability": "Round trip to an audio editor (Audition) for deeper sound work.",
+     "pro_use": "Cleaning dialogue and building sound design outside the comp.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-40"
+      ],
+      "note": "Sound is mixed automatically; driving Audacity or Ardour and editing cues in Studio is WP-40."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Collaboration: Frame.io and Team Projects",
+   "source_url": "https://helpx.adobe.com/after-effects/desktop/collaboration-with-others/team-projects/collaborate-using-team-projects.html",
+   "capabilities": [
+    {
+     "id": "ae-collab-1",
+     "capability": "Frame.io review: upload renders from the app and see reviewers' frame-accurate comments as timeline markers.",
+     "pro_use": "Client and director feedback arrives on the exact frame without email.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "review.add",
+       "review.list",
+       "review.fix"
+      ],
+      "note": "Notes are pinned to frames and review.fix turns them into data edits, re-renders and measures the change; review on a phone is WP-19."
+     }
+    },
+    {
+     "id": "ae-collab-2",
+     "capability": "Team Projects: a shared cloud project that several artists edit, publish and sync.",
+     "pro_use": "Editors and motion designers work on the same project at once.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.launch",
+       "prod.merge",
+       "WP-39"
+      ],
+      "note": "Each film gets a git worktree and branch (prod.launch) and approved work merges in scope (prod.merge); people, roles and locks are WP-39."
+     }
+    },
+    {
+     "id": "ae-collab-3",
+     "capability": "Approval and version tracking for deliverables.",
+     "pro_use": "Knowing which version the client signed off.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "prod.approve",
+       "ledger.add",
+       "post.approve"
+      ],
+      "note": "The owner approves finals that passed QA; ledger.add records gate verdicts with before/after numbers; each post needs a named approval."
+     }
+    },
+    {
+     "id": "ae-collab-4",
+     "capability": "Syncing settings and presets between machines.",
+     "pro_use": "An artist's setup follows them to a new workstation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor"
+      ],
+      "note": "The setup is in the repo: engine.doctor checks a machine and tools/setup.sh applies the fixes."
+     }
+    },
+    {
+     "id": "ae-collab-5",
+     "capability": "Collect Files: packaging a project with all its footage for hand-off or archive.",
+     "pro_use": "Archiving a job or sending it to another studio.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films as text in git",
+       "assets/manifest.json"
+      ],
+      "note": "A film is text plus references to versioned cast, sets and manifest-tracked assets; renders are rebuilt rather than archived. There is no single zip export."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Memory, storage and performance",
+   "source_url": "https://helpx.adobe.com/after-effects/using/memory-storage1.html",
+   "capabilities": [
+    {
+     "id": "ae-performance-1",
+     "capability": "Persistent disk cache and RAM cache that keep rendered frames between sessions.",
+     "pro_use": "Reopening a project does not mean re-rendering everything.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "Per-shot content hashes skip unchanged shots across sessions and identical frames are reused; build/ holds outputs."
+     }
+    },
+    {
+     "id": "ae-performance-2",
+     "capability": "GPU acceleration for rendering and effects.",
+     "pro_use": "Real-time playback of heavy effects.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "The container has no GPU (software WebGL and Vulkan); GPU-only work waits for a GPU, per WP-42."
+     }
+    },
+    {
+     "id": "ae-performance-3",
+     "capability": "Proxies and low-resolution stand-ins for heavy footage.",
+     "pro_use": "Keeping interaction fast on big projects.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.animatic",
+       "WP-15"
+      ],
+      "note": "The animatic and storyboard stand in for the full render; a static-layer cache and rendering only unique stepped frames are WP-15."
+     }
+    },
+    {
+     "id": "ae-performance-4",
+     "capability": "Handling long, memory-heavy projects (purging, low-memory modes).",
+     "pro_use": "Feature-length or heavy VFX projects stay workable.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-38"
+      ],
+      "note": "A long-form (20-minute) test of memory, cache and assembly limits is WP-38."
+     }
+    },
+    {
+     "id": "ae-performance-5",
+     "capability": "Diagnostics for GPU drivers and hardware readiness.",
+     "pro_use": "Ruling out the machine when something renders wrong.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor"
+      ],
+      "note": "engine.doctor reports every missing package, binary, model or voice with the exact fix."
+     }
+    }
+   ]
+  }
+ ]
+}

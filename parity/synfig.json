@@ -1,0 +1,2464 @@
+{
+ "tool": "Synfig Studio",
+ "version": "1.4.5 (current stable, 1.4.x line) and 1.5.5 (current development, 1.5.x line); manual at synfig.readthedocs.io/en/latest, read 2026-11-02",
+ "sources": [
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/index.html",
+   "title": "Synfig User Manual: contents",
+   "used_for": "chapter list (installation, quick start, main concepts, tutorials, import, tools, layers, parameters, converters, configuration, canvas, interface, export, plugins, misc, interpolations, release notes)"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/main_concepts.html",
+   "title": "Main concepts",
+   "used_for": "animation mode, waypoints, keyframes, linking, exported parameters and canvases, static parameters, value nodes"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/main_concepts/keyframes.html",
+   "title": "Keyframes",
+   "used_for": "keyframe length, locks, activation and descriptions"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/ui.html",
+   "title": "Interface",
+   "used_for": "panel list (timebar, canvas browser, library, graphs, history, info, keyframes, layers, navigator, palette editor, parameters, sets, timetrack, tool options, toolbox)"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/ui/panel_children.html",
+   "title": "Library Panel",
+   "used_for": "exported values, connecting and reuse"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/ui/panel_sets.html",
+   "title": "Sets Panel",
+   "used_for": "named layer sets"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/canvas.html",
+   "title": "Canvas",
+   "used_for": "workarea, grid, guides, preview, properties dialog, render, timebar"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/misc.html",
+   "title": "Misc",
+   "used_for": "onion skin, handles, group transformation widget, colours and gradient editor dialogs, new layer defaults, audio synchronisation"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/tools.html",
+   "title": "Tools",
+   "used_for": "the 20 toolbox tools"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/layers.html",
+   "title": "Layers",
+   "used_for": "the 45 documented layers"
+  },
+  {
+   "url": "https://wiki.synfig.org/Category:Layers",
+   "title": "Synfig wiki: layer categories",
+   "used_for": "grouping layers into geometry, gradients, filters, blurs, distortions, transform, stylize, time, other, example, fractals"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/layers/skeleton.html",
+   "title": "Skeleton Layer",
+   "used_for": "bones, bone parameters, link to bone, link to skeleton"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/layers/skeleton_deformation.html",
+   "title": "Skeleton Deformation Layer",
+   "used_for": "bone-driven mesh deformation of artwork below"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/layers/sound.html",
+   "title": "Sound Layer",
+   "used_for": "sound parameters and the fact that sound is not rendered into output"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/parameters.html",
+   "title": "Parameters",
+   "used_for": "antialiasing, blend method, feather, focus point, invert, opacity, origin, time offset, winding style, z-depth, zoom"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/parameters/blend_method.html",
+   "title": "Blend Method Parameter",
+   "used_for": "list of blend methods"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/converters.html",
+   "title": "Converters",
+   "used_for": "the 60 convert types (value nodes)"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/interpolations.html",
+   "title": "Interpolations",
+   "used_for": "clamped, constant, ease in/out, linear, TCB"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/artwork_import.html",
+   "title": "Importing your artwork",
+   "used_for": "images, image sequences, vectorization, SVG, video, swf2svg"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/export.html",
+   "title": "Export",
+   "used_for": "animation, still image and Lottie export"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/export/export_for_web_lottie.html",
+   "title": "Export for Web (Lottie)",
+   "used_for": "Lottie exporter outputs and limits (no bones, shapes baked per frame)"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/plugins.html",
+   "title": "Plugins",
+   "used_for": "Python plugin model, plugin.xml, importer and exporter plugins, third-party plugins"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/tutorials.html",
+   "title": "Tutorials",
+   "used_for": "bone morphing, reusing animations, duplicate layer, subtracting shapes"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/quick_start.html",
+   "title": "Quick Start",
+   "used_for": "the beginner workflow (shapes, animating, basic bones, basic masking)"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/installation.html",
+   "title": "Installation",
+   "used_for": "platform packages"
+  },
+  {
+   "url": "https://wiki.synfig.org/Doc:Synfig_CLI_Syntax",
+   "title": "Synfig wiki: CLI syntax",
+   "used_for": "command-line renderer options (targets, size, time range, quality, antialias, threads, canvas id, alpha extraction, introspection); the page is old, so options were cross-checked against release notes"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases.html",
+   "title": "Release Notes index",
+   "used_for": "latest versions: stable 1.4.5, development 1.5.5"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases/stable/1.4.0.html",
+   "title": "Synfig 1.4.0 release notes",
+   "used_for": "editable graphs, sound panel, baking, timetrack playback range, onion skin by frames, image sequence import, vectorization, video import, Lottie export, render cache, per-document gamma, switch by depth, workspaces"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases/development/1.5.0.html",
+   "title": "Synfig 1.5.0 release notes",
+   "used_for": "timetrack rewrite, sound panel layer choice, skeleton tool, perspective layer, import/export plugins, Rhubarb import, render threads, stop render"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases/development/1.5.1.html",
+   "title": "Synfig 1.5.1 release notes",
+   "used_for": "rewritten text layer with right-to-left direction, onion skin by keyframes or frames"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases/development/1.5.3.html",
+   "title": "Synfig 1.5.3 release notes",
+   "used_for": "chroma key layer, motion blur trail, CLI engine choice and repeats, plugin dialogs, rulers and guides, canvas dependencies dialog, WebM, Magick++ importer"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases/development/1.5.4.html",
+   "title": "Synfig 1.5.4 release notes",
+   "used_for": "alpha intersection blend, map range value node, SVG and Lottie text, keyframe lock hotkeys"
+  },
+  {
+   "url": "https://synfig.readthedocs.io/en/latest/releases/development/1.5.5.html",
+   "title": "Synfig 1.5.5 release notes",
+   "used_for": "absolute converter, colour correct saturation, sketch tool redo, add-skeleton-simple plugin"
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Installation and setup",
+   "source_url": "https://synfig.readthedocs.io/en/latest/installation.html",
+   "capabilities": [
+    {
+     "id": "synfig-installation-1",
+     "capability": "Ready-to-run packages for Windows, macOS and Linux (an AppImage on Linux), so a workstation is set up in minutes.",
+     "pro_use": "Studios image every artist seat with the same build so files open identically everywhere.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor"
+      ],
+      "note": "Doodleberry runs in one Linux container; engine.doctor lists what is missing (Synfig among the tools) with the exact fix and tools/setup.sh applies it."
+     }
+    },
+    {
+     "id": "synfig-installation-2",
+     "capability": "Stable and development builds that can be installed side by side, so new features can be tried without risking production files.",
+     "pro_use": "Leads trial a development build on a copy of a shot before the team upgrades.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "One pinned toolchain per container; engine.info reports the versions found. A second environment is a second container, not a second install."
+     }
+    },
+    {
+     "id": "synfig-installation-3",
+     "capability": "Building the application from source (Autotools, CMake from 1.5, vcpkg), with reproducible builds from 1.5.3.",
+     "pro_use": "Pipeline teams patch the renderer and ship an in-house build.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "vendor.build",
+       "vendor.check"
+      ],
+      "note": "vendor.build runs a vendored component's upstream build recipe in a copy; vendor.check verifies its upstream record and licence. Synfig core itself is not vendored yet (WP-34 decides drive vs vendor)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Quick start",
+   "source_url": "https://synfig.readthedocs.io/en/latest/quick_start.html",
+   "capabilities": [
+    {
+     "id": "synfig-quick-start-1",
+     "capability": "A first animation from scratch: draw a few shapes, key them at two times, render a movie.",
+     "pro_use": "Onboarding and quick tests of an idea before a real shot is set up.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template",
+       "film.render"
+      ],
+      "note": "A film folder from scratch or a format template, rendered with QA in one command; the doodle flow (doodle.snap) gets a talking character in seconds."
+     }
+    },
+    {
+     "id": "synfig-quick-start-2",
+     "capability": "A basic cut-out rig with bones on separate drawn parts.",
+     "pro_use": "The standard way to make a reusable character for a series.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import",
+       "cast.generate",
+       "doodle.snap"
+      ],
+      "note": "Layered drawings become rigged puppets by layer name; cast.generate makes an original rigged humanoid."
+     }
+    },
+    {
+     "id": "synfig-quick-start-3",
+     "capability": "Basic masking: show one piece of artwork only inside another shape.",
+     "pro_use": "Mouths inside heads, reveals, wipes and eye-in-socket tricks.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No general mask in puppet or shot data (only internal clipping in toon shading and mesh triangles); masks and mattes belong to the compositor WP."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Interface and panels",
+   "source_url": "https://synfig.readthedocs.io/en/latest/ui.html",
+   "capabilities": [
+    {
+     "id": "synfig-interface-1",
+     "capability": "Dockable panels with workspace layouts that can be saved and switched (1.4).",
+     "pro_use": "Artists keep separate layouts for drawing, rigging and timing.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agent-native: the command registry (engine.commands) is the interface; Studio pages are fixed views over the same commands."
+     }
+    },
+    {
+     "id": "synfig-interface-2",
+     "capability": "Layers panel: the stacked tree of layers and groups, with show/hide, reordering, grouping and renaming.",
+     "pro_use": "Organising a character into named parts and keeping heavy scenes navigable.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts (hierarchy, z)",
+       "shots.json overlays/underlays/cast"
+      ],
+      "note": "The part tree and its z order live in the puppet; shot layers (set, underlays, cast, overlays) in shots.json. No layer-tree editor in Studio; the Rig Canvas edits parts."
+     }
+    },
+    {
+     "id": "synfig-interface-3",
+     "capability": "Parameters panel: every parameter of the selected layer is editable numerically, including sub-parameters of converted values.",
+     "pro_use": "Precise values for placement, colours and timing that are hard to drag by hand.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.get",
+       "film.write",
+       "film.validate"
+      ],
+      "note": "Every field of a film is plain JSON, read with film.get and written (schema-validated) with film.write."
+     }
+    },
+    {
+     "id": "synfig-interface-4",
+     "capability": "Timetrack panel: waypoints of every parameter aligned to the time bar, with box selection, dragging, duplicating and scaling (rewritten in 1.5.0).",
+     "pro_use": "Retiming a performance by shifting or compressing groups of keys.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "The Studio timeline moves, resizes, adds and deletes clip layers (line-relative); per-key lanes, camera-key lane and line/shot dragging are WP-19."
+     }
+    },
+    {
+     "id": "synfig-interface-5",
+     "capability": "History panel: an undo/redo list where individual past actions can be toggled off.",
+     "pro_use": "Safe experimentation and backing out of a change made several steps ago.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.write",
+       "WP-39"
+      ],
+      "note": "Films are text under git (any version re-renders exactly) and the Studio timeline keeps an undo stack; a per-change audit log of who changed what is WP-39."
+     }
+    },
+    {
+     "id": "synfig-interface-6",
+     "capability": "Info panel: pointer coordinates and colour, and render progress (progress bar from 1.4).",
+     "pro_use": "Checking exact positions and watching long renders.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "Jobs run async but report no progress events; progress events and webhooks are WP-20."
+     }
+    },
+    {
+     "id": "synfig-interface-7",
+     "capability": "Palette editor: a document palette of named colours, loadable and savable, applied to selected shapes.",
+     "pro_use": "Keeping a character's colour model consistent across every shot.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json palette (slots)",
+       "brand/<id>.json palette"
+      ],
+      "note": "Strokes reference named palette slots, so recolouring is a data change; puppet.lint flags raw colours and brand.check measures the brand palette."
+     }
+    },
+    {
+     "id": "synfig-interface-8",
+     "capability": "Sets panel: named selections of layers scattered through the document, selected or switched off together.",
+     "pro_use": "Toggling all of a prop's pieces, or selecting all left-side parts at once.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No named part selections in the Rig Canvas or data (clip tracks target parts one by one); should join WP-18 (Rig Canvas 2).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-interface-9",
+     "capability": "Navigator and canvas browser: a thumbnail for panning a zoomed view, and a browser of open files and their nested canvases.",
+     "pro_use": "Moving around large backgrounds and multi-canvas files.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "View navigation is a desktop UI concern; films and their files are listed by film.get."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Canvas, workarea and document settings",
+   "source_url": "https://synfig.readthedocs.io/en/latest/canvas.html",
+   "capabilities": [
+    {
+     "id": "synfig-canvas-1",
+     "capability": "Canvas properties: pixel size, image area in units, frame rate, start and end time, background.",
+     "pro_use": "Setting a delivery format once per project.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json size",
+       "shots.json fps",
+       "shots.json shots[].start/end"
+      ],
+      "note": "Size and fps are film fields; qa.run enforces 1080x1920 at 30 fps; shot times may be line-relative."
+     }
+    },
+    {
+     "id": "synfig-canvas-2",
+     "capability": "Resizing the canvas with presets and a keep-aspect option (1.5.1, 1.5.3).",
+     "pro_use": "Making a square or landscape version of a vertical piece.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "film.render with aspect 16:9 or 1:1 re-stages the film for the new frame rather than cropping; one command for all aspects is WP-24."
+     }
+    },
+    {
+     "id": "synfig-canvas-3",
+     "capability": "Per-document gamma (1.4; new files linear at 1.0, old files kept at 2.2).",
+     "pro_use": "Matching colour blending to the rest of the pipeline.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Colours are plain sRGB in the browser and ffmpeg; managed colour (OCIO, ACES) is WP-37."
+     }
+    },
+    {
+     "id": "synfig-canvas-4",
+     "capability": "Grid with snapping for placing handles.",
+     "pro_use": "Aligning layout elements and mechanical props.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Positions are numbers in data written by agents or commands; there is no hand placement to snap."
+     }
+    },
+    {
+     "id": "synfig-canvas-5",
+     "capability": "Rulers and guides, rotatable and editable from 1.5.3.",
+     "pro_use": "Marking title-safe areas, horizons and eye lines.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run"
+      ],
+      "note": "Instead of drawn guides, qa.run measures every word's box against the platform-safe area and type minimums; brand.assets writes safe-area overlays."
+     }
+    },
+    {
+     "id": "synfig-canvas-6",
+     "capability": "Workarea preview quality modes, background rendering and a frame cache for smooth scrubbing (1.4).",
+     "pro_use": "Judging motion interactively in heavy scenes.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "export.web"
+      ],
+      "note": "The player page renders every frame as a pure function of time, so it scrubs live in the browser."
+     }
+    },
+    {
+     "id": "synfig-canvas-7",
+     "capability": "Preview render of a time range at reduced size and frame rate.",
+     "pro_use": "Quick timing checks before a full render.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic",
+       "film.preview",
+       "film.storyboard"
+      ],
+      "note": "Animatic over the sound in seconds, live preview, and a storyboard strip."
+     }
+    },
+    {
+     "id": "synfig-canvas-8",
+     "capability": "Onion skin: faint past and future frames, counted in frames or in keyframes (1.4, 1.5.1).",
+     "pro_use": "Spacing and arcs while keying poses.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The Rig Canvas onion shows only the rest pose; onion skins over time come with hand-drawn animation (WP-35), boards with onion skin in WP-18."
+     }
+    },
+    {
+     "id": "synfig-canvas-9",
+     "capability": "Animate editing mode: edits either change the base value or create waypoints at the current time.",
+     "pro_use": "Separating rig setup from animation without accidental keys.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json (rest pose)",
+       "shots.json cast[].timeline"
+      ],
+      "note": "Separation is structural: the puppet holds the rest state, the shot timeline holds everything that changes."
+     }
+    },
+    {
+     "id": "synfig-canvas-10",
+     "capability": "On-canvas handles and the group transformation widget (move, rotate, scale, move the origin) for direct manipulation.",
+     "pro_use": "Posing and placing by hand rather than by numbers.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-19"
+      ],
+      "note": "The Rig Canvas poses by dragging hands and feet (IK) and puppet.save keeps poses and clips; dragging characters, camera and lines within a shot is WP-19."
+     }
+    },
+    {
+     "id": "synfig-canvas-11",
+     "capability": "Canvas dependencies dialog listing external files with path relinking (1.5.3).",
+     "pro_use": "Collecting and repairing a project's assets before hand-off.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.provenance",
+       "asset.check",
+       "film.credits"
+      ],
+      "note": "Every file that shapes a film is listed with its licence class; paths are data, so relinking is a film.write."
+     }
+    },
+    {
+     "id": "synfig-canvas-12",
+     "capability": "Colours dialog (RGB, HSV, hex, alpha) and defaults for new layers (fill and outline colours, width, blend).",
+     "pro_use": "House colours and line weights applied to every new shape.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json palette",
+       "brand/<id>.json"
+      ],
+      "note": "Palette slots and brand kit defaults; brand.check measures contrast and colour-blind separation."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Tools",
+   "source_url": "https://synfig.readthedocs.io/en/latest/tools.html",
+   "capabilities": [
+    {
+     "id": "synfig-tools-1",
+     "capability": "Transform, smooth move, scale and rotate tools for selecting and manipulating layers and vertices, with box selection.",
+     "pro_use": "Day-to-day posing and layout.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Posing by drag in the Rig Canvas and clip edits in the timeline; in-shot transforms of characters and props are data only until WP-19."
+     }
+    },
+    {
+     "id": "synfig-tools-2",
+     "capability": "Spline tool: a Bezier pen that makes a region, outline, advanced outline, plant or curve gradient from one path in one pass.",
+     "pro_use": "Clean vector character lines with editable tangents.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "drawing.fulfil",
+       "WP-18"
+      ],
+      "note": "Strokes are SVG paths; the Rig Canvas draws freehand ink and drawing.fulfil lifts ink into parts, but there is no Bezier pen with tangent handles or polygon editing (WP-18)."
+     }
+    },
+    {
+     "id": "synfig-tools-3",
+     "capability": "Draw tool: freehand strokes fitted to splines with smoothing, optional pressure-driven width.",
+     "pro_use": "Sketch-quality lines that stay editable vectors.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Rig Canvas pressure ink with simplify (perfect-freehand); stabiliser, textured brushes, lasso and transform remain in WP-18."
+     }
+    },
+    {
+     "id": "synfig-tools-4",
+     "capability": "Sketch tool: rough guide strokes that are never rendered, saved and reloaded separately (redo from 1.5.5).",
+     "pro_use": "Roughing poses and layout before clean-up.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "drawing.requests",
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "Drawing requests carry ghost guides and puppet.import skips sketch and guide layers; a sketch layer inside the Rig Canvas is not there (WP-18)."
+     }
+    },
+    {
+     "id": "synfig-tools-5",
+     "capability": "Width tool: brush along an outline to thicken or thin it locally.",
+     "pro_use": "Line weight that tapers into joints and swells on curves.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Strokes carry one width; editing width along a line belongs with Rig Canvas tools 2."
+     }
+    },
+    {
+     "id": "synfig-tools-6",
+     "capability": "Fill and eyedrop tools: fill a closed area with the current colour, pick a colour from the canvas (fill colour on Ctrl+click from 1.5).",
+     "pro_use": "Fast colouring of line art.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json strokes[].fill (palette slot)"
+      ],
+      "note": "The Rig Canvas gap-closing fill writes a palette slot name into the stroke; picking is by slot name, not by sampling."
+     }
+    },
+    {
+     "id": "synfig-tools-7",
+     "capability": "Circle, rectangle, star and polygon tools creating parametric shapes as chosen layer types.",
+     "pro_use": "Props, graphic elements and motion-design shapes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json strokes[].d",
+       "shots.json overlays (draw, icon)"
+      ],
+      "note": "Any static primitive is an SVG path; animatable parametric primitives (radius, point count) do not exist and would join WP-42 (procedural 2D)."
+     }
+    },
+    {
+     "id": "synfig-tools-8",
+     "capability": "Gradient tool: drag to create linear, radial, conical or spiral gradient layers.",
+     "pro_use": "Sky ramps, soft shading and lighting passes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Gradients are flattened on import and absent from puppet and shot data; should join WP-36 (compositor) as generator nodes.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-tools-9",
+     "capability": "Text tool: place a text layer, then edit text, font, size and orientation.",
+     "pro_use": "Titles, labels and signage.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json overlays (text, title, sign, paper, card)"
+      ],
+      "note": "Timed text elements with fonts from the brand kit; type sizes measured by qa.run."
+     }
+    },
+    {
+     "id": "synfig-tools-10",
+     "capability": "Mirror tool: reflect selected vertices across a horizontal or vertical axis.",
+     "pro_use": "Building symmetric drawings and flipping poses.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No mirror operation on strokes or poses (puppet.coach only reports left/right mismatch); should join WP-18.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-tools-11",
+     "capability": "Cutout tool: draw a polygon to cut a region out of an image layer.",
+     "pro_use": "Splitting a painted character into animatable parts.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "doodle.cut",
+       "puppet.from_ink"
+      ],
+      "note": "Parts are cut from one ink layer by polygons with overlap seams that hide the cut."
+     }
+    },
+    {
+     "id": "synfig-tools-12",
+     "capability": "Brush tool (experimental, MyPaint-based) for raster painting on image layers.",
+     "pro_use": "Painted texture, backgrounds and touch-ups inside the animation file.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "No raster painting; WP-34 picks the brush engine (libmypaint, Krita) and WP-35/WP-18 build on it."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: geometry",
+   "source_url": "https://wiki.synfig.org/Category:Geometry",
+   "capabilities": [
+    {
+     "id": "synfig-layers-geometry-1",
+     "capability": "Region layer: a filled area bounded by a spline whose vertices can be animated.",
+     "pro_use": "Fills of character parts and backgrounds.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts[].strokes[] (d, fill)"
+      ],
+      "note": "Filled paths per part; the path itself is static per drawing (shape changes are swaps, bends or mesh skinning)."
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-2",
+     "capability": "Outline layer: a stroke along a spline with per-vertex width, round tips and sharp or smooth cusps.",
+     "pro_use": "Ink lines of characters.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json strokes[] (stroke, width)"
+      ],
+      "note": "Strokes have one width and round caps; export.synfig writes them as outline layers."
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-3",
+     "capability": "Advanced outline: width points independent of vertices, dashes, several tip styles (two new dash tips in 1.4), smoothing.",
+     "pro_use": "Expressive tapered ink and dashed lines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "No variable-width or dashed character lines (only dashed whisper bubbles); line media simulation is WP-15."
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-4",
+     "capability": "Animating spline vertices directly: shapes morph between keyed outlines.",
+     "pro_use": "Shape tweens for cloth, mouths and squash without swaps.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-43"
+      ],
+      "note": "Shapes deform by bendy limbs and skinned mesh strokes (SVG only); there is no per-vertex keyed morph, and morphs between drawings are WP-43."
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-5",
+     "capability": "Parametric circle, rectangle (rounded corners, feather; 1.4), star and polygon layers with animatable parameters.",
+     "pro_use": "Motion graphics shapes whose radius or point count animates.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Static paths and kit elements only; animated parametric primitives should join WP-42 (procedural 2D).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-6",
+     "capability": "Solid colour layer filling the canvas or group.",
+     "pro_use": "Backgrounds and colour holds.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json set (plain) and set_opts"
+      ],
+      "note": "The plain set with a colour option; exporters write a background colour or the set plate."
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-7",
+     "capability": "Feathered (soft) shape edges.",
+     "pro_use": "Soft shadows, glows and light pools.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No soft-edge shapes in data; blurs and mattes come with the compositor."
+     }
+    },
+    {
+     "id": "synfig-layers-geometry-8",
+     "capability": "Winding style (non-zero or even-odd) to make holes in self-overlapping regions.",
+     "pro_use": "Rings, letters and cut-through shapes from one path.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Puppet strokes have no fill-rule field (holes are drawn as separate shapes); a fill-rule field is a puppet-format change and should join WP-11 (puppet format v0.8).",
+      "added_to_scope": true
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: gradients",
+   "source_url": "https://wiki.synfig.org/Category:Gradients",
+   "capabilities": [
+    {
+     "id": "synfig-layers-gradients-1",
+     "capability": "Linear and radial gradient layers with animatable endpoints and colour stops.",
+     "pro_use": "Skies, vignettes, soft lighting and depth fades.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Only sets drawn in code use gradients; nothing in puppet or shot data. Should join WP-36 (compositor generator nodes). The AI-look lint (WP-04) also limits large gradient fills.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-layers-gradients-2",
+     "capability": "Conical and spiral gradient layers.",
+     "pro_use": "Radar sweeps, stylised backgrounds, hypnotic effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Same as linear/radial: join WP-36.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-layers-gradients-3",
+     "capability": "Curve gradient: a gradient laid along a spline with a width, for shading along edges.",
+     "pro_use": "Rim shading and form shading that follows a contour.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-14"
+      ],
+      "note": "style.toon gives cel shadow bands and rim light from a fixed light in the SVG renderer; other renderers (Synfig, Lottie, Grease Pencil) are WP-14."
+     }
+    },
+    {
+     "id": "synfig-layers-gradients-4",
+     "capability": "Noise gradient: animated procedural noise mapped to a gradient.",
+     "pro_use": "Textures, clouds, flicker and film grain.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.grain",
+       "shots.json style.boil"
+      ],
+      "note": "Seeded grain and turbulent line boil, both deterministic; not a general noise fill."
+     }
+    },
+    {
+     "id": "synfig-layers-gradients-5",
+     "capability": "Gradient editor dialog and gradient converters (rotate, repeat, two-tone, gradient colour) to edit and reuse gradients.",
+     "pro_use": "House gradients shared across shots.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No gradient data type; join WP-36.",
+      "added_to_scope": true
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: filters",
+   "source_url": "https://wiki.synfig.org/Category:Filters",
+   "capabilities": [
+    {
+     "id": "synfig-layers-filters-1",
+     "capability": "Colour correct layer: hue shift, brightness, contrast, exposure, gamma and (1.5.5) saturation on everything below it.",
+     "pro_use": "Shot grading and matching a character to a background.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "shots.json post (grade, LUT, vignette, presets) grades the joined picture; per-layer correction inside a shot is WP-36."
+     }
+    },
+    {
+     "id": "synfig-layers-filters-2",
+     "capability": "Clamp layer: keep colour values within a range (no negatives, a ceiling on brightness).",
+     "pro_use": "Cleaning up results of additive blends before output.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "The 8-bit sRGB path cannot go out of range; a float or HDR pipeline (WP-37) would need clamping."
+     }
+    },
+    {
+     "id": "synfig-layers-filters-3",
+     "capability": "Luma key: turn brightness into transparency.",
+     "pro_use": "Using scanned line art or light effects over other layers.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-36"
+      ],
+      "note": "Ink import thresholds a scan's ink to alpha at import time; a keying node inside a shot is WP-36."
+     }
+    },
+    {
+     "id": "synfig-layers-filters-4",
+     "capability": "Chroma key layer with invert (1.5.3).",
+     "pro_use": "Compositing green-screen footage or flat-colour plates.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No footage keying; compositor WP."
+     }
+    },
+    {
+     "id": "synfig-layers-filters-5",
+     "capability": "Halftone 2 and halftone 3 layers: print-style dot screens.",
+     "pro_use": "Comic and retro print looks.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Style passes cover paper, grain and boil; a halftone pass fits WP-15's medium simulation."
+     }
+    },
+    {
+     "id": "synfig-layers-filters-6",
+     "capability": "Filters act on everything below them in their group, so effects can be scoped by grouping.",
+     "pro_use": "Grading only the background, or only one character.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Effects are whole-frame (post) or built in; scoped effect stacks need the per-shot node compositor."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: blurs",
+   "source_url": "https://wiki.synfig.org/Category:Blurs",
+   "capabilities": [
+    {
+     "id": "synfig-layers-blurs-1",
+     "capability": "Blur layer with several kernels (box, fast Gaussian, cross, Gaussian, disc) on the content below.",
+     "pro_use": "Soft shadows, glows and out-of-focus backgrounds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No blur in shot or puppet data."
+     }
+    },
+    {
+     "id": "synfig-layers-blurs-2",
+     "capability": "Motion blur layer: accumulates sub-frame samples over an aperture; can leave a sharp trail instead (1.5.3).",
+     "pro_use": "Fast action that reads smoothly; ghosted trails as a stylistic effect.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Speed lines are drawn from motion (fx), but sub-frame motion blur is open in WP-15."
+     }
+    },
+    {
+     "id": "synfig-layers-blurs-3",
+     "capability": "Radial blur: a zoom-burst blur from a centre point.",
+     "pro_use": "Impact frames and dramatic push-ins.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Impact stars exist (fx.impacts) but no radial blur."
+     }
+    },
+    {
+     "id": "synfig-layers-blurs-4",
+     "capability": "Depth-of-field effects by blurring far layers.",
+     "pro_use": "Focusing the eye on the speaking character.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Multiplane depth of field is in WP-36's scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: distortions",
+   "source_url": "https://wiki.synfig.org/Category:Distortions",
+   "capabilities": [
+    {
+     "id": "synfig-layers-distortions-1",
+     "capability": "Curve warp: bends the artwork below along a spline.",
+     "pro_use": "Rubber-hose limbs, tails and bending props without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-14"
+      ],
+      "note": "puppet bend curves a part along the joint's arc and chains bend tails (SVG and Grease Pencil); not along an arbitrary spline, and Synfig/Lottie output stays rigid until WP-14."
+     }
+    },
+    {
+     "id": "synfig-layers-distortions-2",
+     "capability": "Noise distort: turbulent displacement of the content below, animatable.",
+     "pro_use": "Wobbly hand-drawn lines, heat haze, water.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json style.boil"
+      ],
+      "note": "Deterministic cycled displacement fields make line boil on characters, bubbles and props."
+     }
+    },
+    {
+     "id": "synfig-layers-distortions-3",
+     "capability": "Spherize, twirl, stretch and inside-out lens distortions.",
+     "pro_use": "Cartoon bulges, dizzy spins, comedic stretches.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No distortion nodes; compositor WP."
+     }
+    },
+    {
+     "id": "synfig-layers-distortions-4",
+     "capability": "Perspective layer (the rewritten warp layer, 1.5.0): four-corner perspective warp of everything below, with interpolation quality.",
+     "pro_use": "Putting a flat drawing on a wall, a floor or a screen in the scene.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "2D layers in 3D exist only in the three.js renderer; layers on planes with a camera are WP-36."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: transform",
+   "source_url": "https://wiki.synfig.org/Category:Transform",
+   "capabilities": [
+    {
+     "id": "synfig-layers-transform-1",
+     "capability": "Translate, rotate and scale layers that transform everything below them in their group.",
+     "pro_use": "Moving a whole character or scene section at once.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json cast[].place (x, y, s)",
+       "puppet.json parts (pivot, parent)"
+      ],
+      "note": "Characters are placed by keyed position and scale; parts rotate about pivots down the hierarchy."
+     }
+    },
+    {
+     "id": "synfig-layers-transform-2",
+     "capability": "Group transformation with offset, angle, skew, scale and a movable origin (1.4).",
+     "pro_use": "Rigging nested pieces and adding a lean or shear.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts (pivot)",
+       "pose.shifts",
+       "squash"
+      ],
+      "note": "Rotation about pivots, shifts and whole-body squash; skew and per-part squash are missing (per-part squash and stretch is WP-11)."
+     }
+    },
+    {
+     "id": "synfig-layers-transform-3",
+     "capability": "Camera moves made by transforming a top-level group (pan, zoom, rotate).",
+     "pro_use": "Pans, push-ins and shakes in a scene without a camera object.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json camera",
+       "shots.json camera_auto"
+      ],
+      "note": "Camera keys and automatic coverage (speaker framing, punch-ins, handheld) are baked for every renderer; camera roll is not supported."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: stylize",
+   "source_url": "https://wiki.synfig.org/Category:Stylize",
+   "capabilities": [
+    {
+     "id": "synfig-layers-stylize-1",
+     "capability": "Shade layer: a drop shadow (or inner shadow, inverted) made from the alpha below, with offset, softness and colour.",
+     "pro_use": "Lifting characters off the background, and graphic-style shadows.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Ground shadows under characters and cel shadows (style.toon) exist; a general drop or inner shadow from alpha needs the compositor."
+     }
+    },
+    {
+     "id": "synfig-layers-stylize-2",
+     "capability": "Bevel layer: a light and dark edge that makes shapes look embossed (handles on parameters from 1.5.3).",
+     "pro_use": "Buttons, logos and a soft 3D finish on props.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-14"
+      ],
+      "note": "style.toon's rim light and shadow band give a similar edge on filled vector shapes in SVG; other renderers are WP-14."
+     }
+    },
+    {
+     "id": "synfig-layers-stylize-3",
+     "capability": "Animating the light angle, depth and softness of shade and bevel over time.",
+     "pro_use": "Lighting that changes as a lamp swings or the sun sets.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "The toon light is fixed per shot; animated lighting with the compositor (time-of-day grades also touch WP-37)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: time",
+   "source_url": "https://wiki.synfig.org/Category:Time",
+   "capabilities": [
+    {
+     "id": "synfig-layers-time-1",
+     "capability": "Time loop layer: repeats a span of the animation below (local start, duration, link time).",
+     "pro_use": "Walk cycles, blinking lights, idling crowds.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "clip library clips[].loop",
+       "shots.json cast[].timeline.clips"
+      ],
+      "note": "Library and character clips loop (idle, walk); chains carry a travelling wave."
+     }
+    },
+    {
+     "id": "synfig-layers-time-2",
+     "capability": "Stroboscope layer: samples the animation below at a lower rate.",
+     "pro_use": "Animating on twos or threes for a hand-made feel.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json style.step"
+      ],
+      "note": "Stepped timing on 12s, 8s or 6s per shot or character; repeated frames are deduplicated at render."
+     }
+    },
+    {
+     "id": "synfig-layers-time-3",
+     "capability": "Time offset and speed on groups and imported canvases: shift, slow, speed up or freeze a nested animation.",
+     "pro_use": "Reusing one animation at a different moment or tempo.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json clips start/end (line-relative)",
+       "puppet.json acting.tempo",
+       "shots.json timewarp"
+      ],
+      "note": "Clips are placed on the words and play at a tempo; timewarp holds and slows a shot (SVG player only)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers: other (group, switch, duplicate, image, text, procedural)",
+   "source_url": "https://wiki.synfig.org/Category:Other",
+   "capabilities": [
+    {
+     "id": "synfig-layers-other-1",
+     "capability": "Group layer: nests layers into a sub-canvas with its own transform, time offset, z range and outline grow.",
+     "pro_use": "Building a character as nested parts and reusing groups.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts (parent tree)"
+      ],
+      "note": "Parts form the hierarchy; export.synfig writes one group per part."
+     }
+    },
+    {
+     "id": "synfig-layers-other-2",
+     "capability": "Switch group: shows exactly one child, chosen by name or (1.4) by depth index, animatable.",
+     "pro_use": "Mouth charts, hand poses, eye sets and outfit changes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json swaps",
+       "puppet.json views",
+       "puppet.json controls (swap targets)"
+      ],
+      "note": "Swap sets and views, driven by visemes, clips and controls; exported to Synfig as hold-keyed visibility."
+     }
+    },
+    {
+     "id": "synfig-layers-other-3",
+     "capability": "Duplicate layer: repeats its group with an index value, so copies can vary by index.",
+     "pro_use": "Radial patterns, rows of objects, simple crowds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Scatter and instancing as data are in the procedural 2D scope."
+     }
+    },
+    {
+     "id": "synfig-layers-other-4",
+     "capability": "Import image layer: a bitmap placed by its corners, openable in an external editor and reloaded (1.4).",
+     "pro_use": "Painted backgrounds and raster character parts.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.from_ink",
+       "puppet.import",
+       "puppet.export_layers"
+      ],
+      "note": "Raster-part puppets from scans or PSD/ORA, and a layered file out to an artist and back (raster parts render in SVG only, WP-14)."
+     }
+    },
+    {
+     "id": "synfig-layers-other-5",
+     "capability": "Text layer: font family list, size, orientation, spacing, animatable text; rewritten in 1.5.1 with right-to-left support and a direction parameter.",
+     "pro_use": "Titles, captions and signage in several languages.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "film.localize",
+       "WP-25"
+      ],
+      "note": "Text overlays, bubbles and captions with Sinhala fallback; right-to-left and complex scripts are WP-25."
+     }
+    },
+    {
+     "id": "synfig-layers-other-6",
+     "capability": "Plant layer: procedural branching growth along a spline.",
+     "pro_use": "Growing vines, roots and hair-like flourishes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-42"
+      ],
+      "note": "The kit's roots element grows a root system timed to lines; general procedural growth is WP-42."
+     }
+    },
+    {
+     "id": "synfig-layers-other-7",
+     "capability": "Super sample layer: renders a group at higher resolution for cleaner antialiasing.",
+     "pro_use": "Fixing jaggies on fine detail.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Vector parts are rasterised by Chromium at output resolution with antialiasing; nothing to supersample."
+     }
+    },
+    {
+     "id": "synfig-layers-other-8",
+     "capability": "Procedural generator layers: checkerboard, XOR pattern, metaballs, Mandelbrot and Julia fractals.",
+     "pro_use": "Backgrounds, test patterns and abstract motion design.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Procedural 2D layer scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layer parameters and blend methods",
+   "source_url": "https://synfig.readthedocs.io/en/latest/parameters.html",
+   "capabilities": [
+    {
+     "id": "synfig-parameters-1",
+     "capability": "Blend methods per layer: composite, straight, onto, behind, screen, overlay, hard light, multiply, divide, add, subtract, difference, brighten, darken, colour, hue, saturation, luminance, alpha over, and alpha intersection (1.5.4).",
+     "pro_use": "Shading, lighting passes, glows and graphic colour effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Everything composites normally; blend modes are in the compositor scope."
+     }
+    },
+    {
+     "id": "synfig-parameters-2",
+     "capability": "Masking through blends: draw a layer only onto what is below, or use one layer's alpha to cut another.",
+     "pro_use": "Clothing patterns inside a shape, shading clipped to a body part.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Only internal self-clipping (toon shading) exists."
+     }
+    },
+    {
+     "id": "synfig-parameters-3",
+     "capability": "Opacity (amount) per layer, animatable.",
+     "pro_use": "Fades, ghosts and dissolving effects.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Strokes have a static opacity and swaps/views switch by visibility; animated opacity on parts and layers is not in data (would sit with WP-36; dissolves between shots are WP-15)."
+     }
+    },
+    {
+     "id": "synfig-parameters-4",
+     "capability": "Z-depth parameter: moves a layer within its group's order, animatable.",
+     "pro_use": "An arm passing in front of then behind the body.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "export.synfig",
+       "WP-14"
+      ],
+      "note": "pose.z, clip swaps.z and controls drive order in SVG and Grease Pencil; Synfig and Lottie exports keep a static order (WP-14)."
+     }
+    },
+    {
+     "id": "synfig-parameters-5",
+     "capability": "Origin and focus point parameters: the pivot for transforms and the centre for effects.",
+     "pro_use": "Rotating parts about joints.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts[].pivot"
+      ],
+      "note": "Pivots per part, estimated on import and checked by puppet.coach."
+     }
+    },
+    {
+     "id": "synfig-parameters-6",
+     "capability": "Invert parameter: a shape becomes a hole that shows everything outside it.",
+     "pro_use": "Iris wipes, spotlights and cut-through windows.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No inverted shapes or mattes; iris wipes are also a WP-15 transition."
+     }
+    },
+    {
+     "id": "synfig-parameters-7",
+     "capability": "Antialias switch and feather per shape.",
+     "pro_use": "Crisp pixel-art edges, or softened edges.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Antialiasing is always on in the browser rasteriser; soft edges are covered under geometry feathering (WP-36)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Bones and skeleton deformation",
+   "source_url": "https://synfig.readthedocs.io/en/latest/layers/skeleton.html",
+   "capabilities": [
+    {
+     "id": "synfig-bones-1",
+     "capability": "Skeleton layer: a hierarchy of bones (origin, angle, length, width, tip width, depth) that is shown while editing and never rendered.",
+     "pro_use": "Cut-out character rigs.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts (parent, pivot, limits)"
+      ],
+      "note": "Each part is a bone with a pivot and joint limits; FK, two-bone IK and FABRIK chains are in the loader."
+     }
+    },
+    {
+     "id": "synfig-bones-2",
+     "capability": "Skeleton tool (1.5.0): click to create bones and re-parent them.",
+     "pro_use": "Rigging new characters quickly.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "doodle.cut",
+       "cast.generate",
+       "WP-16"
+      ],
+      "note": "Rigs come from templates (humanoid, doodle) with pivots from markers or estimated; free-form hierarchies such as quadrupeds and birds are WP-16 templates."
+     }
+    },
+    {
+     "id": "synfig-bones-3",
+     "capability": "Link to bone: attach chosen vertices to one bone so they move rigidly with it.",
+     "pro_use": "Rigid cut-out pieces such as a forearm or a shoe.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json parts[].strokes"
+      ],
+      "note": "Strokes belong to a part and follow it rigidly."
+     }
+    },
+    {
+     "id": "synfig-bones-4",
+     "capability": "Link to skeleton: vertices are bound to every bone whose influence shape covers them, weighted by coverage; weights are editable.",
+     "pro_use": "Smooth bends at elbows, knees and torsos from one drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-11"
+      ],
+      "note": "Skinned mesh strokes carry per-vertex part weights (from Blender rigs) and bend in SVG; automatic weighting of vector strokes is missing and should join WP-11.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "synfig-bones-5",
+     "capability": "Skeleton deformation layer: bones warp raster artwork below through a subdivided mesh, with a rest pose reset.",
+     "pro_use": "Bending painted characters without cutting them into pieces.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "export.synfig",
+       "WP-14"
+      ],
+      "note": "Mesh strokes give this in the SVG renderer; the .sif exporter does not write Skeleton Deformation, which the feature map assigns to WP-14."
+     }
+    },
+    {
+     "id": "synfig-bones-6",
+     "capability": "Bone link and bone influence converters: any parameter (a prop's position, a value) follows a bone.",
+     "pro_use": "Props held in hands, accessories that follow the head.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json props[].attach",
+       "puppet.json anchors",
+       "timeline lookat"
+      ],
+      "note": "Props attach to parts and move hand to hand; look-at aims a part at another character's part (SVG player)."
+     }
+    },
+    {
+     "id": "synfig-bones-7",
+     "capability": "Changing a bone's parent during the animation.",
+     "pro_use": "Passing an object between hands, or a character picking something up.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json props[].attach (keyed parents, arcs)"
+      ],
+      "note": "Parent switching for props with travel arcs; parts of a character keep a fixed hierarchy."
+     }
+    },
+    {
+     "id": "synfig-bones-8",
+     "capability": "Bone length scaling (local and recursive) to stretch limbs.",
+     "pro_use": "Cartoon stretch on reaches and jumps.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Only whole-body squash; per-part squash and stretch is WP-11."
+     }
+    },
+    {
+     "id": "synfig-bones-9",
+     "capability": "Rest pose versus animated pose (reset pose), and a quick humanoid skeleton from a bundled plugin (add-skeleton-simple; image-as-stickman).",
+     "pro_use": "Starting rigs from a standard template.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.generate",
+       "puppet.sheet"
+      ],
+      "note": "Every puppet has a rest pose and named poses; cast.generate builds a rigged original from a short spec; puppet.sheet shows rest and key poses."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Value nodes and converters",
+   "source_url": "https://synfig.readthedocs.io/en/latest/converters.html",
+   "capabilities": [
+    {
+     "id": "synfig-converters-1",
+     "capability": "Arithmetic converters: add, subtract, scale, reciprocal, power, exponential, logarithm, modulo, absolute (1.5.5), range and map range (1.5.4).",
+     "pro_use": "Driving one value from another with a formula, such as a wheel turning with distance.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-42"
+      ],
+      "note": "puppet.json controls drive targets through piecewise-linear key curves (covers map range and scale), and every renderer plays them; general expressions on any field would join WP-42's rules."
+     }
+    },
+    {
+     "id": "synfig-converters-2",
+     "capability": "Trigonometric and vector converters: sine, cosine, atan2, dot product, vector angle, length, X and Y, composite and radial composite.",
+     "pro_use": "Oscillations, orbits and values split into components for separate animation.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-42"
+      ],
+      "note": "Built-in oscillators exist (chain wave, idle noise, camera float), but no general trig driver on arbitrary fields (WP-42)."
+     }
+    },
+    {
+     "id": "synfig-converters-3",
+     "capability": "Logic and comparison converters: and, or, not, compare, switch between values by a condition.",
+     "pro_use": "Rig switches: show the hand pose that matches a control.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-42"
+      ],
+      "note": "controls can drive discrete swaps (swap.<id>) by value, which covers switch-by-threshold; boolean logic is absent."
+     }
+    },
+    {
+     "id": "synfig-converters-4",
+     "capability": "Linear converter: a value that changes at a constant rate over time.",
+     "pro_use": "Spinning wheels, drifting clouds, ticking clocks.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json props[].spin",
+       "shots.json style.float"
+      ],
+      "note": "Props spin, sets drift and the camera floats; not available on every field."
+     }
+    },
+    {
+     "id": "synfig-converters-5",
+     "capability": "Random converter: seeded smooth random motion with speed, radius and loop.",
+     "pro_use": "Jitter, handheld camera and flicker that stay repeatable.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json camera_auto.handheld",
+       "puppet acting idle",
+       "shots.json style.boil"
+      ],
+      "note": "Seeded noise everywhere; frames are pure functions of the frame number."
+     }
+    },
+    {
+     "id": "synfig-converters-6",
+     "capability": "Spline converters (spline, vertex, tangent, width, segment): bind a value to a point or tangent along a path.",
+     "pro_use": "Objects travelling along paths and orienting to them.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Follow-path constraints and walking along a path are WP-11; props travel on arcs only."
+     }
+    },
+    {
+     "id": "synfig-converters-7",
+     "capability": "Dynamic converter: a point with mass, spring and damping that lags and overshoots its target.",
+     "pro_use": "Follow-through on hair, ears, antennae and props.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json springs",
+       "shots.json timeline.springs"
+      ],
+      "note": "Deterministic spring re-simulation on parts; prop physics solved at bake time."
+     }
+    },
+    {
+     "id": "synfig-converters-8",
+     "capability": "Animation from file converter: values read from an external file (Papagayo and Rhubarb lip-sync; more value types in 1.5).",
+     "pro_use": "Driving a mouth switch from a lip-sync tool's output.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "film.data"
+      ],
+      "note": "Visemes come from the voice alignment (voice.build); data-bound overlays read analysis output (film.data). Arbitrary fields cannot be fed from a file."
+     }
+    },
+    {
+     "id": "synfig-converters-9",
+     "capability": "String converters (integer, real, angle and time to text).",
+     "pro_use": "On-screen counters, timers and debug readouts.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json overlays counter"
+      ],
+      "note": "Animated counters with prefix, suffix and decimals; values can come from data.json."
+     }
+    },
+    {
+     "id": "synfig-converters-10",
+     "capability": "Time-shaping converters: step, timed swap, time loop and reverse, applied to a single parameter.",
+     "pro_use": "Stepping one element on twos while the rest moves smoothly; reversing a move.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-15"
+      ],
+      "note": "style.step works per shot or character and timewarp per shot; per-parameter stepping and reversed clips are not there (12-fps-native stepped rendering is WP-15)."
+     }
+    },
+    {
+     "id": "synfig-converters-11",
+     "capability": "Colour converters: greyed, gradient colour, two-tone, stripes.",
+     "pro_use": "Desaturated flashbacks, colour cycling and patterned fills.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-16"
+      ],
+      "note": "Runtime recolour exists through palette slots; palette variants per scene (night, sick, cold) are WP-16."
+     }
+    },
+    {
+     "id": "synfig-converters-12",
+     "capability": "Average, weighted average and derivative converters.",
+     "pro_use": "Blending between poses, and reacting to speed.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json timeline.clips[].weight",
+       "shots.json fx"
+      ],
+      "note": "Clips blend by weight with fades; speed lines and dust are computed from motion speed."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Linking, exported values and the library",
+   "source_url": "https://synfig.readthedocs.io/en/latest/main_concepts/linking.html",
+   "capabilities": [
+    {
+     "id": "synfig-linking-1",
+     "capability": "Linking: several parameters share one value, so moving one handle moves all linked ones.",
+     "pro_use": "Joints that never gap and colours that change together.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json palette slots",
+       "puppet.json parts[].pivot (shared joints)"
+      ],
+      "note": "Colours link through slots; joints share pivots with overlap so bends do not gap (checked by puppet.coach)."
+     }
+    },
+    {
+     "id": "synfig-linking-2",
+     "capability": "Exporting a value to the library under a name, then connecting it elsewhere; exported values keep their animation.",
+     "pro_use": "A shared light angle or colour scheme across a whole shot.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json poses",
+       "brand/<id>.json",
+       "clip library"
+      ],
+      "note": "Named poses, brand values and clips are reusable by name; there is no named value shared between arbitrary shot fields."
+     }
+    },
+    {
+     "id": "synfig-linking-3",
+     "capability": "Exported canvases: nested animations stored once (also in other files) and reused as many instances.",
+     "pro_use": "A walk cycle or a prop animation reused across shots and files.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.add",
+       "cast.list",
+       "puppet.save"
+      ],
+      "note": "Characters and their own clips live in the cast library with provenance and content hashes; shots reference them by path."
+     }
+    },
+    {
+     "id": "synfig-linking-4",
+     "capability": "Reusing an animation on a different character by importing a file with exported values.",
+     "pro_use": "One library of motion for a whole cast.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "clip library (template-level clips)"
+      ],
+      "note": "Clips are template-level, so every character on a template plays them (retargeting across characters)."
+     }
+    },
+    {
+     "id": "synfig-linking-5",
+     "capability": "Static parameters: mark a value so it cannot be animated by accident.",
+     "pro_use": "Locking rig settings while animating.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Rig values live in the puppet and only timeline fields animate; nothing in the rig can be keyed by accident."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation: waypoints, interpolation, keyframes and the time track",
+   "source_url": "https://synfig.readthedocs.io/en/latest/main_concepts/waypoints.html",
+   "capabilities": [
+    {
+     "id": "synfig-animation-1",
+     "capability": "Any parameter change in animation mode creates a waypoint at the current time.",
+     "pro_use": "Pose-to-pose keying directly on the canvas.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "puppet.save",
+       "WP-19"
+      ],
+      "note": "Keys are written as data (place, look, ik, controls, camera) and clips are added in the timeline; the Rig Canvas records keyed poses into clips. Per-key editing in Studio is WP-19."
+     }
+    },
+    {
+     "id": "synfig-animation-2",
+     "capability": "Waypoint editing: select, drag, duplicate and scale groups of waypoints; jump between them (1.5.0).",
+     "pro_use": "Retiming and polishing a performance.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Clip layers move and resize; individual keys inside a clip and key scaling are WP-19."
+     }
+    },
+    {
+     "id": "synfig-animation-3",
+     "capability": "Interpolation per waypoint side: clamped, TCB (tension, continuity, bias), constant, ease in/out and linear; changed in bulk from 1.5.3.",
+     "pro_use": "Holds, snaps, smooth arcs and overshoot shaped key by key.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-19"
+      ],
+      "note": "Clip keys always ease with smoothstep, swaps and views hold, anticipation/overshoot comes from acting.principles; choosing interpolation per key needs the curve editor of WP-19."
+     }
+    },
+    {
+     "id": "synfig-animation-4",
+     "capability": "Keyframes: named marks across all parameters; changing a keyframe's length shifts every later waypoint.",
+     "pro_use": "Retiming a whole scene section without touching individual keys.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.retime",
+       "script.slots"
+      ],
+      "note": "Spoken lines play the role of keyframes: times are line-relative, so re-voicing or retiming moves everything after it."
+     }
+    },
+    {
+     "id": "synfig-animation-5",
+     "capability": "Keyframe locks for past and future keyframes (hotkeys in 1.5.4), so editing between keys keeps neighbouring poses.",
+     "pro_use": "Protecting finished poses while adjusting an in-between.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Clips are separate layers with their own start and end; editing one never writes keys into neighbours."
+     }
+    },
+    {
+     "id": "synfig-animation-6",
+     "capability": "Keyframe activation toggle and description notes.",
+     "pro_use": "Labelling story beats on the time bar.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "script.json line ids",
+       "shots.json start_line/end_line",
+       "review.json"
+      ],
+      "note": "Lines are named beats; review notes pin comments to frames (review.add)."
+     }
+    },
+    {
+     "id": "synfig-animation-7",
+     "capability": "Time track with playback range, looped playback, frame previews on hover and markers for segments with constant value (1.4, 1.5).",
+     "pro_use": "Reviewing a section repeatedly while timing it.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-19"
+      ],
+      "note": "The Studio timeline scrubs with live preview over clip and dialogue lanes; per-parameter lanes, camera lane and graph view are WP-19."
+     }
+    },
+    {
+     "id": "synfig-animation-8",
+     "capability": "Graphs panel: value curves with draggable control points and tangents, multi-select, nudging (1.4).",
+     "pro_use": "Fine-tuning ease and spacing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Curve (graph) editor is in WP-19's scope."
+     }
+    },
+    {
+     "id": "synfig-animation-9",
+     "capability": "Baking: turn an interpolated or converted parameter into one waypoint per frame (1.4).",
+     "pro_use": "Freezing procedural motion for export or hand-editing.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "export.synfig",
+       "export.lottie"
+      ],
+      "note": "All renderers read the baked animation (tools/bake.mjs); the exporters write per-frame keys from it."
+     }
+    },
+    {
+     "id": "synfig-animation-10",
+     "capability": "Copying and pasting waypoints or whole poses to other times.",
+     "pro_use": "Reusing a key pose later in the shot.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.json poses",
+       "shots.json timeline.poses"
+      ],
+      "note": "Named poses can be placed at any time; clips can be added again with timeline.edit."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Sound and lip-sync",
+   "source_url": "https://synfig.readthedocs.io/en/latest/layers/sound.html",
+   "capabilities": [
+    {
+     "id": "synfig-sound-1",
+     "capability": "Sound layer: an audio file placed with a delay and volume (audio is not rendered into the output file).",
+     "pro_use": "Animating to dialogue and music in the scene.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "film.render"
+      ],
+      "note": "Voices are synthesised and aligned, and film.render mixes voice, score, cues and foley and muxes them with the picture."
+     }
+    },
+    {
+     "id": "synfig-sound-2",
+     "capability": "Sound panel with a waveform for syncing (1.4), with a choice of which sound layer to show (1.5.0).",
+     "pro_use": "Hitting accents and phonemes by eye.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-40"
+      ],
+      "note": "Words and beats are known from timing.json and film.beats, but no waveform lanes in Studio (WP-40)."
+     }
+    },
+    {
+     "id": "synfig-sound-3",
+     "capability": "Audio playback while scrubbing and playing in the workarea.",
+     "pro_use": "Checking sync interactively.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "export.web",
+       "film.animatic",
+       "WP-40"
+      ],
+      "note": "The web player and animatic play with sound; editing and scrubbing audio cues in the timeline is WP-40."
+     }
+    },
+    {
+     "id": "synfig-sound-4",
+     "capability": "Lip-sync import from Papagayo (.pgo) and Rhubarb (TSV/XML, 1.5.0) driving a switch group of mouths.",
+     "pro_use": "Fast dialogue animation from a breakdown.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "lipsync.check"
+      ],
+      "note": "Visemes come from phoneme timings automatically; lipsync.check measures sync against the voice and against Rhubarb when installed."
+     }
+    },
+    {
+     "id": "synfig-sound-5",
+     "capability": "Per-layer volume.",
+     "pro_use": "Balancing dialogue, music and effects.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run"
+      ],
+      "note": "The mix is rule-based (ducking, effects under music) and measured: -14 LUFS, true peak, effect onsets; mixcheck checks intelligibility."
+     }
+    },
+    {
+     "id": "synfig-sound-6",
+     "capability": "Joining sound and picture after rendering with an external tool (the manual suggests ffmpeg).",
+     "pro_use": "Delivering a finished movie with audio.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "Muxing is part of the render, with captions (.srt, .vtt) and QA."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Importing artwork",
+   "source_url": "https://synfig.readthedocs.io/en/latest/artwork_import.html",
+   "capabilities": [
+    {
+     "id": "synfig-import-1",
+     "capability": "Bitmap import (PNG, JPEG and more; many formats through Magick++ from 1.5.3) with scale-to-fit (1.5.0).",
+     "pro_use": "Bringing in painted backgrounds and character art.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap",
+       "puppet.import"
+      ],
+      "note": "Scans and photos become raster-part puppets; layered PSD/ORA become puppets by layer name."
+     }
+    },
+    {
+     "id": "synfig-import-2",
+     "capability": "Image sequence import as an animated layer, skipping duplicate frames (1.4, 1.5.0).",
+     "pro_use": "Bringing hand-drawn frame-by-frame animation or renders into a scene.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels (a sequence of drawings with exposures) are WP-35."
+     }
+    },
+    {
+     "id": "synfig-import-3",
+     "capability": "Vectorization: bitmaps traced into outline layers (centreline and outline modes, ported from OpenToonz, 1.4).",
+     "pro_use": "Turning paper drawings into editable vectors.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Ink import keeps raster lines; vector tracing (VTracer, potrace) is WP-18."
+     }
+    },
+    {
+     "id": "synfig-import-4",
+     "capability": "SVG import into layers (groups, paths, colours; SVG text from 1.5.4).",
+     "pro_use": "Bringing in art made in Inkscape or Illustrator.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Layered SVG becomes a vector puppet; colours become palette slots and transforms and gradients are flattened."
+     }
+    },
+    {
+     "id": "synfig-import-5",
+     "capability": "Video import as a layer (basic; slow on large files).",
+     "pro_use": "Reference footage for rotoscoping and timing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-36"
+      ],
+      "note": "Video of a person becomes an action clip (pose and face retargeting); footage as a layer in a shot, for reference or compositing, belongs with WP-36."
+     }
+    },
+    {
+     "id": "synfig-import-6",
+     "capability": "Swf2svg: a helper to convert Flash files to SVG.",
+     "pro_use": "Migrating old Flash libraries.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No Flash legacy to migrate; SVG import covers converted files."
+     }
+    },
+    {
+     "id": "synfig-import-7",
+     "capability": "Round trip of an image layer through an external editor (1.4).",
+     "pro_use": "Painting fixes in a raster editor and seeing them in the scene.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.export_layers",
+       "puppet.import"
+      ],
+      "note": "A puppet goes out as a layered SVG, ORA or PSD and comes back by layer name."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Rendering and the command-line renderer",
+   "source_url": "https://wiki.synfig.org/Doc:Synfig_CLI_Syntax",
+   "capabilities": [
+    {
+     "id": "synfig-rendering-1",
+     "capability": "Render dialog: target, file name, image size, quality, antialiasing, a time range or a single frame.",
+     "pro_use": "Final renders and test renders of a section.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render",
+       "film.render"
+      ],
+      "note": "One shot or the whole film; film.render only re-renders changed shots (content hash)."
+     }
+    },
+    {
+     "id": "synfig-rendering-2",
+     "capability": "Output targets: PNG and PNG sequences, GIF, BMP, ffmpeg video (AVI default from 1.4, lossless H.264, WebM from 1.5.3), ImageMagick formats.",
+     "pro_use": "Delivering to editors, the web and print.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "film.package",
+       "WP-23"
+      ],
+      "note": "H.264 MP4 with per-platform encoding profiles; WebM and ProRes with alpha, GIF, APNG and stickers are WP-23."
+     }
+    },
+    {
+     "id": "synfig-rendering-3",
+     "capability": "Headless command-line rendering: choose file, target, output, size, start and end time, frame rate.",
+     "pro_use": "Batch and farm rendering from scripts.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render",
+       "export.synfig"
+      ],
+      "note": "shot.render with renderer synfig writes the .sif and drives the Synfig CLI; characters render with alpha and are composited over the SVG set."
+     }
+    },
+    {
+     "id": "synfig-rendering-4",
+     "capability": "Multithreaded rendering with a thread count (preferences from 1.5.0) and render engine choice on the command line (1.5.3).",
+     "pro_use": "Using every core and choosing speed versus quality.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-38"
+      ],
+      "note": "One browser worker per CPU with frame dedupe; renderer choice per shot. Distributed workers across machines are WP-38."
+     }
+    },
+    {
+     "id": "synfig-rendering-5",
+     "capability": "Rendering one exported canvas instead of the root, and listing canvases.",
+     "pro_use": "Rendering a single element or variant from a master file.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render",
+       "variants.hooks"
+      ],
+      "note": "Single shots, and hook variants as alternative openings joined to the rest of the film."
+     }
+    },
+    {
+     "id": "synfig-rendering-6",
+     "capability": "Alpha output, including writing alpha to a separate file.",
+     "pro_use": "Handing characters to a compositor over separate backgrounds.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-23"
+      ],
+      "note": "Synfig and Grease Pencil renders are made with alpha internally and composited; alpha deliverables (WebM, ProRes) and EXR passes are WP-23 and WP-37."
+     }
+    },
+    {
+     "id": "synfig-rendering-7",
+     "capability": "Render progress output, stopping a render (1.5.0) and a notification when done.",
+     "pro_use": "Managing long renders.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-20"
+      ],
+      "note": "Renders run as async jobs; progress events and webhooks are WP-20 (owner notifications WP-03)."
+     }
+    },
+    {
+     "id": "synfig-rendering-8",
+     "capability": "Benchmarks and repeated renders of the same target (-b, --set-repeats in 1.5.3).",
+     "pro_use": "Measuring render cost before committing a farm.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "A cost and time estimate before rendering (frames times measured renderer rate) is WP-20."
+     }
+    },
+    {
+     "id": "synfig-rendering-9",
+     "capability": "Physical resolution (DPI) for print output.",
+     "pro_use": "Posters, books and merchandise stills.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-23"
+      ],
+      "note": "Print-ready stills are WP-23."
+     }
+    },
+    {
+     "id": "synfig-rendering-10",
+     "capability": "Gamma and quality settings per render.",
+     "pro_use": "Matching delivery colour and trading quality for speed in tests.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-37"
+      ],
+      "note": "Draft versus final is a renderer and animatic choice; colour management is WP-37."
+     }
+    },
+    {
+     "id": "synfig-rendering-11",
+     "capability": "Introspection from the command line: list layers, targets, importers, value nodes, modules; print layer and canvas info.",
+     "pro_use": "Pipeline scripts checking what an installation can do.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.info",
+       "engine.commands",
+       "engine.doctor"
+      ],
+      "note": "Renderers and tools available, every command with its schema, and what is missing."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Export: Lottie, still images and interchange",
+   "source_url": "https://synfig.readthedocs.io/en/latest/export.html",
+   "capabilities": [
+    {
+     "id": "synfig-export-1",
+     "capability": "Lottie export (1.4; under File > Export from 1.5.0) producing JSON, an HTML preview and a log of unsupported features; bones are not exported and spline shapes are baked per frame.",
+     "pro_use": "Animations for web pages and mobile apps.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "export.lottie",
+       "export.web"
+      ],
+      "note": "Baked puppet animation as parented Lottie layers with views, swaps, lip-sync and springs; the web player export plays the whole film."
+     }
+    },
+    {
+     "id": "synfig-export-2",
+     "capability": "Lottie text layers (1.5.4) and a smaller-file mode that drops variable-width outlines (1.5.0).",
+     "pro_use": "Animated titles in apps; light files for the web.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-14"
+      ],
+      "note": "export.lottie writes characters and the set image only; text, props and other elements in Lottie are renderer parity (WP-14); Lottie QA and dotLottie are WP-23."
+     }
+    },
+    {
+     "id": "synfig-export-3",
+     "capability": "Exporting a still image of a chosen frame.",
+     "pro_use": "Thumbnails, posters and review stills.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "cover.make",
+       "WP-23"
+      ],
+      "note": "Storyboard stills and scored cover frames per cut and platform; print-ready transparent stills at high resolution are WP-23."
+     }
+    },
+    {
+     "id": "synfig-export-4",
+     "capability": "The native .sif/.sifz/.sfg file as an editable exchange format for other people and tools.",
+     "pro_use": "Handing a shot to an animator for hand finishing.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "export.synfig"
+      ],
+      "note": "One shot as a .sif with one group per part and animated transforms, editable in Synfig Studio (bends, raster parts and dynamic z are not exported yet, WP-14)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Plugins and scripting",
+   "source_url": "https://synfig.readthedocs.io/en/latest/plugins.html",
+   "capabilities": [
+    {
+     "id": "synfig-plugins-1",
+     "capability": "Python 3 plugins run from the menu: Synfig hands the script a copy of the document file, then reloads the edited result.",
+     "pro_use": "Batch edits and pipeline automation inside the editor.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands",
+       "film.write"
+      ],
+      "note": "Every capability is an @command exposed to CLI, HTTP, MCP and Studio; agents edit film data directly."
+     }
+    },
+    {
+     "id": "synfig-plugins-2",
+     "capability": "Plugin metadata file declaring names (translatable) and exec, importer and exporter entries.",
+     "pro_use": "Distributing in-house tools to every seat.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Commands carry their own input schemas, listed by engine.commands; adding one is a decorated function."
+     }
+    },
+    {
+     "id": "synfig-plugins-3",
+     "capability": "Importer and exporter plugins that add file formats to File > Import and File > Export (1.5.0).",
+     "pro_use": "Supporting studio-specific or new formats.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "export.lottie",
+       "export.synfig",
+       "export.web",
+       "puppet.import"
+      ],
+      "note": "Formats are commands; editor formats (FCPXML, EDL) are WP-22 and sticker/alpha formats WP-23."
+     }
+    },
+    {
+     "id": "synfig-plugins-4",
+     "capability": "Plugins with simple dialogs that receive the current time and the selected layer (1.5.3).",
+     "pro_use": "Context-aware tools such as 'add a blink here'.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "acting.direct",
+       "review.add",
+       "review.fix"
+      ],
+      "note": "Commands take times and frames as arguments; prose directions and frame notes become data edits."
+     }
+    },
+    {
+     "id": "synfig-plugins-5",
+     "capability": "Third-party plugins such as importing labels and timings from an audio editor, controller rigs and free-form deformation.",
+     "pro_use": "Bringing audio breakdowns in as timing marks; extra rigging aids.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.beats",
+       "script.slots",
+       "WP-40"
+      ],
+      "note": "Timing comes from alignment, slots and the beat grid; importing labels from Audacity or Ardour is in WP-40's sound-editing scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Configuration and preferences",
+   "source_url": "https://synfig.readthedocs.io/en/latest/configuration.html",
+   "capabilities": [
+    {
+     "id": "synfig-configuration-1",
+     "capability": "Autosave and backups (on by default from 1.4).",
+     "pro_use": "Not losing work after a crash.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Every edit is a schema-checked file write in a git working tree; there is no unsaved editor state."
+     }
+    },
+    {
+     "id": "synfig-configuration-2",
+     "capability": "Unit system, default sizes and new-document settings (default background colour or image, 1.4).",
+     "pro_use": "House defaults for every new project.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "New films start from defaults or a format template; brand kits are inherited per channel."
+     }
+    },
+    {
+     "id": "synfig-configuration-3",
+     "capability": "Experimental feature switches (the brush tool) and render thread count.",
+     "pro_use": "Opting into new features per seat.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Features are commands, enabled for all; worker count follows the CPU count."
+     }
+    },
+    {
+     "id": "synfig-configuration-4",
+     "capability": "Keyboard and mouse shortcuts, including new hotkeys for keyframe locks, duplicating layers and switching tabs (1.5.3, 1.5.4).",
+     "pro_use": "Speed for full-time artists.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agent-driven; the Studio timeline has a few shortcuts (undo)."
+     }
+    },
+    {
+     "id": "synfig-configuration-5",
+     "capability": "Icon themes chosen through an environment variable (1.5.0) and interface theming.",
+     "pro_use": "Comfort and accessibility of the interface.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Desktop UI theming."
+     }
+    },
+    {
+     "id": "synfig-configuration-6",
+     "capability": "Environment settings for external tools (for example the Python interpreter used by plugins).",
+     "pro_use": "Pointing the application at pipeline tool versions.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor",
+       "engine.info"
+      ],
+      "note": "DBE_* environment variables name tool paths (Blender, Rhubarb, Python); the doctor reports and fixes them."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Tutorial workflows",
+   "source_url": "https://synfig.readthedocs.io/en/latest/tutorials.html",
+   "capabilities": [
+    {
+     "id": "synfig-tutorials-1",
+     "capability": "Bone morphing: a shape that changes between two drawn states as bones move.",
+     "pro_use": "Turning heads and changing silhouettes smoothly.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-43"
+      ],
+      "note": "The turn control slides and parallaxes face parts for a 2.5D head turn and views switch; vector morphs between views are WP-43."
+     }
+    },
+    {
+     "id": "synfig-tutorials-2",
+     "capability": "Reusing animations across files through exported values and imported canvases.",
+     "pro_use": "Building a motion library for a series.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "clip library",
+       "puppet.json clips"
+      ],
+      "note": "Template clips and character clips play on every character of a template and in every renderer."
+     }
+    },
+    {
+     "id": "synfig-tutorials-3",
+     "capability": "Symmetric patterns from one drawing with the duplicate layer (the snowflake).",
+     "pro_use": "Motion-design ornaments and kaleidoscopic effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Instancing and procedural repetition."
+     }
+    },
+    {
+     "id": "synfig-tutorials-4",
+     "capability": "Subtracting shapes from each other with blend methods to cut holes.",
+     "pro_use": "Moons, donuts, cut-out lettering and shape booleans.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No shape booleans or alpha-subtract blends in puppet or shot data."
+     }
+    }
+   ]
+  }
+ ]
+}

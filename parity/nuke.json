@@ -1,0 +1,2642 @@
+{
+ "tool": "Foundry Nuke",
+ "version": "Nuke 16.0/16.1 and 17.0 (online help read at 17.1v2; covers features introduced from 15.x on)",
+ "sources": [
+  {
+   "url": "https://learn.foundry.com/nuke/content/user_guide.html",
+   "title": "Nuke Online Help: User Guide (landing page)",
+   "used_for": "Top-level structure of the user guide."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/nuke/nuke_intro.html",
+   "title": "Nuke Online Help: Compositing with Nuke (17.1v2)",
+   "used_for": "The 31 compositing chapters and their URLs; version shown."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/nukex/nukex_intro.html",
+   "title": "Nuke Online Help: Advanced Compositing (NukeX)",
+   "used_for": "NukeX feature chapters (Kronos, trackers, MatchGrade, Smart Vectors, DepthGenerator, particles, FurnaceCore, CopyCat, BlinkScript, CaraVR, UnrealReader)."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/timeline_environment/preface/nukestudio_timeline.html",
+   "title": "Nuke Online Help: Timeline Editing in Nuke Studio and Hiero",
+   "used_for": "Timeline and review chapters."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/getting_started/using_interface/nuke_studio_environments.html",
+   "title": "Nuke Online Help: Nuke Studio Environments",
+   "used_for": "Interface, environments and workspaces."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/getting_started/managing_scripts/managing_scripts.html",
+   "title": "Nuke Online Help: Managing Scripts",
+   "used_for": "Project settings and proxy mode."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/channels/channels.html",
+   "title": "Nuke Online Help: Channels",
+   "used_for": "Layers, channel limits, Shuffle."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/merging/merges.html",
+   "title": "Nuke Online Help: Merging Images",
+   "used_for": "Merge operations, masks, mix, ContactSheet."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/color_correction/colour_correction.html",
+   "title": "Nuke Online Help: Working with Color",
+   "used_for": "Colour correction chapter scope."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/configuring_nuke/using_ocio_config_files.html",
+   "title": "Nuke Online Help: OCIO Color Management",
+   "used_for": "OCIO configs, ACES working space, viewer transforms."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/filters/filters.html",
+   "title": "Nuke Online Help: Filtering and Spatial Effects",
+   "used_for": "Convolve, ZDefocus and filter scope."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/effects/creating_effects.html",
+   "title": "Nuke Online Help: Creating Effects",
+   "used_for": "LightWrap, Glint, Text."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/temporal_operations/temporal_operations.html",
+   "title": "Nuke Online Help: Temporal Operations",
+   "used_for": "Retime, FrameHold, TimeOffset, AppendClip, Kronos, OFlow."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/rotopaint/using_rotopaint.html",
+   "title": "Nuke Online Help: Using RotoPaint",
+   "used_for": "Shapes, feather, motion blur, paint, layers."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/tracking_stabilizing/tracking_stabilizing.html",
+   "title": "Nuke Online Help: Tracking and Stabilizing",
+   "used_for": "Tracking, match-move, stabilise."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/usd-3d-comp/usd-3d-comp.html",
+   "title": "Nuke Online Help: 3D Compositing with the New 3D System",
+   "used_for": "USD scene graph, cameras, projections, lights, materials, rendering, import/export."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/stereoscopic_films/stereo_projects.html",
+   "title": "Nuke Online Help: Stereoscopic Scripts",
+   "used_for": "Views, anaglyph, convergence."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/deep/deep_compositing.html",
+   "title": "Nuke Online Help: Deep Compositing",
+   "used_for": "Deep nodes and workflows."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/multishot/multishot_intro.html",
+   "title": "Nuke Online Help: Working with Graph Scope Variables",
+   "used_for": "Multishot variables, VariableSwitch, VariableGroup, linked nodes."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/rendering/previews_rendering.html",
+   "title": "Nuke Online Help: Previews and Rendering",
+   "used_for": "Viewer, Flipbook, Viewer Capture, Write rendering."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/organizing_scripts/organizing_scripts.html",
+   "title": "Nuke Online Help: Organizing Scripts",
+   "used_for": "Backdrops, Groups, Precomps, LiveGroups, Gizmos."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/configuring_nuke/configuring_nuke.html",
+   "title": "Nuke Online Help: Configuring Nuke",
+   "used_for": "Command line, environment, plug-in paths, templates, viewer processes."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/expressions/expressions.html",
+   "title": "Nuke Online Help: Expressions",
+   "used_for": "Linking and maths expressions."
+  },
+  {
+   "url": "https://learn.foundry.com/nuke/content/comp_environment/script_editor/script_editor_python.html",
+   "title": "Nuke Online Help: The Script Editor and Python",
+   "used_for": "Python API and headless sessions."
+  },
+  {
+   "url": "https://www.foundry.com/news-and-awards/foundry-announces-nuke-16",
+   "title": "Foundry announces Nuke 16",
+   "used_for": "Nuke 16 features: multishot variables, linked nodes, in-graph group editing, roto performance, 3D system beta, Studio contact sheet and multichannel soft effects."
+  },
+  {
+   "url": "https://www.cgchannel.com/2025/02/foundry-releases-nuke-16-0",
+   "title": "CG Channel: Foundry releases Nuke 16.0",
+   "used_for": "Nuke 16.0 release summary (ScanlineRender2, GeoXformPrim, BlinkScript changes)."
+  },
+  {
+   "url": "https://thefoundry.s3.amazonaws.com/products/nuke/releases/17.0v1/Nuke17.0v1_ReleaseNotes.pdf",
+   "title": "Nuke 17.0v1 Release Notes",
+   "used_for": "Nuke 17: Gaussian splats, 3D system out of beta, MaterialX, Field nodes, BigCat, ACES 2.0, NotchLC; 16.1 as the VFX Reference Platform 2024 build."
+  },
+  {
+   "url": "https://www.foundry.com/news-and-awards/foundry-releases-nuke-17-advancing-compositing-workflows",
+   "title": "Foundry releases Nuke 17",
+   "used_for": "Release date and headline features of Nuke 17."
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Interface, Node Graph and workspaces (Nuke Studio environments)",
+   "source_url": "https://learn.foundry.com/nuke/content/getting_started/using_interface/nuke_studio_environments.html",
+   "capabilities": [
+    {
+     "id": "nuke-interface-1",
+     "capability": "Node-based compositing: every image operation is a node, and the wired-up graph is the complete, re-renderable recipe for a shot.",
+     "pro_use": "Artists read a shot as a flow from plates to output and can bypass, swap or branch any step without destroying earlier work.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Doodleberry's recipe is film data (shots.json) run through fixed passes (player, post, captions, mix); there is no user-editable image-processing graph. WP-36 adds a per-shot node compositor."
+     }
+    },
+    {
+     "id": "nuke-interface-2",
+     "capability": "Graph editing with live inspection: connect a viewer to any node to see that step's output.",
+     "pro_use": "Leads debug a comp by stepping through the tree and seeing what each node contributes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "WP-20 adds the graph view of facts, script, shots and renders with per-node cache state; WP-36 makes it the compositor's editor."
+     }
+    },
+    {
+     "id": "nuke-interface-3",
+     "capability": "Properties panel for every node's parameters, with keyframing and a Curve Editor and Dope Sheet for animation timing.",
+     "pro_use": "Compositors animate any control (a grade, a transform) and refine its easing and timing on curves.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "The Studio timeline shows and edits clip layers, emotion and gaze keys; a curve (graph) editor and a camera-keys lane are WP-19."
+     }
+    },
+    {
+     "id": "nuke-interface-4",
+     "capability": "Viewer with channel isolation, A/B wipe comparison, region of interest, zoom and frame scrubbing.",
+     "pro_use": "Checking an alpha, comparing a version against the last one, or focusing on one area of a heavy frame.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "shot.render",
+       "WP-19"
+      ],
+      "note": "film.preview gives a scrubbable live player; shot.render with a renderer override writes side-by-side files. Channel views and a visual diff between two versions are WP-19."
+     }
+    },
+    {
+     "id": "nuke-interface-5",
+     "capability": "Customisable, saveable workspaces and preferences (panel layouts per task).",
+     "pro_use": "Separate layouts for roto, tracking or review, shared as studio defaults.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is agent-first: commands are the interface (CLI, HTTP, Studio, MCP) and Studio pages are fixed; window layout presets have no counterpart worth building."
+     }
+    },
+    {
+     "id": "nuke-interface-6",
+     "capability": "Compositing and editorial environments in one application, sharing one project (Nuke Studio).",
+     "pro_use": "An editor and a comp artist move between the cut and a shot's comp without exporting.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "timeline.edit",
+       "film.cuts",
+       "WP-19"
+      ],
+      "note": "The Studio timeline edits shots.json directly and film.cuts assembles cuts from edit.json; dragging shots and lines in the timeline is WP-19."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Managing scripts (project settings and proxies)",
+   "source_url": "https://learn.foundry.com/nuke/content/getting_started/managing_scripts/managing_scripts.html",
+   "capabilities": [
+    {
+     "id": "nuke-scripts-1",
+     "capability": "Project settings that fix the frame range, frame rate and full-size output format for the whole script.",
+     "pro_use": "The delivery spec is locked at the start so every node and render agrees on size and timing.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json size",
+       "shots.json fps",
+       "shots.json shots[].start/end"
+      ],
+      "note": "Size and fps are film fields; the QA bar (qa.run) then measures 1080x1920 at 30 fps on the output."
+     }
+    },
+    {
+     "id": "nuke-scripts-2",
+     "capability": "Scripts saved as plain-text files that can be versioned (v001, v002) and read or written by pipeline tools.",
+     "pro_use": "Artists version up for each review; pipelines generate or patch scripts as text.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.write",
+       "film.get"
+      ],
+      "note": "Film data is JSON text in git, validated on film.write; versions are git commits and per-film branches (prod.launch)."
+     }
+    },
+    {
+     "id": "nuke-scripts-3",
+     "capability": "Proxy mode: work and render at a reduced format or scale, then switch back to full resolution with shapes and tracks still in place.",
+     "pro_use": "Fast interaction on heavy plates; the final render is done at full resolution.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "film.animatic",
+       "WP-15"
+      ],
+      "note": "Vector frames are resolution independent and the player preview is scaled live; there is no low-resolution draft render switch. Render-speed work (render only unique stepped frames, static-layer cache) is WP-15."
+     }
+    },
+    {
+     "id": "nuke-scripts-4",
+     "capability": "Separate pre-made low-resolution proxy files per Read, chosen automatically.",
+     "pro_use": "Offline/online workflows on large footage.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No heavy plate footage: sets and characters are drawn from data at render time."
+     }
+    },
+    {
+     "id": "nuke-scripts-5",
+     "capability": "A project directory and relative paths so scripts move between machines and the farm.",
+     "pro_use": "Shots are handed to other artists or render nodes without broken file paths.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ folder layout",
+       "shots.json shots[].cast[].puppet (repo-relative)"
+      ],
+      "note": "Every film is a self-contained folder with repo-relative references; production sessions work in git worktrees."
+     }
+    },
+    {
+     "id": "nuke-scripts-6",
+     "capability": "Enlarging a script: render the same comp at a larger output format.",
+     "pro_use": "Up-res deliverables (HD to UHD) without rebuilding the comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-37"
+      ],
+      "note": "Vector rendering makes any size possible by changing shots.json size, and film.render re-stages aspects; a 4K master as a delivery profile is WP-37."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Reading and writing images; working with file metadata",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/metadata/working_file_metadata.html",
+   "capabilities": [
+    {
+     "id": "nuke-io-1",
+     "capability": "Read image sequences and movies in many formats (EXR, DPX, TIFF, PNG, JPEG, QuickTime, MXF, NotchLC) with a colourspace per file.",
+     "pro_use": "Bringing plates, CG renders and stock elements into a comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.from_ink",
+       "doodle.snap",
+       "puppet.from_blend",
+       "WP-36",
+       "WP-37"
+      ],
+      "note": "Images enter as puppets (layered drawings, scans, photos, Blender rigs) or set background plates; a generic footage layer in a shot is WP-36 and EXR/OpenImageIO reading is WP-37."
+     }
+    },
+    {
+     "id": "nuke-io-2",
+     "capability": "Write renders as image sequences or movies with codec, bit depth, compression, alpha and colourspace options.",
+     "pro_use": "EXR to grading, ProRes to editorial, H.264 for review.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "shot.render",
+       "export.web",
+       "WP-23",
+       "WP-37"
+      ],
+      "note": "Output is H.264 MP4 by platform profile (and Lottie, Synfig, web player exports); ProRes/WebM with alpha, GIF and APNG are WP-23, EXR masters WP-37."
+     }
+    },
+    {
+     "id": "nuke-io-3",
+     "capability": "Multi-layer EXR input and output carrying many named passes in one file.",
+     "pro_use": "CG lighters deliver one EXR per frame with all AOVs; comps write multi-pass masters.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "WP-37 scopes OpenEXR multi-pass output (beauty, line, shadow, mattes)."
+     }
+    },
+    {
+     "id": "nuke-io-4",
+     "capability": "Inspect, edit and copy file metadata (timecode, camera and lens data, colour info) and pass it downstream.",
+     "pro_use": "Driving a comp from camera metadata, stamping timecode, tracking where an element came from.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.provenance",
+       "film.credits",
+       "film.get",
+       "WP-26"
+      ],
+      "note": "Doodleberry records what shaped a film (provenance.json, licence classes, credits) at film level, not per-frame image metadata; C2PA content credentials on finals are WP-26."
+     }
+    },
+    {
+     "id": "nuke-io-5",
+     "capability": "Timecode and frame-number offsets on writes to match editorial.",
+     "pro_use": "Renders slot straight into the editor's timeline.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-22"
+      ],
+      "note": "film.cuts writes an .srt and an OpenTimelineIO edit on each cut's clock; EDL/FCPXML with timecode is WP-22."
+     }
+    },
+    {
+     "id": "nuke-io-6",
+     "capability": "Burned-in slates and shot information (text driven by metadata) for dailies.",
+     "pro_use": "Every review clip shows shot, version, frame and artist.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "critic.pack",
+       "WP-19"
+      ],
+      "note": "Storyboard contact sheets and critic packets carry shot notes and times beside stills; a burn-in on review video belongs with the review room (WP-19)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Reformatting elements",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/reformatting_elements/reformatting_elements.html",
+   "capabilities": [
+    {
+     "id": "nuke-reformat-1",
+     "capability": "Resize an element to another format (fit width, fit height, fill or distort) with a choice of resampling filter.",
+     "pro_use": "Conforming plates and elements to the project's delivery format.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "film.render with an aspect (16:9, 9:16, 1:1) re-stages characters and camera from the data instead of scaling or cropping; arbitrary sizes come from shots.json size."
+     }
+    },
+    {
+     "id": "nuke-reformat-2",
+     "capability": "Crop and bounding-box control, including letterboxing.",
+     "pro_use": "Limiting processing to the useful region and adding matte bars.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Bounding boxes are a raster-engine optimisation; Doodleberry never letterboxes by design (native dual-aspect composition)."
+     }
+    },
+    {
+     "id": "nuke-reformat-3",
+     "capability": "Pixel aspect ratio handling for anamorphic and non-square formats.",
+     "pro_use": "Working on squeezed anamorphic plates.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Square-pixel social and web formats only."
+     }
+    },
+    {
+     "id": "nuke-reformat-4",
+     "capability": "Named format presets and custom formats.",
+     "pro_use": "Studio-wide delivery formats chosen from a list.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json size",
+       "shots.json aspects",
+       "dbe/profiles.json"
+      ],
+      "note": "Aspect blocks and per-platform encoding profiles are data."
+     }
+    },
+    {
+     "id": "nuke-reformat-5",
+     "capability": "Viewer guides for title-safe and action-safe areas.",
+     "pro_use": "Keeping text and key action away from screen edges and platform overlays.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run layout checks"
+      ],
+      "note": "Layout QA measures text inside the safe area and heads cut by the frame; brand.assets also writes safe-area overlays for covers."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Channels",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/channels/channels.html",
+   "capabilities": [
+    {
+     "id": "nuke-channels-1",
+     "capability": "Arbitrary named channels grouped into layers beyond RGBA (up to 1023 per script), flowing through the tree together.",
+     "pro_use": "Carrying render passes, mattes, depth and motion vectors alongside the beauty image.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Doodleberry renders a single RGB picture; multi-pass output (beauty, line, shadow, mattes) is WP-37."
+     }
+    },
+    {
+     "id": "nuke-channels-2",
+     "capability": "Shuffling channels between layers (Shuffle).",
+     "pro_use": "Pulling one render pass into RGB to grade or inspect it.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Needs a channel-aware compositor (WP-36)."
+     }
+    },
+    {
+     "id": "nuke-channels-3",
+     "capability": "Alpha handling with premultiply and unpremultiply to keep edges clean under colour correction.",
+     "pro_use": "Avoiding dark or bright fringes when grading a foreground element.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Internally Synfig and Grease Pencil characters are rendered with alpha and composited over the set video; user-level premultiplication control comes with the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "nuke-channels-4",
+     "capability": "Copying channels from one stream to another (Copy, ChannelMerge).",
+     "pro_use": "Taking a matte from one render and applying it to another.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-channels-5",
+     "capability": "Limiting any node to chosen channels and feeding a mask channel to it.",
+     "pro_use": "Grading only the alpha-masked region or only one pass.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-channels-6",
+     "capability": "Utility passes such as depth (Z) and motion vectors as channels.",
+     "pro_use": "Driving depth of field, fog and motion blur in comp.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "The bake already knows every layer's position and depth plane, so exact passes are possible; output of passes is WP-37, their use in DoF WP-36."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Merging images",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/merging/merges.html",
+   "capabilities": [
+    {
+     "id": "nuke-merge-1",
+     "capability": "Layering one image over another with premultiplied alpha (the 'over' operation), with any number of inputs.",
+     "pro_use": "The basic operation of every comp: foreground over background.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast",
+       "shots.json shots[].overlays",
+       "shots.json shots[].underlays"
+      ],
+      "note": "Layer order is data the SVG player draws; shot.render composites Synfig/Grease Pencil characters over the set video."
+     }
+    },
+    {
+     "id": "nuke-merge-2",
+     "capability": "A full set of blend operations (screen, multiply, plus, difference, minimum, maximum, overlay, hard light and more).",
+     "pro_use": "Adding light effects, combining passes, checking differences between versions.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Blend modes are in WP-36's scope; today only ffmpeg overlays are used."
+     }
+    },
+    {
+     "id": "nuke-merge-3",
+     "capability": "Masked merges and a mix control for partial strength.",
+     "pro_use": "Applying an element only inside a matte or at reduced intensity.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-merge-4",
+     "capability": "Matte-driven blend between two images (Keymix).",
+     "pro_use": "Swapping in a fixed region from another version or plate.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-merge-5",
+     "capability": "Stencil and holdout operations that cut one element with another's alpha.",
+     "pro_use": "Hiding a foreground behind a set piece or cutting a shape out of a layer.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "In pure 2D the z-order of parts and layers handles most occlusion; matte cut-outs need WP-36."
+     }
+    },
+    {
+     "id": "nuke-merge-6",
+     "capability": "Bounding-box and metadata pass-through choices on merges.",
+     "pro_use": "Keeping processing regions small on large comps.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "A raster performance concern; vector frames are drawn whole."
+     }
+    },
+    {
+     "id": "nuke-merge-7",
+     "capability": "Contact sheets: tiling many images or frames into one image.",
+     "pro_use": "Reviewing many shots or versions at a glance.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "qa.run",
+       "film.storyboard",
+       "critic.pack"
+      ],
+      "note": "qa.run writes contact sheets; film.storyboard writes strip.png and contact.pdf; critic.pack includes contact sheets."
+     }
+    },
+    {
+     "id": "nuke-merge-8",
+     "capability": "Dissolving between two inputs over time.",
+     "pro_use": "Soft transitions and fades between shots or states.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Shot changes use whoosh cuts; cross-dissolves, match cuts and wipes are WP-15."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Removing noise with Denoise",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/denoise/removing_noise_denoise.html",
+   "capabilities": [
+    {
+     "id": "nuke-denoise-1",
+     "capability": "Analysing a plate's noise profile and removing noise while keeping detail.",
+     "pro_use": "Cleaning plates before keying and comp.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Frames drawn from vector data are noise-free; there are no camera plates."
+     }
+    },
+    {
+     "id": "nuke-denoise-2",
+     "capability": "Temporal denoising that uses neighbouring frames.",
+     "pro_use": "Removing noise from low-light footage.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No camera plates."
+     }
+    },
+    {
+     "id": "nuke-denoise-3",
+     "capability": "Denoise-then-regrain: re-adding a consistent grain so all elements share one texture.",
+     "pro_use": "Every element in the final comp looks like it came from the same camera.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.grain"
+      ],
+      "note": "Film-wide grain with a fixed seed (post finishing); it is uniform rather than matched to a plate."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Keying (ChromaKeyer, Primatte, Keylight, Ultimatte)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/keying_with_chromakeyer/keying_chromakeyer.html",
+   "capabilities": [
+    {
+     "id": "nuke-keying-1",
+     "capability": "Pulling a matte from blue or green screen footage with several keying algorithms.",
+     "pro_use": "Separating actors from screens for live-action composites.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No screen footage; characters are generated with exact alpha. (Act it out takes are read for pose only, never composited.)"
+     }
+    },
+    {
+     "id": "nuke-keying-2",
+     "capability": "Spill suppression and edge colour replacement.",
+     "pro_use": "Removing green contamination from hair and edges.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No screen footage."
+     }
+    },
+    {
+     "id": "nuke-keying-3",
+     "capability": "Matte refinement: clipping black and white, separate core and edge mattes, combining with garbage mattes.",
+     "pro_use": "Getting a solid core and soft hair detail on the same key.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No screen footage."
+     }
+    },
+    {
+     "id": "nuke-keying-4",
+     "capability": "Luminance or difference keying of high-contrast material, such as ink on paper.",
+     "pro_use": "Lifting drawn or printed elements off their background.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap"
+      ],
+      "note": "Scans and photos of drawings are flattened (divided by a blurred copy), ink is thresholded to alpha and specks removed."
+     }
+    },
+    {
+     "id": "nuke-keying-5",
+     "capability": "GPU-accelerated keying that stays interactive on high-resolution plates.",
+     "pro_use": "Fast iteration on 4K screen shots.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No screen footage."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Using RotoPaint",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/rotopaint/using_rotopaint.html",
+   "capabilities": [
+    {
+     "id": "nuke-roto-1",
+     "capability": "Animated Bezier and B-spline shapes as mattes, with per-point and global feather.",
+     "pro_use": "Isolating an element for grading, garbage mattes, articulated roto.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Masks are in WP-36's scope; in Doodleberry most mattes could be derived from part shapes rather than drawn."
+     }
+    },
+    {
+     "id": "nuke-roto-2",
+     "capability": "Motion blur on roto shapes.",
+     "pro_use": "Mattes that match the blur of fast-moving elements.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Sub-frame motion blur in general is WP-15."
+     }
+    },
+    {
+     "id": "nuke-roto-3",
+     "capability": "Clone and reveal painting for clean-up (rig removal, dust busting).",
+     "pro_use": "Removing rigs, wires and dust from plates.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No photographed plates to clean."
+     }
+    },
+    {
+     "id": "nuke-roto-4",
+     "capability": "Paint strokes with brushes, erasers, blur and dodge/burn, with per-stroke lifetimes over frames.",
+     "pro_use": "Frame-by-frame touch-ups and painted effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels, rough-line cleanup and painted effects are WP-35 (brush engines evaluated in WP-34)."
+     }
+    },
+    {
+     "id": "nuke-roto-5",
+     "capability": "Layer hierarchy of shapes and strokes with per-layer transforms and blend modes.",
+     "pro_use": "Organising hundreds of shapes for a character.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-roto-6",
+     "capability": "Shapes linked to tracking data so mattes follow motion automatically.",
+     "pro_use": "A matte that rides on a tracked object with only small corrections.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Doodleberry knows every part's transform exactly, so WP-36 masks should attach to parts instead of tracks."
+     }
+    },
+    {
+     "id": "nuke-roto-7",
+     "capability": "Cutting a still into separate layers with roto shapes.",
+     "pro_use": "Preparing a painting or photo for 2.5D moves.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "doodle.cut",
+       "puppet.from_ink"
+      ],
+      "note": "Polygon cuts with overlap seams turn one drawing into separately animated parts."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Tracking and stabilizing (Tracker, PlanarTracker, CameraTracker)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/tracking_stabilizing/tracking_stabilizing.html",
+   "capabilities": [
+    {
+     "id": "nuke-tracking-1",
+     "capability": "2D feature tracking of position, rotation and scale.",
+     "pro_use": "Measuring how something moves in footage.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No footage to track; the nearest thing is actout.clip reading body landmarks from reference takes for retargeting."
+     }
+    },
+    {
+     "id": "nuke-tracking-2",
+     "capability": "Match-moving: applying a track so an added element sticks to a moving feature.",
+     "pro_use": "Attaching signs, screens or effects to moving objects in a plate.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json prop attach keys",
+       "bubble tails (player)"
+      ],
+      "note": "Everything's motion is known from the bake, so props attach to parts and bubble tails follow the speaker without tracking."
+     }
+    },
+    {
+     "id": "nuke-tracking-3",
+     "capability": "Stabilising shaky footage by inverting a track.",
+     "pro_use": "Steadying a plate before work, then re-applying the shake.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-12"
+      ],
+      "note": "Only relevant to Act it out takes: WP-12 scopes camera-motion compensation from the background."
+     }
+    },
+    {
+     "id": "nuke-tracking-4",
+     "capability": "Four-point corner pinning of an image onto a moving surface.",
+     "pro_use": "Screen replacements and sign inserts.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Inserting an image onto a moving card in a scene needs WP-36 (or the 2.5D planes in WP-36)."
+     }
+    },
+    {
+     "id": "nuke-tracking-5",
+     "capability": "Planar tracking of flat surfaces.",
+     "pro_use": "Robust tracks of walls, screens and floors.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No footage."
+     }
+    },
+    {
+     "id": "nuke-tracking-6",
+     "capability": "3D camera solving from footage, with a point cloud.",
+     "pro_use": "Matching a CG camera to a real moving camera.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "The virtual camera's keys are exact; nothing to solve."
+     }
+    },
+    {
+     "id": "nuke-tracking-7",
+     "capability": "Adding handheld motion or shake to a locked-off shot.",
+     "pro_use": "Making CG or locked shots feel filmed.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera",
+       "camera_auto (seeded handheld and shake)"
+      ],
+      "note": "Seeded handheld drift and shake come from the camera grammar, deterministic per frame."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Transforming elements",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/transforming_elements/transforming_elements.html",
+   "capabilities": [
+    {
+     "id": "nuke-transform-1",
+     "capability": "2D transforms (translate, rotate, scale, skew) of any element, animatable, around a chosen centre.",
+     "pro_use": "Positioning and animating elements in the frame.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].place",
+       "shots.json shots[].overlays (x, y, size)"
+      ],
+      "note": "Character placement keys and kit element positions are data; parts transform through the rig."
+     }
+    },
+    {
+     "id": "nuke-transform-2",
+     "capability": "Reframing the whole picture: pans, zooms and push-ins.",
+     "pro_use": "Camera moves on a static or animated frame.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera",
+       "camera_auto"
+      ],
+      "note": "Camera keys [t, [cx, cy, zoom]] are folded into the bake for every renderer; camera_auto adds follow, auto-framing and punch-ins."
+     }
+    },
+    {
+     "id": "nuke-transform-3",
+     "capability": "Motion blur on transforms (shutter and sample controls).",
+     "pro_use": "Fast moves that read naturally.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Sub-frame motion blur on fast shots is WP-15."
+     }
+    },
+    {
+     "id": "nuke-transform-4",
+     "capability": "Concatenating successive transforms so the image is filtered only once.",
+     "pro_use": "Avoiding softening from stacked transforms.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Vector parts are redrawn, never resampled; camera and placement are already folded into one baked transform."
+     }
+    },
+    {
+     "id": "nuke-transform-5",
+     "capability": "Placing a flat element on a card in 3D space for perspective moves (Card3D).",
+     "pro_use": "Perspective tilts and 2.5D moves on stills.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "scene.js films with a three.js scene exist (e.g. films/screwworm-3d); 2D layers on planes with a real camera are WP-36."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Warping images (GridWarp, SplineWarp, IDistort, LensDistortion, Smart Vectors)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/warping/warping_morphing.html",
+   "capabilities": [
+    {
+     "id": "nuke-warp-1",
+     "capability": "Grid and spline warps to bend and reshape parts of an image.",
+     "pro_use": "Subtle shape fixes, cheating a pose, squash and stretch on elements.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-11"
+      ],
+      "note": "Mesh parts with vertex weights deform with bones (Blender-imported rigs); per-part squash and stretch and angle-driven drawing substitution are WP-11."
+     }
+    },
+    {
+     "id": "nuke-warp-2",
+     "capability": "Morphing between two images with matched shapes.",
+     "pro_use": "Transformations from one form into another.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "WP-43 includes morphs between views (front to three-quarter to side)."
+     }
+    },
+    {
+     "id": "nuke-warp-3",
+     "capability": "Distortion driven by vectors, noise or UV maps (IDistort and displacement).",
+     "pro_use": "Heat haze, wobble and texture effects.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "line boil (style presets)"
+      ],
+      "note": "Line boil uses cycled smooth displacement fields with per-layer seeds, deterministic per frame."
+     }
+    },
+    {
+     "id": "nuke-warp-4",
+     "capability": "Removing or adding lens distortion from grids or lines (LensDistortion).",
+     "pro_use": "Undistorting plates for tracking and redistorting CG to match.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No real lenses; a stylistic lens distortion, if wanted, would join WP-36."
+     }
+    },
+    {
+     "id": "nuke-warp-5",
+     "capability": "Propagating paint or textures across a deforming surface with Smart Vectors.",
+     "pro_use": "Fixing faces or clothing across many frames from one painted frame.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No photographed surfaces; drawn parts already carry their own art."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Temporal operations, retiming and motion blur (Retime, FrameHold, Kronos, VectorGenerator, MotionBlur)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/temporal_operations/temporal_operations.html",
+   "capabilities": [
+    {
+     "id": "nuke-time-1",
+     "capability": "Retiming: speeding up, slowing down or reversing clips, with frame blending or optical-flow interpolation.",
+     "pro_use": "Slow-motion, speed changes to fit an edit.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json cast[].timeline.clips[].speed",
+       "shots.json timewarp"
+      ],
+      "note": "Frames are pure functions of time, so retimes render exact in-between frames rather than interpolating; the warp works on SVG-player shots only."
+     }
+    },
+    {
+     "id": "nuke-time-2",
+     "capability": "Speed ramps: variable speed within a clip from a curve.",
+     "pro_use": "Ramping into slow motion on an impact.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json timewarp"
+      ],
+      "note": "Piecewise knots [[cut time, film time], ...]; film.soundoff writes them to hold lines long enough to read."
+     }
+    },
+    {
+     "id": "nuke-time-3",
+     "capability": "Freeze frames and holds.",
+     "pro_use": "Holding on a moment for emphasis or to fill time.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json timewarp"
+      ],
+      "note": "Holds play the acting slower rather than freezing; the QA bar fails any still stretch over 0.5 s, and camera holds are exact."
+     }
+    },
+    {
+     "id": "nuke-time-4",
+     "capability": "Slipping and offsetting clips in time.",
+     "pro_use": "Nudging an element's timing against the cut.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.retime",
+       "timeline.edit"
+      ],
+      "note": "Times reference lines ('line.start+0.9'), so re-voicing slides everything together; timeline.edit moves clip layers."
+     }
+    },
+    {
+     "id": "nuke-time-5",
+     "capability": "Cutting and splicing clips (frame ranges, appending).",
+     "pro_use": "Building sequences and trims inside the comp tool.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.cuts",
+       "film.render"
+      ],
+      "note": "film.render joins shots; film.cuts assembles cuts from edit.json with cut points on beats and never inside a line."
+     }
+    },
+    {
+     "id": "nuke-time-6",
+     "capability": "Generating motion vectors from footage for later use (VectorGenerator).",
+     "pro_use": "Feeding motion blur, retimes and Smart Vector tools.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Exact motion would come from the bake rather than estimation; its consumer, sub-frame motion blur, is WP-15."
+     }
+    },
+    {
+     "id": "nuke-time-7",
+     "capability": "Vector-based motion blur added in post (MotionBlur, Kronos).",
+     "pro_use": "Adding realistic blur to CG or fast moves without re-rendering.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Sub-frame motion blur on fast shots only is WP-15; cartoon speed lines exist and smear frames are WP-09."
+     }
+    },
+    {
+     "id": "nuke-time-8",
+     "capability": "Frame blending and echoes for trails.",
+     "pro_use": "Ghosted trails and stylised motion.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "shots.json fx.speed_lines",
+       "WP-09"
+      ],
+      "note": "Speed lines trail fast parts (data on a shot); smear frames and motion arcs are WP-09."
+     }
+    },
+    {
+     "id": "nuke-time-9",
+     "capability": "Frame-rate conversion and stepped timing.",
+     "pro_use": "Converting 24 fps material to 30 fps, or animating on twos.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json fps",
+       "shots.json shots[].style.step"
+      ],
+      "note": "Frames render natively at any fps; style.step 12 animates on twos (stepped frames are deduplicated). Rendering only unique stepped frames is WP-15."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Working with colour and OCIO colour management (incl. MatchGrade)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/color_correction/colour_correction.html",
+   "capabilities": [
+    {
+     "id": "nuke-colour-1",
+     "capability": "Primary grading: lift, gamma, gain, offset, and black and white points.",
+     "pro_use": "Balancing shots and setting the look.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "shots.json post.grade takes ffmpeg filters (plus presets crisp, film, warm, cool, paper, noir), applied film-wide to the joined picture; per-shot and per-layer corrections are WP-36."
+     }
+    },
+    {
+     "id": "nuke-colour-2",
+     "capability": "Range-based correction of shadows, midtones and highlights, with saturation and contrast.",
+     "pro_use": "Targeted fixes without keying.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "Possible through ffmpeg filters in post.grade, film-wide only."
+     }
+    },
+    {
+     "id": "nuke-colour-3",
+     "capability": "Curve-based correction: hue against saturation or luminance, and RGB curves.",
+     "pro_use": "Shifting one colour range, such as skies or skin.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "ffmpeg curves and hue filters in post.grade; no per-layer curves."
+     }
+    },
+    {
+     "id": "nuke-colour-4",
+     "capability": "Applying LUT files (.cube, .3dl).",
+     "pro_use": "Show looks and conversions supplied by the colourist.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.lut"
+      ],
+      "note": "A .cube LUT in post finishing."
+     }
+    },
+    {
+     "id": "nuke-colour-5",
+     "capability": "OCIO colour management: a working space, input transforms per file, output transforms, any config.",
+     "pro_use": "Consistent colour across every department and tool.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "OpenColorIO is in WP-37."
+     }
+    },
+    {
+     "id": "nuke-colour-6",
+     "capability": "ACES workflows (ACEScg working space; ACES 2.0 in Nuke 17).",
+     "pro_use": "Industry-standard colour pipeline for VFX and features.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-colour-7",
+     "capability": "Viewer display transforms and looks.",
+     "pro_use": "Viewing the same linear data as it will appear on each display.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-colour-8",
+     "capability": "CDL import and export for grading round trips.",
+     "pro_use": "Matching the on-set or editorial grade in comp.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-colour-9",
+     "capability": "Scopes: histogram, waveform and vectorscope.",
+     "pro_use": "Measuring levels and colour objectively instead of by eye.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "No per-frame scopes; brand.check measures palette contrast and colour-blind separation. Should join WP-37.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "nuke-colour-10",
+     "capability": "Automatic colour matching of one shot to a reference (MatchGrade, NukeX).",
+     "pro_use": "Matching inserts and pick-ups to the hero shot.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Colour is palette data so shots already agree; a colour script and grades per scene are WP-37, palette variants WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Filtering and spatial effects",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/filters/filters.html",
+   "capabilities": [
+    {
+     "id": "nuke-filters-1",
+     "capability": "Blurs: Gaussian, directional, per-channel sizes.",
+     "pro_use": "Softening elements, faking depth, building glows.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Blurs are in WP-36's scope."
+     }
+    },
+    {
+     "id": "nuke-filters-2",
+     "capability": "Depth-driven defocus with realistic bokeh (ZDefocus, Defocus).",
+     "pro_use": "Depth of field matched to a lens, pulling focus between planes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "WP-36 adds multiplane depth of field."
+     }
+    },
+    {
+     "id": "nuke-filters-3",
+     "capability": "Convolution with a custom kernel image for lens-shaped blur (Convolve).",
+     "pro_use": "Bokeh in the shape of a real aperture.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-filters-4",
+     "capability": "Matte operations: erode, dilate, edge detection and edge blur.",
+     "pro_use": "Shrinking or softening mattes and edges.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-filters-5",
+     "capability": "Glow and bloom from bright areas.",
+     "pro_use": "Lights, screens, magical effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Note: the AI-look lint (WP-04) flags blur glows; WP-36 glows need a style rule so deliberate glows pass."
+     }
+    },
+    {
+     "id": "nuke-filters-6",
+     "capability": "Sharpening and softening.",
+     "pro_use": "Matching sharpness between elements; delivery sharpening.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Vector output is already crisp; nothing to match."
+     }
+    },
+    {
+     "id": "nuke-filters-7",
+     "capability": "Vignettes.",
+     "pro_use": "Pulling the eye to the centre.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.vignette"
+      ],
+      "note": "Film-wide vignette strength 0-1 in post finishing."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Creating effects (LightWrap, Glint, Text, Grain, Noise, Particles)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/effects/creating_effects.html",
+   "capabilities": [
+    {
+     "id": "nuke-effects-1",
+     "capability": "Light wrap: spilling background light onto the edges of a foreground.",
+     "pro_use": "Seating a foreground into its background.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Light wraps are in WP-36's scope."
+     }
+    },
+    {
+     "id": "nuke-effects-2",
+     "capability": "Glints, star filters and lens flares.",
+     "pro_use": "Highlights on sparkles and lights.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Impact star bursts exist (fx.impacts) but are drawn cartoon effects, not optical glints."
+     }
+    },
+    {
+     "id": "nuke-effects-3",
+     "capability": "Text elements with fonts, layout and animation.",
+     "pro_use": "Titles, credits and labels.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "film.credits",
+       "WP-15",
+       "WP-17"
+      ],
+      "note": "Word-timed captions are burned in by film.render; kit elements (cards, quotes, citations, wordmark) are overlays; credits.txt comes from film.credits. Kinetic typography is WP-15, letter-by-letter typewriter WP-17."
+     }
+    },
+    {
+     "id": "nuke-effects-4",
+     "capability": "Grain synthesis with film-stock presets.",
+     "pro_use": "Matching or adding film texture.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.grain"
+      ],
+      "note": "Seeded grain 0-20 in post finishing; paper sets add page grain."
+     }
+    },
+    {
+     "id": "nuke-effects-5",
+     "capability": "Procedural noise and turbulence patterns.",
+     "pro_use": "Textures, mattes and animated distortion.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json cast[].timeline.seed",
+       "line boil (style presets)"
+      ],
+      "note": "Seeded noise drives idle motion, handheld camera and line boil; no general noise image generator."
+     }
+    },
+    {
+     "id": "nuke-effects-6",
+     "capability": "Particle systems with emitters and forces.",
+     "pro_use": "Dust, sparks, rain, snow and debris.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "shots.json fx",
+       "WP-42"
+      ],
+      "note": "Motion-driven dust puffs, impacts and speed lines plus prop physics exist; rain, sparks and particle systems are WP-42."
+     }
+    },
+    {
+     "id": "nuke-effects-7",
+     "capability": "Relighting renders using normal and position passes.",
+     "pro_use": "Adjusting light direction in comp without re-rendering.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "shots.json shots[].style.toon",
+       "WP-14"
+      ],
+      "note": "Toon shading adds cel shadows and rim light from a light direction (SVG renderer); other renderers are WP-14, grades per time of day WP-37."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Analyzing and matching clips (CurveTool)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/curvetool/analyzing_frame_sequences.html",
+   "capabilities": [
+    {
+     "id": "nuke-analysis-1",
+     "capability": "Measuring average intensity per frame.",
+     "pro_use": "Detecting and removing flicker.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-24"
+      ],
+      "note": "WP-24 adds a flash check (WCAG 2.3) on frames."
+     }
+    },
+    {
+     "id": "nuke-analysis-2",
+     "capability": "Finding the region of a frame that holds content (auto-crop).",
+     "pro_use": "Detecting black borders and empty areas.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run frame fill (bare share)"
+      ],
+      "note": "Layout QA measures how much of each frame is bare, with per-style thresholds."
+     }
+    },
+    {
+     "id": "nuke-analysis-3",
+     "capability": "Tracking the brightest or darkest pixel over time.",
+     "pro_use": "Following a light source for flares.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Light positions are known from the data."
+     }
+    },
+    {
+     "id": "nuke-analysis-4",
+     "capability": "Turning image analysis into curves that drive other parameters.",
+     "pro_use": "Linking an effect to a measured change in the picture.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Doodleberry drives acting from the voice (acting.plan) but not from picture analysis; would join WP-36.",
+      "added_to_scope": true
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "3D compositing (new USD-based 3D system and Classic 3D)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/usd-3d-comp/usd-3d-comp.html",
+   "capabilities": [
+    {
+     "id": "nuke-3d-1",
+     "capability": "Virtual cameras with animation and lens settings, imported from trackers or other 3D tools.",
+     "pro_use": "Matching CG and plates; camera moves through 2.5D scenes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-42"
+      ],
+      "note": "scene.js films can use a three.js camera (e.g. films/screwworm-3d); shot films have a 2D camera. A Blender/USD 3D layer with one camera is WP-42."
+     }
+    },
+    {
+     "id": "nuke-3d-2",
+     "capability": "Cards and planes in 3D space for 2.5D multiplane scenes.",
+     "pro_use": "Parallax moves on matte paintings and layered sets.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "True 2D multiplane depth and parallax are WP-36; the forest set has fixed parallax depths."
+     }
+    },
+    {
+     "id": "nuke-3d-3",
+     "capability": "Projecting paintings or frames through a camera onto geometry.",
+     "pro_use": "Camera projection for set extensions and moves on stills.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-3d-4",
+     "capability": "Importing geometry (OBJ, FBX, Alembic, USD) and creating primitives.",
+     "pro_use": "Bringing set pieces and proxies into the comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-42"
+      ],
+      "note": "GLB models load in three.js scene pages and Blender rigs become puppets; OpenUSD interchange is WP-42."
+     }
+    },
+    {
+     "id": "nuke-3d-5",
+     "capability": "A USD scene graph: stage, prims, layers, with paths and masks to select parts of a scene.",
+     "pro_use": "Working with large CG scenes from layout and lighting.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "OpenUSD as the scene interchange is in WP-42."
+     }
+    },
+    {
+     "id": "nuke-3d-6",
+     "capability": "Lights, materials and shaders (including MaterialX in Nuke 17).",
+     "pro_use": "Lighting 3D elements to match a plate.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "2D toon lighting exists (style.toon); 3D materials and lights come with WP-42."
+     }
+    },
+    {
+     "id": "nuke-3d-7",
+     "capability": "Rendering the 3D scene to 2D with passes (ScanlineRender, ray-traced ScanlineRender2).",
+     "pro_use": "Rendering 2.5D and CG elements inside the comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-42"
+      ],
+      "note": "three.js scene films render through the scene.js pipeline; EEVEE passes composited with 2D are WP-42."
+     }
+    },
+    {
+     "id": "nuke-3d-8",
+     "capability": "Exporting the 3D scene as USD.",
+     "pro_use": "Handing comp-built layouts back to 3D departments.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "3D reconstruction and particles (NukeX: DepthGenerator, PointCloudGenerator, PoissonMesh, ModelBuilder, Particles, PrmanRender)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/nukex/nukex_intro.html",
+   "capabilities": [
+    {
+     "id": "nuke-nukex3d-1",
+     "capability": "Generating depth maps from footage.",
+     "pro_use": "Fog, depth of field and relighting on plates.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "WP-43 scopes depth estimates (Depth Anything) for parallax on paintings and photos."
+     }
+    },
+    {
+     "id": "nuke-nukex3d-2",
+     "capability": "Point clouds and meshes reconstructed from footage.",
+     "pro_use": "Rebuilding a set for projection and placement.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No photographed sets."
+     }
+    },
+    {
+     "id": "nuke-nukex3d-3",
+     "capability": "Modelling simple geometry aligned to a plate (ModelBuilder).",
+     "pro_use": "Quick projection geometry.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No plates."
+     }
+    },
+    {
+     "id": "nuke-nukex3d-4",
+     "capability": "3D particle systems with emitters, forces and collisions.",
+     "pro_use": "Debris, smoke and sparks in the comp.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-nukex3d-5",
+     "capability": "Rendering with RenderMan inside the comp (PrmanRender).",
+     "pro_use": "High-quality CG elements without leaving Nuke.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "WP-42 plans Blender in-process with EEVEE passes rather than RenderMan."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Working with Gaussian Splats",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/splats/working_with_splats.html",
+   "capabilities": [
+    {
+     "id": "nuke-splats-1",
+     "capability": "Importing, viewing and rendering Gaussian splat captures.",
+     "pro_use": "Photoreal set extensions and backgrounds from captured locations.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Splats capture real places; films use original drawn sets. If ever wanted, it joins WP-42."
+     }
+    },
+    {
+     "id": "nuke-splats-2",
+     "capability": "Masking, editing and exporting splats with field nodes.",
+     "pro_use": "Cleaning and placing splat captures.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Same reason as above."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Stereoscopic scripts",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/stereoscopic_films/stereo_projects.html",
+   "capabilities": [
+    {
+     "id": "nuke-stereo-1",
+     "capability": "Named views (left and right) flowing through one script.",
+     "pro_use": "Stereo feature work from one comp.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Delivery is flat video for phone feeds; no stereo releases."
+     }
+    },
+    {
+     "id": "nuke-stereo-2",
+     "capability": "Splitting off one view for separate changes.",
+     "pro_use": "Fixing problems that occur in one eye only.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No stereo."
+     }
+    },
+    {
+     "id": "nuke-stereo-3",
+     "capability": "Copying paint and roto between eyes with disparity.",
+     "pro_use": "Saving work in stereo clean-up.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No stereo."
+     }
+    },
+    {
+     "id": "nuke-stereo-4",
+     "capability": "Anaglyph and side-by-side review.",
+     "pro_use": "Checking depth without a stereo display.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No stereo."
+     }
+    },
+    {
+     "id": "nuke-stereo-5",
+     "capability": "Adjusting convergence.",
+     "pro_use": "Setting which depth sits at the screen.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No stereo; multiplane depth (WP-36) could render two views later if needed."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Working with Graph Scope Variables (multishot)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/multishot/multishot_intro.html",
+   "capabilities": [
+    {
+     "id": "nuke-multishot-1",
+     "capability": "One script driving many shots through variables.",
+     "pro_use": "A sequence lead builds one comp template used across dozens of shots.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.from_template",
+       "plan.brief"
+      ],
+      "note": "Format templates build a storyboard from a format and a brief; a series episode is a data template."
+     }
+    },
+    {
+     "id": "nuke-multishot-2",
+     "capability": "Switching branches per shot (VariableSwitch).",
+     "pro_use": "Per-shot differences inside a shared template.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].set_opts",
+       "shots.json shots[].style",
+       "shots.json shots[].fx",
+       "shots.json hooks"
+      ],
+      "note": "Per-shot fields override film-level ones; variants.hooks renders alternative openings."
+     }
+    },
+    {
+     "id": "nuke-multishot-3",
+     "capability": "Grouping variables (VariableGroup).",
+     "pro_use": "Keeping shot, sequence and show settings organised.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json brand",
+       "plan/channels/<id>.json"
+      ],
+      "note": "Brand kits and channel defaults (cast, voices) are inherited by a channel's films."
+     }
+    },
+    {
+     "id": "nuke-multishot-4",
+     "capability": "Linked nodes: edit one, update every linked copy, override individual controls.",
+     "pro_use": "Changing a show-wide setting in one place.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "cast library (cast/index.json)",
+       "shots.json brand"
+      ],
+      "note": "Puppets and clips are referenced by path from every film; brand values apply unless a film sets its own."
+     }
+    },
+    {
+     "id": "nuke-multishot-5",
+     "capability": "Re-rendering many shots after a shared change.",
+     "pro_use": "Applying a note across a sequence.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-27"
+      ],
+      "note": "film.render re-renders only shots whose hash changed; re-rendering a whole catalogue in a new brand kit is WP-27."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Deep compositing",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/deep/deep_compositing.html",
+   "capabilities": [
+    {
+     "id": "nuke-deep-1",
+     "capability": "Reading and writing deep images that store many depth samples per pixel.",
+     "pro_use": "Combining volumetric CG renders without re-rendering.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No volumetric CG renders; 2D layering resolves occlusion by z-order."
+     }
+    },
+    {
+     "id": "nuke-deep-2",
+     "capability": "Depth-correct merging of renders without holdout mattes.",
+     "pro_use": "Placing elements inside smoke or crowds correctly.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Needed once 3D passes are composited with 2D (WP-42); in pure 2D, z-order data suffices."
+     }
+    },
+    {
+     "id": "nuke-deep-3",
+     "capability": "Deep holdouts from pairs of deep images.",
+     "pro_use": "Generating mattes for elements behind others.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No deep renders."
+     }
+    },
+    {
+     "id": "nuke-deep-4",
+     "capability": "Recolouring deep samples from a flat render, converting to and from flat images, sampling and transforming deep data.",
+     "pro_use": "Pipeline utilities around deep renders.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No deep renders."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Audio in Nuke",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/audio_in_nuke/audio_nuke.html",
+   "capabilities": [
+    {
+     "id": "nuke-audio-1",
+     "capability": "Loading audio and playing it in sync with pictures.",
+     "pro_use": "Checking timing against dialogue and music.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic",
+       "export.web"
+      ],
+      "note": "The animatic plays storyboard stills over the mix or the voice; the web player ships audio.ogg."
+     }
+    },
+    {
+     "id": "nuke-audio-2",
+     "capability": "Showing the audio waveform against the animation timeline.",
+     "pro_use": "Timing keys to beats and syllables.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-40"
+      ],
+      "note": "The timeline shows lines with word timings; waveform lanes are WP-40."
+     }
+    },
+    {
+     "id": "nuke-audio-3",
+     "capability": "Generating animation curves from audio amplitude.",
+     "pro_use": "Driving an effect from sound.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "acting.plan",
+       "voice.build"
+      ],
+      "note": "Gestures land on emphasised words (loudness, pitch, length) and visemes come from aligned speech."
+     }
+    },
+    {
+     "id": "nuke-audio-4",
+     "capability": "Multiple audio tracks trimmed and offset on the timeline (Nuke Studio).",
+     "pro_use": "Building temp mixes in review.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "film.cuts",
+       "WP-40"
+      ],
+      "note": "film.render mixes voice, score and foley to -14 LUFS; film.cuts crossfades stems; moving and trimming cues in Studio is WP-40."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Previews and rendering (Viewer, Flipbook, Write, background and farm rendering)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/rendering/previews_rendering.html",
+   "capabilities": [
+    {
+     "id": "nuke-render-1",
+     "capability": "Flipbook playback of a frame range in real time, with audio.",
+     "pro_use": "Checking motion at speed before a full render.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "film.animatic",
+       "export.web"
+      ],
+      "note": "The player renders every frame live as a pure function of time."
+     }
+    },
+    {
+     "id": "nuke-render-2",
+     "capability": "Viewer capture: quick image sequences for review.",
+     "pro_use": "Sending stills to a supervisor.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard",
+       "critic.pack"
+      ],
+      "note": "Stills per shot or every few seconds from the final encode."
+     }
+    },
+    {
+     "id": "nuke-render-3",
+     "capability": "Rendering one, several or all Write nodes over a frame range.",
+     "pro_use": "Rendering only the outputs needed now.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "film.render takes 'only' to force a list of shots; shot.render renders one."
+     }
+    },
+    {
+     "id": "nuke-render-4",
+     "capability": "Multi-process and background rendering (frame server).",
+     "pro_use": "Keeping the interface free while using all cores.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "One browser per worker on contiguous frame ranges, with repeated frames linked instead of captured; jobs can run async over HTTP."
+     }
+    },
+    {
+     "id": "nuke-render-5",
+     "capability": "Command-line rendering without the interface.",
+     "pro_use": "Batch renders in pipelines.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "Every command runs from python -m dbe, HTTP and MCP."
+     }
+    },
+    {
+     "id": "nuke-render-6",
+     "capability": "Render farm submission and distributed rendering.",
+     "pro_use": "Rendering many shots overnight on many machines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-38"
+      ],
+      "note": "Distributed workers with a shared content-hash cache are WP-38."
+     }
+    },
+    {
+     "id": "nuke-render-7",
+     "capability": "Disk caching and localising inputs to speed up re-renders.",
+     "pro_use": "Avoiding repeated work on heavy upstream branches.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "Shots re-render only when their content hash changes; the static-layer cache is WP-15."
+     }
+    },
+    {
+     "id": "nuke-render-8",
+     "capability": "32-bit float linear processing.",
+     "pro_use": "Keeping full dynamic range through the comp.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-render-9",
+     "capability": "Output to an external broadcast monitor.",
+     "pro_use": "Colour-critical viewing at the correct pixel aspect.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Delivery targets phone and web screens; review on a phone is WP-19."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Organizing scripts (Backdrops, Groups, Precomps, LiveGroups, Gizmos)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/organizing_scripts/organizing_scripts.html",
+   "capabilities": [
+    {
+     "id": "nuke-organize-1",
+     "capability": "Backdrops and notes to label regions of the graph.",
+     "pro_use": "Making a large comp readable for the next artist.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "There is no graph to annotate yet; the graph view is WP-20. Frame-pinned notes exist (review.add)."
+     }
+    },
+    {
+     "id": "nuke-organize-2",
+     "capability": "Groups that collapse a subgraph into one node.",
+     "pro_use": "Hiding complexity and reusing setups.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-organize-3",
+     "capability": "Precomps: render a branch to disk and read the result back.",
+     "pro_use": "Freezing finished parts of a heavy comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "Shot renders are reused while their hash is unchanged; per-layer caching (static layers) is WP-15."
+     }
+    },
+    {
+     "id": "nuke-organize-4",
+     "capability": "LiveGroups: externally stored subgraphs shared by many scripts.",
+     "pro_use": "One shared setup updated for every shot that uses it.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "cast library (cast/index.json)",
+       "shots.json shots[].cast[].puppet"
+      ],
+      "note": "Puppets, clips and sets live once in the library and are referenced by every film; cast.add records provenance for every change."
+     }
+    },
+    {
+     "id": "nuke-organize-5",
+     "capability": "Gizmos: packaged tools with a reduced set of exposed controls.",
+     "pro_use": "Studio tools distributed to every artist.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].overlays (kit elements)",
+       "shots.json shots[].set_opts"
+      ],
+      "note": "Kit elements and sets are code with a few exposed options; new tools become @command functions."
+     }
+    },
+    {
+     "id": "nuke-organize-6",
+     "capability": "Toolsets and template setups.",
+     "pro_use": "Starting new shots from a standard setup.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Configuring Nuke (command line, environment, plug-ins, templates)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/configuring_nuke/configuring_nuke.html",
+   "capabilities": [
+    {
+     "id": "nuke-config-1",
+     "capability": "Command-line options and environment variables.",
+     "pro_use": "Controlling Nuke in pipelines and on farm nodes.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor",
+       "engine.info"
+      ],
+      "note": "DBE_* variables (voices, models, Python) are checked by engine.doctor with exact fixes."
+     }
+    },
+    {
+     "id": "nuke-config-2",
+     "capability": "Plug-in directories for gizmos, Python, Tcl, OFX and compiled plug-ins.",
+     "pro_use": "Extending Nuke with studio and third-party tools.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-34"
+      ],
+      "note": "New features are @command functions that appear everywhere; hosting OpenFX plug-ins (Natron) is evaluated in WP-34 for WP-36."
+     }
+    },
+    {
+     "id": "nuke-config-3",
+     "capability": "Custom menus and toolbars from startup scripts.",
+     "pro_use": "Putting studio tools in front of artists.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "A registered command appears in the CLI, HTTP API, Studio and MCP at once."
+     }
+    },
+    {
+     "id": "nuke-config-4",
+     "capability": "Template scripts and default project settings.",
+     "pro_use": "Every new shot starts from the studio standard.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-config-5",
+     "capability": "Custom viewer processes and script LUTs.",
+     "pro_use": "Showing artists the look as it will be delivered.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-config-6",
+     "capability": "Cross-platform path mapping.",
+     "pro_use": "Mixed Windows, Mac and Linux studios.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "One Linux environment with repo-relative paths."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Expressions",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/expressions/expressions.html",
+   "capabilities": [
+    {
+     "id": "nuke-expressions-1",
+     "capability": "Linking one parameter to another node's parameter.",
+     "pro_use": "Keeping related values in sync automatically.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "line-relative times in shots.json",
+       "shots.json shots[].start_line/end_line"
+      ],
+      "note": "Times reference lines ('mid.start+0.9', 'catch.end+0.45'), so cuts and moves follow the voice."
+     }
+    },
+    {
+     "id": "nuke-expressions-2",
+     "capability": "Mathematical expressions with the frame number for procedural animation.",
+     "pro_use": "Oscillations, offsets and rule-based motion.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "shots.json has no per-parameter expressions; scene.js films and kit elements are frame-pure code. Should join WP-36 (node parameters).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "nuke-expressions-3",
+     "capability": "Per-pixel maths on channels (Expression node).",
+     "pro_use": "Custom mattes and image operations without code plug-ins.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "In-house WebGL nodes are one of WP-36's options."
+     }
+    },
+    {
+     "id": "nuke-expressions-4",
+     "capability": "Several expression languages (Nuke expressions, Tcl, Python) with conversion between them.",
+     "pro_use": "Using the language that suits the task.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Data is JSON and logic is Python or JavaScript; nothing to convert between."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "The Script Editor, Python and BlinkScript",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/script_editor/script_editor_python.html",
+   "capabilities": [
+    {
+     "id": "nuke-python-1",
+     "capability": "A Python API that creates, connects and edits nodes and starts renders.",
+     "pro_use": "Pipeline automation and batch fixes across shots.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands",
+       "film.write",
+       "timeline.edit"
+      ],
+      "note": "Every command has an input schema and runs from Python, CLI, HTTP and MCP."
+     }
+    },
+    {
+     "id": "nuke-python-2",
+     "capability": "Headless Python sessions and Nuke as a Python module.",
+     "pro_use": "Scripts and services that drive Nuke without a screen.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "python -m dbe <command> is the headless entry point."
+     }
+    },
+    {
+     "id": "nuke-python-3",
+     "capability": "Callbacks before and after creation, saving and rendering.",
+     "pro_use": "Pipeline hooks: naming checks, publishing renders.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "Progress events and webhooks for long jobs are WP-20."
+     }
+    },
+    {
+     "id": "nuke-python-4",
+     "capability": "Custom Python panels in the interface.",
+     "pro_use": "Studio-specific tools beside the viewer.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-21"
+      ],
+      "note": "Commands show up in Studio automatically; a chat desk and role subsets are WP-21."
+     }
+    },
+    {
+     "id": "nuke-python-5",
+     "capability": "BlinkScript: custom image-processing kernels that run on GPU or CPU inside the comp.",
+     "pro_use": "Fast bespoke effects without compiling plug-ins.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "In-house WebGL nodes are one of WP-36's options."
+     }
+    },
+    {
+     "id": "nuke-python-6",
+     "capability": "ParticleBlinkScript: custom particle behaviour.",
+     "pro_use": "Bespoke particle motion.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Machine learning tools (CopyCat, BigCat, CatFileCreator, Inference)",
+   "source_url": "https://learn.foundry.com/nuke/content/comp_environment/air_tools/cc-intro.html",
+   "capabilities": [
+    {
+     "id": "nuke-ml-1",
+     "capability": "Training a network from a few artist-finished frames to repeat the task across a shot (CopyCat).",
+     "pro_use": "Clean-up, beauty work or mattes on long shots from a handful of examples.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "WP-43 brings models in as assistants whose output a person or critic accepts."
+     }
+    },
+    {
+     "id": "nuke-ml-2",
+     "capability": "Large-scale training across many shots (BigCat, Nuke 17).",
+     "pro_use": "Show-wide models trained on whole sequences.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "Falls within the named work package's scope."
+     }
+    },
+    {
+     "id": "nuke-ml-3",
+     "capability": "Running pre-trained PyTorch models as nodes (CatFileCreator, Inference).",
+     "pro_use": "Using community or in-house models inside the comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "voice.build",
+       "WP-43"
+      ],
+      "note": "MediaPipe pose and face, Whisper and Kokoro run behind commands; general models (depth, segmentation) are WP-43, SAM cut suggestions WP-18."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Timeline editing and review in Nuke Studio and Hiero",
+   "source_url": "https://learn.foundry.com/nuke/content/timeline_environment/preface/nukestudio_timeline.html",
+   "capabilities": [
+    {
+     "id": "nuke-timeline-1",
+     "capability": "Conforming an edit from EDL or XML against media.",
+     "pro_use": "Rebuilding the editor's cut for VFX turnover.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-22"
+      ],
+      "note": "FCPXML and EDL hand-off with a round trip through melt is WP-22."
+     }
+    },
+    {
+     "id": "nuke-timeline-2",
+     "capability": "Timeline editing tools: ripple, roll, slip, slide, razor and retime.",
+     "pro_use": "Trimming and adjusting the cut in the finishing tool.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "film.cuts",
+       "WP-19"
+      ],
+      "note": "timeline.edit moves, resizes, adds and deletes clip layers; dragging lines and shots is WP-19."
+     }
+    },
+    {
+     "id": "nuke-timeline-3",
+     "capability": "Real-time effects on timeline clips (grade, transform, text), including masked multichannel effects (Nuke 16).",
+     "pro_use": "Quick temp fixes and looks during review.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "Film-wide post finishing only; per-shot effects come with WP-36."
+     }
+    },
+    {
+     "id": "nuke-timeline-4",
+     "capability": "Create Comp: send a timeline shot to a linked comp script and bring renders back as versions.",
+     "pro_use": "Round tripping between editorial and comp.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Edit and comp are the same data: shots in shots.json are rendered and joined by film.render, so there is nothing to round-trip."
+     }
+    },
+    {
+     "id": "nuke-timeline-5",
+     "capability": "Annotations drawn on frames during review.",
+     "pro_use": "Supervisors mark exactly what to fix.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "review.add",
+       "review.list",
+       "review.fix",
+       "WP-19"
+      ],
+      "note": "Text notes are pinned to frames and turned into data edits; drawn annotations and notes about camera and gaze are WP-19."
+     }
+    },
+    {
+     "id": "nuke-timeline-6",
+     "capability": "Sync review: several remote people in one playback session.",
+     "pro_use": "Remote dailies.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "The review room (WP-19) adds review on a phone; shared sessions should join it."
+     }
+    },
+    {
+     "id": "nuke-timeline-7",
+     "capability": "Versions and snapshots of shots, swapped and compared on the timeline.",
+     "pro_use": "Choosing between takes and rolling back.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.launch",
+       "shot.render",
+       "WP-19"
+      ],
+      "note": "Each film session has its own git branch and renderer comparisons can be rendered side by side; a visual diff between two versions is WP-19."
+     }
+    },
+    {
+     "id": "nuke-timeline-8",
+     "capability": "Exporting shots, transcodes and edit decisions for hand-off.",
+     "pro_use": "Turnover to vendors and delivery to editorial.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "film.package",
+       "WP-22"
+      ],
+      "note": "Cuts with .srt and OTIO, and posting packages; FCPXML and EDL are WP-22."
+     }
+    },
+    {
+     "id": "nuke-timeline-9",
+     "capability": "Contact sheet view with pick and tag modes (Nuke 16).",
+     "pro_use": "Selecting takes and tagging shots visually.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard",
+       "qa.run",
+       "critic.pack"
+      ],
+      "note": "Contact sheets are written as files; there is no interactive pick or tag mode (cover.make picks cover frames by score)."
+     }
+    },
+    {
+     "id": "nuke-timeline-10",
+     "capability": "Tags on shots and clips for tracking status and notes.",
+     "pro_use": "Marking shots as approved, needing work, or omitted.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "review.list",
+       "prod.status",
+       "WP-19"
+      ],
+      "note": "Note statuses and film states exist; per-shot tags belong with the review room (WP-19)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Plate repair and specialist tools (FurnaceCore, CaraVR, UnrealReader)",
+   "source_url": "https://learn.foundry.com/nuke/content/furnacecore/deflicker2.html",
+   "capabilities": [
+    {
+     "id": "nuke-specialist-1",
+     "capability": "Removing flicker from footage (Deflicker).",
+     "pro_use": "Fixing timelapse and lighting flicker.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Rendered frames have no exposure flicker; a flash check for viewers' safety is WP-24."
+     }
+    },
+    {
+     "id": "nuke-specialist-2",
+     "capability": "Matching grain to a plate (Regrain).",
+     "pro_use": "Making added elements share the plate's grain.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post.grain"
+      ],
+      "note": "Uniform seeded grain; there is no plate to match."
+     }
+    },
+    {
+     "id": "nuke-specialist-3",
+     "capability": "Wire and rig removal.",
+     "pro_use": "Removing stunt rigs from live action.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No live action."
+     }
+    },
+    {
+     "id": "nuke-specialist-4",
+     "capability": "Aligning and steadying shots (Align, Steadiness).",
+     "pro_use": "Matching two passes of a camera move.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No live action."
+     }
+    },
+    {
+     "id": "nuke-specialist-5",
+     "capability": "360-degree VR stitching and review (CaraVR).",
+     "pro_use": "VR productions.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Flat social video only."
+     }
+    },
+    {
+     "id": "nuke-specialist-6",
+     "capability": "Pulling live renders from Unreal Engine into the comp (UnrealReader).",
+     "pro_use": "Real-time engine elements in finishing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "No game-engine link; would join WP-42 (3D layer).",
+      "added_to_scope": true
+     }
+    }
+   ]
+  }
+ ]
+}

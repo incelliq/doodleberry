@@ -1,0 +1,2378 @@
+{
+ "tool": "TVPaint Animation",
+ "version": "12.1.0 (TVPaint Animation 12; manual at doc.tvpaint.com)",
+ "sources": [
+  {
+   "url": "https://doc.tvpaint.com/docs/doc-introduction",
+   "title": "TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and sidebar table of contents",
+   "used_for": "The manual's 26 top-level chapters, and the introduction chapter"
+  },
+  {
+   "url": "https://doc.tvpaint.com/sitemap.xml",
+   "title": "doc.tvpaint.com sitemap",
+   "used_for": "The full list of manual pages under each chapter (about 260 English pages read)"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/changelogs/12-1-0",
+   "title": "TVPaint Animation 12.1.0 changelog",
+   "used_for": "Current version, and 12.1 additions (timesheet, XDTS, typed camera moves, rig constraints, search, loop range, ProRes, bridge between clips)"
+  },
+  {
+   "url": "https://tvpaint.com/en/blog/tvpaint-animation-12-nouveautes",
+   "title": "TVPaint Animation 12: what's new (TVPaint blog)",
+   "used_for": "12.0 headline features: modular interface, layer folders, key-based 2D camera, bitmap rigging, dual papers, selection brush, updated converter"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/drawing-basic-tools/tool-panel/brush-engine/brush-engine-overview",
+   "title": "Brush engine chapter pages (drawing modes, profiles, connections, custom and anim brushes)",
+   "used_for": "Drawing: basic tools capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/animation-advanced-functions/light-table/light-table-overview",
+   "title": "Light table and advanced animation pages",
+   "used_for": "Onion skin, out of pegs, flip, repeat images, animated strokes, drawing recorder, image library"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/animation-puppet-layer/overview",
+   "title": "Puppet layer chapter (rig mode, animate mode, poses, export options)",
+   "used_for": "Puppet layer capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/colorize-texturize/colorize-with-ctg-layers/quick-overview",
+   "title": "CTG layer colouring and texturing pages",
+   "used_for": "Colorize and texturize capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/camera/overview",
+   "title": "Camera chapter pages",
+   "used_for": "Camera capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/timesheet/timesheet-overview",
+   "title": "Timesheet chapter pages (roles, camera movement keys, PDF and XDTS)",
+   "used_for": "Timesheet capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/import-export/export-files/overview",
+   "title": "Import / Export chapter pages (formats, layer structure, JSON, converter, clean-up, peg holes, video input)",
+   "used_for": "Import / Export capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/advanced-tools/multiplane-camera/overview",
+   "title": "Advanced tools pages (KeyFramer, multiplane camera, particle generator)",
+   "used_for": "Advanced tools capabilities"
+  },
+  {
+   "url": "https://doc.tvpaint.com/docs/george/george-overview",
+   "title": "George scripting chapter",
+   "used_for": "Scripting capabilities"
+  },
+  {
+   "url": "file:///home/user/doodleberry/docs/feature-map.md",
+   "title": "Doodleberry feature map (local)",
+   "used_for": "Status of Doodleberry features and their WPs"
+  },
+  {
+   "url": "file:///home/user/doodleberry/docs/dbe.md",
+   "title": "dbe backend docs (local)",
+   "used_for": "Data fields (shots.json camera, style, post, fx, overlays), Rig Canvas tools, renderers"
+  },
+  {
+   "url": "file:///home/user/doodleberry/docs/work-packages.md",
+   "title": "Doodleberry work packages (local)",
+   "used_for": "Full scopes of WP-33 to WP-43, for gap mapping"
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Introduction",
+   "source_url": "https://doc.tvpaint.com/docs/doc-introduction",
+   "capabilities": [
+    {
+     "id": "tvpaint-introduction-1",
+     "capability": "Downloadable example projects that go with the lessons, so each tool can be tried on real material.",
+     "pro_use": "Studios hand these to new hires and freelancers so they can learn the house tools on known scenes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/fx-demo",
+       "films/kit-demo",
+       "films/explainer-demo",
+       "films/review-demo"
+      ],
+      "note": "Doodleberry's demo films each exercise a feature set and double as golden-frame fixtures; no lesson text goes with them."
+     }
+    },
+    {
+     "id": "tvpaint-introduction-2",
+     "capability": "Video walkthroughs for the more complex tools (camera, puppet layer).",
+     "pro_use": "Teams use them to onboard artists quickly, without a trainer.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-28"
+      ],
+      "note": "Teaching mode (turn a pipeline into a step-by-step tutorial) is in WP-28's scope."
+     }
+    },
+    {
+     "id": "tvpaint-introduction-3",
+     "capability": "A manual in several interface languages (French, Japanese, Chinese planned).",
+     "pro_use": "International studios and outsourcing partners work from the same reference.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is in-house with one owner and agents; its docs are English. Localising film content is a separate matter (film.localize, WP-25)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Download, install and manage your license",
+   "source_url": "https://doc.tvpaint.com/docs/download-install-manage/wibu-glossary",
+   "capabilities": [
+    {
+     "id": "tvpaint-install-license-1",
+     "capability": "Installers for Windows, macOS and Linux, with per-OS setup steps.",
+     "pro_use": "IT teams roll the same version out across a studio's mixed workstations.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor"
+      ],
+      "note": "engine.doctor lists what the machine has and lacks with the exact fix; tools/setup.sh applies them idempotently."
+     }
+    },
+    {
+     "id": "tvpaint-install-license-2",
+     "capability": "Licence activation, rehosting and troubleshooting through a copy-protection system (software or dongle).",
+     "pro_use": "Studios move seats between machines and recover after hardware changes.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is in-house and built on open-source parts; there are no seat licences. Third-party licence classes are tracked separately (licence.ledger)."
+     }
+    },
+    {
+     "id": "tvpaint-install-license-3",
+     "capability": "Network installation for many seats from one server.",
+     "pro_use": "Large studios deploy and update all workstations centrally.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.doctor",
+       "WP-38"
+      ],
+      "note": "One machine runs every command over CLI, HTTP and MCP; render workers on several machines, sharing a content-hash cache, come in WP-38."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Interface",
+   "source_url": "https://doc.tvpaint.com/docs/interface/interface-overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-interface-1",
+     "capability": "A modular interface where every panel can be detached from the main window and arranged across several monitors.",
+     "pro_use": "Animators keep the canvas on the tablet display and timeline, colour and light table on a second screen.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "timeline.get",
+       "WP-21"
+      ],
+      "note": "Studio is a set of separate browser pages (timeline, review, board, Rig Canvas) that can sit on different screens, but the layout cannot be saved. A combined, arrangeable desk belongs with WP-21."
+     }
+    },
+    {
+     "id": "tvpaint-interface-2",
+     "capability": "Rooms: saved workspaces for each stage of the work (storyboard, roughs, clean-up, compositing).",
+     "pro_use": "Artists switch their whole layout when they move from roughing to cleaning or compositing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-21"
+      ],
+      "note": "The nearest equivalent for agents is a command subset per role (director, animator, editor), in WP-21."
+     }
+    },
+    {
+     "id": "tvpaint-interface-3",
+     "capability": "A timeline that carries layer drawings, camera keys, effect keys, notes and audio tracks in one view.",
+     "pro_use": "Everything that is timed in a scene can be checked against everything else at a glance.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "timeline.edit",
+       "WP-19",
+       "WP-40"
+      ],
+      "note": "The Studio timeline has shot, dialogue (with word ticks) and clip lanes. A camera-keys lane is in WP-19 and audio waveform lanes in WP-40."
+     }
+    },
+    {
+     "id": "tvpaint-interface-4",
+     "capability": "A layer stack for creating, ordering, grouping, merging, splitting and renaming layers.",
+     "pro_use": "Compositing order and per-layer edits are managed by hand on every scene.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: underlays / cast / overlays order",
+       "puppet: part order and z controls",
+       "WP-35"
+      ],
+      "note": "Layering is declarative: set, then underlays, cast in order, then overlays; inside a puppet, part order plus z controls. There is no free stack of drawn layers until drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "tvpaint-interface-5",
+     "capability": "A playback bar with play, loop, frame step and playback-rate options.",
+     "pro_use": "Animators review timing constantly while drawing.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "export.web"
+      ],
+      "note": "The player page (every frame a pure function of time) and the exported web player both play, scrub and step frames."
+     }
+    },
+    {
+     "id": "tvpaint-interface-6",
+     "capability": "An info bar that reads out cursor coordinates, the colour under the cursor and preview status.",
+     "pro_use": "Artists use it to place elements precisely and check colour values.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents read exact positions from the baked animation (tools/bake.mjs, the PROBE used by review.fix) rather than from a cursor."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Project creation and management",
+   "source_url": "https://doc.tvpaint.com/docs/project-creation-management/create-project",
+   "capabilities": [
+    {
+     "id": "tvpaint-project-1",
+     "capability": "A new project set up with resolution, frame rate, pixel aspect, field order and background.",
+     "pro_use": "Each production fixes its delivery format before any drawing starts.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create"
+      ],
+      "note": "film.create makes the folder; shots.json holds size and fps (1080x1920 at 30 fps is the QA bar). Pixel aspect and fields have no use in a progressive digital pipeline."
+     }
+    },
+    {
+     "id": "tvpaint-project-2",
+     "capability": "Loading existing projects, with a list of recent ones.",
+     "pro_use": "Artists hop between scenes all day.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.get"
+      ],
+      "note": "film.get returns a film's sources and build outputs; prod.status lists the films on the board."
+     }
+    },
+    {
+     "id": "tvpaint-project-3",
+     "capability": "Saving and save-as, so successive versions can be kept.",
+     "pro_use": "Teams keep numbered versions to roll back after bad changes.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.write"
+      ],
+      "note": "film.write validates each source file on write; films are text, so git holds every version."
+     }
+    },
+    {
+     "id": "tvpaint-project-4",
+     "capability": "Guidance and features for keeping work safe: backups, local storage, not touching files while they are open.",
+     "pro_use": "Studios guard against lost days of drawing after a crash.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "git history of films/<name>/",
+       "prod.launch worktree per film"
+      ],
+      "note": "Films are small text files under version control. Each production session gets its own worktree and branch."
+     }
+    },
+    {
+     "id": "tvpaint-project-5",
+     "capability": "Project templates: blank projects with preset resolution, rate and layers.",
+     "pro_use": "Series productions start every episode from the same technical setup.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.from_template"
+      ],
+      "note": "Format templates build a storyboard from a brief, with the frame size and pacing rules set. These are narrative templates as well as technical ones."
+     }
+    },
+    {
+     "id": "tvpaint-project-6",
+     "capability": "Modify project: resize or resample, crop and change the frame rate of an existing project.",
+     "pro_use": "Re-purposing a scene for a new delivery format or a higher-resolution master.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-24",
+       "WP-37"
+      ],
+      "note": "film.render with an aspect re-stages a film natively for 16:9 or 1:1, and vector art scales freely. One command for every aspect is in WP-24; higher frame-rate and 4K masters are in WP-37."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Canvas display",
+   "source_url": "https://doc.tvpaint.com/docs/canvas-display/rotate-pan-zoom",
+   "capabilities": [
+    {
+     "id": "tvpaint-canvas-1",
+     "capability": "Rotate, pan and zoom the view without changing the drawing, and open several windows on one project.",
+     "pro_use": "Animators turn the page to draw natural arcs and zoom in for clean-up.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "The Rig Canvas has no view rotation or zoom; drawing-tool upgrades are in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-canvas-2",
+     "capability": "A canvas background (colour or checkerboard) kept out of exports, with layers stacked on it like cels.",
+     "pro_use": "Artists judge line and colour against neutral or transparent grounds and export with alpha.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "export.lottie",
+       "WP-23"
+      ],
+      "note": "Synfig and Grease Pencil render characters with alpha before compositing, and export.lottie can leave out the set (background none). Alpha video deliverables are in WP-23."
+     }
+    },
+    {
+     "id": "tvpaint-canvas-3",
+     "capability": "Display overlays: stencil, paper texture, current selection, an animator disc and a safe frame.",
+     "pro_use": "Artists see framing and masking aids while drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "qa.run",
+       "brand.assets",
+       "WP-18"
+      ],
+      "note": "Safe areas are measured by qa.run and drawn as overlays on brand assets. Live drawing overlays belong in the Rig Canvas tools (WP-18)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Drawing: basic tools",
+   "source_url": "https://doc.tvpaint.com/docs/drawing-basic-tools/drawing-basic-tools-intro",
+   "capabilities": [
+    {
+     "id": "tvpaint-drawing-1",
+     "capability": "A set of natural-media raster brushes (pen, pencil, airbrush, crayon, oil, watercolour-like) with many settings.",
+     "pro_use": "Frame-by-frame animators draw roughs, clean lines and painted backgrounds in the one program.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "puppet.from_ink",
+       "WP-34",
+       "WP-18"
+      ],
+      "note": "The Rig Canvas has one pressure ink (perfect-freehand), and puppet.from_ink keeps a real pen's texture from a scan. Textured brush engines (Krita, libmypaint) come through WP-34 and WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-2",
+     "capability": "Pen gestures (pressure, tilt, speed, direction) mapped to brush parameters through editable curves.",
+     "pro_use": "Line weight that responds to the hand is central to the look of hand-drawn animation.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Pressure (or a speed-simulated pressure with a mouse) drives ink width in the Rig Canvas. Mapping to other parameters, and tilt, is in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-3",
+     "capability": "Custom brushes cut from any drawing, with stamp spacing and wet profiles, plus animated brushes that cycle through several images.",
+     "pro_use": "Studios build a brush kit for a show's signature texture; animated brushes stamp foliage or crowds fast.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34",
+       "WP-18"
+      ],
+      "note": "Painting and brush engines are WP-34 candidates; scatter of animated stamps also touches WP-42."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-4",
+     "capability": "Drawing modes that decide how a stroke combines with what is already there: colour, behind, erase, shade, light, colorize, panto and others.",
+     "pro_use": "Painting behind line art and shading without masks speeds up clean-up and colour.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "The Rig Canvas bucket tucks fills under the ink, which acts like a 'behind' mode. Layer-level blend modes are in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-5",
+     "capability": "Shape tools: freehand strokes, lines, rectangles, ellipses and circles (2 and 3 point), and Bezier or B-spline curves, filled or outlined.",
+     "pro_use": "Used for props, layouts and clean geometric elements.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "Vector paths are native puppet and kit data, and puppet.import flattens basic SVG shapes. Interactive shape tools in the Rig Canvas are in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-6",
+     "capability": "Papers: grain textures applied through the brush, including two papers at once.",
+     "pro_use": "Gives digital drawings the tooth of real paper, a signature of the medium.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "The paper set and the post presets (paper, grain) texture the whole frame. Medium simulation for each stroke (pencil, marker, crayon) is in WP-15."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-7",
+     "capability": "Line smoothing (stabiliser), either in real time or after the stroke.",
+     "pro_use": "Clean-up artists get steady, confident lines without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Strokes are simplified after drawing (Ramer-Douglas-Peucker); a live stabiliser is in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-8",
+     "capability": "Cut, select and crop tools: rectangle, freehand and colour-based selection, a selection brush, and cropping.",
+     "pro_use": "Artists isolate parts of a drawing to move, fix or reuse them.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.cut",
+       "puppet.from_ink",
+       "WP-18"
+      ],
+      "note": "Polygon cuts split a drawing into rig parts (with overlap seams). General lasso and selection editing are in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-9",
+     "capability": "A colour panel with A/B colours, sliders, a picker, a mixer, palettes, a colour wheel, variations and a history.",
+     "pro_use": "Colourists keep a show palette and mix related shades fast.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet: palette slots",
+       "brand/brand.json palette"
+      ],
+      "note": "Colours are named palette slots in puppets and a measured brand palette (brand.check). There is no interactive mixer, which agents do not need."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-10",
+     "capability": "Construction guides with snapping: grid, field chart, circles, ellipses, angle lines, segments, vanishing points and image guides.",
+     "pro_use": "Layout artists draw in correct perspective; animators keep arcs and paths true.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No drawing guides yet; they fit the Rig Canvas tools of WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-11",
+     "capability": "A safe-area guide showing title-safe and action-safe zones.",
+     "pro_use": "Keeps important action and text clear of cropping on delivery.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run",
+       "brand.assets"
+      ],
+      "note": "qa.run measures every word's box against the platform-safe area of each aspect; brand.assets draws safe-area QA overlays."
+     }
+    },
+    {
+     "id": "tvpaint-drawing-12",
+     "capability": "Tool presets and a tool history to recall configured brushes.",
+     "pro_use": "Artists switch between rough, clean and colour brushes many times an hour.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Belongs with brush engines (WP-34) and the Rig Canvas tools (WP-18)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Drawing: transformations",
+   "source_url": "https://doc.tvpaint.com/docs/drawing-transformations/transformations-overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-transform-1",
+     "capability": "Panning a drawing or selection across the canvas, on one image or across many.",
+     "pro_use": "Repositions drawings during clean-up or fixes registration between frames.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json: cast[].place keys"
+      ],
+      "note": "Characters are moved by keyed placement (x, y, scale). Moving drawn pixels needs drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "tvpaint-transform-2",
+     "capability": "Transform: scale, rotate, shift and flip with handles or typed values, a movable pivot, applied to one frame or many.",
+     "pro_use": "Adjusts the size and staging of drawings without redrawing.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json: cast[].place {x, y, s}",
+       "shots.json: cast[].flip",
+       "puppet: part pivots and angles"
+      ],
+      "note": "Scale, flip and move are placement data, and rotation comes through part angles about pivots. A whole character's rotation is not a placement field."
+     }
+    },
+    {
+     "id": "tvpaint-transform-3",
+     "capability": "Perspective: four corner points distort a drawing.",
+     "pro_use": "Fits a drawing onto a receding surface such as a sign or a floor.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Corner-pin distortion fits the per-shot compositor."
+     }
+    },
+    {
+     "id": "tvpaint-transform-4",
+     "capability": "Warp: an elastic grid with pins that bends pixels smoothly.",
+     "pro_use": "Fixes proportions or adds organic bends to a finished drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet: mesh strokes with skinning (v0.5), bendy limbs",
+       "WP-35"
+      ],
+      "note": "Bone-driven mesh deformation exists in the puppet format (SVG renderer). Free pin warping of a drawing fits WP-35 drawn levels, or the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "tvpaint-transform-5",
+     "capability": "Transformation resampling that preserves image quality, with a preview-quality option.",
+     "pro_use": "Avoids softening line art when drawings are scaled or rotated repeatedly.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-37"
+      ],
+      "note": "Vector art is resolution independent, but raster parts are resampled by the browser with no quality control. 4K masters are in WP-37."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation: first steps",
+   "source_url": "https://doc.tvpaint.com/docs/animation-first-steps/introduction",
+   "capabilities": [
+    {
+     "id": "tvpaint-anim-basics-1",
+     "capability": "Animation layers: each layer is a strip of drawings, like a roll of film shown on the canvas.",
+     "pro_use": "The core of frame-by-frame work: every character, effect and background is drawn layer by layer.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels (a sequence of drawings with exposures) are the new part type of WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-2",
+     "capability": "Instances and exposure cells: one drawing held for any number of frames, and instances split or joined.",
+     "pro_use": "Timing on ones, twos or threes, and holds, are set per drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: style.step",
+       "WP-35"
+      ],
+      "note": "style.step animates a shot or character on 12s, 8s or 6s. Exposure per drawing comes with WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-3",
+     "capability": "Adding or removing exposures and instances, shrinking a layer, and reversing a run of images.",
+     "pro_use": "Retiming hand-drawn animation without redrawing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "timeline.edit retimes and resizes clips, but not drawings."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-4",
+     "capability": "A layer's start frame and moving a whole layer in time.",
+     "pro_use": "Offsets overlapping actions and syncs an element to sound.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.edit"
+      ],
+      "note": "move_clip moves a clip layer, and times can be line-relative so they follow the dialogue after re-voicing."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-5",
+     "capability": "Moving, cutting, copying and pasting images within a layer and between layers.",
+     "pro_use": "Reuses drawings and rearranges keys while blocking.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Needs drawn levels."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-6",
+     "capability": "Navigation from instance to instance and selection of instance ranges.",
+     "pro_use": "Animators flip quickly between keys while in-betweening.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-19"
+      ],
+      "note": "timeline.get gives every clip's resolved start and end, and the Studio nudges by frame. Key-to-key navigation and a keys lane are in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-7",
+     "capability": "Layer folders that group layers and move them together.",
+     "pro_use": "Keeps big scenes with many characters and effects tidy.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet: part hierarchy",
+       "shots.json: cast[] entries"
+      ],
+      "note": "A character is a group of parts with one timeline, and a shot groups its cast. Arbitrary user folders arrive with drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "tvpaint-anim-basics-8",
+     "capability": "Flipping a layer horizontally or vertically.",
+     "pro_use": "Reverses a character's facing or reuses a drawing mirrored.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json: cast[].flip"
+      ],
+      "note": "flip is 1 or -1 per cast member."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation: additional functions",
+   "source_url": "https://doc.tvpaint.com/docs/animation-additional-functions/timeline-options/pre-post-behavior",
+   "capabilities": [
+    {
+     "id": "tvpaint-anim-extra-1",
+     "capability": "Pre and post behaviour: what a layer shows before its first image and after its last (nothing, hold, loop, ping-pong), now also per folder.",
+     "pro_use": "Cycles (walks, flames, idles) run for a whole scene from a few drawings.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: timeline clips (looping base layers such as idle)",
+       "WP-35"
+      ],
+      "note": "Clips can loop and base layers fill the gaps between gestures. Ping-pong and pre/post settings for drawn levels are in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-2",
+     "capability": "Per-layer opacity, and layer attenuation during playback.",
+     "pro_use": "Dims reference layers and builds transparent effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Opacity and mattes for each layer belong to the compositor."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-3",
+     "capability": "Locking layers against accidental edits, and collapsing them to save room.",
+     "pro_use": "Protects approved backgrounds or clean lines while others are worked on.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-39"
+      ],
+      "note": "WP-39 adds assignments and locks on films and characters."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-4",
+     "capability": "A background preview proxy that caches played frames, with settings for quality and memory.",
+     "pro_use": "Smooth real-time playback of heavy scenes on ordinary machines.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "film.animatic",
+       "shot.render"
+      ],
+      "note": "The live player renders frames on demand, the animatic takes seconds, and renders are cached per shot by content hash so only changed shots re-render."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-5",
+     "capability": "Colour groups: tag layers with colours to show, hide, select or protect them together.",
+     "pro_use": "Organises dense scenes by character or department.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Timeline organisation features fit the timeline room upgrade (WP-19)."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-6",
+     "capability": "Layer blending modes (multiply, screen, add, overlay and so on) and merging layers through a mode.",
+     "pro_use": "Shadows, glows and colour tints are composited from separate layers.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Blend modes are in WP-36's node compositor scope."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-7",
+     "capability": "Bookmarks and coloured image marks that set key drawings apart from breakdowns.",
+     "pro_use": "Lead animators mark keys and breakdowns so assistants know what to in-between.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "review.add",
+       "WP-35"
+      ],
+      "note": "review.add pins notes to frames. Marking drawings by role (key, breakdown, in-between) comes with WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-8",
+     "capability": "Preserve alpha (paint only on existing pixels) and stencils (mask one layer by another's opaque pixels).",
+     "pro_use": "Shading, texturing and recolouring inside line art without leaking.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: style.toon",
+       "WP-36"
+      ],
+      "note": "Toon shading clips each shape to itself to paint cel shadows. General masks and mattes are in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-anim-extra-9",
+     "capability": "Layer presets that set the defaults (type, colour, opacity, mode) of new layers.",
+     "pro_use": "Departments start every scene with a consistent layer setup.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Only meaningful once drawn layers exist (WP-35); style defaults today live in dbe/profiles.json."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation: advanced functions",
+   "source_url": "https://doc.tvpaint.com/docs/animation-advanced-functions/light-table/light-table-overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-anim-advanced-1",
+     "capability": "A light table (onion skin) showing nearby frames faded and tinted, with per-frame opacity and modes by instance, frame, bookmark, rig key or image mark.",
+     "pro_use": "Essential for in-betweening and checking spacing in hand-drawn animation.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The Rig Canvas 'Onion' only shows the rest of the character faintly (a spatial guide, not frames in time). Onion skins over time are in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-2",
+     "capability": "Out of pegs: slide the onion-skin frames on top of each other, without changing the drawings, to line them up for in-betweening.",
+     "pro_use": "Animators line up overlapping volumes when an in-between travels a long way.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of the onion-skin work in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-3",
+     "capability": "Flipping: roll through a few drawings back and forth as one would with paper.",
+     "pro_use": "The quickest check of a motion's flow while drawing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "film.preview scrubs a film, but flipping drawings belongs to WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-4",
+     "capability": "Sketch panel presets for roughing in colour and cleaning up in a separate pass.",
+     "pro_use": "The usual rough, tie-down and clean-up workflow.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Clean-up of rough lines is in WP-35's scope."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-5",
+     "capability": "An animator panel of one-click actions such as setting a layer to ones, twos or threes or adding exposure.",
+     "pro_use": "Speeds up retiming and layer housekeeping.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: style.step",
+       "WP-35"
+      ],
+      "note": "Stepped timing per shot or character exists; per-drawing exposure actions are in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-6",
+     "capability": "Repeat images: exposures reuse content from earlier instances to build cycles without duplicating drawings.",
+     "pro_use": "Makes cycles and repeated actions cheap to change.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: timeline clips (loops)",
+       "WP-35"
+      ],
+      "note": "Motion clips loop; drawn cycles come with drawn levels."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-7",
+     "capability": "Animated strokes: a single stroke spread over successive frames.",
+     "pro_use": "Fast hand-made effects such as rain, flying insects or sparkles.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Procedural rain and sparks are in WP-42; hand-made strokes through time fit WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-8",
+     "capability": "A drawing recorder that replays how a drawing was built, stroke by stroke, as an animation.",
+     "pro_use": "Draw-on reveals for titles, explainers and process videos.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: overlays type draw",
+       "WP-18"
+      ],
+      "note": "The kit 'draw' element makes paths draw themselves over time. Recording a live drawing session in the Rig Canvas would join WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-anim-advanced-9",
+     "capability": "An image library per project storing images, sounds, rigs and poses for reuse.",
+     "pro_use": "Shared assets stay consistent across scenes and artists.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "cast.add",
+       "cast.list",
+       "WP-16"
+      ],
+      "note": "The cast library registers puppets with licence and provenance, and poses and clips travel with each puppet. Props, outfits and set packs are in WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation: puppet layer",
+   "source_url": "https://doc.tvpaint.com/docs/animation-puppet-layer/overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-puppet-1",
+     "capability": "Building a puppet from parts drawn on separate layers grouped in a puppet folder.",
+     "pro_use": "Cut-out characters for TV series where full redraws are too costly.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Layered SVG, PSD or ORA files become a puppet by layer name, with pivots estimated where markers are missing."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-2",
+     "capability": "Rig mode: placing and editing bones and joints on the drawing.",
+     "pro_use": "Riggers set where each limb bends before animation starts.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "doodle.cut",
+       "puppet.save",
+       "WP-16"
+      ],
+      "note": "Rigs follow templates (humanoid, doodle), with pivots and cuts that can be confirmed or dragged. Free-form bone layouts and new templates (quadruped, bird, object) are in WP-16."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-3",
+     "capability": "Animate mode: keying bone rotations and positions, with in-betweens made automatically.",
+     "pro_use": "Fast keyed motion for simple actions without drawing in-betweens.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.save",
+       "timeline.edit"
+      ],
+      "note": "Rig Canvas posing records keys and saves them as a clip (puppet v0.7). Clips are placed and retimed on the timeline."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-4",
+     "capability": "Squash and stretch of individual members, scaled in both directions.",
+     "pro_use": "Adds elasticity and impact to cut-out motion.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: timeline clips (whole-body squash)",
+       "WP-11"
+      ],
+      "note": "Only the whole body squashes today; squash and stretch per part is in WP-11."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-5",
+     "capability": "Bone locking and bone constraints.",
+     "pro_use": "Keeps feet planted and limbs bound while other bones move.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: timeline ik / pins",
+       "WP-11"
+      ],
+      "note": "Two-bone and FABRIK IK, foot pins, joint limits, look-at and parent switching exist. Copy-rotation and follow-path constraints are in WP-11."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-6",
+     "capability": "Speed curves on rig keys for easing.",
+     "pro_use": "Gives keyed motion weight and accents.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet/loader/acting.js: smoothstep between keys",
+       "WP-19"
+      ],
+      "note": "Keys ease with a fixed smoothstep. Editable curves per key are in WP-19's graph editor."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-7",
+     "capability": "Swapping a member's drawing (mouth, hand, eye shape) at any key from stored poses.",
+     "pro_use": "Lip-sync and hand poses on cut-out characters.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet: swap sets",
+       "clips: swaps tracks",
+       "puppet: controls"
+      ],
+      "note": "Swap sets with keyed swaps and controls; visemes come from the voice automatically (voice.build)."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-8",
+     "capability": "A pose selector with previews, and adding new poses from existing ones.",
+     "pro_use": "Animators pick from a library of approved poses instead of re-posing.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.save",
+       "puppet.sheet"
+      ],
+      "note": "Saved poses live in the puppet (used by poses keys in any timeline); the model sheet shows poses and expressions."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-9",
+     "capability": "Saving and importing whole rigs and rigged animations through the library.",
+     "pro_use": "Rigs and stock motions are reused across episodes and artists.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.add",
+       "puppet.save"
+      ],
+      "note": "Clips are template-level, so any character on a template plays any library clip."
+     }
+    },
+    {
+     "id": "tvpaint-puppet-10",
+     "capability": "Turning puppet layers into ordinary frame-by-frame layers for redrawing.",
+     "pro_use": "Animators rough with the rig, then plus the animation by hand.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The bake (tools/bake.mjs) gives every frame's pose, but there is no conversion into drawn levels to redraw. puppet.export_layers exports only the rest pose."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Working with sound",
+   "source_url": "https://doc.tvpaint.com/docs/working-with-sound/adding-editing-audio-tracks/overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-sound-1",
+     "capability": "Loading several audio tracks from files or from the library, project-wide or per clip.",
+     "pro_use": "Dialogue, music and effects tracks drive timing in animatics and animation.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "voice.build",
+       "WP-13"
+      ],
+      "note": "Voices are synthesised and aligned, the score is procedural and foley is automatic. Importing recorded human takes into slots is in WP-13."
+     }
+    },
+    {
+     "id": "tvpaint-sound-2",
+     "capability": "Per-track settings: mute, volume, colour group, compact or full view.",
+     "pro_use": "Editors balance temp tracks while timing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-40"
+      ],
+      "note": "The mix follows rules (ducking, effects below music, panning by screen position). Controls for each track in Studio are in WP-40."
+     }
+    },
+    {
+     "id": "tvpaint-sound-3",
+     "capability": "Waveform display with drag-to-offset, trimming and a master track summing all tracks.",
+     "pro_use": "Animators read accents and syllables from the waveform.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-40"
+      ],
+      "note": "Dialogue lanes show lines with word ticks. Waveform lanes and cue trimming are in WP-40."
+     }
+    },
+    {
+     "id": "tvpaint-sound-4",
+     "capability": "Audio scrubbing: a short piece of sound plays as the playhead is dragged.",
+     "pro_use": "Finds the exact frame of a sound accent.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-40"
+      ],
+      "note": "Word timings are exact in data (timing.json), but there is no audio scrub in Studio."
+     }
+    },
+    {
+     "id": "tvpaint-sound-5",
+     "capability": "A stopwatch for tapping beats to measure the rhythm of music or action.",
+     "pro_use": "Timing action to music or to an acted reference.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.beats"
+      ],
+      "note": "The beat grid comes from the score's bpm, and shot changes and line starts are measured against it."
+     }
+    },
+    {
+     "id": "tvpaint-sound-6",
+     "capability": "Timeline notes: drawn and typed annotations placed along time.",
+     "pro_use": "Directors leave timing notes for animators on the scene itself.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "review.add",
+       "review.list"
+      ],
+      "note": "Notes are pinned to frames, and review.fix turns many of them into data edits."
+     }
+    },
+    {
+     "id": "tvpaint-sound-7",
+     "capability": "Sound files stored in the project library and dropped on the timeline (12.1).",
+     "pro_use": "Reusable effect and music libraries per show.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-13"
+      ],
+      "note": "Effect cues are typed (shots.json cues) and come from a synthesised set in the manifest. A sample library (Kenney CC0) is in WP-13."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Colorize and texturize",
+   "source_url": "https://doc.tvpaint.com/docs/colorize-texturize/colorize-with-drawing-tools/paint-bucket-in-depth",
+   "capabilities": [
+    {
+     "id": "tvpaint-colour-1",
+     "capability": "A paint bucket with source options (this layer, another layer, all layers), tolerance, gap closing and antialiasing control.",
+     "pro_use": "Ink and paint: colour fills read the line layer while painting on a separate colour layer.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-35"
+      ],
+      "note": "The Rig Canvas bucket closes gaps up to about 10 px and tucks fills under the ink, on one drawing. Filling across frames is in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-colour-2",
+     "capability": "Fill inside: a brush stroke that only paints inside the closed area it starts in.",
+     "pro_use": "Quick shadow and highlight passes without masks.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Colour work on drawn frames is in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-colour-3",
+     "capability": "Gradient fills (linear, radial, conical, multi-point).",
+     "pro_use": "Soft lighting on characters and props.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "Gradients in imported SVG are flattened, and sets drawn in code use gradients. Gradient fill tools are in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-colour-4",
+     "capability": "Opacity mapping to control transparency across a fill.",
+     "pro_use": "Fades and soft-edged fills.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Mattes and transparency ramps fit the compositor."
+     }
+    },
+    {
+     "id": "tvpaint-colour-5",
+     "capability": "A colour checker that finds pixels left unfilled next to lines.",
+     "pro_use": "Ink-and-paint QA before shots go to compositing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.lint",
+       "WP-35"
+      ],
+      "note": "puppet.lint flags raw colours that are not palette slots, and vector fills sit under the ink so they leave no gaps. A per-frame fill check belongs with drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "tvpaint-colour-6",
+     "capability": "CTG layers: colour a whole animation from a few squiggles, with the colour following the lines as they change from frame to frame.",
+     "pro_use": "Cuts colouring time for frame-by-frame animation by a large factor.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "'Colour styles applied across every frame' is in WP-35's scope."
+     }
+    },
+    {
+     "id": "tvpaint-colour-7",
+     "capability": "A CTG palette for editing and extracting colours, so a colour can be changed everywhere at once.",
+     "pro_use": "Colour-model changes (a night version, a corrected skin tone) are applied across a scene.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet: palette slots",
+       "shots.json: set_opts"
+      ],
+      "note": "Named palette slots recolour a character everywhere, and set_opts recolours sets. Palette variants per scene (night, sick, cold) are in WP-16."
+     }
+    },
+    {
+     "id": "tvpaint-colour-8",
+     "capability": "CTG textures that stay on coloured areas as they move and change shape.",
+     "pro_use": "Textured looks (fabric, paper, brushwork) on animated characters without boiling by accident.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Boil and paper grain exist (style.boil, post paper). Textures that track drawn regions fit WP-35, or WP-15 for medium simulation."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Camera",
+   "source_url": "https://doc.tvpaint.com/docs/camera/overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-camera-1",
+     "capability": "A key-based 2D camera layer with position, rotation, zoom and size keys on the timeline.",
+     "pro_use": "Pans, trucks and tilts that frame the action, designed in layout.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: camera keys [t, [cx, cy, zoom]]",
+       "WP-19"
+      ],
+      "note": "Camera keys cover pan and zoom only, and the bake folds them in for every renderer. Camera rotation is missing (it should join WP-19 with the camera-keys lane, or WP-36). There is no camera lane in Studio yet."
+     }
+    },
+    {
+     "id": "tvpaint-camera-2",
+     "capability": "Camera parameters: format presets, aspect, pixel aspect, fields.",
+     "pro_use": "Matches the camera to the delivery format.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json: size",
+       "film.render aspect"
+      ],
+      "note": "The frame size is film data, and other aspects are native re-stagings, not crops."
+     }
+    },
+    {
+     "id": "tvpaint-camera-3",
+     "capability": "Speed curves for ease-in and ease-out of position, zoom and rotation.",
+     "pro_use": "Camera moves that start and stop softly feel filmed rather than mechanical.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: camera_auto.ease",
+       "WP-19"
+      ],
+      "note": "Keys ease with a fixed smoothstep, and auto-framing has an ease setting. Editable curves are in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-camera-4",
+     "capability": "Path modes between camera keys: linear, spline or Bezier, with linear sections where needed.",
+     "pro_use": "Curved camera travel around a layout.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Interpolation between keys is fixed; curve control comes with the graph editor (WP-19)."
+     }
+    },
+    {
+     "id": "tvpaint-camera-5",
+     "capability": "Keyframe management: create, delete, move, copy, invert keys and jump between them.",
+     "pro_use": "Layout artists refine camera timing against the animation.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.write",
+       "WP-19"
+      ],
+      "note": "Keys are edited as data and may be line-relative. A camera-keys lane is in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-camera-6",
+     "capability": "Copying the last camera position of the previous clip to begin the next one.",
+     "pro_use": "Continuity between shots that start where the last one ended.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Continuity checks and tools are in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-camera-7",
+     "capability": "Typed camera moves (12.1) matching common Japanese camera work, recorded on keys and exported with the timesheet.",
+     "pro_use": "The camera intent travels to the compositing studio with the exposure sheet.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: camera_auto",
+       "WP-22"
+      ],
+      "note": "Auto-framing gives a grammar (follow the speaker, wide shots between, punch-ins, handheld). Typed move annotations in interchange formats would join WP-22."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Timesheet",
+   "source_url": "https://doc.tvpaint.com/docs/timesheet/timesheet-overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-timesheet-1",
+     "capability": "An exposure-sheet panel in Japanese or Western layout, one column per layer.",
+     "pro_use": "The standard way to plan and hand off timing between key animators, in-betweeners and compositors.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The X-sheet is in WP-35, built on OpenToonz's model where WP-34 chooses it."
+     }
+    },
+    {
+     "id": "tvpaint-timesheet-2",
+     "capability": "A memo panel, dialogue notes, waveform and camera columns on the sheet.",
+     "pro_use": "Directors and animators plan acting against the dialogue frame by frame.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "film.storyboard",
+       "WP-35"
+      ],
+      "note": "timeline.get gives lines with word timings, and the storyboard PDF carries lines and directions per shot. A sheet layout is in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-timesheet-3",
+     "capability": "A dialogue breakdown per frame for lip-sync.",
+     "pro_use": "Animators read mouth shapes from the sheet.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "lipsync.check"
+      ],
+      "note": "Visemes come from the voice's phoneme timings automatically, and lipsync.check measures their lag against the audio."
+     }
+    },
+    {
+     "id": "tvpaint-timesheet-4",
+     "capability": "Frame roles (key, breakdown, in-between, special in-between) with to-do and done status.",
+     "pro_use": "Tracks who still has to draw what in a scene.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Key poses with in-between assistance (WP-43) are part of WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-timesheet-5",
+     "capability": "Automatic reuse: a new key that shares a name with an existing key takes its content.",
+     "pro_use": "Repeated keys (a return to a pose) stay identical.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Named poses already exist for rigs (puppet.save); for drawings this needs WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-timesheet-6",
+     "capability": "Timesheet export to PDF, and XDTS import and export for exchange with other animation software.",
+     "pro_use": "Sheets go to partner studios and other tools in a shared format.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The storyboard contact PDF exists (film.storyboard). XDTS fits the X-sheet work in WP-35, and interchange formats are in WP-22."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Storyboarding",
+   "source_url": "https://doc.tvpaint.com/docs/storyboarding/overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-storyboard-1",
+     "capability": "A project organised as scenes and clips (shots), shown as thumbnails, in columns or on a timeline.",
+     "pro_use": "Storyboard artists structure the episode before animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard",
+       "timeline.get"
+      ],
+      "note": "shots.json is the shot list; film.storyboard draws the strip of every shot with its notes."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-2",
+     "capability": "Creating, splitting, joining, duplicating and reordering scenes and clips.",
+     "pro_use": "Restructures the edit as the story changes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.write",
+       "WP-19"
+      ],
+      "note": "Shots are edited as data (validated); dragging shots in Studio is in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-3",
+     "capability": "Action, dialogue and notes text fields per clip.",
+     "pro_use": "Boards carry the instructions animators need.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard"
+      ],
+      "note": "The script lines and directions are data, and the contact sheet prints them beside each shot."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-4",
+     "capability": "Turning the board into an animatic by setting clip durations, with sound and camera moves.",
+     "pro_use": "Directors judge pacing before committing to animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic",
+       "shot.render"
+      ],
+      "note": "film.animatic holds stills over the mix or voice in seconds (no camera moves); an SVG draft render gives a moving animatic with the camera."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-5",
+     "capability": "PDF publishing of the storyboard with layout options.",
+     "pro_use": "Printed boards for meetings and clients.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard"
+      ],
+      "note": "Writes contact.pdf (shots per page with notes) and strip.png."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-6",
+     "capability": "HTML publishing: a web page whose thumbnails play their animation and camera move on hover.",
+     "pro_use": "Shares boards with remote reviewers without software.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "export.web",
+       "film.storyboard",
+       "WP-19"
+      ],
+      "note": "export.web makes a self-contained interactive player of the film; a board page that plays each shot on hover would join WP-19 (review on a phone)."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-7",
+     "capability": "EDL publishing: each clip exported as a video, plus an edit list that an editing program can rebuild.",
+     "pro_use": "Hands the animatic to editorial.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-22"
+      ],
+      "note": "film.cuts writes OTIO per cut; FCPXML and EDL are in WP-22."
+     }
+    },
+    {
+     "id": "tvpaint-storyboard-8",
+     "capability": "A bridge between clips (12.1): faint views of the previous clip's last frame and the next clip's first.",
+     "pro_use": "Checks continuity across cuts while drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "qa.run",
+       "WP-19"
+      ],
+      "note": "qa.run measures seam smoothness at cuts; visual continuity checks (screen direction, eyeline) are in WP-19."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Import / Export",
+   "source_url": "https://doc.tvpaint.com/docs/import-export/export-files/overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-import-export-1",
+     "capability": "Importing images, image sequences and video into layers, either embedded or linked to the source file.",
+     "pro_use": "Brings in layouts, backgrounds, live-action reference and rotoscoping plates.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.from_ink",
+       "WP-36"
+      ],
+      "note": "Layered drawings and photos become puppets, and video is read for pose by actout.clip. Image or video plates as shot layers fit the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-2",
+     "capability": "Exporting movies and image sequences in many formats (MP4, MOV, AVI, GIF, PNG, TGA, TIFF, PSD), with palette reduction and dithering options.",
+     "pro_use": "Delivers to clients, compositors and the web.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "shot.render",
+       "WP-23"
+      ],
+      "note": "H.264 MP4 per platform profile. WebM and ProRes with alpha, GIF, APNG and dithered line-art GIFs are in WP-23."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-3",
+     "capability": "A slate burned into exported frames (project name, frame counter, time).",
+     "pro_use": "Review copies are identifiable frame by frame in dailies.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Burn-ins for review copies fit the review room upgrade."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-4",
+     "capability": "Layered structure export: PSD with layers, CSV with images, the older project format.",
+     "pro_use": "Hands a scene to compositing with every layer separated.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "WP-37"
+      ],
+      "note": "A puppet exports as a layered SVG, ORA or PSD to repaint. Per-shot multi-pass output (beauty, line, shadow, mattes in EXR) is in WP-37."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-5",
+     "capability": "JSON export that rebuilds the project, with its layers and timing, in a compositing program.",
+     "pro_use": "Moves animation into After Effects for compositing without flattening.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "export.lottie",
+       "export.synfig",
+       "WP-22"
+      ],
+      "note": "Lottie and Synfig exports keep parts and keys editable; editor hand-off formats are in WP-22."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-6",
+     "capability": "A sprite-sheet generator.",
+     "pro_use": "Delivers animation to game engines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-30"
+      ],
+      "note": "Game runtime export (sprite sheets, Godot) is in WP-30."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-7",
+     "capability": "Cleaning up scanned drawings: removing paper white and grey, cleaning rough pencil lines.",
+     "pro_use": "Paper animators scan their work and prepare it for colour.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap"
+      ],
+      "note": "Flattens lighting, thresholds the ink to alpha and removes specks, keeping the artist's line."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-8",
+     "capability": "Peg-hole registration that realigns scans using the peg holes.",
+     "pro_use": "Feeder-scanned drawings play back without jitter.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Imported paper animation would come in as drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-9",
+     "capability": "Printing images or sequences with page layouts.",
+     "pro_use": "Paper copies for review or for animating over.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "WP-23"
+      ],
+      "note": "Storyboard PDFs exist; print-ready stills are in WP-23."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-10",
+     "capability": "Share manager: sending projects, clips or panels to colleagues on the same network.",
+     "pro_use": "Quick hand-offs inside a studio.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.launch",
+       "prod.merge",
+       "cast.add",
+       "WP-39"
+      ],
+      "note": "Films move through git branches and worktrees per production session, and characters through the cast library. People and roles are in WP-39."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-11",
+     "capability": "A stand-alone converter that batch-exports projects to many formats without opening the main program, with a client-server mode.",
+     "pro_use": "Render wranglers convert whole episodes overnight.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-38"
+      ],
+      "note": "Every render runs headless from the CLI or HTTP API; distributed workers are in WP-38."
+     }
+    },
+    {
+     "id": "tvpaint-import-export-12",
+     "capability": "Video input: capturing frames from a camera for stop motion or line tests.",
+     "pro_use": "Animators test paper animation and shoot stop motion directly.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "doodle.snap",
+       "WP-35"
+      ],
+      "note": "The camera feeds Act it out (pose to clips) and a photo feeds a doodle puppet. Capturing paper drawings as frames needs WP-35."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Other functions",
+   "source_url": "https://doc.tvpaint.com/docs/other-functions/clipboard",
+   "capabilities": [
+    {
+     "id": "tvpaint-other-1",
+     "capability": "Clipboard exchange of the current brush or image with other applications.",
+     "pro_use": "Quick round trips to a paint program or chat.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents exchange files and JSON through the CLI, HTTP and MCP rather than a desktop clipboard."
+     }
+    },
+    {
+     "id": "tvpaint-other-2",
+     "capability": "A spare image held in memory as a source for certain drawing modes.",
+     "pro_use": "Clones or blends content from a stored image while painting.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "Depends on a brush engine with source modes (WP-34)."
+     }
+    },
+    {
+     "id": "tvpaint-other-3",
+     "capability": "Swapping the current image with the spare to compare two states.",
+     "pro_use": "Before-and-after checks during clean-up.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "A visual diff between two versions of a film is in WP-19."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Custom Panels",
+   "source_url": "https://doc.tvpaint.com/docs/custom-panels/creating-custom-panels",
+   "capabilities": [
+    {
+     "id": "tvpaint-custom-panels-1",
+     "capability": "User-built panels holding buttons for brushes, tools, scripts and menu actions.",
+     "pro_use": "Each studio or artist builds a toolbar for its own pipeline.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-21"
+      ],
+      "note": "Every command is a tool for agents (CLI, HTTP, MCP, Studio). Curated subsets per role are in WP-21."
+     }
+    },
+    {
+     "id": "tvpaint-custom-panels-2",
+     "capability": "Action buttons that chain many internal actions as one macro.",
+     "pro_use": "Repetitive pipeline steps become one click.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-21"
+      ],
+      "note": "Composite commands (film.render, film.heal, film.revoice) already chain steps, and agents script any sequence. Saved user macros and natural-language routing are in WP-21."
+     }
+    },
+    {
+     "id": "tvpaint-custom-panels-3",
+     "capability": "Exporting a panel with its brushes, scripts and plug-ins as one package file to share.",
+     "pro_use": "Studios distribute their tool kits to every artist and partner.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-29"
+      ],
+      "note": "Creator packages (rig, boil-preset and loop-pack templates) are in WP-29."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "The FX Stack",
+   "source_url": "https://doc.tvpaint.com/docs/fx-stack/introduction",
+   "capabilities": [
+    {
+     "id": "tvpaint-fx-stack-1",
+     "capability": "A non-destructive stack of effects on a layer, applied in order.",
+     "pro_use": "In-program compositing of glows, blurs and colour without leaving the program.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "Shot-level post (grade, vignette, grain, LUT), motion effects (fx), toon shading and boil are data on a shot. An ordered stack per layer is in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-fx-stack-2",
+     "capability": "Preview modes and real-time preview of effects, including on all layers (12.1).",
+     "pro_use": "Artists tune effects while watching playback.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "WP-36"
+      ],
+      "note": "fx, boil and toon show in the live player; post grades apply only at render (ffmpeg)."
+     }
+    },
+    {
+     "id": "tvpaint-fx-stack-3",
+     "capability": "Stacking, reordering, swapping, renaming and collapsing (baking) effects.",
+     "pro_use": "Builds complex looks step by step and bakes them for performance.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Node graph editing is in WP-36, with the graph view of WP-20 as its editor."
+     }
+    },
+    {
+     "id": "tvpaint-fx-stack-4",
+     "capability": "Saving, resetting and reusing effect settings as presets.",
+     "pro_use": "Consistent looks across a show.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json: post presets (crisp, film, warm, cool, paper, noir)"
+      ],
+      "note": "Named presets plus explicit parameters; the brand kit fixes colours."
+     }
+    },
+    {
+     "id": "tvpaint-fx-stack-5",
+     "capability": "Keyframed effect parameters, several per effect, interpolated over time.",
+     "pro_use": "Animated glows, fades and colour shifts.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Post parameters are fixed for each shot today; motion effects are derived from motion, not keyed."
+     }
+    },
+    {
+     "id": "tvpaint-fx-stack-6",
+     "capability": "Speed curves for effect keys.",
+     "pro_use": "Eases effect animation like any other motion.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Needs keyed effects (WP-36) and the curve editor (WP-19)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Effect categories",
+   "source_url": "https://doc.tvpaint.com/docs/effect-categories/blur/cubic-gaussian-blurs",
+   "capabilities": [
+    {
+     "id": "tvpaint-effects-1",
+     "capability": "Blurs: Gaussian, radial, directional, median, chroma, and motion blur.",
+     "pro_use": "Depth, speed and softening in compositing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36",
+       "WP-15"
+      ],
+      "note": "post.grade accepts ffmpeg filters on the whole frame. Per-layer blurs and depth of field are in WP-36, and sub-frame motion blur in WP-15."
+     }
+    },
+    {
+     "id": "tvpaint-effects-2",
+     "capability": "Colour correction: curves, histogram, adjustment sliders, tint and colour replacement, black-and-white, multi-colour replace.",
+     "pro_use": "Matches shots and sets mood.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-37"
+      ],
+      "note": "Post presets, grade filters and a LUT file apply to the whole frame. Colour management (OCIO, ACES) is in WP-37, and per-layer correction in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-effects-3",
+     "capability": "Scan clean-up effects: dust cleaner, black-and-white and colour scan cleaners, colour eraser, line colorize.",
+     "pro_use": "Prepares scanned paper animation and recolours line art.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "Ink thresholding and speck removal are in puppet.from_ink. Recolouring the lines of drawn frames is in WP-35."
+     }
+    },
+    {
+     "id": "tvpaint-effects-4",
+     "capability": "Distortions: bump and displacement maps, warp grid, four-point perspective, kaleidoscope, tornado and wave, optical flow.",
+     "pro_use": "Heat haze, water, impact wobbles and retiming.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: style.boil",
+       "WP-36",
+       "WP-43"
+      ],
+      "note": "Boil uses cycled displacement fields. Other distortions are in WP-36; optical-flow in-betweening is in WP-43."
+     }
+    },
+    {
+     "id": "tvpaint-effects-5",
+     "capability": "Keying: chroma, luma, colour and cross keyers, plus alpha control.",
+     "pro_use": "Pulls mattes from footage or from colour-coded drawings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Mattes are in the compositor's scope; Doodleberry rarely uses live footage."
+     }
+    },
+    {
+     "id": "tvpaint-effects-6",
+     "capability": "Motion effects: path tools and a path recorder, a pixel tracker, a shaker, stabilisation.",
+     "pro_use": "Attaches elements to moving footage, shakes the camera on impacts, steadies scans.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: camera_auto handheld",
+       "shots.json: cast[].place",
+       "WP-11"
+      ],
+      "note": "Handheld drift and keyed placement exist. Follow-path is in WP-11, and tracking footage in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-effects-7",
+     "capability": "Rendering generators: lighting, volumetric light, lens flare, Perlin noise and plasma, patterns, backgrounds, simple and multi-line text, timecode.",
+     "pro_use": "Generated elements for backgrounds, titles and lighting.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: overlays (title, sign, text, card)",
+       "shots.json: style.toon rim",
+       "WP-36"
+      ],
+      "note": "Text and title elements, sets drawn in code, and toon rims exist. Volumetric light, flares and glows are in WP-36; a timecode burn-in is in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-effects-8",
+     "capability": "Rototracking and a healing tracker that follow a region across frames and paint or patch it.",
+     "pro_use": "Paint fixes and rotoscoping over many frames.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Little need without live footage; fits the compositor."
+     }
+    },
+    {
+     "id": "tvpaint-effects-9",
+     "capability": "Stylise effects: toon shading, drop shadow, bevel, border, glow and erode, bloom, grain, halftone and print looks, mosaic, posterise, antialiasing.",
+     "pro_use": "Finishing looks for cel and graphic styles.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: style.toon",
+       "shots.json: post.grain",
+       "WP-36",
+       "WP-15"
+      ],
+      "note": "Cel shadows and rims, ground shadows and grain exist. Glow and bloom are in WP-36, halftone and medium looks in WP-15."
+     }
+    },
+    {
+     "id": "tvpaint-effects-10",
+     "capability": "Transitions: fade, blinds, blocks, page turn, rotary and slide, and blur transitions.",
+     "pro_use": "Scene changes in animatics and finished films.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-15"
+      ],
+      "note": "Whoosh cuts and crossfaded audio at cut points exist. Cross-dissolves, match cuts and wipes are in WP-15."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Advanced tools",
+   "source_url": "https://doc.tvpaint.com/docs/advanced-tools/keyframer",
+   "capabilities": [
+    {
+     "id": "tvpaint-advanced-1",
+     "capability": "KeyFramer: moves any element (brush, layer, spare image, paper) along keyed or preset paths, with rotation on three axes, motion blur and pre/post behaviour.",
+     "pro_use": "Animated graphic elements and flying props without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: cast[].place",
+       "shots.json: props flight / drop",
+       "WP-11"
+      ],
+      "note": "Keyed placement, ballistic prop flights and drops exist. Follow-path is in WP-11, motion blur in WP-15, and 3D-style rotations of 2D layers in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-advanced-2",
+     "capability": "Multiplane camera: background planes at different depths, each moving at its own speed for parallax.",
+     "pro_use": "Classic depth in pans across layered backgrounds.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "sets: forest parallax depths",
+       "WP-36"
+      ],
+      "note": "Some sets have built-in parallax depths; true multiplane depth for any layers is in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-advanced-3",
+     "capability": "Depth-of-field blur set by a focus distance on the multiplane camera.",
+     "pro_use": "Focus pulls between foreground and background.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Depth of field is in WP-36's multiplane scope."
+     }
+    },
+    {
+     "id": "tvpaint-advanced-4",
+     "capability": "Stage views (perspective, side, front, top) for arranging planes in space.",
+     "pro_use": "Layout artists place planes with confidence.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "A three.js renderer places 3D sets; 2D multiplane layout and its views are in WP-36."
+     }
+    },
+    {
+     "id": "tvpaint-advanced-5",
+     "capability": "A multiplane wizard that builds planes from layers automatically.",
+     "pro_use": "Sets up depth fast from an existing layered background.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Automatic depth estimates for parallax (Depth Anything) are in WP-43."
+     }
+    },
+    {
+     "id": "tvpaint-advanced-6",
+     "capability": "A particle generator: emitters (shape, rate, life, size, colour), a world (gravity, wind) and particles drawn with any brush, for rain, snow, smoke, fireworks or fountains.",
+     "pro_use": "Natural effects that would take days to draw by hand.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json: fx (dust, speed_lines, impacts)",
+       "WP-42"
+      ],
+      "note": "Motion-derived dust puffs, speed lines and impact stars exist, and props have gravity. General particles are in WP-42."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Preferences",
+   "source_url": "https://doc.tvpaint.com/docs/preferences/overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-preferences-1",
+     "capability": "Keyboard shortcut configuration for nearly every action.",
+     "pro_use": "Artists tune their hands-on speed.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents call commands by name; Studio's shortcuts are fixed and few."
+     }
+    },
+    {
+     "id": "tvpaint-preferences-2",
+     "capability": "Interface language and resolution scaling.",
+     "pro_use": "Multilingual teams and high-DPI or tablet screens.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "In-house tool with one owner; Studio is a web page that follows the browser's zoom."
+     }
+    },
+    {
+     "id": "tvpaint-preferences-3",
+     "capability": "Pen and tablet settings: eraser-end behaviour, pressure handling, OS tablet APIs.",
+     "pro_use": "Makes the pen feel right on each artist's hardware.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Pointer pressure works in the Rig Canvas; full tablet support is in WP-18."
+     }
+    },
+    {
+     "id": "tvpaint-preferences-4",
+     "capability": "Save alarm and backup settings.",
+     "pro_use": "Prevents losing work after a crash.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.edit",
+       "film.write"
+      ],
+      "note": "Every Studio edit is written to the film's files immediately and validated, and git keeps the history."
+     }
+    },
+    {
+     "id": "tvpaint-preferences-5",
+     "capability": "Startup configurations (panel layouts, tools, shortcuts) and a default template.",
+     "pro_use": "Studios give every seat the same setup.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.doctor",
+       "film.from_template",
+       "WP-21"
+      ],
+      "note": "The machine setup is checked (engine.doctor) and films start from templates. Per-role setups are in WP-21."
+     }
+    },
+    {
+     "id": "tvpaint-preferences-6",
+     "capability": "Timeline and sound preferences (default lengths, audio scrub, playback sync).",
+     "pro_use": "Matches playback behaviour to the work.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-40"
+      ],
+      "note": "Audio behaviour in Studio is in WP-40."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "George scripting",
+   "source_url": "https://doc.tvpaint.com/docs/george/george-overview",
+   "capabilities": [
+    {
+     "id": "tvpaint-george-1",
+     "capability": "A scripting language that drives almost every tool: layers, drawing, saving, bookmarks.",
+     "pro_use": "Technical directors automate repetitive pipeline tasks.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every feature is an @command, available at once in the CLI, the HTTP API, Studio and MCP. Agents are the main users."
+     }
+    },
+    {
+     "id": "tvpaint-george-2",
+     "capability": "Scripts as plain text files that run from panel buttons or at startup.",
+     "pro_use": "Pipeline scripts are kept in version control and shared.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "python -m dbe <command> '<json>' runs any command; the tools/ scripts are plain files in git."
+     }
+    },
+    {
+     "id": "tvpaint-george-3",
+     "capability": "Passing arguments to scripts and choosing launch modes.",
+     "pro_use": "Scripts are parameterised per shot or per project.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every command has a JSON input schema, and results are JSON-safe."
+     }
+    },
+    {
+     "id": "tvpaint-george-4",
+     "capability": "Querying project state from scripts (layers, frames, current settings).",
+     "pro_use": "Scripts make decisions from the current scene.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.get",
+       "timeline.get",
+       "film.validate"
+      ],
+      "note": "These return sources, resolved timing and validation results as JSON."
+     }
+    },
+    {
+     "id": "tvpaint-george-5",
+     "capability": "Language features: variables, operators, strings, arrays, functions and procedures, parsing.",
+     "pro_use": "Write non-trivial tools inside the program.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is written in Python and JS directly, so no in-app language is needed."
+     }
+    },
+    {
+     "id": "tvpaint-george-6",
+     "capability": "A plug-in SDK (C/C++, now hosted on GitHub) for native extensions.",
+     "pro_use": "Studios add native tools and integrations.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands",
+       "vendor.build",
+       "vendor.check"
+      ],
+      "note": "A new @command appears everywhere at once; vendored upstream code is built and recorded (WP-33)."
+     }
+    },
+    {
+     "id": "tvpaint-george-7",
+     "capability": "Script dialogs and messages for interacting with the user.",
+     "pro_use": "Tools ask artists for options at run time.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Commands take arguments and return results; human approvals go through the board and posting gates."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Changelogs",
+   "source_url": "https://doc.tvpaint.com/docs/changelogs/12-1-0",
+   "capabilities": [
+    {
+     "id": "tvpaint-changelogs-1",
+     "capability": "A search engine across brushes, panels, shortcuts, clips, layers, library and projects (12.1).",
+     "pro_use": "Finds tools and assets quickly in large configurations.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands",
+       "cast.list"
+      ],
+      "note": "Commands are listed with their schemas, and the cast library lists puppets with licence and voice."
+     }
+    },
+    {
+     "id": "tvpaint-changelogs-2",
+     "capability": "Loop playback over a selected frame range (12.1).",
+     "pro_use": "Reviews one action repeatedly while fixing it.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "WP-19"
+      ],
+      "note": "The player scrubs and plays; range loops in review are in WP-19."
+     }
+    },
+    {
+     "id": "tvpaint-changelogs-3",
+     "capability": "Official ProRes encoding on every operating system (12.1).",
+     "pro_use": "Broadcast and post-production deliveries.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-23"
+      ],
+      "note": "ProRes with alpha is in WP-23."
+     }
+    },
+    {
+     "id": "tvpaint-changelogs-4",
+     "capability": "Faster handling of projects above 4K (12.1).",
+     "pro_use": "Feature-film and print resolutions.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-37"
+      ],
+      "note": "Vector art renders at any resolution; 4K masters and EXR passes are in WP-37."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Licenses",
+   "source_url": "https://doc.tvpaint.com/docs/licenses",
+   "capabilities": [
+    {
+     "id": "tvpaint-licenses-1",
+     "capability": "A page listing third-party components the documentation uses, with their licence texts.",
+     "pro_use": "Compliance: every bundled component's licence is on record.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "licence.ledger",
+       "asset.check",
+       "vendor.check",
+       "film.credits"
+      ],
+      "note": "Doodleberry records every component with its licence class and flags restricted classes when a film is posted publicly."
+     }
+    }
+   ]
+  }
+ ]
+}

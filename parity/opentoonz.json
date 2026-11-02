@@ -1,0 +1,2732 @@
+{
+ "tool": "OpenToonz",
+ "version": "1.7.1 (manual baseline; 1.7 released 2023); 1.8.0 released 19 June 2026 noted where it adds features. Tahoma2D 1.6 fork noted where relevant.",
+ "sources": [
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/",
+   "title": "OpenToonz manual (Read the Docs, latest): table of contents",
+   "used_for": "chapter list"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/installing_opentoonz.html",
+   "title": "Installing OpenToonz",
+   "used_for": "install chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/using_ffmpeg_with_opentoonz.html",
+   "title": "Using FFmpeg with OpenToonz",
+   "used_for": "install chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/whats_new.html",
+   "title": "What's New in OpenToonz (v1.6)",
+   "used_for": "release notes chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/production_workflow.html",
+   "title": "Production Workflow",
+   "used_for": "workflow chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/interface_overview.html",
+   "title": "Interface Overview",
+   "used_for": "interface chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/managing_projects.html",
+   "title": "Managing Projects",
+   "used_for": "projects chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/setting_up_a_scene.html",
+   "title": "Setting Up a Scene",
+   "used_for": "scene setup chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/scanning_paper_drawings.html",
+   "title": "Scanning Paper Drawings",
+   "used_for": "scanning chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/cleaning-up_scanned_drawings.html",
+   "title": "Cleaning-up Scanned Drawings",
+   "used_for": "cleanup chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/drawing_animation_levels.html",
+   "title": "Drawing Animation Levels",
+   "used_for": "drawing chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/editing_animation_levels.html",
+   "title": "Editing Animation Levels",
+   "used_for": "level editing chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/managing_palettes_and_styles.html",
+   "title": "Managing Palettes and Styles",
+   "used_for": "palettes chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/painting_animation_levels.html",
+   "title": "Painting Animation Levels",
+   "used_for": "painting chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/working_in_xsheet.html",
+   "title": "Working in Xsheet/Timeline",
+   "used_for": "xsheet, sound and lip-sync chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/creating_movements.html",
+   "title": "Creating Movements",
+   "used_for": "stage schematic, motion paths, camera and 3D view"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/editing_curves_and_numerical_columns.html",
+   "title": "Editing Using Spreadsheet and Curves",
+   "used_for": "function editor chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/creating_cutout_animation.html",
+   "title": "Creating Cutout Animation",
+   "used_for": "skeleton chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/create_animations_using_plastic_tool.html",
+   "title": "Create animations using Plastic tool",
+   "used_for": "plastic chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/applying_special_fx.html",
+   "title": "Applying Effects",
+   "used_for": "FX schematic chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/using_the_particles_effect.html",
+   "title": "Using the Particles Effect",
+   "used_for": "particles chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/rendering_the_animation.html",
+   "title": "Previewing and Rendering",
+   "used_for": "rendering chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/using_the_toonz_farm.html",
+   "title": "Using the Toonz Farm",
+   "used_for": "farm and command-line tools (tcomposer log, console mode)"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/using_the_version_control.html",
+   "title": "Using the Version Control System",
+   "used_for": "version control chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/toonzscript.html",
+   "title": "ToonzScript",
+   "used_for": "scripting chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/keyboard_shortcuts.html",
+   "title": "Keyboard Shortcuts",
+   "used_for": "shortcuts chapter"
+  },
+  {
+   "url": "https://opentoonz.readthedocs.io/en/latest/fx_docs/fx_index.html",
+   "title": "FX Reference (Layer Blending)",
+   "used_for": "FX reference chapter"
+  },
+  {
+   "url": "https://github.com/opentoonz/opentoonz/releases",
+   "title": "OpenToonz releases on GitHub (v1.7, v1.7.1, v1.8)",
+   "used_for": "version and release highlights"
+  },
+  {
+   "url": "https://newreleases.io/project/github/opentoonz/opentoonz/release/v1.7.0",
+   "title": "OpenToonz v1.7.0 release notes (mirror)",
+   "used_for": "full 1.7 feature list"
+  },
+  {
+   "url": "https://forest.watch.impress.co.jp/docs/news/2118799.html",
+   "title": "Madonomori: OpenToonz 1.8.0 released",
+   "used_for": "1.8.0 release date (19 June 2026) and highlights"
+  },
+  {
+   "url": "https://groups.google.com/g/opentoonz_en/c/Gp0Hu5cQB3k",
+   "title": "OpenToonz users forum: rendering from the command line",
+   "used_for": "tcomposer command line shown by render tasks"
+  },
+  {
+   "url": "https://tahoma2d.readthedocs.io/en/latest/",
+   "title": "Tahoma2D manual",
+   "used_for": "fork's manual structure (adds a Working with Audio chapter; stop motion)"
+  },
+  {
+   "url": "https://tahoma2d.readthedocs.io/en/latest/whats_new.html",
+   "title": "What's New in Tahoma2D (v1.6)",
+   "used_for": "fork notes (clipping masks, alpha lock, camera capture, Rhubarb option)"
+  },
+  {
+   "url": "/home/user/doodleberry/docs/feature-map.md",
+   "title": "Doodleberry feature map",
+   "used_for": "Doodleberry status per feature"
+  },
+  {
+   "url": "/home/user/doodleberry/docs/dbe.md",
+   "title": "Doodleberry backend reference",
+   "used_for": "data fields and command behaviour"
+  },
+  {
+   "url": "/home/user/doodleberry/docs/work-packages.md",
+   "title": "Doodleberry work packages",
+   "used_for": "full WP scopes for gaps"
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Getting started: installing OpenToonz and FFmpeg",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/installing_opentoonz.html",
+   "capabilities": [
+    {
+     "id": "otz-install-1",
+     "capability": "Installers for Windows, macOS, Linux and the BSDs, with the stuffs folder (presets, brushes, profiles) set up on first run.",
+     "pro_use": "Studios image the same build onto every workstation so scenes open identically everywhere.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor"
+      ],
+      "note": "engine.doctor checks the container (packages, Node, Playwright, ffmpeg, models, voices) and names each fix; tools/setup.sh applies them idempotently. Doodleberry runs in one Linux container, not per-OS installers."
+     }
+    },
+    {
+     "id": "otz-install-2",
+     "capability": "FFmpeg plugged in as an external encoder so the renderer can write MP4, WebM and animated GIF and import those formats.",
+     "pro_use": "Artists point OpenToonz at a system FFmpeg to get delivery codecs without extra software.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor",
+       "engine.info"
+      ],
+      "note": "ffmpeg is a required core tool checked by engine.doctor; engine.info reports which renderers and tools are present. Encoding itself happens in film.render."
+     }
+    },
+    {
+     "id": "otz-install-3",
+     "capability": "Reporting the running version and build so plugins, scripts and scenes can be matched to it.",
+     "pro_use": "Pipeline TDs pin a version for a whole production and check it before batch jobs.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.info",
+       "vendor.check"
+      ],
+      "note": "engine.info lists renderers and tools; vendor.check records the version of every vendored upstream (UPSTREAM.json)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Production workflow (traditional and paperless)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/production_workflow.html",
+   "capabilities": [
+    {
+     "id": "otz-workflow-1",
+     "capability": "Paper pipeline: drawings scanned, registered by peg holes, cleaned, inked and painted, then composited and rendered.",
+     "pro_use": "Studios with traditional animators keep paper keys and in-betweens and digitise them in batches.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap",
+       "WP-35"
+      ],
+      "note": "Single photos or scans become raster-part puppets in the artist's line; frame-by-frame paper sequences (registration, levels, exposure) are WP-35."
+     }
+    },
+    {
+     "id": "otz-workflow-2",
+     "capability": "Paperless pre-production: designs and storyboard panels made in the tool before animation starts.",
+     "pro_use": "Directors lock the board before layout so every scene's assets are known up front.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard",
+       "film.from_template",
+       "storyboard.check"
+      ],
+      "note": "Storyboards are generated from shots.json and format templates rather than drawn panel by panel."
+     }
+    },
+    {
+     "id": "otz-workflow-3",
+     "capability": "Animatic: boards timed against reference audio with rough camera moves.",
+     "pro_use": "Editors and directors judge pacing on the animatic before committing to animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic"
+      ],
+      "note": "Storyboard stills held over the film's sound as build/animatic.mp4."
+     }
+    },
+    {
+     "id": "otz-workflow-4",
+     "capability": "Reusable libraries of modular characters, props, backgrounds, turnarounds and motion cycles.",
+     "pro_use": "Series reuse the same rigs and cycles across many episodes to keep cost down.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.add",
+       "cast.list",
+       "cast.generate"
+      ],
+      "note": "Cast library with provenance; template-level clip library (walk, wave and others) retargets to every character; 16 code-drawn sets."
+     }
+    },
+    {
+     "id": "otz-workflow-5",
+     "capability": "Layout stage: library assets placed in each scene with rough camera and timing.",
+     "pro_use": "Layout artists block scenes so animators start from correct staging.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].place",
+       "shots.json shots[].camera",
+       "shots.json shots[].set",
+       "shots.json shots[].camera_auto"
+      ],
+      "note": "Placement keys, sets and camera keys (or automatic coverage) are fields in shots.json."
+     }
+    },
+    {
+     "id": "otz-workflow-6",
+     "capability": "A colour model fixed early so every character and prop keeps consistent colours through ink and paint.",
+     "pro_use": "Colour designers deliver a reference palette that painters must follow.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.lint",
+       "brand.check",
+       "WP-16"
+      ],
+      "note": "Puppets use named palette slots and puppet.lint flags raw colours; brand kits are measured; colour models and per-scene palette variants are WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Interface overview (rooms, panes, appearance)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/interface_overview.html",
+   "capabilities": [
+    {
+     "id": "otz-interface-1",
+     "capability": "Rooms: named workspaces, each a saved layout of panes for one task (drawing, timing, painting, rendering).",
+     "pro_use": "Artists switch rooms per task instead of rearranging windows.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is agent-native: the interface is the command registry (CLI, HTTP, MCP) plus fixed Studio pages (/timeline, /board, /doodle, /actout, Rig Canvas). Role-specific command subsets for agents are WP-21."
+     }
+    },
+    {
+     "id": "otz-interface-2",
+     "capability": "Dockable, floating and lockable panes (viewer, xsheet, timeline, schematic, function editor, palette, level strip).",
+     "pro_use": "Leads lock a room layout so the team sees the same tools in the same place.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No user-arranged window layout; Studio pages are fixed views served by dbe/server.py."
+     }
+    },
+    {
+     "id": "otz-interface-3",
+     "capability": "Interface themes built from editable stylesheets and a choice of interface language.",
+     "pro_use": "Studios ship a house theme and localised UI to international crews.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Single in-house owner; Studio has one theme. Film-content localisation is separate (film.localize)."
+     }
+    },
+    {
+     "id": "otz-interface-4",
+     "capability": "A command bar of favourite commands and a searchable list of every command.",
+     "pro_use": "Power users pin the few operations they repeat all day.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-21"
+      ],
+      "note": "engine.commands lists every command with its input schema (what agents see as tools); per-role favourites and subsets are WP-21."
+     }
+    },
+    {
+     "id": "otz-interface-5",
+     "capability": "History pane with step-by-step undo and redo.",
+     "pro_use": "Artists back out of a bad edit several steps without reloading.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/*.json under git"
+      ],
+      "note": "Films are plain text, so every change is a git diff that can be reverted; a per-change audit log of who changed what is WP-39."
+     }
+    },
+    {
+     "id": "otz-interface-6",
+     "capability": "Record Audio pane that captures a voice or scratch track straight into the scene.",
+     "pro_use": "Animators record scratch dialogue to time a scene before the real voice arrives.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-13"
+      ],
+      "note": "Human voice-over import with phone-level alignment and fitting into slots is in WP-13; there is no in-app recorder."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Managing projects",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/managing_projects.html",
+   "capabilities": [
+    {
+     "id": "otz-projects-1",
+     "capability": "A project root shared by every machine so all artists see the same projects.",
+     "pro_use": "Studios mount one shared project root so scenes and assets resolve the same everywhere.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "repository layout: films/, cast/, sets/, brand/, plan/"
+      ],
+      "note": "The git repository is the project root; production sessions get git worktrees (prod.launch)."
+     }
+    },
+    {
+     "id": "otz-projects-2",
+     "capability": "Creating a project or scene that inherits settings from an existing one.",
+     "pro_use": "Supervisors set up one template project per series and clone it for each episode.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template",
+       "plan.brief"
+      ],
+      "note": "film.create makes the folder with empty brief, facts, script, shots and score; film.from_template drafts from a format; channel brand, cast and voices are inherited (WP-32)."
+     }
+    },
+    {
+     "id": "otz-projects-3",
+     "capability": "Standard folders per project for scans, drawings, extras, outputs, scenes and palettes.",
+     "pro_use": "Fixed folder roles let scripts and the farm find files without per-scene paths.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/{brief.md,facts.json,script.json,shots.json,score.json,build/}"
+      ],
+      "note": "Each film has fixed source files and a git-ignored build/ folder; cast and sets live in cast/ and sets/."
+     }
+    },
+    {
+     "id": "otz-projects-4",
+     "capability": "Project browser listing projects and their scenes.",
+     "pro_use": "Coordinators jump between shows and episodes from one list.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.status",
+       "film.get",
+       "WP-20"
+      ],
+      "note": "prod.status lists every film on the production board and film.get returns one film; a full catalogue/graph view of every film folder fits WP-20."
+     }
+    },
+    {
+     "id": "otz-projects-5",
+     "capability": "Per-scene sub-folders driven by path variables.",
+     "pro_use": "Large shows keep each scene's renders and drawings apart automatically.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/build/"
+      ],
+      "note": "Outputs always go under the film's own build/ folder; derived films (aspect, sound-off) get their own folders."
+     }
+    },
+    {
+     "id": "otz-projects-6",
+     "capability": "Collect Assets: copy files loaded from outside into the project and repoint the scene, so it can be moved intact.",
+     "pro_use": "Before handing a scene to another studio, artists gather every external file into it.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "asset.check",
+       "film.provenance",
+       "WP-33"
+      ],
+      "note": "Every tracked third-party file must have a manifest row and provenance is recorded; external rigs stay out of git by design, so a 'gather into a portable bundle' step would extend WP-33's vendoring."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Setting up a scene",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/setting_up_a_scene.html",
+   "capabilities": [
+    {
+     "id": "otz-scene-setup-1",
+     "capability": "Scene settings that start from project defaults, with the option to save a scene's settings back as the new default.",
+     "pro_use": "Supervisors tune one scene and promote its settings to the whole show.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json size",
+       "shots.json fps",
+       "plan/channels/<id>.json brand"
+      ],
+      "note": "Size and fps per film; brand kit, cast and voices inherited from the channel (WP-32)."
+     }
+    },
+    {
+     "id": "otz-scene-setup-2",
+     "capability": "Working units: inches, millimetres, centimetres, animation fields or pixels.",
+     "pro_use": "Paper animators lay out in fields to match their peg-bar paper.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry works in pixels on fixed artboards (puppets in artboard units, frames 1080x1920); field units are a paper convention."
+     }
+    },
+    {
+     "id": "otz-scene-setup-3",
+     "capability": "Scene frame rate, plus rendering at another rate by stretching.",
+     "pro_use": "The same scene is delivered at 24, 25 or 30 fps for cinema, PAL or NTSC.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.create",
+       "WP-37"
+      ],
+      "note": "fps is set per film (30 is the QA bar) and stepped timing gives 12s, 8s or 6s; masters at other or higher frame rates are WP-37."
+     }
+    },
+    {
+     "id": "otz-scene-setup-4",
+     "capability": "Camera definition: frame size, aspect ratio, pixel resolution and DPI with locks, and saved resolution presets.",
+     "pro_use": "Layout sets the camera once per show so every scene renders to spec.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "shots.json size sets the frame; film.render with aspect 16:9 or 1:1 re-stages the film natively (not a crop), with per-aspect overrides in shots.json aspects."
+     }
+    },
+    {
+     "id": "otz-scene-setup-5",
+     "capability": "Viewer colour calibration through a 3D look-up table for a target colour space.",
+     "pro_use": "Colourists preview on calibrated monitors to match broadcast or cinema targets.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "A LUT can be applied to the output (shots.json post.lut), but display calibration and colour management (OpenColorIO, ACES) are WP-37."
+     }
+    },
+    {
+     "id": "otz-scene-setup-6",
+     "capability": "Limits on undo memory and raster memory to keep long sessions stable.",
+     "pro_use": "Artists on heavy raster scenes cap memory to avoid crashes.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Renders are headless, frame-pure and per shot; there is no long interactive editing session to tune."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Scanning paper drawings",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/scanning_paper_drawings.html",
+   "capabilities": [
+    {
+     "id": "otz-scanning-1",
+     "capability": "Scanning through supported USB or TWAIN scanners, with an automatic sheet feeder for batches.",
+     "pro_use": "Paper departments feed whole scenes of drawings through a scanner in one pass.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No scanner hardware; drawings arrive as photos or scan files (phone-first flow, doodle.snap, puppet.from_ink)."
+     }
+    },
+    {
+     "id": "otz-scanning-2",
+     "capability": "Scan modes: black-and-white threshold, greyscale or colour lines.",
+     "pro_use": "Colour mode keeps blue/red construction or shadow lines separate for cleanup.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "puppet.from_ink flattens lighting and thresholds ink to alpha, keeping texture; separating coloured line types across a sequence is WP-35."
+     }
+    },
+    {
+     "id": "otz-scanning-3",
+     "capability": "Peg-hole registration so every scanned drawing lines up for autocentering.",
+     "pro_use": "Without registration, scanned in-betweens jitter against each other.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Only single drawings are imported today; registering frame sequences belongs with drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "otz-scanning-4",
+     "capability": "Defining which levels and frames to scan (level name, frame count, step), with unscanned frames shown as missing.",
+     "pro_use": "Scan operators work from a list that tells them which drawings are still due.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawing requests (drawing.requests) track missing swap drawings for rigs, not frames of drawn levels."
+     }
+    },
+    {
+     "id": "otz-scanning-5",
+     "capability": "A crop box limiting the scanned area.",
+     "pro_use": "Operators crop to the drawing area to speed scanning.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "doodle.snap",
+       "puppet.from_ink"
+      ],
+      "note": "Photos are turned upright and cropped to the ink automatically; parts are cut by polygons."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Cleaning up scanned drawings",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/cleaning-up_scanned_drawings.html",
+   "capabilities": [
+    {
+     "id": "otz-cleanup-1",
+     "capability": "Autocentering on peg holes, rotation in 90-degree steps and mirroring.",
+     "pro_use": "Cleanup aligns every frame before lines are processed.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.snap",
+       "WP-35"
+      ],
+      "note": "doodle.snap turns a photo upright; registration across a sequence is WP-35."
+     }
+    },
+    {
+     "id": "otz-cleanup-2",
+     "capability": "A cleanup camera that crops and resizes drawings to a target field and resolution.",
+     "pro_use": "All drawings land at one consistent scale and centre.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.snap",
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "Single drawings are scaled to the artboard; sequence-wide normalisation is WP-35."
+     }
+    },
+    {
+     "id": "otz-cleanup-3",
+     "capability": "Line processing for greyscale lines: sharpness, despeckling, antialiasing (including morphological), thickness and contrast.",
+     "pro_use": "Turns pencil scans into clean, paintable lines in bulk.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.from_ink"
+      ],
+      "note": "Lighting flattened by dividing by a blurred copy, ink thresholded to alpha, specks removed; line-weight-preserving squash for blinks."
+     }
+    },
+    {
+     "id": "otz-cleanup-4",
+     "capability": "Colour line separation: up to several line colours detected and mapped to output styles.",
+     "pro_use": "Shadow and highlight lines drawn in coloured pencil become their own styles.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Colour styles applied across frames are in WP-35's scope."
+     }
+    },
+    {
+     "id": "otz-cleanup-5",
+     "capability": "Cleanup palette created automatically from the detected line colours.",
+     "pro_use": "Painters start from a palette that already matches the cleaned lines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Palette slots are created on vector import (puppet.import) but not from cleaned raster lines."
+     }
+    },
+    {
+     "id": "otz-cleanup-6",
+     "capability": "Live cleanup preview, a camera test of the crop, and an opacity check that colours solid, antialiased and removed pixels.",
+     "pro_use": "Supervisors tune cleanup settings on a few frames before batching a scene.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.snap",
+       "puppet.coach",
+       "WP-18"
+      ],
+      "note": "/doodle shows suggested cuts and pivots for confirmation and puppet.coach returns an annotated image; a live cleanup-settings preview fits WP-18."
+     }
+    },
+    {
+     "id": "otz-cleanup-7",
+     "capability": "Batch cleanup of whole scenes as background tasks with priorities and dependencies.",
+     "pro_use": "Overnight cleanup of every scanned scene.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Commands run as async jobs, but sequence cleanup itself does not exist yet."
+     }
+    },
+    {
+     "id": "otz-cleanup-8",
+     "capability": "Cleanup settings saved as reusable files and linked to a level.",
+     "pro_use": "One tuned setting is reused for every scene by the same animator.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.from_ink spec (JSON)"
+      ],
+      "note": "The import spec (polygons, pivots, swaps and thresholds) is a reusable JSON file."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Drawing animation levels",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/drawing_animation_levels.html",
+   "capabilities": [
+    {
+     "id": "otz-drawing-1",
+     "capability": "Three drawing types: resolution-free vector levels, palette-indexed raster line levels and full-colour raster levels.",
+     "pro_use": "Teams pick vector for clean cartoon lines and raster for textured or scanned work.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "Puppet parts are vector strokes, raster parts or mesh strokes; drawn levels (sequences of drawings with exposures) are a new part type in WP-35."
+     }
+    },
+    {
+     "id": "otz-drawing-2",
+     "capability": "Brush with pressure, size range, smoothing, stabilising and snapping.",
+     "pro_use": "Animators get confident lines from a tablet without wobble.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "The Rig Canvas has pressure ink (perfect-freehand) and simplification; stabiliser and textured brushes are WP-18 and WP-34."
+     }
+    },
+    {
+     "id": "otz-drawing-3",
+     "capability": "Geometric tool for rectangles, ellipses, polygons, polylines and arcs, closing and filling shapes automatically.",
+     "pro_use": "Props and backgrounds are built quickly from clean primitives.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Sets and props are drawn in code (sets/*.js); the Rig Canvas has no shape tools."
+     }
+    },
+    {
+     "id": "otz-drawing-4",
+     "capability": "Text tool that turns typed text into editable vector outlines.",
+     "pro_use": "Signs and lettering in the drawing itself, not as overlays.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json overlays[] (sign, text, title, paper)"
+      ],
+      "note": "On-screen text is live-rendered from OFL fonts in the same ink; it is not converted into editable drawing outlines."
+     }
+    },
+    {
+     "id": "otz-drawing-5",
+     "capability": "Vector reshaping tools: cut, join, pinch, pump thickness, magnet, bend and smooth strokes.",
+     "pro_use": "Cleanup artists fix lines without redrawing them.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Polygon editing of cuts is planned in WP-18; vector deformer code (Synfig core, Inkscape) is evaluated in WP-34."
+     }
+    },
+    {
+     "id": "otz-drawing-6",
+     "capability": "Selection with move, rotate, scale and distort, by stroke, region or matching style.",
+     "pro_use": "Artists rescale or reposition part of a drawing between frames.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Lasso and transform are listed in the feature map under WP-18 and WP-34."
+     }
+    },
+    {
+     "id": "otz-drawing-7",
+     "capability": "Converting raster drawings to vectors (centre-line strokes or outline fills).",
+     "pro_use": "Scanned roughs become editable vector levels.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Vector tracing (VTracer, potrace) of scans is WP-18; today scans stay raster parts."
+     }
+    },
+    {
+     "id": "otz-drawing-8",
+     "capability": "Key, breakdown and in-between drawing workflow with drawings numbered automatically from the timeline.",
+     "pro_use": "Leads draw keys, assistants fill breakdowns and in-betweens.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Keys with in-between assistance on drawn levels are WP-35 (proposals from WP-43)."
+     }
+    },
+    {
+     "id": "otz-drawing-9",
+     "capability": "Automatic in-betweens between two vector extremes with linear or eased spacing.",
+     "pro_use": "Saves assistants' time on simple moves and holds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "In-between proposals for drawn levels and morphs between views are WP-43."
+     }
+    },
+    {
+     "id": "otz-drawing-10",
+     "capability": "Rotoscoping by drawing over imported video or image sequences.",
+     "pro_use": "Reference footage gives realistic timing for complex actions.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-35"
+      ],
+      "note": "actout.clip turns a filmed take into motion on a rig (not traced drawings); drawing over footage needs drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "otz-drawing-11",
+     "capability": "Onion skin in relative and fixed modes, tinted for earlier and later frames, per level or whole scene.",
+     "pro_use": "Essential for judging spacing while drawing frame by frame.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The Rig Canvas shows the character's rest pose faintly behind the part being drawn; onion skins over time are WP-35."
+     }
+    },
+    {
+     "id": "otz-drawing-12",
+     "capability": "Shift and trace: a light table showing neighbouring keys that can be offset, rotated or placed along a path.",
+     "pro_use": "In-betweeners line up arcs before tracing the middle drawing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-drawing-13",
+     "capability": "Viewer guides: field guide, safe areas and custom guides.",
+     "pro_use": "Layout keeps important action and text inside broadcast-safe areas.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run"
+      ],
+      "note": "qa.run measures every word's box against the platform-safe area per aspect; brand.assets writes safe-area overlays."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Editing animation levels",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/editing_animation_levels.html",
+   "capabilities": [
+    {
+     "id": "otz-level-editing-1",
+     "capability": "Level strip listing every drawing in a level, including unexposed ones, with insert, renumber and expose.",
+     "pro_use": "Animators manage a level's drawings apart from their timing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-level-editing-2",
+     "capability": "Sequence operations on drawings: reverse, swing, repeat, thin out, duplicate and merge.",
+     "pro_use": "Cycles and holds are built from existing drawings without redrawing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Clips can be reversed in speed or looped on rigs, but not drawing sequences."
+     }
+    },
+    {
+     "id": "otz-level-editing-3",
+     "capability": "Merging several columns of drawings into one flattened level, and merging painted raster levels.",
+     "pro_use": "Simplifies scenes and prepares levels for hand-off.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-level-editing-4",
+     "capability": "Level processing: brightness and contrast, colour fade, antialias, binarise, adjust levels and vector line thickness.",
+     "pro_use": "Batch fixes to whole levels, especially scans, before painting.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "Thresholding and speck removal happen on import; whole-level processing across frames is WP-35."
+     }
+    },
+    {
+     "id": "otz-level-editing-5",
+     "capability": "Saving levels with optional backups and saving a copy under a new name without changing the scene.",
+     "pro_use": "Artists branch a level safely while the scene keeps its reference.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "cast/*.puppet.json under git"
+      ],
+      "note": "Puppets are JSON under git; cast.add records content hashes in cast/provenance.jsonl."
+     }
+    },
+    {
+     "id": "otz-level-editing-6",
+     "capability": "Exporting levels as image sequences or layered files with background, antialias and scale options.",
+     "pro_use": "Hand drawings to compositing or another tool.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "puppet.sheet",
+       "WP-23"
+      ],
+      "note": "Puppets export as layered SVG/ORA/PSD and model sheets as PNG; print-ready transparent stills are WP-23."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Managing palettes and styles",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/managing_palettes_and_styles.html",
+   "capabilities": [
+    {
+     "id": "otz-palettes-1",
+     "capability": "Palette per level with indexed, named styles on pages; changing a style recolours every drawing that uses it.",
+     "pro_use": "Colour changes late in production update every frame at once.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet palette slots",
+       "shots.json shots[].set_opts"
+      ],
+      "note": "Puppet colours are palette slots named after the parts they paint; sets recolour through set_opts."
+     }
+    },
+    {
+     "id": "otz-palettes-2",
+     "capability": "Studio palette: a shared library of production palettes, with styles linked to their source so edits propagate.",
+     "pro_use": "Character colour masters live in one place for the whole show.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "brand.check",
+       "plan.channel",
+       "WP-16"
+      ],
+      "note": "Brand kits are shared and inherited by a channel's films; shared character colour models and palette variants are WP-16."
+     }
+    },
+    {
+     "id": "otz-palettes-3",
+     "capability": "Animated palettes: style colours keyed over time.",
+     "pro_use": "Lighting changes (sunset, a blush) without repainting.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-16"
+      ],
+      "note": "Palette variants per scene (night, sick, cold) are WP-16; keying colours over time within a shot would join it."
+     }
+    },
+    {
+     "id": "otz-palettes-4",
+     "capability": "Style types beyond flat colour: textures, generated patterns, strokes that repeat an image, MyPaint-style raster brushes.",
+     "pro_use": "Gives painted, textured or decorative looks on top of clean lines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Line boil, toon shading and grain exist; pencil, marker and crayon line media are WP-15 and brush engines (libmypaint, Krita) WP-34."
+     }
+    },
+    {
+     "id": "otz-palettes-5",
+     "capability": "Bulk adjustment of many styles at once (hue, saturation, value, alpha, blend between two styles).",
+     "pro_use": "Colour stylists derive night or desaturated palettes from a day palette.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-16"
+      ],
+      "note": "A grade on the whole picture is possible (shots.json post.grade), but palette-level derivation is WP-16."
+     }
+    },
+    {
+     "id": "otz-palettes-6",
+     "capability": "Style naming conventions applied through a name editor.",
+     "pro_use": "Consistent names let scripts and match tools find the same style across characters.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.lint"
+      ],
+      "note": "Slots follow template names and puppet.lint flags raw colours outside the slots."
+     }
+    },
+    {
+     "id": "otz-palettes-7",
+     "capability": "Matching a palette to a reference palette within a colour tolerance.",
+     "pro_use": "Keeps imported characters consistent with the show's colour model.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-16"
+      ],
+      "note": "brand.check measures contrast and colour-blind separation, not palette matching."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Painting animation levels",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/painting_animation_levels.html",
+   "capabilities": [
+    {
+     "id": "otz-painting-1",
+     "capability": "Fill tool clicking, or by rectangle, freehand or polyline area, filling areas, lines or both.",
+     "pro_use": "Ink-and-paint artists fill whole frames in a few strokes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Rig Canvas bucket fills an ink-outlined area with a palette slot; area-select fill modes are WP-18."
+     }
+    },
+    {
+     "id": "otz-painting-2",
+     "capability": "Closing gaps in outlines so fills do not leak, with a check view that highlights closable gaps.",
+     "pro_use": "Avoids leaks on sketchy or scanned lines.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "The bucket closes gaps up to about 10 px and refuses open outlines; a visual gap check is not there."
+     }
+    },
+    {
+     "id": "otz-painting-3",
+     "capability": "Painting across a range of frames, or picking colours from an onion-skinned neighbour frame.",
+     "pro_use": "Speeds painting of long sequences with the same regions.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Colour styles applied across every frame are WP-35."
+     }
+    },
+    {
+     "id": "otz-painting-4",
+     "capability": "Selective fill that skips painted areas, and fill depth through antialiased raster edges.",
+     "pro_use": "Repaint only unfinished regions without undoing others.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-painting-5",
+     "capability": "Lines that take the colour of the area they border automatically.",
+     "pro_use": "Coloured lines in the style of Japanese production without extra painting.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-painting-6",
+     "capability": "Painting checks: ink-only, paint-only, transparency and black-background views to find unpainted spots.",
+     "pro_use": "Final check before render to catch holes and wrong colours.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.lint",
+       "puppet.coach",
+       "WP-35"
+      ],
+      "note": "Rigs are checked for raw colours, joint gaps and missing parts; per-frame paint checks on drawn levels are WP-35."
+     }
+    },
+    {
+     "id": "otz-painting-7",
+     "capability": "Match lines: merging lines from one column onto another level (for tone or shadow lines).",
+     "pro_use": "Shadow lines drawn separately are joined to the paint level at the end.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-painting-8",
+     "capability": "Colour model viewer: a reference drawing or animation to pick styles from while painting.",
+     "pro_use": "Painters copy colours straight from the approved model.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.sheet",
+       "WP-16"
+      ],
+      "note": "puppet.sheet gives a model sheet; colour models as references for painting are WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Working in the Xsheet/Timeline",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/working_in_xsheet.html",
+   "capabilities": [
+    {
+     "id": "otz-xsheet-1",
+     "capability": "Exposure sheet and layer timeline as two views of the same columns-by-frames grid.",
+     "pro_use": "Animators time on the sheet; compositors prefer the layer view.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "timeline.edit",
+       "WP-35"
+      ],
+      "note": "The Studio timeline (clips, emotion and gaze keys, dialogue lanes) is clip-based; an exposure-sheet view is WP-35."
+     }
+    },
+    {
+     "id": "otz-xsheet-2",
+     "capability": "Exposing drawings into cells, and replacing a level while keeping its timing.",
+     "pro_use": "Swap a rough level for the cleaned one without retiming.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].puppet"
+      ],
+      "note": "Clips are template-level, so changing a cast member's puppet keeps all its timing."
+     }
+    },
+    {
+     "id": "otz-xsheet-3",
+     "capability": "Column controls: name, fold, lock, hide from preview or render, opacity and colour filter.",
+     "pro_use": "Compositors isolate layers and tint references while working.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Per-layer opacity and colour filters belong to the compositor (WP-36); shots can be rendered selectively (film.render only)."
+     }
+    },
+    {
+     "id": "otz-xsheet-4",
+     "capability": "Cell timing operations: on twos and threes, each, increase or decrease step, reverse, swing, random, roll, time stretch.",
+     "pro_use": "Fast retiming of drawings and holds without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-35"
+      ],
+      "note": "style.step animates on 12s, 8s or 6s; clips have speed, fades and weights; cell-level exposure tools are WP-35."
+     }
+    },
+    {
+     "id": "otz-xsheet-5",
+     "capability": "Inserting or removing frames across the whole scene with keys shifting to match.",
+     "pro_use": "Opening up or tightening a scene after an edit note.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.retime",
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Line-relative times reflow everything after a voice change; dragging lines and shots in Studio is WP-19."
+     }
+    },
+    {
+     "id": "otz-xsheet-6",
+     "capability": "Sub-xsheets: nest columns into a reusable sub-scene, open, edit in place, collapse, explode or save separately.",
+     "pro_use": "Reusable cycles and complex sections stay manageable.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "WP-36"
+      ],
+      "note": "film.cuts assembles inserts from other films at edit level; nested sub-compositions inside a shot fit WP-36."
+     }
+    },
+    {
+     "id": "otz-xsheet-7",
+     "capability": "Soundtrack columns: load audio files, trim and move clips, set volume, scrub with the frame cursor.",
+     "pro_use": "Dialogue and music are timed against picture in the sheet.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "voice.build",
+       "film.render",
+       "WP-40"
+      ],
+      "note": "Voices are synthesized and placed on lines and the score is generated from score.json; waveform lanes, trimming and importing music files are WP-40."
+     }
+    },
+    {
+     "id": "otz-xsheet-8",
+     "capability": "Automatic lip sync from audio (Rhubarb), assigning mouth drawings to phonemes in a column.",
+     "pro_use": "Gets a first pass of mouth timing in seconds.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "lipsync.check",
+       "doodle.say"
+      ],
+      "note": "Visemes come from word and phoneme alignment; lipsync.check cross-checks against the voice and Rhubarb."
+     }
+    },
+    {
+     "id": "otz-xsheet-9",
+     "capability": "Importing lip-sync data from Papagayo-NG or Magpie files.",
+     "pro_use": "Lip-sync specialists break down dialogue in a dedicated tool.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-13"
+      ],
+      "note": "Importing external phoneme timings fits WP-13's recorded voice-over import with phone-level alignment."
+     }
+    },
+    {
+     "id": "otz-xsheet-10",
+     "capability": "Memos pinned to a frame and column.",
+     "pro_use": "Directors leave timing notes where the animator will see them.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "review.add",
+       "review.list"
+      ],
+      "note": "Notes pinned to frames; review.fix turns them into data edits."
+     }
+    },
+    {
+     "id": "otz-xsheet-11",
+     "capability": "Save, autosave, revert and rolling backups of scenes.",
+     "pro_use": "Protects work against crashes and bad saves.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ under git"
+      ],
+      "note": "film.write validates every write; history is git."
+     }
+    },
+    {
+     "id": "otz-xsheet-12",
+     "capability": "Importing or exporting scenes between projects with their files copied to the right folders.",
+     "pro_use": "Moving scenes between productions or vendors.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ folder"
+      ],
+      "note": "A film is a self-contained folder of text files referencing cast and sets by path; prod.merge brings a film's branch back into the main tree."
+     }
+    },
+    {
+     "id": "otz-xsheet-13",
+     "capability": "Printing the exposure sheet as HTML or PDF.",
+     "pro_use": "Paper sheets go to animators and to overseas studios.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "timeline.get",
+       "WP-35"
+      ],
+      "note": "contact.pdf gives notes per shot; a printable exposure sheet is WP-35."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Creating movements (stage schematic, animating objects, 3D view)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/creating_movements.html",
+   "capabilities": [
+    {
+     "id": "otz-movement-1",
+     "capability": "Stage schematic: a node graph of every scene object (columns, pegbars, cameras, table) and their links.",
+     "pro_use": "TDs read and fix scene hierarchy at a glance.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-20"
+      ],
+      "note": "timeline.get returns shots, cast and clip layers as data; a node view is WP-20."
+     }
+    },
+    {
+     "id": "otz-movement-2",
+     "capability": "Pegbars and multi-level parenting so children add their own motion to a parent's.",
+     "pro_use": "A character rides a vehicle or a group moves as one.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Bones parent within a puppet and props switch parents (attach keys), but a scene-level null object grouping characters and props is missing; it fits WP-11's constraints."
+     }
+    },
+    {
+     "id": "otz-movement-3",
+     "capability": "Several cameras per scene, each with its own size and animation, one active at a time.",
+     "pro_use": "Alternate framings of the same action for editorial choice.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera",
+       "shots.json hooks"
+      ],
+      "note": "Each shot has its own camera keys; the same action can be shot again as another shot or hook variant."
+     }
+    },
+    {
+     "id": "otz-movement-4",
+     "capability": "Camera linked to an object so it follows a character.",
+     "pro_use": "Tracking shots without hand-keying the camera.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera_auto"
+      ],
+      "note": "Camera grammar follows the speaker, shakes and punches in as a pure function of time."
+     }
+    },
+    {
+     "id": "otz-movement-5",
+     "capability": "Hooks on drawings as attach points and pivots, up to many per level.",
+     "pro_use": "Props stay in a hand and feet stay planted in walk cycles.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet anchors (anchor:<name>)",
+       "timeline.pins"
+      ],
+      "note": "Anchors and pivots come from import markers; foot pins hold feet on the ground."
+     }
+    },
+    {
+     "id": "otz-movement-6",
+     "capability": "Tracker tool that follows image regions across frames and outputs hooks.",
+     "pro_use": "Attach drawn elements to filmed or animated features.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Region tracking in footage is missing; it should join WP-36 (compositor), with camera-motion compensation from WP-12.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "otz-movement-7",
+     "capability": "Animate tool for position, rotation, scale, shear, depth and stacking order keys, per channel or all at once.",
+     "pro_use": "Core layout and cut-out animation of whole objects.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-11"
+      ],
+      "note": "Placement keys carry x, y, scale and flip; whole-object rotation and shear keys and animated cross-character stacking order would join WP-11 (per-pose z-order)."
+     }
+    },
+    {
+     "id": "otz-movement-8",
+     "capability": "Motion paths: objects move along a drawn path, optionally turning to its direction, with keys snapped to path points.",
+     "pro_use": "Flying objects and smooth arcs without many keys.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Follow-path constraints and walking along a path are WP-11; ballistic prop arcs exist in the SVG player."
+     }
+    },
+    {
+     "id": "otz-movement-9",
+     "capability": "Keys shown on timeline cells, with easing handles, constant-speed segments and cycles.",
+     "pro_use": "Timing tweaks happen right in the sheet.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Keys use a fixed smooth ease and clips loop; per-segment easing handles and a camera-keys lane are WP-19."
+     }
+    },
+    {
+     "id": "otz-movement-10",
+     "capability": "3D view with depth (Z) for multiplane and truck effects; objects scale with distance.",
+     "pro_use": "Classic multiplane depth and parallax on camera moves.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "True 2D multiplane depth is WP-36 (some sets have parallax depths, and scene.js films can use a three.js renderer)."
+     }
+    },
+    {
+     "id": "otz-movement-11",
+     "capability": "Camera animation: pan, zoom and rotate.",
+     "pro_use": "Pushes, pans and Dutch angles for staging.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera"
+      ],
+      "note": "Camera keys [t, [cx, cy, zoom]] are folded into the bake for every renderer; camera roll is not a field."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Editing using spreadsheet and curves (function editor)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/editing_curves_and_numerical_columns.html",
+   "capabilities": [
+    {
+     "id": "otz-function-editor-1",
+     "capability": "Spreadsheet of per-frame numeric values for every animated parameter.",
+     "pro_use": "Precise numeric fixes and copy-paste of values.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-19"
+      ],
+      "note": "Keys are readable and writable as JSON; a numeric spreadsheet view is part of Studio timeline work (WP-19)."
+     }
+    },
+    {
+     "id": "otz-function-editor-2",
+     "capability": "Graph editor of curves with tangent handles, linked to the spreadsheet.",
+     "pro_use": "Animators polish spacing and overshoot visually.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Curve (graph) editor for keys is WP-19."
+     }
+    },
+    {
+     "id": "otz-function-editor-3",
+     "capability": "Segment interpolation types: constant, linear, speed in/out, ease in/out by frames or percent, exponential.",
+     "pro_use": "Each move gets the spacing it needs.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Keys interpolate with a fixed smooth ease and holds (views, swaps); choosing interpolation per segment is WP-19."
+     }
+    },
+    {
+     "id": "otz-function-editor-4",
+     "capability": "Expressions that compute a parameter from other objects, effects, frame number and functions (wave, random, cycle).",
+     "pro_use": "Procedural motion and linked controls without keys.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls (driven keys)",
+       "line-relative times",
+       "{{path}} bindings"
+      ],
+      "note": "Driven keys link controls to angles, shifts, swaps and z; times reference lines; text binds to data.json. General formulas on arbitrary parameters are not supported."
+     }
+    },
+    {
+     "id": "otz-function-editor-5",
+     "capability": "Parameter values read from an external data file.",
+     "pro_use": "Drive animation from measured or simulated data.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.data"
+      ],
+      "note": "Analysis scripts write data.json and overlays bind to it (data_from)."
+     }
+    },
+    {
+     "id": "otz-function-editor-6",
+     "capability": "Similar-shape curves and editing many curves at once.",
+     "pro_use": "Keep secondary channels in step with a primary one.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-function-editor-7",
+     "capability": "Stepped values on curves (hold every n frames).",
+     "pro_use": "Match curve motion to drawings on twos.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].style.step"
+      ],
+      "note": "Stepped timing per shot on 12s, 8s or 6s."
+     }
+    },
+    {
+     "id": "otz-function-editor-8",
+     "capability": "Saving and loading curves as files.",
+     "pro_use": "Reuse motion between scenes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "clip library JSON",
+       "puppet poses and clips"
+      ],
+      "note": "Clips and poses are JSON and travel with the puppet."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Creating cut-out animation (skeleton tool)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/creating_cutout_animation.html",
+   "capabilities": [
+    {
+     "id": "otz-cutout-1",
+     "capability": "Building a skeleton by linking part columns and setting their pivots.",
+     "pro_use": "Riggers turn a model sheet into an animatable puppet.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import",
+       "cast.generate",
+       "puppet.save"
+      ],
+      "note": "Layered SVG/PSD/ORA by layer name with pivots from markers or estimated; generated humanoids; Rig Canvas saves through puppet.save."
+     }
+    },
+    {
+     "id": "otz-cutout-2",
+     "capability": "Hook-based joints so parts stay attached even when a part is a bending animated drawing.",
+     "pro_use": "No gaps at elbows and knees during extreme poses.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.coach"
+      ],
+      "note": "Bendy limbs and mesh strokes deform at joints; puppet.coach bends each joint by 50 degrees and measures any gap."
+     }
+    },
+    {
+     "id": "otz-cutout-3",
+     "capability": "Switching a part's drawing from within the rig (drawing substitution).",
+     "pro_use": "Hands, mouths and turned heads changed per pose.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet swaps",
+       "puppet controls"
+      ],
+      "note": "Swap sets driven by clips or controls; drawing.requests asks for missing drawings."
+     }
+    },
+    {
+     "id": "otz-cutout-4",
+     "capability": "Forward kinematics posing that keys automatically, with global keys for scale and shear.",
+     "pro_use": "Fast pose-to-pose cut-out animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.edit",
+       "puppet.save"
+      ],
+      "note": "Clips are placed on the timeline; poses made in the Rig Canvas travel with the puppet."
+     }
+    },
+    {
+     "id": "otz-cutout-5",
+     "capability": "Inverse kinematics with permanent and temporary pins.",
+     "pro_use": "Plant feet or a hand on a table while the body moves.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json timeline.ik",
+       "shots.json timeline.pins"
+      ],
+      "note": "Two-bone IK, FABRIK chains and foot pins; IK/FK blending is WP-11."
+     }
+    },
+    {
+     "id": "otz-cutout-6",
+     "capability": "Showing only the active skeleton and resetting centres and pins.",
+     "pro_use": "Keeps complex rigs readable while posing.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Viewer convenience for manual posing; agents edit data directly."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animating with the Plastic tool (mesh deformation)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/create_animations_using_plastic_tool.html",
+   "capabilities": [
+    {
+     "id": "otz-plastic-1",
+     "capability": "Generating a triangle mesh from a drawing with set density and margin.",
+     "pro_use": "Deform painted or complex drawings smoothly instead of cutting them into parts.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-18"
+      ],
+      "note": "Mesh strokes with skinning come from Blender cut-out rigs; meshing an arbitrary drawing inside Doodleberry would join WP-18."
+     }
+    },
+    {
+     "id": "otz-plastic-2",
+     "capability": "Editing the mesh: move points, swap, collapse, split or cut edges.",
+     "pro_use": "Fix bad deformation around eyes or mouths.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-plastic-3",
+     "capability": "A vertex skeleton inside the mesh that bends it.",
+     "pro_use": "Organic bends in tails, cloth and bodies.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet mesh strokes (v0.5)",
+       "puppet parts[].bend"
+      ],
+      "note": "Bones with skinning weights and bendy limbs; SVG renderer only, others in WP-14."
+     }
+    },
+    {
+     "id": "otz-plastic-4",
+     "capability": "Several skeletons on one mesh, switched at chosen frames.",
+     "pro_use": "Turnarounds and big shape changes on one drawing.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet views",
+       "shots.json timeline.view"
+      ],
+      "note": "Multi-view rigs switch views over time; a turn control drives three-quarter offsets."
+     }
+    },
+    {
+     "id": "otz-plastic-5",
+     "capability": "Per-vertex angle limits and no-stretch locks.",
+     "pro_use": "Prevent impossible poses.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].limits"
+      ],
+      "note": "Joint limits clamp after clips, IK, pins, chains and springs."
+     }
+    },
+    {
+     "id": "otz-plastic-6",
+     "capability": "Painting rigid and flexible zones on the mesh.",
+     "pro_use": "Keep faces or hands rigid while limbs bend.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Weights come from the Blender source rig; painting them in the Rig Canvas would join WP-18."
+     }
+    },
+    {
+     "id": "otz-plastic-7",
+     "capability": "Parenting other levels to skeleton vertices or hooks.",
+     "pro_use": "Props and accessories ride a deforming body.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "prop attach keys",
+       "kit face attach {cast, part, at}"
+      ],
+      "note": "Props and faces attach to parts."
+     }
+    },
+    {
+     "id": "otz-plastic-8",
+     "capability": "Vertex values in the function editor and in expressions (for example mirrored shoulders).",
+     "pro_use": "Fine control and linked motion on deformation rigs.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls (driven keys)"
+      ],
+      "note": "No curve editor yet (WP-19)."
+     }
+    },
+    {
+     "id": "otz-plastic-9",
+     "capability": "Applying a mesh to a sub-xsheet so a group of layers deforms together.",
+     "pro_use": "Deform a whole assembled character as one.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Deforming a composite group is missing; it should join WP-36 (compositor), with renderer support via WP-14.",
+      "added_to_scope": true
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Applying effects (FX schematic)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/applying_special_fx.html",
+   "capabilities": [
+    {
+     "id": "otz-fx-1",
+     "capability": "FX schematic: a node graph connecting columns and effects to output nodes, with several outputs and one active.",
+     "pro_use": "Compositors build and reuse per-scene effect trees.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "Finishing is a fixed ffmpeg chain (shots.json post) plus motion effects (fx); a node compositor is WP-36."
+     }
+    },
+    {
+     "id": "otz-fx-2",
+     "capability": "Inserting, adding or replacing effects on links and toggling each on or off for rendering.",
+     "pro_use": "Quick A/B checks of an effect in context.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-fx-3",
+     "capability": "Effect settings panel with preview and keyframed parameters.",
+     "pro_use": "Effects that change over a shot, like a growing glow.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "post settings are static per shot."
+     }
+    },
+    {
+     "id": "otz-fx-4",
+     "capability": "On-screen handles for effect positions and sizes.",
+     "pro_use": "Place a light or blur centre directly in the frame.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Parameters are data set by agents; a visual editor for the compositor is WP-36 via the WP-20 graph view."
+     }
+    },
+    {
+     "id": "otz-fx-5",
+     "capability": "Effect presets and macro effects combining several nodes.",
+     "pro_use": "Studios standardise looks across scenes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "Finishing presets (crisp, film, warm, cool, paper, noir) exist; user macros of nodes are WP-36."
+     }
+    },
+    {
+     "id": "otz-fx-6",
+     "capability": "Blur, glow and light effects (including bokeh and radial or spin blur).",
+     "pro_use": "Atmosphere, magic and depth cues.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Note the generic-AI-look lint (WP-04) flags blur glows, so any glow must be deliberate."
+     }
+    },
+    {
+     "id": "otz-fx-7",
+     "capability": "Image adjustment and colour correction effects.",
+     "pro_use": "Grade scenes for mood and continuity.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json post (grade, lut, vignette, grain)"
+      ],
+      "note": "Applied to the joined picture before captions; grain has a fixed seed."
+     }
+    },
+    {
+     "id": "otz-fx-8",
+     "capability": "Layer blending modes (add, multiply, screen, lighten and others).",
+     "pro_use": "Shadows, light passes and glows composited over paint.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-fx-9",
+     "capability": "Mattes and masks (matte in/out, erode or dilate).",
+     "pro_use": "Restrict effects or reveal elements inside shapes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-fx-10",
+     "capability": "Distortion and noise effects (warp, ripple, fractal noise, random wave).",
+     "pro_use": "Heat haze, water and handmade wobble.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].style.boil"
+      ],
+      "note": "Deterministic line boil (turbulent displacement with cycled seeds); general distortion nodes are WP-36."
+     }
+    },
+    {
+     "id": "otz-fx-11",
+     "capability": "Motion blur computed from the movement of a layer.",
+     "pro_use": "Smooth fast action at film frame rates.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Sub-frame motion blur on fast shots is WP-15."
+     }
+    },
+    {
+     "id": "otz-fx-12",
+     "capability": "Line effects for drawn levels: art contour patterns, calligraphic thickness, outlines, palette filters, external palettes.",
+     "pro_use": "Stylise lines and isolate colours for compositing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Medium simulation for vector lines is WP-15; toon outlines and rims exist (style.toon)."
+     }
+    },
+    {
+     "id": "otz-fx-13",
+     "capability": "Generated backgrounds, gradients and colour cards.",
+     "pro_use": "Quick backgrounds and fills behind animation.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].set",
+       "shots.json shots[].underlays"
+      ],
+      "note": "Sixteen code-drawn sets and underlay elements."
+     }
+    },
+    {
+     "id": "otz-fx-14",
+     "capability": "GLSL shader effects and plug-in effects.",
+     "pro_use": "Studios add custom looks without patching the app.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "In-house WebGL nodes are one of WP-36's options."
+     }
+    },
+    {
+     "id": "otz-fx-15",
+     "capability": "Caching effect results to speed previews.",
+     "pro_use": "Iterate on top layers without recomputing heavy effects below.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "Shots are re-rendered only when their content hash changes and repeated frames are linked; the static-layer cache is WP-15 and node-level re-cook WP-20."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Using the particles effect",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/using_the_particles_effect.html",
+   "capabilities": [
+    {
+     "id": "otz-particles-1",
+     "capability": "Particle emitter using any animated column as the particle image.",
+     "pro_use": "Leaves, sparkles or debris that move like the source drawing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Particles (rain, sparks, snow) are WP-42."
+     }
+    },
+    {
+     "id": "otz-particles-2",
+     "capability": "Control images that drive spawn area, size, speed, orientation, lifetime and colour by brightness.",
+     "pro_use": "Particles shaped by a logo or emitted from a region.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-particles-3",
+     "capability": "Birth rate, start frame and a random seed for repeatable variety.",
+     "pro_use": "Same settings give a new but reproducible arrangement.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Any implementation must be seeded so frames stay pure functions of the frame number."
+     }
+    },
+    {
+     "id": "otz-particles-4",
+     "capability": "Forces: gravity, friction, wind and scattering.",
+     "pro_use": "Natural falling and drifting motion.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Props already fall, bounce and roll under gravity (drop, ballistic flight), but there is no particle system; multi-body physics is WP-09."
+     }
+    },
+    {
+     "id": "otz-particles-5",
+     "capability": "Change over life: spin, fade in and out, growth, trails and colour shifts.",
+     "pro_use": "Sparks that cool and smoke that disperses.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-particles-6",
+     "capability": "Presets for rain, snow, sparkles and smoke.",
+     "pro_use": "Fast starting points for common atmosphere.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Dust puffs and speed lines (shots.json fx) and ambient set life (steam, clouds) exist."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Previewing and rendering",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/rendering_the_animation.html",
+   "capabilities": [
+    {
+     "id": "otz-render-1",
+     "capability": "Previewing the rendered result in the viewer, framebar showing which frames are done.",
+     "pro_use": "Quick checks of effects and timing before a full render.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "export.web"
+      ],
+      "note": "Player page with live scrubbing; web player with play, scrub and frame step."
+     }
+    },
+    {
+     "id": "otz-render-2",
+     "capability": "Separate preview settings (lower resolution, sub-camera region) for faster checks.",
+     "pro_use": "Directors review fast low-res previews; final settings stay untouched.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "film.animatic",
+       "WP-20"
+      ],
+      "note": "Single shots and animatics render quickly; a draft-scale or region option with a time estimate fits WP-20."
+     }
+    },
+    {
+     "id": "otz-render-3",
+     "capability": "Flipbook with snapshot comparison, RGB and alpha channels, histograms and linked playback.",
+     "pro_use": "Compare takes and check alpha and levels.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "critic.pack",
+       "qa.run",
+       "WP-19"
+      ],
+      "note": "Contact sheets and stills are generated; a visual diff between two versions is WP-19."
+     }
+    },
+    {
+     "id": "otz-render-4",
+     "capability": "Output to image sequences and movies (PNG, TIF, TGA, MP4, WebM, GIF, MOV, APNG, sprite sheets).",
+     "pro_use": "Deliverables for editorial, web and games.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "export.web",
+       "export.lottie",
+       "WP-23"
+      ],
+      "note": "MP4 (H.264/AAC), web player and Lottie exist; WebM and ProRes with alpha, GIF and APNG are WP-23, sprite sheets WP-30."
+     }
+    },
+    {
+     "id": "otz-render-5",
+     "capability": "High bit depth, floating-point and linear-light rendering with gamma control.",
+     "pro_use": "Clean gradients and correct light blending for film delivery.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-render-6",
+     "capability": "Rendering with an alpha channel.",
+     "pro_use": "Hand transparent animation to compositing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-23"
+      ],
+      "note": "Synfig and Grease Pencil render characters with alpha internally before compositing; alpha deliverables are WP-23."
+     }
+    },
+    {
+     "id": "otz-render-7",
+     "capability": "Multiple rendering: separate outputs per column or FX branch.",
+     "pro_use": "Passes for later compositing (line, paint, shadow).",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "OpenEXR multi-pass output (beauty, line, shadow, mattes) is WP-37."
+     }
+    },
+    {
+     "id": "otz-render-8",
+     "capability": "Stereoscopic output with a camera offset.",
+     "pro_use": "3D cinema and VR releases.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Not planned; it should join WP-37 as a delivery profile.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "otz-render-9",
+     "capability": "Frame range and step settings for partial renders.",
+     "pro_use": "Re-render only a fixed section or every nth frame for tests.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "shot.render",
+       "WP-20"
+      ],
+      "note": "film.render takes only (a set of shots); arbitrary frame ranges would join WP-20's re-cook-only-what-changed work."
+     }
+    },
+    {
+     "id": "otz-render-10",
+     "capability": "Soundtrack merged into movie output.",
+     "pro_use": "Picture and sound delivered together for review.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "Voices, score and effects are mixed to -14 LUFS and muxed; stems are kept."
+     }
+    },
+    {
+     "id": "otz-render-11",
+     "capability": "Batch render tasks with priorities and dependencies, saved and reloaded.",
+     "pro_use": "Render queues run overnight.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.launch",
+       "prod.status",
+       "WP-38"
+      ],
+      "note": "Commands run as async jobs and production sessions queue beyond max_parallel; a render queue across workers is WP-38."
+     }
+    },
+    {
+     "id": "otz-render-12",
+     "capability": "Multithreaded, tiled rendering to control memory on heavy scenes.",
+     "pro_use": "Large frames render without running out of memory.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "One browser per CPU on frame ranges, frame-hash dedupe of repeats."
+     }
+    },
+    {
+     "id": "otz-render-13",
+     "capability": "Clapperboard (slate) frames added to renders.",
+     "pro_use": "Editorial identifies scene, take and version from the first frames.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "No slate; it should join WP-37's delivery profiles (or WP-22 editor hand-off).",
+      "added_to_scope": true
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Using the Toonz farm",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/using_the_toonz_farm.html",
+   "capabilities": [
+    {
+     "id": "otz-farm-1",
+     "capability": "Render farm with a controller, render servers and the app as client sharing one farm root.",
+     "pro_use": "Studios render scenes across many machines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-38"
+      ],
+      "note": "Distributed render workers (OpenCue, Flamenco or in-house) are WP-38."
+     }
+    },
+    {
+     "id": "otz-farm-2",
+     "capability": "Splitting one render into chunks rendered on different machines.",
+     "pro_use": "Long scenes finish in a fraction of the time.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-38"
+      ],
+      "note": "Frame-pure rendering makes chunks identical to a single-machine render, which is WP-38's done-when."
+     }
+    },
+    {
+     "id": "otz-farm-3",
+     "capability": "Monitoring servers (state, current task, CPUs, memory) and reading logs.",
+     "pro_use": "Render wranglers spot dead nodes and failed tasks.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.status",
+       "WP-38"
+      ],
+      "note": "The production board monitors film sessions, not render nodes."
+     }
+    },
+    {
+     "id": "otz-farm-4",
+     "capability": "Automatic load balancing as servers become free.",
+     "pro_use": "Keeps every machine busy.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-38"
+      ],
+      "note": "Scheduling by cost estimate is WP-38 (estimates from WP-20)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Using the version control system",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/using_the_version_control.html",
+   "capabilities": [
+    {
+     "id": "otz-version-control-1",
+     "capability": "Central repository with revision history of every production file.",
+     "pro_use": "Teams recover any earlier version of a scene or level.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/, cast/, sets/ under git"
+      ],
+      "note": "Films are text, so they diff, branch and bisect; renders are git-ignored and reproducible."
+     }
+    },
+    {
+     "id": "otz-version-control-2",
+     "capability": "Get and put workflow with comments.",
+     "pro_use": "Artists check out work, change it and submit it back.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "prod.launch",
+       "prod.merge"
+      ],
+      "note": "A git worktree and branch per film; prod.merge refuses changes outside the film's folder."
+     }
+    },
+    {
+     "id": "otz-version-control-3",
+     "capability": "Edit locks on files, including locks on a frame range of a level.",
+     "pro_use": "Two artists can work on one level without overwriting each other.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-39"
+      ],
+      "note": "Assignments and locks on films and characters are WP-39."
+     }
+    },
+    {
+     "id": "otz-version-control-4",
+     "capability": "Seeing who holds a lock and file status against the repository.",
+     "pro_use": "Coordinators know who is working on what.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-39"
+      ],
+      "note": "Audit log of who changed what is WP-39; prod.status shows each film session's state."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "ToonzScript",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/toonzscript.html",
+   "capabilities": [
+    {
+     "id": "otz-scripting-1",
+     "capability": "JavaScript-like scripting of scenes, levels, cells and columns.",
+     "pro_use": "TDs automate repetitive setup and fixes.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every @command is exposed to the CLI, HTTP API, Studio and MCP with a JSON input schema."
+     }
+    },
+    {
+     "id": "otz-scripting-2",
+     "capability": "Interactive script console inside the app.",
+     "pro_use": "Quick one-off automation without writing files.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "python -m dbe <command> '<json>' and MCP tool calls play this role."
+     }
+    },
+    {
+     "id": "otz-scripting-3",
+     "capability": "Vectorising raster images by outline or centre line from a script.",
+     "pro_use": "Batch conversion of scanned material.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Vector tracing is WP-18."
+     }
+    },
+    {
+     "id": "otz-scripting-4",
+     "capability": "Rasterising vectors and rendering scenes or single frames from a script.",
+     "pro_use": "Automated stills and test renders.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render",
+       "film.render",
+       "puppet.sheet"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-scripting-5",
+     "capability": "Batch file management and format conversion.",
+     "pro_use": "Clean up and convert asset folders in bulk.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.export_layers",
+       "WP-23"
+      ],
+      "note": "Puppets convert to and from layered files; general image and video format conversion is WP-23."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Keyboard shortcuts",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/keyboard_shortcuts.html",
+   "capabilities": [
+    {
+     "id": "otz-shortcuts-1",
+     "capability": "Per-user configurable shortcuts for tools, modifiers, views, playback and menu commands, including multi-key shortcuts (1.8).",
+     "pro_use": "Artists adapt the tool to habits from other software.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents call commands by name; Studio pages are not a full drawing application."
+     }
+    },
+    {
+     "id": "otz-shortcuts-2",
+     "capability": "Playback and frame-stepping keys.",
+     "pro_use": "Rapid review of timing frame by frame.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "export.web",
+       "film.preview"
+      ],
+      "note": "The web player supports play, scrub and frame step."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "FX reference: layer blending",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/fx_docs/fx_index.html",
+   "capabilities": [
+    {
+     "id": "otz-fx-reference-1",
+     "capability": "Global transparency effect with a keyable opacity.",
+     "pro_use": "Fade a layer in or out over a shot.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Clip fades blend motion, not layer opacity; overlays pop in and out."
+     }
+    },
+    {
+     "id": "otz-fx-reference-2",
+     "capability": "Local transparency driven by another layer.",
+     "pro_use": "Fade parts of a layer through a shaped mask.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-fx-reference-3",
+     "capability": "Linear colour space option for blending effects.",
+     "pro_use": "Physically correct light mixing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": ""
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Command-line tools (tcomposer, tcleanup, tconverter, farm daemons)",
+   "source_url": "https://opentoonz.readthedocs.io/en/latest/using_the_toonz_farm.html",
+   "capabilities": [
+    {
+     "id": "otz-cli-1",
+     "capability": "Headless rendering of a scene file with output path, frame range, step and shrink options (tcomposer).",
+     "pro_use": "Farms and scripts render without opening the interface.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "All rendering is headless; frame range and shrink options are not exposed (see the rendering chapter)."
+     }
+    },
+    {
+     "id": "otz-cli-2",
+     "capability": "Headless batch cleanup of scans (tcleanup).",
+     "pro_use": "Overnight cleanup on servers.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "Single-drawing ink cleanup only."
+     }
+    },
+    {
+     "id": "otz-cli-3",
+     "capability": "Format conversion between image, level and movie formats (tconverter).",
+     "pro_use": "Convert deliverables or legacy assets in bulk.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.export_layers",
+       "WP-23"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-cli-4",
+     "capability": "Render tasks show the exact command line they will run, so it can be rerun by hand.",
+     "pro_use": "Wranglers reproduce and debug farm failures.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every command has a JSON input schema and the same call works from CLI, HTTP and MCP."
+     }
+    },
+    {
+     "id": "otz-cli-5",
+     "capability": "Driving OpenToonz itself from Doodleberry data (a scene rendered by tcomposer).",
+     "pro_use": "Reuse OpenToonz's renderer and level model inside an automated pipeline.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "WP-34's done-when names exactly this; WP-35 builds drawn levels on OpenToonz's level and X-sheet model if chosen."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "What's new: release notes 1.6 to 1.8 (and Tahoma2D fork notes)",
+   "source_url": "https://github.com/opentoonz/opentoonz/releases",
+   "capabilities": [
+    {
+     "id": "otz-release-notes-1",
+     "capability": "Preproduction board panel for laying out story panels (1.7; Tahoma2D refactored its own board in 1.6).",
+     "pro_use": "Boards and timing live in the same tool as animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.storyboard",
+       "film.animatic"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-release-notes-2",
+     "capability": "Interchange of layered cel animation through the Open Cel Animation format (export 1.7, import 1.8).",
+     "pro_use": "Move drawn animation between Krita, Blender and other cel tools.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "export.synfig",
+       "export.lottie",
+       "WP-22"
+      ],
+      "note": "Rig exports exist (layered files, Synfig, Lottie); OCA in and out would join WP-22's hand-off formats."
+     }
+    },
+    {
+     "id": "otz-release-notes-3",
+     "capability": "Exposure-sheet interchange: XDTS integration (1.8), plus sheet export to PDF and TVPaint JSON (1.6).",
+     "pro_use": "Timing sheets exchanged with Japanese studios and other paint tools.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Belongs with the exposure sheet in WP-35."
+     }
+    },
+    {
+     "id": "otz-release-notes-4",
+     "capability": "Camera track export (1.7).",
+     "pro_use": "Camera moves reused in a compositing or 3D tool.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-22"
+      ],
+      "note": "Camera keys are data but are not exported; it should join WP-22 (editor hand-off).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "otz-release-notes-5",
+     "capability": "Navigation tags and coloured cell marks on the timeline (1.6, 1.7).",
+     "pro_use": "Jump to story points in long scenes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "script.json line ids",
+       "review.json"
+      ],
+      "note": "Lines are named anchors that shots and clips reference; review notes are pinned to frames."
+     }
+    },
+    {
+     "id": "otz-release-notes-6",
+     "capability": "Screentone fills (1.8).",
+     "pro_use": "Manga-style tone shading.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Joins WP-15's medium and style passes."
+     }
+    },
+    {
+     "id": "otz-release-notes-7",
+     "capability": "Stroke replication (symmetry-style drawing) and improved perspective/assistant guides (1.8).",
+     "pro_use": "Symmetrical props and correct perspective in backgrounds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-release-notes-8",
+     "capability": "New effects: Flow effect series and Floor Bump (1.7), Smoother and lazy-brush style effects (1.8).",
+     "pro_use": "Painterly flow-driven distortion and line smoothing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-release-notes-9",
+     "capability": "OpenEXR image support (1.6) and floating-point linear rendering (1.7).",
+     "pro_use": "Film-grade intermediates.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": ""
+     }
+    },
+    {
+     "id": "otz-release-notes-10",
+     "capability": "Multithreaded FFmpeg encoding (1.6) and faster MP4 renders with audio (1.7).",
+     "pro_use": "Shorter turnaround for review movies.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "Parallel capture plus -tune animation encoding."
+     }
+    },
+    {
+     "id": "otz-release-notes-11",
+     "capability": "Pasting images from the system clipboard, custom panels and a see-through main window (1.7, 1.8).",
+     "pro_use": "Interactive conveniences for artists.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Desktop UI conveniences; Doodleberry is driven by commands."
+     }
+    },
+    {
+     "id": "otz-release-notes-12",
+     "capability": "Camera capture for stop motion and pencil tests, with camera calibration (1.6); Tahoma2D adds DSLR support through Canon SDK and gphoto.",
+     "pro_use": "Capture paper pencil tests or puppets frame by frame.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "actout.clip uses a webcam for performance capture, not frame capture; stop-motion capture should join WP-35 (drawn levels as image sequences).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "otz-release-notes-13",
+     "capability": "Tahoma2D: clipping masks in the timeline and per-column alpha lock (1.6).",
+     "pro_use": "Paint inside a character's shape without spilling.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Masks and mattes are WP-36."
+     }
+    }
+   ]
+  }
+ ]
+}

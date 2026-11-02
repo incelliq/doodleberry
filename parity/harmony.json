@@ -1,0 +1,2461 @@
+{
+ "tool": "Toon Boom Harmony",
+ "version": "25 (25.2, March 2026), Premium",
+ "sources": [
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/book/index.html",
+   "title": "Harmony 25 Premium documentation",
+   "used_for": "Documentation home"
+  },
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/book/about-user-guide.html",
+   "title": "Harmony 25 Premium User Guide",
+   "used_for": "Chapter list (table of contents)"
+  },
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/release-notes/harmony/harmony-25-release-notes.html",
+   "title": "Harmony 25 Release Notes",
+   "used_for": "New features in 25"
+  },
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/release-notes/harmony/harmony-25-1-release-notes.html",
+   "title": "Harmony 25.1 Release Notes",
+   "used_for": "Point release features"
+  },
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/release-notes/harmony/harmony-25-2-release-notes.html",
+   "title": "Harmony 25.2 Release Notes",
+   "used_for": "Point release features"
+  },
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/ai/ai-operations.html",
+   "title": "AI Operations",
+   "used_for": "Ember AI features"
+  },
+  {
+   "url": "https://docs.toonboom.com/help/harmony-25/premium/project-creation/about-database.html",
+   "title": "Harmony Server",
+   "used_for": "Collaboration and database"
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Scene Creation",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/project-creation/about-project-creation.html",
+   "capabilities": [
+    {
+     "id": "harmony-scene-creation-1",
+     "capability": "Scene settings that fix the frame size, aspect ratio and frame rate of a scene",
+     "pro_use": "Set once per production to match the delivery spec so every scene is consistent",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json size",
+       "shots.json fps"
+      ],
+      "note": "Film-level size and fps in shots.json; qa.run checks 1080x1920 at 30 fps"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-2",
+     "capability": "Start a new scene from an empty setup or a studio template",
+     "pro_use": "Each episode or shot starts from a template carrying the camera, palettes and rigs",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "Empty film folder, or a storyboard drafted from a format template"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-3",
+     "capability": "Compact single-file scene storage that cuts the number of files on disk (new in 25)",
+     "pro_use": "Lighter scenes for remote artists and faster transfers between studios",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ source files"
+      ],
+      "note": "A film is already a handful of small JSON/text files; generated files stay in build/ (git-ignored)"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-4",
+     "capability": "Stand-alone scenes saved with version history and restorable earlier saves",
+     "pro_use": "Artists roll back to a previous save after a bad change",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ in git"
+      ],
+      "note": "Films are text under version control; history and branches come from git"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-5",
+     "capability": "Central server database where many artists work on the same project at once",
+     "pro_use": "Large studios keep every asset in one place and assign scenes to artists",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "prod.launch",
+       "prod.merge",
+       "prod.status",
+       "WP-39"
+      ],
+      "note": "One git worktree and branch per film with a scoped merge; people, roles and assignments are WP-39"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-6",
+     "capability": "Scene and drawing locks so only one person edits an element at a time",
+     "pro_use": "Prevents two animators overwriting the same drawing in a shared database",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-39"
+      ],
+      "note": "Assignments and locks on films and characters are in WP-39's scope"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-7",
+     "capability": "Organising projects into environments, jobs and scenes",
+     "pro_use": "Production management sorts shows, episodes and shots in a hierarchy",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "plan.channels",
+       "prod.status",
+       "WP-39"
+      ],
+      "note": "Channels, quarters and the production board organise films; per-level permissions wait for WP-39"
+     }
+    },
+    {
+     "id": "harmony-scene-creation-8",
+     "capability": "Checking a scene's integrity for missing or broken references",
+     "pro_use": "Run before handing off or rendering to catch missing files",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.validate"
+      ],
+      "note": "Schema and reference check (lines, puppets, clips, shot order)"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "User Interface",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/user-interface/about-interface.html",
+   "capabilities": [
+    {
+     "id": "harmony-user-interface-1",
+     "capability": "Configurable workspaces made of dockable views and toolbars",
+     "pro_use": "Each department (layout, animation, compositing) keeps its own screen layout",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents work through the command registry, not a window layout; Studio pages are fixed views over the same data"
+     }
+    },
+    {
+     "id": "harmony-user-interface-2",
+     "capability": "Keyboard shortcuts for every action",
+     "pro_use": "Speed for artists doing repetitive keyframing and drawing",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agent-run studio: actions are commands with JSON arguments"
+     }
+    },
+    {
+     "id": "harmony-user-interface-3",
+     "capability": "Interface theme colours and interface language",
+     "pro_use": "Comfort and localisation for international crews",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "No per-user desktop UI to theme; Studio is a small web front end"
+     }
+    },
+    {
+     "id": "harmony-user-interface-4",
+     "capability": "Preferences holding studio-wide defaults for tools, display and rendering",
+     "pro_use": "Studios ship a standard preference set so all seats behave alike",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "dbe/profiles.json"
+      ],
+      "note": "Per-style QA thresholds and per-platform encoding profiles live in one checked-in file"
+     }
+    },
+    {
+     "id": "harmony-user-interface-5",
+     "capability": "Several synchronised views of one scene (camera, drawing, timeline, xsheet, node graph)",
+     "pro_use": "Animators see picture, timing and structure side by side",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "timeline.get",
+       "WP-20"
+      ],
+      "note": "Live player and Studio timeline exist; the node/graph view is WP-20 and the xsheet WP-35"
+     }
+    },
+    {
+     "id": "harmony-user-interface-6",
+     "capability": "Built-in, searchable help for tools and commands",
+     "pro_use": "Artists look up a tool without leaving the application",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every command with its input schema, which is what agents see as tools"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers and Columns",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/layers/about-layer-column.html",
+   "capabilities": [
+    {
+     "id": "harmony-layers-and-columns-1",
+     "capability": "Typed layers for drawings, pegs, groups, sound, camera, effects and annotations",
+     "pro_use": "The scene is assembled from many layer types stacked in the timeline",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast",
+       "shots.json overlays",
+       "shots.json cues",
+       "shots.json camera"
+      ],
+      "note": "A shot's cast, overlays, underlays, cues and camera play the role of layer types"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-2",
+     "capability": "Adding, deleting, renaming and reordering layers",
+     "pro_use": "Everyday scene assembly",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.write",
+       "timeline.edit"
+      ],
+      "note": "Layers are entries in shots.json written by film.write; timeline.edit moves, resizes, adds or deletes clip layers"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-3",
+     "capability": "Enabling, disabling, soloing and locking layers while working",
+     "pro_use": "Isolate one element to check it, protect finished layers",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-39"
+      ],
+      "note": "One shot renders on its own; per-layer solo is unnecessary for agents, but locks are WP-39"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-4",
+     "capability": "Clone layers that share drawings versus independent duplicates",
+     "pro_use": "Reuse one character's artwork in several places without copying files",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].puppet"
+      ],
+      "note": "Cast entries reference a puppet file by path, so any number of shots share one character"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-5",
+     "capability": "Group layers to collapse and move related elements together",
+     "pro_use": "Keeps a character's many parts manageable in the timeline",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet skeleton (parent)"
+      ],
+      "note": "A cast member is one entry whose parts are grouped by the puppet's skeleton"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-6",
+     "capability": "Annotation columns for notes drawn or typed on the timeline",
+     "pro_use": "Directors and leads leave notes for animators on specific frames",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "review.add",
+       "review.list"
+      ],
+      "note": "Notes pinned to frames in review.json"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-7",
+     "capability": "Timing columns that hold exposure only and point at drawings elsewhere",
+     "pro_use": "Separates timing from artwork so a timing pass can be redone cheaply",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels with exposures and an X-sheet are WP-35"
+     }
+    },
+    {
+     "id": "harmony-layers-and-columns-8",
+     "capability": "Element manager listing the drawing elements a scene uses",
+     "pro_use": "Clean up unused elements before archiving",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.provenance",
+       "film.credits",
+       "WP-29"
+      ],
+      "note": "What a film uses is listed with licences; screen time per asset (usage accounting) is WP-29"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Timing",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/timing/about-timing.html",
+   "capabilities": [
+    {
+     "id": "harmony-timing-1",
+     "capability": "Setting scene length and inserting or removing frames",
+     "pro_use": "Fits a scene to its slot in the edit",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.retime"
+      ],
+      "note": "Shot start and end derive from line references, so length follows the voice"
+     }
+    },
+    {
+     "id": "harmony-timing-2",
+     "capability": "Exposure editing: holding, extending and filling drawing exposures",
+     "pro_use": "Core timing work in the xsheet for hand-drawn and cut-out scenes",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-35"
+      ],
+      "note": "Clip timing is editable; per-drawing exposures need drawn levels and an X-sheet (WP-35)"
+     }
+    },
+    {
+     "id": "harmony-timing-3",
+     "capability": "Animating on ones, twos or threes",
+     "pro_use": "Classic 2D look and cheaper animation on held frames",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json style.step"
+      ],
+      "note": "Stepped timing per shot or character (e.g. 12 fps while the film runs at 30)"
+     }
+    },
+    {
+     "id": "harmony-timing-4",
+     "capability": "Frame markers and scene markers that label points or ranges in time",
+     "pro_use": "Mark key poses, act breaks or sync points for the team",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "script.json line ids (line-relative times)"
+      ],
+      "note": "Times are written relative to named lines (\"mid.start+0.9\"), which act as markers that survive re-voicing"
+     }
+    },
+    {
+     "id": "harmony-timing-5",
+     "capability": "Locking the timeline ruler so scene markers and length cannot shift by accident (new in 25)",
+     "pro_use": "Protects locked edit timing during animation",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "script.slots"
+      ],
+      "note": "Narration slots fix each line's start and maximum length before any voice exists"
+     }
+    },
+    {
+     "id": "harmony-timing-6",
+     "capability": "Tempo markers that lay a beat grid on the timeline",
+     "pro_use": "Animate dance, music and comic beats on tempo",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.beats"
+      ],
+      "note": "Beats and bars from the score, with how far each cut and line falls from them"
+     }
+    },
+    {
+     "id": "harmony-timing-7",
+     "capability": "Xsheet view with a dialogue column for phonetic breakdown",
+     "pro_use": "Animators read sound breakdown next to exposures",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "WP-35"
+      ],
+      "note": "Dialogue lanes with words exist in the Studio timeline; a true exposure sheet is WP-35"
+     }
+    },
+    {
+     "id": "harmony-timing-8",
+     "capability": "Printing the exposure sheet",
+     "pro_use": "Paper xsheets for animators and checkers",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "An X-sheet (and a printable export of it) belongs with WP-35"
+     }
+    },
+    {
+     "id": "harmony-timing-9",
+     "capability": "Ripple versus overwrite behaviour when timing changes",
+     "pro_use": "Keeps downstream timing in place or pushes it along deliberately",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.retime",
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Line-relative times ripple with the voice; dragging lines and shots is WP-19"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Drawing",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/drawing/about-drawing.html",
+   "capabilities": [
+    {
+     "id": "harmony-drawing-1",
+     "capability": "Vector brush and pencil (centre-line) tools with pen pressure",
+     "pro_use": "Primary drawing tools for design, animation and cleanup",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Rig Canvas pressure ink and fills saved with puppet.save; centre-line pencil lines and more tools are WP-18"
+     }
+    },
+    {
+     "id": "harmony-drawing-2",
+     "capability": "Shape, line, polyline and text tools",
+     "pro_use": "Fast construction of props, backgrounds and signage",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet strokes d (SVG path)",
+       "shots.json overlays (sign, text)"
+      ],
+      "note": "Shapes are SVG path data; text and signs are overlays drawn in the film's ink"
+     }
+    },
+    {
+     "id": "harmony-drawing-3",
+     "capability": "Stroke editing: contour, centre-line and smoothing editors, cutter",
+     "pro_use": "Fix and refine lines after drawing",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Polygon and stroke editing in the Rig Canvas is WP-18"
+     }
+    },
+    {
+     "id": "harmony-drawing-4",
+     "capability": "Stroke stabiliser and adjustable pressure curve",
+     "pro_use": "Smooth confident lines on any tablet",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Pressure strokes and simplification exist; stabiliser is WP-18"
+     }
+    },
+    {
+     "id": "harmony-drawing-5",
+     "capability": "Drawing guides: perspective grids with vanishing points",
+     "pro_use": "Draw backgrounds and props in consistent perspective",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No perspective guides; fits the Rig Canvas tools of WP-18"
+     }
+    },
+    {
+     "id": "harmony-drawing-6",
+     "capability": "Optimising drawings: flatten, remove extra strokes, deduplicate, shrink textures",
+     "pro_use": "Keep scenes light and fast before rendering or archiving",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.lint",
+       "WP-18"
+      ],
+      "note": "Imports simplify outlines (RDP) and lint flags problems; a dedicated optimiser is WP-18"
+     }
+    },
+    {
+     "id": "harmony-drawing-7",
+     "capability": "Converting between brush strokes and pencil lines",
+     "pro_use": "Switch a drawing to the representation that suits cleanup or ink",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "Vector editing via Synfig core or Inkscape is a WP-34 candidate"
+     }
+    },
+    {
+     "id": "harmony-drawing-8",
+     "capability": "Bitmap layers and vectorising bitmap artwork",
+     "pro_use": "Mix painted textures with vectors; turn scans into editable vectors",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap",
+       "WP-18"
+      ],
+      "note": "Raster parts from photos or scans exist; vector tracing (VTracer, potrace) is WP-18"
+     }
+    },
+    {
+     "id": "harmony-drawing-9",
+     "capability": "Pencil Retouch: adjust thickness or opacity of existing pencil lines like natural media (new in 25)",
+     "pro_use": "Gives clean vector lines a hand-drawn variation during ink and paint",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Medium simulation for vector lines (pencil, marker, crayon) is WP-15"
+     }
+    },
+    {
+     "id": "harmony-drawing-10",
+     "capability": "Importing Photoshop brushes for the brush and eraser tools (new in 25)",
+     "pro_use": "Artists keep the brushes they already use",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "Brush engines (Krita, libmypaint) are WP-34 candidates"
+     }
+    },
+    {
+     "id": "harmony-drawing-11",
+     "capability": "Envelope and perspective transforms of selected artwork",
+     "pro_use": "Warp a drawing to fit a surface or angle",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Not available on drawings; fits WP-18 editing tools"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Painting & Colours",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/colour/colours.html",
+   "capabilities": [
+    {
+     "id": "harmony-painting-colours-1",
+     "capability": "Colour swatches referenced by drawings, so editing a swatch repaints every drawing",
+     "pro_use": "Change a character's colours globally late in production",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet strokes fill/stroke palette slots"
+      ],
+      "note": "Strokes name palette slots (\"cloth1\", \"ink\"); puppet.lint flags raw colours"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-2",
+     "capability": "Palette management: scene and element palettes, linking, cloning, palette lists",
+     "pro_use": "Night, day or wet versions of a character from cloned palettes",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json set_opts",
+       "WP-16"
+      ],
+      "note": "Runtime recolour of sets and slots exists; palette variants per scene are WP-16"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-3",
+     "capability": "Gradient and texture swatches",
+     "pro_use": "Soft shading and painted textures inside fills",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-15"
+      ],
+      "note": "Raster parts carry painted texture; vector gradients are flattened on import; texture passes are WP-15"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-4",
+     "capability": "Paint bucket with gap closing for unclosed lines",
+     "pro_use": "Fast ink-and-paint of every frame",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-35"
+      ],
+      "note": "Rig Canvas bucket closes gaps up to about 10 px; batch painting of drawn sequences belongs with WP-35"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-5",
+     "capability": "Colour models as the reference for ink and paint",
+     "pro_use": "Painters match each drawing to an approved colour model",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.sheet"
+      ],
+      "note": "Model sheet with every view and expression in its palette"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-6",
+     "capability": "Dirt cleanup and verifying unpainted zones",
+     "pro_use": "Scanned or rough drawings are cleaned before painting",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "puppet.lint",
+       "WP-35"
+      ],
+      "note": "Speck removal on ink import; cleanup of rough lines for drawn animation is WP-35"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-7",
+     "capability": "Recolouring drawings in bulk and protecting chosen colours",
+     "pro_use": "Swap a colour across a whole scene safely",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet strokes fill/stroke palette slots",
+       "shots.json set_opts"
+      ],
+      "note": "Slots recolour in one place; no protect flag is needed because nothing paints raw colours"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-8",
+     "capability": "Optimising palettes: merge duplicates and remove unused colours (new in 25)",
+     "pro_use": "Clean palettes before delivery",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.lint",
+       "WP-16"
+      ],
+      "note": "Lint reports raw colours and missing slots; merging unused slots is not built (WP-16 palette work)"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-9",
+     "capability": "Colour space management for elements, scene, display and export",
+     "pro_use": "Consistent colour from painting through grading to delivery",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "OpenColorIO and ACES are WP-37"
+     }
+    },
+    {
+     "id": "harmony-painting-colours-10",
+     "capability": "Separate line art and colour art layers in each drawing",
+     "pro_use": "Ink and paint stay independent for easier fixes",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet strokes (fill strokes, outline drawn last)"
+      ],
+      "note": "Fill and ink are separate strokes per part; outlines are drawn last"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Paperless Animation",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/paperless-animation/about-paperless-animation.html",
+   "capabilities": [
+    {
+     "id": "harmony-paperless-animation-1",
+     "capability": "Rough, tie-down and clean-up passes drawn frame by frame",
+     "pro_use": "Traditional hand-drawn character animation done digitally",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels and cleanup of rough lines are WP-35"
+     }
+    },
+    {
+     "id": "harmony-paperless-animation-2",
+     "capability": "Onion skin and light table showing neighbouring drawings",
+     "pro_use": "Spacing and arcs between drawings",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Onion skins are in WP-35 (WP-18 for Rig Canvas boards)"
+     }
+    },
+    {
+     "id": "harmony-paperless-animation-3",
+     "capability": "Shift-and-trace to offset and trace over previous drawings",
+     "pro_use": "Inbetweening with control over overlap",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of hand-drawn animation tools"
+     }
+    },
+    {
+     "id": "harmony-paperless-animation-4",
+     "capability": "Flipping and playing drawings in place, mini playback",
+     "pro_use": "Check motion while drawing",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview"
+      ],
+      "note": "Live player with scrubbing; drawing-level flipping waits for drawn levels (WP-35)"
+     }
+    },
+    {
+     "id": "harmony-paperless-animation-5",
+     "capability": "Marking drawings as key, breakdown or inbetween",
+     "pro_use": "Lead animators hand keys to assistants",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Key poses with in-between assistance are WP-35/WP-43"
+     }
+    },
+    {
+     "id": "harmony-paperless-animation-6",
+     "capability": "Art Layer Manager to move, swap or consolidate art layers across a frame range (new in 25.2)",
+     "pro_use": "Bulk fixes to layered artwork across many drawings",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Needs drawn levels first"
+     }
+    },
+    {
+     "id": "harmony-paperless-animation-7",
+     "capability": "Drawing thumbnails in the timeline",
+     "pro_use": "Find a drawing quickly",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "timeline.get",
+       "WP-35"
+      ],
+      "note": "Shot stills exist; per-drawing thumbnails need drawn levels"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Scene Staging",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/staging/about-staging.html",
+   "capabilities": [
+    {
+     "id": "harmony-scene-staging-1",
+     "capability": "Positioning, scaling and rotating layers in the scene",
+     "pro_use": "Layout artists block characters and props",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].place"
+      ],
+      "note": "Keys [t, {x, y, s}] per cast member; re-staged per aspect"
+     }
+    },
+    {
+     "id": "harmony-scene-staging-2",
+     "capability": "Multiplane: elements at different depths for parallax",
+     "pro_use": "Depth in pans and trucks without 3D",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Some sets have built-in parallax (forest); true multiplane is WP-36"
+     }
+    },
+    {
+     "id": "harmony-scene-staging-3",
+     "capability": "3D space staging: layers rotated and moved in z with a perspective camera",
+     "pro_use": "2.5D scenes such as fly-throughs",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "WP-36 multiplane depth; tools/three is a test harness only"
+     }
+    },
+    {
+     "id": "harmony-scene-staging-4",
+     "capability": "Alignment guides and snapping",
+     "pro_use": "Precise manual placement",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Placement is numeric in data; safe-area and framing are measured by qa.run and film.lint instead"
+     }
+    },
+    {
+     "id": "harmony-scene-staging-5",
+     "capability": "Z-depth ordering and nudging between layers",
+     "pro_use": "Control what is in front",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts z",
+       "puppet controls z",
+       "timeline swaps.z",
+       "shots.json cast order"
+      ],
+      "note": "Part order inside a character; cast order between characters"
+     }
+    },
+    {
+     "id": "harmony-scene-staging-6",
+     "capability": "Layer opacity and transparency",
+     "pro_use": "Fades, ghosts and see-through elements",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "No per-layer opacity in shots.json; belongs with the compositor"
+     }
+    },
+    {
+     "id": "harmony-scene-staging-7",
+     "capability": "Flipping a layer horizontally",
+     "pro_use": "Reuse a character facing the other way",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].place flip"
+      ],
+      "note": "Whole-character flip (1 or -1)"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Digital Animation",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/motion-path/about-motion-path.html",
+   "capabilities": [
+    {
+     "id": "harmony-digital-animation-1",
+     "capability": "Pegs: transform-only parents that move whatever is attached",
+     "pro_use": "Move groups, set up hierarchies and camera-like moves",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json shots[].cast[].place",
+       "WP-36"
+      ],
+      "note": "Each cast member has its own transform; a free peg shared by several elements needs layers on planes (WP-36)"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-2",
+     "capability": "Keyframes on position, scale, rotation and other parameters",
+     "pro_use": "Basic motion for props, characters and camera",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].place",
+       "shots.json camera",
+       "puppet clips"
+      ],
+      "note": "Keys in place, camera and clips"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-3",
+     "capability": "Function curves with Bezier and ease handles in a graph editor",
+     "pro_use": "Polish timing and spacing",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Easing exists in keys and clips; a curve editor is WP-19"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-4",
+     "capability": "Motion paths with tension, bias and continuity",
+     "pro_use": "Arcs and trajectories for moving objects",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json shots[].cast[].place",
+       "WP-11"
+      ],
+      "note": "Point-to-point travel; follow-path constraints are WP-11; motion arcs WP-09"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-5",
+     "capability": "Copy, paste-special, reverse and cycle motion",
+     "pro_use": "Reuse animation across scenes and loop walks",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet/clips/<template>.json (loop)",
+       "puppet clips"
+      ],
+      "note": "Clips are template-level, reusable on any character, with looping clips; reverse paste is not offered"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-6",
+     "capability": "Velocity and ease control on keyframes",
+     "pro_use": "Slow-in, slow-out",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet clips",
+       "shots.json camera_auto ease"
+      ],
+      "note": "Easing in clips and camera; anticipation and overshoot filter"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-7",
+     "capability": "Stepped keyframes and step-on functions",
+     "pro_use": "Pose-to-pose blocking",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json style.step"
+      ],
+      "note": "Stepped timing per shot or character"
+     }
+    },
+    {
+     "id": "harmony-digital-animation-8",
+     "capability": "Expression columns computing values from other values",
+     "pro_use": "Link rotations or drive repeated motion procedurally",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet controls",
+       "WP-11"
+      ],
+      "note": "Piecewise-linear driven keys; copy-rotation constraints are WP-11; scene.js frame functions can compute anything"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Morphing Animation",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/morphing/about-morphing.html",
+   "capabilities": [
+    {
+     "id": "harmony-morphing-animation-1",
+     "capability": "Automatic shape morph between a source and destination vector drawing",
+     "pro_use": "Effects, smoke and simple shape changes without drawing inbetweens",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "In-between proposals and morphs between views are WP-43"
+     }
+    },
+    {
+     "id": "harmony-morphing-animation-2",
+     "capability": "Morph hints controlling which points correspond",
+     "pro_use": "Fix twisting or collapsing morphs",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "Comes with the morph work"
+     }
+    },
+    {
+     "id": "harmony-morphing-animation-3",
+     "capability": "Morph velocity and timing control",
+     "pro_use": "Ease the morph to the action",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "Comes with the morph work"
+     }
+    },
+    {
+     "id": "harmony-morphing-animation-4",
+     "capability": "Converting a morph into editable inbetween drawings",
+     "pro_use": "Touch up generated inbetweens by hand",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Needs drawn levels (WP-35)"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Importing & Scanning",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/import/about-import.html",
+   "capabilities": [
+    {
+     "id": "harmony-importing-scanning-1",
+     "capability": "Importing bitmap images as layers",
+     "pro_use": "Backgrounds, references and textures",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-16"
+      ],
+      "note": "Images become puppet raster parts; sets are drawn in code, image sets and prop packs are WP-16"
+     }
+    },
+    {
+     "id": "harmony-importing-scanning-2",
+     "capability": "Multi-layer PSD import keeping layers separate",
+     "pro_use": "Bring Photoshop character designs into a rig",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Layered SVG, PSD and ORA by layer name, with pivots estimated"
+     }
+    },
+    {
+     "id": "harmony-importing-scanning-3",
+     "capability": "PSD layout import with layer positions",
+     "pro_use": "Background painters deliver layouts in Photoshop",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-16"
+      ],
+      "note": "Characters only; layered set import is not built"
+     }
+    },
+    {
+     "id": "harmony-importing-scanning-4",
+     "capability": "Vector import (AI, PDF, SVG, SWF/FLA)",
+     "pro_use": "Reuse vector assets from other tools",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "SVG done; AI and others in WP-18"
+     }
+    },
+    {
+     "id": "harmony-importing-scanning-5",
+     "capability": "Importing movie files as reference layers",
+     "pro_use": "Rotoscope or match to live-action reference",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-35"
+      ],
+      "note": "Video takes become action clips; video as a tracing layer needs drawn levels"
+     }
+    },
+    {
+     "id": "harmony-importing-scanning-6",
+     "capability": "Scanning paper drawings with registration and vectorisation",
+     "pro_use": "Paper animators feed drawings into the digital pipeline",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap",
+       "WP-18"
+      ],
+      "note": "Photos and scans become raster parts; vectorisation is WP-18"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Node View",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/nodes/about-node-view.html",
+   "capabilities": [
+    {
+     "id": "harmony-node-view-1",
+     "capability": "Node graph wiring drawings, pegs, effects, composites and outputs",
+     "pro_use": "Technical directors build and debug the render pipeline of a scene",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Per-shot node compositor is WP-36, with WP-20's graph view as its editor"
+     }
+    },
+    {
+     "id": "harmony-node-view-2",
+     "capability": "Composite nodes with blending and pass-through modes",
+     "pro_use": "Control how layers merge before effects",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Renderer layers are composited over the set with ffmpeg; blend modes are WP-36"
+     }
+    },
+    {
+     "id": "harmony-node-view-3",
+     "capability": "Groups, backdrops and waypoints to organise large graphs",
+     "pro_use": "Keep complex rigs and comps readable",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-20"
+      ],
+      "note": "React Flow node view is WP-20"
+     }
+    },
+    {
+     "id": "harmony-node-view-4",
+     "capability": "Display nodes to preview any branch",
+     "pro_use": "Inspect one part of the comp",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-20"
+      ],
+      "note": "A shot renders alone, or in another renderer for comparison; per-node preview is WP-20"
+     }
+    },
+    {
+     "id": "harmony-node-view-5",
+     "capability": "Node and rig caching to speed up heavy scenes",
+     "pro_use": "Interactive playback of complex rigs",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "Content-hash per shot and frame dedupe; static-layer cache is WP-15"
+     }
+    },
+    {
+     "id": "harmony-node-view-6",
+     "capability": "Port filtering and multi-layer write outputs",
+     "pro_use": "Split one comp into many outputs",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "Multi-pass output is WP-37"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Camera",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/camera/about-camera.html",
+   "capabilities": [
+    {
+     "id": "harmony-camera-1",
+     "capability": "Several cameras in a scene with a selectable active camera",
+     "pro_use": "Alternate angles and cuts within one setup",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera"
+      ],
+      "note": "One camera per shot; cuts change shots"
+     }
+    },
+    {
+     "id": "harmony-camera-2",
+     "capability": "Animating camera framing: pan, truck, zoom",
+     "pro_use": "Camera moves on layout",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].camera"
+      ],
+      "note": "Keys [t, [cx, cy, zoom]] folded into the bake for every renderer"
+     }
+    },
+    {
+     "id": "harmony-camera-3",
+     "capability": "Camera shake",
+     "pro_use": "Impacts and comedy accents",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json camera_auto (handheld, punch)"
+      ],
+      "note": "Camera grammar includes shake and punch-ins"
+     }
+    },
+    {
+     "id": "harmony-camera-4",
+     "capability": "Perspective or orthographic camera type and clipping planes",
+     "pro_use": "Control depth in 3D-space scenes",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "True 2D multiplane with depth"
+     }
+    },
+    {
+     "id": "harmony-camera-5",
+     "capability": "Locking drawings to face the camera angle",
+     "pro_use": "Flat elements stay readable when the camera moves in 3D",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Needs 3D-space staging"
+     }
+    },
+    {
+     "id": "harmony-camera-6",
+     "capability": "Camera rotation about the view axis",
+     "pro_use": "Dutch angles and tilted framing",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Camera keys have no roll; add to WP-36's camera"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Character Rigging",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/rigging/about-rig.html",
+   "capabilities": [
+    {
+     "id": "harmony-character-rigging-1",
+     "capability": "Breaking a character design into parts at the articulations",
+     "pro_use": "First step of every cut-out rig",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import",
+       "doodle.cut",
+       "puppet.coach"
+      ],
+      "note": "Parts by layer name or confirmed cuts; the coach checks the drawing first"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-2",
+     "capability": "Naming conventions that keep rigs consistent",
+     "pro_use": "Scripts and templates rely on predictable layer names",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet template part ids"
+      ],
+      "note": "Template part ids (head, upperarm_R) are the convention; puppet.lint checks them"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-3",
+     "capability": "Setting pivot points per part",
+     "pro_use": "Correct rotation of every joint",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Pivots from markers or estimated from the drawing; stored as part pivots"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-4",
+     "capability": "Peg and drawing hierarchies (parent-child structure)",
+     "pro_use": "Move a forearm with the upper arm",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet skeleton (parent)"
+      ],
+      "note": "Bone hierarchy with FK"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-5",
+     "capability": "Drawing substitutions inside the rig (hands, mouths, eyes)",
+     "pro_use": "Swap drawings for expressions and poses",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet swaps"
+      ],
+      "note": "Swap sets per slot"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-6",
+     "capability": "Fine-tuning joints: invert cutting and overlaps that hide seams",
+     "pro_use": "Clean joints at every angle",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.coach",
+       "doodle.cut"
+      ],
+      "note": "Coach bends each joint and measures the hole; ink cuts keep overlap seams"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-7",
+     "capability": "A master peg that moves the whole character",
+     "pro_use": "Place and travel the character in layout",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json shots[].cast[].place"
+      ],
+      "note": "Per cast member transform"
+     }
+    },
+    {
+     "id": "harmony-character-rigging-8",
+     "capability": "Model reference and size relation between characters",
+     "pro_use": "Characters keep correct relative sizes",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.sheet",
+       "WP-18"
+      ],
+      "note": "Model sheets exist; a turnaround with height lines is WP-18"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Cut-out Animation",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/cut-out-animation/about-cut-out-animation.html",
+   "capabilities": [
+    {
+     "id": "harmony-cut-out-animation-1",
+     "capability": "Posing a hierarchy with a transform tool",
+     "pro_use": "Main cut-out animation workflow",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet poses",
+       "acting timeline angles"
+      ],
+      "note": "Agents pose through data; people pose in the Rig Canvas and save with puppet.save"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-2",
+     "capability": "Keyframes and inbetweens with eases",
+     "pro_use": "Pose-to-pose cut-out animation",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet clips",
+       "shots.json shots[].cast[].timeline.clips"
+      ],
+      "note": "Clips stack with fades and additive layers"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-3",
+     "capability": "Breakdown Assistant: blend between neighbouring key poses to make breakdowns (new in 25)",
+     "pro_use": "Faster breakdowns with a slider rather than hand-posing",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-43"
+      ],
+      "note": "Clip blending gives weighted mixes; in-between assistance is WP-43"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-4",
+     "capability": "Swapping drawings over time",
+     "pro_use": "Hand poses and mouth changes in a cut",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline swaps",
+       "puppet swaps"
+      ],
+      "note": "drawing.requests lists swaps a character lacks"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-5",
+     "capability": "Onion skin for cut-out poses",
+     "pro_use": "Compare poses across frames",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Onion skin in the Rig Canvas boards is WP-18"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-6",
+     "capability": "Flipping parts and mirroring poses",
+     "pro_use": "Reuse a pose for the opposite side",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json shots[].cast[].place flip",
+       "WP-11"
+      ],
+      "note": "Whole-character flip and mirrored clip pairs exist; per-part flip is not built"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-7",
+     "capability": "Lip-sync from a sound track mapped onto a mouth chart",
+     "pro_use": "Dialogue animation in minutes",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "lipsync.check",
+       "doodle.say"
+      ],
+      "note": "Visemes from phoneme timings, cross-checked against the voice"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-8",
+     "capability": "Changing z-depth of parts over time",
+     "pro_use": "Arm in front of or behind the body",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline swaps.z",
+       "puppet controls z"
+      ],
+      "note": "Clips carry z; controls drive z"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-9",
+     "capability": "Creating cycles (walks, idles)",
+     "pro_use": "Loops for walks and background action",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet clips (loop)"
+      ],
+      "note": "Looping clips in the clip library"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-10",
+     "capability": "Inverse kinematics with nails that pin parts",
+     "pro_use": "Plant feet, reach for objects",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline ik",
+       "acting timeline pins"
+      ],
+      "note": "Two-bone IK, FABRIK chains, foot pins, joint limits; IK/FK blending is WP-11"
+     }
+    },
+    {
+     "id": "harmony-cut-out-animation-11",
+     "capability": "Pose copier and pose libraries",
+     "pro_use": "Reuse approved poses",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet poses",
+       "puppet/clips/<template>.json presets"
+      ],
+      "note": "Per-character poses plus shared presets"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Deformations",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/deformation/about-deformation.html",
+   "capabilities": [
+    {
+     "id": "harmony-deformations-1",
+     "capability": "Bone deformers that bend artwork smoothly along a chain",
+     "pro_use": "Rubber-hose limbs, smooth elbows and knees",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts bend",
+       "puppet strokes mesh"
+      ],
+      "note": "Bendy limbs and skinned mesh strokes (SVG renderer; others WP-14)"
+     }
+    },
+    {
+     "id": "harmony-deformations-2",
+     "capability": "Curve deformers for hair, tails and flexible parts",
+     "pro_use": "Organic shapes that curve rather than hinge",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet chains"
+      ],
+      "note": "FABRIK chains with a living wave, puppet v0.6"
+     }
+    },
+    {
+     "id": "harmony-deformations-3",
+     "capability": "Envelope deformers that reshape outlines",
+     "pro_use": "Squash a head or bulge a belly",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Per-part squash and stretch is WP-11; contour envelopes are not planned elsewhere"
+     }
+    },
+    {
+     "id": "harmony-deformations-4",
+     "capability": "Free-form deformers with an editable point lattice",
+     "pro_use": "Arbitrary warps of a drawing",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Mesh strokes follow parts, not free animated points"
+     }
+    },
+    {
+     "id": "harmony-deformations-5",
+     "capability": "Weighted and shape-aware deformation with regions of influence",
+     "pro_use": "Deform drawings without tearing lines",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet strokes mesh (skin weights)"
+      ],
+      "note": "Linear blend skinning with weights; pinches past about 90 degrees"
+     }
+    },
+    {
+     "id": "harmony-deformations-6",
+     "capability": "Kinematic outputs that attach rigid parts to deformed points",
+     "pro_use": "Keep a hand drawing attached to a bent arm",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet anchors"
+      ],
+      "note": "Named anchors and look-at targets on other parts"
+     }
+    },
+    {
+     "id": "harmony-deformations-7",
+     "capability": "Dynamic deformations for follow-through",
+     "pro_use": "Secondary motion without hand keys",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet springs"
+      ],
+      "note": "Deterministic springs re-simulated per frame"
+     }
+    },
+    {
+     "id": "harmony-deformations-8",
+     "capability": "Converting a deformed result into a drawing",
+     "pro_use": "Touch up a single frame by hand",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Needs drawn levels"
+     }
+    },
+    {
+     "id": "harmony-deformations-9",
+     "capability": "Multi-pose rigs with a rest position per drawing or view",
+     "pro_use": "One deformer set that works for front and side drawings",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet views"
+      ],
+      "note": "Views override parts and pivots per angle"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Master Controller",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/master-controller/about-master-controller.html",
+   "capabilities": [
+    {
+     "id": "harmony-master-controller-1",
+     "capability": "Slider controllers that drive many parameters from one value",
+     "pro_use": "Animators dial a smile or a hand pose",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls (driven keys)"
+      ],
+      "note": "One control drives angles, shifts, swaps and z through key curves"
+     }
+    },
+    {
+     "id": "harmony-master-controller-2",
+     "capability": "Grid controllers for two-axis poses (head turn left/right and up/down)",
+     "pro_use": "Fast head turns on complex rigs",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet controls",
+       "WP-11"
+      ],
+      "note": "The turn control is one axis; a two-axis grid is not built"
+     }
+    },
+    {
+     "id": "harmony-master-controller-3",
+     "capability": "Stack controllers that toggle groups of layers",
+     "pro_use": "Switch costumes or accessories",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls swap targets"
+      ],
+      "note": "Controls can drive swaps; outfits as swap sets are WP-16"
+     }
+    },
+    {
+     "id": "harmony-master-controller-4",
+     "capability": "Deformer-on-deformer setups",
+     "pro_use": "Layered deformation for squash on top of bones",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Not supported"
+     }
+    },
+    {
+     "id": "harmony-master-controller-5",
+     "capability": "Scripted custom on-screen widgets",
+     "pro_use": "TDs build bespoke controls",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents set control values in data; no on-canvas widgets needed"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Effects",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/effects/about-effect.html",
+   "capabilities": [
+    {
+     "id": "harmony-effects-1",
+     "capability": "Blur family (gaussian, directional, radial)",
+     "pro_use": "Depth, speed and focus",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json post",
+       "WP-36"
+      ],
+      "note": "Whole-picture ffmpeg grade only; per-layer blurs are WP-36; sub-frame motion blur WP-15"
+     }
+    },
+    {
+     "id": "harmony-effects-2",
+     "capability": "Glows, highlights, tones and drop shadows",
+     "pro_use": "Lighting and finish on 2D characters",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json style.toon",
+       "WP-36"
+      ],
+      "note": "Cel shadow bands and rim light in SVG; glows WP-36"
+     }
+    },
+    {
+     "id": "harmony-effects-3",
+     "capability": "Masking and cutting with mattes",
+     "pro_use": "Reveal, hide or clip elements",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Masks and mattes are WP-36"
+     }
+    },
+    {
+     "id": "harmony-effects-4",
+     "capability": "Colour override, fade, curves and levels",
+     "pro_use": "Grade or recolour parts of a scene",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json post (grade, lut)",
+       "WP-36"
+      ],
+      "note": "Whole-frame grade and LUT; per-layer correction WP-36"
+     }
+    },
+    {
+     "id": "harmony-effects-5",
+     "capability": "Light and surface shading from drawn shapes",
+     "pro_use": "Volume lighting on flat art",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json style.toon",
+       "WP-36"
+      ],
+      "note": "Fixed-light cel shading on vector fills"
+     }
+    },
+    {
+     "id": "harmony-effects-6",
+     "capability": "Particle systems (rain, snow, sparks)",
+     "pro_use": "Environmental and impact effects",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json fx",
+       "WP-42"
+      ],
+      "note": "Speed lines, dust and impact stars from motion; particles are WP-42"
+     }
+    },
+    {
+     "id": "harmony-effects-7",
+     "capability": "Animated matte generator from drawing strokes",
+     "pro_use": "Quick mattes that follow animation",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Comes with the compositor"
+     }
+    },
+    {
+     "id": "harmony-effects-8",
+     "capability": "OpenFX plugin support",
+     "pro_use": "Third-party effects inside the comp",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Natron and OpenFX are WP-34/WP-36 candidates"
+     }
+    },
+    {
+     "id": "harmony-effects-9",
+     "capability": "Animating effect parameters over time",
+     "pro_use": "Effects that build and fade",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "post is static per shot"
+     }
+    },
+    {
+     "id": "harmony-effects-10",
+     "capability": "Real-time effect preview in the camera view (improved in 25)",
+     "pro_use": "Judge effects without a full render",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "WP-36"
+      ],
+      "note": "The player previews boil, toon shading and motion effects; compositor nodes come later"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Sound",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/sound/about-sound.html",
+   "capabilities": [
+    {
+     "id": "harmony-sound-1",
+     "capability": "Importing sound files into sound layers",
+     "pro_use": "Dialogue, music and effects tracks",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "voice.build",
+       "WP-13"
+      ],
+      "note": "Voices are synthesised; human voice-over import with alignment is WP-13"
+     }
+    },
+    {
+     "id": "harmony-sound-2",
+     "capability": "Sound editor: trim, fade and volume envelopes",
+     "pro_use": "Clean up and mix tracks in the scene",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-40"
+      ],
+      "note": "Moving, trimming and replacing cues in Studio is WP-40"
+     }
+    },
+    {
+     "id": "harmony-sound-3",
+     "capability": "Waveform display in the timeline",
+     "pro_use": "Animate to visible sound",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-40"
+      ],
+      "note": "Waveform lanes are WP-40"
+     }
+    },
+    {
+     "id": "harmony-sound-4",
+     "capability": "Scrubbing sound with the playhead",
+     "pro_use": "Find sync points by ear",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.preview",
+       "WP-40"
+      ],
+      "note": "Player scrubs picture; audio scrubbing with lanes is WP-40"
+     }
+    },
+    {
+     "id": "harmony-sound-5",
+     "capability": "Automatic lip-sync detection into mouth shapes",
+     "pro_use": "Fast dialogue breakdown",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "lipsync.check"
+      ],
+      "note": "Phoneme-level visemes; Rhubarb comparison when installed"
+     }
+    },
+    {
+     "id": "harmony-sound-6",
+     "capability": "Mapping detected phonemes to a character's mouth drawings",
+     "pro_use": "Fit each character's own mouth chart",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet swaps mouth (talk, emotion charts)"
+      ],
+      "note": "Emotion-aware mouth charts"
+     }
+    },
+    {
+     "id": "harmony-sound-7",
+     "capability": "Exporting the mixed soundtrack",
+     "pro_use": "Hand audio to the editor or mixer",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "film.cuts"
+      ],
+      "note": "Mix with loudness and peak targets; stems used by cuts"
+     }
+    },
+    {
+     "id": "harmony-sound-8",
+     "capability": "Audio folder in the library to preview and drag sounds into the timeline (new in 25.2)",
+     "pro_use": "Shared sound effects across scenes",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "asset.check",
+       "WP-13"
+      ],
+      "note": "Synth effects in the manifest; a sample library (Kenney CC0) is WP-13"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "3D Integration",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/3d-integration/about-3d-integration.html",
+   "capabilities": [
+    {
+     "id": "harmony-3d-integration-1",
+     "capability": "Importing 3D models (FBX, OBJ, Alembic, USDZ)",
+     "pro_use": "Props, vehicles and sets that rotate convincingly",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "tools/three test pages load GLB, but no command or film field yet"
+     }
+    },
+    {
+     "id": "harmony-3d-integration-2",
+     "capability": "Animated 3D models and filling timing from their animation (new in 25)",
+     "pro_use": "Use animation authored in a 3D package",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Blender in-process is WP-42"
+     }
+    },
+    {
+     "id": "harmony-3d-integration-3",
+     "capability": "Manipulating subnodes of a 3D model",
+     "pro_use": "Animate a door or wheel inside a model",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Comes with the 3D layer"
+     }
+    },
+    {
+     "id": "harmony-3d-integration-4",
+     "capability": "Rendering 3D models with a toon shader",
+     "pro_use": "Match 3D elements to the 2D style",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "EEVEE passes composited with 2D are WP-42"
+     }
+    },
+    {
+     "id": "harmony-3d-integration-5",
+     "capability": "Exchanging 3D animation and camera data via ATOM and USD (new in 25, camera data in 25.2)",
+     "pro_use": "Round trip with Maya or Blender",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "OpenUSD as the scene interchange"
+     }
+    },
+    {
+     "id": "harmony-3d-integration-6",
+     "capability": "Bringing rigs from Blender or Maya into the 2D scene",
+     "pro_use": "Reuse assets from 3D departments",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-42"
+      ],
+      "note": "Blender cut-out rigs become puppets; 3D models are WP-42"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "AI Features",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/ai/ai-features.html",
+   "capabilities": [
+    {
+     "id": "harmony-ai-features-1",
+     "capability": "AI masking that selects objects in an image",
+     "pro_use": "Quick mattes on painted backgrounds",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Click-to-mask cut suggestions with SAM 2.1 are WP-18"
+     }
+    },
+    {
+     "id": "harmony-ai-features-2",
+     "capability": "Generative fill from a text prompt in a masked area (new in 25.2)",
+     "pro_use": "Fix or extend painted artwork",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "ML assists; generated inputs are flagged at the posting gate"
+     }
+    },
+    {
+     "id": "harmony-ai-features-3",
+     "capability": "AI erase of unwanted objects",
+     "pro_use": "Clean plates for backgrounds",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "ML assists"
+     }
+    },
+    {
+     "id": "harmony-ai-features-4",
+     "capability": "Upscaling bitmap images and textures",
+     "pro_use": "Reuse low-resolution art at delivery size",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "ML assists"
+     }
+    },
+    {
+     "id": "harmony-ai-features-5",
+     "capability": "Expanding an image to fit the camera framing",
+     "pro_use": "Extend backgrounds for wider moves",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "Aspect re-staging from data reduces the need, but outpainting is not built"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Rendering & Exporting",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/export/about-export.html",
+   "capabilities": [
+    {
+     "id": "harmony-rendering-exporting-1",
+     "capability": "Write nodes rendering image sequences or movies",
+     "pro_use": "Final output of each scene",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "Every shot rendered, assembled, mixed, muxed and checked"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-2",
+     "capability": "Movie export in many codecs",
+     "pro_use": "Deliver previews and finals",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "film.package",
+       "WP-23"
+      ],
+      "note": "H.264 platform profiles; ProRes and WebM with alpha are WP-23"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-3",
+     "capability": "Animated GIF export",
+     "pro_use": "Previews and social posts",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-23"
+      ],
+      "note": "GIF, APNG and line-art GIFs are WP-23"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-4",
+     "capability": "Flash (SWF) movie export",
+     "pro_use": "Legacy web delivery",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Obsolete format; export.lottie and export.web cover the web"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-5",
+     "capability": "Quick OpenGL frame exports",
+     "pro_use": "Fast previews and animatics",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic",
+       "film.storyboard"
+      ],
+      "note": "Stills and an animatic in seconds"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-6",
+     "capability": "Layout image export (layered) for background artists",
+     "pro_use": "Painters receive the camera framing",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "WP-16"
+      ],
+      "note": "Characters export as layers; set layouts do not"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-7",
+     "capability": "Export to After Effects",
+     "pro_use": "Compositing in another package",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "export.lottie",
+       "WP-22"
+      ],
+      "note": "Lottie JSON for web and AE workflows; editor hand-offs are WP-22"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-8",
+     "capability": "Batch rendering of many scenes",
+     "pro_use": "Overnight renders on render machines",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "prod.launch",
+       "WP-38"
+      ],
+      "note": "Parallel workers per machine and films in parallel sessions; a render farm is WP-38"
+     }
+    },
+    {
+     "id": "harmony-rendering-exporting-9",
+     "capability": "Cryptomattes and multi-pass EXR output",
+     "pro_use": "Compositors isolate objects after rendering",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "OpenEXR multi-pass is WP-37"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Library & Templates",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/library/about-library.html",
+   "capabilities": [
+    {
+     "id": "harmony-library-templates-1",
+     "capability": "Library of reusable characters, props and backgrounds",
+     "pro_use": "Assets are built once and reused across episodes",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.list",
+       "cast.add"
+      ],
+      "note": "Cast library with provenance; sets live in sets/"
+     }
+    },
+    {
+     "id": "harmony-library-templates-2",
+     "capability": "Templates that save rigs or animation for reuse",
+     "pro_use": "Drop a rig or a walk cycle into any scene",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet/clips/<template>.json",
+       "puppet clips (v0.7 own clips)"
+      ],
+      "note": "Template-level clip library plus each character's own clips"
+     }
+    },
+    {
+     "id": "harmony-library-templates-3",
+     "capability": "Action templates applying animation to any character with the same rig",
+     "pro_use": "Share animation across characters",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet/clips/<template>.json"
+      ],
+      "note": "Clips retarget across characters on one template"
+     }
+    },
+    {
+     "id": "harmony-library-templates-4",
+     "capability": "Symbols: nested reusable elements with their own timeline",
+     "pro_use": "Animated props and repeated effects",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json overlays",
+       "WP-16"
+      ],
+      "note": "Kit elements and overlays are reusable; props with their own animation are WP-16"
+     }
+    },
+    {
+     "id": "harmony-library-templates-5",
+     "capability": "Shared libraries across a team",
+     "pro_use": "Studios share approved assets",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "cast.add",
+       "WP-29"
+      ],
+      "note": "Registry with content hashes; contributor flow is WP-29"
+     }
+    },
+    {
+     "id": "harmony-library-templates-6",
+     "capability": "Paste special controlling what gets pasted (keys, drawings, timing)",
+     "pro_use": "Precise reuse of animation pieces",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Agents write exact data edits; there is no clipboard step"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Gaming",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/gaming/about-gaming-book.html",
+   "capabilities": [
+    {
+     "id": "harmony-gaming-1",
+     "capability": "Preparing game assets (game bones, sprite layout)",
+     "pro_use": "Game studios animate characters in Harmony",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-30"
+      ],
+      "note": "Game formats are WP-30"
+     }
+    },
+    {
+     "id": "harmony-gaming-2",
+     "capability": "Export to Unity with an SDK for playback in engine",
+     "pro_use": "2D game characters with full animation",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-30"
+      ],
+      "note": "Godot export is in WP-30; Unity would join it"
+     }
+    },
+    {
+     "id": "harmony-gaming-3",
+     "capability": "Sprite-sheet export",
+     "pro_use": "Lightweight game and web animation",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-30"
+      ],
+      "note": "Sprite sheets and game formats are WP-30"
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Scripting",
+   "source_url": "https://docs.toonboom.com/help/harmony-25/premium/scripting/about-scripting.html",
+   "capabilities": [
+    {
+     "id": "harmony-scripting-1",
+     "capability": "Script API (Qt Script and Python) to automate scene work",
+     "pro_use": "TDs automate repetitive pipeline tasks",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every feature is a command reachable through CLI, HTTP, Studio and MCP"
+     }
+    },
+    {
+     "id": "harmony-scripting-2",
+     "capability": "Script editor with syntax check, debugging and sandbox",
+     "pro_use": "Develop and test scripts safely",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Commands are Python in the repo, tested with test"
+     }
+    },
+    {
+     "id": "harmony-scripting-3",
+     "capability": "Adding scripts as toolbar buttons",
+     "pro_use": "Give artists one-click tools",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "A new command appears in Studio and MCP at once"
+     }
+    },
+    {
+     "id": "harmony-scripting-4",
+     "capability": "Exposing node attributes to scripts",
+     "pro_use": "Read and set any scene value",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.get",
+       "timeline.get",
+       "film.write"
+      ],
+      "note": "Film data is plain JSON"
+     }
+    },
+    {
+     "id": "harmony-scripting-5",
+     "capability": "Headless batch scripting and rendering",
+     "pro_use": "Run tasks on a farm without the interface",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "engine.commands"
+      ],
+      "note": "Everything runs headless from the CLI"
+     }
+    },
+    {
+     "id": "harmony-scripting-6",
+     "capability": "Script nodes that compute images per frame in the comp",
+     "pro_use": "Custom effects",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/scene.js"
+      ],
+      "note": "Frame functions are pure functions of the frame number"
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,2229 @@
+{
+ "tool": "Blender Grease Pencil",
+ "version": "Grease Pencil v3 (Blender 4.3+); manual 'latest' read 2026-11-02 shows Blender 5.2 LTS; release notes 4.3, 4.4, 4.5",
+ "sources": [
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/index.html",
+   "title": "Blender Manual: Grease Pencil (table of contents)",
+   "used_for": "chapter list and version (manual shows Blender 5.2 LTS)"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/introduction.html",
+   "title": "Grease Pencil: Introduction",
+   "used_for": "object overview, 2D animation template"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/structure.html",
+   "title": "Grease Pencil: Structure",
+   "used_for": "points, edit lines, strokes"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/primitives.html",
+   "title": "Grease Pencil: Primitives",
+   "used_for": "add-menu primitives and line-art set-ups"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/properties/index.html",
+   "title": "Grease Pencil: Properties (object, data, curve data, settings)",
+   "used_for": "lights, linking, depth order, attributes, vertex groups, curve settings"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/properties/layers.html",
+   "title": "Grease Pencil: Layers",
+   "used_for": "layer tree, masks, adjustments, relations, view layers"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/properties/onion_skinning.html",
+   "title": "Grease Pencil: Onion Skinning",
+   "used_for": "ghost modes, colours, fade, loop display"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/introduction.html",
+   "title": "Grease Pencil Modifiers: Introduction",
+   "used_for": "stack, apply, influence filters"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/generate/index.html",
+   "title": "Grease Pencil Modifiers: Generate",
+   "used_for": "Array, Build, Dot Dash, Envelope, Length, Mirror, Multiple Strokes, Outline, Simplify, Subdivide"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/generate/line_art.html",
+   "title": "Line Art Modifier",
+   "used_for": "line art chapter"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/generate/build.html",
+   "title": "Build Modifier",
+   "used_for": "write-on behaviour"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/deform/index.html",
+   "title": "Grease Pencil Modifiers: Deform",
+   "used_for": "Armature, Hook, Lattice, Noise, Offset, Shrinkwrap, Smooth, Thickness"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/deform/armature.html",
+   "title": "Armature Modifier (Grease Pencil)",
+   "used_for": "rigging chapter"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/deform/noise.html",
+   "title": "Noise Modifier",
+   "used_for": "comparison with line boil"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/color/index.html",
+   "title": "Grease Pencil Modifiers: Color",
+   "used_for": "Hue/Saturation, Opacity, Tint"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/edit/index.html",
+   "title": "Grease Pencil Modifiers: Edit",
+   "used_for": "Texture Mapping, Time Offset, Vertex Weight Angle and Proximity"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/edit/time_offset.html",
+   "title": "Time Offset Modifier",
+   "used_for": "loop, reverse, fixed-frame modes"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/visual_effects/index.html",
+   "title": "Grease Pencil: Visual Effects",
+   "used_for": "Blur, Colorize, Flip, Glow, Pixelate, Rim, Shadow, Swirl, Wave Distortion"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/materials/index.html",
+   "title": "Grease Pencil: Materials",
+   "used_for": "stroke and fill components, slots"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/materials/properties.html",
+   "title": "Grease Pencil Material Properties",
+   "used_for": "line types, textures, gradients, holdout, slot controls"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/multiframe.html",
+   "title": "Grease Pencil: Multiframe",
+   "used_for": "multiframe editing"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/animation/introduction.html",
+   "title": "Grease Pencil Animation: Introduction",
+   "used_for": "ways to animate, additive drawing"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/animation/interpolation.html",
+   "title": "Grease Pencil Animation: Interpolation",
+   "used_for": "interpolate and interpolate sequence"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/animation/tools.html",
+   "title": "Grease Pencil Animation Tools",
+   "used_for": "keyframe operators, bake object transform"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/draw/index.html",
+   "title": "Grease Pencil: Draw Mode",
+   "used_for": "tools, brushes, fill, planes, placement, drawing options"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/draw/tools/fill.html",
+   "title": "Fill Tool",
+   "used_for": "fill solvers, gap closure, fill guides"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/edit/index.html",
+   "title": "Grease Pencil: Edit Mode",
+   "used_for": "selection, transform tools, stroke, point and clean-up menus"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/sculpting/index.html",
+   "title": "Grease Pencil: Sculpt Mode",
+   "used_for": "sculpt brushes, auto-masking"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/vertex_paint/index.html",
+   "title": "Grease Pencil: Vertex Paint Mode",
+   "used_for": "colour brushes and adjustments"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/weight_paint/index.html",
+   "title": "Grease Pencil: Weight Paint Mode",
+   "used_for": "weight brushes for cut-out rigging"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/object/trace_image.html",
+   "title": "Trace Image to Grease Pencil",
+   "used_for": "image tracing"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/editors/dope_sheet/modes/grease_pencil.html",
+   "title": "Dope Sheet: Grease Pencil Mode",
+   "used_for": "layer channels and key operations"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/render/eevee/render_settings/grease_pencil.html",
+   "title": "EEVEE Render Settings: Grease Pencil",
+   "used_for": "anti-aliasing and motion blur settings"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/files/import_export/grease_pencil_svg.html",
+   "title": "Import/Export: SVG as Grease Pencil",
+   "used_for": "SVG import and export"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/files/import_export/grease_pencil_pdf.html",
+   "title": "Export: Grease Pencil as PDF",
+   "used_for": "PDF export"
+  },
+  {
+   "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/grease_pencil/index.html",
+   "title": "Geometry Nodes: Grease Pencil Nodes",
+   "used_for": "procedural nodes chapter"
+  },
+  {
+   "url": "https://developer.blender.org/docs/release_notes/4.3/grease_pencil/",
+   "title": "Blender 4.3 release notes: Grease Pencil",
+   "used_for": "GPv3 rewrite: layer groups, brush assets, geometry nodes, envelope parenting, removed features"
+  },
+  {
+   "url": "https://developer.blender.org/docs/release_notes/4.4/grease_pencil/",
+   "title": "Blender 4.4 release notes: Grease Pencil",
+   "used_for": "restored stroke placement, auto-masking, mesh/curve conversion, breakdown deletion"
+  },
+  {
+   "url": "https://developer.blender.org/docs/release_notes/4.5/grease_pencil/",
+   "title": "Blender 4.5 release notes: Grease Pencil",
+   "used_for": "render pass, SSAA, fill guides, curve-type conversion, multi-frame SVG export, onion limited to active object"
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Introduction and stroke structure",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/structure.html",
+   "capabilities": [
+    {
+     "id": "gp-structure-1",
+     "capability": "Drawings are stored as strokes: ordered point lists placed in a 3D scene, captured from mouse or tablet.",
+     "pro_use": "Studios mix hand-drawn 2D characters, storyboards and motion graphics into 3D sets in one file.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].strokes[].d"
+      ],
+      "note": "Puppet strokes are SVG path data on a 2D artboard; there is no 3D placement of strokes (2D layers in 3D space belong to WP-36/WP-42)."
+     }
+    },
+    {
+     "id": "gp-structure-2",
+     "capability": "Each point carries its own thickness, opacity, weight and texture rotation, so a line can vary along its length.",
+     "pro_use": "Animators get tapered, pressure-shaped ink without extra geometry and can edit width point by point later.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-15"
+      ],
+      "note": "Rig Canvas ink bakes pressure into an outline shape (perfect-freehand) and puppet strokes carry one width/opacity per stroke; per-point attributes and line styles are WP-15."
+     }
+    },
+    {
+     "id": "gp-structure-3",
+     "capability": "A stroke can be drawn as an outline line, a filled area, or both, from one material.",
+     "pro_use": "Line-and-fill character art: ink lines over flat colour, coloured independently.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].strokes[].fill",
+       "puppet.parts[].strokes[].stroke",
+       "puppet.parts[].strokes[].width"
+      ],
+      "note": "Every stroke has a fill slot and an ink slot; the grease-pencil renderer splits such strokes into fill-only and line-only GP strokes."
+     }
+    },
+    {
+     "id": "gp-structure-4",
+     "capability": "Per-stroke curve types (polyline, Bezier, Catmull-Rom, NURBS) with resolution, closing and cap shape settings.",
+     "pro_use": "Clean-up artists switch rough polylines to smooth curves and tune caps for a consistent ink look.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "SVG paths already hold Bezier curves and closed shapes (read by puppet.import); caps are always round and there is no curve-type conversion or curve editing tool (WP-18)."
+     }
+    },
+    {
+     "id": "gp-structure-5",
+     "capability": "A ready-made 2D animation starting file: white background, plain colour view, front drawing plane, line and fill layers, auto-keying on.",
+     "pro_use": "Teams start every shot from the same template so settings never drift between artists.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "film.create makes a film folder with empty sources; film.from_template builds a storyboard from a format template."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Primitives",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/primitives.html",
+   "capabilities": [
+    {
+     "id": "gp-primitives-1",
+     "capability": "Add an empty drawing object, or one holding a single reference stroke, to start drawing at once.",
+     "pro_use": "Quick set-up of a new character or prop container before drawing.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.template",
+       "puppet/templates"
+      ],
+      "note": "A new puppet starts from a template (humanoid, doodle) that defines its parts; cast.generate can also build a full original character."
+     }
+    },
+    {
+     "id": "gp-primitives-2",
+     "capability": "A built-in 2D test head with preset materials and layers.",
+     "pro_use": "Used as a standard test object for checking materials, modifiers and effects.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "test"
+      ],
+      "note": "Doodleberry's equivalent is its benchmark films and golden frames (python -m dbe test) plus the example puppets."
+     }
+    },
+    {
+     "id": "gp-primitives-3",
+     "capability": "One-click line-art set-ups that create a drawing object tracing the whole scene, a collection or one object.",
+     "pro_use": "Fast toon outlines for 3D layouts and animatics.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "No 3D-to-ink line generation; Blender in-process for 3D sets and Grease Pencil 3 is WP-42."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Object and data properties",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/properties/index.html",
+   "capabilities": [
+    {
+     "id": "gp-data-properties-1",
+     "capability": "Per-object (and per-layer) switch for whether strokes react to scene lights.",
+     "pro_use": "Keep flat colour for cel style, or let lights shade drawings placed in a lit 3D set.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-14"
+      ],
+      "note": "style.toon gives cel shadows and rims from a fixed light in the SVG renderer; the grease-pencil renderer turns GP lights off. Toon shading in other renderers is WP-14."
+     }
+    },
+    {
+     "id": "gp-data-properties-2",
+     "capability": "Drawing data can be linked so several objects share one drawing.",
+     "pro_use": "Instancing the same character or prop many times; one fix updates them all.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.shots[].cast[].puppet"
+      ],
+      "note": "Cast entries reference one puppet file; any number of shots and cast members reuse it."
+     }
+    },
+    {
+     "id": "gp-data-properties-3",
+     "capability": "Stroke depth order chosen between the 2D layer list and real 3D position.",
+     "pro_use": "2D order for flat cut-out work; 3D order when drawings live inside a 3D scene.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].z",
+       "pose.z",
+       "puppet.controls (z.<part>)",
+       "clip swaps.z"
+      ],
+      "note": "2D draw order only, but it can be animated by controls and clips; no 3D depth ordering."
+     }
+    },
+    {
+     "id": "gp-data-properties-4",
+     "capability": "Custom attributes on layers and custom properties on the drawing data.",
+     "pro_use": "Pipelines tag layers and drawings with data their scripts read (status, pass names, variants).",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.lint",
+       "WP-11"
+      ],
+      "note": "Puppets carry meta (author, licence) and the schema is fixed; free per-part attributes are not defined. NEW: should join WP-11 with the next puppet-format bump.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "gp-data-properties-5",
+     "capability": "Vertex groups: named, weighted sets of points used by deformers and filters.",
+     "pro_use": "Bind parts of a drawing to bones or limit an effect to an area.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet strokes mesh.weights",
+       "puppet.parts[].parent"
+      ],
+      "note": "Mesh strokes (v0.5) store per-vertex part weights; ordinary strokes follow their single part."
+     }
+    },
+    {
+     "id": "gp-data-properties-6",
+     "capability": "Per-curve render settings: fill opacity, start and end caps, edge softness, texture scale and aspect.",
+     "pro_use": "Fine-tuning line ends and soft fills for a painterly look.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-15"
+      ],
+      "note": "Stroke opacity exists; caps are fixed round and softness/texture scale are missing (medium simulation, WP-15)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Layers and masks",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/properties/layers.html",
+   "capabilities": [
+    {
+     "id": "gp-layers-1",
+     "capability": "A layer tree with layer groups; each stroke belongs to one layer and new strokes go to the active one.",
+     "pro_use": "Separate line, colour, shadow and effects layers, grouped per character.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts",
+       "puppet.parts[].parent",
+       "shots.shots[].overlays",
+       "shots.shots[].underlays"
+      ],
+      "note": "Puppet parts act as layers in a bone hierarchy; scene-level layers are the set, underlays, cast and overlays. No free layer groups."
+     }
+    },
+    {
+     "id": "gp-layers-2",
+     "capability": "Per-layer visibility, locking, hide-others and auto-lock of inactive layers.",
+     "pro_use": "Protects finished work while drawing on one layer.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Viewport editing conveniences; agents edit JSON through commands. Locks on films and characters for people are WP-39."
+     }
+    },
+    {
+     "id": "gp-layers-3",
+     "capability": "Any layer can mask others (above or below), with invert and several masks per layer.",
+     "pro_use": "Clip drawings inside shapes (eyes inside sockets, a character inside a window).",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Masks and mattes are WP-36 (node compositor). SVG clip paths are used internally (toon, mesh triangles) but not exposed as a mask field."
+     }
+    },
+    {
+     "id": "gp-layers-4",
+     "capability": "Per-layer blend modes and opacity.",
+     "pro_use": "Multiply shadow layers, add glows, fade layers in and out.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Stroke opacity exists; blend modes and keyed layer opacity are WP-36."
+     }
+    },
+    {
+     "id": "gp-layers-5",
+     "capability": "Per-layer location, rotation and scale.",
+     "pro_use": "Nudge or animate parts of a drawing without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-11"
+      ],
+      "note": "Parts rotate about pivots and move with pose shifts; per-part scale (squash and stretch) is WP-11."
+     }
+    },
+    {
+     "id": "gp-layers-6",
+     "capability": "Layer adjustments: tint all colours on a layer by a factor and override stroke thickness.",
+     "pro_use": "Push a character into night or silhouette quickly; unify line weight.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-16"
+      ],
+      "note": "Palette slots allow runtime recolour; palette variants per scene are WP-16. A layer-wide line-weight override is missing (WP-15)."
+     }
+    },
+    {
+     "id": "gp-layers-7",
+     "capability": "A layer can be parented to an object or bone and inherit its motion.",
+     "pro_use": "The basis of cut-out rigs: each body part on its own layer riding a bone.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].parent",
+       "puppet.parts[].pivot"
+      ],
+      "note": "This is the puppet skeleton itself."
+     }
+    },
+    {
+     "id": "gp-layers-8",
+     "capability": "Layer pass index for restricting modifiers and effects to some layers.",
+     "pro_use": "Apply a noise or tint only to the effects layers.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry targets parts by id; it has no per-layer modifier stack to filter (see gp-modifier-stack-3)."
+     }
+    },
+    {
+     "id": "gp-layers-9",
+     "capability": "Assign layers to render view layers to split a drawing into passes for compositing.",
+     "pro_use": "Render characters, lines and shadows separately and combine them in comp.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-37"
+      ],
+      "note": "Characters are already rendered with alpha and composited over the set video; arbitrary passes (OpenEXR multi-pass) are WP-37."
+     }
+    },
+    {
+     "id": "gp-layers-10",
+     "capability": "Duplicate a layer with empty keyframes, and merge layers down, by group or all.",
+     "pro_use": "Set up clean-up and colour layers that follow the rough animation's timing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels, clean-up of rough lines and colour styles across frames are WP-35."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Onion skinning",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/properties/onion_skinning.html",
+   "capabilities": [
+    {
+     "id": "gp-onion-skinning-1",
+     "capability": "Ghosts of earlier and later frames or keyframes around the current frame, with counts before and after.",
+     "pro_use": "Core of frame-by-frame animation: spacing and arcs are judged against neighbouring drawings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "The Rig Canvas 'Onion' shows the rest of the character faintly in space, not neighbouring frames in time."
+     }
+    },
+    {
+     "id": "gp-onion-skinning-2",
+     "capability": "Onion skin switched per layer, and per material whether it appears in ghosts.",
+     "pro_use": "Ghost only the layer being animated so the view stays readable.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of onion skins in WP-35."
+     }
+    },
+    {
+     "id": "gp-onion-skinning-3",
+     "capability": "Custom colours for past and future ghosts, overall opacity and fading with distance.",
+     "pro_use": "Tell direction of motion at a glance.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of onion skins in WP-35."
+     }
+    },
+    {
+     "id": "gp-onion-skinning-4",
+     "capability": "Ghost only keyframes picked by hand in the timeline.",
+     "pro_use": "Compare against chosen key poses, not every in-between.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of onion skins in WP-35."
+     }
+    },
+    {
+     "id": "gp-onion-skinning-5",
+     "capability": "Show the first frame as a ghost when on the last frame of a loop; limit ghosts to the active object.",
+     "pro_use": "Seamless cycles (walks, idles, smoke loops).",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Clip loops exist for rigged motion (clip loop flag), but there is no visual loop check for drawings."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Modifier stack and influence filters",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/introduction.html",
+   "capabilities": [
+    {
+     "id": "gp-modifier-stack-1",
+     "capability": "Non-destructive stack of procedural operations on strokes, evaluated in order and editable at any time.",
+     "pro_use": "Artists keep drawings clean and add wobble, thickness and colour changes as reversible steps.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Shot style options (boil, toon, step, shadow) and post presets act non-destructively, but in a fixed order; a general ordered effects graph is WP-36 (with the graph view of WP-20)."
+     }
+    },
+    {
+     "id": "gp-modifier-stack-2",
+     "capability": "Apply a modifier to the current keyframe or to all keyframes, turning the result into real strokes.",
+     "pro_use": "Freeze procedural results so they can be hand-tweaked.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-35"
+      ],
+      "note": "The bake (tools/bake.mjs) and the grease-pencil exporter write deformed per-frame strokes, but not back into editable drawings; editable drawn frames are WP-35."
+     }
+    },
+    {
+     "id": "gp-modifier-stack-3",
+     "capability": "Influence filters: limit a modifier by layer or group, layer pass, material, material pass, vertex group, or a falloff curve along the stroke.",
+     "pro_use": "Wobble only the hair, thin only the outline, taper only stroke ends.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Looks apply per shot (boil has per-layer seeds); per-part or per-palette-slot targeting of line styles fits WP-15."
+     }
+    },
+    {
+     "id": "gp-modifier-stack-4",
+     "capability": "Custom modifiers built as Geometry Nodes groups.",
+     "pro_use": "Technical artists write studio-specific stroke effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Procedural layer and Blender in-process are WP-42."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Generate modifiers",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/generate/index.html",
+   "capabilities": [
+    {
+     "id": "gp-generate-modifiers-1",
+     "capability": "Array: repeat strokes with offsets, object-driven spacing and random variation.",
+     "pro_use": "Fences, crowds of simple shapes, repeated motion-graphic elements.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Scatter, instancing and crowds as data are WP-42."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-2",
+     "capability": "Build: strokes appear or vanish over time as if drawn or erased, one by one or together, optionally at the recorded drawing speed, with fades.",
+     "pro_use": "Write-on titles, drawings that draw themselves, explainer reveals.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-15"
+      ],
+      "note": "Kit 'draw' elements draw themselves with a pen-scratch sound; puppet strokes cannot be written on. Extending draw-on to character and prop lines fits WP-15 (kinetic and stroke effects)."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-3",
+     "capability": "Dot Dash: break strokes into dash-and-gap patterns, each segment with its own material and thickness.",
+     "pro_use": "Dashed guide lines, stitches, motion trails, map routes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-15"
+      ],
+      "note": "Whisper bubbles are dashed and some generated cast details use fixed dashes; no dash field on puppet strokes (WP-15)."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-4",
+     "capability": "Envelope: generate extra strokes around existing ones for a sketchy or hairy look.",
+     "pro_use": "Rough pencil looks and stylised fur from simple lines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Medium simulation for vector lines is WP-15."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-5",
+     "capability": "Length: extend or shorten strokes, following curvature, with randomness.",
+     "pro_use": "Overshooting construction lines, animated line growth.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "No stroke-length operations."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-6",
+     "capability": "Mirror: mirror strokes across axes.",
+     "pro_use": "Draw half of a symmetric object and get the other half.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.coach",
+       "WP-18"
+      ],
+      "note": "Whole characters flip (place.flip) and mirrored clips exist; puppet.coach measures left/right mismatch. Symmetric drawing in the Rig Canvas is WP-18."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-7",
+     "capability": "Multiple Strokes: duplicate strokes with offsets and fading for a multi-pass sketch look.",
+     "pro_use": "Hand-sketched, re-traced line quality.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Medium simulation for vector lines is WP-15."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-8",
+     "capability": "Outline: turn strokes into outlines around their shape with a chosen material, as seen from the camera.",
+     "pro_use": "Consistent ink outlines around fills, sticker-style borders.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].strokes[].stroke",
+       "puppet.parts[].strokes[].width",
+       "style.toon"
+      ],
+      "note": "Every filled shape can carry an ink outline; toon shading uses outline offsets. Title kit elements have an outline option."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-9",
+     "capability": "Simplify: reduce point counts by fixed steps, adaptive tolerance, resampling or merging close points.",
+     "pro_use": "Lighter files and cleaner curves after rough drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "The Rig Canvas simplifies strokes while drawing (Ramer-Douglas-Peucker) and imports flatten paths; no simplify operation on existing strokes."
+     }
+    },
+    {
+     "id": "gp-generate-modifiers-10",
+     "capability": "Subdivide: add points to smooth strokes.",
+     "pro_use": "Smoother deformation of strokes that bend with bones.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "SVG paths are resolution-independent curves; mesh strokes are subdivided at import when needed."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Deform modifiers",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/deform/index.html",
+   "capabilities": [
+    {
+     "id": "gp-deform-modifiers-1",
+     "capability": "Armature: bones deform stroke points by vertex groups or bone envelopes.",
+     "pro_use": "Cut-out and bendy character rigs inside Blender.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].parent",
+       "puppet.parts[].bend",
+       "puppet strokes mesh.weights"
+      ],
+      "note": "Rigid parts on bones, bendy limbs and skinned mesh strokes; every renderer reads the baked result."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-2",
+     "capability": "Hook: points follow a controller object with falloff.",
+     "pro_use": "Pull a cheek or tail tip with a handle.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-11"
+      ],
+      "note": "Pose shifts and driven controls move whole parts and swaps; point-level hooks and further constraints are WP-11."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-3",
+     "capability": "Lattice: deform strokes through a cage.",
+     "pro_use": "Squash, stretch and warp whole drawings smoothly.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-11"
+      ],
+      "note": "Whole-body squash and bendy limbs exist; per-part squash and stretch is WP-11; free-form cage warps are not planned."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-4",
+     "capability": "Noise: seeded jitter of position, thickness, opacity and texture, changing every N frames or on keyframes.",
+     "pro_use": "Hand-made line boil on clean digital lines.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "style.boil"
+      ],
+      "note": "style.boil {fps, amount, freq} gives deterministic, stepped displacement on characters, bubbles and signs; thickness and opacity noise are not included."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-5",
+     "capability": "Offset: shift, rotate and scale strokes per layer, material or stroke, with randomisation.",
+     "pro_use": "Break the uniformity of repeated drawings; animate parts offset from each other.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-42"
+      ],
+      "note": "Pose shifts and placement move parts; seeded random variation across copies is WP-42 (crowds with variation)."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-6",
+     "capability": "Shrinkwrap: project strokes onto 3D surfaces.",
+     "pro_use": "Draw markings that stick to a 3D model.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry characters are 2D; 3D sets with Grease Pencil 3 are in WP-42 if this becomes useful."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-7",
+     "capability": "Smooth: smooth position, thickness, opacity or texture along strokes.",
+     "pro_use": "Remove jitter from tablet input or from deformations.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Rig Canvas ink is smoothed while drawing; no smoothing of existing strokes."
+     }
+    },
+    {
+     "id": "gp-deform-modifiers-8",
+     "capability": "Thickness: set or scale line width, normalise it, or shape it along the stroke with a curve.",
+     "pro_use": "Consistent line weight across a production; tapered ends.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-15"
+      ],
+      "note": "Each stroke has a width and ink import keeps line weight under squash; no global or along-stroke width control."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Color modifiers",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/color/index.html",
+   "capabilities": [
+    {
+     "id": "gp-color-modifiers-1",
+     "capability": "Hue, saturation and value shift on strokes and fills.",
+     "pro_use": "Colour variants and mood shifts without repainting.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-16"
+      ],
+      "note": "shots.json post grades shift the whole picture and set_opts recolour sets; per-character palette variants are WP-16."
+     }
+    },
+    {
+     "id": "gp-color-modifiers-2",
+     "capability": "Opacity: change stroke and fill opacity, set hardness, or make it uniform.",
+     "pro_use": "Fade characters or effects; soft-edged lines.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Stroke opacity is static data; keyed opacity of parts or characters and soft edges are WP-36."
+     }
+    },
+    {
+     "id": "gp-color-modifiers-3",
+     "capability": "Tint: blend a colour over strokes and fills, solid or as a gradient by distance to an object.",
+     "pro_use": "Atmospheric depth, a light source tinting nearby drawings.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-16"
+      ],
+      "note": "Palette slots support recolouring; palette variants per scene are WP-16; distance-based gradient tint is not planned."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Edit modifiers",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/edit/index.html",
+   "capabilities": [
+    {
+     "id": "gp-edit-modifiers-1",
+     "capability": "Texture Mapping: move, rotate and scale the texture along strokes or across fills.",
+     "pro_use": "Brush-texture lines and animated patterns.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Textured line styles (pencil, marker, crayon) are WP-15."
+     }
+    },
+    {
+     "id": "gp-edit-modifiers-2",
+     "capability": "Time Offset: shift drawing keys in time, reverse them, show a fixed frame, ping-pong or chain modes, loop and speed.",
+     "pro_use": "Reuse cycles (walks, smoke, rain), desynchronise copies, pick mouth drawings by frame.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-35"
+      ],
+      "note": "Rigged motion already has clip start, speed and loop, and swaps pick drawings by name; time remapping of drawn frames is WP-35."
+     }
+    },
+    {
+     "id": "gp-edit-modifiers-3",
+     "capability": "Vertex Weight Angle: weights from stroke direction.",
+     "pro_use": "Calligraphic thick-thin lines that depend on angle.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "A pen-nib look belongs with the vector line styles of WP-15."
+     }
+    },
+    {
+     "id": "gp-edit-modifiers-4",
+     "capability": "Vertex Weight Proximity: weights from distance to an object.",
+     "pro_use": "Fade or thin lines with depth or near a light.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Depth-driven effects fit the multiplane depth of WP-36."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Line Art",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/generate/line_art.html",
+   "capabilities": [
+    {
+     "id": "gp-line-art-1",
+     "capability": "Generate ink strokes from 3D meshes as seen by the camera, with occlusion.",
+     "pro_use": "Toon outlines on 3D sets and props so they match 2D characters.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "3D sets through Blender in-process are WP-42; the three.js renderer has no line art."
+     }
+    },
+    {
+     "id": "gp-line-art-2",
+     "capability": "Choose edge types: contour and silhouette, creases by angle, intersections, material borders, marked edges, light contours and cast-shadow edges.",
+     "pro_use": "Control which lines read as drawn ink.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Part of 3D line art in WP-42."
+     }
+    },
+    {
+     "id": "gp-line-art-3",
+     "capability": "Illumination filtering (lit or shaded regions) and filled shapes from enclosed regions.",
+     "pro_use": "Shadow shapes and two-tone fills generated from 3D lighting.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Part of 3D line art in WP-42."
+     }
+    },
+    {
+     "id": "gp-line-art-4",
+     "capability": "Occlusion levels, line chaining and smoothing, and a shared cache across several line-art modifiers.",
+     "pro_use": "Hidden-line views and performance on dense scenes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Part of 3D line art in WP-42."
+     }
+    },
+    {
+     "id": "gp-line-art-5",
+     "capability": "Write results to a chosen layer and material with set radius and opacity, then bake to editable strokes.",
+     "pro_use": "Hand-touch generated lines for final shots.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Part of 3D line art in WP-42."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Visual effects",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/visual_effects/index.html",
+   "capabilities": [
+    {
+     "id": "gp-visual-effects-1",
+     "capability": "Blur (also usable as depth-of-field style blur) over the whole object.",
+     "pro_use": "Soften background drawings, fake focus.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Blurs and depth of field are WP-36."
+     }
+    },
+    {
+     "id": "gp-visual-effects-2",
+     "capability": "Colorize: greyscale, sepia, duotone, transparency or a custom colour.",
+     "pro_use": "Flashbacks, silhouettes and stylised looks.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "Picture-wide post presets (noir, warm, cool) and ffmpeg grades exist; per-object colour effects are WP-36."
+     }
+    },
+    {
+     "id": "gp-visual-effects-3",
+     "capability": "Flip horizontally or vertically.",
+     "pro_use": "Mirror a character to face the other way.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.shots[].cast[].place.flip"
+      ],
+      "note": "Placement flip mirrors a whole character."
+     }
+    },
+    {
+     "id": "gp-visual-effects-4",
+     "capability": "Glow: bloom around colours above a threshold.",
+     "pro_use": "Magic, screens, lamps and neon.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Glows are WP-36; note that WP-04's lint flags neon glow as a generic-AI look."
+     }
+    },
+    {
+     "id": "gp-visual-effects-5",
+     "capability": "Pixelate.",
+     "pro_use": "Retro looks, censoring, transitions.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "An image-space node in the compositor (WP-36)."
+     }
+    },
+    {
+     "id": "gp-visual-effects-6",
+     "capability": "Rim: offset coloured rim around the drawing with a blend mode.",
+     "pro_use": "Back-light accents that separate characters from the background.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-14"
+      ],
+      "note": "style.toon rim lighting works in the SVG renderer only; other renderers are WP-14."
+     }
+    },
+    {
+     "id": "gp-visual-effects-7",
+     "capability": "Shadow: offset drop shadow with blur and optional wave.",
+     "pro_use": "Lift characters off flat backgrounds.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "Ground shadows (style.shadow) and cel shadows exist; offset drop shadows are WP-36."
+     }
+    },
+    {
+     "id": "gp-visual-effects-8",
+     "capability": "Swirl distortion.",
+     "pro_use": "Dizziness, hypnosis and transition gags.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Distortion nodes belong to WP-36."
+     }
+    },
+    {
+     "id": "gp-visual-effects-9",
+     "capability": "Wave distortion.",
+     "pro_use": "Heat haze, underwater wobble, dream sequences.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-36"
+      ],
+      "note": "style.boil is a turbulent displacement for line shimmer; directed wave distortion is WP-36."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Materials",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/materials/index.html",
+   "capabilities": [
+    {
+     "id": "gp-materials-1",
+     "capability": "Each material has independent stroke and fill parts that can be switched on or off.",
+     "pro_use": "Line-only, fill-only or line-and-fill shapes from one set of materials.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].strokes[].fill",
+       "puppet.parts[].strokes[].stroke"
+      ],
+      "note": "Either can be 'none'."
+     }
+    },
+    {
+     "id": "gp-materials-2",
+     "capability": "Shared material slots: changing a material updates every stroke that uses it.",
+     "pro_use": "Global colour changes and colour-model consistency across a production.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.palette"
+      ],
+      "note": "Palette slots name every colour; puppet.lint flags raw colours; cast.generate sets skin, hair and outfit colours."
+     }
+    },
+    {
+     "id": "gp-materials-3",
+     "capability": "Line styles of dots or squares with spacing by count, radius or density, alignment, rotation and random size, strength, rotation and colour.",
+     "pro_use": "Stippled, chalky or particle-like lines and dotted trails.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Medium simulation for vector lines is WP-15."
+     }
+    },
+    {
+     "id": "gp-materials-4",
+     "capability": "Image textures mapped along strokes and over fills, mixed with the base colour.",
+     "pro_use": "Paper, pencil grain and fabric patterns on drawings.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-15"
+      ],
+      "note": "Raster parts and skinned mesh strokes carry painted texture (SVG renderer only, WP-14); textured vector lines and fills are WP-15. Paper grain exists as a picture-wide post pass."
+     }
+    },
+    {
+     "id": "gp-materials-5",
+     "capability": "Gradient fills, linear or radial, with a second colour and an in-viewport tool to place the gradient.",
+     "pro_use": "Soft shading, skies and glowing objects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Puppet strokes are flat fills; puppet.import flattens SVG gradients. A gradient fill style would join WP-15."
+     }
+    },
+    {
+     "id": "gp-materials-6",
+     "capability": "Holdout: a stroke or fill erases what lies beneath it.",
+     "pro_use": "Cut holes and reveal effects without masks.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Masks and mattes are WP-36."
+     }
+    },
+    {
+     "id": "gp-materials-7",
+     "capability": "Self-overlap control for semi-transparent strokes.",
+     "pro_use": "Even transparency where a translucent stroke crosses itself.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "An SVG path with opacity never darkens where it crosses itself."
+     }
+    },
+    {
+     "id": "gp-materials-8",
+     "capability": "Material visibility, locking, isolation and ghost visibility in the slot list.",
+     "pro_use": "Protect colour work while editing lines.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Viewport editing conveniences."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Multiframe",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/multiframe.html",
+   "capabilities": [
+    {
+     "id": "gp-multiframe-1",
+     "capability": "Draw, edit, sculpt or paint weights on many selected keyframes at once.",
+     "pro_use": "Fix a prop or line across a whole drawn sequence in one pass.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-35"
+      ],
+      "note": "For rigged characters one edit to a part already changes every frame; for drawn levels this is WP-35."
+     }
+    },
+    {
+     "id": "gp-multiframe-2",
+     "capability": "Falloff curve so the change fades with distance from the current frame.",
+     "pro_use": "Gradual corrections across a range of drawings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of drawn levels (WP-35)."
+     }
+    },
+    {
+     "id": "gp-multiframe-3",
+     "capability": "Fill and stroke-pairing work across several frames.",
+     "pro_use": "Colour a whole drawn sequence quickly.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Colour styles applied across every frame are WP-35."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Animation",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/animation/index.html",
+   "capabilities": [
+    {
+     "id": "gp-animation-1",
+     "capability": "Animate the drawing object as a whole: position, rotation and size over time.",
+     "pro_use": "Slide-ons, camera-relative moves, simple motion graphics.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.shots[].cast[].place",
+       "timeline.travel",
+       "shots.shots[].camera"
+      ],
+      "note": "Placement, travel with foot pins and camera keys, folded into the bake for every renderer."
+     }
+    },
+    {
+     "id": "gp-animation-2",
+     "capability": "Frame-by-frame drawing: keyframes that each hold a complete drawing.",
+     "pro_use": "Traditional hand-drawn animation and effects (splashes, smoke).",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels with exposures are WP-35."
+     }
+    },
+    {
+     "id": "gp-animation-3",
+     "capability": "Inherited animation from parents, hooks and armatures (cut-out).",
+     "pro_use": "Rig-driven acting with reusable motion.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.edit",
+       "acting.plan",
+       "acting.direct"
+      ],
+      "note": "Rigged clips, poses, IK and controls, placed by hand, from prose or from the voice."
+     }
+    },
+    {
+     "id": "gp-animation-4",
+     "capability": "Auto-key and additive drawing: a new key starts from the previous drawing.",
+     "pro_use": "Fast straight-ahead animation that changes only what moves.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Part of drawn levels and the X-sheet in WP-35."
+     }
+    },
+    {
+     "id": "gp-animation-5",
+     "capability": "Interpolate tool: drag to create a breakdown drawing between two keys at a chosen blend.",
+     "pro_use": "Quick in-betweens for simple shapes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "In-between assistance for drawn levels is WP-35, with ML proposals in WP-43."
+     }
+    },
+    {
+     "id": "gp-animation-6",
+     "capability": "Interpolate sequence: fill every frame between two keys, with step, easing type, layer scope, smoothing and stroke flip handling.",
+     "pro_use": "Generate spacing for tweened shape changes on twos or with easing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-35"
+      ],
+      "note": "Rig poses and clips already interpolate with easing and stepped timing; interpolating between two drawings is WP-35."
+     }
+    },
+    {
+     "id": "gp-animation-7",
+     "capability": "Insert blank, duplicate or delete keyframes on the active or all layers, with a duration.",
+     "pro_use": "Block timing and holds in drawn animation.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Exposure sheet (X-sheet) is WP-35."
+     }
+    },
+    {
+     "id": "gp-animation-8",
+     "capability": "Bake object transform animation into drawing keyframes over a frame range with a step.",
+     "pro_use": "Turn moves into editable per-frame drawings or hand to another tool.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render"
+      ],
+      "note": "The grease-pencil renderer bakes acting and camera into world-space strokes and writes one GP keyframe per frame."
+     }
+    },
+    {
+     "id": "gp-animation-9",
+     "capability": "Animating on twos or threes by stepped keys and interpolation steps.",
+     "pro_use": "A hand-made cadence for cartoon timing.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "style.step"
+      ],
+      "note": "style.step animates a shot on 12s, 8s or 6s while the film stays at 30 fps."
+     }
+    },
+    {
+     "id": "gp-animation-10",
+     "capability": "Key types (keyframe, breakdown and others) shown and filtered separately.",
+     "pro_use": "Separate key poses from in-betweens during blocking and polish.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Belongs with the X-sheet of WP-35."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Draw mode",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/draw/index.html",
+   "capabilities": [
+    {
+     "id": "gp-draw-mode-1",
+     "capability": "Freehand brush with pressure, active smoothing, spacing and screen-space simplify.",
+     "pro_use": "The everyday drawing tool for roughs and final lines.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Rig Canvas ink uses pressure (or speed-simulated pressure) with smoothing and simplify; a stabiliser is WP-18."
+     }
+    },
+    {
+     "id": "gp-draw-mode-2",
+     "capability": "Brush assets: preset and custom pencils, inks, markers, fills and erasers kept in shared libraries.",
+     "pro_use": "Studio-wide brush sets keep every artist's lines consistent.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "Brush engines (libmypaint, Krita) are evaluated in WP-34; textured brushes in WP-18."
+     }
+    },
+    {
+     "id": "gp-draw-mode-3",
+     "capability": "Fill tool: detects closed regions from geometry or pixels, closes gaps by radius or extension, supports fill guides, inverted fill and layer scope.",
+     "pro_use": "Fast flat colouring of line art, including slightly open lines.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "The Rig Canvas bucket closes gaps up to about 10 px, tucks the fill under the ink and refuses open outlines; fill guides, solver choice and layer scope are missing (WP-18)."
+     }
+    },
+    {
+     "id": "gp-draw-mode-4",
+     "capability": "Erasers: soft, hard, point and whole-stroke, cutting strokes at intersections; box and lasso erase.",
+     "pro_use": "Clean up and shape lines while drawing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "The Rig Canvas has undo and clear-slot only; an eraser is in WP-18."
+     }
+    },
+    {
+     "id": "gp-draw-mode-5",
+     "capability": "Trim tool: cut stroke ends back to where they cross other strokes.",
+     "pro_use": "Tidy overshooting lines after rough inking.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Drawing tools in WP-18."
+     }
+    },
+    {
+     "id": "gp-draw-mode-6",
+     "capability": "Shape tools: line, polyline, arc, curve, box and circle.",
+     "pro_use": "Props, backgrounds and graphic elements with precise shapes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Agents can write any SVG path directly and kit elements draw shapes in code; the Rig Canvas has freehand and fill shapes only."
+     }
+    },
+    {
+     "id": "gp-draw-mode-7",
+     "capability": "Eyedropper to pick colours or materials from the screen.",
+     "pro_use": "Match colours from reference.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Colours are palette slots chosen by name."
+     }
+    },
+    {
+     "id": "gp-draw-mode-8",
+     "capability": "Drawing planes and stroke placement: draw at the origin, the cursor, on surfaces or on other strokes.",
+     "pro_use": "Draw in 3D space around models and sets.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Drawing is on a 2D artboard; 3D drawing would come with WP-42."
+     }
+    },
+    {
+     "id": "gp-draw-mode-9",
+     "capability": "Drawing options: auto-merge onto stroke ends, draw behind existing strokes, add bone weights to new strokes.",
+     "pro_use": "Paint colour under ink on one layer and keep new drawing bound to the rig.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Fills are tucked under ink and every stroke drawn into a part follows that part's bone; auto-merge is missing."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Edit mode",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/edit/index.html",
+   "capabilities": [
+    {
+     "id": "gp-edit-mode-1",
+     "capability": "Select points and strokes by click, box, circle or lasso.",
+     "pro_use": "Pick exactly the lines to adjust.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.cut",
+       "WP-18"
+      ],
+      "note": "Parts and swap shapes are addressed by id; cut polygons and pivots are confirmed in /doodle. Polygon editing is WP-18."
+     }
+    },
+    {
+     "id": "gp-edit-mode-2",
+     "capability": "Transform points: move, rotate, scale, bend, shear, push to a sphere, change radius.",
+     "pro_use": "Correct proportions and fix drawings without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.cut",
+       "WP-18"
+      ],
+      "note": "Pivots and cut polygons can be moved; general point editing is WP-18."
+     }
+    },
+    {
+     "id": "gp-edit-mode-3",
+     "capability": "Pen tool for Bezier strokes and handle and corner types.",
+     "pro_use": "Precise vector shapes for props and clean-up.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "Bezier paths come in through layered SVG (e.g. from Inkscape); no Bezier editing tool."
+     }
+    },
+    {
+     "id": "gp-edit-mode-4",
+     "capability": "Stroke operations: subdivide, smooth, simplify, join, split, close, set caps, flip direction, set start point.",
+     "pro_use": "Day-to-day clean-up of vector lines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Vector stroke editing belongs with the Rig Canvas upgrade (WP-18)."
+     }
+    },
+    {
+     "id": "gp-edit-mode-5",
+     "capability": "Convert stroke curve types with a fitting threshold.",
+     "pro_use": "Turn rough polylines into editable smooth curves.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "With vector tracing in WP-18."
+     }
+    },
+    {
+     "id": "gp-edit-mode-6",
+     "capability": "Outline operator: turn a line into a filled outline shape.",
+     "pro_use": "Make variable-width ink editable as a shape.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Rig Canvas ink is already stored as filled outline shapes; converting existing lines is not available."
+     }
+    },
+    {
+     "id": "gp-edit-mode-7",
+     "capability": "Move strokes to another layer, assign a material, and arrange draw order.",
+     "pro_use": "Reorganise drawings and recolour them.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].z",
+       "puppet.parts[].strokes[].fill",
+       "puppet.parts[].strokes[].stroke"
+      ],
+      "note": "Edited in the puppet JSON (written back through puppet.save)."
+     }
+    },
+    {
+     "id": "gp-edit-mode-8",
+     "capability": "Clean up: remove loose points, duplicate frames and near-duplicate points, reproject strokes, remove fill guides.",
+     "pro_use": "Lighter, tidier files before final render.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "WP-35"
+      ],
+      "note": "Ink import removes specks and renders link duplicate frames by hash; clean-up of drawn frames is WP-35."
+     }
+    },
+    {
+     "id": "gp-edit-mode-9",
+     "capability": "Separate, duplicate, copy and paste strokes between layers and objects.",
+     "pro_use": "Reuse drawings and split one drawing into rig parts.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "doodle.cut",
+       "WP-18"
+      ],
+      "note": "doodle.cut and puppet.from_ink cut one drawing into parts; puppet.export_layers/puppet.import round-trip parts; free copy and paste is WP-18."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Sculpt mode",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/sculpting/index.html",
+   "capabilities": [
+    {
+     "id": "gp-sculpt-mode-1",
+     "capability": "Brushes to smooth lines and raise or lower their thickness and opacity locally.",
+     "pro_use": "Refine line quality after inking.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No sculpt brushes on existing strokes."
+     }
+    },
+    {
+     "id": "gp-sculpt-mode-2",
+     "capability": "Brushes to grab, push, twist, pinch and inflate strokes.",
+     "pro_use": "Reshape drawings quickly between poses.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "No reshaping brushes."
+     }
+    },
+    {
+     "id": "gp-sculpt-mode-3",
+     "capability": "Randomize brush: add local jitter to points.",
+     "pro_use": "Hand-made imperfection in chosen areas.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-18"
+      ],
+      "note": "style.boil jitters whole shots deterministically; brushed local jitter is missing."
+     }
+    },
+    {
+     "id": "gp-sculpt-mode-4",
+     "capability": "Clone brush: stamp copied strokes under the brush.",
+     "pro_use": "Scatter leaves, grass or repeated marks.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Scatter and instancing are WP-42."
+     }
+    },
+    {
+     "id": "gp-sculpt-mode-5",
+     "capability": "Selection masks and auto-masking by stroke, layer or material.",
+     "pro_use": "Sculpt only the intended lines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Follows the sculpt brushes."
+     }
+    },
+    {
+     "id": "gp-sculpt-mode-6",
+     "capability": "Multiframe sculpting across keys.",
+     "pro_use": "Fix shapes over a whole drawn sequence.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Needs drawn levels (WP-35)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Vertex paint mode",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/vertex_paint/index.html",
+   "capabilities": [
+    {
+     "id": "gp-vertex-paint-1",
+     "capability": "Paint colour onto points, mixed over the material colour, on strokes, fills or both.",
+     "pro_use": "Shading and colour variation without new materials.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Colour is per stroke from palette slots; per-point colour belongs with medium simulation (WP-15)."
+     }
+    },
+    {
+     "id": "gp-vertex-paint-2",
+     "capability": "Tint tool in draw mode to recolour strokes with a brush.",
+     "pro_use": "Quick colour corrections on finished drawings.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Palette slots can be recoloured in the Rig Canvas; brushed per-stroke recolour is missing."
+     }
+    },
+    {
+     "id": "gp-vertex-paint-3",
+     "capability": "Blur, average, smear and replace colour brushes.",
+     "pro_use": "Blend painted colour smoothly.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "With per-point colour in WP-15."
+     }
+    },
+    {
+     "id": "gp-vertex-paint-4",
+     "capability": "Colour adjustments on painted colours: levels, hue/saturation/value, brightness/contrast, invert, reset.",
+     "pro_use": "Grade a character's colours to match a scene.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-16"
+      ],
+      "note": "Palette edits and picture-wide grades exist; palette variants per scene are WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Weight paint mode",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/weight_paint/index.html",
+   "capabilities": [
+    {
+     "id": "gp-weight-paint-1",
+     "capability": "Paint bone influence weights on points for cut-out deformation.",
+     "pro_use": "Smooth bends at joints in rigged drawings.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-18"
+      ],
+      "note": "Skinned mesh strokes with per-vertex weights come from Blender cut-out rigs via puppet.from_blend; bendy limbs need no weights. No weight-painting tool (WP-18)."
+     }
+    },
+    {
+     "id": "gp-weight-paint-2",
+     "capability": "Blur, average and smear weight brushes.",
+     "pro_use": "Even out deformation.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Follows weight painting."
+     }
+    },
+    {
+     "id": "gp-weight-paint-3",
+     "capability": "Weight heat-map display while painting.",
+     "pro_use": "See which bone moves which line.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "puppet.coach annotates joint gaps under bending, not weights."
+     }
+    },
+    {
+     "id": "gp-weight-paint-4",
+     "capability": "New strokes and painting automatically add to the active vertex group.",
+     "pro_use": "Keep new drawings bound to the rig.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Strokes drawn into a part follow that part's bone automatically; group weights are not painted."
+     }
+    },
+    {
+     "id": "gp-weight-paint-5",
+     "capability": "Weights drive other effects (thickness, opacity, influence filters).",
+     "pro_use": "Taper or fade lines by painted weight.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Per-point attributes and line styles are WP-15."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Object mode: trace and convert",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modes/object/trace_image.html",
+   "capabilities": [
+    {
+     "id": "gp-trace-image-1",
+     "capability": "Trace a black-and-white image into strokes with a threshold, stroke radius and turn policy.",
+     "pro_use": "Bring paper drawings and logos in as editable lines.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.snap",
+       "WP-18"
+      ],
+      "note": "Scans and photos become raster-part puppets in the artist's own line and doodles get cut and rigged; vector tracing (VTracer, potrace) is WP-18."
+     }
+    },
+    {
+     "id": "gp-trace-image-2",
+     "capability": "Trace an image sequence into one drawing per frame.",
+     "pro_use": "Convert paper animation tests into drawn keys.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels from scanned sequences are WP-35."
+     }
+    },
+    {
+     "id": "gp-trace-image-3",
+     "capability": "Convert meshes and curves into drawing strokes.",
+     "pro_use": "Use 3D or curve shapes as a starting point for 2D drawings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "3D and Blender in-process work is WP-42."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Rigging with armatures",
+   "source_url": "https://docs.blender.org/manual/en/latest/grease_pencil/modifiers/deform/armature.html",
+   "capabilities": [
+    {
+     "id": "gp-rigging-1",
+     "capability": "Bind drawings to an armature so bones deform stroke points (vertex groups or envelopes).",
+     "pro_use": "Cut-out characters animated by posing bones.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].parent",
+       "puppet.parts[].pivot",
+       "puppet strokes mesh.weights"
+      ],
+      "note": "puppet.from_blend also imports Blender cut-out rigs (bones, sprite and shape-key variants) into puppets."
+     }
+    },
+    {
+     "id": "gp-rigging-2",
+     "capability": "Automatic weights from bone envelopes, without painting.",
+     "pro_use": "Fast rigging of simple shapes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet.parts[].bend"
+      ],
+      "note": "Bendy limbs curve smoothly out of their parent with no weights; puppet.import estimates pivots from the drawing."
+     }
+    },
+    {
+     "id": "gp-rigging-3",
+     "capability": "Blender's IK, constraints and drivers applied to bones that move drawings.",
+     "pro_use": "Planted feet, reaching hands, controls that drive several parts.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "timeline.ik",
+       "timeline.pins",
+       "puppet.chains",
+       "puppet.controls",
+       "puppet.parts[].limits"
+      ],
+      "note": "Two-bone IK, FABRIK chains, joint limits, look-at and driven controls; IK/FK blending, copy rotation and follow path are WP-11."
+     }
+    },
+    {
+     "id": "gp-rigging-4",
+     "capability": "Reusable actions and poses applied to rigs.",
+     "pro_use": "Library of cycles and gestures shared across shots.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.edit",
+       "acting.direct",
+       "actout.clip"
+      ],
+      "note": "Template-level clip library and per-character clips; actout.clip turns a filmed take into a clip."
+     }
+    },
+    {
+     "id": "gp-rigging-5",
+     "capability": "Objects parented to bones and hooks so props follow hands.",
+     "pro_use": "Props passed between characters in cut-out scenes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.shots[].props[].attach"
+      ],
+      "note": "Props attach to a character's part and switch parents with arcs (SVG player only; other renderers refuse props, WP-14)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Dope Sheet: Grease Pencil mode",
+   "source_url": "https://docs.blender.org/manual/en/latest/editors/dope_sheet/modes/grease_pencil.html",
+   "capabilities": [
+    {
+     "id": "gp-dope-sheet-1",
+     "capability": "Each layer is a channel of drawing keys that can be moved, scaled and retimed.",
+     "pro_use": "Block a shot's timing and adjust holds.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.get",
+       "timeline.edit",
+       "WP-35"
+      ],
+      "note": "The Studio timeline moves and resizes clip layers per character, line-relative; channels of drawn keys are WP-35."
+     }
+    },
+    {
+     "id": "gp-dope-sheet-2",
+     "capability": "Copy and paste keys between layers and objects, including paste by layer.",
+     "pro_use": "Reuse timing and drawings across characters.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "With the X-sheet in WP-35."
+     }
+    },
+    {
+     "id": "gp-dope-sheet-3",
+     "capability": "Breakdown keys shown distinctly, with an operator to delete them.",
+     "pro_use": "Strip generated in-betweens and re-time.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "With in-between assistance in WP-35."
+     }
+    },
+    {
+     "id": "gp-dope-sheet-4",
+     "capability": "Layer opacity, mask, onion, visibility and lock toggles, solo and isolate in the channel list.",
+     "pro_use": "Manage layers while timing.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Editor conveniences."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Rendering",
+   "source_url": "https://docs.blender.org/manual/en/latest/render/eevee/render_settings/grease_pencil.html",
+   "capabilities": [
+    {
+     "id": "gp-render-1",
+     "capability": "Strokes rendered in EEVEE with SMAA thresholds and SSAA sample count for anti-aliasing.",
+     "pro_use": "Clean, smooth lines in final renders.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render"
+      ],
+      "note": "renderer 'grease-pencil' renders with EEVEE at half resolution and upscales; DBE_GP_SAMPLES sets the samples."
+     }
+    },
+    {
+     "id": "gp-render-2",
+     "capability": "Motion blur steps for strokes.",
+     "pro_use": "Natural blur on fast moves.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Sub-frame motion blur on fast shots is WP-15."
+     }
+    },
+    {
+     "id": "gp-render-3",
+     "capability": "A dedicated Grease Pencil render pass and per-view-layer inclusion.",
+     "pro_use": "Comp drawings separately from 3D.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "WP-37"
+      ],
+      "note": "Characters render with alpha and are composited over the set video; multi-pass output is WP-37."
+     }
+    },
+    {
+     "id": "gp-render-4",
+     "capability": "Transparent background rendering for compositing.",
+     "pro_use": "Lay drawn characters over painted or live backgrounds.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "shot.render"
+      ],
+      "note": "The grease-pencil path renders RGBA frames composited over the SVG set by ffmpeg."
+     }
+    },
+    {
+     "id": "gp-render-5",
+     "capability": "Output resolution, frame rate and colour view transform.",
+     "pro_use": "Deliver to spec.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run"
+      ],
+      "note": "qa.run checks 1080x1920 and 30 fps; the renderer uses the Standard view transform. Colour management (OCIO, ACES) is WP-37."
+     }
+    },
+    {
+     "id": "gp-render-6",
+     "capability": "Save the drawing as a native, editable project for further work in the tool.",
+     "pro_use": "Hand a shot to a Blender artist for hand-finishing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-14"
+      ],
+      "note": "shot.render writes build/shots/<id>.gp.json and frames, not a .blend; the feature map lists Grease Pencil project export as done, which WP-01 should correct. Saving the .blend fits WP-14 (renderer parity)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Import and export",
+   "source_url": "https://docs.blender.org/manual/en/latest/files/import_export/grease_pencil_svg.html",
+   "capabilities": [
+    {
+     "id": "gp-import-export-1",
+     "capability": "Import SVG as strokes with resolution, scale and centring options.",
+     "pro_use": "Bring vector art from Inkscape or Illustrator into animation.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Layered SVG becomes a puppet, with parts, swaps and pivots taken from layer names."
+     }
+    },
+    {
+     "id": "gp-import-export-2",
+     "capability": "Export SVG for one frame, selected keys or the whole range as animation, with fill, uniform width and camera clipping options.",
+     "pro_use": "Vector stills and animations for the web and print.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "export.lottie",
+       "export.web",
+       "WP-23"
+      ],
+      "note": "Layered SVG of a puppet in rest pose, Lottie and a live web player exist; animated SVG and other formats are WP-23."
+     }
+    },
+    {
+     "id": "gp-import-export-3",
+     "capability": "Export PDF with one page per frame.",
+     "pro_use": "Flipbooks, print checks and review packets.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "WP-30"
+      ],
+      "note": "film.storyboard writes a contact PDF (six shots a page); per-frame print books fit WP-30 (comics and storybooks from shot data)."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Geometry Nodes for Grease Pencil",
+   "source_url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/grease_pencil/index.html",
+   "capabilities": [
+    {
+     "id": "gp-geometry-nodes-1",
+     "capability": "Read and write layers, strokes and attributes of drawings in node trees.",
+     "pro_use": "Procedural generation and editing of 2D drawings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Procedural 2D as data and Blender in-process are WP-42."
+     }
+    },
+    {
+     "id": "gp-geometry-nodes-2",
+     "capability": "Nodes to set stroke colour, depth and softness, merge layers, and convert between drawings and curves.",
+     "pro_use": "Build custom procedural looks and pipelines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Part of WP-42."
+     }
+    },
+    {
+     "id": "gp-geometry-nodes-3",
+     "capability": "Node Tools: node groups exposed as custom operators in drawing and edit modes.",
+     "pro_use": "Studio-specific one-click tools for artists.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-42"
+      ],
+      "note": "Doodleberry's own tools are @command functions listed by engine.commands (CLI, HTTP, Studio, MCP); procedural tools on strokes are WP-42."
+     }
+    }
+   ]
+  }
+ ]
+}
