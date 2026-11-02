@@ -160,6 +160,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.5 Cast variety | done: `cast.generate` (parametric original characters: build, age, skin, 9 hairstyles incl. hijab, 7 tops, 3 bottoms, accessories), 12 registered cast members, golden pose case. Open: Open Peeps/Humaaans conversion, outfits as swap sets | this commit |
 | 1.4 Rig Canvas drawing upgrade | done: perfect-freehand ink with pressure, simplified strokes, gap-closing bucket fill, model sheets (canvas button and `puppet.sheet`). Open: expression boards for drawing swap sets side by side | this commit |
 | 2.3 Gesture planner | done: `acting.plan` (prosody-driven beats, aimed points, exclamations, questions, listener gaze/nods/blinks); dialogue-demo acted with no hand-placed clips. Open: semantic gestures from LLM tags, personality profiles (E13), a critic rating against hand-keyed acting | this commit |
+| 2.6 Camera grammar | done: `camera_auto` (speaker medium shots, wide shots between, eased; punch-ins on emphasis; handheld; clamped to the set; caption headroom) | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

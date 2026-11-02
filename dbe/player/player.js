@@ -227,6 +227,41 @@
       `<path d="M${-r} 0 Q0 ${r * 0.5} ${r} 0 M0 ${-r} Q${r * 0.45} 0 0 ${r}" fill="none" stroke="${INK}" stroke-width="3" opacity="0.55"/></g>`;
   }
 
+  // ---------- camera grammar (plan 2.6): "camera_auto": true | {"zoom": 1.5, "punch": 0.06, "handheld": 0.4, "ease": 0.6} ----------
+  // Speaker framing during each line (medium shot), a two-shot otherwise, eased between; punch-ins on emphasised words
+  // (long or stressed); seeded handheld drift; clamped so the frame never leaves the set; heads kept above captions.
+  function autoCam(sh, t, casts) {
+    const o = sh.camera_auto === true ? {} : sh.camera_auto, zMax = o.zoom ?? 1.45, ease = o.ease ?? 0.6;
+    const byName = {}; casts.forEach(cc => { if (cc.c.speaker) byName[cc.c.speaker] = cc; });
+    const box = list => { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (const cc of list) { const h = cc.p.artboard[1] * cc.s * 0.95, w = cc.p.artboard[0] * cc.s * 0.6; x0 = Math.min(x0, cc.x - w / 2); x1 = Math.max(x1, cc.x + w / 2); y0 = Math.min(y0, cc.y - h); y1 = Math.max(y1, cc.y); }
+      return [x0, y0, x1, y1]; };
+    const frameFor = (list, single) => { if (!list.length) return [W / 2, H / 2, 1];
+      const [x0, y0, x1, y1] = box(list), frac = single ? (o.medium ?? 0.62) : 1;   // singles: a medium shot, head to waist
+      const bw = (x1 - x0) * 1.25, bh = (y1 - y0) * frac * 1.15;
+      const z = Math.min(single ? (o.zoom_single ?? 1.9) : zMax, Math.max(1, Math.min(W / bw, H * 0.82 / bh)));
+      return [(x0 + x1) / 2, y0 + bh * 0.46 + (H / z) * 0.08, z]; };   // heads high, room below for captions
+    const wide = frameFor(casts);
+    const lines = (T.lines || []).filter(l => byName[l.speaker] && l.end > sh.start - 0.5 && l.start < sh.end + 0.5);
+    // target per instant: the speaker while a line plays (and 0.3 s before), else the two-shot
+    const target = tt => { const l = lines.find(l => tt >= l.start - 0.3 && tt <= l.end + 0.2); return l && casts.length > 1 ? frameFor([byName[l.speaker]], true) : wide; };
+    // ease: blend from the previous target over `ease` seconds after each change (pure: derived from the schedule)
+    let cur = target(t); const changes = [];
+    for (const l of lines) changes.push(l.start - 0.3, l.end + 0.2);
+    const last = changes.filter(c => c <= t).pop();
+    if (last != null && t - last < ease) { const prev = target(last - 0.01), u = (t - last) / ease, e = u * u * (3 - 2 * u); cur = cur.map((v, i) => prev[i] + (v - prev[i]) * e); }
+    let [cx, cy, z] = cur;
+    // punch-in on emphasised words (long words in the current line), 0.06 zoom over 0.35 s
+    const punch = o.punch ?? 0.05;
+    if (punch) for (const l of lines) for (const w of l.words || []) { const len = w.end - w.start, letters = w.text.replace(/\W/g, '').length || 1;
+      if (len / letters > 0.085 || /!$/.test(w.text)) { const d = t - w.start; if (d > -0.05 && d < 0.6) z *= 1 + punch * Math.sin(Math.PI * Math.min(1, Math.max(0, (d + 0.05) / 0.65))); } }
+    // handheld drift: sum of incommensurate sines (seeded by the shot id)
+    const hh = o.handheld ?? 0; if (hh) { const sd = (sh.id || 's').length * 1.7; cx += hh * 9 * (Math.sin(t * 0.71 + sd) + 0.5 * Math.sin(t * 1.93 + sd * 2)); cy += hh * 7 * (Math.sin(t * 0.83 + sd * 3) + 0.5 * Math.sin(t * 2.31 + sd)); }
+    const hw = W / (2 * z), hhh = H / (2 * z);
+    cx = Math.min(W - hw, Math.max(hw, cx)); cy = Math.min(H - hhh, Math.max(hhh, cy));
+    return [cx, cy, z];
+  }
+
   function frameAt(t, bgOnly) {
     const sh = shotAt(t), st = sh.style || {};
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
@@ -265,6 +300,8 @@
     let svg = boilDefs(st, t) + world;
     if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2 + 6 * Math.cos(a)} ${H / 2 + 6 * Math.sin(a)}) scale(${z.toFixed(4)}) translate(${-W / 2} ${-H / 2})">${world}</g>`; }
+    if (sh.camera_auto && !sh.camera && !bgOnly) { const [cx, cy, z] = autoCam(sh, tq, casts);   // camera grammar (plan 2.6)
+      svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z.toFixed(4)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})">${world}</g>`; }
     if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);

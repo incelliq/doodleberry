@@ -210,7 +210,10 @@
       "visemes_from": "priya"
      }
     }
-   ]
+   ],
+   "camera_auto": {
+    "handheld": 0.3
+   }
   }
  ]
 }

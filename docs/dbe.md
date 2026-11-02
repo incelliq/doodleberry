@@ -308,3 +308,10 @@ strongest word; a shrug (humanoid) or tilt (doodle) ending a question. Listeners
 their lines and blink on their pauses. Gesture clips get weight 3 so they read over the idle loop. Generated clips are
 tagged `"auto": true` and replaced on each run; hand-placed clips are kept. `films/dialogue-demo` (Ravi and Priya,
 classroom) is acted entirely this way.
+
+## Camera grammar (plan 2.6)
+`"camera_auto": true | {"zoom": 1.45, "zoom_single": 1.9, "medium": 0.62, "punch": 0.05, "handheld": 0.3, "ease": 0.6}` on a shot
+without camera keys frames it automatically, as a pure function of time: a waist-up medium shot on whoever is speaking
+(from 0.3 s before the line), a wide shot fitting the whole cast otherwise, eased between; small punch-ins on emphasised
+words (long or exclaimed); seeded handheld drift; clamped so the frame never leaves the set; heads kept high, with room
+below for captions. Explicit `camera` keys always win.
