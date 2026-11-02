@@ -1,16 +1,97 @@
 {
-  "length_s": 202.9,
-  "bpm": 96,
-  "offset_s": 0.0,
-  "note": "tension under the cold open and the breach; warm build through the experiments; finale on the 1960s success; reflective lab section",
-  "sections": [
-    {"kind": "intro",   "from_beat": 0,   "to_beat": 32,  "chords": ["Dm", "Bb", "Gm", "Am"]},
-    {"kind": "main",    "from_beat": 32,  "to_beat": 72,  "chords": ["Dm", "Bb", "F", "C"]},
-    {"kind": "reflect", "from_beat": 72,  "to_beat": 120, "chords": ["F", "C", "Dm", "Bb"]},
-    {"kind": "main",    "from_beat": 120, "to_beat": 170, "chords": ["F", "C", "Dm", "C"]},
-    {"kind": "finale",  "from_beat": 170, "to_beat": 228, "chords": ["F", "C", "Bb", "C"]},
-    {"kind": "reflect", "from_beat": 228, "to_beat": 272, "chords": ["Dm", "Bb", "Gm", "Am"]},
-    {"kind": "main",    "from_beat": 272, "to_beat": 312, "chords": ["F", "C", "Dm", "Bb"]},
-    {"kind": "finale",  "from_beat": 312, "to_beat": 325, "chords": ["F", "C", "Bb", "C"], "end_chord": "F"}
-  ]
+ "length_s": 241.554,
+ "bpm": 96,
+ "offset_s": 0.0,
+ "note": "tension under the cold open and the breach; warm build through the experiments; finale on the 1960s success; reflective lab section",
+ "sections": [
+  {
+   "kind": "intro",
+   "from_beat": 0,
+   "to_beat": 32,
+   "chords": [
+    "Dm",
+    "Bb",
+    "Gm",
+    "Am"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 32,
+   "to_beat": 72,
+   "chords": [
+    "Dm",
+    "Bb",
+    "F",
+    "C"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 72,
+   "to_beat": 120,
+   "chords": [
+    "F",
+    "C",
+    "Dm",
+    "Bb"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 120,
+   "to_beat": 170,
+   "chords": [
+    "F",
+    "C",
+    "Dm",
+    "C"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 170,
+   "to_beat": 228,
+   "chords": [
+    "F",
+    "C",
+    "Bb",
+    "C"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 228,
+   "to_beat": 272,
+   "chords": [
+    "Dm",
+    "Bb",
+    "Gm",
+    "Am"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 272,
+   "to_beat": 312,
+   "chords": [
+    "F",
+    "C",
+    "Dm",
+    "Bb"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 312,
+   "to_beat": 325,
+   "chords": [
+    "F",
+    "C",
+    "Bb",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
 }

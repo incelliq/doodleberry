@@ -1,7 +1,7 @@
 {
  "speakers": {
   "nar": {
-   "voice": "en_US-ryan-high"
+   "voice": "kokoro:am_michael"
   }
  },
  "length_scale": 1.06,
@@ -96,7 +96,7 @@
   {
    "id": "curacao",
    "fact": "curacao",
-   "text": "So, in 1954, they went to Cura\u00e7ao, an island in the Caribbean. Every week, an airplane dropped sterile flies over it."
+   "text": "So, in 1954, they went to Curaçao, an island in the Caribbean. Every week, an airplane dropped sterile flies over it."
   },
   {
    "id": "seventy",
@@ -130,7 +130,7 @@
   {
    "id": "wall",
    "fact": "panama",
-   "text": "Today, a plant in Panama releases up to a hundred million sterile flies a week, a living wall at the Dari\u00e9n Gap."
+   "text": "Today, a plant in Panama releases up to a hundred million sterile flies a week, a living wall at the Darién Gap."
   },
   {
    "id": "keys",
