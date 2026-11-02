@@ -247,7 +247,7 @@
       const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
       casts.push({ p, x, y, s, flip, pose, c, tl, L });
       if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`;
-      ink += Puppet.render(p, x, y, { ...pose, s, flip });
+      ink += Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}) });
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
     if (!bgOnly) ink += (sh.props || []).map(pr => propSVG(pr, tq, casts)).join('');

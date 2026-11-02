@@ -25,10 +25,27 @@
   const I = [1, 0, 0, 1, 0, 0];
 
   function colourOf(v, pal) { if (!v) return 'none'; return v[0] === '#' || v === 'none' ? v : pal[v] || '#ff00ff'; }
-  function strokesSVG(strokes, pal, m, extra = '') {
+  // v0.5 toon shading (render option toon: {dir: [x, y] towards the light, d: 7, shade: '#2a1a10', opacity: 0.22, rim: 0}):
+  // within each filled vector shape, the band facing away from the light is shaded: the shape is clipped to itself,
+  // filled with the shade colour, and the same shape shifted towards the light repaints the lit part. The light stays
+  // fixed in the world as parts rotate. The outline is drawn last so it stays crisp.
+  function toonSVG(st, fill, line, m, toon) {
+    const [lx, ly] = toon.dir || [-0.6, -0.8], n = Math.hypot(lx, ly) || 1, d = toon.d ?? 11;
+    // world offset towards the light, expressed in the part's own axes (inverse rotation = transpose)
+    const wx = lx / n * d, wy = ly / n * d, vx = m[0] * wx + m[1] * wy, vy = m[2] * wx + m[3] * wy;
+    const id = 'tc' + hashStr(st.d), w = st.width || 3;
+    let s = `<path d="${st.d}" fill="${fill}"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
+    s += `<clipPath id="${id}"><path d="${st.d}"/></clipPath><g clip-path="url(#${id})" opacity="${toon.opacity ?? 0.26}">` +
+      `<rect x="-5000" y="-5000" width="10000" height="10000" fill="${toon.shade || '#2a1a10'}"/><path d="${st.d}" transform="translate(${f2(vx)} ${f2(vy)})" fill="${fill}"/></g>`;
+    if (toon.rim) s += `<g clip-path="url(#${id})" opacity="${toon.rim}"><path d="${st.d}" fill="${toon.light || '#fff6e0'}"/><path d="${st.d}" transform="translate(${f2(-vx * 0.5)} ${f2(-vy * 0.5)})" fill="${fill}"/></g>`;
+    if (line !== 'none') s += `<path d="${st.d}" fill="none" stroke="${line}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
+    return s;
+  }
+  function strokesSVG(strokes, pal, m, extra = '', toon = null) {
     if (!strokes || !strokes.length) return '';
     let s = `<g transform="matrix(${m.map(f2).join(' ')})" ${extra}>`;
     for (const st of strokes) {
+      if (toon && st.d && !st.image && st.fill && st.fill !== 'none' && (st.opacity == null || st.opacity > 0.9)) { s += toonSVG(st, colourOf(st.fill, pal), colourOf(st.stroke, pal), m, toon); continue; }
       // v0.3 raster part: original ink or paint as an image placed in artboard units
       if (st.image) { s += `<image href="${st.image}" x="${st.x}" y="${st.y}" width="${st.w}" height="${st.h}" preserveAspectRatio="none"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`; continue; }
       const fill = colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
@@ -209,7 +226,7 @@
       const replaced = Object.entries(p.swaps || {}).some(([sid, sw]) => sw.replaces === id && pose[sid] && sw.shapes[pose[sid]] && sw.shapes[pose[sid]].length);
       const J = p._bendy ? jointsFor(p, M, id, pose) : [];
       const meshes = part.strokes.filter(st => st.mesh), flat = meshes.length ? part.strokes.filter(st => !st.mesh) : part.strokes;
-      const svgPart = (J.length ? bentSVG(flat, pal, M[id], J) : strokesSVG(flat, pal, M[id])) + meshes.map(st => meshSVG(st, M)).join('');
+      const svgPart = (J.length ? bentSVG(flat, pal, M[id], J) : strokesSVG(flat, pal, M[id], '', pose.toon || null)) + meshes.map(st => meshSVG(st, M)).join('');
       if (!replaced) items.push({ z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: svgPart });
     }
     for (const [sid, sw] of Object.entries(p.swaps || {})) {

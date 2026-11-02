@@ -155,6 +155,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 2.20 Motion effects | done for SVG: speed lines, landing dust, prop impact stars from the motion (`fx` on a shot). Open: smear frames, motion arcs, effects in other renderers | this commit |
 | 2.19 Cartoon physics | first part done: ballistic throws that land at a line-relative time, drops that bounce, roll and spin, bounce rings. Open: multi-body scenes with Rapier, squash on impact, contacts on the beat grid | this commit |
 | 1.10 Drawing coach | done: `puppet.coach` (measured joint gaps under bending, pivots, proportions, symmetry, face abilities, scale, ground, layer names) with an annotated image; runs inside `puppet.import` | this commit |
+| 1.7 Toon shading and post | done: `style.toon` cel shadows and rim light (SVG), `post` presets (grade, vignette, seeded grain, LUT). Open: cross-dissolves, sub-frame motion blur, toon in other renderers | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates

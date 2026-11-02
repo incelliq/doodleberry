@@ -258,3 +258,14 @@ parent, or open a gap when bent (each joint is bent +-50 degrees and the hole be
 drawing; upper-to-lower limb proportions and left/right mismatch; eyes, pupils and mouths needed to blink, look and
 lip-sync; scale on the artboard and feet on the ground line; layers the importer could not place. `puppet.import` runs
 it automatically and returns the advice with the puppet.
+
+## Toon shading and finishing (plan 1.7)
+- **Toon shading** (`style.toon` on a shot: `true` or `{"dir": [-0.6, -0.8], "d": 11, "shade": "#2a1a10", "opacity": 0.26, "rim": 0.3}`):
+  every filled vector shape gets a cel-shadow band on the side away from the light (and an optional rim light towards
+  it). Pure SVG: the shape is clipped to itself and repainted shifted towards the light; the light stays fixed in the
+  world as parts rotate; outlines are drawn last. Raster and mesh parts already carry their painted light.
+- **Finishing** (`"post"` in shots.json: `crisp`, `film`, `warm`, `cool`, `paper`, `noir`, or
+  `{"preset", "grade": "<ffmpeg filters>", "vignette": 0-1, "grain": 0-20, "lut": "file.cube"}`): applied to the
+  joined picture before captions, so text stays crisp; grain uses a fixed seed. Grain costs file size (fx-demo: 2 MB
+  to 10 MB).
+Open: cross-dissolves between shots (they change timing), sub-frame motion blur (needs a second render pass).

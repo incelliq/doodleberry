@@ -17,7 +17,10 @@
    "end_line": "got",
    "tail": 1.8,
    "style": {
-    "shadow": false
+    "shadow": false,
+    "toon": {
+     "rim": 0.3
+    }
    },
    "bubbles": true,
    "cast": [
@@ -218,5 +221,6 @@
     "impacts": true
    }
   }
- ]
+ ],
+ "post": "film"
 }

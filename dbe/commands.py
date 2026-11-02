@@ -477,6 +477,34 @@ def _shot_hash(name, sh, s):
     return h.hexdigest()[:20]
 
 
+POST_PRESETS = {  # finishing looks: colour grade, vignette strength (0-1), grain strength (0-20)
+    "crisp": {},
+    "film": {"grade": "eq=contrast=1.04:saturation=1.05,colorbalance=rs=0.03:gs=0.01:bs=-0.03:rh=0.02:bh=-0.02", "vignette": 0.35, "grain": 6},
+    "warm": {"grade": "colorbalance=rs=0.05:gs=0.02:bs=-0.05:rm=0.03:bm=-0.03", "vignette": 0.2, "grain": 2},
+    "cool": {"grade": "colorbalance=rs=-0.04:bs=0.05:bm=0.03", "vignette": 0.2, "grain": 2},
+    "paper": {"grade": "eq=saturation=0.88:contrast=0.97", "vignette": 0.25, "grain": 5},
+    "noir": {"grade": "hue=s=0,eq=contrast=1.15", "vignette": 0.5, "grain": 8},
+}
+
+
+def post_filters(post):
+    """shots.json "post": "film" | {"preset": "film", "grade": "<ffmpeg filters>", "vignette": 0.3, "grain": 6, "lut": "path.cube"}
+    -> an ffmpeg filter chain. Grain uses a fixed seed, so renders are repeatable."""
+    if isinstance(post, str):
+        post = {"preset": post}
+    p = {**POST_PRESETS.get(post.get("preset", "crisp"), {}), **{k: v for k, v in post.items() if k != "preset"}}
+    chain = []
+    if p.get("lut"):
+        lut = _inside(p["lut"], True); chain.append(f"lut3d=file={lut.relative_to(ROOT)}")
+    if p.get("grade"):
+        chain.append(p["grade"])
+    if p.get("vignette"):
+        chain.append(f"vignette=angle={0.25 + 0.5 * float(p['vignette']):.3f}:mode=forward")
+    if p.get("grain"):
+        chain.append(f"noise=c0s={int(p['grain'])}:c0f=t+u:all_seed=7")
+    return ",".join(chain)
+
+
 @command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default: only shots whose inputs changed", None),
          aspect=("string", "render another aspect ratio from the same film: 16:9 | 9:16 | 1:1 (default: the film's own)", ""))
 def film_render(name, only=None, aspect=""):
@@ -508,6 +536,12 @@ def film_render(name, only=None, aspect=""):
     lst.write_text("".join(f"file '{(d / 'build' / 'shots' / (sh['id'] + '.mp4')).resolve()}'\n" for sh in s["shots"]))
     pic = d / "build" / "picture.mp4"
     _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), str(pic)])
+    if s.get("post"):  # finishing (plan 1.7): grade, vignette, grain, LUT, before captions so text stays crisp
+        vf = post_filters(s["post"])
+        if vf:
+            graded = d / "build" / "picture_post.mp4"
+            _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-vf", vf, "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(graded)])
+            pic = graded
     if s.get("captions", True):
         # one caption pass over the joined picture, so every renderer gets the same word-timed captions
         from .captions import make_ass
