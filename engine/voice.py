@@ -41,12 +41,13 @@ def resample(x, sr_in, sr_out):
     return resample_poly(x, sr_out // g, sr_in // g).astype(np.float32)
 
 
-def trim(x, thresh=0.01, pad=0.03):
+def trim(x, thresh=0.01, pad=0.03, offset=False):
+    """drop silence at both ends; offset=True also returns the seconds removed from the start"""
     idx = np.where(np.abs(x) > thresh)[0]
     if len(idx) == 0:
-        return x
-    p = int(pad * SR_OUT)
-    return x[max(0, idx[0] - p): idx[-1] + p]
+        return (x, 0.0) if offset else x
+    p = int(pad * SR_OUT); a = max(0, idx[0] - p)
+    return (x[a: idx[-1] + p], a / SR_OUT) if offset else x[a: idx[-1] + p]
 
 
 def norm_word(w):
@@ -145,24 +146,31 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                 voices[cfg["voice"]] = _km.KokoroVoice(cfg["voice"], voices_dir)
             else:
                 voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"))
-        a = trim(synth_line(voices[cfg["voice"]], ln["text"], ln.get("length_scale", script.get("length_scale", 1.0))))
+        a, cut0 = trim(synth_line(voices[cfg["voice"]], ln["text"], ln.get("length_scale", script.get("length_scale", 1.0))), offset=True)
+        # phone timings from the voice model itself (plan 2.1: Kokoro's duration predictor), on the trimmed clock
+        phones = [(ph, s0 - cut0, s1 - cut0) for ph, s0, s1 in (getattr(voices[cfg["voice"]], "last_phones", None) or [])]
         if cfg.get("fx") and fxmod:
             fx = cfg["fx"] if isinstance(cfg["fx"], dict) else {"preset": cfg["fx"]}
             p = {**fxmod.PRESETS.get(fx.get("preset"), {"pitch": 1.0, "formant": 1.0, "range": 1.0}),
                  **{k: v for k, v in fx.items() if k != "preset"}}
             y, _, _ = fxmod.revoice(a.astype(np.float64), SR_OUT, p["pitch"], p["formant"], p["range"])
             a = (y * (0.9 / (np.max(np.abs(y)) + 1e-9))).astype(np.float32)
-        words = align_words(model, a, ln["text"], lang)
+        import importlib.util as _u
+        _spec = _u.spec_from_file_location("visemes", Path(__file__).with_name("visemes.py")); _vm = _u.module_from_spec(_spec); _spec.loader.exec_module(_vm)
+        words = _vm.phone_words(phones, ln["text"].split(), voices[cfg["voice"]].phonemize) if phones else None
+        align = "model" if words else "whisper"
+        words = words or align_words(model, a, ln["text"], lang)
         d = len(a) / SR_OUT
         lines.append({"id": ln["id"], "speaker": spk, "fact": ln.get("fact"), "text": ln["text"],
-                      "start": round(t, 3), "end": round(t + d, 3),
+                      "start": round(t, 3), "end": round(t + d, 3), "align": align,
                       "words": [{**w, "start": round(t + w["start"], 3),
                                  "end": round(t + w["end"], 3)} for w in words]})
         mouths.append((spk, t, mouth_track(a, fps)))
-        try:  # sound-based lip-sync cues (visemes) from the same phonemiser that voiced the line
-            import importlib.util as _u
-            _spec = _u.spec_from_file_location("visemes", Path(__file__).with_name("visemes.py")); _vm = _u.module_from_spec(_spec); _spec.loader.exec_module(_vm)
-            vis.setdefault(spk, []).extend(_vm.line_visemes(voices[cfg["voice"]], lines[-1]["words"]))
+        try:  # lip-sync cues (visemes): the model's own phone timings when it has them, else phonemes spread over words
+            if phones:
+                vis.setdefault(spk, []).extend(_vm.phone_visemes(phones, t))
+            else:
+                vis.setdefault(spk, []).extend(_vm.line_visemes(voices[cfg["voice"]], lines[-1]["words"]))
         except Exception as e:  # lip-sync falls back to loudness
             print("visemes skipped:", e)
         pause = gap + ln.get("pause", 0.0)

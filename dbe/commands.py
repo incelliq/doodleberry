@@ -649,6 +649,14 @@ def qa_run(name, layout=True):
         rep = json.loads(r.stdout)
     except Exception:
         return {"error": (r.stderr or r.stdout)[-800:]}
+    # lip-sync cross-check (plan 2.2): every speaker's mouths against their own voice (lag and agreement)
+    ls = subprocess.run([PY, "dbe/lipsync_qa.py", f"films/{name}"], cwd=ROOT, capture_output=True, text=True)
+    try:
+        rep["lipsync"] = json.loads(ls.stdout)
+        if not rep["lipsync"].get("skipped"):
+            rep.setdefault("checks", {})["lipsync"] = rep["lipsync"]["ok"]
+    except Exception:
+        rep["lipsync"] = {"error": (ls.stderr or ls.stdout)[-400:]}
     if layout and (FILMS / name / "shots.json").exists():
         from . import layout_qa
         lay = layout_qa.run(FILMS / name, page=_player_page(name))
@@ -664,6 +672,16 @@ def qa_run(name, layout=True):
                 rep["checks"]["lint"] = li["summary"]["error"] == 0
         (FILMS / name / "build" / "qa.json").write_text(json.dumps(rep, indent=1))
     return rep
+
+
+@command("lipsync.check", name=("string", "film"))
+def lipsync_check(name):
+    """Lip-sync cross-check (plan 2.2): each speaker's viseme track against their own voice (first-formant energy of
+    build/voice.wav inside their lines): best lag in frames and correlation; with DBE_RHUBARB set, also agreement with
+    Rhubarb Lip Sync's reading of the same audio and text. Fails beyond +-2 frames or below 0.2 correlation."""
+    _film(name)
+    return json.loads(subprocess.run(
+        [PY, "dbe/lipsync_qa.py", f"films/{name}"], cwd=ROOT, capture_output=True, text=True, check=True).stdout)
 
 
 @command("film.lint", name=("string", "film"), step=("integer", "sample every Nth frame", 3))

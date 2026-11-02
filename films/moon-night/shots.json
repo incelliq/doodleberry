@@ -47,14 +47,14 @@
        },
        {
         "clip": "talk_beat",
-        "start": 2.06,
+        "start": 1.97,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_beat",
-        "start": 3.493,
+        "start": 3.543,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -81,7 +81,7 @@
         ]
        ],
        [
-        3.493,
+        3.543,
         [
          0.0,
          0.0
@@ -142,28 +142,42 @@
        },
        {
         "clip": "talk_beat",
-        "start": 6.931,
+        "start": 7.006,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 8.106,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "shrug",
-        "start": 8.711,
+        "start": 8.701,
         "weight": 3,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 11.172,
+        "start": 11.382,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_open_palms",
-        "start": 13.252,
-        "end": 14.132,
+        "start": 11.835,
+        "end": 13.235,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "point_R",
+        "start": 13.01,
+        "end": 13.91,
         "weight": 3,
         "auto": true
        }
@@ -172,21 +186,21 @@
       "visemes_from": "ravi",
       "look": [
        [
-        6.871,
+        6.921,
         [
          0.0,
          0.0
         ]
        ],
        [
-        9.468,
+        9.518,
         [
          1.0,
          0.1
         ]
        ],
        [
-        11.572,
+        11.782,
         [
          0.0,
          0.0
@@ -197,6 +211,7 @@
        3.393,
        5.171,
        11.472,
+       11.682,
        18.103,
        19.925,
        22.086,
@@ -223,21 +238,21 @@
        },
        {
         "clip": "nod",
-        "start": 9.218,
+        "start": 9.268,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_beat",
-        "start": 9.618,
+        "start": 9.668,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 13.882,
+        "start": 14.092,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -247,21 +262,21 @@
       "visemes_from": "momo",
       "look": [
        [
-        6.721,
+        6.771,
         [
          -1.0,
          0.1
         ]
        ],
        [
-        9.618,
+        9.668,
         [
          0.0,
          0.0
         ]
        ],
        [
-        11.422,
+        11.632,
         [
          -1.0,
          0.1
@@ -270,7 +285,9 @@
       ],
       "blinks": [
        9.518,
+       9.568,
        14.182,
+       14.392,
        18.103,
        22.086,
        25.549,
@@ -310,27 +327,27 @@
        },
        {
         "clip": "point_R",
-        "start": 16.712,
-        "end": 17.612,
+        "start": 16.82,
+        "end": 17.72,
         "weight": 3,
         "auto": true
        },
        {
         "clip": "shrug",
-        "start": 17.342,
+        "start": 17.495,
         "weight": 3,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 19.625,
+        "start": 20.024,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_beat",
-        "start": 20.025,
+        "start": 20.424,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -340,21 +357,21 @@
       "visemes_from": "priya",
       "look": [
        [
-        15.882,
+        16.092,
         [
          0.0,
          0.0
         ]
        ],
        [
-        18.053,
+        18.263,
         [
          1.0,
          0.1
         ]
        ],
        [
-        20.025,
+        20.424,
         [
          0.0,
          0.0
@@ -368,6 +385,7 @@
        11.472,
        14.182,
        19.925,
+       20.324,
        25.549,
        27.554,
        31.204
@@ -391,27 +409,27 @@
        },
        {
         "clip": "nod",
-        "start": 17.803,
+        "start": 18.013,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_beat",
-        "start": 18.203,
+        "start": 18.413,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "shrug",
-        "start": 19.243,
+        "start": 19.502,
         "weight": 3,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 21.786,
+        "start": 22.206,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -421,21 +439,21 @@
       "visemes_from": "momo",
       "look": [
        [
-        15.732,
+        15.942,
         [
          -1.0,
          0.1
         ]
        ],
        [
-        18.203,
+        18.413,
         [
          0.0,
          0.0
         ]
        ],
        [
-        19.875,
+        20.274,
         [
          -1.0,
          0.1
@@ -446,7 +464,9 @@
        9.518,
        14.182,
        18.103,
+       18.313,
        22.086,
+       22.506,
        25.549,
        29.436
       ]
@@ -484,28 +504,28 @@
        },
        {
         "clip": "talk_beat",
-        "start": 24.046,
+        "start": 24.206,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 27.254,
+        "start": 28.064,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 29.136,
+        "start": 29.946,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 30.904,
+        "start": 31.714,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -515,28 +535,28 @@
       "visemes_from": "ravi",
       "look": [
        [
-        23.786,
+        24.206,
         [
          0.0,
          0.0
         ]
        ],
        [
-        25.499,
+        26.139,
         [
          1.0,
          0.1
         ]
        ],
        [
-        27.504,
+        28.314,
         [
          1.0,
          0.1
         ]
        ],
        [
-        29.386,
+        30.196,
         [
          1.0,
          0.1
@@ -551,8 +571,11 @@
        19.925,
        22.086,
        27.554,
+       28.364,
        29.436,
-       31.204
+       30.246,
+       31.204,
+       32.014
       ]
      }
     },
@@ -578,28 +601,28 @@
        },
        {
         "clip": "nod",
-        "start": 25.249,
+        "start": 25.889,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_open_palms",
-        "start": 25.649,
-        "end": 27.049,
+        "start": 26.289,
+        "end": 27.689,
         "weight": 3,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 29.136,
+        "start": 29.946,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_beat",
-        "start": 29.636,
+        "start": 30.491,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -637,28 +660,28 @@
       },
       "look": [
        [
-        23.636,
+        24.056,
         [
          -1.0,
          0.1
         ]
        ],
        [
-        25.649,
+        26.289,
         [
          0.0,
          0.0
         ]
        ],
        [
-        27.504,
+        28.314,
         [
          1.0,
          0.1
         ]
        ],
        [
-        29.536,
+        30.346,
         [
          0.0,
          0.0
@@ -671,7 +694,9 @@
        18.103,
        22.086,
        25.549,
-       29.436
+       26.189,
+       29.436,
+       30.246
       ]
      }
     },
@@ -692,28 +717,28 @@
        },
        {
         "clip": "nod",
-        "start": 25.249,
+        "start": 25.889,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 27.254,
+        "start": 28.064,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "talk_beat",
-        "start": 27.654,
+        "start": 28.464,
         "additive": true,
         "weight": 0.8,
         "auto": true
        },
        {
         "clip": "nod",
-        "start": 30.904,
+        "start": 31.714,
         "additive": true,
         "weight": 0.8,
         "auto": true
@@ -723,28 +748,28 @@
       "visemes_from": "priya",
       "look": [
        [
-        23.636,
+        24.056,
         [
          -1.0,
          0.1
         ]
        ],
        [
-        25.499,
+        26.139,
         [
          -1.0,
          0.1
         ]
        ],
        [
-        27.654,
+        28.464,
         [
          0.0,
          0.0
         ]
        ],
        [
-        29.386,
+        30.196,
         [
          -1.0,
          0.1
@@ -759,8 +784,11 @@
        14.182,
        19.925,
        25.549,
+       26.189,
        27.554,
-       31.204
+       28.364,
+       31.204,
+       32.014
       ]
      }
     }

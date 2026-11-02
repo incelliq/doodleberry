@@ -12,3 +12,5 @@ pyloudnorm
 #   kokoro-v1.0.onnx, voices-v1.0.bin from https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0
 # kokoro-onnx itself is MIT; its phonemizer and espeakng-loader pull espeak-ng (GPL): keep it a separate process.
 kokoro-onnx==0.6.1
+# Plan 2.1: exposes Kokoro's phoneme durations (kokoro-v1.0-timed.onnx, made once from kokoro-v1.0.onnx). Apache-2.0.
+onnx==1.23.2

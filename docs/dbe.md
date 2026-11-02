@@ -403,3 +403,26 @@ cut many ways from it.
 
 `films/moon-night` is the test production: a four-scene story made once, cut into the full film at 16:9, four 9:16
 episodes and a teaser.
+
+## Phone-level lip-sync and the lip-sync check (plans 2.1, 2.2)
+**Alignment.** Kokoro predicts how many 25 ms frames each phoneme lasts before it makes any sound. `engine/kokoro_voice.py`
+exposes that duration output once (`timed_model` writes `kokoro-v1.0-timed.onnx` next to the model, with the `onnx`
+package from requirements-audio.txt), and kokoro-onnx turns it into phoneme timings. Measured over five voices and
+21 lines against the audio, those timings sit about 80 ms after the sound, so they are shifted back by `PHONE_LEAD`
+(0.08 s). `engine/voice.py` then takes, for every Kokoro line:
+- visemes from the phones (`visemes.phone_visemes`): stress and length marks extend the phone before them, a
+  silence between phones (the pauses Kokoro inserts after punctuation) closes the mouth;
+- word times from the phones (`visemes.phone_words`): spoken words between spaces are grouped with the script's
+  words by a small DP on phoneme counts, so "for a" run together, "25" read as two words and "Dr." all map;
+- `"align": "model"` on the line in timing.json (`"whisper"` when it fell back).
+Compared on the same audio, the previous method (Whisper word times, phonemes spread across each word) was 70-87 ms
+off on average and showed the right mouth class on only 24-33% of frames. With timings on, Kokoro also inserts its
+sentence and clause pauses, so re-voiced lines can be a little longer than before. Piper voices and recordings still
+use Whisper words with spread phonemes.
+
+**Check.** `python -m dbe lipsync.check '{"name": "FILM"}'`, also run by `qa.run` as the `lipsync` check, compares each
+speaker's viseme track with how open the jaw should be, read from `build/voice.wav` as first-formant energy
+(300-1200 Hz) inside that speaker's lines. It reports the best lag (positive: mouths after the voice) and the
+correlation there, and fails beyond +-2 frames or below 0.2. With `DBE_RHUBARB` pointing at a Rhubarb Lip Sync
+binary (MIT), each line is also read by Rhubarb and its Preston Blair cues are compared class by class (closed,
+narrow, open, round; fails below 50% agreement).
