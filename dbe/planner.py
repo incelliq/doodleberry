@@ -112,8 +112,9 @@ def same_topic(a, b, threshold=0.4):
     shared = ta & tb
     if len(shared) >= 2 and len(shared) / max(1, min(len(ta), len(tb))) >= 0.6:
         return True
-    A, B = _stem(topic_words(a)), _stem(topic_words(b))
-    return len(A & B) / max(1, min(len(A), len(B))) >= threshold
+    ratio = lambda A, B: len(A & B) / max(1, min(len(A), len(B)))
+    A, B = topic_words(a), topic_words(b)
+    return max(ratio(A, B), ratio(_stem(A), _stem(B))) >= threshold   # stripping plurals can lower the score as well as raise it
 
 
 def validate_idea(x, ch):

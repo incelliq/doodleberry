@@ -3,6 +3,11 @@
 This plan combines the feature map (`docs/feature-map.md`: what the studio needs) with the open-source research
 (`docs/oss-research.md`: what to build it with, and which licences are safe). It replaces the "Next 12" list.
 
+**Execution plan:** `docs/work-packages.md` turns everything still open here (3.9, 3.10, Phase 4, the "Open:"
+remainders of built items, feature-map rows no item covered, and the owner's requests for several series and for
+professional parity through open-source code) into 41 work packages in nine milestones, each with a measurable "done
+when". This file stays the list of items and their status.
+
 **How it's ordered**
 - Multipliers first: speed, tests and clean inputs make every later step cheaper and safer.
 - Then the biggest visible gap (character deformation and look).
@@ -215,7 +220,8 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 
 ## Never build
 Generative-video characters (they break consistency, editing and the licence trail). A raster frame-by-frame paint
-suite (import from Krita instead). Embedded Spine or Remotion runtimes. Anything on the research "avoid" list:
+suite (import from Krita instead; under review: WP-35 in `docs/work-packages.md` asks the owner to
+reconsider this, now that open-source codebases such as OpenToonz may be integrated). Embedded Spine or Remotion runtimes. Anything on the research "avoid" list:
 OpenPose, Ultralytics, python-lottie in the service, aeneas, XTTS-v2 and F5-TTS weights, MMS aligner weights,
 EMAGE/BEAT2, audio2photoreal, MakeItTalk, Sapiens, LAFAN1 data, OpenMoji (SA), BBC sound effects (NC), Sonniss files
 in public repos or training sets, Z-Anatomy NC parts.
