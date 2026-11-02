@@ -129,6 +129,10 @@ A stroke can be a texture on a triangle mesh whose vertices follow several parts
   triangle. Ids hash the content, so frames stay pure functions of time and identical frames still dedupe.
 - `dbe/cutout_import.py` makes these from skinned meshes in Blender cut-out rigs. Like raster parts, mesh strokes
   render in the SVG renderer only; the other exporters skip them.
+- **acting** (per character): `{"viseme_hold": 0.09, "tempo": 0.8, "fade": 0.35}`. Mouth shapes shorter than `viseme_hold`
+  seconds fold into the previous shape (closures always land); clip layers play at `tempo` and blend in and out over
+  `fade` seconds unless a layer sets its own; `energy` scales every clip's motion and `idle` the idle loop's (a layer's own
+  `gain` multiplies in). Richly drawn characters read as shaky with cartoon-snappy timing.
 - Linear blend skinning pinches at very sharp bends (beyond about 90°); subdivide the mesh for smoother arcs.
 
 ## Acting timelines (used by `puppet/loader/acting.js`)

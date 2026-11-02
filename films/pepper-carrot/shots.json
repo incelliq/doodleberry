@@ -29,9 +29,9 @@
      "puppet": "cast/external/pepper.puppet.json",
      "speaker": "pepper",
      "place": {
-      "x": 350,
+      "x": 300,
       "y": 1660,
-      "s": 1.5
+      "s": 1.45
      },
      "timeline": {
       "clips": [
@@ -39,12 +39,6 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
-       },
-       {
-        "clip": "talk_beat",
-        "start": "ready.start",
-        "end": "ready.end",
-        "additive": true
        },
        {
         "clip": "point_R",
@@ -109,7 +103,7 @@
      "puppet": "cast/external/carrot.puppet.json",
      "speaker": "carrot",
      "place": {
-      "x": 800,
+      "x": 850,
       "y": 1660,
       "s": 1.05
      },

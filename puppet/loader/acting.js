@@ -61,10 +61,10 @@
       const fi = L.fadeIn ?? 0.25, fo = L.fadeOut ?? 0.25;
       let w = (L.weight ?? 1) * (fi ? smooth(clamp((t - (L.start || 0)) / fi)) : 1) * (isFinite(end) && fo ? 1 - smooth(clamp((t - end) / fo)) : 1);
       if (w <= 0) continue;
-      const s = sampleClip(clip, lt);
+      const s = sampleClip(clip, lt), g = L.gain ?? 1;   // gain scales the clip's motion (calmer or bigger acting)
       const tgt = L.additive ? add : base;
-      for (const [k, v] of Object.entries(s.angles)) tgt.angles[k] = (tgt.angles[k] || 0) + v * w;
-      if (!L.additive) { wsum += w; if (s.offset) offs.push([s.offset, w]); for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) base[k] = v; }
+      for (const [k, v] of Object.entries(s.angles)) tgt.angles[k] = (tgt.angles[k] || 0) + v * w * g;
+      if (!L.additive) { wsum += w; if (s.offset) offs.push([g === 1 ? s.offset : s.offset.map(v => v * g), w]); for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) base[k] = v; }
       else { if (s.offset) add.offset = [(add.offset || [0, 0])[0] + s.offset[0] * w, (add.offset || [0, 0])[1] + s.offset[1] * w];  // additive moves (hops) stack on the base
         for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) add[k] = v; }
     }
@@ -137,13 +137,33 @@
     return d >= 0 && d < 0.16 ? Math.sin((d / 0.16) * Math.PI) : 0;
   }
 
+  // v0.5 puppet.acting.viseme_hold: mouth shapes shorter than `hold` seconds are folded into the previous one, so a
+  // richly drawn mouth does not flicker every frame (animators hold mouths on twos or threes). Pure: same list, same result.
+  const HELD = new WeakMap();
+  function heldVisemes(vis, hold) {
+    if (!hold) return vis;
+    const memo = HELD.get(vis) || {}; if (memo[hold]) return memo[hold];
+    const out = [];
+    for (let i = 0; i < vis.length; i++) {
+      const [ct, sh] = vis[i], next = i + 1 < vis.length ? vis[i + 1][0] : Infinity;
+      if (out.length && (next - ct < hold) && sh !== 'closed') continue;   // too short: keep the previous shape (closures always land)
+      if (out.length && out[out.length - 1][1] === sh) continue;
+      if (out.length && ct - out[out.length - 1][0] < hold * 0.5) { out[out.length - 1] = [out[out.length - 1][0], sh]; continue; }
+      out.push([ct, sh]);
+    }
+    memo[hold] = out; HELD.set(vis, memo); return out;
+  }
+
   // ---------- evaluate everything at t ----------
   function evaluate(puppet, tl, t, CLIPS = {}, PRESETS = {}) {
     const base = presetAt(puppet, tl.poses, t, tl.poseBlend || 0.4, PRESETS) || { angles: {} };
-    const stack = evalStack(tl.clips, t, CLIPS);
+    const ac = puppet.acting || {};
+    const layers = (ac.tempo || ac.fade || ac.energy) ? (tl.clips || []).map(L => ({ ...L, speed: (L.speed || 1) * (ac.tempo || 1), fadeIn: L.fadeIn ?? ac.fade, fadeOut: L.fadeOut ?? ac.fade,
+      gain: (L.gain ?? 1) * (ac.energy ?? 1) * (L.clip === 'idle' ? (ac.idle ?? 1) : 1) })) : tl.clips;
+    const stack = evalStack(layers, t, CLIPS);
     const pose = { ...base, ...stack, angles: { ...base.angles } };
     for (const [k, v] of Object.entries(stack.angles)) pose.angles[k] = (pose.angles[k] || 0) + v;
-    if (tl.visemes && tl.visemes.length && !pose.mouth) { let sh = 'closed'; for (const [ct, s] of tl.visemes) { if (ct > t + 0.033) break; sh = s; } pose.mouth = sh; }
+    if (tl.visemes && tl.visemes.length && !pose.mouth) { let sh = 'closed'; for (const [ct, s] of heldVisemes(tl.visemes, tl.viseme_hold ?? (puppet.acting || {}).viseme_hold ?? 0)) { if (ct > t + 0.033) break; sh = s; } pose.mouth = sh; }
     if (tl.look) pose.look = sampleKeys(tl.look, t);
     if (tl.view) { pose.view = sampleKeys(tl.view, t); for (const [ts] of tl.view.slice(1)) { const d = Math.abs(t - ts); if (d < 0.09) pose.squash = Math.min(pose.squash ?? 1, 1 - 0.35 * (1 - d / 0.09)); } }
     if (tl.blink !== false) pose.blink = Math.max(pose.blink || 0, blinkAt(t, tl.seed || 0));
@@ -184,8 +204,8 @@
       if (!tl.pins[foot] || !pose.contacts || !pose.contacts[foot]) continue;
       const limb = foot === 'foot_L' ? 'leg_L' : 'leg_R', [u, l, e, bend] = LIMBS[limb];
       // find when this contact began (step back in small steps), and where the foot was then
-      let t0 = t; for (let k = 0; k < 60; k++) { const s = evalStack(tl.clips, t0 - 1 / 60, CLIPS); if (!s.contacts || !s.contacts[foot]) break; t0 -= 1 / 60; }
-      const p0 = evalStack(tl.clips, t0, CLIPS);
+      let t0 = t; for (let k = 0; k < 60; k++) { const s = evalStack(layers, t0 - 1 / 60, CLIPS); if (!s.contacts || !s.contacts[foot]) break; t0 -= 1 / 60; }
+      const p0 = evalStack(layers, t0, CLIPS);
       const at0 = P.pointOf(puppet, e, null, 0, 0, { angles: { ...base.angles, ...p0.angles }, offset: p0.offset || [0, 0] });
       const hipX = (puppet.parts.hip.pivot[0]), ground = puppet.ground;
       const world = [at0[0] + hipX + (tl.travel || 0) * (t0 - t), Math.min(at0[1] + ground, ground - 2)];

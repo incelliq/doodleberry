@@ -507,6 +507,8 @@ def build(ext_dir, spec):
           "anchors": anchors, "meta": meta}
     if springs:
         pz["springs"] = springs
+    if spec.get("acting"):
+        pz["acting"] = spec["acting"]
     report = {"materials": mats, "parts": {k: {"pivot": v["pivot"], "parent": v["parent"], "z": v["z"], "strokes": len(v["strokes"])} for k, v in parts.items()},
               "swaps": {k: {s: len(v) for s, v in sw["shapes"].items()} for k, sw in swaps.items()}, "owned": sorted(owned), "artboard": [F.W, F.H]}
     return pz, report

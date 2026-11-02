@@ -108,6 +108,27 @@
    "additionalProperties": {
     "type": "object"
    }
+  },
+  "acting": {
+   "type": "object",
+   "description": "v0.5: per-character acting defaults",
+   "properties": {
+    "viseme_hold": {
+     "type": "number"
+    },
+    "tempo": {
+     "type": "number"
+    },
+    "fade": {
+     "type": "number"
+    },
+    "idle": {
+     "type": "number"
+    },
+    "energy": {
+     "type": "number"
+    }
+   }
   }
  },
  "$defs": {
