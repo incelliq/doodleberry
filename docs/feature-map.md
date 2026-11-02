@@ -62,7 +62,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Z-order switching (arm in front of or behind the body) | PRO | 🟡 | P1 | per view only; needs per-pose |
 | Rig retargeting across characters on one template | PRO | ✅ | – | clips are template-level |
 | Line-weight-preserving squash for blinks and squints: area-averaged resampling with re-inking, so a closed eye stays one solid line; dot eyes flatten to dashes | NEW | ⬜ | P1 | works for raster and vector eyes |
-| Rig ability inventory: each character declares what it can do without new drawings (hop, blink, tilt, wave, wag) and what needs a drawing | IDEA | ⬜ | P1 | feeds rig-aware writing (§5) and drawing requests (E20) |
+| Rig ability inventory: each character declares what it can do without new drawings (hop, blink, tilt, wave, wag) and what needs a drawing | IDEA | ✅ | P1 | `puppet.abilities` (2.12); feeds rig-aware writing (§5) and drawing requests (E20, 3.6) |
 | Doodle template: minimal rigs (head, body, arms, tail) for simple characters, with clips that fit them | NEW | ⬜ | P1 | not every character is a humanoid |
 
 ## 3. Animation and acting
@@ -280,8 +280,8 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Director's desk: chat beside a storyboard strip and animatic | IDEA | ⬜ | P1 | |
 | Review room on mobile: approve, comment on a frame | NEW | ⬜ | P1 | |
 | Tablet and pencil support | PRO | 🟡 | P1 | pointer pressure works |
-| **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ⬜ | P1 | the on-ramp for hobbyist artists |
-| Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ⬜ | P1 | see E20 |
+| **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ✅ | P1 | Studio /doodle and `doodle.snap/cut/say/keep` (plan 3.6): photo to talking in about 11 s |
+| Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ✅ | P1 | `drawing.requests` / `drawing.fulfil` (plan 3.6): swap shapes and parts drawn over a ghost; pupils, views and chains go to the Rig Canvas |
 | **Production board:** calendar, per-film status, checkpoints, measurements and critic verdicts, with approve and stop controls | NEW | ⬜ | P1 | the owner's view of the studio |
 | Live plan tracker shared with collaborators | NEW | ⬜ | P2 | |
 
@@ -311,7 +311,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E17 | Same acting → many renderers | **Style A/B tests.** Render one performance flat, Synfig-smooth or Grease Pencil-sketchy, then pick per audience or platform. | ✅ |
 | E18 | Data films + aspect ratios | **Re-blocked formats.** A 16:9 version re-stages characters and camera rather than cropping a 9:16 film. | ⬜ P1 |
 | E19 | Ink-fidelity import + rigging + voice + shot data | **Doodle to series.** Any notebook doodle becomes a talking, acting series character in minutes, in the artist's own line. | ⬜ P1 |
-| E20 | Rig ability inventory + writer agent + Rig Canvas | **Human-in-the-loop production queue.** Scripts stay within what rigs can do; a missing pose becomes a drawing request; the new drawing joins the rig and the shot re-renders. | ⬜ P1 |
+| E20 | Rig ability inventory + writer agent + Rig Canvas | **Human-in-the-loop production queue.** Scripts stay within what rigs can do; a missing pose becomes a drawing request; the new drawing joins the rig and the shot re-renders. | ✅ P1 (swap shapes and parts; poses and views still in the Rig Canvas) |
 | E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ⬜ P1 |
 | E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | ⬜ P1 |
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 |

@@ -15,6 +15,7 @@ SPEC: {"photo": "path", "crop": [x0, y0, x1, y1] (optional), "name": "Nib", "tem
 Coordinates are in the cropped drawing's pixels.
 """
 import base64
+import math
 import io
 import json
 import sys
@@ -79,13 +80,36 @@ def squash(e, k):
     return out
 
 
+def make_mouths(gen, H, W):
+    """talking mouth shapes in ink for a doodle: {shape: alpha array}, drawn at gen.center, gen.width wide, in the
+    doodle's line weight (filled dark inside, like a pen-drawn open mouth)"""
+    cx, cy = gen["center"]; mw = gen["width"]; lw = max(2, int(round(gen["line"])))
+    S = {  # (kind, width factor, height factor)
+        "closed": ("line", 0.75, 0.0), "small": ("oval", 0.45, 0.22), "mid": ("oval", 0.7, 0.4), "wide": ("oval", 0.95, 0.65),
+        "O": ("oval", 0.42, 0.55), "FV": ("oval", 0.7, 0.16), "smile": ("smile", 0.9, 0.3)}
+    out = {}
+    for name, (kind, fw, fh) in S.items():
+        im = Image.new("L", (W, H), 0); d = ImageDraw.Draw(im)
+        if gen.get("keep_drawn") and kind == "oval" and name != "FV":   # cover the drawn mouth underneath
+            fw, fh = max(fw, 0.8), max(fh, 0.4)
+        hw, hh = mw * fw / 2, max(lw, mw * fh / 2)
+        if kind == "line":
+            d.line([(cx - hw, cy), (cx + hw, cy)], fill=255, width=lw)
+        elif kind == "oval":
+            d.ellipse([cx - hw, cy - hh, cx + hw, cy + hh], fill=235, outline=255, width=lw)
+        else:
+            d.arc([cx - hw, cy - 2 * hh, cx + hw, cy + hh], 15, 165, fill=255, width=lw)
+        out[name] = np.asarray(im).astype(np.float32) / 255
+    return out
+
+
 def build(spec):
     ink = tuple(int(spec.get("ink", "#181e26")[i:i + 2], 16) for i in (1, 3, 5))
     A = extract(spec["photo"], spec.get("crop"), tuple(spec.get("threshold", (225, 75))), spec.get("min_speck", 25))
     H, W = A.shape
     claimed = np.zeros(A.shape, bool)
     parts = {}
-    swap_masks = {sid: poly_mask(A.shape, sw["open"]["poly"]) for sid, sw in (spec.get("swaps") or {}).items() if sw.get("open")}
+    swap_masks = {sid: poly_mask(A.shape, sw["open"]["poly"], sw["open"].get("grow", 0)) for sid, sw in (spec.get("swaps") or {}).items() if sw.get("open")}
     any_swap = np.zeros(A.shape, bool)
     for m in swap_masks.values():
         any_swap |= m
@@ -104,6 +128,18 @@ def build(spec):
     base.setdefault("parent", "hip"); parts[rest] = base
     swaps = {}
     for sid, sw in (spec.get("swaps") or {}).items():
+        if sw.get("talk"):   # plan 3.6: a mouth; the drawn one is "closed", talking shapes are drawn to match it
+            gen = make_mouths(sw["talk"], H, W)
+            shapes = {k: [s for s in [raster(v, ink)] if s] for k, v in gen.items()}
+            if sw["talk"].get("keep_drawn"):   # the drawn mouth stays in the head; "closed" adds nothing
+                shapes["closed"] = []
+            if sid in swap_masks:
+                drawn = raster(A * swap_masks[sid], ink)
+                if drawn:
+                    shapes["closed"] = [drawn]
+            swaps[sid] = {"anchor": sw.get("anchor", "head"), "z": sw.get("z", 31), "shapes": shapes, "talk": ["closed", "small", "mid", "wide"],
+                          "made": "talking shapes drawn to match the doodle's line (dbe/autorig.py)"}
+            continue
         e = A * swap_masks[sid]
         shapes = {"open": [s for s in [raster(e, ink)] if s]}
         if sw.get("blink", "squash") == "squash":

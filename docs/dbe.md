@@ -639,3 +639,40 @@ character must come back as the clips that made them (wave, celebrate, shrug und
 within 0.08 s with planted soles within 5 units of the ground, a waist-up take must not guess legs, `reach` must
 keep a long-armed performer's clap together (0.035 torso lengths, against 0.17 for angles), and face keys must
 follow blendshapes (`upper` never touches the mouth).
+
+## Phone-first creator flow and drawing requests (plan 3.6)
+http://127.0.0.1:8770/doodle (linked from Studio; laid out for a phone): draw a character with a dark pen (a closed
+loop for the head, one for the body, eyes and a mouth inside the head, stick arms), then:
+1. **Snap** (`doodle.snap`): the photo is turned upright (EXIF), cropped to the ink and scaled to about 900 px
+   (`out/doodle/<id>/`). `dbe/autorig.py` closes small gaps in the line and reads it: the two largest stacked closed
+   loops are the head and body (one loop: a blob, all head, resting on the ground); marks well inside the head that
+   are not joined to its outline are the eyes (upper) and the mouth (the lowest wide one); strokes leaving the body's
+   sides at its height are arms, with the pivot where they meet it; a second, lower side stroke is a tail; marks above
+   the body (ears, hair, a hat) ride with the head; legs and feet stay on the body. Every guess is reported with a
+   reason, and notes say what it could not find.
+2. **Check the cuts**: each piece is tinted over the photo; drag a dot to move a pivot (or the mouth centre), tap a
+   piece to leave it on the body; `doodle.cut` rebuilds.
+3. **See it move and talk** (`doodle.say`): one line in a clean Kokoro voice, run as its own process
+   (`engine/say_line.py`), with lip-sync cues from the model's phoneme timings; the acting is idle, a wave on a
+   greeting, a hop on an exclamation, head and body beats while talking, blinks. Hop, Wave, Tilt, Shake (and Wag with
+   a tail) play on tap.
+4. **Keep it** (`doodle.keep`): `cast/drawn/<name>.puppet.json`, registered with owner rights and its voice.
+
+The puppet is built by `dbe/ink.py` in the artist's own line. Eyes blink by squashing the drawn eyes. The mouth gets
+talking shapes (closed, small, mid, wide, O, FV, smile) drawn in the doodle's ink and line weight: the drawn mouth
+is `closed`; with none drawn, all are made; a drawn mouth joined to another line stays drawn and the dark open shapes
+cover it (reported, so the person checks the mouth box). Measured on a synthetic cat doodle through the page at phone
+size: cut in 3 s, talking 11 s after the photo was picked.
+
+**Drawing requests** (feature map E20): `drawing.requests` lists every drawing a character is missing, for one
+film's directions (`film`, from `script.rigcheck`) or for all its costly moves (`puppet.abilities`), as requests in
+`<puppet>.requests.json` with the reason and a ghost guide (`out/requests/`): the character faintly at rest on its own
+artboard, the related drawing it has a little stronger, and a dashed box where the new drawing goes. On the page,
+**Draw it** opens the guide to draw over with a finger; a drawing on paper photographed at the same framing works too.
+`drawing.fulfil` lifts the ink inside the box (`ink.extract`), stores it as the swap shape (a new swap if needed, e.g.
+brows) or part (a tail, pivoted where the stroke is nearest the body), saves the character, and closes the request
+only when the rig check no longer lists it, reporting the moves that became free; with `render` it re-renders the
+film that asked. Pupils, a turn view and chains are rigged rather than drawn, so they are listed for the Rig Canvas.
+Drawn shapes are raster strokes (SVG renderer). `python -m dbe test` cuts three synthetic doodles (head and body,
+blob, cat with a tail and ears; pivots within 11 px), snaps the cat, builds its queue, draws raised brows into the box
+and checks happy and surprised become free, and voices a line when Kokoro is installed.

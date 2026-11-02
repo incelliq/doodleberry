@@ -242,8 +242,7 @@ def cast_add(path, id, author, license, provenance, voice=None, personality="", 
         raise ValueError(f"puppet is incomplete: {missing[:5]}")
     pup = _json(pp)
     if voice and voice.get("voice"):
-        reg = _json(ROOT / "voices" / "registry.json", {}).get("voices", {})
-        if reg.get(voice["voice"], {}).get("status") != "clean":
+        if _voice_registry().get(voice["voice"], {}).get("status") != "clean":   # registry file plus installed Kokoro voices
             raise PermissionError(f"voice {voice['voice']} is not marked clean in voices/registry.json")
     idx = _json(ROOT / "cast" / "index.json", {"puppets": []})
     entry = {"id": id, "name": pup.get("name", id), "path": str(pp.relative_to(ROOT)), "template": pup.get("template"),
@@ -1203,6 +1202,200 @@ def _actout_sheet(vid, start, mirror, puppet_rel, clip, dur, out, kp=None, n=6):
     return out
 
 
+# ---------------- phone-first creator flow (plan 3.6) ----------------
+DOODLES = ROOT / "out" / "doodle"
+
+
+def _doodle_dir(id):
+    if not re.fullmatch(r"[0-9a-f]{12}", id or ""):
+        raise ValueError("not a doodle id")
+    d = DOODLES / id
+    if not d.is_dir():
+        raise FileNotFoundError(f"no doodle {id}")
+    return d
+
+
+def _doodle_build(d, spec):
+    spec = {**spec, "photo": str(d / "photo.png")}
+    spec.pop("found", None)
+    (d / "spec.json").write_text(json.dumps(spec))
+    out = json.loads(_run([PY, "dbe/ink.py", str(d / "spec.json"), str(d / "doodle.puppet.json")])[-1])
+    return out
+
+
+@command("doodle.snap", photo=("string", "a phone photo of a pen doodle (path from the project root or absolute; /upload puts one in out/actout/takes/)"),
+         name=("string", "the character's name", "Doodle"))
+def doodle_snap(photo, name="Doodle"):
+    """Phone-first creator flow (plan 3.6), step 1: a photo of a doodle becomes a talking doodle puppet with suggested
+    cuts and pivots. The photo is turned upright, cropped to the ink and scaled; closed loops give the head and body
+    (or one blob), marks inside the head the eyes (blinking by squash) and mouth (talking shapes drawn to match in the
+    same line), strokes leaving the body's sides the arms and a tail, marks above the body ride with the head. Returns
+    the doodle id, the ink spec (polygons and pivots to confirm or move, then doodle.cut) and what was found, with
+    reasons and notes for anything it could not find."""
+    import hashlib
+    from . import autorig as AR
+    src = Path(photo) if Path(photo).is_absolute() else ROOT / photo
+    if not src.is_file():
+        raise FileNotFoundError(f"no photo at {photo}")
+    id = hashlib.sha256(src.read_bytes()).hexdigest()[:12]
+    d = DOODLES / id; d.mkdir(parents=True, exist_ok=True)
+    info = AR.prepare(src, d / "photo.png")
+    spec = AR.suggest(str(d / "photo.png"), name=name)
+    built = _doodle_build(d, spec)
+    rel = lambda p: str(p.relative_to(ROOT))
+    return {"id": id, "photo": rel(d / "photo.png"), "size": info["size"], "puppet": rel(d / "doodle.puppet.json"),
+            "found": spec["found"], "spec": {k: v for k, v in spec.items() if k != "found"}, "built": built}
+
+
+@command("doodle.cut", id=("string", "doodle id from doodle.snap"), spec=("object", "the ink spec with confirmed or moved cuts and pivots"))
+def doodle_cut(id, spec):
+    """Step 2: rebuild a doodle puppet from confirmed cuts and pivots (parts' polygons and pivots, swaps' boxes;
+    remove a part to leave it on the body)."""
+    d = _doodle_dir(id)
+    for pid, ps in (spec.get("parts") or {}).items():
+        if pid not in ("head", "arm_L", "arm_R", "tail", "body"):
+            raise ValueError(f"doodle parts are head, arm_L, arm_R, tail (and body as the rest), not {pid}")
+        if "pivot" not in ps or ("poly" in ps and len(ps["poly"]) < 3):
+            raise ValueError(f"{pid} needs a pivot and a polygon of 3 or more points")
+    return {"id": id, "puppet": str((d / "doodle.puppet.json").relative_to(ROOT)), "built": _doodle_build(d, spec)}
+
+
+@command("doodle.say", puppet=("string", "puppet file (a doodle from doodle.snap, or any character)"), text=("string", "the line to say"),
+         voice=("string", "a clean voice (Kokoro voices are clean)", "kokoro:af_heart"))
+def doodle_say(puppet, text, voice="kokoro:af_heart"):
+    """Step 3: the character says a line. The line is voiced in a separate process (Kokoro) with lip-sync cues from
+    the model's own phoneme timings, and a short acting timeline is made for it: idle, a hop on an exclamation, a
+    wave on a greeting, head and body beats while talking, blinks. Returns the audio file and the timeline, which the
+    page plays live (Acting.evaluate with the template's clips)."""
+    import hashlib
+    reg = _voice_registry()
+    if reg.get(voice, {}).get("status") != "clean":
+        raise PermissionError(f"{voice} is not a clean voice")
+    if not text.strip() or len(text) > 300:
+        raise ValueError("say one line (up to 300 characters)")
+    pz = _json(ROOT / puppet)
+    if pz is None:
+        raise FileNotFoundError(f"no puppet at {puppet}")
+    out = DOODLES / "say"; out.mkdir(parents=True, exist_ok=True)
+    wav = out / (hashlib.sha256(f"{voice}|{text}".encode()).hexdigest()[:16] + ".wav")
+    r = json.loads(_run([PY, "engine/say_line.py", text, voice, str(wav), VOICES], timeout=300)[-1])
+    dur, lead = r["duration"], 0.35
+    tpl = pz.get("template", "humanoid"); low = text.lower().strip()
+    clips = [{"clip": "idle", "start": 0}]
+    if tpl == "doodle":
+        if re.match(r"(hi|hello|hey|hiya|good (morning|afternoon|evening))\b", low):
+            clips.append({"clip": "wave_R" if "arm_R" in pz["parts"] else "wave_L", "start": 0.0, "end": lead + 0.9, "fadeIn": 0.1, "fadeOut": 0.2})
+        if "!" in text:
+            clips.append({"clip": "hop", "start": 0.0, "additive": True, "fadeIn": 0, "fadeOut": 0})
+        clips.append({"clip": "talk", "start": lead, "end": lead + dur, "weight": 0.8, "fadeIn": 0.1, "fadeOut": 0.2})
+    else:
+        if re.match(r"(hi|hello|hey)\b", low):
+            clips.append({"clip": "wave_R", "start": 0.0, "end": lead + 1.2, "weight": 3})
+        clips.append({"clip": "talk_beat", "start": lead, "end": lead + dur, "weight": 1})
+    tl = {"clips": clips, "visemes": [[round(t + lead, 3), sh] for t, sh in r["visemes"]], "blink": True, "springs": False}
+    return {"audio": str(wav.relative_to(ROOT)), "lead": lead, "duration": round(lead + dur + 0.6, 2), "timeline": tl, "visemes": len(r["visemes"]), "voice": voice}
+
+
+@command("doodle.keep", id=("string", "doodle id"), name=("string", "the character's name"), owner=("string", "who drew it (the rights holder)"),
+         voice=("string", "the character's voice", "kokoro:af_heart"))
+def doodle_keep(id, name, owner, voice="kokoro:af_heart"):
+    """Step 4: keep the doodle as a cast member (cast/drawn/<name>.puppet.json, rights: owner), with its voice, so
+    films, the Rig Canvas and drawing requests can use it."""
+    d = _doodle_dir(id); pz = _json(d / "doodle.puppet.json")
+    slug = re.sub(r"[^a-z0-9_-]", "_", name.lower()).strip("_") or "doodle"
+    pz["name"] = name; pz.setdefault("meta", {}).update({"author": owner, "license": "LicenseRef-owner", "made": "phone photo, auto cuts (doodle.snap)"})
+    path = f"cast/drawn/{slug}.puppet.json"
+    f = ROOT / path; f.parent.mkdir(parents=True, exist_ok=True); pz["meta"]["cast_path"] = path
+    f.write_text(json.dumps(pz))
+    idx = _json(ROOT / "cast" / "index.json", {"puppets": []})
+    if not any(p.get("path") == path for p in idx["puppets"]):
+        cast_add(path, slug, owner, "LicenseRef-owner", "drawn by the owner; photo cut and rigged by doodle.snap (plan 3.6)", voice={"voice": voice}, rights="owner", owner=owner)
+    return {"path": path, "id": slug}
+
+
+# ---------------- drawing request queue with ghost guides (plan 3.6, E20) ----------------
+def _req_puppet(puppet):
+    f = (ROOT / puppet).resolve()
+    if not (str(f).startswith(str((ROOT / "cast").resolve()) + "/") or str(f).startswith(str(DOODLES.resolve()) + "/")) or not f.is_file():
+        raise ValueError("drawing requests are for characters under cast/ or doodles under out/doodle/")
+    return f
+
+
+@command("drawing.requests", puppet=("string", "character file (cast/... or a doodle under out/doodle/)"),
+         film=("string", "a film whose directions need drawings from this character (script.rigcheck); empty: every costly move", ""))
+def drawing_requests(puppet, film=""):
+    """Drawing request queue (plan 3.6, E20): each drawing this character is missing, for a film's directions or for
+    its costly moves, becomes a request with the reason and a ghost guide (out/requests/): the character faintly at
+    rest on its own artboard, the related drawing it has, and a dashed box where the new one goes. Needs that are
+    rigged rather than drawn (pupils, a turn view, chains) are listed for the Rig Canvas. Queue: <puppet>.requests.json."""
+    from . import director as DR, drawreq as RQ
+    f = _req_puppet(puppet); p = _json(f); rel = str(f.relative_to(ROOT))
+    if film:
+        ch = next((v for v in script_rigcheck(film)["characters"].values() if v["puppet"] == rel), None)
+        needs = (ch or {}).get("needs_drawings", {})
+    else:
+        needs = {}
+        for c in DR.abilities(p, _clip_lib(p.get("template", "humanoid"), p))["costly"]:
+            for lbl in c.get("draw", []):
+                needs.setdefault(lbl, []).append(c["move"])
+    qp = RQ.queue_path(rel); q = _json(qp, {"puppet": rel, "requests": []})
+    have = {(r.get("swap"), r.get("shape"), r.get("part"), r.get("what")) for r in q["requests"]}
+    for r in RQ.make_requests(p, needs):
+        k = (r.get("swap"), r.get("shape"), r.get("part"), r.get("what"))
+        if k in have:
+            continue
+        r["id"] = f"r{len(q['requests']) + 1}"
+        if film:
+            r["film"] = film
+        q["requests"].append(r); have.add(k)
+    gdir = ROOT / "out" / "requests" / (f.parent.name if f.name == "doodle.puppet.json" else f.name.split(".")[0]); gdir.mkdir(parents=True, exist_ok=True)
+    rest = None
+    for r in q["requests"]:
+        if r["status"] != "open" or (r.get("ghost") and (ROOT / r["ghost"]).exists()):
+            continue
+        if rest is None:
+            rest = gdir / "rest.png"; (gdir / "rest.json").write_text(json.dumps(RQ.ghost_spec(p, rel)))
+            _run(["node", "tools/pose_still.mjs", str(gdir / "rest.json"), str(rest)], timeout=300)
+        r["ghost"] = str(RQ.compose_ghost(rest, p, r, gdir / f"{r['id']}.png").relative_to(ROOT))
+    qp.write_text(json.dumps(q, indent=1))
+    return {**q, "open": sum(r["status"] == "open" for r in q["requests"]), "rig_canvas": sum(r["status"] == "rig_canvas" for r in q["requests"])}
+
+
+@command("drawing.fulfil", puppet=("string", "character file"), id=("string", "request id"),
+         image=("string", "the drawing: made on the ghost guide (same framing), a canvas export or a photo"),
+         render=("boolean", "re-render the request's film afterwards", False))
+def drawing_fulfil(puppet, id, image, render=False):
+    """Slot a drawing into the rig (plan 3.6, E20): ink is lifted from the drawing inside the request's box and stored
+    as that swap shape or part (a tail gets its pivot where the stroke meets the body), the character is saved, and
+    the request closes only when the rig check no longer lists the need; the moves that became free are reported.
+    With render, the film that asked for it is re-rendered."""
+    from . import director as DR, drawreq as RQ
+    f = _req_puppet(puppet); rel = str(f.relative_to(ROOT)); p = _json(f)
+    qp = RQ.queue_path(rel); q = _json(qp, {"requests": []})
+    r = next((x for x in q["requests"] if x["id"] == id), None)
+    if not r:
+        raise ValueError(f"no request {id}")
+    if r["status"] == "rig_canvas":
+        raise ValueError(f"{r['need']} is rigged in the Rig Canvas, not drawn over a guide")
+    img = Path(image) if Path(image).is_absolute() else ROOT / image
+    lib = _clip_lib(p.get("template", "humanoid"), p)
+    before = {c["move"] for c in DR.abilities(p, lib)["free"]}
+    st, A = RQ.lift(img, p, r)
+    where = RQ.slot(p, r, st, A)
+    if rel.startswith("cast/"):
+        puppet_save(rel, p)
+    else:
+        f.write_text(json.dumps(p))
+    now_free = sorted({c["move"] for c in DR.abilities(p, lib)["free"]} - before)
+    ok = not RQ.missing(p, r)
+    r.update(status="done" if ok else "open", slotted=where, freed=now_free)
+    qp.write_text(json.dumps(q, indent=1))
+    out = {"request": r, "verified": ok, "now_free": now_free}
+    if ok and render and r.get("film"):
+        out["render"] = film_render(r["film"]).get("qa")
+    return out
+
+
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------
 def _board_frames(name):
     """one representative moment per shot: a moment into its first line (the picture as it speaks), else its middle"""
@@ -1575,6 +1768,37 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "doodle":   # phone-first creator flow (plan 3.6): cuts, a talking rig, drawing requests
+        from . import autorig as AR
+        from PIL import ImageDraw
+        work = ROOT / "out" / "doodletest"; bad, meas = AR.self_test(work)
+        im, _ = AR.synthetic_doodle("cat"); im.save(work / "cat_photo.png")
+        snap = doodle_snap(str((work / "cat_photo.png").relative_to(ROOT)), "Miso")
+        __import__("shutil").rmtree(DOODLES / snap["id"]); snap = doodle_snap(str((work / "cat_photo.png").relative_to(ROOT)), "Miso")   # a clean queue
+        pz = _json(ROOT / snap["puppet"]); sw = pz.get("swaps", {})
+        if set(pz["parts"]) < {"head", "arm_L", "arm_R", "tail", "body"} or set(sw.get("eyes", {}).get("shapes", {})) != {"open", "half", "closed"} \
+                or not {"closed", "small", "mid", "wide", "O", "FV", "smile"} <= set(sw.get("mouth", {}).get("shapes", {})):
+            bad.append(f"snap: parts {sorted(pz['parts'])}, swaps {({k: sorted(v.get('shapes', {})) for k, v in sw.items()})}")
+        q = drawing_requests(snap["puppet"]); rq = next((r for r in q["requests"] if r.get("swap") == "brows" and r.get("shape") == "raised"), None)
+        meas["requests"] = {"open": q["open"], "rig_canvas": q["rig_canvas"]}
+        if not rq or not (ROOT / rq.get("ghost", "")).is_file():
+            bad.append("requests: no raised-brows request with a ghost guide")
+        else:
+            W, H = pz["artboard"]; dr = Image.new("RGBA", (int(W), int(H)), (0, 0, 0, 0)); g = ImageDraw.Draw(dr); x0, y0, x1, y1 = rq["box"]
+            for a0 in (x0 + 0.1 * (x1 - x0), x0 + 0.6 * (x1 - x0)):
+                g.arc([a0, y0 + 0.3 * (y1 - y0), a0 + 0.3 * (x1 - x0), y0 + 0.9 * (y1 - y0)], 200, 340, fill=(20, 20, 20, 255), width=6)
+            dr.save(work / "brows.png")
+            r = drawing_fulfil(snap["puppet"], rq["id"], str((work / "brows.png").relative_to(ROOT)))
+            meas["fulfil"] = {"verified": r["verified"], "now_free": r["now_free"]}
+            if not r["verified"] or "emotion happy" not in r["now_free"]:
+                bad.append(f"fulfil: {r['verified']}, now free {r['now_free']}")
+        if (Path(VOICES) / "kokoro" / "voices-v1.0.bin").exists():
+            sy = doodle_say(snap["puppet"], "Hi! I'm Miso.")
+            meas["say"] = {"visemes": sy["visemes"], "seconds": sy["duration"], "clips": [c["clip"] for c in sy["timeline"]["clips"]]}
+            if sy["visemes"] < 5 or "wave_R" not in meas["say"]["clips"] or "hop" not in meas["say"]["clips"]:
+                bad.append(f"say: {meas['say']}")
+        failed += 1 if bad else 0
+        results.append({"doodle": "auto cuts, talking rig, drawing requests", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "timeline":   # Studio timeline re-timing (plan 3.1): anchored edits stay anchored
         tmx = {"lines": [{"id": "a", "start": 1.0, "end": 2.0}, {"id": "b", "start": 4.0, "end": 5.5}]}
         cases = [(("a.start+0.2", 1.5), "a.start+0.5"), (("a.end", 2.4), "a.end+0.4"), (("a.start", 4.3), "b.start+0.3"), ((0.7, 3.0), 3.0)]

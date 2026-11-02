@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doodle To Life</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --ok: #3f9a5a; --warn: #c9821c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 16px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  h1 { font-size: 18px; margin: 0; } h2 { font-size: 16px; margin: 0 0 8px; } a { color: var(--accent); }
+  main { max-width: 560px; margin: 0 auto; padding: 12px 16px 40px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+  section[hidden] { display: none; }
+  button, select, input { font: inherit; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); } button:disabled { opacity: .5; }
+  .big { display: block; width: 100%; text-align: center; padding: 16px; font-size: 18px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  .stage { position: relative; width: 100%; background: #fff; border-radius: 10px; overflow: hidden; touch-action: none; }
+  .stage img, .stage canvas { width: 100%; display: block; } .stage svg.over { position: absolute; inset: 0; width: 100%; height: 100%; }
+  svg.char { width: 100%; aspect-ratio: 3 / 4; background: var(--bg); border-radius: 10px; display: block; }
+  .chip { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; }
+  .chip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .note { color: var(--warn); font-size: 14px; } .muted { color: var(--muted); font-size: 14px; }
+  .req { border-top: 1px solid var(--line); padding: 10px 0; display: flow-root; } .req img { width: 96px; float: right; border: 1px solid var(--line); border-radius: 6px; margin-left: 8px; }
+  #msg { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header><h1>🫐 Doodle to life</h1><span style="flex:1"></span><a href="/">Studio</a></header>
+<main>
+  <div id="msg">Draw a character with a dark pen on paper: a closed loop for the head, one for the body, eyes and a mouth inside the head, stick arms. Then take a photo.</div>
+  <section id="s1"><h2>1 · Snap your doodle</h2>
+    <label class="big primary" style="border-radius:10px;background:var(--accent);color:#fff;cursor:pointer">Take a photo<input id="photo" type="file" accept="image/*" capture="environment" hidden></label>
+    <div class="row"><label for="cname" class="muted">Name</label><input id="cname" value="Nib" size="10"></div></section>
+  <section id="s2" hidden><h2>2 · Check the cuts</h2>
+    <div class="muted">Each coloured shape moves on its own. Drag a dot to move where it bends. Tap a name to leave that piece on the body.</div>
+    <div class="stage" id="cutstage"><img id="pimg" alt="your doodle"><svg class="over" id="over"></svg></div>
+    <div class="row" id="chips"></div><div id="notes"></div>
+    <button class="big primary" id="ok">Looks right</button></section>
+  <section id="s3" hidden><h2>3 · See it move and talk</h2>
+    <svg class="char" id="char" role="img" aria-label="your doodle, moving"></svg>
+    <div class="row"><input id="line" style="flex:1;min-width:0" value="Hi! I'm Nib, and I just got drawn!"></div>
+    <div class="row"><select id="voice" aria-label="voice"></select><button class="primary" id="say">Say it</button></div>
+    <div class="row"><button data-move="hop">Hop</button><button data-move="wave_R">Wave</button><button data-move="tilt">Tilt</button><button data-move="shake">Shake</button><button data-move="wag" id="wagbtn" hidden>Wag</button></div>
+    <audio id="audio"></audio></section>
+  <section id="s4" hidden><h2>4 · Keep it</h2>
+    <div class="row"><label for="owner" class="muted">Drawn by</label><input id="owner" placeholder="your name" size="14"><button id="keep">Add to the cast</button></div><div id="kept" class="muted"></div></section>
+  <section id="s5" hidden><h2>Drawings it could use</h2>
+    <div class="muted">Each one unlocks moves. Draw on the faint guide, inside the dashed box.</div><div id="reqs"></div>
+    <div id="drawbox" hidden><div class="stage"><canvas id="pad"></canvas></div>
+      <div class="row"><button id="undo">Undo</button><button id="clear">Clear</button><span style="flex:1"></span><button class="primary" id="done">Done</button></div></div></section>
+</main>
+<script src="/puppet/loader/puppet.js"></script><script src="/puppet/loader/acting.js"></script><script src="/puppet/clips/doodle.js"></script><script src="/puppet/clips/humanoid.js"></script>
+<script>
+const $ = id => document.getElementById(id); const msg = m => { $('msg').textContent = m; };
+let D = null, spec = null, puppet = null, tl = { clips: [{ clip: 'idle', start: 0 }], blink: true }, t0 = performance.now(), voiceT = null, req = null, strokes = [];
+const COL = { head: '#e8743a', arm_L: '#3f7fd0', arm_R: '#3f9a5a', tail: '#a24fc9', eyes: '#c9821c', mouth: '#d0405a' };
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
+const shown = id => { $(id).hidden = false; $(id).scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
+$('photo').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; const t = performance.now(); msg('reading your drawing…');
+  const ext = (f.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+  const up = await (await fetch('/upload?ext=' + ext, { method: 'POST', body: f })).json(); if (up.error) return msg(up.error);
+  D = await api('doodle.snap', { photo: up.path, name: $('cname').value || 'Doodle' }); spec = D.spec;
+  window.SNAP_SECONDS = (performance.now() - t) / 1000; msg(`found: ${D.found.shape}, ${D.found.eyes || 0} eyes, mouth ${D.found.mouth || 'none'}`);
+  $('line').value = `Hi! I'm ${$('cname').value || 'Doodle'}, and I just got drawn!`; drawCuts(); shown('s2');
+};
+function drawCuts() {
+  const [W, H] = D.size; $('pimg').src = '/' + D.photo + '?t=' + Date.now(); const o = $('over'); o.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const polys = Object.entries(spec.parts).filter(([, p]) => p.poly).map(([k, p]) => `<polygon points="${p.poly.map(q => q.join(',')).join(' ')}" fill="${COL[k] || '#888'}" fill-opacity=".18" stroke="${COL[k] || '#888'}" stroke-width="3"/>`)
+    .concat(Object.entries(spec.swaps).filter(([, s]) => s.open).map(([k, s]) => `<polygon points="${s.open.poly.map(q => q.join(',')).join(' ')}" fill="none" stroke="${COL[k]}" stroke-width="3" stroke-dasharray="8 6"/>`));
+  const r = Math.max(W, H) / 40;
+  const dots = Object.entries(spec.parts).map(([k, p]) => `<circle data-part="${k}" cx="${p.pivot[0]}" cy="${p.pivot[1]}" r="${r}" fill="${COL[k] || '#888'}" stroke="#fff" stroke-width="4" style="cursor:grab"/>`);
+  const m = spec.swaps.mouth && spec.swaps.mouth.talk ? [`<circle data-mouth="1" cx="${spec.swaps.mouth.talk.center[0]}" cy="${spec.swaps.mouth.talk.center[1]}" r="${r * 0.8}" fill="none" stroke="${COL.mouth}" stroke-width="5"/>`] : [];
+  o.innerHTML = polys.join('') + dots.join('') + m.join('');
+  $('chips').innerHTML = Object.keys(spec.parts).map(k => `<button class="chip" data-chip="${k}"><i style="background:${COL[k]}"></i>${k.replace('_L', ' (left)').replace('_R', ' (right)')}</button>`).join('')
+    + Object.keys(spec.swaps).map(k => `<span class="chip"><i style="background:${COL[k]}"></i>${k}</span>`).join('');
+  $('notes').innerHTML = (D.found.notes || []).map(n => `<div class="note">${n}</div>`).join('');
+  document.querySelectorAll('[data-chip]').forEach(b => b.onclick = () => { delete spec.parts[b.dataset.chip]; spec._edited = true; drawCuts(); });
+}
+// drag pivots (and the mouth centre) in photo pixels
+(() => { let drag = null; const o = $('over');
+  const at = e => { const pt = o.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(o.getScreenCTM().inverse()); };
+  o.addEventListener('pointerdown', e => { const c = e.target.closest('circle'); if (!c) return; drag = c; o.setPointerCapture(e.pointerId); });
+  o.addEventListener('pointermove', e => { if (!drag) return; const p = at(e); drag.setAttribute('cx', p.x); drag.setAttribute('cy', p.y); });
+  o.addEventListener('pointerup', e => { if (!drag) return; const p = at(e), q = [Math.round(p.x), Math.round(p.y)];
+    if (drag.dataset.part) spec.parts[drag.dataset.part].pivot = q; else spec.swaps.mouth.talk.center = q; spec._edited = true; drag = null; drawCuts(); });
+})();
+$('ok').onclick = async () => {
+  if (spec._edited) { msg('cutting again…'); const s = { ...spec }; delete s._edited; await api('doodle.cut', { id: D.id, spec: s }); }
+  puppet = await (await fetch('/' + D.puppet + '?t=' + Date.now())).json(); tl = { clips: [{ clip: 'idle', start: 0 }], blink: true }; t0 = performance.now();
+  $('wagbtn').hidden = !puppet.parts.tail; shown('s3'); $('s4').hidden = false; loadReqs(); msg('type a line and press Say it');
+};
+async function play(res) {
+  tl = res.timeline; voiceT = null; const a = $('audio'); a.src = '/' + res.audio + '?t=' + Date.now(); t0 = performance.now();
+  // the voice starts after the timeline's lead-in, so the hop and wave come first
+  setTimeout(() => { a.currentTime = 0; a.play().catch(() => {}); voiceT = performance.now(); }, res.lead * 1000); window.TALKING = true;
+}
+$('say').onclick = async () => { $('say').disabled = true; msg('finding its voice…');
+  try { const r = await api('doodle.say', { puppet: D.puppet, text: $('line').value, voice: $('voice').value }); await play(r); msg('');
+    window.TALK_SECONDS = (performance.now() - window.T_START) / 1000; } finally { $('say').disabled = false; } };
+document.querySelectorAll('[data-move]').forEach(b => b.onclick = () => { const L = puppet.template === 'doodle' ? window.CLIPLIB.doodle : window.CLIPLIB.humanoid, c = L.clips[b.dataset.move];
+  const now = (performance.now() - t0) / 1000; tl = { ...tl, clips: [...tl.clips.filter(k => k.clip === 'idle'), { clip: b.dataset.move, start: now, end: c && c.loop ? now + 1.2 : undefined, additive: b.dataset.move === 'hop', fadeIn: 0.05 }] }; });
+function frame() {
+  if (puppet) { const L = puppet.template === 'doodle' ? window.CLIPLIB.doodle : window.CLIPLIB.humanoid, t = (performance.now() - t0) / 1000;
+    const pose = Acting.evaluate(puppet, tl, t, L.clips, L.presets), [W, H] = puppet.artboard, s = Math.min(560 / H, 420 / W) * 0.95;
+    $('char').setAttribute('viewBox', '0 0 450 600'); $('char').innerHTML = Puppet.render(puppet, 225, 585, { s, ...pose }); }
+  requestAnimationFrame(frame);
+}
+$('keep').onclick = async () => { const owner = $('owner').value.trim(); if (!owner) return msg('who drew it?');
+  const r = await api('doodle.keep', { id: D.id, name: $('cname').value || 'Doodle', owner, voice: $('voice').value }); $('kept').textContent = `kept as ${r.path}`;
+  D.puppet = r.path; loadReqs(); };
+// drawing requests: draw on the ghost guide inside the dashed box
+async function loadReqs() { const q = await api('drawing.requests', { puppet: D.puppet }); $('s5').hidden = false;
+  $('reqs').innerHTML = q.requests.map(r => `<div class="req">${r.ghost && r.status === 'open' ? `<img src="/${r.ghost}?t=${Date.now()}" alt="guide">` : ''}<b>${r.kind === 'swap' ? r.swap + ': ' + r.shape : r.kind === 'part' ? r.part : r.what}</b>
+    <div class="muted">for ${[...new Set(r.why)].join(', ')}</div>${r.status === 'open' ? `<button data-req="${r.id}">Draw it</button>` : r.status === 'done' ? `<div style="color:var(--ok)">✓ in the rig · now free: ${(r.freed || []).join(', ') || '—'}</div>` : '<div class="muted">rigged in the Rig Canvas</div>'}</div>`).join('');
+  document.querySelectorAll('[data-req]').forEach(b => b.onclick = () => startDraw(q.requests.find(r => r.id === b.dataset.req))); }
+function startDraw(r) { req = r; strokes = []; const img = new Image(); img.onload = () => { const c = $('pad'); c.width = img.width; c.height = img.height; c.ghost = img; redraw(); $('drawbox').hidden = false; $('drawbox').scrollIntoView({ behavior: 'smooth' }); }; img.src = '/' + r.ghost + '?t=' + Date.now(); }
+function redraw(ghost = true) { const c = $('pad'), g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); if (ghost) g.drawImage(c.ghost, 0, 0);
+  g.strokeStyle = '#1c1e24'; g.lineCap = g.lineJoin = 'round'; g.lineWidth = Math.max(4, c.width / 90);
+  for (const s of strokes) { g.beginPath(); s.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); } }
+(() => { const c = $('pad'); let cur = null; const at = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) * c.width / r.width, (e.clientY - r.top) * c.height / r.height]; };
+  c.addEventListener('pointerdown', e => { cur = [at(e)]; strokes.push(cur); c.setPointerCapture(e.pointerId); });
+  c.addEventListener('pointermove', e => { if (cur) { cur.push(at(e)); redraw(); } }); c.addEventListener('pointerup', () => { cur = null; }); })();
+$('undo').onclick = () => { strokes.pop(); redraw(); }; $('clear').onclick = () => { strokes = []; redraw(); };
+$('done').onclick = async () => { if (!strokes.length) return; redraw(false);   // export the strokes alone, transparent, at the guide's framing
+  const blob = await new Promise(s => $('pad').toBlob(s, 'image/png')); redraw();
+  const up = await (await fetch('/upload?ext=png', { method: 'POST', body: blob })).json();
+  const r = await api('drawing.fulfil', { puppet: D.puppet, id: req.id, image: up.path });
+  msg(r.verified ? `in the rig: now free ${r.now_free.join(', ') || '(nothing new)'}` : 'not found in the box: try again inside the dashed box');
+  if (r.verified) { $('drawbox').hidden = true; puppet = await (await fetch('/' + D.puppet + '?t=' + Date.now())).json(); $('wagbtn').hidden = !puppet.parts.tail; loadReqs(); } };
+(async () => { window.T_START = performance.now(); const v = await api('voices.list', { language: '' });
+  const ks = Object.keys(v).filter(k => /^kokoro:[ab][fm]_/.test(k)); const nice = ['kokoro:af_heart', 'kokoro:am_michael', 'kokoro:bf_emma', 'kokoro:bm_george'];
+  $('voice').innerHTML = [...nice.filter(k => ks.includes(k)), ...ks.filter(k => !nice.includes(k))].map(k => `<option>${k}</option>`).join('') || '<option>kokoro:af_heart</option>';
+  frame(); })();
+</script>
+</body>
+</html>
