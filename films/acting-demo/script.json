@@ -1,7 +1,7 @@
 {
  "speakers": {
   "pip": {
-   "voice": "en_US-amy-medium",
+   "voice": "kokoro:af_bella",
    "fx": {
     "pitch": 1.25,
     "formant": 1.08,

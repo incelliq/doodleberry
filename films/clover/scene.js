@@ -5,7 +5,7 @@
   const { clamp, lerp, inv, ease, spring, keys, noise, rand, blink, pop, tf } = M;
   const T = M.bindTiming(window.TIMING);
   const FPS = 30, W = 1080, H = 1920;
-  const END = 31.7;
+  const END = 37.444;
   const at = (line, word, nth = 0) => T.word(line, word, nth).start;
   const L = T.lines;
 

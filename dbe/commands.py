@@ -906,6 +906,69 @@ def puppet_from_ink(spec, out):
     return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]) if r else None, "lint": lint.get("issues")}
 
 
+# ---------------- re-voicing (plan 0.6) ----------------
+CLEAN_EQUIVALENTS = {  # restricted Piper voices -> clean Kokoro voices of similar age, sex and accent
+    "en_US-amy-medium": "kokoro:af_bella", "en_US-ryan-high": "kokoro:am_michael", "en_GB-alan-medium": "kokoro:bm_george",
+    "en_US-lessac-high": "kokoro:af_sarah", "en_US-lessac-medium": "kokoro:af_sarah", "en_US-ryan-medium": "kokoro:am_michael"}
+
+
+@command("film.revoice", name=("string", "film"), map=("object", "voice -> voice overrides (else the clean equivalents table)", None),
+         build=("boolean", "rebuild audio and picture and run QA", True),
+         rebuild=("boolean", "rebuild even when no voice needed changing (e.g. after a failed build)", False))
+def film_revoice(name, map=None, build=True, rebuild=False):
+    """Swap restricted voices for clean ones (voices/registry.json status "clean"), keeping each speaker's effects, then
+    rebuild: shot films with voice.build, retime and film.render; scene.js films through the engine pipeline (voice,
+    voice fx, cues, audio, picture, mux, QA). Scenes and shots are timed off words, so sync survives the new voices."""
+    d = _film(name); sp = d / "script.json"; s = _json(sp)
+    reg = _voice_registry(); mapping = {**CLEAN_EQUIVALENTS, **(map or {})}
+    changed = {}
+
+    def swap(v):
+        if not v or reg.get(v, {}).get("status") == "clean":
+            return v
+        new = mapping.get(v)
+        if not new or reg.get(new, {}).get("status") != "clean":
+            raise PermissionError(f"no clean replacement for {v}; pass map={{'{v}': '<clean voice>'}}")
+        changed[v] = new
+        return new
+    if s.get("speakers"):
+        for k, v in s["speakers"].items():
+            v["voice"] = swap(v.get("voice"))
+    if s.get("voice"):
+        s["voice"] = swap(s["voice"])
+    sp.write_text(json.dumps(s, indent=1, ensure_ascii=False))
+    out = {"film": name, "changed": changed}
+    if not build or (not changed and not rebuild):
+        return out
+    if (d / "shots.json").exists():
+        voice_build(name); film_retime(name)
+        r = film_render(name)
+        return {**out, "final": r.get("final"), "qa": r.get("qa")}
+    # scene.js film: the engine pipeline
+    F = f"films/{name}"
+    old_end = (_json(d / "timing.json", {}).get("lines") or [{}])[-1].get("end")
+    _run([PY, "engine/voice.py", F, "--voices-dir", os.environ.get("DBE_VOICES", str(ROOT / "voices"))], timeout=3600)
+    new_end = (_json(d / "timing.json", {}).get("lines") or [{}])[-1].get("end")
+    sc = _json(d / "score.json", {})
+    if old_end and new_end and sc.get("length_s"):  # the new voice may run longer or shorter: keep the original tail after the last line
+        tail = max(1.0, sc["length_s"] - old_end)
+        sc["length_s"] = round(new_end + tail, 3); (d / "score.json").write_text(json.dumps(sc, indent=1))
+        scene = d / "scene.js"
+        if scene.exists():  # legacy scenes hard-code their end
+            scene.write_text(re.sub(r"const END = [\d.]+;", f"const END = {sc['length_s']};", scene.read_text(), count=1))
+    if s.get("voice_fx"):
+        _run([PY, "engine/voicefx.py", F])
+    _run(["node", "engine/render.mjs", F, "--dump-cues"], timeout=1800)
+    _run([PY, "engine/audio.py", F], timeout=1800)
+    _run(["node", "engine/render.mjs", F, "--workers", str(max(1, (os.cpu_count() or 2) - 1))], timeout=7200)
+    mix = d / "build" / "mix.wav"
+    length = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(mix)], capture_output=True, text=True).stdout or 0)
+    _run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(d / "build" / "picture.mp4"), "-i", str(mix), "-map", "0:v", "-map", "1:a",
+          "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-af", "apad", "-t", f"{length:.3f}", str(d / "build" / "final.mp4")])
+    qa = subprocess.run([PY, "engine/qa.py", F], cwd=ROOT, capture_output=True, text=True)
+    return {**out, "final": f"{F}/build/final.mp4", "qa": (qa.stdout or qa.stderr).strip().splitlines()[-12:]}
+
+
 # ---------------- drawing import (plan 1.3) ----------------
 def _inside(p, must_exist=False):
     q = (ROOT / p).resolve()
@@ -927,7 +990,23 @@ def puppet_import(source, out, template="", name="", z="document", author="", li
     sp, op = _inside(source, True), _inside(out)
     opts = {k: v for k, v in {"template": template, "name": name, "z": z, "author": author, "license": license}.items() if v}
     r = _run([PY, "dbe/drawing_import.py", str(sp), str(op), json.dumps(opts)])
-    return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]), "lint": puppet_lint(str(op.relative_to(ROOT))).get("issues")}
+    coach = puppet_coach(str(op.relative_to(ROOT)))
+    return {"puppet": str(op.relative_to(ROOT)), "report": json.loads(r[-1]), "lint": puppet_lint(str(op.relative_to(ROOT))).get("issues"),
+            "coach": {"errors": coach["errors"], "warnings": coach["warnings"], "advice": [i["msg"] for i in coach["issues"]], "image": coach["image"]}}
+
+
+@command("puppet.coach", source=("string", "a .puppet.json, or a layered .svg/.psd/.ora before import"),
+         out=("string", "annotated PNG to write (inside the repo)", ""))
+def puppet_coach(source, out=""):
+    """Drawing coach: checks a character before it is rigged and says exactly what to fix, with an annotated image:
+    missing parts, joints that open a gap when bent (each joint is bent +-50 degrees and the hole measured), pivots
+    outside their drawing, limb proportions and left/right mismatch, eyes/pupils/mouths needed to blink, look and
+    lip-sync, scale and ground contact, and layers the importer could not place."""
+    sp = _inside(source, True)
+    op = _inside(out) if out else sp.with_name(sp.name.split(".")[0] + ".coach.png")
+    r = _run([PY, "dbe/coach.py", str(sp), str(op)], timeout=900)
+    res = json.loads(r[-1]); res["image"] = str(op.relative_to(ROOT))
+    return res
 
 
 @command("puppet.export_layers", path=("string", "a .puppet.json"), out=("string", "output .svg, .ora or .psd inside the repo"),

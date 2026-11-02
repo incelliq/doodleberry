@@ -1,1 +1,19 @@
-{"length_s": 16, "bpm": 104, "offset_s": 0, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 28, "chords": ["F", "C", "Dm", "Bb"], "end_chord": "F"}]}
+{
+ "length_s": 14.283,
+ "bpm": 104,
+ "offset_s": 0,
+ "sections": [
+  {
+   "kind": "main",
+   "from_beat": 0,
+   "to_beat": 28,
+   "chords": [
+    "F",
+    "C",
+    "Dm",
+    "Bb"
+   ],
+   "end_chord": "F"
+  }
+ ]
+}

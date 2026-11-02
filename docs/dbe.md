@@ -250,3 +250,11 @@ A prop's attach key can ask for physics (SVG player; deterministic, so frames st
   restitution `e`, rolls towards `x` and spins as it rolls. With `fx.impacts` on, each bounce draws a ring.
 `gravity` (px/s², default 2600) is set per prop. Multi-body scenes (stacks, tumbling objects) are the next step, with the
 deterministic Rapier 2D build measured in the brainstorm.
+
+## Drawing coach (plan 1.10)
+`puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
+and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their
+parent, or open a gap when bent (each joint is bent +-50 degrees and the hole beside it measured); pivots outside their
+drawing; upper-to-lower limb proportions and left/right mismatch; eyes, pupils and mouths needed to blink, look and
+lip-sync; scale on the artboard and feet on the ground line; layers the importer could not place. `puppet.import` runs
+it automatically and returns the advice with the puppet.

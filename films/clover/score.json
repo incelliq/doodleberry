@@ -1,12 +1,49 @@
 {
-  "length_s": 31.7,
-  "bpm": 100,
-  "offset_s": 0.35,
-  "note": "offset puts beat 14 on 'Clover has help' (8.75 s); sections change on beats",
-  "sections": [
-    {"kind": "intro",   "from_beat": 0,  "to_beat": 14, "chords": ["F", "Dm"]},
-    {"kind": "main",    "from_beat": 14, "to_beat": 35, "chords": ["F", "Dm", "Bb", "C"]},
-    {"kind": "reflect", "from_beat": 35, "to_beat": 43, "chords": ["Dm", "Bb"]},
-    {"kind": "finale",  "from_beat": 43, "to_beat": 51, "chords": ["F", "C", "Bb", "C"], "end_chord": "F"}
-  ]
+ "length_s": 37.444,
+ "bpm": 100,
+ "offset_s": 0.35,
+ "note": "offset puts beat 14 on 'Clover has help' (8.75 s); sections change on beats",
+ "sections": [
+  {
+   "kind": "intro",
+   "from_beat": 0,
+   "to_beat": 14,
+   "chords": [
+    "F",
+    "Dm"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 14,
+   "to_beat": 35,
+   "chords": [
+    "F",
+    "Dm",
+    "Bb",
+    "C"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 35,
+   "to_beat": 43,
+   "chords": [
+    "Dm",
+    "Bb"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 43,
+   "to_beat": 51,
+   "chords": [
+    "F",
+    "C",
+    "Bb",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
 }
