@@ -137,7 +137,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 0.3 Schemas and golden tests | done | c06754f |
 | 0.4 Incremental re-render | done (6m11s → 32s unchanged) | 0315203 |
 | 0.5 Kokoro backend | done: 54 voices, Spanish film re-voiced | 16cf74b |
-| 0.6 Re-voice legacy films | open: the seven older films still use restricted voices (flagged internal-only) | – |
+| 0.6 Re-voice legacy films | done: all eight films now use clean Kokoro voices (`film.revoice`); seven rebuilt and passing QA. screwworm-3d's sources are re-voiced, but its render needs the local CC0 asset packs (Quaternius characters, UAL clips, CMU mocap via tools/blender/cmu_retarget.py), which stay out of git | this commit |
 | 0.7 / 0.9 Asset manifest and rights | done | f6a03f4 |
 | 0.8 / 0.13 Subtitles, encode profiles, posting package | done | f6a03f4 |
 | 0.10 / 0.12 Research gates and critic loop | done | f77ba03 |
