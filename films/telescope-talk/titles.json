@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "Why does a telescope show things we cannot see?",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Telescopes are about light, not zoom",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "MORE LIGHT",
+   "bottom": "NOT ZOOM",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "WHY SO",
+   "bottom": "HUGE?",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

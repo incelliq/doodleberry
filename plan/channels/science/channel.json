@@ -13,6 +13,17 @@
  "languages": [
   "en"
  ],
+ "brand": "brand",
+ "cast": {
+  "expert": "ravi",
+  "learner": "momo",
+  "narrator": "priya"
+ },
+ "voices": {
+  "ravi": "kokoro:am_michael",
+  "momo": "kokoro:af_heart",
+  "priya": "kokoro:af_bella"
+ },
  "rules": {
   "post_days": [
    "mon",

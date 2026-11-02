@@ -24,7 +24,7 @@
 </style>
 </head>
 <body>
-<header><h1>🫐 Content plan</h1><select id="q" aria-label="quarter"></select><span id="sum" class="muted"></span><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/board">Board ↗</a><a href="/">Studio ↗</a></header>
+<header><h1>🫐 Content plan</h1><select id="ch" aria-label="channel"></select><select id="q" aria-label="quarter"></select><span id="sum" class="muted"></span><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/board">Board ↗</a><a href="/">Studio ↗</a></header>
 <main>
   <div class="box"><h2>Spread rules</h2><div class="rules" id="rules"></div><div id="fails" class="over"></div></div>
   <div class="box stats" id="stats"></div>
@@ -36,8 +36,9 @@ async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { meth
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const weekOf = s => { const d = new Date(s + 'T00:00:00Z'); const k = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - k); return d.toISOString().slice(0, 10); };
 async function load() {
-  const q = $('q').value; if (!q) return;
-  const [chk, tr, bank] = await Promise.all([api('plan.check', { quarter: q }), api('plan.track', { quarter: q }), api('plan.ideas')]);
+  const q = $('q').value, channel = $('ch').value; if (!q) return;
+  const c = (window.CHANNELS || []).find(x => x.id === channel); if (c) document.documentElement.style.setProperty('--accent', c.colour);
+  const [chk, tr, bank] = await Promise.all([api('plan.check', { quarter: q, channel }), api('plan.track', { quarter: q, channel }), api('plan.ideas', { channel })]);
   $('rules').innerHTML = Object.entries(chk.rules).map(([k, v]) => `<span class="rule ${v.ok ? '' : 'bad'}" title="${(v.detail || []).join('; ')}">${v.ok ? '✓' : '✗'} ${k.replace(/_/g, ' ')}</span>`).join('');
   $('fails').innerHTML = Object.entries(chk.rules).filter(([, v]) => !v.ok).map(([k, v]) => `${k}: ${(v.detail || []).join('; ')}`).join('<br>');
   $('sum').textContent = `${chk.summary.posts} posts in ${chk.summary.slots} slots · ${chk.ok ? 'every rule satisfied' : 'rules failing'} · today ${tr.today}`;
@@ -51,11 +52,15 @@ async function load() {
       ${r.overdue.length ? `<div class="over">${r.overdue.join('; ')}</div>` : ''}
       ${r.film ? `<span class="muted">films/${r.film}</span>` : `<button data-brief="${r.date}">Brief</button> <button data-launch="${r.date}">Brief + board</button>`}</div>` : `<div class="row over">${r.date}: empty slot</div>`).join('')}</div>`).join('');
   document.querySelectorAll('[data-brief],[data-launch]').forEach(b => b.onclick = async () => {
-    const r = await api('plan.brief', { quarter: q, date: b.dataset.brief || b.dataset.launch, launch: !!b.dataset.launch, runner: 'manual' }); msg(`wrote ${r.brief}`); load(); });
+    const r = await api('plan.brief', { quarter: q, channel, date: b.dataset.brief || b.dataset.launch, launch: !!b.dataset.launch, runner: 'manual' }); msg(`wrote ${r.brief}`); load(); });
 }
-(async () => { const ls = await (await fetch('/api/plan.quarters', { method: 'POST', body: '{}' })).json();
-  const qs = (ls.result || []); $('q').innerHTML = qs.map(q => `<option>${q}</option>`).join('') || '<option value="">no calendar yet: plan.schedule</option>';
-  $('q').onchange = load; load(); setInterval(load, 15000); })();
+async function quarters() {   // a channel's quarters (WP-32: several series, each with its own plan)
+  const qs = await api('plan.quarters', { channel: $('ch').value });
+  $('q').innerHTML = qs.map(q => `<option>${q}</option>`).join('') || '<option value="">no calendar yet: plan.schedule</option>'; load();
+}
+(async () => { window.CHANNELS = await api('plan.channels');
+  $('ch').innerHTML = CHANNELS.map(c => `<option value="${c.id}" title="${c.audience}">${c.name}</option>`).join('');
+  $('ch').onchange = quarters; $('q').onchange = load; quarters(); setInterval(load, 15000); })();
 </script>
 </body>
 </html>

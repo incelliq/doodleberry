@@ -121,6 +121,9 @@ Report at each checkpoint, then do what the answer says:
     python -m dbe prod.checkpoint '{{"film": "{f}", "stage": "first_render", "report": {{"shot": "<first shot id>"}}}}'
     python -m dbe prod.checkpoint '{{"film": "{f}", "stage": "final", "report": {{}}}}'
 
+- A new film from the calendar starts as a draft storyboard (script.json "draft"): its lines are the planner's words
+  and its facts have no sources. Research first, then rewrite every line and fact, and delete "draft" (voice.build
+  refuses a draft).
 - research: after the research gate (python -m dbe research.check). List anything in the sources that contradicts
   the brief under "contradictions"; the owner decides before you go on.
 - first_render: after the first shot renders (python -m dbe shot.render).
@@ -151,6 +154,31 @@ def start(e, reg):
         p = subprocess.Popen(cmd, cwd=ws, env=env, stdout=lf, stderr=subprocess.STDOUT, start_new_session=True)
     e.update(state="running", session={"runner": e["runner"], "started": now(), "pid": p.pid, "log": str(log)})
     event(e, "launched", runner=e["runner"], pid=p.pid)
+
+
+def prepare(e):
+    """put a new film into its workspace and commit it on the film branch: a draft left in the main checkout by
+    plan.brief moves over (so the merge later does not meet untracked copies), the brief is written, and the draft
+    storyboard is built with film.from_template. -> the storyboard check, or None"""
+    film = e["film"]; ws = workspace(film); bd = ws / "films" / film
+    main = ROOT / "films" / film
+    if main.is_dir() and not _git("ls-files", "--", f"films/{film}") and not (bd / "script.json").exists():
+        shutil.rmtree(bd, ignore_errors=True); bd.parent.mkdir(parents=True, exist_ok=True); shutil.move(str(main), str(bd))
+    bd.mkdir(parents=True, exist_ok=True)
+    if e.get("brief") and not (bd / "brief.md").exists():
+        (bd / "brief.md").write_text(e["brief"] + "\n")
+    sb = None
+    if e.get("storyboard") and not (bd / "script.json").exists():
+        r = _dbe(ws, "film.from_template", {"name": film, "format": e["storyboard"]["format"], "brief": e["storyboard"]["brief"]})
+        if "error" in r or "storyboard" not in r:
+            raise RuntimeError(f"{film}: the draft storyboard failed: {r.get('error', r)}")
+        sb = r["storyboard"]
+    elif e.get("storyboard"):
+        sb = _dbe(ws, "storyboard.check", {"name": film})
+    if _git("status", "--porcelain", "--", f"films/{film}", cwd=ws):
+        _git("add", "--", f"films/{film}", cwd=ws)
+        _git("commit", "-q", "-m", f"Brief and draft storyboard for {film} (posts {e['post_on']})", cwd=ws)
+    return sb
 
 
 def alive(pid):
@@ -425,6 +453,25 @@ def self_test(scratch):
             if sch[days] != want:
                 fails.append(f"schedule {days} days out: {sch[days]}, want {want}")
         got["schedule"] = sch
+        # WP-06: a calendar row to a draft storyboard to a running session, in one command
+        cal = json.loads((repo / "plan" / "channels" / "science" / "2027-Q1.json").read_text()); row = next(r for r in cal["rows"] if r.get("idea"))
+        pb = run("plan.brief", {"quarter": "2027-Q1", "date": row["date"], "launch": True, "runner": "manual"})
+        nf = pb.get("film", "?"); nws = base / "repo-films" / nf
+        got["calendar_to_production"] = {"film": nf, "format": pb.get("format"), "storyboard_ok": (pb.get("storyboard") or {}).get("ok"),
+                                         "running": nf in ((pb.get("launch") or {}).get("running") or [])}
+        if "error" in pb or not (pb.get("storyboard") or {}).get("ok") or not got["calendar_to_production"]["running"]:
+            fails.append(f"plan.brief launch: {pb}")
+        elif (repo / "films" / nf).exists() or "draft storyboard" not in git("log", "-1", "--format=%s", cwd=nws).stdout:
+            fails.append("plan.brief launch: the draft is not committed in the workspace only")
+        else:
+            tr = run("plan.track", {"quarter": "2027-Q1", "today": cal["planned_on"]})
+            st = run("prod.status", {"today": cal["planned_on"]})
+            trow = next(r for r in tr["rows"] if r.get("film") == nf); board = next(f for f in st["films"] if f["film"] == nf)
+            if trow["stage"] != "in production" or trow["overdue"] or (board.get("plan") or {}).get("start_by") != row["start_by"]:
+                fails.append(f"tracker or board: {trow['stage']} {trow['overdue']} {board.get('plan')}")
+            vb = subprocess.run([PY, "-m", "dbe", "voice.build", json.dumps({"name": nf})], cwd=nws, capture_output=True, text=True, env=env)
+            if vb.returncode == 0 or "draft" not in vb.stderr:
+                fails.append("voice.build voiced a draft storyboard")
     finally:
         subprocess.run(["git", "worktree", "prune"], cwd=repo, capture_output=True)
         shutil.rmtree(base, ignore_errors=True)

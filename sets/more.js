@@ -37,7 +37,7 @@
       let s = R(0, 0, W, fl, o.wall || '#e9e2c9');
       const bw = Math.min(W * 0.86, 1300), bh = fl * 0.34, bx = (W - bw) / 2, by = fl * 0.12;
       s += RS(bx - 16, by - 16, bw + 32, bh + 32, '#9b6b43', 6) + R(bx, by, bw, bh, '#2f4f3e');
-      (o.board || []).forEach((txt, i) => { s += `<text x="${f1(bx + 40)}" y="${f1(by + 70 + i * 66)}" font-family="'Patrick Hand','Noto Sans Sinhala',sans-serif" font-size="56" fill="#f2f2e8" opacity="0.92">${String(txt).replace(/[<&]/g, '')}</text>`; });
+      (o.board || []).forEach((txt, i) => { s += `<text x="${f1(bx + 40)}" y="${f1(by + 150 + i * 66)}" font-family="'Patrick Hand','Noto Sans Sinhala',sans-serif" font-size="56" fill="#f2f2e8" opacity="0.92">${String(txt).replace(/[<&]/g, '')}</text>`; });
       s += RS(bx, by + bh + 16, bw, 14, '#b88a5f', 3);
       const cx = W - 110, cy = by + bh + 120; s += `<circle cx="${cx}" cy="${cy}" r="56" fill="#fff" stroke="${INK}" stroke-width="5"/>` + line(cx, cy, cx, cy - 36) + line(cx, cy, cx + 28 * Math.cos(t * 0.5), cy + 28 * Math.sin(t * 0.5), '#c0392b', 4);
       s += floorBand(W, H, fl, '#c9b08d');

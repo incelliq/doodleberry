@@ -35,6 +35,28 @@ environment variables below).
   - `cover.png`, a chosen frame with cover text fitted to the safe area.
 
   It reads `shots.json` `brief` (title, takeaway, hook, hashtags, cover_text, cover_t, prompt, post_date, part/parts, client).
+  With a `titles.json`, the package uses its chosen title, re-runs the truth check on it (`title_true`) and lists the
+  covers per cut and platform.
+- **Title, thumbnail and cover lab** (plan 3.9, WP-07; `dbe/packaging.py`):
+  - **title.check**: the packaging truth check. A title or a double-barrel thumbnail (top and bottom, at most 4 words
+    and 18 characters each) may not claim what the film does not support (its fact claims and narration): every
+    number must be in them (counts and years exactly), absolutes and superlatives (always, never, only, first, cure,
+    deadliest, ...) must be said of the same subject, and a causal claim stated rather than asked needs a fact or line
+    on the same subject that is not negated; one the film negates is *contradicted*. A myth film may ask its myth or
+    deny it, never state it. Plus the newcomer check: at most 60 characters, no unexplained acronyms, few long words,
+    no insider wording (episode numbers, we, our, again, unless quoting the film's own line), no emoji. It is a
+    mechanical floor; the writing agent reads the facts on top of it.
+  - **title.propose**: mechanical candidates (the film's title and its own questions) with their checks, and the brief
+    for a writing agent; **title.set** records candidates in `films/<name>/titles.json` with their checks (failing
+    ones are kept with the reason) and the chosen title and thumbnail, which must pass.
+  - **cover.make**: for every finished cut (master, sound-off, episode and teaser cuts, other aspects) and every
+    platform in `dbe/profiles.json`, the best frame of the cut (least bare ground, a character on screen, at least
+    0.5 s from a cut and 1 s from the ends) with the chosen thumbnail text in the brand kit's headline font and
+    colours, placed in the calmest band of the platform-safe area so it never sits on the film's own words. A platform
+    in another aspect gets the cut in that aspect when it was rendered, else the frame on the brand's paper (never a
+    stretch). Writes `build/package/covers/<cut>--<platform>.png` and `covers.json`.
+  - **titles.status**: the back catalogue: per film, title and thumbnail candidates that pass today's check (facts
+    change, so titles are re-checked) and covers missing for rendered cuts.
 - **research.check**: the research gate (sources, two independent sources for numbers, research log, fact-check clearance, safety clearance for sensitive briefs); renders refuse to start while it reports errors. See `docs/research-standard.md`.
 - **critic.pack / ledger.add**: review packets for fresh critic agents (role prompts in `dbe/critic/`), and the ledger of gates and critic rounds with before/after QA numbers.
 - **asset.check**: every tracked third-party file must be listed in `assets/manifest.json`.
@@ -50,9 +72,22 @@ environment variables below).
   - **cold open:** a character in frame one, and the first words by 1.5 s;
   - **mix:** effects below music; percussive cue onsets within one frame.
 
-  Every film gets the numbers. A layout check fails a film only if the film opts in with
-  `"qa": {"enforce": ["text_in_safe_area", ...], "fill_max": 0.4}` in shots.json; thresholds come from flat-paper
-  explainers and are calibrated per style first.
+  - **AI look** (WP-04, `tools/ailook.mjs`): drop shadows, gradient fills over 3% of the frame, blur glows, emoji, and
+    layouts where every text box is centred (at least three texts); the house set library's own gradients and
+    filters are exempt.
+
+  Every film gets the numbers. Thresholds and enforced checks come per style (WP-04, `dbe/profiles.json`
+  `layout_styles`): a film's style is `shots.json` `"style"`, else doodle (a doodle-template character), cartoon
+  (humanoid cast) or explainer (no cast). Each style was calibrated on its reference films' final encodes, each
+  threshold just above the worst reference: frame fill (bare share) explainer 0.62, doodle 0.85, cartoon 0.80 (flat
+  painted ground counts as bare, so this catches an empty frame, not a sparse one); first words by 1.5 s for
+  explainers and 2.5 s for action-led doodle and cartoon openings; caption pace 3.2 words/s, 3.8 for cartoon
+  dialogue. Enforced in every style (a failure fails QA): frame fill, text in the safe area, type size, AI look,
+  cold open, reading time, effects below music and cue sync. Seams stay advisory until transitions exist (WP-15).
+  A film's `"qa"` in shots.json may tighten thresholds and add enforced checks. Text measurement counts only words a
+  viewer can see (not hidden, clipped or covered, not pushed out of frame) and leaves set text magnified past 1.25
+  by a camera push-in out of the safe-area rule. Cue sync times percussive cues only (whooshes and swishes ramp in),
+  each from halfway after the previous cue.
 - **test**: golden-frame regression test (`tests/golden.json`); `{"update": true}` rewrites the goldens.
 - **film.validate**: schemas plus reference checks; runs automatically on `film.write` and before renders.
 - **export.lottie / export.synfig / export.web**: a Lottie JSON (with the set embedded as an image), an editable Synfig project, or an interactive web player.
@@ -513,7 +548,8 @@ re-rendered the chart shot and the "best month" shot and re-voiced their two lin
 ## Format templates (plan 2.15)
 `python -m dbe film.from_template '{"name": "NEW", "format": "dialogue", "brief": {...}}'` writes a whole
 storyboard from a format and a brief, then checks it:
-- formats (`dbe/formats.py`): `myth_vs_data` (myth, question, finding, why, source), `dialogue` (topic and
+- formats (`dbe/formats.py`): `myth_vs_data` (myth, question, finding, why, source), `explainer` (hook, point,
+  detail, source; optional question; the calendar's analysis and news slots), `dialogue` (topic and
   `exchanges` of q/a; the learner asks, the expert answers, E28), `wonder_story` (imagine, build, reveal, reflect),
   `we_reran_it` (old_claim, new_finding, changed, source), `anniversary` (years, event, changed, now) and `series`
   (`parts`, each with its own format; edit.json splits it into episodes). Any beat's text can be overridden in
@@ -739,10 +775,20 @@ session was run in this test.
 ## Content planner (plan 3.8)
 http://127.0.0.1:8770/plan (linked from Studio): the quarter's calendar by week, every spread rule with its verdict,
 the idea bank's counts, and each row's field, sweep, role, start-by date, fact-lock date and status and live stage,
-with **Brief** and **Brief + board** buttons. Files in `plan/` (in git: the studio's plan): `channel.json`,
-`ideas.json`, `<quarter>.json`.
+with **Brief** and **Brief + board** buttons, for the channel picked at the top. Files, per channel (in git: the
+studio's plan): `plan/channels/<id>/channel.json`, `ideas.json`, `<quarter>.json`; `plan/channels.json` names the
+default channel.
 
-1. **Channel** (`plan.channel`): audience, topic fields, the locale for local stories, and the rules: posting days, the
+0. **Channels** (WP-32): the studio can run several series side by side, each with its own audience, fields, locale,
+   rules, brand kit, cast and voices. Every `plan.*` command takes `channel` (default: the default channel);
+   `plan.channels` lists them with their brand colour, cast, series and quarters; `plan.channel` with a new id starts
+   one from the defaults. A channel's films inherit its brand kit (`shots.json` `"brand": "<id>"` reads
+   `brand/<id>.json`; `true` stays the house kit), its cast (template roles to characters) and its voices, through
+   `plan.brief`. `plan.cross` lines every channel's quarter up week by week and flags two channels posting the same
+   subject in one week. The board colours each film by its channel and filters by channel. `science` is the live
+   channel; `brand/sample-kids.json` and the test channel in `planner.KIDS_SAMPLE` are samples for a second series.
+
+1. **Channel** (`plan.channel`): audience, topic fields, the locale for local stories, brand kit, cast and voices, and the rules: posting days, the
    weekly series (day, name, format), at most one post per field per week, days between posts in a field, local
    stories per week, an analysis every N weeks, the tolerance for dated hooks, and lead and fact-lock days per sweep.
 2. **Sweeps** (`plan.sweep_prompt`): six research prompts for agents with web search: dated hooks (anniversaries,
@@ -755,7 +801,13 @@ with **Brief** and **Brief + board** buttons. Files in `plan/` (in git: the stud
    are refused. Every cited URL is fetched: a source that does not exist (404, or a host that does not resolve) is
    dropped, an idea left with none is refused, and the rest record "ok" or "blocked" (a site that refuses robots).
 4. **Schedule** (`plan.schedule`): dated hooks on their day (capped so each week keeps room for its series episode
-   and local story), the series slot, the analysis cadence, the local quota, then the open slots. An open slot goes to
+   and local story), the series slot (a hook on the series day moves the episode to another free day that week; a
+   hook blocking the series day's field is set aside when that is the only way to place the episode), the local quota,
+   the analysis cadence (any week of its span), a repair pass (a week short of its local story or series episode, or a
+   span short of its analysis, takes the slot of one of its dated hooks, never the one on the series day), then the
+   open slots. Measured on made-up banks for two channels: 47 of 48 quarters pass every rule (the scheduler before
+   WP-32 passed 29 of 48 for the science channel alone); a miss is a bank short of fitting ideas, and the check says
+   which week. An open slot goes to
    a field with no post yet, then the least-used field, then the higher score; recent stories must still be fresh and
    every idea must be startable by its lead time. Each row gets `start_by` and a `fact_lock` date: the day the film's
    facts must be cleared by the fact gate (`ledger.add role=fact_gate verdict=cleared`).
@@ -765,8 +817,15 @@ with **Brief** and **Brief + board** buttons. Files in `plan/` (in git: the stud
    an empty field getting the next open slot, no repeats, distinct topics (no two films on one subject in a quarter:
    titles sharing two or more words and most of the shorter title, or title, angle and hook sharing most of their
    words, with accents folded and plurals stripped), sources on every idea.
-6. **Brief and track**: `plan.brief` writes `films/<slug>/brief.md` from the idea (with `launch`, onto the production
-   board with its posting date: calendar to briefs to film sessions, feature map E24). `plan.track` reads the films
+6. **Brief, storyboard and launch** (WP-06, feature map E24): `plan.brief` writes the row's brief and drafts its
+   storyboard with `film.from_template` from the format the row names (`myth_vs_data`, `explainer`, `dialogue`),
+   in the idea's own words: the hook, the angle's first two sentences, a short citation of the first source. Every
+   fact starts unsourced (the research gate holds the film) and `script.json` carries `"draft"`, which `voice.build`
+   refuses until the session has rewritten the lines after research. With `launch` it is one command from calendar
+   to session: the film goes onto the board with its plan row (quarter, start-by, fact-lock date, role, review
+   level), its brief and draft storyboard are committed on its branch in its workspace (nothing is left in the main
+   checkout, so the merge meets no untracked copies), and its session starts (or queues behind `max_parallel`).
+   The board shows each card's plan row. `plan.track` reads the films
    and the production registry and shows each row's stage (planned, briefed, in production, final ready, approved,
    merged, posted), its fact-lock status from the film's ledger, and what is overdue. `plan.posted` records the link.
 

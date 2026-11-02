@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "A cough that keeps you up at night",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "At the doctor: breathe in slowly",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "THIS COUGH",
+   "bottom": "KEEPS ME UP",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "BREATHE IN",
+   "bottom": "SLOWLY",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

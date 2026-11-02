@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "Nib, catch!",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Can Nib catch it?",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "NIB!",
+   "bottom": "CATCH!",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "GOT IT!",
+   "bottom": "NIB CATCHES",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

@@ -7,7 +7,8 @@ shot), optional on-screen kit elements, and optional "predict": a prediction pro
 stays up through the line and a silent count of `predict` seconds, long enough to read). Line-relative timing
 everywhere, so voicing later keeps the cut (narration slots, plan 2.16).
 
-Formats: myth_vs_data, dialogue (learner and expert), wonder_story, we_reran_it, anniversary, series (several parts,
+Formats: myth_vs_data, explainer (hook, question, two steps, source), dialogue (learner and expert), wonder_story,
+we_reran_it, anniversary, series (several parts,
 each in its own format, cut into episodes by edit.json).
 """
 import json
@@ -15,6 +16,7 @@ import re
 
 ROLES = {"expert": "ravi", "learner": "momo", "narrator": "priya"}
 SETS = {"open": "classroom", "myth": "paper", "predict": "paper", "reveal": "paper", "why": "classroom", "close": "classroom",
+        "explain": "paper", "detail": "paper",
         "wonder": "night", "story": "forest", "then": "paper", "now": "paper", "street": "street"}
 
 
@@ -65,6 +67,18 @@ TEMPLATES = {
             _beat("changed", "expert", "{changed}", "why", fact="changed", cite="{source}"),
         ],
         "defaults": {"when": "A few years ago"},
+    },
+    "explainer": {
+        "about": "a hook, the learner's question, the idea in two steps, the source (the calendar's analysis and news slots)",
+        "needs": ["hook", "point", "detail", "source"],
+        "beats": [
+            _beat("hook", "expert", "{hook}", "open"),
+            _beat("ask", "learner", "{question}", "open"),
+            _beat("point", "expert", "{point}", "explain", title="{point_title}", chart=True, fact="point"),
+            _beat("detail", "expert", "{detail}", "detail", fact="detail"),
+            _beat("button", "learner", "{button}", "close", cite="{source}"),
+        ],
+        "defaults": {"question": "Wait, how does that work?", "point_title": "HERE'S HOW", "button": "So that's how it works."},
     },
     "anniversary": {
         "about": "on this day: the event, what it changed, where things stand now",
@@ -120,6 +134,7 @@ def build(fmt, brief, prefix=""):
     beats, b = beats_of(fmt, brief)
     cast_ids = {**ROLES, **(brief.get("cast") or {})}
     lines, facts, shots = [], [], []
+    last_tail = 1.2
     for be in beats:
         lid = f"{prefix}{be['id']}"
         ln = {"id": lid, "speaker": cast_ids[be["role"]], "fact": None, "text": be["text"]}
@@ -161,8 +176,10 @@ def build(fmt, brief, prefix=""):
             if x.get("chart") and brief.get("data"):
                 overlays.append({"type": "bars", "data_from": brief.get("chart_key", "chart"), "title": brief.get("chart_title", ""), "y": 420, "h": 760,
                                  "start": f"{lid}.start", "duration": 1.2})
-            if x.get("cite") and x["cite"].strip():
-                overlays.append({"type": "citation", "text": x["cite"], "y": 1240, "start": f"{lid}.start", "end": f"{lid}.end+1.0"})
+            if x.get("cite") and x["cite"].strip():   # held for words / 3 + 1 s at least, against the line's draft length
+                tail = cite_tail(x["cite"], x["text"])
+                overlays.append({"type": "citation", "text": x["cite"], "y": 1240, "start": f"{lid}.start", "end": f"{lid}.end+{tail}"})
+                last_tail = max(last_tail, tail + 0.2)
         start = 0 if (si == 0 and not prefix) else f"{first}.start-0.3"
         set_ = brief.get("sets", {}).get(sc, SETS.get(sc, "classroom"))
         board = {"set_opts": {"board": [w.strip() for w in re.findall(r".{1,16}(?:\s|$)", str(brief.get("title", "")) + " ")][:3]}} if set_ == "classroom" and brief.get("title") else {}
@@ -172,8 +189,19 @@ def build(fmt, brief, prefix=""):
                       **({"style": {"float": True}} if not cast else {}), "cast": cast, **({"overlays": overlays} if overlays else {})})
     for a, b_ in zip(shots, shots[1:]):
         a["end"] = b_["start"]
-    shots[-1]["end"] = f"{lines[-1]['id']}.end+1.2"
+    shots[-1]["end"] = f"{lines[-1]['id']}.end+{round(last_tail, 2)}"
     return lines, shots, facts
+
+
+def _words(t):
+    return len(re.findall(r"[\w']+", str(t)))
+
+
+def cite_tail(cite, line, wpm=135):
+    """seconds a citation stays up after its line ends: 1 s, or more when the line (at its draft pace) is shorter than
+    the citation's reading time"""
+    need = _words(cite) / 3 + 1; line_s = _words(line) * 60.0 / wpm + 0.25
+    return round(max(1.0, need - line_s + 0.2), 2)
 
 
 def storyboard(fmt, brief):

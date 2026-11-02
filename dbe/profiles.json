@@ -1,12 +1,152 @@
 {
  "note": "Delivery encode profiles. The master follows the film playbook spec (H.264 High, yuv420p, CRF 18, faststart, AAC 48 kHz 320 kb/s). Platform entries add size caps, aspect, caption and packaging notes. Caps are conservative; check current platform limits before relying on them.",
- "master": {"vcodec": "libx264", "profile": "high", "crf": 18, "preset": "slow", "pix_fmt": "yuv420p", "acodec": "aac", "ar": 48000, "ab": "320k", "faststart": true, "max_mb": 100},
+ "master": {
+  "vcodec": "libx264",
+  "profile": "high",
+  "crf": 18,
+  "preset": "slow",
+  "pix_fmt": "yuv420p",
+  "acodec": "aac",
+  "ar": 48000,
+  "ab": "320k",
+  "faststart": true,
+  "max_mb": 100
+ },
  "platforms": {
-  "tiktok":    {"aspect": "9:16", "max_mb": 100, "captions": "burned-in", "cover": "upload the cover file", "first_line": "takeaway", "hashtags": 5},
-  "reels":     {"aspect": "9:16", "max_mb": 100, "captions": "burned-in", "cover": "upload the cover file", "first_line": "takeaway", "hashtags": 5},
-  "shorts":    {"aspect": "9:16", "max_mb": 100, "captions": "burned-in", "max_s": 180, "first_line": "takeaway", "hashtags": 3},
-  "facebook":  {"aspect": "9:16 or 16:9", "max_mb": 100, "captions": "burned-in + SRT", "first_line": "takeaway"},
-  "linkedin":  {"aspect": "16:9", "max_mb": 100, "captions": "SRT upload", "native_upload": true, "first_line": "takeaway"},
-  "youtube":   {"aspect": "16:9", "max_mb": 100, "captions": "SRT or VTT upload", "chapters": true, "first_line": "takeaway"}
+  "tiktok": {
+   "aspect": "9:16",
+   "max_mb": 100,
+   "captions": "burned-in",
+   "cover": "upload the cover file",
+   "first_line": "takeaway",
+   "hashtags": 5
+  },
+  "reels": {
+   "aspect": "9:16",
+   "max_mb": 100,
+   "captions": "burned-in",
+   "cover": "upload the cover file",
+   "first_line": "takeaway",
+   "hashtags": 5
+  },
+  "shorts": {
+   "aspect": "9:16",
+   "max_mb": 100,
+   "captions": "burned-in",
+   "max_s": 180,
+   "first_line": "takeaway",
+   "hashtags": 3
+  },
+  "facebook": {
+   "aspect": "9:16 or 16:9",
+   "max_mb": 100,
+   "captions": "burned-in + SRT",
+   "first_line": "takeaway"
+  },
+  "linkedin": {
+   "aspect": "16:9",
+   "max_mb": 100,
+   "captions": "SRT upload",
+   "native_upload": true,
+   "first_line": "takeaway"
+  },
+  "youtube": {
+   "aspect": "16:9",
+   "max_mb": 100,
+   "captions": "SRT or VTT upload",
+   "chapters": true,
+   "first_line": "takeaway"
+  }
+ },
+ "layout_styles": {
+  "note": "WP-04: per-style layout thresholds, calibrated on 2 November 2026 from the reference films' final encodes (each threshold sits just above the worst reference film), and the checks each style enforces (a failure fails QA). Seams stay advisory until transitions exist (WP-15): hard cuts between sets measure 17 to 168 against the playbook's 3.5. Frame fill counts flat ground as bare, so painted sets with flat sky and walls measure 0.5 to 0.8: the check catches an empty frame, not a sparse one.",
+  "explainer": {
+   "references": [
+    "kit-demo"
+   ],
+   "measured": {
+    "fill_max": 0.571,
+    "first_words_s": 0.3,
+    "caption_wps": null,
+    "centred_share": 0.0
+   },
+   "fill_max": 0.62,
+   "hook_by_s": 1.5,
+   "caption_wps_max": 3.2,
+   "centred_max": 0.5,
+   "seam_max": 3.5,
+   "sync_ms": 34,
+   "enforce": [
+    "frame_fill",
+    "text_in_safe_area",
+    "type_size",
+    "ai_look",
+    "cold_open",
+    "reading_time",
+    "effects_below_music",
+    "cue_sync"
+   ]
+  },
+  "doodle": {
+   "references": [
+    "nib-hello",
+    "fx-demo",
+    "props-demo"
+   ],
+   "measured": {
+    "fill_max": 0.79,
+    "first_words_s": 2.245,
+    "caption_wps": null,
+    "centred_share": 0.0
+   },
+   "fill_max": 0.85,
+   "hook_by_s": 2.5,
+   "caption_wps_max": 3.2,
+   "centred_max": 0.5,
+   "seam_max": 3.5,
+   "sync_ms": 34,
+   "enforce": [
+    "frame_fill",
+    "text_in_safe_area",
+    "type_size",
+    "ai_look",
+    "cold_open",
+    "reading_time",
+    "effects_below_music",
+    "cue_sync"
+   ]
+  },
+  "cartoon": {
+   "references": [
+    "explainer-demo",
+    "data-demo",
+    "direct-demo",
+    "dialogue-demo",
+    "clips-demo",
+    "telescope-talk"
+   ],
+   "measured": {
+    "fill_max": 0.753,
+    "first_words_s": 2.318,
+    "caption_wps": 3.74,
+    "centred_share": 0.0
+   },
+   "fill_max": 0.8,
+   "hook_by_s": 2.5,
+   "caption_wps_max": 3.8,
+   "centred_max": 0.5,
+   "seam_max": 3.5,
+   "sync_ms": 34,
+   "enforce": [
+    "frame_fill",
+    "text_in_safe_area",
+    "type_size",
+    "ai_look",
+    "cold_open",
+    "reading_time",
+    "effects_below_music",
+    "cue_sync"
+   ]
+  }
  }
 }

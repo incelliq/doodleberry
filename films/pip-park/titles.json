@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "One puppet, three renderers",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Pip in Synfig and in Blender's Grease Pencil",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "SAME PUPPET",
+   "bottom": "THREE RENDERERS",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "SYNFIG",
+   "bottom": "THEN BLENDER",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

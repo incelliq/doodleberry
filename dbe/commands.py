@@ -149,6 +149,9 @@ def voice_build(name):
     """Synthesize narration/dialogue (Piper), align words (Whisper), make lip-sync visemes; writes timing.json.
     Voices are checked against voices/registry.json: only 'clean' voices pass unless script.json allows restricted ones."""
     _film(name)
+    sc = _json(FILMS / name / "script.json", {})
+    if sc.get("draft"):   # WP-06: drafted storyboards carry placeholder words until research rewrites them
+        raise ValueError(f"script.json is a draft storyboard ({sc['draft']}); rewrite the lines after research and remove \"draft\" before voicing")
     voice_check(name)
     out = _run([PY, "engine/voice.py", f"films/{name}", "--voices-dir", VOICES])
     t = _json(FILMS / name / "timing.json", {})
@@ -434,6 +437,21 @@ def resolve_times(obj, timing):
     return walk(obj)
 
 
+def _brand_kit(shots_all):
+    """a film's brand kit: shots.json "brand": true is the house kit (brand/brand.json); a string names one,
+    brand/<id>.json, so each channel's films carry their own (WP-32); none when the film sets no brand"""
+    b = shots_all.get("brand")
+    if not b:
+        return None
+    kit = "brand" if b is True else str(b)
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,40}", kit):
+        raise ValueError(f"brand kit ids are lower-case words: {kit!r}")
+    k = _json(ROOT / "brand" / f"{kit}.json", None)
+    if k is None:
+        raise FileNotFoundError(f"no brand kit brand/{kit}.json")
+    return k
+
+
 def _shots(name, resolve=True):
     s = _json(FILMS / name / "shots.json")
     if not s:
@@ -494,7 +512,7 @@ def _player_page(name):
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
 {clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/fx.js"></script>{tags}
-<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_json(ROOT / 'brand' / 'brand.json', {}) if _shots(name).get('brand') else None)};</script>
+<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     (d / "build" / "player.html").write_text(page)
     return d / "build" / "player.html"
@@ -694,7 +712,7 @@ def film_render(name, only=None, aspect=""):
         ass = d / "build" / "captions.ass"
         cs = dict(s.get("caption_style") or {})
         if s.get("brand"):  # brand caption colours unless the film overrides them
-            b = _json(ROOT / "brand" / "brand.json", {}); pal = b.get("palette", {}); bc = b.get("captions", {})
+            b = _brand_kit(s) or {}; pal = b.get("palette", {}); bc = b.get("captions", {})
             res = lambda v: pal.get(v, v) if isinstance(v, str) else v
             for k in ("highlight", "outline", "text"):
                 if bc.get(k) and k not in cs:
@@ -1474,8 +1492,10 @@ def _today(today=""):
 @command("prod.plan", film=("string", "film folder name (it may not exist yet for claude or manual runners)"),
          post_on=("string", "posting date, YYYY-MM-DD"), runner=("string", "pipeline | claude | manual", "pipeline"),
          priority=("integer", "lower goes first among films posting the same day", 1),
-         brief=("string", "for a new film: the brief (written to films/<film>/brief.md in its workspace)", ""))
-def prod_plan(film, post_on, runner="pipeline", priority=1, brief=""):
+         brief=("string", "for a new film: the brief (written to films/<film>/brief.md in its workspace)", ""),
+         storyboard=("object", "for a new film: {format, brief} for film.from_template, built in its workspace at launch", None),
+         plan=("object", "the calendar row it comes from (quarter, date, start_by, fact_lock_by, role, review)", None))
+def prod_plan(film, post_on, runner="pipeline", priority=1, brief="", storyboard=None, plan=None):
     """Put a film on the production board (plan 3.7) with its posting date and the kind of session that makes it:
     pipeline (tools/film_agent.py rebuilds an existing film through every gate), claude (a Claude Code session with
     the director prompt), manual (any agent, given the written protocol)."""
@@ -1492,7 +1512,8 @@ def prod_plan(film, post_on, runner="pipeline", priority=1, brief=""):
         e = reg["films"].get(film) or {"film": film, "state": "planned", "checkpoints": [], "events": []}
         if e["state"] not in ("planned", "queued", "stopped", "failed", "needs_work"):
             raise ValueError(f"{film} is {e['state']}; stop it first to re-plan")
-        e.update(post_on=post_on, runner=runner, priority=priority, **({"brief": brief} if brief else {}))
+        e.update(post_on=post_on, runner=runner, priority=priority, **({"brief": brief} if brief else {}),
+                 **({"storyboard": storyboard} if storyboard else {}), **({"plan": plan} if plan else {}))
         PR.event(e, "planned", post_on=post_on, runner=runner); reg["films"][film] = e
         return {k: e[k] for k in ("film", "post_on", "runner", "state")}
 
@@ -1509,10 +1530,10 @@ def prod_launch(film="", max_parallel=0):
         for e in todo:
             if e["state"] not in ("planned", "stopped", "failed", "needs_work"):
                 continue
-            if e.get("brief") and e["runner"] != "pipeline":   # a new film's brief goes into its workspace
-                ws = PR.workspace(e["film"]); bd = ws / "films" / e["film"]; bd.mkdir(parents=True, exist_ok=True)
-                if not (bd / "brief.md").exists():
-                    (bd / "brief.md").write_text(e["brief"] + "\n")
+            if e["runner"] != "pipeline":   # a new film's brief and draft storyboard go into its workspace (WP-06)
+                sb = PR.prepare(e)
+                if sb:
+                    PR.event(e, "storyboard drafted", ok=sb["ok"], checks=sb["checks"], facts_need_sources=len(sb.get("facts_need_sources", [])))
             e["state"] = "queued"; PR.event(e, "queued")
         PR.tick(reg)
         return {"running": [k for k, e in reg["films"].items() if e["state"] == "running"], "queued": [k for k, e in reg["films"].items() if e["state"] == "queued"],
@@ -1552,6 +1573,7 @@ def prod_status(today=""):
             media = {k: str((PR.reg_dir() / e["film"] / f).relative_to(ROOT)) for k, f in (("poster", "poster.jpg"), ("first", "first.jpg"), ("final", "final.mp4"))
                      if (PR.reg_dir() / e["film"] / f).exists() and ROOT in (PR.reg_dir() / e["film"] / f).resolve().parents}
             films.append({"film": e["film"], "post_on": e["post_on"], "runner": e["runner"], "state": e["state"], "schedule": PR.schedule(e, reg["lead_days"], d),
+                          "plan": e.get("plan"), "channel": (e.get("plan") or {}).get("channel"),
                           "checkpoints": last, "escalation": e.get("escalation") if e["state"] == "escalated" else None,
                           "approved": (e.get("approvals") or [None])[-1], "narrowed": e.get("narrowed", []), "media": media,
                           "session": {k: v for k, v in (e.get("session") or {}).items() if k in ("runner", "started", "pid", "log")},
@@ -1559,11 +1581,12 @@ def prod_status(today=""):
         weeks = {}
         for f in films:
             p = _dt.date.fromisoformat(f["post_on"]); wk = (p - _dt.timedelta(days=p.weekday())).isoformat()
-            weeks.setdefault(wk, []).append({"film": f["film"], "post_on": f["post_on"], "status": f["schedule"]["status"]})
+            weeks.setdefault(wk, []).append({"film": f["film"], "post_on": f["post_on"], "status": f["schedule"]["status"], "channel": f["channel"]})
         counts = {}
         for f in films:
             counts[f["state"]] = counts.get(f["state"], 0) + 1
-        return {"today": d.isoformat(), "max_parallel": reg["max_parallel"], "lead_days": reg["lead_days"], "counts": counts,
+        chans = {c["id"]: {"name": c["name"], "colour": c["colour"]} for c in plan_channels()}   # WP-32: films by channel
+        return {"today": d.isoformat(), "max_parallel": reg["max_parallel"], "lead_days": reg["lead_days"], "counts": counts, "channels": chans,
                 "calendar": [{"week_of": k, "films": v} for k, v in sorted(weeks.items())], "films": films}
 
 
@@ -1665,56 +1688,82 @@ def prod_merge(film):
 
 
 # ---------------- content planner (plan 3.8) ----------------
-def _plan_bank():
-    return _json(ROOT / "plan" / "ideas.json", {"note": "idea bank (plan 3.8): sweeps add ideas; the planner schedules them", "ideas": []})
+CH_ARG = ("string", "channel id (default: the default channel, plan/channels.json)", "")
 
 
-def _plan_save(name, obj):
-    (ROOT / "plan").mkdir(exist_ok=True); (ROOT / "plan" / name).write_text(json.dumps(obj, indent=1, ensure_ascii=False) + "\n")
+def _plan_bank(channel=""):
+    from . import planner as PL
+    return _json(PL.chan_dir(channel) / "ideas.json", {"note": "idea bank (plan 3.8): sweeps add ideas; the planner schedules them", "ideas": []})
 
 
-def _plan_cal(quarter):
-    c = _json(ROOT / "plan" / f"{quarter}.json")
+def _plan_save(name, obj, channel=""):
+    from . import planner as PL
+    d = PL.chan_dir(channel); d.mkdir(parents=True, exist_ok=True); (d / name).write_text(json.dumps(obj, indent=1, ensure_ascii=False) + "\n")
+
+
+def _plan_cal(quarter, channel=""):
+    from . import planner as PL
+    c = _json(PL.chan_dir(channel) / f"{quarter}.json")
     if not c:
-        raise FileNotFoundError(f"no calendar for {quarter}: plan.schedule first")
+        raise FileNotFoundError(f"no calendar for {quarter} on channel {channel or PL.default_channel()}: plan.schedule first")
     return c
 
 
-@command("plan.quarters")
-def plan_quarters():
-    """Quarters that have a calendar in plan/, newest first."""
-    return sorted((f.stem for f in (ROOT / "plan").glob("*-Q*.json")), reverse=True)
+@command("plan.quarters", channel=CH_ARG)
+def plan_quarters(channel=""):
+    """Quarters that have a calendar on a channel, newest first."""
+    from . import planner as PL
+    return sorted((f.stem for f in PL.chan_dir(channel).glob("*-Q*.json")), reverse=True)
 
 
-@command("plan.channel", update=("object", "fields to change (name, audience, fields, locale, languages, rules)", None))
-def plan_channel(update=None):
+@command("plan.channels")
+def plan_channels():
+    """The channels the studio plans for (WP-32), each with its audience, fields, brand kit, cast and quarters; the
+    default first."""
+    from . import planner as PL
+    out = []
+    for cid in sorted(PL.channel_ids(), key=lambda c: c != PL.default_channel()):
+        ch = PL.channel(cid); br = _json(ROOT / "brand" / f"{ch.get('brand', 'brand')}.json", {})
+        out.append({"id": cid, "name": ch["name"], "audience": ch["audience"], "fields": ch["fields"], "locale": ch.get("locale"),
+                    "brand": ch.get("brand", "brand"), "colour": (br.get("palette") or {}).get(br.get("wordmark_accent", "primary")) or "#888888",
+                    "cast": ch.get("cast"), "series": (ch["rules"].get("series") or {}).get("name"), "quarters": plan_quarters(cid),
+                    "default": cid == PL.default_channel()})
+    return out
+
+
+@command("plan.channel", update=("object", "fields to change (name, audience, fields, locale, languages, rules, brand, cast, voices)", None),
+         channel=("string", "channel id (default: the default channel); a new id makes a new channel from the defaults", ""))
+def plan_channel(update=None, channel=""):
     """The channel the content planner plans for (plan 3.8): audience, topic fields, locale for the local quota, and the
     spread rules (posting days, the weekly series, topic diversity, field gap, local quota, analysis cadence, lead and
-    fact-lock days per sweep). plan/channel.json."""
+    fact-lock days per sweep), and (WP-32) its brand kit (brand/<brand>.json), default cast {role: character} and voices
+    {character: voice}. plan/channels/<id>/channel.json."""
     from . import planner as PL
-    ch = PL.channel()
+    ch = PL.channel(channel)
     if update:
         for k, v in update.items():
             ch[k] = {**ch[k], **v} if isinstance(v, dict) and isinstance(ch.get(k), dict) else v
-        _plan_save("channel.json", ch)
+        if ch.get("brand") and not (ROOT / "brand" / f"{ch['brand']}.json").exists():
+            raise FileNotFoundError(f"no brand kit brand/{ch['brand']}.json")
+        _plan_save("channel.json", {k: v for k, v in ch.items() if k != "id"}, channel)
     return ch
 
 
 @command("plan.sweep_prompt", sweep=("string", "dated_hook | recent | evergreen | tool | analysis | local"), quarter=("string", "e.g. 2027-Q1"),
-         count=("integer", "ideas to ask for", 20))
-def plan_sweep_prompt(sweep, quarter, count=20):
+         count=("integer", "ideas to ask for", 20), channel=CH_ARG)
+def plan_sweep_prompt(sweep, quarter, count=20, channel=""):
     """The research prompt for one sweep (plan 3.8), for a research agent with web search: what to find for this
     channel and quarter, the sourcing rules (real, opened sources; nothing invented) and the exact JSON to return,
     which plan.ideas_add accepts."""
     from . import planner as PL
     if sweep not in PL.SWEEPS:
         raise ValueError(f"sweep is one of {PL.SWEEPS}")
-    return {"sweep": sweep, "prompt": PL.sweep_prompt(sweep, quarter, PL.channel(), count)}
+    return {"sweep": sweep, "channel": PL.channel(channel)["id"], "prompt": PL.sweep_prompt(sweep, quarter, PL.channel(channel), count)}
 
 
 @command("plan.ideas_add", ideas=("array", "ideas in the sweep schema (plan.sweep_prompt)"), by=("string", "who found them (agent or person)"),
-         check_urls=("boolean", "fetch every cited URL and refuse sources that do not exist", True))
-def plan_ideas_add(ideas, by, check_urls=True):
+         check_urls=("boolean", "fetch every cited URL and refuse sources that do not exist", True), channel=CH_ARG)
+def plan_ideas_add(ideas, by, check_urls=True, channel=""):
     """Add ideas to the bank (plan 3.8): each is checked (fields, sweep, a source URL, a date for dated hooks,
     fresh_until for recent stories, data and terms for analyses), near-duplicates of banked ideas are refused, and
     with check_urls every cited URL is fetched: an idea whose sources are all missing (404, or no such host) is
@@ -1731,29 +1780,30 @@ def plan_ideas_add(ideas, by, check_urls=True):
                 rej0.append({"title": x.get("title"), "why": ["sources not found: " + ", ".join(s["url"] for s in srcs if s["checked"] == "missing")]}); continue
             keep.append({**x, "sources": good})
         ideas = keep
-    bank = _plan_bank(); added, rejected = PL.add_ideas(bank, ideas, PL.channel(), by); rejected = rej0 + rejected
-    _plan_save("ideas.json", bank)
+    bank = _plan_bank(channel); added, rejected = PL.add_ideas(bank, ideas, PL.channel(channel), by); rejected = rej0 + rejected
+    _plan_save("ideas.json", bank, channel)
     return {"added": len(added), "ids": added, "rejected": rejected, "bank": len(bank["ideas"])}
 
 
-@command("plan.ideas", sweep=("string", "filter", ""), field=("string", "filter", ""), status=("string", "filter", ""))
-def plan_ideas(sweep="", field="", status=""):
+@command("plan.ideas", sweep=("string", "filter", ""), field=("string", "filter", ""), status=("string", "filter", ""), channel=CH_ARG)
+def plan_ideas(sweep="", field="", status="", channel=""):
     """The idea bank, filtered, with counts by sweep, field and status."""
     from collections import Counter
-    ideas = [i for i in _plan_bank()["ideas"] if (not sweep or i["sweep"] == sweep) and (not field or i["field"] == field) and (not status or i["status"] == status)]
+    ideas = [i for i in _plan_bank(channel)["ideas"] if (not sweep or i["sweep"] == sweep) and (not field or i["field"] == field) and (not status or i["status"] == status)]
     return {"count": len(ideas), "by_sweep": dict(Counter(i["sweep"] for i in ideas)), "by_field": dict(Counter(i["field"] for i in ideas)),
             "by_status": dict(Counter(i["status"] for i in ideas)), "ideas": ideas}
 
 
-@command("plan.schedule", quarter=("string", "e.g. 2027-Q1"), planned_on=("string", "the day the plan is made (lead times count from it; default today)", ""))
-def plan_schedule(quarter, planned_on=""):
+@command("plan.schedule", quarter=("string", "e.g. 2027-Q1"), planned_on=("string", "the day the plan is made (lead times count from it; default today)", ""),
+         channel=CH_ARG)
+def plan_schedule(quarter, planned_on="", channel=""):
     """Make the quarter's calendar (plan 3.8): dated hooks on their day, the weekly series, the analysis cadence, the
     local quota, then the rest, an empty field getting the next slot; each row with a start-by date and a fact-lock
     date. Writes plan/<quarter>.json (ideas used are marked planned) and returns plan.check's verdict."""
     import datetime as _dt
     from . import planner as PL
-    ch = PL.channel(); bank = _plan_bank(); po = _dt.date.fromisoformat(planned_on) if planned_on else _dt.date.today()
-    old = _json(ROOT / "plan" / f"{quarter}.json")
+    ch = PL.channel(channel); bank = _plan_bank(channel); po = _dt.date.fromisoformat(planned_on) if planned_on else _dt.date.today()
+    old = _json(PL.chan_dir(channel) / f"{quarter}.json")
     if old and any(r.get("film") for r in old["rows"]):
         raise ValueError(f"{quarter} already has briefed rows; edit it rather than re-planning")
     for i in bank["ideas"]:   # re-planning frees this quarter's ideas
@@ -1764,23 +1814,23 @@ def plan_schedule(quarter, planned_on=""):
     for i in bank["ideas"]:
         if i["id"] in used:
             i["status"] = "planned"; i["quarter"] = quarter
-    cal = {"quarter": quarter, "planned_on": po.isoformat(), "channel": ch["name"], "rules": ch["rules"], "rows": rows}
-    _plan_save(f"{quarter}.json", cal); _plan_save("ideas.json", bank)
+    cal = {"quarter": quarter, "planned_on": po.isoformat(), "channel": ch["name"], "channel_id": ch["id"], "rules": ch["rules"], "rows": rows}
+    _plan_save(f"{quarter}.json", cal, channel); _plan_save("ideas.json", bank, channel)
     return PL.check(cal, bank, ch)
 
 
-@command("plan.check", quarter=("string", "e.g. 2027-Q1"))
-def plan_check(quarter):
+@command("plan.check", quarter=("string", "e.g. 2027-Q1"), channel=CH_ARG)
+def plan_check(quarter, channel=""):
     """Check a quarter's calendar against every spread rule (plan 3.8), independently of how it was made: slots
     filled, posts per week, topic diversity, field gap, local quota, analysis cadence, series cadence, dated hooks on
     their day and recent stories while fresh, lead times, a fact-lock date on every row, an empty field getting the
     next slot, no repeats, sources on every idea."""
     from . import planner as PL
-    return PL.check(_plan_cal(quarter), _plan_bank(), PL.channel())
+    return PL.check(_plan_cal(quarter, channel), _plan_bank(channel), PL.channel(channel))
 
 
-@command("plan.track", quarter=("string", "e.g. 2027-Q1"), today=("string", "YYYY-MM-DD (default today)", ""))
-def plan_track(quarter, today=""):
+@command("plan.track", quarter=("string", "e.g. 2027-Q1"), today=("string", "YYYY-MM-DD (default today)", ""), channel=CH_ARG)
+def plan_track(quarter, today="", channel=""):
     """The live tracker (plan 3.8): every row with where it really is (planned, briefed, in production, final ready,
     approved, merged, posted, from the films and the production registry), its fact-lock status (locked once the
     film's ledger has a cleared fact gate) and what is overdue."""
@@ -1789,21 +1839,25 @@ def plan_track(quarter, today=""):
     if (PR.reg_dir() / "registry.json").exists():
         with PR.registry(write=False) as r:
             reg = r["films"]
-    rows = PL.track(_plan_cal(quarter), _plan_bank(), reg, _today(today))
+    rows = PL.track(_plan_cal(quarter, channel), _plan_bank(channel), reg, _today(today))
     from collections import Counter
-    return {"quarter": quarter, "today": _today(today).isoformat(), "stages": dict(Counter(r["stage"] for r in rows)),
+    return {"quarter": quarter, "channel": PL.channel(channel)["id"], "today": _today(today).isoformat(), "stages": dict(Counter(r["stage"] for r in rows)),
             "overdue": [r for r in rows if r["overdue"]], "rows": rows}
 
 
 @command("plan.brief", quarter=("string", "e.g. 2027-Q1"), date=("string", "the row's posting date"),
-         launch=("boolean", "also put it on the production board (prod.plan) with its posting date", False),
-         runner=("string", "production runner when launching: claude | manual", "claude"))
-def plan_brief(quarter, date, launch=False, runner="claude"):
-    """Turn a calendar row into a film brief (plan 3.8): films/<slug>/brief.md with the hook (draft), angle, why now,
-    starting-point sources, research leads, cautions, start-by and fact-lock dates; optionally onto the production
-    board (E24: calendar -> briefs -> film sessions)."""
+         storyboard=("boolean", "also draft the storyboard from the row's format template (film.from_template)", True),
+         launch=("boolean", "put it on the production board with its posting date and start its session (prod.plan + prod.launch)", False),
+         runner=("string", "production runner when launching: claude | manual", "claude"), channel=CH_ARG)
+def plan_brief(quarter, date, storyboard=True, launch=False, runner="claude", channel=""):
+    """Calendar to production in one command (plan 3.8, WP-06, feature map E24): the row's brief (hook, angle, why now,
+    starting-point sources, research leads, cautions, start-by and fact-lock dates, review level), a draft storyboard
+    from the format template the row names (myth_vs_data, explainer, dialogue), drafted from the idea's own words with
+    every fact unsourced so the research gate holds it, and its storyboard.check. Without launch it is written to
+    films/<slug>/ for a look; with launch it goes onto the board with its plan row and starts a session, and the brief
+    and storyboard are committed on the film's branch in its workspace (nothing is left in the main checkout)."""
     from . import planner as PL
-    cal = _plan_cal(quarter); bank = _plan_bank(); ch = PL.channel()
+    cal = _plan_cal(quarter, channel); bank = _plan_bank(channel); ch = PL.channel(channel)
     row = next((r for r in cal["rows"] if r["date"] == date and r.get("idea")), None)
     if not row:
         raise ValueError(f"no planned row on {date}")
@@ -1812,28 +1866,74 @@ def plan_brief(quarter, date, launch=False, runner="claude"):
     d = FILMS / film
     if (d / "script.json").exists():
         raise FileExistsError(f"films/{film} already has a script")
-    d.mkdir(parents=True, exist_ok=True); text = PL.brief_md(idea, row, ch); (d / "brief.md").write_text(text)
-    row["film"] = film; idea["status"] = "briefed"; idea["film"] = film
-    _plan_save(f"{quarter}.json", cal); _plan_save("ideas.json", bank)
-    out = {"film": film, "brief": f"films/{film}/brief.md"}
+    text = PL.brief_md(idea, row, ch)
+    fmt, fields = PL.draft_storyboard(idea, row)
+    fields.update({k: ch[k] for k in ("cast", "voices") if ch.get(k)})   # WP-32: the channel's cast, voices and brand kit
+    fields["brand"] = ch.get("brand", "brand")
+    out = {"film": film, "format": fmt, "channel": ch["id"]}
     if launch:
-        out["production"] = prod_plan(film, date, runner=runner, brief=text)
+        if runner not in ("claude", "manual"):
+            raise ValueError("a new film is made by a claude or manual session")
+        plan = {"channel": ch["id"], "quarter": quarter, "date": row["date"], "start_by": row["start_by"], "fact_lock_by": row["fact_lock"]["by"],
+                "role": row.get("role"), "review": row.get("review", "standard"), "idea": idea["id"], "title": idea["title"]}
+        out["production"] = prod_plan(film, date, runner=runner, brief=text, storyboard={"format": fmt, "brief": fields} if storyboard else None, plan=plan)
+        out["launch"] = prod_launch(film)
+        from . import production as PR
+        with PR.registry(write=False) as reg:
+            ev = [x for x in reg["films"][film]["events"] if x.get("what") == "storyboard drafted"]
+        out["storyboard"] = ev[-1] if ev else None
+        out["brief"] = f"films/{film}/brief.md (in its workspace, branch film/{film})"
+    else:
+        d.mkdir(parents=True, exist_ok=True); (d / "brief.md").write_text(text)
+        out["brief"] = f"films/{film}/brief.md"
+        if storyboard:
+            out["storyboard"] = film_from_template(film, fmt, fields)["storyboard"]
+    row["film"] = film; idea["status"] = "briefed"; idea["film"] = film
+    _plan_save(f"{quarter}.json", cal, channel); _plan_save("ideas.json", bank, channel)
     return out
 
 
-@command("plan.posted", quarter=("string", "e.g. 2027-Q1"), date=("string", "the row's posting date"), url=("string", "where it was posted"))
-def plan_posted(quarter, date, url):
+@command("plan.posted", quarter=("string", "e.g. 2027-Q1"), date=("string", "the row's posting date"), url=("string", "where it was posted"), channel=CH_ARG)
+def plan_posted(quarter, date, url, channel=""):
     """Mark a calendar row as posted, with its link (the tracker's last stage)."""
-    cal = _plan_cal(quarter); row = next((r for r in cal["rows"] if r["date"] == date and r.get("idea")), None)
+    cal = _plan_cal(quarter, channel); row = next((r for r in cal["rows"] if r["date"] == date and r.get("idea")), None)
     if not row:
         raise ValueError(f"no planned row on {date}")
-    row["posted"] = {"url": url, "at": _today().isoformat()}; _plan_save(f"{quarter}.json", cal)
-    bank = _plan_bank()
+    row["posted"] = {"url": url, "at": _today().isoformat()}; _plan_save(f"{quarter}.json", cal, channel)
+    bank = _plan_bank(channel)
     for i in bank["ideas"]:
         if i["id"] == row["idea"]:
             i["status"] = "posted"
-    _plan_save("ideas.json", bank)
+    _plan_save("ideas.json", bank, channel)
     return row
+
+
+@command("plan.cross", quarter=("string", "e.g. 2027-Q1"), same_week=("boolean", "flag two channels posting the same subject in one week", True))
+def plan_cross(quarter, same_week=True):
+    """Every channel's quarter side by side, week by week (WP-32): posts per channel, and (when same_week) the weeks in
+    which two channels post on the same subject (the planner's topic guard across channels)."""
+    import datetime as _dt
+    from . import planner as PL
+    weeks, chans, rows_by = {}, [], {}
+    for cid in PL.channel_ids():
+        cal = _json(PL.chan_dir(cid) / f"{quarter}.json")
+        if not cal:
+            continue
+        chans.append(cid); ideas = {i["id"]: i for i in _plan_bank(cid)["ideas"]}
+        for r in cal["rows"]:
+            if not r.get("idea"):
+                continue
+            d = _dt.date.fromisoformat(r["date"]); wk = (d - _dt.timedelta(days=d.weekday())).isoformat()
+            weeks.setdefault(wk, {}).setdefault(cid, []).append({"date": r["date"], "title": r["title"], "field": r.get("field")})
+            rows_by.setdefault(wk, []).append((cid, ideas.get(r["idea"], {"title": r["title"]})))
+    clashes = []
+    if same_week:
+        for wk, xs in sorted(rows_by.items()):
+            for i, (ca, a) in enumerate(xs):
+                for cb, b in xs[i + 1:]:
+                    if ca != cb and PL.same_topic(a, b):
+                        clashes.append({"week_of": wk, "a": [ca, a["title"]], "b": [cb, b["title"]]})
+    return {"quarter": quarter, "channels": chans, "weeks": [{"week_of": k, **v} for k, v in sorted(weeks.items())], "clashes": clashes, "ok": not clashes}
 
 
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------
@@ -1932,15 +2032,15 @@ def storyboard_check(name):
     words / 3 + 1 s; captions at most 3.2 words/s. Also lists facts still waiting for a source (the research gate)."""
     from . import layout_qa as LQ
     d = _film(name); res = _shots(name); tm = _json(d / "timing.json", {})
-    co = LQ.cold_open(res["shots"], tm, res.get("size", [1080, 1920])); rd = LQ.reading_time(res["shots"], tm)
+    co = LQ.cold_open(res["shots"], tm, res.get("size", [1080, 1920])); rd = LQ.reading_time(res["shots"], tm, captions=res.get("captions", True))
     facts = _json(d / "facts.json", {"facts": []}).get("facts", [])
-    checks = {"cold_open": bool(co["character_in_frame_one"] and co["first_text_s"] is not None and co["first_text_s"] <= 1.5),
-              "reading_time": not rd["too_short"] and rd["caption_words_per_s"] <= 3.2}
-    return {"ok": all(checks.values()), "checks": checks, "cold_open": co, "reading": rd,
+    style, cfg = LQ.config_for(res)   # the film's style thresholds (WP-04)
+    checks = {k: v for k, v in LQ.judge({"cold_open": co, "reading": rd}, cfg)["checks"].items() if k in ("cold_open", "reading_time")}
+    return {"ok": all(checks.values()), "checks": checks, "style": style, "cold_open": co, "reading": rd,
             "facts_need_sources": [f["id"] for f in facts if not f.get("source")]}
 
 
-@command("film.from_template", name=("string", "new film"), format=("string", "myth_vs_data | dialogue | wonder_story | we_reran_it | anniversary | series"),
+@command("film.from_template", name=("string", "new film"), format=("string", "myth_vs_data | explainer | dialogue | wonder_story | we_reran_it | anniversary | series"),
          brief=("object", "the brief: the fields the format needs (see dbe/formats.py), optional cast {role: id}, lines {beat: text}, facts, data"))
 def film_from_template(name, format, brief):
     """Format templates (plan 2.15): build a storyboard from a format and a brief: script with narration slots
@@ -1955,21 +2055,29 @@ def film_from_template(name, format, brief):
         raise FileExistsError(f"films/{name} exists")
     lines, shots, facts, edit = FM.storyboard(format, brief)
     d.mkdir(parents=True, exist_ok=True)
-    voices = {"ravi": "kokoro:am_michael", "momo": "kokoro:af_heart", "priya": "kokoro:af_bella"}
+    voices = {"ravi": "kokoro:am_michael", "momo": "kokoro:af_heart", "priya": "kokoro:af_bella", **(brief.get("voices") or {})}
     spk = {l["speaker"] for l in lines}
     script = {"title": brief.get("title", name), "format": format,
               "speakers": {k: ({"voice": voices.get(k, "kokoro:af_sarah"), **({"fx": {"pitch": 1.2, "formant": 1.08, "range": 1.25}} if k == "momo" else {})}) for k in sorted(spk)},
               "lead_in_s": 0.6, "gap_s": 0.45, "lines": lines}
     (d / "script.json").write_text(json.dumps(script, indent=1, ensure_ascii=False))
-    (d / "shots.json").write_text(json.dumps({"title": brief.get("title", name), "size": [1080, 1920], "fps": 30, "captions": True, "shots": shots}, indent=1, ensure_ascii=False))
+    (d / "shots.json").write_text(json.dumps({"title": brief.get("title", name), "size": [1080, 1920], "fps": 30, "captions": True,
+                                              **({"brand": brief["brand"]} if brief.get("brand") else {}), "shots": shots}, indent=1, ensure_ascii=False))
     (d / "facts.json").write_text(json.dumps({"facts": facts}, indent=1, ensure_ascii=False))
     (d / "score.json").write_text(json.dumps({"length_s": 30, "bpm": 96, "offset_s": 0, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 64, "chords": ["F", "Am", "Dm", "C"], "end_chord": "F"}]}, indent=1))
     if brief.get("data"):
         (d / "data.json").write_text(json.dumps(brief["data"], indent=1, ensure_ascii=False))
     if edit:
         (d / "edit.json").write_text(json.dumps(edit, indent=1))
-    (d / "brief.md").write_text(f"# {brief.get('title', name)}\n\nFormat: {format} ({FM.TEMPLATES.get(format, {}).get('about', 'series of parts')}).\n\n"
-                                + "\n".join(f"- {k}: {v}" for k, v in brief.items() if isinstance(v, (str, int, float))) + "\n")
+    if brief.get("draft"):
+        script["draft"] = brief["draft"]; (d / "script.json").write_text(json.dumps(script, indent=1, ensure_ascii=False))
+    about = (f"Format: {format} ({FM.TEMPLATES.get(format, {}).get('about', 'series of parts')}).\n\n"
+             + "\n".join(f"- {k}: {v}" for k, v in brief.items() if isinstance(v, (str, int, float))) + "\n")
+    if (d / "brief.md").exists():   # a planner brief stays; the storyboard's fields are added under it
+        with open(d / "brief.md", "a") as fh:
+            fh.write(f"\n## Storyboard (film.from_template)\n{about}")
+    else:
+        (d / "brief.md").write_text(f"# {brief.get('title', name)}\n\n{about}")
     sl = script_slots(name)
     chk = storyboard_check(name)
     return {"film": f"films/{name}", "lines": len(lines), "shots": [s_["id"] for s_ in shots], "length_s": sl["length_s"], "storyboard": chk,
@@ -2208,6 +2316,22 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "layout":   # layout QA per style and the AI-look lint (WP-04)
+        from . import layout_qa as LQ
+        bad, meas = LQ.self_test(ROOT / "out" / "layouttest")
+        failed += 1 if bad else 0
+        results.append({"layout": "AI-look lint, style thresholds, seeded failures per style", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "channels":   # several series side by side (WP-32)
+        from . import planner as PLN
+        bad, meas = PLN.channels_self_test(ROOT / "out" / "channeltest")
+        failed += 1 if bad else 0
+        results.append({"channels": "two channels, own rules and brands, cross view", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "packaging":   # title, thumbnail and cover lab (WP-07)
+        from . import packaging as PKG
+        bad, meas = PKG.self_test(ROOT / "out" / "packagingtest")
+        failed += 1 if bad else 0
+        results.append({"packaging": "truth check, back-catalogue titles, covers", "status": "FAIL" if bad else "ok", "measured": {k: v for k, v in meas.items() if k != "truth"},
+                        **({"cases": bad} if bad else {})})
     if not film or film == "licence":   # licence ledger and vendored code (WP-33)
         from . import vendoring as VND
         bad, meas = VND.self_test(ROOT / "out")
@@ -2401,8 +2525,16 @@ def film_package(name, cover_t=None):
         f = ImageFont.truetype(str(ROOT / "engine" / "fonts" / "Fredoka.ttf"), fs)
         dr.text((x0, y0), txt, font=f, fill="#ffffff", stroke_width=10, stroke_fill="#24160e")
         im.save(pk / "cover.png")
-    title = b["title"]
-    checks = {"title_under_50_chars": len(title) <= 50, "has_takeaway": bool(b.get("takeaway")), "has_sources": bool(srcs) or not facts,
+    from . import packaging as PK
+    tl = PK.load(d); ci = (tl.get("chosen") or {}).get("title")
+    title = tl["titles"][ci]["text"] if ci is not None and ci < len(tl["titles"]) else b["title"]
+    tcheck = PK.check_title(title, PK.support_of(d), _film_format(d))   # WP-07: the posted title is true of the film
+    cov = d / "build" / "package" / "covers" / "covers.json"
+    if cov.exists():
+        pkg_covers = {f"{c['cut']}--{c['platform']}": c["file"] for c in _json(cov)["covers"]}
+    else:
+        pkg_covers = {}
+    checks = {"title_true": tcheck["ok"], "title_under_50_chars": len(title) <= 50, "has_takeaway": bool(b.get("takeaway")), "has_sources": bool(srcs) or not facts,
               "cover_chosen": True, "subtitles": (d / "build" / "captions.srt").exists()}
     posts = {}
     for k, pf in prof.items():
@@ -2411,7 +2543,8 @@ def film_package(name, cover_t=None):
         posts[k] = {"caption": body + ("\n\n" + " ".join(tags[:n]) if tags else ""), "aspect": pf["aspect"], "captions": pf["captions"],
                     **({"title": title, "description": body + ("\n\n" + "\n".join(chapters) if chapters else "") + ("\n\n" + pinned if pinned else "")} if k == "youtube" else {})}
     pkg = {"film": name, "title": title, "takeaway": takeaway, "posts": posts, "pinned_comment": pinned, "alt_text": alt,
-           "chapters": chapters, "cover": "build/package/cover.png", "video": "build/final.mp4", "subtitles": ["build/captions.srt", "build/captions.vtt"],
+           "chapters": chapters, "cover": "build/package/cover.png", "covers": pkg_covers, "title_problems": tcheck["truth"]["problems"] + tcheck["newcomer"]["problems"],
+           "video": "build/final.mp4", "subtitles": ["build/captions.srt", "build/captions.vtt"],
            "post_date": b.get("post_date"), "engagement_prompt": b.get("prompt"), "credits": credits, "checks": checks}
     md = [f"# Posts: {title}", "", f"Video `build/final.mp4` · cover `build/package/cover.png` (upload it; don't use the platform default) · subtitles `build/captions.srt`",
           f"Post date: {b.get('post_date') or 'not set'}", "", "Draft generated from the film's data. Check every word of the title and captions is literally true of the film.", ""]
@@ -2431,6 +2564,178 @@ def film_package(name, cover_t=None):
     prov = film_provenance(name)   # WP-33: inputs whose terms restrict a public film are flagged for the owner
     return {"package": str((pk / "posts.md").relative_to(ROOT)), "checks": checks, "chapters": len(chapters),
             "posting_flags": prov["flags"], "clear_to_post": prov["clear_to_post"]}
+
+
+# ---------------- title, thumbnail and cover lab (plan 3.9, WP-07) ----------------
+def _film_format(d):
+    return _json(d / "script.json", {}).get("format")
+
+
+@command("title.check", name=("string", "film"), text=("string", "a title to check", ""),
+         top=("string", "thumbnail top line", ""), bottom=("string", "thumbnail bottom line", ""))
+def title_check(name, text="", top="", bottom=""):
+    """The packaging truth check (WP-07): is a title or a double-barrel thumbnail literally true of the film? Numbers,
+    absolutes and causal claims must be in its facts or narration, a claim the film negates is contradicted, a myth
+    film may ask its myth or deny it but never state it; plus the newcomer check (length, acronyms, long words,
+    insider wording, emoji). Questions make no claim."""
+    from . import packaging as PK
+    d = _film(name); sup = PK.support_of(d); fmt = _film_format(d); out = {}
+    if text:
+        out["title"] = {"text": text, **PK.check_title(text, sup, fmt)}
+    if top or bottom:
+        out["thumbnail"] = {"top": top, "bottom": bottom, **PK.thumb_check(top, bottom, sup, fmt)}
+    if not out:
+        raise ValueError("give text, or top and bottom")
+    out["ok"] = all(v["ok"] for v in out.values() if isinstance(v, dict))
+    return out
+
+
+@command("title.set", name=("string", "film"), titles=("array", "title candidates (strings)", None),
+         thumbnails=("array", "double-barrel thumbnail texts: [{top, bottom}]", None), by=("string", "who wrote them (agent or person)", "agent"),
+         chosen=("object", "{title: index, thumbnail: index} to use in the package (must pass)", None))
+def title_set(name, titles=None, thumbnails=None, by="agent", chosen=None):
+    """Record title and thumbnail candidates in films/<name>/titles.json with their checks (WP-07). Candidates that
+    fail are kept with their problems so the next writer sees why; the chosen ones must pass. Returns how many pass."""
+    from . import packaging as PK
+    d = _film(name); sup = PK.support_of(d); fmt = _film_format(d); t = PK.load(d)
+    for x in titles or []:
+        t["titles"] = [y for y in t["titles"] if y["text"] != x] + [{"text": x, "by": by, "checks": PK.check_title(x, sup, fmt)}]
+    for x in thumbnails or []:
+        t["thumbnails"] = [y for y in t["thumbnails"] if (y["top"], y["bottom"]) != (x["top"], x["bottom"])] + \
+                          [{"top": x["top"], "bottom": x["bottom"], "by": by, "checks": PK.thumb_check(x["top"], x["bottom"], sup, fmt)}]
+    for y in t["titles"]:   # re-check old candidates against today's facts
+        y["checks"] = PK.check_title(y["text"], sup, fmt)
+    for y in t["thumbnails"]:
+        y["checks"] = PK.thumb_check(y["top"], y["bottom"], sup, fmt)
+    ch = dict(t.get("chosen") or {}); ch.update(chosen or {})
+    for k, lst in (("title", t["titles"]), ("thumbnail", t["thumbnails"])):
+        if k in ch and not (0 <= ch[k] < len(lst) and lst[ch[k]]["checks"]["ok"]):
+            raise ValueError(f"the chosen {k} must be a candidate that passes the checks")
+        if k not in ch:   # default: the first that passes
+            ok = [i for i, y in enumerate(lst) if y["checks"]["ok"]]
+            if ok:
+                ch[k] = ok[0]
+    t["chosen"] = ch
+    (d / "titles.json").write_text(json.dumps(t, indent=1, ensure_ascii=False))
+    return {"titles_passing": sum(y["checks"]["ok"] for y in t["titles"]), "thumbnails_passing": sum(y["checks"]["ok"] for y in t["thumbnails"]),
+            "failing": [{"text": y.get("text") or f"{y['top']} / {y['bottom']}", "problems": y["checks"].get("problems") or y["checks"]["truth"]["problems"] + y["checks"]["newcomer"]["problems"]}
+                        for y in t["titles"] + t["thumbnails"] if not y["checks"]["ok"]], "chosen": ch}
+
+
+@command("title.propose", name=("string", "film"))
+def title_propose(name):
+    """Draft packaging for an agent to improve (WP-07): mechanical candidates from the film (its question, its hook,
+    its first fact), each with its checks, plus the brief for a writer: two titles for a newcomer that are literally
+    true, two double-barrel thumbnails, then title.set."""
+    from . import packaging as PK
+    d = _film(name); s = _shots(name, resolve=False); b = _brief_of(d, s); sup = PK.support_of(d); fmt = _film_format(d)
+    sc = _json(d / "script.json", {}); lines = [l["text"] for l in sc.get("lines", [])]
+    cands = [b["title"]] + [l for l in lines if l.endswith("?") and 3 <= len(l.split()) <= 10][:2]
+    seen, out = set(), []
+    for c in cands:
+        if c and c not in seen:
+            seen.add(c); out.append({"text": c, **PK.check_title(c, sup, fmt)})
+    return {"film": name, "format": fmt, "candidates": out, "support": sup[:12],
+            "writer_brief": ("Write two titles a newcomer would click that are literally true of this film (its facts and narration "
+                             "above): plain words, at most 60 characters, no episode numbers or insider wording, no emoji; a question "
+                             "is fine; a myth film asks or denies its myth. Write two double-barrel thumbnails (top and bottom, at most "
+                             "4 words each) that are true together. Then: python -m dbe title.set '{\"name\": \"%s\", \"titles\": [...], "
+                             "\"thumbnails\": [{\"top\": ..., \"bottom\": ...}]}'" % name)}
+
+
+def _cuts_of(name):
+    """every finished cut of a film: the master, a sound-off cut, episode and teaser cuts, other aspects"""
+    d = FILMS / name; size = _json(d / "shots.json", {}).get("size", [1080, 1920])   # older films have no shots.json
+    asp = next((k for k, v in ASPECT_SIZE.items() if v == size), "9:16")
+    out = {}
+    if (d / "build" / "final.mp4").exists():
+        out["master"] = {"video": d / "build" / "final.mp4", "aspect": asp}
+    for f in sorted((d / "build").glob("final_*.mp4")):
+        tag = f.stem[len("final_"):]
+        a = tag.replace("x", ":") if re.fullmatch(r"\d+x\d+", tag) else asp
+        out[tag] = {"video": f, "aspect": a}
+    for f in sorted((d / "build" / "cuts").glob("*.mp4")) if (d / "build" / "cuts").exists() else []:
+        out[f"cut-{f.stem}"] = {"video": f, "aspect": asp}
+    for a in ASPECT_SIZE:
+        alt = FILMS / f"{name}--{a.replace(':', 'x')}" / "build" / "final.mp4"
+        if alt.exists() and a != asp:
+            out[f"master-{a.replace(':', 'x')}"] = {"video": alt, "aspect": a}
+    return out
+
+
+def _duration(video):
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(video)], capture_output=True, text=True, check=True)
+    return float(r.stdout.strip().splitlines()[-1])
+
+
+@command("cover.make", name=("string", "film"), thumbnail=("integer", "thumbnail index in titles.json (default: the chosen one)", -1))
+def cover_make(name, thumbnail=-1):
+    """Deliberate covers (WP-07): for every finished cut and every platform, the best frame of that cut (least bare
+    ground, a character on screen, away from cuts and the ends), with the chosen double-barrel thumbnail text in the
+    brand kit inside the platform-safe area. A platform in another aspect gets the cut in that aspect when one was
+    rendered, else the frame on the brand's paper. Writes build/package/covers/<cut>--<platform>.png and covers.json."""
+    from . import packaging as PK
+    d = _film(name); t = PK.load(d); s = _shots(name)
+    i = thumbnail if thumbnail >= 0 else (t.get("chosen") or {}).get("thumbnail")
+    if i is None or not (0 <= i < len(t["thumbnails"])):
+        raise ValueError("no thumbnail text: title.set it first (title.propose drafts the brief)")
+    th = t["thumbnails"][i]
+    if not th["checks"]["ok"]:
+        raise ValueError(f"the thumbnail text fails its checks: {th['checks']['problems']}")
+    cuts = _cuts_of(name)
+    if not cuts:
+        raise FileNotFoundError("render the film first (film.render)")
+    brand = _brand_kit(_json(d / "shots.json", {})) or _json(ROOT / "brand" / "brand.json", {})   # the film's own brand kit (WP-32)
+    plats = _json(ROOT / "dbe" / "profiles.json")["platforms"]
+    out_dir = d / "build" / "package" / "covers"; out_dir.mkdir(parents=True, exist_ok=True)
+    shot_cuts = [x["start"] for x in s["shots"][1:]]
+    cast_t = [(x["start"], x["end"]) for x in s["shots"] if x.get("cast") or any(o.get("type") == "face" for o in x.get("overlays", []))]
+    picks, made = {}, []
+    for cid, c in cuts.items():
+        dur = _duration(c["video"])
+        tt, score, _ = PK.pick_frame(c["video"], shot_cuts if cid.startswith("master") or cid == "soundoff" else [], dur,
+                                     cast_t if (cid.startswith("master") and cast_t) else None)
+        if tt is None:
+            tt, score = dur / 2, None
+        fr = out_dir / f"_{cid}.png"
+        _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{tt:.3f}", "-i", str(c["video"]), "-frames:v", "1", str(fr)])
+        picks[cid] = {"t": tt, "score": score, "aspect": c["aspect"], "frame": fr}
+    base_cuts = [k for k in cuts if not re.match(r"master-\d+x\d+$", k)]
+    for cid in base_cuts:
+        for pn, pf in plats.items():
+            want = pf["aspect"].split(" or ")[0]
+            src = picks[cid]
+            alt = f"master-{want.replace(':', 'x')}"
+            if src["aspect"] != want and cid == "master" and alt in picks:
+                src = picks[alt]
+            o = out_dir / f"{cid}--{pn}.png"
+            info = PK.make_cover(src["frame"], o, want, th["top"], th["bottom"], brand)
+            made.append({"cut": cid, "platform": pn, "aspect": want, "file": str(o.relative_to(ROOT)), "frame_t": src["t"],
+                         "from": "own aspect" if src["aspect"] == want else "on paper", **info})
+    for p_ in out_dir.glob("_*.png"):
+        p_.unlink()
+    (out_dir / "covers.json").write_text(json.dumps({"thumbnail": {k: th[k] for k in ("top", "bottom")}, "covers": made}, indent=1))
+    return {"covers": len(made), "cuts": base_cuts, "platforms": list(plats), "frames": {k: v["t"] for k, v in picks.items()}, "files": [m["file"] for m in made]}
+
+
+@command("titles.status", films=("array", "films (default: every film with a script)", None))
+def titles_status(films=None):
+    """The back catalogue (WP-07): per film, how many title and thumbnail candidates pass today's truth check (facts
+    change, so old titles are re-checked), whether a cover exists for every cut and platform, and what is missing."""
+    from . import packaging as PK
+    names = films or sorted(p.name for p in FILMS.iterdir() if (p / "script.json").exists() and "--" not in p.name)
+    plats = list(_json(ROOT / "dbe" / "profiles.json")["platforms"])
+    rows = []
+    for n in names:
+        d = FILMS / n; t = PK.load(d); sup = PK.support_of(d); fmt = _film_format(d)
+        tp = sum(PK.check_title(y["text"], sup, fmt)["ok"] for y in t["titles"])
+        hp = sum(PK.thumb_check(y["top"], y["bottom"], sup, fmt)["ok"] for y in t["thumbnails"])
+        cuts = [k for k in _cuts_of(n) if not re.match(r"master-\d+x\d+$", k)]
+        cov = [f"{c}--{p}" for c in cuts for p in plats]
+        missing = [c for c in cov if not (d / "build" / "package" / "covers" / f"{c}.png").exists()]
+        rows.append({"film": n, "titles_passing": tp, "thumbnails_passing": hp, "rendered_cuts": cuts, "covers_missing": len(missing),
+                     "ok": tp >= 2 and hp >= 1 and (not cuts or not missing)})
+    return {"films": rows, "ok": all(r["ok"] for r in rows), "short": [r["film"] for r in rows if not r["ok"]]}
 
 
 @command("asset.check")

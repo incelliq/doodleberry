@@ -13,17 +13,22 @@ starting-point sources (leads, not facts), research leads and cautions, its fiel
 (the event date of a dated hook, the fresh_until of a recent story).
 
 The scheduler fills the quarter's posting days, in order: dated hooks on their day, the weekly series slot, the
-analysis cadence, the local quota, then the rest. Among candidates it prefers a field that has had nothing yet
+local quota, the analysis cadence (any week of its span), a repair pass (a week short of its local story or a span
+short of its analysis, or a week without its series episode, takes the slot of one of its dated hooks), then the rest. Among candidates it prefers a field that has had nothing yet
 (an empty field gets the next slot), then the least-used field, then the idea's score. Every row gets a start-by date
 (the post date minus the lead time for its sweep) and a fact-lock date: the day facts.json must be cleared by the fact
 gate (ledger fact_gate cleared), after which the script may change but its claims may not.
 
 plan.check verifies every rule independently of the scheduler, so a calendar edited by hand is checked the same way.
 plan.track reads the films and the production registry, so the calendar shows where each post really is.
-Files: plan/channel.json, plan/ideas.json, plan/<quarter>.json (all in git: they are the studio's plan).
+Channels (WP-32): the studio can run several series side by side, each a channel with its own audience, fields,
+locale, rules, brand kit, default cast and voices. Files, per channel: plan/channels/<id>/channel.json, ideas.json and
+<quarter>.json (all in git: they are the studio's plan); plan/channels.json names the default channel. Every plan
+command takes `channel` (default: the default channel). plan.cross lines the channels' quarters up week by week.
 """
 import datetime as dt
 import json
+import os
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -65,9 +70,38 @@ def needs_expert(idea, ch):
     return f"keyword: {hit}" if hit else None
 
 
-def channel():
-    f = PLAN / "channel.json"
-    return json.loads(f.read_text()) if f.exists() else json.loads(json.dumps(DEFAULT_CHANNEL))
+def plan_root():
+    """plan/ (DBE_PLAN points elsewhere, for tests)"""
+    return Path(os.environ.get("DBE_PLAN") or PLAN)
+
+
+def channel_ids():
+    d = plan_root() / "channels"
+    return sorted(p.name for p in d.iterdir() if (p / "channel.json").exists()) if d.is_dir() else []
+
+
+def default_channel():
+    f = plan_root() / "channels.json"
+    if f.exists():
+        return json.loads(f.read_text())["default"]
+    ids = channel_ids()
+    return ids[0] if ids else "main"
+
+
+def chan_dir(cid=None):
+    cid = cid or default_channel()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,40}", cid):
+        raise ValueError("channel ids are lower-case letters, digits and -")
+    return plan_root() / "channels" / cid
+
+
+def channel(cid=None):
+    """a channel's settings, with its id (the defaults when it has none yet)"""
+    cid = cid or default_channel()
+    f = chan_dir(cid) / "channel.json"
+    ch = json.loads(f.read_text()) if f.exists() else json.loads(json.dumps(DEFAULT_CHANNEL))
+    ch["id"] = cid
+    return ch
 
 
 def quarter_dates(q):
@@ -259,27 +293,70 @@ def schedule(q, bank, ch, planned_on):
         take(d, best, role); return True
     ideas = bank["ideas"]
     series_pool = [i for i in ideas if i["sweep"] in r["series"]["sweeps"] and i.get("format") == r["series"]["format"]]
+    def untake(d):
+        v = rows[d]; used.discard(v["idea"]); by_field_dates[v["field"]].remove(d); rows[d] = None; return v
+
+    def retake(d, v):
+        rows[d] = v; used.add(v["idea"]); by_field_dates[v["field"]].append(d)
+
     for wk in weeks:   # the series day, or (when a dated hook has it) the next free day that week
         sday = wk + dt.timedelta(days=DAYS.index(r["series"]["day"]))
         if not start <= sday <= end:
             continue
-        for d in sorted(x for x in rows if week_of(x) == wk and x >= sday and rows[x] is None):
+        if rows.get(sday, 1) is None and not pick(sday, series_pool, r["series"]["name"]):
+            # nothing fits the series day: a dated hook within the field gap may be blocking it; set it aside, place the
+            # episode, and put the hook back if its field still fits
+            near = [x for x in rows if rows[x] and rows[x]["role"] == "dated hook" and abs((x - sday).days) < max(7, r["min_field_gap_days"])]
+            for hd in near:
+                v = untake(hd)
+                if pick(sday, series_pool, r["series"]["name"]):
+                    if field_ok(v["field"], hd):
+                        retake(hd, v)
+                    break
+                retake(hd, v)
+        if any(v and v["role"] == r["series"]["name"] for x, v in rows.items() if week_of(x) == wk):
+            continue
+        # the series day is taken (a dated hook): the next free day that week, else an earlier one (a Sunday series)
+        free = [x for x in rows if week_of(x) == wk and rows[x] is None and start <= x <= end]
+        for d in sorted(x for x in free if x >= sday) + sorted((x for x in free if x < sday), reverse=True):
             if pick(d, series_pool, r["series"]["name"]):
                 break
-    for k, wk in enumerate(weeks):
-        if k % r["analysis_every_weeks"] == 0:
-            span = [x for x in weeks[k:k + r["analysis_every_weeks"]]]
-            if not any(v and v["sweep"] == "analysis" for d, v in rows.items() if week_of(d) in span):
-                for d in [d for d in rows if week_of(d) == wk and rows[d] is None]:
-                    if pick(d, [i for i in ideas if i["sweep"] == "analysis"], "analysis"):
-                        break
-    for wk in weeks:
+    for wk in weeks:   # the weekly local quota before the analysis cadence, which can use any week of its span
         have = sum(1 for d, v in rows.items() if week_of(d) == wk and v and v["local"])
         for d in [d for d in rows if week_of(d) == wk and rows[d] is None]:
             if have >= r["local_per_week"]:
                 break
             if pick(d, [i for i in ideas if i.get("local")], "local"):
                 have += 1
+    for k, wk in enumerate(weeks):
+        if k % r["analysis_every_weeks"] == 0:
+            span = [x for x in weeks[k:k + r["analysis_every_weeks"]]]
+            if not any(v and v["sweep"] == "analysis" for d, v in rows.items() if week_of(d) in span):
+                for d in [d for d in rows if week_of(d) in span and rows[d] is None]:
+                    if pick(d, [i for i in ideas if i["sweep"] == "analysis"], "analysis"):
+                        break
+    # repair: a week short of its local story, or a span short of its analysis, takes the slot of one of its dated
+    # hooks (hooks are welcome extras; the quotas are rules)
+    def swap_in(days, pool, role):
+        # never a hook on the series day: it is what lets that week's episode sit on another day
+        for d in sorted((x for x in days if rows[x] and rows[x]["role"] == "dated hook" and DAYS[x.weekday()] != r["series"]["day"]),
+                        key=lambda x: byid[rows[x]["idea"]].get("score", 3)):
+            v = untake(d)
+            if pick(d, pool, role):
+                return True
+            retake(d, v)
+        return False
+    for wk in weeks:
+        sday = wk + dt.timedelta(days=DAYS.index(r["series"]["day"]))
+        if start <= sday <= end and not any(v and v["role"] == r["series"]["name"] for d, v in rows.items() if week_of(d) == wk):
+            swap_in([d for d in rows if week_of(d) == wk], series_pool, r["series"]["name"])
+        if sum(1 for d, v in rows.items() if week_of(d) == wk and v and v["local"]) < r["local_per_week"]:
+            swap_in([d for d in rows if week_of(d) == wk], [i for i in ideas if i.get("local")], "local")
+    for k, wk in enumerate(weeks):
+        if k % r["analysis_every_weeks"] == 0:
+            span = weeks[k:k + r["analysis_every_weeks"]]
+            if not any(v and v["sweep"] == "analysis" for d, v in rows.items() if week_of(d) in span):
+                swap_in([d for d in rows if week_of(d) in span], [i for i in ideas if i["sweep"] == "analysis"], "analysis")
     for d in rows:
         if rows[d] is None:
             pick(d, [i for i in ideas if i["sweep"] != "dated_hook"], "open slot")
@@ -361,8 +438,10 @@ def check(cal, bank, ch):
 
 
 # ---------------------------------------------------------------- the brief and the live tracker
-def slug(title):
-    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", title.lower())).strip("-")[:48]
+def slug(title, n=48):
+    """a film folder name from a title: at most n characters, cut at a word boundary"""
+    s = re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", _fold(title).lower())).strip("-")
+    return s if len(s) <= n else (s[:n].rsplit("-", 1)[0] if "-" in s[:n] else s[:n])
 
 
 def brief_md(idea, row, ch):
@@ -393,6 +472,45 @@ by {row['fact_lock']['by']} (fact gate cleared in the ledger).
 ## Cautions
 {chr(10).join('- ' + x for x in idea['cautions'])}
 {_expert_note(idea, ch)}"""
+
+
+def _sentences(t):
+    return [x.strip() for x in re.split(r"(?<=[.!?])\s+", str(t or "")) if x.strip()]
+
+
+def short_source(src):
+    """a citation short enough to read on screen: the site and the year"""
+    host = re.sub(r"^www\.", "", re.sub(r"^https?://([^/]+).*$", r"\1", src.get("url", "")))
+    year = (re.search(r"(19|20)\d\d", str(src.get("date", ""))) or [None])[0]
+    return f"Source: {host}" + (f", {year}" if year else "")
+
+
+def draft_storyboard(idea, row):
+    """the template brief for a calendar row, drafted from the idea's own fields: the hook, the angle's first two
+    sentences, the first source. Every line is a draft and every fact is unsourced: the session rewrites them after
+    research (the research gate holds the film until each fact has a source). -> (format, brief fields)"""
+    fmt = row.get("format") or idea.get("format") or "explainer"
+    sents = _sentences(idea.get("angle")); hook = _sentences(idea.get("hook")) or [idea["title"]]
+    first = sents[0] if sents else idea["title"]
+    second = sents[1] if len(sents) > 1 else "(To write after research: the second step.)"
+    src = short_source(idea["sources"][0]) if idea.get("sources") else "Source: to come"
+    title = idea["title"]
+    if fmt == "myth_vs_data":
+        f = {"myth": " ".join(hook), "question": title if title.endswith("?") else "So, is that true?", "finding": first, "why": second, "source": src}
+        fact_beats = {"finding": first, "why": second}
+    elif fmt == "dialogue":
+        f = {"topic": title.rstrip("?"), "exchanges": [{"q": title if title.endswith("?") else "What's going on here?", "a": first, "fact": "a1"},
+                                                     {"q": "Why, though?", "a": second, "fact": "a2"}]}
+        fact_beats = {"a1": first, "a2": second}
+    else:
+        fmt = "explainer"
+        f = {"hook": " ".join(hook), "point": first, "detail": second, "source": src}
+        fact_beats = {"point": first, "detail": second}
+    f["title"] = title
+    f["facts"] = {k: {"claim": v, "source": None, "status": "draft"} for k, v in fact_beats.items()}
+    f["draft"] = (f"Drafted from plan row {row['date']} (idea {idea['id']}) on the planner's own words: rewrite every line "
+                  f"after research, and lock the facts by {row['fact_lock']['by']}.")
+    return fmt, f
 
 
 def _expert_note(idea, ch):
@@ -443,16 +561,17 @@ def track(cal, bank, reg_films, today):
 
 
 # ---------------------------------------------------------------- self-test
-def synthetic_bank(ch, q, seed=5):
-    """a bank of made-up ideas (for tests only: example.invalid sources) with every sweep and field represented"""
+def synthetic_bank(ch, q, seed=5, offset=0):
+    """a bank of made-up ideas (for tests only: example.invalid sources) with every sweep and field represented;
+    offset gives another channel other titles"""
     import random
     rng = random.Random(seed); start, end = quarter_dates(q); ideas = []
     for k in range(90):
         sw = SWEEPS[k % 6]; f = ch["fields"][(k * 5 + k // 6) % len(ch["fields"])]
-        tag = "".join(chr(97 + (k // 26 ** j) % 26) for j in range(3))   # distinct words per idea (the topic guard compares words)
+        tag = "".join(chr(97 + ((k + offset) // 26 ** j) % 26) for j in range(3))   # distinct words per idea (the topic guard compares words)
         x = {"title": f"{tag}ology {tag}ness {tag}ward", "sweep": sw, "field": f, "hook": "h", "angle": "a", "why_now": "w",
              "sources": [{"url": f"https://example.invalid/{k}", "title": "t", "date": "2026-10-01"}], "research_leads": ["l"], "cautions": ["c"],
-             "score": rng.randint(1, 5), "format": "myth_vs_data" if sw == "evergreen" else "explainer"}
+             "score": rng.randint(1, 5), "format": ch["rules"]["series"]["format"] if sw in ch["rules"]["series"]["sweeps"] else "explainer"}
         if sw == "dated_hook":
             x["date"] = (start + dt.timedelta(days=rng.randint(15, (end - start).days))).isoformat()
         if sw == "recent":
@@ -576,3 +695,101 @@ def check_sources(ideas, workers=12):
                   | {i["data"]["url"] for i in ideas if isinstance(i.get("data"), dict) and i["data"].get("url")})
     with ThreadPoolExecutor(workers) as ex:
         return dict(zip(urls, ex.map(check_url, urls)))
+
+
+KIDS_SAMPLE = {   # a second channel for tests (WP-32): other audience, fields, locale, rules, brand, cast and voices
+    "name": "Story sprouts (sample)", "audience": "children 6 to 10 watching with a parent; short words, one idea per film",
+    "fields": ["animals", "space", "how things work", "the body"], "locale": "anywhere", "languages": ["en"],
+    "brand": "sample-kids", "cast": {"expert": "priya", "learner": "momo", "narrator": "priya"}, "voices": {"priya": "kokoro:af_bella", "momo": "kokoro:af_heart"},
+    "rules": {"post_days": ["tue", "sun"], "series": {"day": "sun", "name": "Story Sunday", "sweeps": ["evergreen"], "format": "wonder_story"},
+              "max_field_per_week": 1, "min_field_gap_days": 3, "local_per_week": 0, "analysis_every_weeks": 6, "dated_hook_tolerance_days": 2,
+              "lead_days": {"dated_hook": 10, "recent": 7, "evergreen": 7, "tool": 7, "analysis": 14, "local": 10},
+              "fact_lock_days": {"default": 3, "analysis": 5},
+              "expert_review": {"fields": ["the body"], "keywords": ["disease", "medicine", "vaccine"]}},
+}
+
+
+def channels_self_test(tmp):
+    """two channels side by side (WP-32): each plans a quarter that passes its own rules, the cross-channel view finds
+    no clash between distinct banks and finds one when both carry the same subject, briefs carry each channel's brand
+    kit and cast, and a film resolves its own brand kit"""
+    import shutil
+    import subprocess
+    import sys
+    fails, got = [], {}
+    root = Path(tmp) / "plan"; shutil.rmtree(root, ignore_errors=True)
+    q = "2027-Q2"; planned_on = "2027-02-20"
+    sci = json.loads((PLAN / "channels" / default_channel() / "channel.json").read_text()) if (PLAN / "channels").is_dir() else DEFAULT_CHANNEL
+    for cid, ch, off in (("science", sci, 0), ("kids", KIDS_SAMPLE, 300)):
+        d = root / "channels" / cid; d.mkdir(parents=True)
+        (d / "channel.json").write_text(json.dumps(ch, indent=1))
+        (d / "ideas.json").write_text(json.dumps(synthetic_bank({**ch, "id": cid}, q, seed=5 + off, offset=off), indent=1))
+    (root / "channels.json").write_text(json.dumps({"default": "science"}))
+    env = {**os.environ, "DBE_PLAN": str(root)}
+
+    def run(cmd, args):
+        r = subprocess.run([sys.executable, "-m", "dbe", cmd, json.dumps(args)], cwd=ROOT, capture_output=True, text=True, env=env, timeout=300)
+        return json.loads(r.stdout) if r.returncode == 0 else {"error": (r.stderr or r.stdout).strip().splitlines()[-1]}
+    got["channels"] = [c["id"] for c in run("plan.channels", {})] if isinstance(run("plan.channels", {}), list) else run("plan.channels", {})
+    if got["channels"] != ["science", "kids"]:
+        fails.append(f"channels: {got['channels']}")
+    for cid in ("science", "kids"):
+        r = run("plan.schedule", {"quarter": q, "planned_on": planned_on, "channel": cid})
+        got[cid] = {"ok": r.get("ok"), "posts": (r.get("summary") or {}).get("posts"), "failing": [k for k, v in (r.get("rules") or {}).items() if not v["ok"]]}
+        if not r.get("ok"):
+            fails.append(f"{cid}: its quarter breaks its own rules: {got[cid]['failing'] or r}")
+    sk = json.loads((root / "channels" / "kids" / f"{q}.json").read_text())
+    per_week = Counter(week_of(dt.date.fromisoformat(r["date"])) for r in sk["rows"] if r.get("idea"))
+    if max(per_week.values()) > len(KIDS_SAMPLE["rules"]["post_days"]):
+        fails.append(f"kids posts more than its {len(KIDS_SAMPLE['rules']['post_days'])} a week: {max(per_week.values())}")
+    x = run("plan.cross", {"quarter": q}); got["cross"] = {"weeks": len(x.get("weeks", [])), "clashes": len(x.get("clashes", []))}
+    if x.get("clashes") or x.get("channels") != ["kids", "science"]:
+        fails.append(f"cross view with distinct banks: {x.get('clashes') or x}")
+    kb = json.loads((root / "channels" / "kids" / "ideas.json").read_text()); sb = json.loads((root / "channels" / "science" / "ideas.json").read_text())
+    srow = next(r for r in json.loads((root / "channels" / "science" / f"{q}.json").read_text())["rows"] if r.get("idea"))
+    krow = next(r for r in sk["rows"] if r.get("idea") and abs((dt.date.fromisoformat(r["date"]) - dt.date.fromisoformat(srow["date"])).days) < 7
+                and week_of(dt.date.fromisoformat(r["date"])) == week_of(dt.date.fromisoformat(srow["date"])))
+    same = next(i for i in sb["ideas"] if i["id"] == srow["idea"])
+    for i in kb["ideas"]:
+        if i["id"] == krow["idea"]:
+            i["title"] = same["title"]   # the same subject on both channels in one week
+    (root / "channels" / "kids" / "ideas.json").write_text(json.dumps(kb))
+    x2 = run("plan.cross", {"quarter": q}); got["cross_seeded_clash"] = len(x2.get("clashes", []))
+    if not x2.get("clashes"):
+        fails.append("cross view missed two channels posting one subject in a week")
+    sys.path.insert(0, str(ROOT))
+    from . import commands as C
+    for cid, kit in (("science", sci.get("brand", "brand")), ("kids", "sample-kids")):
+        ch = {**(sci if cid == "science" else KIDS_SAMPLE), "id": cid}
+        idea = next(i for i in json.loads((root / "channels" / cid / "ideas.json").read_text())["ideas"] if i["status"] == "planned")
+        row = {"date": "2027-04-06", "format": "explainer", "fact_lock": {"by": "2027-04-01"}}
+        fmt, fields = draft_storyboard(idea, row)
+        fields.update({k: ch[k] for k in ("cast", "voices") if ch.get(k)}); fields["brand"] = ch.get("brand", "brand")
+        name = f"zz-channeltest-{cid}"; fd = ROOT / "films" / name
+        try:
+            C.film_from_template(name, fmt, fields)
+            sh = json.loads((fd / "shots.json").read_text()); sc = json.loads((fd / "script.json").read_text())
+            k = C._brand_kit(sh); want = json.loads((ROOT / "brand" / f"{kit}.json").read_text())
+            spk = sorted(sc["speakers"])
+            got[f"{cid}_film"] = {"brand": sh.get("brand"), "primary": (k or {}).get("palette", {}).get("primary"), "speakers": spk}
+            if sh.get("brand") != kit or k != want or not set(spk) <= set(ch["cast"].values()):
+                fails.append(f"{cid}: the film does not carry the channel's brand kit and cast: {got[f'{cid}_film']}")
+        finally:
+            shutil.rmtree(fd, ignore_errors=True)
+    if got.get("science_film", {}).get("primary") == got.get("kids_film", {}).get("primary"):
+        fails.append("the two channels' films share one palette")
+    # robustness: the scheduler on many made-up banks for both channels (a quarter can still miss a rule when the bank
+    # runs short of fitting ideas; the check then says so)
+    ok = n = 0
+    for cid, ch0 in (("science", sci), ("kids", KIDS_SAMPLE)):
+        for q2, po in (("2027-Q1", "2026-11-02"), ("2027-Q2", "2027-02-20"), ("2027-Q3", "2027-05-20"), ("2027-Q4", "2027-08-20")):
+            for seed in range(5, 11):
+                off = 300 if cid == "kids" else 0; chx = {**ch0, "id": cid}
+                b = synthetic_bank(chx, q2, seed=seed + off, offset=off)
+                rs = schedule(q2, b, chx, dt.date.fromisoformat(po)); n += 1
+                ok += check({"quarter": q2, "planned_on": po, "rules": chx["rules"], "rows": rs}, b, chx)["ok"]
+    got["robustness"] = f"{ok} of {n} made-up quarters pass every rule"
+    if ok < n * 0.9:
+        fails.append(f"scheduler robustness: {got['robustness']}")
+    shutil.rmtree(root, ignore_errors=True)
+    return fails, got

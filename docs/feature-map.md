@@ -188,7 +188,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Interactive toy pages: a character with live boil, wobble and fps sliders, for audiences or for artists tuning a look | IDEA | ⬜ | P2 | WP-30 |
 | **Master to many cuts:** edit lists assemble one master render plus inserts (cards) into a full film, an episode series, teasers and recaps. Cuts fall on beats and inserts are whole bars, so the music keeps its phase | NEW | ✅ | – | `film.cuts` (2.14) |
 | **Native dual-aspect composition:** 16:9 and 9:16 are laid out separately with the same story and timings, never cropped or letterboxed | NEW | ✅ | – | 1.12 |
-| Deliberate covers per cut and platform (chosen frame plus cover text), never the platform default | NEW | 🟡 | P1 | `film.package` takes a cover frame (0.13); per cut and platform: WP-07 |
+| Deliberate covers per cut and platform (chosen frame plus cover text), never the platform default | NEW | ✅ | P1 | `cover.make`: scored frame per cut, brand-kit text in the calm band of the safe area, per platform (WP-07) |
 | Encoding profiles per platform: H.264 High CRF 18, AAC 48 kHz 320 kb/s, faststart, size caps | NEW | ✅ | – | dbe/profiles.json and `film.package` (0.13) |
 
 ## 8. Localisation, accessibility, reach
@@ -207,7 +207,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Platform packs: safe zones, thumbnails, titles, descriptions | NEW | ✅ | – | `film.package` platform files (0.13) |
 | Interactive web films: branching, quizzes, click-to-explore | EMG | ⬜ | P2 | WP-30 |
 | **Posting package generator:** per-platform captions (takeaway in the first line, sources in a pinned comment, hashtags last), YouTube title, description and chapters, alt text, an engagement prompt, playlists, post dates | NEW | ✅ | – | `film.package` (0.13) |
-| **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | 🟡 | P1 | `variants.hooks`; the lab: WP-07 |
+| **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | 🟡 | P1 | `title.check/propose/set`, `titles.status`: truth and newcomer checks, double-barrel thumbnails, back catalogue retitled (WP-07); audience polls between true options: WP-31 |
 | Publishing connectors and scheduler: upload and schedule per platform, always with human approval per post | IDEA | ⬜ | P2 | WP-08 |
 | 48-hour metrics checklist and analytics ingestion per platform | NEW | ⬜ | P2 | WP-31 |
 | Multi-language audio tracks on the main channel vs separate dubbed channels, with revenue per geography considered | NEW | ⬜ | P2 | WP-08 |
@@ -228,7 +228,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Minimum type sizes per aspect (9:16: headline 64, body 40, label 30, floor 26 px; 16:9: 56/34/24) | NEW | ✅ | – | `qa.run` (0.11) |
 | **Reading-time rule:** each text block visible ≥ words ÷ 3 + 1 s; a new line starts only after the outgoing one clears | NEW | ✅ | – | `qa.run` (0.11) |
 | Seam smoothness: mean frame difference at cuts ≤ 3.5, with 12-frame dissolves or motivated moves | NEW | ✅ | – | `qa.run` (0.11) |
-| Generic-AI-look lint: rounded shadow cards, gradient blobs, emoji, neon glow, centred-everything layouts | IDEA | ⬜ | P1 | style-aware lint: WP-04 |
+| Generic-AI-look lint: rounded shadow cards, gradient blobs, emoji, neon glow, centred-everything layouts | IDEA | ✅ | P1 | `tools/ailook.mjs` in `qa.run`, enforced per style (WP-04) |
 | **Research gates:** two independent sources per on-screen number, a counter-evidence agent, official-page checks for names and dates, a research log, and a fact-check gate before the storyboard | NEW | ✅ | – | `research.check` and `ledger.add` (0.10) |
 | Honest on-screen labels: "re-analysis", "illustration", "preliminary" | NEW | ✅ | – | facts.json labels shown with the captions while a citing line plays (WP-05) |
 | **Critic loop roles:** fresh agents (sound-off reader, fact checker, director) get stills and facts, not the builder's conclusions; at least two rounds; ledger with before/after numbers | NEW | ✅ | – | `critic.pack` (0.12) |
@@ -248,7 +248,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Rights model per asset: open licence, owner-proprietary, client work (with transfer terms), with usage permissions enforced at render | NEW | ✅ | – | `cast.add` rights (0.9) |
 | Creator monetisation outputs: sticker packs, merch stills, loop packs, rig and boil-preset templates for sale, client explainer packages | IDEA | ⬜ | P2 | WP-23, WP-29 |
 | Teaching mode: turn a character's pipeline (photo → cutout → rig → episode) into a step-by-step tutorial | IDEA | ⬜ | P2 | WP-28 |
-| **Brand kit:** palette with measured contrast, colour-blind separation and distance from platform UI colours; type system; exclusion rules ("nothing like competitor X"); generated profile pictures, covers, flyers and print with safe-zone overlays; templates that films inherit | NEW | ✅ | – | `brand.check`, `brand.assets` (1.14); several kits: WP-32 |
+| **Brand kit:** palette with measured contrast, colour-blind separation and distance from platform UI colours; type system; exclusion rules ("nothing like competitor X"); generated profile pictures, covers, flyers and print with safe-zone overlays; templates that films inherit | NEW | ✅ | – | `brand.check`, `brand.assets` (1.14); several kits by id, one per channel, inherited by its films (WP-32) |
 | **Public corrections log:** dated, on the original page; covers titles, thumbnails and social cards; credits critics; separates "what we got wrong" | NEW | ⬜ | P1 | WP-27 |
 | Independence rules: no sponsor that makes what a film assesses; disclose access without payment; disclose ownership changes the day they happen | NEW | ⬜ | P2 | WP-27 |
 | Community intake: send-a-myth, challenges, early-preview reviewers, paired collaborations with other creators | IDEA | ⬜ | P2 | WP-27 |
@@ -315,13 +315,13 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ✅ (2.13) |
 | E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | 🟡 boil, stepped timing, dedupe; unique-frame rendering: WP-15 |
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 · WP-23 |
-| E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | 🟡 planner and orchestrator (3.7, 3.8); the glue: WP-06, WP-08 |
+| E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | 🟡 planner and orchestrator (3.7, 3.8); calendar to storyboard to session in one command (`plan.brief` launch, WP-06); posting: WP-08 |
 | E25 | Beat grid + edit lists + native aspect layouts | **One production, a week of posts:** a full film, an episode series, teasers and both aspect ratios, without re-animating. | ✅ (2.14) |
 | E26 | Facts ledger + posting generator + corrections log | **One source of truth for every word.** Captions, pinned sources, alt text and pages all derive from the same claims, so a correction reaches every surface. | ⬜ P1 · WP-27 |
 | E27 | Narration slots + sound-off master + voices | **Ship silent, voice later, dub anywhere:** any voice or language drops into the same timed slots. | ✅ (2.16) |
 | E28 | Misconception and dialogue formats + the cast | **Characters as learner and expert:** the format with the strongest published learning gains, natural for cartoons. | ✅ (2.15) |
 | E29 | Measured layout rules + films as data | **Layout auto-repair:** the agent moves and resizes text and pictures until frame fill, safe zones, type sizes and reading time all pass (extends E10). | ✅ (2.18) |
-| E30 | Brand kit + templates + deterministic renders | **Rebrand the whole catalogue:** a new identity re-renders every film, cover and post. | 🟡 brand inheritance (1.14); the catalogue: WP-32 |
+| E30 | Brand kit + templates + deterministic renders | **Rebrand the whole catalogue:** a new identity re-renders every film, cover and post. | 🟡 brand inheritance (1.14); kits per channel (WP-32); re-rendering a whole catalogue in a new identity: WP-27 |
 | E31 | Analytics + idea bank + calendar | **A plan that re-ranks itself** on what actually performs, per platform. | ⬜ P2 · WP-31 |
 
 ## 14. What not to build

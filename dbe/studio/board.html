@@ -28,11 +28,14 @@
   .steps { clear: both; }
   .step.ok, .step.ready { background: var(--ok); color: #fff; } .step.fail, .step.blocked, .step.escalate { background: var(--bad); color: #fff; } .step.now { outline: 2px solid var(--accent); }
   .m { font-size: 12px; color: var(--muted); } .why { font-size: 12px; color: var(--bad); } .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .ch { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; color: #fff; margin-right: 4px; vertical-align: 1px; }
+  .pill .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  select { font: inherit; padding: 3px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
   @media (max-width: 600px) { main { padding: 12px 16px; } }
 </style>
 </head>
 <body>
-<header><h1>🫐 Production board</h1><span id="sum" class="muted"></span><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/">Studio ↗</a></header>
+<header><h1>🫐 Production board</h1><span id="sum" class="muted"></span><label class="muted">channel <select id="chan"><option value="">all</option></select></label><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/">Studio ↗</a></header>
 <main>
   <div class="cal" id="cal" aria-label="posting calendar"></div>
   <div class="grid" id="grid"></div>
@@ -56,7 +59,8 @@ function card(f) {
   if (['stopped', 'failed', 'needs_work'].includes(f.state)) acts.push(`<button data-a="relaunch">Relaunch</button>`);
   if (f.state === 'planned') acts.push(`<button class="primary" data-a="launch">Launch</button>`);
   return `<div class="card ${f.state}" data-film="${f.film}">${f.media.poster ? `<img src="/${f.media.poster}?t=${Date.now()}" alt="">` : f.media.first ? `<img src="/${f.media.first}?t=${Date.now()}" alt="">` : ''}
-    <h2>${f.film}</h2><div class="m">posts ${f.post_on} · ${f.runner} · <b>${f.state.replace('_', ' ')}</b></div>
+    <h2>${chip(f.channel)}${f.film}</h2><div class="m">posts ${f.post_on} · ${f.runner} · <b>${f.state.replace('_', ' ')}</b></div>
+    ${f.plan ? `<div class="m" title="${f.plan.title || ''}">plan ${f.plan.quarter} ${f.plan.role || ''} · start by ${f.plan.start_by} · facts locked by ${f.plan.fact_lock_by}${f.plan.review === 'expert' ? ' · <b>expert review</b>' : ''}</div>` : ''}
     <span class="pill s-${sch.status}">${sch.status.replace('_', ' ')}${sch.next ? ` · ${sch.next.replace('_', ' ')} by ${sch.due}` : ''}</span>
     <div class="steps">${steps}</div>
     ${cps.final ? `<div class="m">${fmt(fin.duration_s)} s · ${fmt(fin.loudness_lufs)} LUFS · peak ${fmt(fin.true_peak_dbtp)} dBTP · QA ${fin.checks_passed}/${fin.checks}${fin.layout_advisory && fin.layout_advisory.length ? ' · layout: ' + fin.layout_advisory.join(', ') : ''}${fin.director ? ' · director: ' + fin.director : ''}</div>` : ''}
@@ -65,11 +69,17 @@ function card(f) {
     ${f.media.final ? `<div class="m"><a href="/${f.media.final}" target="_blank">watch the final ↗</a></div>` : ''}
     <div class="m">${(f.events.slice(-1)[0] || {}).what || ''}</div><div class="acts">${acts.join('')}</div></div>`;
 }
+const chip = c => c ? `<span class="ch" style="background:${((window.STATUS || {}).channels || {})[c] ? STATUS.channels[c].colour : '#888'}" title="${((window.STATUS || {}).channels || {})[c] ? STATUS.channels[c].name : c}">${c}</span>` : '';
+const dot = c => c && STATUS.channels[c] ? `<span class="dot" style="background:${STATUS.channels[c].colour}"></span>` : '';
 async function load() {
   const s = await api('prod.status'); window.STATUS = s;
+  const sel = $('chan'), want = sel.value, ids = Object.keys(s.channels || {});
+  if (sel.options.length !== ids.length + 1) sel.innerHTML = '<option value="">all</option>' + ids.map(c => `<option value="${c}">${s.channels[c].name}</option>`).join('');
+  sel.value = want; sel.onchange = load;
+  const keep = f => !want || f.channel === want;
   $('sum').textContent = `${s.today} · ${Object.entries(s.counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`).join(' · ')} · up to ${s.max_parallel} at once`;
-  $('cal').innerHTML = s.calendar.map(w => `<div class="wk"><h3>week of ${w.week_of}</h3>${w.films.map(f => `<span class="pill s-${f.status}" title="${f.post_on}">${f.post_on.slice(5)} ${f.film}</span>`).join('')}</div>`).join('') || '<span class="muted">Nothing planned: python -m dbe prod.plan</span>';
-  $('grid').innerHTML = s.films.map(card).join('');
+  $('cal').innerHTML = s.calendar.map(w => `<div class="wk"><h3>week of ${w.week_of}</h3>${w.films.filter(keep).map(f => `<span class="pill s-${f.status}" title="${f.post_on}${f.channel ? ' · ' + f.channel : ''}">${dot(f.channel)}${f.post_on.slice(5)} ${f.film}</span>`).join('')}</div>`).join('') || '<span class="muted">Nothing planned: python -m dbe prod.plan</span>';
+  $('grid').innerHTML = s.films.filter(keep).map(card).join('');
   document.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => { const film = b.closest('.card').dataset.film, a = b.dataset.a;
     try {
       if (a === 'approve') { const by = prompt('Approved by'); if (!by) return; await api('prod.approve', { film, by }); }

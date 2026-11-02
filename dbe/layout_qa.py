@@ -2,7 +2,8 @@
 
 - frame fill: share of bare ground per scene, sampled every 3 s from the final encode (playbook definition: a pixel is
   bare when it matches a ground colour and sits in a flat area)
-- safe zones and type sizes: every on-screen word inside the platform-safe area and at least the minimum size
+- safe zones and type sizes: every on-screen word inside the platform-safe area (at least three quarters of its box)
+  and at least the minimum size
 - reading time: static text blocks stay up for at least words / 3 + 1 s; caption flow speed
 - seams: mean frame difference at each cut
 - cold open: a character on screen in frame one, and the first words by 1.5 s
@@ -109,20 +110,30 @@ def caption_boxes(timing, size, style):
     return out
 
 
-def safe_and_size(boxes, size):
-    asp = aspect_of(*size); x0, y0, x1, y1 = SAFE[asp]; mn = MIN_PX[asp]
+def safe_and_size(boxes, size, inside_min=0.75, zoom_max=1.25):
+    """a word is outside when less than inside_min of its box lies in the safe area; a word the camera has pushed
+    entirely out of frame is not on screen, and one magnified past zoom_max by a push-in is background detail cropped by
+    the frame, so neither is counted (type size is still checked for every visible word)"""
+    asp = aspect_of(*size); x0, y0, x1, y1 = SAFE[asp]; mn = MIN_PX[asp]; W, H = size
     out_of, small = [], []
     for b in boxes:
-        if b["x0"] < x0 - 1 or b["x1"] > x1 + 1 or b["y0"] < y0 - 1 or b["y1"] > y1 + 1:
-            out_of.append({k: (round(v) if isinstance(v, float) else v) for k, v in b.items() if k in ("t", "text", "x0", "y0", "x1", "y1")})
+        if b["x1"] <= 0 or b["y1"] <= 0 or b["x0"] >= W or b["y0"] >= H:
+            continue
+        if b.get("zoom", 1) > zoom_max:   # set text magnified by a camera push-in: cropped background, not text to read
+            continue
+        area = max(1e-6, (b["x1"] - b["x0"]) * (b["y1"] - b["y0"]))
+        inside = max(0, min(b["x1"], x1) - max(b["x0"], x0)) * max(0, min(b["y1"], y1) - max(b["y0"], y0)) / area
+        if inside < inside_min:
+            out_of.append({k: (round(v) if isinstance(v, float) and k != "t" else v) for k, v in b.items() if k in ("t", "text", "x0", "y0", "x1", "y1")})
         if b["px"] < mn - 0.5:
             small.append({"t": b["t"], "text": b["text"], "px": b["px"]})
     dedupe = lambda L: list({x["text"]: x for x in L}.values())
     return {"aspect": asp, "safe_area": [x0, y0, x1, y1], "min_px": mn, "outside_safe": dedupe(out_of)[:20], "too_small": dedupe(small)[:20]}
 
 
-def reading_time(shots_resolved, timing):
-    """static blocks (timed overlays, silent bubbles) need words / 3 + 1 s on screen"""
+def reading_time(shots_resolved, timing, captions=True):
+    """static blocks (timed overlays, silent bubbles) need words / 3 + 1 s on screen; the caption pace counts only when
+    the film shows captions"""
     short = []
     for s in shots_resolved:
         blocks = [(o.get("text", ""), o.get("start"), o.get("end")) for o in s.get("overlays", []) if o.get("start") is not None and o.get("end") is not None]
@@ -134,7 +145,7 @@ def reading_time(shots_resolved, timing):
                 short.append({"shot": s["id"], "text": text[:50], "on_screen_s": round(b - a, 2), "needs_s": round(need, 2)})
     words = [w for l in timing.get("lines", []) for w in (l.get("words") or [])]
     speech_s = sum(l["end"] - l["start"] for l in timing.get("lines", [])) or 1
-    return {"too_short": short, "caption_words_per_s": round(len(words) / speech_s, 2)}
+    return {"too_short": short, "caption_words_per_s": round(len(words) / speech_s, 2) if captions else None}
 
 
 # ---------------- seams, cold open, mix ----------------
@@ -158,6 +169,9 @@ def cold_open(shots_resolved, timing, size):
         pl = c.get("place", {})
         x = pl[0][1]["x"] if isinstance(pl, list) else pl.get("x", W / 2)
         on.append(-60 <= x <= W + 60 and abs(x - W / 2) < W * 0.62)
+    for o in first.get("overlays", []):   # a kit character (a face) counts when it is up from the first frame
+        if o.get("type") == "face" and (o.get("start") or 0) <= 1 / 30 and -60 <= o.get("x", W / 2) <= W + 60:
+            on.append(True)
     words = [w["start"] for l in timing.get("lines", []) for w in (l.get("words") or [])]
     overlay0 = [o.get("start", 0) for o in first.get("overlays", []) if o.get("text")]
     hook_t = min(words[:1] + overlay0) if (words or overlay0) else None
@@ -180,14 +194,22 @@ def mix_checks(build, cues):
         x = np.abs(np.frombuffer(raw, np.float32))
         k = max(1, int(sr * 0.002)); env = np.convolve(x, np.ones(k) / k, mode="same")
         offs = []
+        times = sorted({round(c["t"], 4) for c in cues})
         for c in cues:
-            if any(k in c.get("type", "") for k in ("whoosh", "swell", "riser", "pad")):
-                continue  # these swell into their moment by design; only percussive cues are timed by onset
-            a, b = int((c["t"] - 0.1) * sr), int((c["t"] + 0.15) * sr)
+            if any(k in c.get("type", "") for k in ("whoosh", "swish", "swell", "riser", "pad")):
+                continue  # these swell into their moment by design (a swish ramps in over ~25 ms); only percussive cues are timed by onset
+            prev = max([t for t in times if t < c["t"] - 1e-4] or [-1])
+            # the window opens halfway after an earlier cue (else 0.1 s before), so a close neighbour's sound is not
+            # taken for this cue's onset; the onset is the rise above what is already sounding
+            t0 = max(c["t"] - 0.1, (prev + c["t"]) / 2)
+            a, b = int(t0 * sr), int((c["t"] + 0.15) * sr)
             seg = env[max(0, a):max(0, b)]
-            if not len(seg) or seg.max() < 1e-4:
+            if not len(seg):
                 continue
-            onset = np.argmax(seg > 0.2 * seg.max()) + max(0, a)
+            base = float(seg[:max(1, int(0.005 * sr))].mean())
+            if seg.max() - base < 1e-4:
+                continue
+            onset = np.argmax(seg > base + 0.2 * (seg.max() - base)) + max(0, a)
             offs.append(round((onset / sr - c["t"]) * 1000, 1))
         res["cue_onset_offsets_ms"] = offs
     return res
@@ -252,7 +274,8 @@ def judge(rep, cfg):
         checks["text_in_safe_area"] = not rep["text"]["outside_safe"]
         checks["type_size"] = not rep["text"]["too_small"]
     if rep.get("reading"):
-        checks["reading_time"] = not rep["reading"]["too_short"] and rep["reading"]["caption_words_per_s"] <= cfg["caption_wps_max"]
+        wps = rep["reading"]["caption_words_per_s"]
+        checks["reading_time"] = not rep["reading"]["too_short"] and (wps is None or wps <= cfg["caption_wps_max"])
     co = rep.get("cold_open")
     if co:
         checks["cold_open"] = co["character_in_frame_one"] and co["first_text_s"] is not None and co["first_text_s"] <= cfg["hook_by_s"]
@@ -296,7 +319,7 @@ def run(film_dir, page=None):
     if shots_all.get("captions", True):
         boxes += caption_boxes(timing, size, shots_all.get("caption_style") or {})
     rep["text"] = safe_and_size(boxes, size)
-    rep["reading"] = reading_time(shots, timing)
+    rep["reading"] = reading_time(shots, timing, captions=shots_all.get("captions", True))
     rep["cold_open"] = cold_open(shots, timing, size)
     cues = _json(d / "build" / "cues.json", [])
     try:
@@ -331,7 +354,55 @@ def self_test(tmp):
     st = {"shots": [{"cast": [{"puppet": "cast/generated/ravi.puppet.json"}]}]}
     if style_of(st) != "cartoon" or style_of({"shots": [{}]}) != "explainer" or style_of({"style": "doodle", "shots": []}) != "doodle":
         fails.append("style inference")
+    got["styles"] = {}
     for sty in ("explainer", "doodle", "cartoon"):
-        if not style_config(sty):
-            fails.append(f"no calibrated config for {sty}")
+        sc = style_config(sty)
+        if not sc:
+            fails.append(f"no calibrated config for {sty}"); continue
+        _, cfg = config_for({"style": sty, "shots": []})
+        clean = _seed_report(cfg)
+        j = judge(clean, cfg)
+        if j["failed_enforced"] or j["advisory_failures"]:
+            fails.append(f"{sty}: a report just inside its thresholds fails {j['failed_enforced'] + j['advisory_failures']}")
+        caught = {}
+        for chk, spoil in SEEDS.items():   # one seeded failure at a time
+            bad = json.loads(json.dumps(clean)); spoil(bad, cfg)
+            caught[chk] = chk in judge(bad, cfg)["failed_enforced"]
+        missed = [c for c in cfg["enforce"] if c in caught and not caught[c]]
+        if missed:
+            fails.append(f"{sty}: seeded {missed} not failed")
+        if not set(MUST_ENFORCE) <= set(cfg["enforce"]):
+            fails.append(f"{sty}: does not enforce {sorted(set(MUST_ENFORCE) - set(cfg['enforce']))}")
+        got["styles"][sty] = {"enforce": cfg["enforce"], "seeded_failures_caught": sorted(c for c, v in caught.items() if v)}
     return fails, got
+
+
+MUST_ENFORCE = ["frame_fill", "text_in_safe_area", "type_size", "ai_look", "cold_open", "reading_time"]
+
+
+def _seed_report(cfg):
+    """measurements just inside a style's thresholds"""
+    return {"frame_fill": {"per_shot_mean": {"s1": round(cfg["fill_max"] - 0.02, 3)}, "worst_frame": None},
+            "seams": {"seams": [{"t": 3.0, "change": round(cfg["seam_max"] * 0.9, 2)}]},
+            "ai_look": {**{k: {"frames": 0, "first": []} for k in ("shadow", "gradient", "glow", "emoji", "centred")}, "centred_share": round(cfg.get("centred_max", 0.5) * 0.5, 3)},
+            "text": {"outside_safe": [], "too_small": []},
+            "reading": {"too_short": [], "caption_words_per_s": round(cfg["caption_wps_max"] - 0.1, 2)},
+            "cold_open": {"character_in_frame_one": True, "first_text_s": round(cfg["hook_by_s"] - 0.2, 2)},
+            "mix": {"sfx_lufs": -30.0, "music_lufs": -20.0, "cue_onset_offsets_ms": [cfg["sync_ms"] - 4]}}
+
+
+def _spoil_ai(r, cfg):
+    r["ai_look"]["shadow"]["frames"] = 3
+
+
+SEEDS = {   # one failure per check, the kind each style's reference films never show
+    "frame_fill": lambda r, c: r["frame_fill"]["per_shot_mean"].update(s2=round(c["fill_max"] + 0.08, 3)),
+    "seams": lambda r, c: r["seams"]["seams"].append({"t": 6.0, "change": c["seam_max"] * 3}),
+    "ai_look": _spoil_ai,
+    "text_in_safe_area": lambda r, c: r["text"]["outside_safe"].append({"t": 5, "text": "TITLE", "x0": 137, "y0": 1603, "x1": 513, "y1": 1748}),
+    "type_size": lambda r, c: r["text"]["too_small"].append({"t": 2, "text": "fine print", "px": 18}),
+    "reading_time": lambda r, c: r["reading"]["too_short"].append({"shot": "s1", "text": "a long sign", "on_screen_s": 0.8, "needs_s": 2.3}),
+    "cold_open": lambda r, c: r["cold_open"].update(first_text_s=c["hook_by_s"] + 1.0),
+    "effects_below_music": lambda r, c: r["mix"].update(sfx_lufs=-12.0),
+    "cue_sync": lambda r, c: r["mix"].update(cue_onset_offsets_ms=[c["sync_ms"] * 3]),
+}

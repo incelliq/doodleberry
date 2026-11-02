@@ -398,6 +398,18 @@
   "beat_cuts": {
    "description": "plan 2.14: move each shot change onto the bar line (else beat) of the score in the pause it falls in",
    "type": "boolean"
+  },
+  "brand": {
+   "description": "true: the house brand kit (brand/brand.json); a string: brand/<id>.json, a channel's own kit (WP-32)",
+   "oneOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "string",
+     "pattern": "^[a-z0-9][a-z0-9_-]{0,40}$"
+    }
+   ]
   }
  }
 }

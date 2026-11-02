@@ -102,6 +102,10 @@ order, in which bundles, and how we know each is finished.
 | 01 | done: feature map reconciled against the code (238 open rows reviewed; now 162 built, 53 partial, 72 open, each open row naming its WP), package scopes extended for the rows they now own, `docs.check` (commands named exist, open rows point at WPs, WP references exist, plan items covered, packages scheduled) in `python -m dbe test` | 2 Nov 2026 |
 | 05 | done: expert review for health, legal and finance (channel rule, `review` on calendar rows and in briefs, `omits` required per fact, `research.check` reports pending, `prod.approve` refuses until a reviewer clears it; tested through the orchestrator), honest labels drawn with the captions; Q1's ten health posts marked | 2 Nov 2026 |
 | 33 | mostly done: licence classes for every component (`licence.ledger`), `film.provenance` posting flags (in `film.package`), `UPSTREAM.json` records and `vendor.check` (in the test suite) for lottie-web, three.js, perfect-freehand and the newly vendored Potrace (GPL) and VTracer (MIT) sources. **Open:** building the two (`vendor.build`) runs their configure, make and cargo scripts, which the environment's safety check blocked pending the owner's permission | 2 Nov 2026 |
+| 04 | done: per-style thresholds and enforced checks in `dbe/profiles.json` `layout_styles` (explainer, doodle, cartoon), calibrated on eleven reference films rendered here; the AI-look lint (shadows, gradient blobs, glows, emoji, centred everything; house set gradients exempt) in `qa.run`; every reference passes its style's enforced checks, and a seeded failure of each check fails QA in each style (`python -m dbe test` layout). Calibration found and fixed: kit-demo's title in the bottom UI band, Nib entering from off-screen, the classroom board's first line under the top bar; and in the measures: a kit face counts as the cold-open character, caption pace only with captions on, invisible or pushed-out text no longer counted, close cues no longer misread as early. Seams stay advisory (hard cuts measure 17 to 168; dissolves are WP-15) | 2 Nov 2026 |
+| 32 | done: channels by id (`plan/channels/<id>/`: channel, idea bank, quarters; the live plan moved to `science`), `channel` on every plan command, `plan.channels`, `plan.cross` (week by week, same-subject clashes across channels), brand kits by id (`brand/<id>.json`, `shots.json` `"brand": "<id>"`), briefs carry the channel's cast, voices and brand, the board colours and filters by channel, the Plan page picks a channel. Two channels (science and a sample kids channel with other audience, fields, posting days, series and brand) each plan a quarter that passes its own rules, the cross view catches a seeded same-subject week, and their films carry their own palettes. The scheduler grew a repair pass: 47 of 48 made-up quarters pass every rule (29 of 48 before). The second series itself is the owner's to define | 2 Nov 2026 |
+| 07 | done: `dbe/packaging.py`: the packaging truth check (numbers, absolutes, causal claims against the film's facts and narration; myth films may ask or deny, never state), the newcomer check, double-barrel thumbnails, `title.check/propose/set`, `titles.status`, and `cover.make` (a scored frame per cut, brand-kit text in the calm band of the safe area, per platform). The back catalogue retitled: all 25 films with a script carry two true titles and two true thumbnails in `titles.json` (one Spanish film in Spanish); covers for every cut and platform of the eleven films rendered here (144 covers); a seeded misleading title ("Cracking your knuckles causes arthritis") is contradicted. `film.package` uses the chosen title and checks it | 2 Nov 2026 |
+| 06 | done: `plan.brief` drafts the storyboard from the row's format template (new `explainer` template; `myth_vs_data`, `dialogue`) in the idea's own words with unsourced facts, and with `launch` puts it on the board with its plan row and starts its session, committing the brief and draft on the film's branch in its workspace; `voice.build` refuses a draft; board cards show start-by, fact-lock and review. Measured in a scratch clone: the first eight Q1 rows each took one command (0.9 to 1.3 s); all eight storyboards pass `storyboard.check`; three sessions run and five queue behind `max_parallel` 3; the tracker shows all eight in production and none overdue. Sessions here were manual runners: Claude Code sessions are WP-03 | 2 Nov 2026 |
 | 02 | done: `engine.doctor` (core, audio, tools; fixes for every gap; doctor self-test), `tools/setup.sh` (idempotent; 1 min 49 s here with the big wheels, 11 s when nothing is missing), `tools/fetch_wheels.py`, `requirements-core.txt` (the core packages were in no requirements file). Not verified on a truly fresh container: this one already had most tools | 2 Nov 2026 |
 
 ## Definition of done (every WP)
@@ -227,7 +231,7 @@ graph LR
   approval, and the tracker shows them posted.
 
 **WP-32 Channels and brands: several series side by side** (S-M, 1 session; owner request)
-- Today: one channel (`plan/channel.json`), one idea bank, one brand kit (`brand/brand.json`). Films can already look
+- Before WP-32: one channel (`plan/channel.json`), one idea bank, one brand kit (`brand/brand.json`). Films could already look
   and sound different (brand, cast, sets, voices and formats are per film), and the board runs any mix of films.
 - Scope: channels by id (`plan/channels/<id>.json`: audience, fields, locale, rules, brand kit, default cast and
   voices); ideas and calendars tagged by channel, with sweeps run per channel; `plan.schedule` and `plan.check` per
@@ -368,7 +372,7 @@ graph LR
 **WP-27 Corrections, companions and living films** (M, 1-2 sessions; plans 4.12, 4.14, 4.8's E12)
 - Scope: a dated corrections log per film that propagates to captions, titles, covers and credits; runnable companion
   guides that reproduce a film's numbers from its analysis scripts; send-a-myth intake into the idea bank; films that
-  re-render when their facts change.
+  re-render when their facts change; a whole catalogue (films, covers, posts) re-rendered in a new brand kit (E30).
 - Done when: one correction updates the page, captions, title and credits in one command, and a companion guide
   reproduces every number in its film.
 
@@ -392,7 +396,8 @@ graph LR
 
 **WP-31 Analytics and a plan that re-ranks itself** (M-L, 2 sessions; plan 4.13, E11, E31; open from 3.8)
 - Scope: the 48-hour metrics checklist; ingestion per platform where terms allow (manual import otherwise);
-  retention curves mapped onto shots and lines; hook variants tested (E11); the idea bank and next quarter's calendar
+  retention curves mapped onto shots and lines; hook variants tested (E11); audience polls between true title options
+  (from `titles.json`, WP-07); the idea bank and next quarter's calendar
   re-ranked by what performed; a business dashboard (revenue by platform and geography, RPM, catalogue value).
 - Done when: Q2 2027's calendar is planned with measured Q1 performance and the change it made is explained row by
   row.

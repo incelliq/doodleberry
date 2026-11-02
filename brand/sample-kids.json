@@ -1,0 +1,25 @@
+{
+ "name": "sample: story shorts for kids",
+ "note": "A sample second brand kit (WP-32): it shows a channel carrying its own look, and is a starting point for the owner's second series. Not a live channel.",
+ "tagline": "Small stories about big wonders",
+ "wordmark": {"text": "story", "accent_text": "sprouts"},
+ "wordmark_accent": "primary",
+ "palette": {
+  "paper": "#fff8e7",
+  "ink": "#1f2a44",
+  "primary": "#0f6e74",
+  "accent": "#b0440f",
+  "highlight": "#ffe066",
+  "mist": "#e3f2ef",
+  "secondary_text": "#44506a"
+ },
+ "accents": ["primary", "accent", "highlight"],
+ "text_pairs": [
+  ["ink", "paper", "body"], ["secondary_text", "paper", "body"], ["paper", "primary", "body"], ["primary", "paper", "body"],
+  ["paper", "accent", "body"], ["accent", "paper", "body"], ["ink", "highlight", "body"], ["ink", "mist", "body"]
+ ],
+ "fonts": {"headline": "Fredoka", "body": "Fredoka", "mono": "Atkinson Hyperlegible Mono", "hand": "Patrick Hand"},
+ "captions": {"highlight": "highlight", "outline": "ink", "text": "#ffffff"},
+ "exclusions": ["no gradients or glows", "no emoji in titles", "never colour alone for meaning", "highlight is never text on paper"],
+ "notes": "Films of a channel that names this kit set shots.json \"brand\": \"sample-kids\"."
+}

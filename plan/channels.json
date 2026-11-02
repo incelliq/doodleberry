@@ -1,0 +1,4 @@
+{
+ "default": "science",
+ "note": "the content planner's channels (WP-32): one folder per channel under plan/channels/; plan commands default to this one"
+}
