@@ -1,0 +1,6 @@
+{"speakers": {"ravi": {"voice": "kokoro:am_michael"}, "priya": {"voice": "kokoro:af_bella"}}, "lead_in_s": 0.8, "gap_s": 0.45,
+ "lines": [
+  {"id": "l1", "speaker": "ravi", "fact": null, "text": "Did you know the library lends telescopes now?"},
+  {"id": "l2", "speaker": "priya", "fact": null, "text": "No way! You can borrow a telescope?"},
+  {"id": "l3", "speaker": "ravi", "fact": null, "text": "Yes. Just bring your card, and look at the moon tonight."},
+  {"id": "l4", "speaker": "priya", "fact": null, "text": "That is the best thing I have heard all week!", "pause": 1.4}]}

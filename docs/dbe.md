@@ -298,3 +298,13 @@ The Rig Canvas (`puppet/canvas/index.html`) now has:
 - **Sheet**: a model sheet of the character (rest, wave, turned both ways, every drawn view; every mouth, brow, eye state
   and gaze close up), downloadable as SVG. `puppet.sheet` renders the same sheet to PNG (`tools/sheet.mjs`,
   `puppet/loader/sheet.js`).
+
+## Gesture planner (plan 2.3)
+`acting.plan` makes every speaking cast member act from the script and the voice, with no hand-placed clips. Emphasis
+per word comes from the recorded voice (loudness, pitch via WORLD, length per letter, as z-scores within the line):
+beats land on the most emphasised words (at most one every 0.9 s); one point per line on a pointing word ("you",
+"this", "look"...), aimed at the listener (`point_R` or the new mirrored `point_L`); open palms on an exclamation's
+strongest word; a shrug (humanoid) or tilt (doodle) ending a question. Listeners look at the speaker, nod after each of
+their lines and blink on their pauses. Gesture clips get weight 3 so they read over the idle loop. Generated clips are
+tagged `"auto": true` and replaced on each run; hand-placed clips are kept. `films/dialogue-demo` (Ravi and Priya,
+classroom) is acted entirely this way.

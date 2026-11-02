@@ -1015,6 +1015,54 @@
      ]
     ]
    }
+  },
+  "point_L": {
+   "duration": 1.0,
+   "note": "mirror of point_R with the left arm (points to screen left)",
+   "tracks": {
+    "upperarm_L": [
+     [
+      0,
+      0
+     ],
+     [
+      0.35,
+      86
+     ],
+     [
+      1,
+      82
+     ]
+    ],
+    "forearm_L": [
+     [
+      0,
+      0
+     ],
+     [
+      0.35,
+      6
+     ],
+     [
+      1,
+      4
+     ]
+    ],
+    "head": [
+     [
+      0,
+      0
+     ],
+     [
+      0.35,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   }
   }
  },
  "presets": {

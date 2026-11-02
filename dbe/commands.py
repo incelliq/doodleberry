@@ -248,6 +248,19 @@ def cast_generate(spec, id):
     return {"puppet": str(out.relative_to(ROOT)), "registered": reg["registered"]["id"], "warnings": reg.get("warnings")}
 
 
+@command("acting.plan", name=("string", "film (voiced: run voice.build first)"))
+def acting_plan(name):
+    """Gesture planner: every speaking cast member acts from the script and the voice with no hand-placed clips:
+    beats on emphasised words (loudness, pitch, length), points on pointing words, open palms on exclamations, a shrug
+    or tilt on questions; listeners look at the speaker, nod after each line and blink on pauses. Generated clips are
+    tagged auto and replaced on every run; hand-placed clips are kept."""
+    d = _film(name)
+    if not (d / "timing.json").exists():
+        raise FileNotFoundError("no timing.json: run voice.build first")
+    r = _run([PY, "dbe/gestures.py", str(d)], timeout=600)
+    return {"film": name, "plan": json.loads(r[-1])}
+
+
 @command("film.credits", name=("string", "film"))
 def film_credits(name):
     """Credits for a film from what it actually uses: puppets (author, licence), voices (licence), fonts and engines.

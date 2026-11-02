@@ -1,0 +1,216 @@
+{
+ "title": "Library Card",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Library lends:",
+     "books, games,",
+     "telescopes!"
+    ]
+   },
+   "start": 0,
+   "end": 12.848,
+   "start_line": "l1",
+   "end_line": "l4",
+   "tail": 1.2,
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 250,
+      "y": 1536,
+      "s": 1.1
+     },
+     "timeline": {
+      "springs": true,
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "auto": true
+       },
+       {
+        "clip": "point_R",
+        "start": 0.8,
+        "end": 1.7,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 2.88,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 6.103,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_R",
+        "start": 7.253,
+        "end": 8.153,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 11.698,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "look": [
+       [
+        0.8,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        3.817,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        6.503,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        9.573,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       6.403,
+       11.998
+      ],
+      "visemes_from": "ravi"
+     }
+    },
+    {
+     "puppet": "cast/generated/priya.puppet.json",
+     "speaker": "priya",
+     "place": {
+      "x": 830,
+      "y": 1536,
+      "s": 1.1
+     },
+     "timeline": {
+      "springs": true,
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 3.567,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_L",
+        "start": 4.537,
+        "end": 5.437,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 5.327,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 9.323,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 9.723,
+        "end": 11.123,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 10.943,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "look": [
+       [
+        0.65,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        3.967,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        6.353,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        9.723,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       3.867,
+       9.623
+      ],
+      "visemes_from": "priya"
+     }
+    }
+   ]
+  }
+ ]
+}
