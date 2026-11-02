@@ -12,7 +12,17 @@ features that **emerge** when Doodleberry's primitives combine. Status is checke
 - **Status:** ✅ have · 🟡 partial · ⬜ missing.
 - **Priority:** P0 next, P1 soon, P2 later.
 
-Pro-tool attributions come from general product knowledge, not a fresh audit. Check them before quoting externally.
+Pro-tool attributions in the rows below come from general product knowledge. The audited, chapter-by-chapter
+comparison is **`docs/parity-matrix.md`** (WP-41, 2 November 2026): eight tools (Harmony, Moho, TVPaint, Blender
+Grease Pencil, OpenToonz, Synfig, After Effects, Nuke), 214 manual chapters, 1,396 capabilities in our own words, each
+matched to a command, a data field, a metric, a partial match with the WP that finishes it, or a gap with the WP that
+closes it. Coverage then: 35% covered, 66% covered or partial (of the capabilities that apply). The gaps fall mostly
+to WP-36 compositor (156), WP-35 hand-drawn animation (106), WP-18 drawing tools (93), WP-42 procedural and 3D (68),
+WP-19 timeline and curves (61), WP-15 post and stroke styles (58) and WP-37 colour (45). Source caveats: Adobe's help
+pages refused automated reading (After Effects chapters come from the guide's listings and Adobe's release pages),
+Moho's manual was read from its public document folder, and OpenToonz 1.8's date is from a news summary. The sweep
+found one row here overstated (Grease Pencil project export, corrected) and twenty capabilities that no package
+covered, now added to their packages' scopes.
 
 ---
 

@@ -1,0 +1,2700 @@
+{
+ "tool": "Moho Pro",
+ "version": "14.5 (Moho 14 series; covers 14.0 to 14.5 and the 13.5 features still in the manual)",
+ "sources": [
+  {
+   "url": "https://lostmarble.com/support/kb/faq.php?id=8",
+   "title": "Lost Marble FAQ: where to find the Moho manuals",
+   "used_for": "Locating the official Moho 14 user manual (manual.lostmarble.com) and tutorial guide"
+  },
+  {
+   "url": "https://manual.lostmarble.com/",
+   "title": "Moho 14 Users Manual (official online wiki)",
+   "used_for": "Official manual entry point (a wiki built on a public Google Drive folder)"
+  },
+  {
+   "url": "https://drive.google.com/drive/folders/1UxA8Gi5DttJku9AmFlSpO0gJw4U9flX3",
+   "title": "Moho 14 Users Manual: top-level table of contents (27 chapters, appendices A to G)",
+   "used_for": "The real chapter list, and each chapter's section list, read from the folder listing"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1JQiteCeMqxlAdhDW21kNVsjMoxyAHPo-q0QHnIEnhYI/edit",
+   "title": "Manual 1.02: What's New in Moho 14",
+   "used_for": "14.0 features: graphics engine, liquid shapes, curvers, freehand styles, smart line boil, dynamic bones with gravity, delayed constraints, Lua 5.4, timeline redesign"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1FU5G9IPZ5f0NrbjMHWiUj8AvVQvLa2gX1oqj3A8A4tE/edit",
+   "title": "Manual 1.02b: What's New in 14.1",
+   "used_for": "14.1 changes: pixelation effect, Linear Dodge blend mode, preview resolution"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1SQAoXD4ZZ2sai5o81wjrvoI9P1p51MHSmCbAiGXDzrs/edit",
+   "title": "Manual 1.02c: What's New in 14.2",
+   "used_for": "14.2 changes: animated curve profile, smart vector-noise boil, Color Burn, PSD clipping, Smart Bones toggling dynamics, startup Lua from the command line"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1hmWinmAPVyqnGpAtAkaZcKgyPNG0TXUhv2j58CA_vTY/edit",
+   "title": "Manual 1.02d: What's New in 14.3",
+   "used_for": "14.3 changes: per-point brush opacity and colour drift, lasso shape selection, 360-degree target bones"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1h_zs407rIl56m1mjoRnE0pyJir_VPCLRll5uhfi85Is/edit",
+   "title": "Manual 1.02e: What's New in 14.4",
+   "used_for": "14.4 changes: glTF/GLB export with actions and morph targets, 360 Smart Bones, particles along curves, bulk style editing"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1Ykbb3WPe0dB40etTGlNkilnQnWRnykWxmvJlahNop_s/edit",
+   "title": "Manual 1.02f: What's New in 14.5 Part 1",
+   "used_for": "14.5 drawing changes: trim tails, paint bucket vector, trace and recolour modes, onion-skin improvements"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1uNkGJ4nNdp_2wNOwZGSC347dgDe64gsKmhJmUHjWrbs/edit",
+   "title": "Manual 1.02g: What's New in 14.5 Part 2",
+   "used_for": "14.5 Live Performance Mode: camera, mic, keyboard and gamepad puppeteering, captured to keys, virtual webcam"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1TfEQgdFfd7wIdimI3Z0vxAjU4pIqG4gARK398ka4q6E/edit",
+   "title": "Manual 1.02h: What's New in 14.5 Part 3",
+   "used_for": "14.5 video tracking upgrade and face tracking from video into bones, Smart Bones and a mesh"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1PGfBh1VB2PCrZUXD66nwUL7sIJwPa5pKn1E3jeONVDY/edit",
+   "title": "Manual 1.02i: What's New in 14.5 Part 4",
+   "used_for": "14.5 audio phonemes, Smart Bone lip sync, EXR export and import, PNG colour profiles, exporter status, Is Animated filter"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1PWM7-42ANwV0rrD07HCJRFeLpvt2aPATwohtI0HONZ4/edit",
+   "title": "Manual Appendix A: Feature Comparison List (Pro vs Debut)",
+   "used_for": "Which capabilities are Pro-only (interpolation types, layer comps, depth of field, stereo, batch export, physics)"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1Xd70Bmhf8aIkOuBmvv_-_JY4xA5Oz2FDJ1jN7iHubjI/edit",
+   "title": "Manual 7.01: Camera Tools",
+   "used_for": "Camera track, zoom, roll, pan/tilt, the camera path, the orbit view"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1pMr3_yXzP821ovTpcqktvycuBgXEHYHZZkT93TiRXhw/edit",
+   "title": "Manual 5.11: Bone Physics",
+   "used_for": "Bone collision regions, motors, lock tip"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1IVCfA8Qu6XnErj5c6y4T2yBy0FdJ5fWrgnVehhGhDj8/edit",
+   "title": "Manual 5.12: Smart Bones",
+   "used_for": "What Smart Bone actions drive, the two-direction actions, dials"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1MOOiPVj1RtDR7gBnyf2RjPIEHF09guNV7_TYhXDowCs/edit",
+   "title": "Manual 27.05: Perspective warp and Quad warp",
+   "used_for": "Perspective and quad mesh warping as a smart warp layer"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1LHICWmawL0fTy1BGNcDRXZvKFrcVsYF5PLGvuAu5pdY/edit",
+   "title": "Manual 18.27: Export Animation",
+   "used_for": "Export formats and render options (codecs with alpha, GIF, SVG sequence, layer comp, half size)"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1U4T7-ai6a8DsitC5X-O9K_FPj6J-ZAgzYJzpVni9WBc/edit",
+   "title": "Manual 18.17: Import",
+   "used_for": "Import types (Moho objects, styles, images, sequences, SVG, movies, tracing image, audio, OBJ)"
+  },
+  {
+   "url": "https://docs.google.com/document/d/1FLYqWGykCLDi8s3QaVwmA0MgwqH_DXwzMcvL2LOV4aI/edit",
+   "title": "Manual Appendix G: Command Line",
+   "used_for": "Headless render flags (format, range, layer comps, quality toggles, logging)"
+  },
+  {
+   "url": "https://docs.google.com/document/d/16lOVCeBw07IM8T0N14syaC3cFgf-YfLNVfrC_-YhCAg/edit",
+   "title": "Manual Appendix C: Acknowledgements",
+   "used_for": "Third-party component attributions"
+  },
+  {
+   "url": "https://moho.lostmarble.com/blogs/news/moho-pro-13-5-new-features",
+   "title": "Moho Pro 13.5 new features (official blog)",
+   "used_for": "13.5 release: Vitruvian bones, quad meshes, wind dynamics"
+  },
+  {
+   "url": "https://moho.lostmarble.com/blogs/news/what-is-new-in-the-latest-13-5-3-free-update-1",
+   "title": "What is new in the 13.5.3 and 13.5.4 updates (official blog)",
+   "used_for": "13.5.3/13.5.4: automatic lip sync to a switch layer, soundtrack WAV export, interval markers"
+  },
+  {
+   "url": "https://moho.lostmarble.com/blogs/news/moho-announces-free-side-quest-update-for-moho-14-owners-export-to-video-game-engines-and-blender",
+   "title": "Moho 14.4 SIDE QUEST announcement (official blog)",
+   "used_for": "Confirming 14.4 game-engine and Blender export"
+  },
+  {
+   "url": "file:///tmp/claude-0/-home-user/bd3c0793-5123-55b8-9af6-ed843e0c96b5/scratchpad/wp41/commands.md",
+   "title": "Doodleberry command registry (one line per command)",
+   "used_for": "Command matches (names as written there)"
+  },
+  {
+   "url": "file:///tmp/claude-0/-home-user/bd3c0793-5123-55b8-9af6-ed843e0c96b5/scratchpad/wp41/wps.md",
+   "title": "Doodleberry work packages WP-01..WP-43",
+   "used_for": "Gap and partial assignments"
+  },
+  {
+   "url": "file:///home/user/doodleberry/puppet/spec/puppet-format.md",
+   "title": "Doodleberry puppet format v0.7",
+   "used_for": "Data matches (parts, swaps, views, springs, controls, chains, limits, bend, mesh strokes, clips, poses)"
+  },
+  {
+   "url": "file:///home/user/doodleberry/docs/dbe.md",
+   "title": "Doodleberry backend reference",
+   "used_for": "shots.json fields (camera, style.step, style.boil, style.toon, props physics, bubbles, overlays), renderers, Studio timeline and Rig Canvas"
+  },
+  {
+   "url": "file:///home/user/doodleberry/docs/feature-map.md",
+   "title": "Doodleberry feature map",
+   "used_for": "Status of partial features and which WP owns each open row"
+  }
+ ],
+ "chapters": [
+  {
+   "chapter": "Chapter 1: Introduction (incl. What's New 14.0 to 14.5)",
+   "source_url": "https://drive.google.com/drive/folders/1SbRuKc1x9WTYXLm_Y8P9uUxqUrg2NDmU",
+   "capabilities": [
+    {
+     "id": "moho-introduction-1",
+     "capability": "System requirements and installation: the supported OS, GPU and tablet setup, and a one-step install.",
+     "pro_use": "Studios image every workstation the same way so files open and render identically.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.doctor",
+       "engine.info"
+      ],
+      "note": "engine.doctor checks core, audio and tool dependencies and prints the exact fix for each (tools/setup.sh applies them); engine.info reports the renderers available."
+     }
+    },
+    {
+     "id": "moho-introduction-2",
+     "capability": "Getting-started projects and startup content: ready-made documents and sample characters to start from.",
+     "pro_use": "Teams start a new episode from a house template rather than an empty canvas.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "film.create makes an empty film folder. film.from_template builds a storyboard from a format template (dialogue, explainer, myth_vs_data)."
+     }
+    },
+    {
+     "id": "moho-introduction-3",
+     "capability": "A custom content folder that holds user brushes, scripts, styles and presets in one place.",
+     "pro_use": "A studio keeps its own brushes, rigs and tools in one place, version-controlled and shared by everyone.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "cast/ library",
+       "puppet/clips/<template>.json",
+       "assets/manifest.json"
+      ],
+      "note": "Characters, clip libraries and third-party assets are files in the repo, and every asset has a manifest row with its licence."
+     }
+    },
+    {
+     "id": "moho-introduction-4",
+     "capability": "Licence activation, deactivation and automatic update checks.",
+     "pro_use": "IT moves seats between machines and controls which version is in use.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is in-house code with no seats or activation. The version is whatever git checkout is in use."
+     }
+    },
+    {
+     "id": "moho-introduction-5",
+     "capability": "Live Performance Mode (14.5): drive a rig in real time from a webcam, microphone, keyboard or game controller, on top of existing animation.",
+     "pro_use": "Used for fast dialogue blocking, live streams and VTuber-style shows with a studio character.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-12"
+      ],
+      "note": "actout.clip turns a recorded take (MediaPipe body and face) into a clip. Real-time live tracking (E9) is a WP-12 follow-on."
+     }
+    },
+    {
+     "id": "moho-introduction-6",
+     "capability": "Live Playback capture: keep a performance as editable keyframes, with separate passes per character or per selected layers.",
+     "pro_use": "Animators capture a rough take and then polish the keys by hand, layering several passes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "timeline.edit",
+       "WP-12"
+      ],
+      "note": "A take becomes a reduced-key clip on the character, and timeline.edit moves or resizes it. Multi-person takes and live passes are in WP-12."
+     }
+    },
+    {
+     "id": "moho-introduction-7",
+     "capability": "Face-tracked head turns and expressions: tracking drives a head-turn control bone and facial Smart Bones, including eyes, brows and mouth.",
+     "pro_use": "Gives quick, natural head and face acting for talking-head and dialogue scenes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-12"
+      ],
+      "note": "Face Landmarker blendshapes already become eye, brow, gaze and mouth keys. Feeding head yaw into the puppet's turn control is named in WP-12."
+     }
+    },
+    {
+     "id": "moho-introduction-8",
+     "capability": "Gamepad and joystick controls: buttons trigger actions and sticks move bones, optionally holding the pose on release.",
+     "pro_use": "Lets a puppeteer trigger gestures and expressions live, like playing an instrument.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-12"
+      ],
+      "note": "There is no live input device path. It fits WP-12's live tracking follow-on."
+     }
+    },
+    {
+     "id": "moho-introduction-9",
+     "capability": "Virtual webcam output: broadcast the live-performed character to meeting or streaming software.",
+     "pro_use": "Puts a branded character into live calls, classes and streams.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-12"
+      ],
+      "note": "Live 2D avatars of the cast (E9) are a WP-12 P2 follow-on."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 2: License",
+   "source_url": "https://drive.google.com/drive/folders/1mm2OeAjqMqgttS3RzBWAz8mSlAstu_DT",
+   "capabilities": [
+    {
+     "id": "moho-license-1",
+     "capability": "Licence types (Pro vs Debut, perpetual, floating or network licences for studios).",
+     "pro_use": "Studios use floating licences so seats follow the artist.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is in-house code with no product licensing. The licences of components it uses are tracked separately (licence.ledger)."
+     }
+    },
+    {
+     "id": "moho-license-2",
+     "capability": "The end-user licence agreement, which sets how the software and the bundled content may be used.",
+     "pro_use": "Legal checks whether the bundled content may appear in client or broadcast work.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "licence.ledger",
+       "film.provenance",
+       "WP-33"
+      ],
+      "note": "Doodleberry has no EULA. The matching control is a licence class for every component, with restricted inputs flagged at the posting gate. WP-33 finishes per-render recording."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 3: The Draw Tools",
+   "source_url": "https://drive.google.com/drive/folders/1Ids9y6TBVgF5DOPbxnGiicCDVCA6AXR9",
+   "capabilities": [
+    {
+     "id": "moho-draw-tools-1",
+     "capability": "Bezier curve editing: add points, then shape curvature with full handles or smooth and peaked corners.",
+     "pro_use": "Cleans character outlines precisely so they deform well under bones.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "puppet.import",
+       "WP-34"
+      ],
+      "note": "Parts are SVG path data, so they can be edited through a layered-SVG round trip (for example in Inkscape). There is no in-house handle editor. Vector editing is a WP-34 integration candidate."
+     }
+    },
+    {
+     "id": "moho-draw-tools-2",
+     "capability": "Freehand drawing with pressure, smoothing, auto-fill, Shift for straight lines, trimming of stray tails and welding of endpoints (14.0, 14.5).",
+     "pro_use": "Used for rough-to-clean drawing straight into the rig, and for frame-by-frame effects.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "The Rig Canvas ink uses perfect-freehand pressure and RDP simplification, and puppet.save writes the result. A stabiliser, tail trimming and welding are in WP-18."
+     }
+    },
+    {
+     "id": "moho-draw-tools-3",
+     "capability": "Boolean shape operations: add, subtract and intersect shapes.",
+     "pro_use": "Builds complex props and cut-outs (holes, highlights) quickly.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Only even-odd fill rules exist (strokes 'rule': 'evenodd'). Shape booleans belong with the Rig Canvas tools in WP-18. Skia-pathops or Clipper2 are already used for toon shading."
+     }
+    },
+    {
+     "id": "moho-draw-tools-4",
+     "capability": "Point selection and transformation: lasso or box select, then move, scale and rotate about a pivot.",
+     "pro_use": "Used to adjust a mouth or a hand drawing without redrawing it.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "The feature map lists lasso and transform under WP-18."
+     }
+    },
+    {
+     "id": "moho-draw-tools-5",
+     "capability": "Shape primitives (rectangle, oval, star, arrow) and the blob brush for filled organic shapes.",
+     "pro_use": "Gives fast blocking of props, backgrounds and filled masses.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "Ink strokes are already filled outline shapes (blob-like). There are no primitives in the Rig Canvas. Sets and props are drawn in code (sets/*.js)."
+     }
+    },
+    {
+     "id": "moho-draw-tools-6",
+     "capability": "An eraser that removes both fills and strokes, optionally limited to the selected shapes.",
+     "pro_use": "Used to fix drawings in place.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "The eraser is in the feature map's brush-engine row, owned by WP-18."
+     }
+    },
+    {
+     "id": "moho-draw-tools-7",
+     "capability": "Point reduction: simplify a curve to fewer points.",
+     "pro_use": "Keeps rigged art light so it deforms cleanly and renders fast.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "Strokes are RDP-simplified on capture. Cleaning up imported parts (picosvg, svgo, vpype) is in WP-18."
+     }
+    },
+    {
+     "id": "moho-draw-tools-8",
+     "capability": "Scatter brush: stamp many varied copies of a shape (leaves, grass, crowds of dots).",
+     "pro_use": "Used to dress backgrounds quickly.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Procedural scatter and instancing are in WP-42."
+     }
+    },
+    {
+     "id": "moho-draw-tools-9",
+     "capability": "Point deformers: perspective, shear and bend applied to selected points.",
+     "pro_use": "Used to fake a turn or a foreshortening on a drawing without redrawing it.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "WP-34 covers vector editing and deformers through Synfig core and Inkscape."
+     }
+    },
+    {
+     "id": "moho-draw-tools-10",
+     "capability": "Noise tool and vector noise: random wobble on points, optionally animated, or only while the shape moves.",
+     "pro_use": "Gives a hand-made, jittery line look.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json style.boil"
+      ],
+      "note": "Deterministic line boil (cycled displacement fields at a chosen fps, amount and frequency) gives the animated-wobble look. A permanent jitter of points is not offered."
+     }
+    },
+    {
+     "id": "moho-draw-tools-11",
+     "capability": "Magnet tool: drag points with a soft falloff, and Shift-drag back toward their frame-0 shape (14.5).",
+     "pro_use": "Used to sculpt squash, cheeks and cloth on a frame.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "There is no point-level sculpting in the Rig Canvas."
+     }
+    },
+    {
+     "id": "moho-draw-tools-12",
+     "capability": "Liquid shapes (14.0): soft vector shapes that merge, subtract and intersect live as they animate.",
+     "pro_use": "Used for fire, smoke, water and blobby character effects.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "This needs live vector booleans in the engine (WP-34 vector editing). The effects use (fire, water, smoke) also overlaps WP-35."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 4: Fill Tools",
+   "source_url": "https://drive.google.com/drive/folders/1ddJfOQFtLpNuwhl-o7IC8xEAKYjSp-Rt",
+   "capabilities": [
+    {
+     "id": "moho-fill-tools-1",
+     "capability": "Create shapes and paint-bucket fills from linework, with gap closing, a trace mode that outlines visible regions across layers, and weld-crossings (14.3, 14.5).",
+     "pro_use": "Colours line art quickly, including rough lines that do not quite close.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.save",
+       "WP-18"
+      ],
+      "note": "The Rig Canvas bucket fills an inked area, closes gaps up to about 10 px and tucks the fill under the ink. Trace-across-layers is in WP-18."
+     }
+    },
+    {
+     "id": "moho-fill-tools-2",
+     "capability": "Recolour mode: change an existing shape's fill or stroke colour without new points.",
+     "pro_use": "Used for colour passes and palette changes late in production.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet palette",
+       "set_opts"
+      ],
+      "note": "Fills and strokes name palette slots, so recolouring a slot recolours every shape using it. set_opts recolours sets."
+     }
+    },
+    {
+     "id": "moho-fill-tools-3",
+     "capability": "Line width per point, with pressure, random width and whole-curve resizing.",
+     "pro_use": "Gives an expressive inked line weight that tapers at joints.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet parts[].strokes[].width",
+       "WP-15"
+      ],
+      "note": "Each stroke has one width, and Rig Canvas ink bakes pressure into its outline. Animatable per-point width belongs with line styles in WP-15."
+     }
+    },
+    {
+     "id": "moho-fill-tools-4",
+     "capability": "Hide edge: make chosen segments of an outline invisible while the fill stays.",
+     "pro_use": "Gives seamless joins where parts overlap, such as the neck or shoulders.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "A stroke can drop its stroke colour entirely, but not per segment. Artists draw parts past the joint instead (puppet.coach checks this)."
+     }
+    },
+    {
+     "id": "moho-fill-tools-5",
+     "capability": "Stroke exposure: animate a line drawing itself on or off.",
+     "pro_use": "Used for write-on titles, signatures and diagram reveals.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "There is no draw-on for vector strokes (only typed consoles and procedural growth such as the roots kit). It should join WP-15 with kinetic typography.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "moho-fill-tools-6",
+     "capability": "Curve profile: shape a stroke's cross-section along its length, animatable with an offset (14.2).",
+     "pro_use": "Used for ribbon-like hair, tubes and stylised outlines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "It should join WP-15 (line styles and medium simulation for vector lines).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "moho-fill-tools-7",
+     "capability": "Point colours: colour that varies across a shape, following its curve.",
+     "pro_use": "Gives soft colour transitions on vector characters without gradients.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "It should join WP-15. Every renderer would need it (WP-14).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "moho-fill-tools-8",
+     "capability": "Brush opacity and colour drift per point, driven by pressure or randomness and animatable (14.3).",
+     "pro_use": "Gives natural-media lines (pencil, watercolour) on rigged vector art.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-34"
+      ],
+      "note": "Brush engines are a WP-34 integration candidate (Krita, libmypaint). The vector medium look is also in WP-15."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 5: Bone Tools",
+   "source_url": "https://drive.google.com/drive/folders/1c_EGakahrWxlX4WrQ3wg2UfzxukX86CZ",
+   "capabilities": [
+    {
+     "id": "moho-bone-tools-1",
+     "capability": "Build a bone hierarchy: add, select, reparent and offset bones, set pivots and pose with forward kinematics.",
+     "pro_use": "This is the base of every cut-out rig.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].parent",
+       "puppet parts[].pivot"
+      ],
+      "note": "Each part is a bone with a parent and a pivot, posed by angles relative to the drawn pose. The Rig Canvas sets pivots, and doodle.cut confirms them for doodles."
+     }
+    },
+    {
+     "id": "moho-bone-tools-2",
+     "capability": "Inverse kinematics while posing: drag a hand or foot and the chain follows, with bone locks and targets.",
+     "pro_use": "Gives fast posing and planted feet for walks.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline ik",
+       "acting timeline pins",
+       "puppet chains"
+      ],
+      "note": "There is two-bone IK with foot pins, and N-bone FABRIK chains. The Rig Canvas Pose tool drags hands and feet by IK."
+     }
+    },
+    {
+     "id": "moho-bone-tools-3",
+     "capability": "Bone strength and region binding: each bone's falloff weights nearby points for smooth deformation.",
+     "pro_use": "Gives smooth elbows, knees and torsos without visible hinges.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-14"
+      ],
+      "note": "Mesh strokes with per-vertex weights (puppet v0.5) and bendy limbs exist, but only in the SVG renderer (bendy limbs also in Grease Pencil). Other renderers are in WP-14. There is no strength-painting tool."
+     }
+    },
+    {
+     "id": "moho-bone-tools-4",
+     "capability": "Sketch bones: draw a whole chain of bones in one gesture.",
+     "pro_use": "Gives quick rigging of tails, hair and props.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "doodle.snap",
+       "cast.generate",
+       "WP-18"
+      ],
+      "note": "Rigs are made automatically (pivots estimated on import, suggested for doodles, generated for cast.generate). Interactive chain drawing in the Rig Canvas is WP-18."
+     }
+    },
+    {
+     "id": "moho-bone-tools-5",
+     "capability": "Bind layers and bind points: attach whole drawings or individual points to chosen bones.",
+     "pro_use": "Controls exactly which art follows which bone.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].strokes",
+       "puppet swaps[].anchor",
+       "mesh strokes weights"
+      ],
+      "note": "A part's strokes move with its bone, and swap sets anchor to a part. Per-vertex binding exists only for mesh strokes."
+     }
+    },
+    {
+     "id": "moho-bone-tools-6",
+     "capability": "Bone physics: pill-shaped collision regions, motors (speed and torque), and lock tip, inside a physics group.",
+     "pro_use": "Used for ragdolls, machines and objects that tumble.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-09"
+      ],
+      "note": "Only props have physics (ballistic flights, drops, bounces). Multi-body scenes with deterministic Rapier are WP-09."
+     }
+    },
+    {
+     "id": "moho-bone-tools-7",
+     "capability": "Smart Bones: a bone's rotation automatically drives corrective actions (point shapes, colours, switches, order, flips), one action per direction.",
+     "pro_use": "This is Moho's signature technique: clean elbows and head turns, and face rigs driven by one dial.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet controls",
+       "WP-11"
+      ],
+      "note": "Controls (v0.4 driven keys) drive angles, shifts, swaps and z from one value, but they are keyed in the timeline rather than driven by a bone's angle, and they cannot morph points. Substitution driven by angle is WP-11. Point morphs are WP-43."
+     }
+    },
+    {
+     "id": "moho-bone-tools-8",
+     "capability": "Control bones as dials or levers that a rig exposes for expressions and turns, including 360-degree Smart Bones (14.4).",
+     "pro_use": "Animators work from a small set of high-level controls instead of many bones.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet controls",
+       "acting timeline controls"
+      ],
+      "note": "Named controls with a range (for example Pip's 'turn') are animated per shot as [[t, value]]. Wrap-around 360 controls are not offered."
+     }
+    },
+    {
+     "id": "moho-bone-tools-9",
+     "capability": "Force / wind tool (13.5): wind with strength, direction and turbulence acting on dynamic bones.",
+     "pro_use": "Used for hair, flags, grass and clothes in outdoor scenes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-09"
+      ],
+      "note": "Springs follow only their driver part. Wind as an external force fits WP-09 (physics finished)."
+     }
+    },
+    {
+     "id": "moho-bone-tools-10",
+     "capability": "Vitruvian bones (13.5): one bone layer holds several alternate bone sets and drawings (for example front and side limbs), switched per frame.",
+     "pro_use": "Gives foreshortening, turnarounds and extreme poses in a single rig.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet views",
+       "acting timeline view"
+      ],
+      "note": "Views override parts, pivots and swaps per view and are switched by the timeline with a turn smear. Every renderer and exporter supports them."
+     }
+    },
+    {
+     "id": "moho-bone-tools-11",
+     "capability": "Bone constraints: angle limits, point-at targets (now reaching a full 360 degrees), copy and independent targeting, and ignoring IK.",
+     "pro_use": "Keeps rigs from breaking and automates eye aim and props.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet parts[].limits",
+       "acting timeline lookat",
+       "WP-11"
+      ],
+      "note": "Joint limits and the look-at constraint exist. Copy-rotation and follow-path constraints are WP-11."
+     }
+    },
+    {
+     "id": "moho-bone-tools-12",
+     "capability": "Animated bone parenting and parent switching over time.",
+     "pro_use": "Used for hand-offs, picking things up, and a character mounting a vehicle.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json props attach",
+       "WP-11"
+      ],
+      "note": "A prop switches parent (hand to hand, a throw, a drop) along an arc. Character-to-character handshakes and hand-offs are WP-11."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 6: Layer Tools",
+   "source_url": "https://drive.google.com/drive/folders/1-B5N3EV72bT5-H1O6txtblNfkRGuNwrq",
+   "capabilities": [
+    {
+     "id": "moho-layer-tools-1",
+     "capability": "Transform layers (move, scale, rotate) and set a layer's origin, all animatable.",
+     "pro_use": "Used to place and move characters and props within a scene.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json cast[].place",
+       "acting timeline travel",
+       "shots.json props"
+      ],
+      "note": "Characters are placed per shot and travel over time. Props have positions, spin and travel."
+     }
+    },
+    {
+     "id": "moho-layer-tools-2",
+     "capability": "Follow path: a layer travels along a drawn curve, optionally oriented to it.",
+     "pro_use": "Used for flights, vehicles and characters walking a curved route.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json props arc",
+       "WP-11"
+      ],
+      "note": "Props travel on arcs between parents. Follow-path constraints and walking along a path are WP-11."
+     }
+    },
+    {
+     "id": "moho-layer-tools-3",
+     "capability": "Rotate a layer about X or Y (3D tilt of flat art) and shear a layer.",
+     "pro_use": "Gives cheap perspective on signs, doors and cards.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Flat layers in depth and the multiplane camera are WP-36."
+     }
+    },
+    {
+     "id": "moho-layer-tools-4",
+     "capability": "Insert text as an editable layer with font, size and colour.",
+     "pro_use": "Used for titles, signs and labels inside the scene.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json overlays (text, sign, title, paper)"
+      ],
+      "note": "Text and sign overlays and title kit elements are timed per shot. Sinhala and other scripts fall back per glyph."
+     }
+    },
+    {
+     "id": "moho-layer-tools-5",
+     "capability": "Word balloons: speech balloons with tails pointing at a speaker.",
+     "pro_use": "Used for comic-style dialogue and captioned, sound-off cuts.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json bubbles",
+       "script lines style/bubble",
+       "shots.json extra_bubbles"
+      ],
+      "note": "Say, shout and whisper bubbles are synced to the voice and avoid collisions. Thought clouds and narration boxes are WP-17."
+     }
+    },
+    {
+     "id": "moho-layer-tools-6",
+     "capability": "Layer selector and eyedropper: pick a layer or copy a style by clicking on the canvas.",
+     "pro_use": "Speeds up hands-on editing in dense scenes.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "In Doodleberry, parts, cast and colours are named ids and palette slots that agents address directly. The Rig Canvas already selects parts by clicking."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 7: Camera and Workspace Tools",
+   "source_url": "https://drive.google.com/drive/folders/1keoF5d4ftZEds6HhjC_0SoKAOxHatNpl",
+   "capabilities": [
+    {
+     "id": "moho-camera-workspace-1",
+     "capability": "Track (pan) and zoom the camera, keyframed.",
+     "pro_use": "Used for push-ins, reveals and following action.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json camera",
+       "shots.json camera_auto"
+      ],
+      "note": "Camera keys [[t, [cx, cy, zoom]]] are folded into the bake for every renderer. camera_auto adds speaker framing and punch-ins as a pure function of time."
+     }
+    },
+    {
+     "id": "moho-camera-workspace-2",
+     "capability": "Roll the camera (tilt the frame sideways).",
+     "pro_use": "Used for dutch angles and impact moments.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Camera keys have no rotation. It should join WP-36 (multiplane camera).",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "moho-camera-workspace-3",
+     "capability": "Pan/tilt the camera in 3D among layers placed at depth, giving real parallax.",
+     "pro_use": "Gives multiplane-style depth in backgrounds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Some sets fake parallax (forest depths). True multiplane depth is WP-36."
+     }
+    },
+    {
+     "id": "moho-camera-workspace-4",
+     "capability": "Show the camera's motion path, and orbit the workspace to view the scene from outside the camera.",
+     "pro_use": "Used to check and plan complex camera moves.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "A camera-keys lane in the Studio timeline is in WP-19."
+     }
+    },
+    {
+     "id": "moho-camera-workspace-5",
+     "capability": "Workspace navigation: pan, zoom, rotate and flip the canvas view (not the output).",
+     "pro_use": "Lets the artist draw at a comfortable angle and check a drawing mirrored.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "This is a view-only editor convenience. Doodleberry renders straight from data, and the Rig Canvas has its own canvas view."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 8: Special Tools",
+   "source_url": "https://drive.google.com/drive/folders/1Vz1XB8WvPmgHRAtbFM57d39OGjUWq38n",
+   "capabilities": [
+    {
+     "id": "moho-special-tools-1",
+     "capability": "Switch layers: a set of alternative drawings, one shown at a time and keyed on the timeline (mouths, hands, eyes).",
+     "pro_use": "Used for lip-sync charts, hand poses and expression swaps.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet swaps",
+       "acting timeline poses"
+      ],
+      "note": "Mouths, eyes, brows, pupils and hand poses are swap sets, chosen by lip-sync, blink or name."
+     }
+    },
+    {
+     "id": "moho-special-tools-2",
+     "capability": "Particle layers: emit copies of child layers with speed, spread, lifetime and gravity.",
+     "pro_use": "Used for rain, snow, sparks, smoke and simple crowds.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Motion effects (speed lines, dust, impact stars) exist. Particles and crowds are WP-42."
+     }
+    },
+    {
+     "id": "moho-special-tools-3",
+     "capability": "Image masking and cropping: cut away part of a bitmap with a vector mask.",
+     "pro_use": "Used to split painted or scanned art into riggable pieces.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "doodle.cut",
+       "WP-36"
+      ],
+      "note": "Raster parts are cut by polygons with hidden overlap seams. General per-layer masks are WP-36."
+     }
+    },
+    {
+     "id": "moho-special-tools-4",
+     "capability": "Video tracking (much improved in 14.5): track a feature through footage or image sequences, with a second point for angle and scale, and apply it to a layer as keys.",
+     "pro_use": "Used to pin animation onto live-action plates or to follow a moving camera.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-12"
+      ],
+      "note": "actout.clip tracks people only. Tracking points and backgrounds (camera-motion compensation) is in WP-12."
+     }
+    },
+    {
+     "id": "moho-special-tools-5",
+     "capability": "Face tracking from video (14.5): analyse recorded footage into facial bones, facial Smart Bones and a face mesh.",
+     "pro_use": "Gives quick facial performance capture for dialogue.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-12"
+      ],
+      "note": "A recorded take gives eye, brow, gaze and mouth keys on an existing rig. Head yaw into the turn control is WP-12. Building a rig from the face is not planned."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 9: Moho's Main Window",
+   "source_url": "https://drive.google.com/drive/folders/12Ivelqck37q0wDQ_2lPnc28_rH2O3N9Y",
+   "capabilities": [
+    {
+     "id": "moho-main-window-1",
+     "capability": "A working area that previews close to the final render (the 14.0 graphics engine), with display-quality toggles for effects, masks and brushes.",
+     "pro_use": "Animators judge the final look while they work, without test renders.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview"
+      ],
+      "note": "The player page is the SVG renderer itself (each frame a pure function of time), so the preview matches the render exactly."
+     }
+    },
+    {
+     "id": "moho-main-window-2",
+     "capability": "Playback controls: play, loop, step frames and jump between keys.",
+     "pro_use": "Used for timing reviews.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.preview",
+       "export.web"
+      ],
+      "note": "The Studio timeline and the review room scrub and frame-step. export.web gives a standalone player with play, scrub and frame step."
+     }
+    },
+    {
+     "id": "moho-main-window-3",
+     "capability": "Toolbar, status bar, docking windows and the Pro split views (side by side, four way).",
+     "pro_use": "Lets each artist arrange the screen to suit them.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is agent-native: tools are commands (engine.commands lists them with schemas) rather than a docked GUI."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 10: Layers Window",
+   "source_url": "https://drive.google.com/drive/folders/1uAfd0S_2U4O4V1tpxcH1Y5i2jDjzr-3I",
+   "capabilities": [
+    {
+     "id": "moho-layers-window-1",
+     "capability": "A layer list with nesting, reordering, visibility and quick settings.",
+     "pro_use": "Organises a character and a scene into a manageable tree.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].z",
+       "puppet parts[].parent",
+       "shots.json cast"
+      ],
+      "note": "Draw order is z per part (switchable by controls and clips). Scene order comes from the cast list."
+     }
+    },
+    {
+     "id": "moho-layers-window-2",
+     "capability": "Searching and filtering the layer list, including showing only animated layers (14.5).",
+     "pro_use": "Finds what is keyed in big rigs.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.get"
+      ],
+      "note": "timeline.get returns, per cast member, every clip layer, emotion and gaze key. The film data is plain JSON that agents can search."
+     }
+    },
+    {
+     "id": "moho-layers-window-3",
+     "capability": "Layer comps: saved sets of visible layers that can be rendered separately (for example characters only, or background only).",
+     "pro_use": "Used for render passes handed to compositing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shot.render",
+       "export.lottie",
+       "WP-37"
+      ],
+      "note": "The Synfig and Grease Pencil renderers already draw characters on alpha over a separate set video, and Lottie can drop the background. Named multi-pass output (OpenEXR passes) is WP-37."
+     }
+    },
+    {
+     "id": "moho-layers-window-4",
+     "capability": "Layer referencing: instances of a layer or character that update from a master, including from other files.",
+     "pro_use": "One character master is used across many scenes and episodes.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json cast[].puppet (cast library reference)"
+      ],
+      "note": "Films reference puppets from the cast library by name, so a fix to the master reaches every film on its next render."
+     }
+    },
+    {
+     "id": "moho-layers-window-5",
+     "capability": "Layer colours and tags for organisation.",
+     "pro_use": "Gives visual grouping in large scenes.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "This is a GUI organisation aid. Doodleberry's data is named ids."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 11: Layer Types",
+   "source_url": "https://drive.google.com/drive/folders/1n9tjQWJ4CzalZQ4fRU0aXroki8TpywZQ",
+   "capabilities": [
+    {
+     "id": "moho-layer-types-1",
+     "capability": "Vector layers: resolution-independent drawings made of points, curves and shapes.",
+     "pro_use": "The default art type for rigged characters.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].strokes[].d"
+      ],
+      "note": "Parts are SVG path data in artboard units, so output is resolution independent."
+     }
+    },
+    {
+     "id": "moho-layer-types-2",
+     "capability": "Image layers: bitmaps (including painted or photographed art) placed and rigged like vectors.",
+     "pro_use": "Used for painted characters and scanned art.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import",
+       "puppet.from_ink",
+       "doodle.snap"
+      ],
+      "note": "These make raster parts (puppet v0.3) from PSD or ORA layers, photos or scans. Raster parts render only in SVG. Other renderers are WP-14."
+     }
+    },
+    {
+     "id": "moho-layer-types-3",
+     "capability": "Image sequence layers: a numbered sequence or video played as one layer.",
+     "pro_use": "Used for hand-drawn effects, rotoscope plates and pre-rendered elements.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Drawn levels (a sequence of drawings with exposures) are WP-35."
+     }
+    },
+    {
+     "id": "moho-layer-types-4",
+     "capability": "Group layers, with group-level masking and shared settings.",
+     "pro_use": "Masks a character's clothing patterns or shading inside a group.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet parts[].parent",
+       "WP-36"
+      ],
+      "note": "The part hierarchy groups art. Group masks are WP-36."
+     }
+    },
+    {
+     "id": "moho-layer-types-5",
+     "capability": "Bone layers that carry the skeleton for their children.",
+     "pro_use": "The container for every rig.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts (skeleton)"
+      ],
+      "note": "The skeleton lives in the puppet file. All renderers read the baked animation from tools/bake.mjs."
+     }
+    },
+    {
+     "id": "moho-layer-types-6",
+     "capability": "Interpolated switch layers: smooth morphs between switch drawings that share point counts.",
+     "pro_use": "Gives smooth mouth and hand transitions instead of pops.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "Swaps are discrete (the only exception is a squash smear on view changes). Morphs between drawings or views are in WP-43."
+     }
+    },
+    {
+     "id": "moho-layer-types-7",
+     "capability": "Frame-by-frame layers: traditional hand-drawn animation inside a rigged scene.",
+     "pro_use": "Used for effects, smears and hand-drawn moments mixed with the rig.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Hand-drawn animation with drawn levels and an X-sheet is WP-35."
+     }
+    },
+    {
+     "id": "moho-layer-types-8",
+     "capability": "Note layers: sticky notes placed in the scene for collaborators.",
+     "pro_use": "Used for director or supervisor notes on specific shots.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "review.add",
+       "review.list",
+       "review.fix"
+      ],
+      "note": "Notes are pinned to frames in review.json, and review.fix turns them into checked data edits."
+     }
+    },
+    {
+     "id": "moho-layer-types-9",
+     "capability": "Audio layers: several sound files placed on the timeline.",
+     "pro_use": "Used for dialogue, music and effects tracks lined up to picture.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "voice.build",
+       "film.render",
+       "WP-40"
+      ],
+      "note": "Voice, a procedural score and timed cues are mixed with stems. Waveform lanes and moving, trimming or replacing audio clips are WP-40."
+     }
+    },
+    {
+     "id": "moho-layer-types-10",
+     "capability": "3D layers: imported 3D models (OBJ) or 2D shapes converted to 3D, in the scene.",
+     "pro_use": "Used for 3D props and sets under a 2D camera.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.info",
+       "WP-42"
+      ],
+      "note": "A three.js GLB renderer exists as a tool (tools/three/run3d.mjs), but no film command composites it with 2D. Blender 3D sets and passes are WP-42."
+     }
+    },
+    {
+     "id": "moho-layer-types-11",
+     "capability": "Patch layers: a masked copy that hides the seam where two overlapping parts meet.",
+     "pro_use": "Gives clean shoulders, hips and necks on cut-out rigs.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_ink",
+       "puppet.coach",
+       "WP-11"
+      ],
+      "note": "Ink cuts keep hidden overlaps, and puppet.coach measures gaps opened by bending. Per-pose z-order (to swap layering at joints) is WP-11."
+     }
+    },
+    {
+     "id": "moho-layer-types-12",
+     "capability": "Text layers.",
+     "pro_use": "Used for on-screen text that stays editable.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json overlays"
+      ],
+      "note": "This is the same match as moho-layer-tools-4."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 12: Layer Settings",
+   "source_url": "https://drive.google.com/drive/folders/1lc0bL_M_kLpqCY5l7MSKU_YdLwug4H6Z",
+   "capabilities": [
+    {
+     "id": "moho-layer-settings-1",
+     "capability": "Layer shadows, shading and outlines (drop shadow, inner shading, outline), previewed live.",
+     "pro_use": "Gives a lit, finished look on flat art without extra drawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json style.toon",
+       "WP-36"
+      ],
+      "note": "Cel-shadow bands and rim light work in SVG, and ground shadows are on by default. Other renderers are WP-14. General layer effects are WP-36. Note that drop shadows are flagged by the AI-look lint."
+     }
+    },
+    {
+     "id": "moho-layer-settings-2",
+     "capability": "Motion blur (realistic, Pro) on moving layers.",
+     "pro_use": "Smooths fast action.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Sub-frame motion blur on fast shots only is in WP-15."
+     }
+    },
+    {
+     "id": "moho-layer-settings-3",
+     "capability": "Masking modes per layer (add, subtract, clip, exclude strokes).",
+     "pro_use": "Used for clothing patterns, eye whites clipping pupils, and shading inside shapes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "This is in the compositor: masks and mattes."
+     }
+    },
+    {
+     "id": "moho-layer-settings-4",
+     "capability": "Blend modes (multiply, screen, add, Color Burn, Linear Dodge) that match PSD behaviour (14.1, 14.2).",
+     "pro_use": "Gives lighting passes and faithful round trips with Photoshop art.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "Only ffmpeg overlays exist. Blend modes are WP-36."
+     }
+    },
+    {
+     "id": "moho-layer-settings-5",
+     "capability": "Animatable layer opacity, blur and pixelation (14.1, 14.2).",
+     "pro_use": "Used for fades, focus pulls and stylised effects.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet parts[].strokes[].opacity",
+       "WP-36"
+      ],
+      "note": "Stroke opacity is static, and finishing presets (grade, vignette, grain) apply per shot. Animated layer opacity and blur are WP-36."
+     }
+    },
+    {
+     "id": "moho-layer-settings-6",
+     "capability": "Depth sort and depth shift: order layers by their distance from the camera.",
+     "pro_use": "Gives correct layering when characters walk in depth.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet parts[].z",
+       "puppet controls z.<part>",
+       "WP-36"
+      ],
+      "note": "Z order is per part and switchable by controls and clips (SVG and Grease Pencil only). Depth planes are WP-36."
+     }
+    },
+    {
+     "id": "moho-layer-settings-7",
+     "capability": "Line boil and smart line boil: redraw jitter at set intervals, optionally only while the shape moves (14.0, 14.2).",
+     "pro_use": "Gives a hand-drawn shimmer on rigged art.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json style.boil",
+       "WP-15"
+      ],
+      "note": "Deterministic boil (fps, amount, frequency) exists on characters, bubbles and signs. Boil only during motion is new and should join WP-15.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "moho-layer-settings-8",
+     "capability": "Particles tab: count, speed, spread, lifetime, emission along curves, per-particle offsets and emission order (14.4).",
+     "pro_use": "Used to tune effects and procedural hair or tails.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "Particles are in WP-42."
+     }
+    },
+    {
+     "id": "moho-layer-settings-9",
+     "capability": "3D options: extrude or lathe a vector shape into a 3D object.",
+     "pro_use": "Used for quick 3D props from 2D drawings.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-42"
+      ],
+      "note": "3D props through Blender are in WP-42."
+     }
+    },
+    {
+     "id": "moho-layer-settings-10",
+     "capability": "Physics tab: rigid bodies with mass, friction, bounciness and collisions between layers.",
+     "pro_use": "Used for falling objects, stacks and collisions without hand keys.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json props attach flight/drop",
+       "WP-09"
+      ],
+      "note": "Single props get ballistic flights, drops, bounces and rolls, deterministically. Multi-body scenes with deterministic Rapier are WP-09."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 13: Style Window",
+   "source_url": "https://drive.google.com/drive/folders/1oy4YrHZMrWUwDGuBrZGSQAdEo4cPHwFG",
+   "capabilities": [
+    {
+     "id": "moho-style-window-1",
+     "capability": "Shared named styles applied to many shapes, so one change updates all of them, including bulk edits of a character's line width, brush and boil (14.4).",
+     "pro_use": "Keeps colour and line consistent across a character and an episode.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet palette",
+       "WP-15"
+      ],
+      "note": "Palette slots share colour across all shapes. Shared line styles (width, brush) across a character belong with line styles in WP-15."
+     }
+    },
+    {
+     "id": "moho-style-window-2",
+     "capability": "Gradient and texture fills.",
+     "pro_use": "Gives soft shading and patterned clothing.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Puppet strokes take flat palette colours only (sets drawn in code may use gradients). It should join WP-18 for authoring, with WP-14 for renderer parity.",
+      "added_to_scope": true
+     }
+    },
+    {
+     "id": "moho-style-window-3",
+     "capability": "Brushes and freehand styles (wet ink, charcoal, gouache, watercolour, pencil), with brush folders.",
+     "pro_use": "Gives natural-media looks on vector rigs.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Medium simulation for vector lines (pencil, marker, crayon) and a watercolour pass are in WP-15. Brush engines are WP-34."
+     }
+    },
+    {
+     "id": "moho-style-window-4",
+     "capability": "Swatches and a colour palette library.",
+     "pro_use": "Holds show palettes and colour models.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet palette",
+       "brand/<id>.json palette"
+      ],
+      "note": "Named palette slots per puppet. The brand kit palette is measured by brand.check."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 14: The Library Window",
+   "source_url": "https://drive.google.com/drive/folders/1897O-2KC5HCdaxeuz0J3sIrQ6PiwDc7L",
+   "capabilities": [
+    {
+     "id": "moho-library-1",
+     "capability": "A library of reusable characters, props, scenes and actions, with tabs and search.",
+     "pro_use": "Teams reuse a show's cast and props from one place.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.list",
+       "cast.add"
+      ],
+      "note": "This is the cast library with provenance. Clips come from template libraries and character clips. Sets come from sets/*.js."
+     }
+    },
+    {
+     "id": "moho-library-2",
+     "capability": "A details panel with item metadata.",
+     "pro_use": "Shows who made an asset and how it may be used.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.list",
+       "asset.check"
+      ],
+      "note": "Lists author, licence and voice profile, and checks every third-party file has a licence row."
+     }
+    },
+    {
+     "id": "moho-library-3",
+     "capability": "Library locations for teams (shared folders that several artists use).",
+     "pro_use": "Gives a shared studio asset store.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "cast.add",
+       "prod.merge",
+       "WP-39"
+      ],
+      "note": "The library is in git and new characters merge through prod.merge. Assignments and locks on characters are WP-39."
+     }
+    },
+    {
+     "id": "moho-library-4",
+     "capability": "Bought or downloaded content packs added to the library.",
+     "pro_use": "Speeds up production with stock assets.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "asset.check",
+       "licence.ledger",
+       "WP-16"
+      ],
+      "note": "Third-party assets are licence-tracked. More packs (Kenney, Open Peeps, Humaaans) are WP-16. Downloaded packs are never committed."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 15: The Character Wizard",
+   "source_url": "https://drive.google.com/drive/folders/10wAhnM89a_JTV1bJpB8MaljSCBeCQrxn",
+   "capabilities": [
+    {
+     "id": "moho-character-wizard-1",
+     "capability": "Parametric character generation (body, face, clothing and style tabs) into a ready rig.",
+     "pro_use": "Gives fast background cast and prototypes.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "cast.generate"
+      ],
+      "note": "Builds an original rigged humanoid from build, age, skin, hair, outfit and accessories. It works with every clip and renderer."
+     }
+    },
+    {
+     "id": "moho-character-wizard-2",
+     "capability": "Walk-cycle designer: parametric walks with stride and style, and making the character walk across the scene.",
+     "pro_use": "Gives quick locomotion for crowds and blocking.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-11"
+      ],
+      "note": "The library walk clip plays with straight travel and foot pins. A parametric walk designer and walking along paths are WP-11."
+     }
+    },
+    {
+     "id": "moho-character-wizard-3",
+     "capability": "Rotating the generated character through 360 degrees.",
+     "pro_use": "Gives turnarounds without redrawing.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "cast.generate",
+       "puppet.sheet",
+       "WP-43"
+      ],
+      "note": "Generated characters get a turn control (three-quarter head), and views can be drawn. Turnaround boards are WP-18. Morphs between views are WP-43."
+     }
+    },
+    {
+     "id": "moho-character-wizard-4",
+     "capability": "Designing your own actions that work on any wizard character.",
+     "pro_use": "Lets a whole cast share one motion set.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet/clips/<template>.json"
+      ],
+      "note": "Clips are defined per template, so every character on a template plays them."
+     }
+    },
+    {
+     "id": "moho-character-wizard-5",
+     "capability": "Creating new content (hair, outfits, parts) for the wizard.",
+     "pro_use": "Lets a studio extend the generator with its own style.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "cast.generate",
+       "WP-16"
+      ],
+      "note": "Generator options are fixed in code. Outfits as swap sets and a family look as parameters are WP-16."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 16: The Timeline Window",
+   "source_url": "https://drive.google.com/drive/folders/1Py61JCduNEYTLwgzrc57XcpJHfYQ8oSv",
+   "capabilities": [
+    {
+     "id": "moho-timeline-1",
+     "capability": "Keyframes per animation channel: add, select, move, copy and delete, including editing switch-type keys.",
+     "pro_use": "This is the core of keyframe animation.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "timeline.get",
+       "WP-19"
+      ],
+      "note": "The timeline edits clip layers (move, resize, add, delete). Per-joint keys are recorded in the Rig Canvas and saved as clips. Dragging lines and shots, and a keys lane, are WP-19."
+     }
+    },
+    {
+     "id": "moho-timeline-2",
+     "capability": "Interpolation methods per key: smooth, linear, ease in/out, step, cycle, noisy, bounce, elastic, stagger.",
+     "pro_use": "Shapes the timing feel of each move.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json style.step",
+       "puppet acting.principles",
+       "WP-19"
+      ],
+      "note": "Keys ease by smoothstep. There is stepped timing, looping clips, and anticipation and overshoot as a filter. Per-key interpolation types and curves are WP-19."
+     }
+    },
+    {
+     "id": "moho-timeline-3",
+     "capability": "Motion graph: edit animation curves directly.",
+     "pro_use": "Gives fine spacing and polish.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "The curve (graph) editor is in WP-19."
+     }
+    },
+    {
+     "id": "moho-timeline-4",
+     "capability": "Onion skins: ghosts of nearby frames or keys, coloured and movable (14.5).",
+     "pro_use": "Essential for spacing and frame-by-frame work.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-35"
+      ],
+      "note": "Onion skins are in WP-35, with expression boards with onion skin in WP-18."
+     }
+    },
+    {
+     "id": "moho-timeline-5",
+     "capability": "Animation interval: animate on twos or threes.",
+     "pro_use": "Gives a hand-made, limited-animation feel.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json style.step"
+      ],
+      "note": "Animate on 12s, 8s or 6s per shot while the film runs at 30 fps. Repeated frames are deduplicated at render."
+     }
+    },
+    {
+     "id": "moho-timeline-6",
+     "capability": "Timeline markers: named or interval markers for beats and notes.",
+     "pro_use": "Lets animators time to music and dialogue beats.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.beats",
+       "timeline.get",
+       "WP-19"
+      ],
+      "note": "There is a beat grid from the score, plus dialogue lanes with word ticks, and times anchor to lines. User-named markers are not offered (WP-19 timeline 2)."
+     }
+    },
+    {
+     "id": "moho-timeline-7",
+     "capability": "Sequencer: move and offset whole layers' animation blocks in time.",
+     "pro_use": "Lets an animator re-time whole performances without touching keys.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Clip layers move and resize, and line-relative times stay line-relative. Dragging shots and lines is WP-19."
+     }
+    },
+    {
+     "id": "moho-timeline-8",
+     "capability": "Push frames left or right: insert or remove time across all layers.",
+     "pro_use": "Used to open up a pause or cut frames late in production.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.retime",
+       "script.slots",
+       "WP-19"
+      ],
+      "note": "Changing a line's slot or voice re-flows shots, acting, captions and cues automatically. A direct insert-time edit is not offered."
+     }
+    },
+    {
+     "id": "moho-timeline-9",
+     "capability": "Relative keyframing: offset a pose additively across existing keys.",
+     "pro_use": "Lets an animator adjust a whole range at once.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline clips[].additive"
+      ],
+      "note": "Additive clip layers add on top of the stack."
+     }
+    },
+    {
+     "id": "moho-timeline-10",
+     "capability": "Mute or hide animation channels.",
+     "pro_use": "Isolates parts of the animation while polishing.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline clips[].weight"
+      ],
+      "note": "A clip layer's weight 0 mutes it. There is no per-joint channel mute."
+     }
+    },
+    {
+     "id": "moho-timeline-11",
+     "capability": "Multiple layers shown together in the timeline, and playing a chosen segment.",
+     "pro_use": "Used to compare timing across characters.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "timeline.get",
+       "shot.render"
+      ],
+      "note": "The Studio timeline shows every character's lanes, the dialogue and the shots. shot.render renders one shot."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 17: Other Windows (Audio Recording, Actions)",
+   "source_url": "https://drive.google.com/drive/folders/10cCxxXNRGyuwIWPbuX6hEkoCtISN_gdR",
+   "capabilities": [
+    {
+     "id": "moho-other-windows-1",
+     "capability": "Audio recording inside the app, straight onto the timeline.",
+     "pro_use": "Used for scratch dialogue for animatics and for solo creators' final voices.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "voice.build",
+       "WP-13"
+      ],
+      "note": "Voices are synthesised and aligned. Human voice-over import with phone-level alignment, fitted to slots, is WP-13."
+     }
+    },
+    {
+     "id": "moho-other-windows-2",
+     "capability": "Actions window: named reusable animations (walk, wave, blink) stored with a rig and inserted on the timeline.",
+     "pro_use": "Builds a motion library per character.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet clips",
+       "puppet/clips/<template>.json"
+      ],
+      "note": "There are 33 library clips plus each character's own clips (v0.7). They are added with timeline.edit add_clip or from prose with acting.direct."
+     }
+    },
+    {
+     "id": "moho-other-windows-3",
+     "capability": "Blending actions onto the timeline with weights, and making actions relative.",
+     "pro_use": "Lets an animator layer a gesture over a walk.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline clips[].weight/fadeIn/additive"
+      ],
+      "note": "A nonlinear clip stack with fades, weights, additive layers and base layers."
+     }
+    },
+    {
+     "id": "moho-other-windows-4",
+     "capability": "Export and import actions, including child layers (14.5), between files and rigs.",
+     "pro_use": "Shares motion across shows.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet/clips/<template>.json",
+       "puppet clips"
+      ],
+      "note": "Clips are template-level, so they work across every character on a template. actout.clip retargets takes onto any rig."
+     }
+    },
+    {
+     "id": "moho-other-windows-5",
+     "capability": "Automatic lip sync: analyse an audio track to drive a mouth switch layer, with random alternate visemes (13.5.3), and label phonemes on the timeline (14.5).",
+     "pro_use": "Cuts most of the lip-sync work in dialogue-heavy series.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "voice.build",
+       "lipsync.check",
+       "doodle.say"
+      ],
+      "note": "Visemes come from the TTS phoneme timings or the aligner, are written to timing.json and drive the mouth swap. lipsync.check measures lag and correlation against the voice."
+     }
+    },
+    {
+     "id": "moho-other-windows-6",
+     "capability": "Smart Bone lip sync (14.5): phoneme poses that drive the whole face (jaw, cheeks) rather than only mouth drawings.",
+     "pro_use": "Gives richer, rig-driven dialogue acting.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "voice.build",
+       "WP-11"
+      ],
+      "note": "Mouths are swaps mapped through emotion-aware charts. Driving controls or face parts from visemes is a puppet-format change and should join WP-11.",
+      "added_to_scope": true
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 18: File Menu",
+   "source_url": "https://drive.google.com/drive/folders/1RiKU_Lc54RoEyX9-fBo59Tifpa809yVZ",
+   "capabilities": [
+    {
+     "id": "moho-file-menu-1",
+     "capability": "New document, new workspace and new from template.",
+     "pro_use": "Gives consistent project setups per show.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.create",
+       "film.from_template"
+      ],
+      "note": "Format templates draft the script, shots and timing."
+     }
+    },
+    {
+     "id": "moho-file-menu-2",
+     "capability": "Gather media: copy every external file a project uses into its folder.",
+     "pro_use": "Used to archive and hand projects to other studios.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.provenance",
+       "export.web",
+       "WP-22"
+      ],
+      "note": "film.provenance lists what shaped a film, and export.web inlines everything for the player. A gathered hand-off package with stems is WP-22."
+     }
+    },
+    {
+     "id": "moho-file-menu-3",
+     "capability": "Save as older file versions and strip comments and tags.",
+     "pro_use": "Used to share with collaborators on older versions.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "There is a single in-house format, versioned (puppet 'version'). Older files stay valid in newer loaders."
+     }
+    },
+    {
+     "id": "moho-file-menu-4",
+     "capability": "Project settings: size, frame rate (including 23.976), background, depth of field, 3D camera, stereo and noise grain.",
+     "pro_use": "Sets the delivery spec for a show.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-36"
+      ],
+      "note": "The QA bar is fixed at 1080x1920 at 30 fps, and other aspects use film.render's 'aspect'. Grain is in the finishing presets. Depth of field is WP-36, and higher-frame-rate or 4K masters are WP-37."
+     }
+    },
+    {
+     "id": "moho-file-menu-5",
+     "capability": "Import images, image sequences, movies, SVG, audio, OBJ models and other Moho documents.",
+     "pro_use": "Brings outside art, plates and assets into a scene.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.from_ink",
+       "puppet.from_blend",
+       "WP-35"
+      ],
+      "note": "Characters can come from SVG, PSD, ORA, photos and Blender rigs. Image sequences and movies as scene layers are WP-35 and WP-42."
+     }
+    },
+    {
+     "id": "moho-file-menu-6",
+     "capability": "Photoshop import with layers becoming separate parts (with clipping and blend modes, 14.2).",
+     "pro_use": "Brings illustrators' layered art into the rig.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "puppet.import"
+      ],
+      "note": "Maps PSD layer names to template parts, swaps, pivots and anchors. PSD blend modes are not kept (WP-36)."
+     }
+    },
+    {
+     "id": "moho-file-menu-7",
+     "capability": "Real-time media connection: imported images update live when they are edited in another program.",
+     "pro_use": "Lets painters revise art while animators keep working.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.export_layers",
+       "puppet.import",
+       "WP-18"
+      ],
+      "note": "There is a round trip by export and re-import, but no live link. Krita .kra import is WP-18."
+     }
+    },
+    {
+     "id": "moho-file-menu-8",
+     "capability": "Preview renders and preview animations (lower quality, quick).",
+     "pro_use": "Used to check timing and look before a full render.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.animatic",
+       "film.preview",
+       "shot.render"
+      ],
+      "note": "The animatic takes seconds, the player preview is live, and one shot can be rendered alone."
+     }
+    },
+    {
+     "id": "moho-file-menu-9",
+     "capability": "Export animation to video and image sequences: MP4 (H.264 default in 14.5, H.265), MOV ProRes with alpha, AVI, PNG/TIFF/WebP/PSD sequences, animated GIF and SVG sequences.",
+     "pro_use": "Delivers to editors, platforms and compositors.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "shot.render",
+       "WP-23"
+      ],
+      "note": "film.render delivers H.264 per the platform profiles. WebM and ProRes with alpha, GIF and APNG are WP-23."
+     }
+    },
+    {
+     "id": "moho-file-menu-10",
+     "capability": "OpenEXR export and import with bit depth, colour spaces (including ACEScg) and compression (14.5).",
+     "pro_use": "High-precision frames for compositing and post.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-37"
+      ],
+      "note": "OpenEXR multi-pass output and OCIO/ACES are in WP-37."
+     }
+    },
+    {
+     "id": "moho-file-menu-11",
+     "capability": "Moho Exporter: a batch render queue in a separate process, with per-item status and reruns (14.5).",
+     "pro_use": "Renders a whole episode's scenes overnight.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "prod.status",
+       "WP-38"
+      ],
+      "note": "Async jobs, incremental re-render by content hash, and parallel film sessions on the board already exist. Distributed render workers are WP-38."
+     }
+    },
+    {
+     "id": "moho-file-menu-12",
+     "capability": "Export to game engines and Blender (14.4): glTF/GLB with rig, actions and Smart Bones as morph targets; FBX for Unity.",
+     "pro_use": "Lets 2D characters run inside games and 3D pipelines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-30"
+      ],
+      "note": "Lottie (export.lottie) and Synfig (export.synfig) exist. Game runtime export (Godot, sprite sheets) is WP-30."
+     }
+    },
+    {
+     "id": "moho-file-menu-13",
+     "capability": "Export a single frame to SVG.",
+     "pro_use": "Used for print, marketing stills and vector hand-off.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.storyboard",
+       "puppet.sheet",
+       "WP-23"
+      ],
+      "note": "Stills and model sheets exist (PNG, plus SVG from the Rig Canvas sheet). Print-ready transparent stills are WP-23."
+     }
+    },
+    {
+     "id": "moho-file-menu-14",
+     "capability": "Export the full soundtrack or a single audio layer as WAV.",
+     "pro_use": "Hands the mix to a sound editor.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render"
+      ],
+      "note": "Writes the mix and the voice, music and effects stems to build/. A stems hand-off to editors is WP-22."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 19: Edit Menu",
+   "source_url": "https://drive.google.com/drive/folders/1M8sItQf6eZ5Qw0nfw614KfS7lkJhqw7Z",
+   "capabilities": [
+    {
+     "id": "moho-edit-menu-1",
+     "capability": "Undo and redo history, with merged steps for repeated edits (14.4).",
+     "pro_use": "Lets artists experiment safely.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/ (text in git)"
+      ],
+      "note": "Films are text, so every version can be diffed and re-rendered exactly. The Studio timeline also has Ctrl+Z."
+     }
+    },
+    {
+     "id": "moho-edit-menu-2",
+     "capability": "Copy and paste layers with their animation, and paste relative.",
+     "pro_use": "Reuses animation across scenes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.cuts",
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Clips and cast references are reused by name, and inserts come from other films in edit lists. A copy-paste of a timeline range is WP-19."
+     }
+    },
+    {
+     "id": "moho-edit-menu-3",
+     "capability": "Custom keyboard shortcuts and device presets.",
+     "pro_use": "Gives speed for power users.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is agent-native: commands are reached through the CLI, HTTP and MCP. Studio has a few fixed keys."
+     }
+    },
+    {
+     "id": "moho-edit-menu-4",
+     "capability": "Preferences: tool defaults, input devices, autosave and display.",
+     "pro_use": "Sets per-artist and per-studio behaviour.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "DBE_* environment variables",
+       "dbe/profiles.json"
+      ],
+      "note": "Environment variables pick binaries and quality, and profiles hold per-style QA thresholds and encoding."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 20: Draw Menu",
+   "source_url": "https://drive.google.com/drive/folders/1cVlUXZpt_0DuSK97uBq3mfIQg5iBjedI",
+   "capabilities": [
+    {
+     "id": "moho-draw-menu-1",
+     "capability": "Snap to grid.",
+     "pro_use": "Used for precise layouts and props.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "The Rig Canvas has no grid. The Studio timeline snaps to frames and words."
+     }
+    },
+    {
+     "id": "moho-draw-menu-2",
+     "capability": "Reset or randomise line widths, and peak or smooth selected points.",
+     "pro_use": "Used for quick line-quality passes.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-15"
+      ],
+      "note": "Line-quality controls belong with line styles in WP-15. Point corner editing is WP-18."
+     }
+    },
+    {
+     "id": "moho-draw-menu-3",
+     "capability": "Raise or lower shapes, to front or back (stacking order within a layer), animatable.",
+     "pro_use": "Used to fix overlaps such as a hand behind a sleeve.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].z",
+       "puppet controls z.<part>",
+       "clip swaps.z"
+      ],
+      "note": "Z order is per part and per swap, and controls and clips can switch it over time."
+     }
+    },
+    {
+     "id": "moho-draw-menu-4",
+     "capability": "Trace image: vectorise a bitmap automatically.",
+     "pro_use": "Turns sketches and scans into editable vectors.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-18"
+      ],
+      "note": "Ink-fidelity import keeps scans as raster parts (puppet.from_ink). Vector tracing (VTracer, potrace) is WP-18."
+     }
+    },
+    {
+     "id": "moho-draw-menu-5",
+     "capability": "Create a mesh layer and triangulate a 2D mesh over artwork.",
+     "pro_use": "Gives smooth deformation of painted art.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-18"
+      ],
+      "note": "Skinned mesh strokes exist (from Blender cut-out rigs), but there is no in-house triangulation of an arbitrary drawing."
+     }
+    },
+    {
+     "id": "moho-draw-menu-6",
+     "capability": "Curver layers: bend artwork along an animatable spline, including compressible curvers.",
+     "pro_use": "Used for rubber-hose limbs, tails and bending props.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet parts[].bend",
+       "WP-34"
+      ],
+      "note": "Bendy limbs curve parts at joints (SVG and Grease Pencil). Spline deformers on any layer are a WP-34 candidate."
+     }
+    },
+    {
+     "id": "moho-draw-menu-7",
+     "capability": "Freeze points and reset points: key the current shape, or restore the rest shape.",
+     "pro_use": "Used to lock and unlock poses during animation.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet poses"
+      ],
+      "note": "Named poses are saved and keyed (poses: [[t, name]]). Point-level freezing does not apply, because shapes are not animated per point."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 21: Bone Menu",
+   "source_url": "https://drive.google.com/drive/folders/1t9kSd7gLkdW9WqiYyxixSiUzlLa0BOwU",
+   "capabilities": [
+    {
+     "id": "moho-bone-menu-1",
+     "capability": "Smooth joint for a bone pair: an automatic curved elbow or knee.",
+     "pro_use": "Gives clean bends without corrective drawings.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet parts[].bend"
+      ],
+      "note": "'bend': {'width'} curves a limb out of its parent while keeping its thickness. It works in SVG and Grease Pencil; Synfig and Lottie stay rigid (WP-14)."
+     }
+    },
+    {
+     "id": "moho-bone-menu-2",
+     "capability": "Release, flexi-bind and link bones to layers (re-binding art to the skeleton).",
+     "pro_use": "Used to fix and rework rigs.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.import",
+       "puppet.lint",
+       "WP-18"
+      ],
+      "note": "Binding is implicit (art belongs to a part). Re-binding means editing the puppet or re-importing it. A Rig Canvas editing pass is WP-18."
+     }
+    },
+    {
+     "id": "moho-bone-menu-3",
+     "capability": "Track a bone to video.",
+     "pro_use": "Gives motion capture of a single point onto a rig.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "actout.clip",
+       "WP-12"
+      ],
+      "note": "Body landmarks retarget to joint angles and root travel. Arbitrary point tracking is WP-12."
+     }
+    },
+    {
+     "id": "moho-bone-menu-4",
+     "capability": "Make Smart Bone dial: build a control and its actions in one step.",
+     "pro_use": "Speeds up face and turn rigs.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "cast.generate",
+       "WP-18"
+      ],
+      "note": "Generated characters get a turn control. Authoring other controls is JSON only, with no canvas tool (WP-18)."
+     }
+    },
+    {
+     "id": "moho-bone-menu-5",
+     "capability": "Freeze pose, freeze selected bones, and reset bones.",
+     "pro_use": "Keys every bone at once to hold or restore a pose.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet poses",
+       "acting timeline poses"
+      ],
+      "note": "The Rig Canvas 'Key' and 'Save pose' record full poses."
+     }
+    },
+    {
+     "id": "moho-bone-menu-6",
+     "capability": "Hide, shy or controlled bones, and coloured bones.",
+     "pro_use": "Declutters complex rigs.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "This is display-only GUI management."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 22: Animation Menu",
+   "source_url": "https://drive.google.com/drive/folders/1g5FVwg7bmMrUvFCwVmvgNcwcZ1gCw9zl",
+   "capabilities": [
+    {
+     "id": "moho-animation-menu-1",
+     "capability": "Bone dynamics: follow-through on rotation, scale and position with weight and gravity, delayed (lagging or leading) control bones (14.0), and toggling by Smart Bones (14.2).",
+     "pro_use": "Gives automatic overlap on hair, ears, tails and cloth.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet springs",
+       "puppet chains wave"
+      ],
+      "note": "Deterministic damped springs follow a driver part, and chains have a travelling wave. There is no gravity and no position or scale dynamics (WP-09)."
+     }
+    },
+    {
+     "id": "moho-animation-menu-2",
+     "capability": "Set a layer's start time and offset its animation.",
+     "pro_use": "Staggers repeated characters or actions.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "shots.json line-relative times"
+      ],
+      "note": "Any time can reference a line ('mid.start+0.9') or be given in seconds."
+     }
+    },
+    {
+     "id": "moho-animation-menu-3",
+     "capability": "Rescale keyframes: stretch or compress the timing of a range.",
+     "pro_use": "Used for quick timing fixes.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "resize_clip changes a clip layer's length, and the puppet's 'acting.tempo' scales a character's clip speed. Rescaling an arbitrary range of keys is not offered (WP-19 timeline 2)."
+     }
+    },
+    {
+     "id": "moho-animation-menu-4",
+     "capability": "Copy deep frame or frame range: copy every layer's state at a time and paste it elsewhere.",
+     "pro_use": "Used for holds and returns to a key pose.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "timeline.edit",
+       "WP-19"
+      ],
+      "note": "Poses and clips can be re-added at any time. A range copy across all characters is WP-19."
+     }
+    },
+    {
+     "id": "moho-animation-menu-5",
+     "capability": "Nudge a physics object: give it an impulse at a frame.",
+     "pro_use": "Starts simulations on cue.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json props attach flight",
+       "WP-09"
+      ],
+      "note": "A prop's attach key starts a ballistic throw or drop at a time. Impulses in multi-body scenes are WP-09."
+     }
+    },
+    {
+     "id": "moho-animation-menu-6",
+     "capability": "Audio level, mute and restart of audio and movie tracks.",
+     "pro_use": "Used for a working mix while animating.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.render",
+       "WP-40"
+      ],
+      "note": "The mix is automatic (ducking, then -14 LUFS measured by qa.run). Manual per-cue levels in Studio are WP-40."
+     }
+    },
+    {
+     "id": "moho-animation-menu-7",
+     "capability": "Align a layer with the camera (billboarding) and allow frame skipping during playback.",
+     "pro_use": "Keeps flat cards facing a 3D camera, and gives real-time previews.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "There is no 3D camera in the 2D path, and the preview plays the renderer directly."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 23: Scripts Menu (Pro Only)",
+   "source_url": "https://drive.google.com/drive/folders/1IOJLAGzVv_IMOJftzzYNGnf2icMhAv7A",
+   "capabilities": [
+    {
+     "id": "moho-scripts-1",
+     "capability": "Lua scripting API (Lua 5.4 in 14.0) for custom tools, menu commands and automation, with documentation.",
+     "pro_use": "Pipeline TDs automate rig building, batch fixes and studio tools.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands"
+      ],
+      "note": "Every feature is an @command with a JSON schema, reachable from the CLI, HTTP, MCP and Studio."
+     }
+    },
+    {
+     "id": "moho-scripts-2",
+     "capability": "Embedded layer scripts that run every frame for procedural animation.",
+     "pro_use": "Used for procedural wiggles, clocks and data-driven motion.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "films/<name>/scene.js"
+      ],
+      "note": "Scene films are frame functions that must be pure functions of the frame number. Data-bound kit elements read data.json."
+     }
+    },
+    {
+     "id": "moho-scripts-3",
+     "capability": "Bundled script packs: tiling, visibility, particle effects, layer effects, warp, sound and 3D helpers.",
+     "pro_use": "Gives ready-made effects without coding.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "shots.json overlays (kit elements)",
+       "WP-42"
+      ],
+      "note": "The explainer kit and motion effects cover some cases. Procedural tiling, scatter and particles are WP-42."
+     }
+    },
+    {
+     "id": "moho-scripts-4",
+     "capability": "Installing third-party scripts.",
+     "pro_use": "Lets studios add community tools.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "vendor.check",
+       "vendor.build"
+      ],
+      "note": "Third-party code is vendored with UPSTREAM.json, a licence class and a recorded build. A new command is added in dbe/commands.py."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 24: View Menu",
+   "source_url": "https://drive.google.com/drive/folders/1WdEl9GgW64HvSIVspWieTuxANMwH4AMN",
+   "capabilities": [
+    {
+     "id": "moho-view-menu-1",
+     "capability": "Video safe zones and a rule-of-thirds overlay.",
+     "pro_use": "Keeps titles and action inside the safe area for each platform.",
+     "match": {
+      "kind": "metric",
+      "ref": [
+       "qa.run safe-area text check",
+       "qa.run minimum type size"
+      ],
+      "note": "Every visible word's box is measured against the platform-safe area per aspect. brand.assets writes the safe-area overlays. There is no rule-of-thirds guide."
+     }
+    },
+    {
+     "id": "moho-view-menu-2",
+     "capability": "Tracing image: a reference picture shown behind the canvas.",
+     "pro_use": "Used to draw over model sheets, sketches or photos.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "drawing.requests",
+       "WP-18"
+      ],
+      "note": "Drawing requests give ghost guides (the character at rest, the related drawing, a target box). Arbitrary reference images in the Rig Canvas are WP-18."
+     }
+    },
+    {
+     "id": "moho-view-menu-3",
+     "capability": "Design mode: edit the rig without creating animation keys, then return to the main timeline.",
+     "pro_use": "Keeps rigging and animation separate.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "*.puppet.json (rig)",
+       "shots.json (animation)"
+      ],
+      "note": "The rig and the animation are separate files by design, so rig edits never create keys."
+     }
+    },
+    {
+     "id": "moho-view-menu-4",
+     "capability": "Stereo views (side by side, over-under, anaglyph) for 3D output.",
+     "pro_use": "Used for stereoscopic deliveries.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Stereo is outside the delivery targets (social video and web). Cinema-style packages are WP-37 if ever needed."
+     }
+    },
+    {
+     "id": "moho-view-menu-5",
+     "capability": "Grid display, curve display and fading unselected layers.",
+     "pro_use": "Gives drawing and editing clarity.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "These are editor display aids. Grid snapping is tracked under moho-draw-menu-1."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 25: Window Menu",
+   "source_url": "https://drive.google.com/drive/folders/1IvBZ_x-OVTLGRTeqNHluV_QwJoe2bgVJ",
+   "capabilities": [
+    {
+     "id": "moho-window-menu-1",
+     "capability": "Blend morphs window: mix several stored shape morphs with sliders.",
+     "pro_use": "Used for facial expressions and corrective shapes blended together.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-43"
+      ],
+      "note": "There are no point morphs. Morphs between drawings and views are WP-43. Controls blend only angles, shifts, swaps and z."
+     }
+    },
+    {
+     "id": "moho-window-menu-2",
+     "capability": "Keyframe window: inspect and set a selected key's interpolation and its parameters.",
+     "pro_use": "Gives precise easing control.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-19"
+      ],
+      "note": "Per-key interpolation editing comes with the curve editor in WP-19."
+     }
+    },
+    {
+     "id": "moho-window-menu-3",
+     "capability": "Switch selection window: choose which drawing a switch shows at the current frame.",
+     "pro_use": "Used for quick swap keying.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "acting timeline poses (mouth, eyes, brows, hand_R_pose)"
+      ],
+      "note": "Swap shapes are forced by name in poses and clips. acting.direct sets them from prose."
+     }
+    },
+    {
+     "id": "moho-window-menu-4",
+     "capability": "Docking layouts and toggling secondary windows.",
+     "pro_use": "Lets each artist arrange the workspace.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "This is a GUI layout concern."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 26: Help Menu",
+   "source_url": "https://drive.google.com/drive/folders/1zS4hUVMbh9GSmAWrAt0HQBbQfN-wPjTU",
+   "capabilities": [
+    {
+     "id": "moho-help-menu-1",
+     "capability": "Manual, tutorials and video tutorials one click away.",
+     "pro_use": "Speeds up onboarding.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "engine.commands",
+       "docs.check"
+      ],
+      "note": "Commands list their own schemas. docs.check keeps the plan, feature map and registry in agreement."
+     }
+    },
+    {
+     "id": "moho-help-menu-2",
+     "capability": "Show autosave files for crash recovery.",
+     "pro_use": "Protects work after a crash.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "There is no long-lived editor session to lose. Every edit is a file write through film.write or timeline.edit, kept in git."
+     }
+    },
+    {
+     "id": "moho-help-menu-3",
+     "capability": "Update checks, licence deactivation and refresh, the welcome screen, buying content, and About.",
+     "pro_use": "Handles product upkeep.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is in-house with no licensing or store."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Chapter 27: Warp Layers",
+   "source_url": "https://drive.google.com/drive/folders/1ghSlvw2sTi3IFtkvvinjYv3S0iWbqEqR",
+   "capabilities": [
+    {
+     "id": "moho-warp-layers-1",
+     "capability": "Mesh warp (smart warp) layers: a triangulated mesh, posed by points or bones, bends any image or vector layer, and meshes can nest.",
+     "pro_use": "Gives organic squash, head turns and painted-art deformation.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "puppet.from_blend",
+       "WP-34"
+      ],
+      "note": "Skinned mesh strokes deform raster textures by part weights (SVG only, WP-14). There is no animatable mesh-point warp on arbitrary layers (WP-34 deformers)."
+     }
+    },
+    {
+     "id": "moho-warp-layers-2",
+     "capability": "Quad and perspective warp (13.5): a four-point mesh puts flat art into true perspective.",
+     "pro_use": "Used for moving backgrounds, floors and signs in perspective.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-36"
+      ],
+      "note": "2D layers in depth are in the multiplane work, WP-36."
+     }
+    },
+    {
+     "id": "moho-warp-layers-3",
+     "capability": "Frame-dependent warping: keyed changes to the warp mesh or curver over time.",
+     "pro_use": "Used for hand-tuned squash and stretch on specific frames.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-11"
+      ],
+      "note": "Only whole-body squash exists. Per-part squash and stretch are in WP-11, and general warp animation is WP-34."
+     }
+    },
+    {
+     "id": "moho-warp-layers-4",
+     "capability": "Warp animation exported as morph targets to game engines (14.4).",
+     "pro_use": "Lets deformed 2D characters play in real-time engines.",
+     "match": {
+      "kind": "gap",
+      "ref": [
+       "WP-30"
+      ],
+      "note": "Game export is in WP-30."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix A: Feature Comparison List",
+   "source_url": "https://docs.google.com/document/d/1PWM7-42ANwV0rrD07HCJRFeLpvt2aPATwohtI0HONZ4/edit",
+   "capabilities": [
+    {
+     "id": "moho-appendix-a-1",
+     "capability": "Edition tiers (Pro vs Debut) that cap frame count, resolution, Smart Bones, audio tracks and scripting.",
+     "pro_use": "Studios buy Pro for unlimited length and resolution.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "There are no editions. The individual Pro features are mapped in the chapters above."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix B: Product Support",
+   "source_url": "https://docs.google.com/document/d/1qFwCV9LL962Jk5thnOQX_j0NR2bEbUMvKCQGHv3XOBI/edit",
+   "capabilities": [
+    {
+     "id": "moho-appendix-b-1",
+     "capability": "Vendor technical support channels.",
+     "pro_use": "Lets studios escalate blocking bugs.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is in-house R&D, so its maintainers are the support."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix C: Acknowledgements",
+   "source_url": "https://docs.google.com/document/d/16lOVCeBw07IM8T0N14syaC3cFgf-YfLNVfrC_-YhCAg/edit",
+   "capabilities": [
+    {
+     "id": "moho-appendix-c-1",
+     "capability": "Attribution of third-party libraries and content providers.",
+     "pro_use": "Gives licence compliance for the tool and its bundled content.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "licence.ledger",
+       "film.credits",
+       "asset.check"
+      ],
+      "note": "Every component has a licence class. Credits are generated from what a film actually uses."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix D: Moho Shortcuts",
+   "source_url": "https://drive.google.com/drive/folders/1-Bvu36szbimoKH7lAJMxthulQHxO4Q5D",
+   "capabilities": [
+    {
+     "id": "moho-appendix-d-1",
+     "capability": "A keyboard shortcut reference, including keyframe navigation keys.",
+     "pro_use": "Gives speed for experienced artists.",
+     "match": {
+      "kind": "not_applicable",
+      "ref": [],
+      "note": "Doodleberry is agent-native. The Studio timeline's few keys (space, arrows, Delete, Ctrl+Z) are documented in docs/dbe.md."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix E: Media Support",
+   "source_url": "https://drive.google.com/drive/folders/18ptZyk4mWFq0H2pj_v4GdWI3nJAqp7eu",
+   "capabilities": [
+    {
+     "id": "moho-appendix-e-1",
+     "capability": "Supported import and export media, plus writing your own export presets.",
+     "pro_use": "Lets studios standardise delivery settings per client.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "dbe/profiles.json encoding profiles"
+      ],
+      "note": "Per-platform encoding profiles (H.264 CRF 18, AAC 48 kHz, faststart, size caps) are used by film.package. More formats are WP-23."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix F: Moho Document File Format",
+   "source_url": "https://drive.google.com/drive/folders/1eOqeIXu9jcyGqB-eq1VnO5VhvdMLwS6V",
+   "capabilities": [
+    {
+     "id": "moho-appendix-f-1",
+     "capability": "A documented, text-based project format (structure and tips) that tools can read and write.",
+     "pro_use": "Lets pipeline TDs generate and patch scenes outside the app.",
+     "match": {
+      "kind": "data",
+      "ref": [
+       "puppet/spec/puppet-format.md",
+       "dbe/schemas/*.schema.json"
+      ],
+      "note": "Puppets and films are JSON with a published format and schemas. They are checked by film.validate on film.write and before every render."
+     }
+    }
+   ]
+  },
+  {
+   "chapter": "Appendix G: Command Line",
+   "source_url": "https://docs.google.com/document/d/1FLYqWGykCLDi8s3QaVwmA0MgwqH_DXwzMcvL2LOV4aI/edit",
+   "capabilities": [
+    {
+     "id": "moho-appendix-g-1",
+     "capability": "Headless command-line rendering: format, codec preset, output path and frame range.",
+     "pro_use": "Used for render farms and scripted batch output.",
+     "match": {
+      "kind": "command",
+      "ref": [
+       "film.render",
+       "shot.render"
+      ],
+      "note": "Both run headless through python -m dbe. The renderer can be overridden per shot."
+     }
+    },
+    {
+     "id": "moho-appendix-g-2",
+     "capability": "Command-line quality toggles (half size, half fps, effects off, fewer particles, antialiasing, premultiply) and layer-comp renders with suffixes or folders.",
+     "pro_use": "Gives fast previews and render passes from scripts.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "film.animatic",
+       "shot.render",
+       "WP-37"
+      ],
+      "note": "Draft output comes from the animatic, and per-renderer outputs are written side by side. Named passes are WP-37."
+     }
+    },
+    {
+     "id": "moho-appendix-g-3",
+     "capability": "Logging, verbose time estimates, and Lua startup scripts from the command line (14.2).",
+     "pro_use": "Gives unattended automation with monitoring.",
+     "match": {
+      "kind": "partial",
+      "ref": [
+       "engine.commands",
+       "WP-20"
+      ],
+      "note": "Any command runs from the CLI, with async jobs over HTTP. A cost and time estimate before rendering, plus progress events, is WP-20."
+     }
+    }
+   ]
+  }
+ ]
+}
