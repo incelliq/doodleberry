@@ -1,0 +1,7 @@
+# Core engine (dbe), always needed: python -m pip install -r requirements-core.txt
+# Voice and audio: requirements-audio.txt. Optional tools (PSD, Act it out): requirements-tools.txt.
+# tools/setup.sh installs all three (large wheels fetched with plain HTTP first, then pip installs from that folder).
+numpy>=2.0
+Pillow>=10.1
+jsonschema>=4.20
+scipy>=1.11

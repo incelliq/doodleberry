@@ -96,6 +96,11 @@ order, in which bundles, and how we know each is finished.
 
 43 packages, about 59 to 78 agent working sessions in all; the parity lane is 24 packages and 37 to 51 sessions. WP-30 counts once (it is M per medium).
 
+## Progress
+| WP | Result | Date |
+|---|---|---|
+| 02 | done: `engine.doctor` (core, audio, tools; fixes for every gap; doctor self-test), `tools/setup.sh` (idempotent; 1 min 49 s here with the big wheels, 11 s when nothing is missing), `tools/fetch_wheels.py`, `requirements-core.txt` (the core packages were in no requirements file). Not verified on a truly fresh container: this one already had most tools | 2 Nov 2026 |
+
 ## Definition of done (every WP)
 - Features are `@command` functions in `dbe/commands.py` (CLI, HTTP, Studio and MCP at once), with JSON-safe
   arguments and results; any UI is a Studio page that calls only commands.

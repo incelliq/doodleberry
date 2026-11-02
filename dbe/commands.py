@@ -42,6 +42,15 @@ def engine_commands():
     return describe()
 
 
+@command("engine.doctor", deep=("boolean", "also start the browser and hash the model files", True))
+def engine_doctor(deep=True):
+    """What this machine has and lacks for Doodleberry (WP-02): core (engine, Studio, SVG renders, tests), audio
+    (voices, alignment, mixing) and tools (PSD import, Act it out, extra renderers), each with the exact fix;
+    tools/setup.sh applies them. ok means every required check passed."""
+    from . import doctor
+    return doctor.check(deep)
+
+
 @command("engine.info")
 def engine_info():
     """Report which renderers and tools are available in this environment."""
@@ -2136,6 +2145,12 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "doctor":   # environment doctor (WP-02): every required check passes on this machine
+        from . import doctor as DOC
+        d = DOC.check(deep=False)
+        failed += 0 if d["ok"] else 1
+        results.append({"doctor": "required environment", "status": "ok" if d["ok"] else "FAIL", "measured": {"missing_optional": d["missing_optional"]},
+                        **({"cases": d["missing_required"], "fixes": d["fixes"]} if not d["ok"] else {})})
     if not film or film == "planner":   # content planner (plan 3.8): the scheduler's quarter passes the independent rule check
         from . import planner as PLN
         bad, meas = PLN.self_test()

@@ -784,3 +784,23 @@ so 35 of the 52 posts are local; the quota is a minimum, and the channel's rules
 `python -m dbe test` runs `planner.self_test` on a synthetic bank: the scheduler's quarter passes every rule, and five
 calendars broken on purpose are caught by the right rule.
 
+
+## Setting up a machine (WP-02)
+    bash tools/setup.sh            # everything; idempotent (about 2 minutes fresh, 11 s when nothing is missing)
+    python -m dbe engine.doctor    # what is there, what is missing, and the exact fix for each gap
+
+`engine.doctor` checks three groups. **core** (needed for the engine, Studio, SVG renders and `python -m dbe test`)
+covers Python 3.11+, `requirements-core.txt` (numpy, Pillow, jsonschema, scipy), ffmpeg, ffprobe, git, Node,
+Playwright, that headless Chromium actually starts, and free disk. **audio** covers `requirements-audio.txt` and the
+Kokoro model files, checked against pinned sha256 hashes, plus the timed model and the Piper voices installed.
+**tools** covers `requirements-tools.txt` (psd-tools, MediaPipe), libEGL, the MediaPipe models (hashed), Synfig,
+Blender and melt. `ok` means every required check passed; the self-test fails if one does not. With `deep: false` it
+skips the browser start and the hashing (about 1 s instead of 5).
+
+`tools/setup.sh [all|system|python|models|node]` applies the fixes: apt packages (ffmpeg, git, libEGL); Python
+requirements, with the pinned large wheels first fetched over plain HTTP by `tools/fetch_wheels.py` (pip stalled on
+large wheels behind this environment's proxy), choosing the wheel by the interpreter's own compatibility tags so an
+ARM or macOS build is never picked; the Kokoro files (verified by hash), the timed model and the MediaPipe models;
+and Playwright only if `require('playwright')` fails. For a cloud environment, put `bash tools/setup.sh` in its setup
+script. Models live in `DBE_VOICES` (default `~/voices`) and `DBE_MODELS` (default `~/.cache/doodleberry/models`),
+wheels in `DBE_WHEELS`; none of them go in git.
