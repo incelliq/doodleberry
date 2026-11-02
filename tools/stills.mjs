@@ -1,16 +1,21 @@
-// Stills of a film at given times from its player page (plan 3.2): node tools/stills.mjs PAGE.html OUT_DIR WIDTH t1 t2 ...
-// Writes OUT_DIR/still_<i>.png at WIDTH px wide (the film's aspect), without captions (the storyboard notes carry the lines).
+// Render stills of a player page at given times (seconds within the page's span).
+//   node tools/stills.mjs PAGE.html "shot=s1" OUT_PREFIX t1 t2 ...   -> OUT_PREFIX_<t>.png
+// Viewport follows the film size (window.FILM). Used by golden tests, QA and critic packets.
 import { createRequire } from 'module'; import path from 'path';
 const require = createRequire(import.meta.url); const { chromium } = require('playwright');
-const [page, out, width, ...times] = process.argv.slice(2);
-const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
-await p.goto('file://' + path.resolve(page) + '?captions=0');   // the notes carry the lines
-await p.waitForFunction(() => window.ready === true, null, { timeout: 120000 });
-const [w, h] = await p.evaluate(() => [window.FILM.width, window.FILM.height]); await p.setViewportSize({ width: w, height: h });
-const k = +width / w;
-for (let i = 0; i < times.length; i++) {
-  await p.evaluate(t => window.frameAtTime(t), +times[i]);
-  await p.screenshot({ path: path.join(out, `still_${i}.png`), clip: { x: 0, y: 0, width: w, height: h }, scale: 'css' });
+const [page, query, out, ...ts] = process.argv.slice(2);
+const b = await chromium.launch({ args: ['--allow-file-access-from-files'] });
+const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
+const errs = []; p.on('pageerror', e => errs.push(String(e)));
+await p.goto('file://' + path.resolve(page) + (query ? '?' + query : ''));
+await p.waitForFunction(() => window.ready === true, null, { timeout: 60000 });
+const [w, h] = await p.evaluate(() => [window.FILM.width, window.FILM.height]);
+await p.setViewportSize({ width: w, height: h });
+const t0 = await p.evaluate(() => window.FILMTIME.start);
+for (const t of ts) {
+  await p.evaluate(tt => window.frameAtTime(tt), t0 + +t);
+  await p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await p.screenshot({ path: `${out}_${t}.png` });
 }
-console.log(JSON.stringify({ size: [w, h], stills: times.length, scale: k }));
+if (errs.length) { console.error('page errors: ' + errs.join(' | ')); process.exitCode = 2; }
 await b.close();

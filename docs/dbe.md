@@ -552,3 +552,16 @@ captions) and writes to `build/storyboard/`: `strip.png` (every shot in a grid w
 stills (`s1.png`, ...). `python -m dbe film.animatic '{"name": "FILM"}'` holds those stills for their shots' lengths
 over the film's sound (the mix if rendered, else the voice) as `build/animatic.mp4`, in seconds, for judging pacing
 before a render. Studio has Storyboard and Animatic buttons; the timeline has Animatic.
+
+## Posing in the Rig Canvas (plan 3.3)
+The Rig Canvas has a **Pose** tool. The character stands on the ground line with handles: hands and feet (orange)
+are placed by two-bone IK (`Acting.ik2`, the solver films use; Shift flips the elbow or knee), the head and chest
+(blue) turn about their joints, the hips (green) move up and down with both feet kept planted (the legs are
+re-solved, knees splayed outward). Joint limits apply. Mouth, brows and eyes come from the character's drawn
+shapes. **Save pose** stores it in the character's `poses` (used by `poses: [[t, name]]` in any timeline); **Key**
+records the current pose at a time and **Save clip** turns the keys into a clip in the character's own `clips`
+(puppet format v0.7), which `Acting.evaluate` merges over the template library, so shots, the bake and every
+renderer play it. Saved poses and clips also appear in the live preview menu. Opened from Studio (served by
+`python -m dbe serve`), **Save to cast** writes the character through `puppet.save` (schema-checked, only under
+`cast/`, new files registered in the cast library). `tools/pose_check.mjs` does the whole round in a headless
+browser; the golden case `tests/poses/rig_canvas_pose.json` plays the saved pose and clip.

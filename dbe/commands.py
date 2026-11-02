@@ -1052,7 +1052,7 @@ def film_storyboard(name, width=360):
     from PIL import Image, ImageDraw, ImageFont
     d = _film(name); out = d / "build" / "storyboard"; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
     rows = _board_frames(name); page = _player_page(name)
-    _run(["node", "tools/stills.mjs", str(page), str(out), str(width), *[str(r["t"]) for r in rows]], timeout=900)
+    _run(["node", "tools/board_stills.mjs", str(page), str(out), str(width), *[str(r["t"]) for r in rows]], timeout=900)
     font = lambda n, bold=False: ImageFont.truetype(str(ROOT / "engine" / "fonts" / "Fredoka.ttf"), n)
     def wrap(txt, f, w, draw):
         lines, cur = [], ""
