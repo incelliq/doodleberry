@@ -1494,8 +1494,9 @@ def _today(today=""):
          priority=("integer", "lower goes first among films posting the same day", 1),
          brief=("string", "for a new film: the brief (written to films/<film>/brief.md in its workspace)", ""),
          storyboard=("object", "for a new film: {format, brief} for film.from_template, built in its workspace at launch", None),
-         plan=("object", "the calendar row it comes from (quarter, date, start_by, fact_lock_by, role, review)", None))
-def prod_plan(film, post_on, runner="pipeline", priority=1, brief="", storyboard=None, plan=None):
+         plan=("object", "the calendar row it comes from (quarter, date, start_by, fact_lock_by, role, review)", None),
+         budget_usd=("number", "for a claude runner: the most its session may spend (0: the board's default)", 0))
+def prod_plan(film, post_on, runner="pipeline", priority=1, brief="", storyboard=None, plan=None, budget_usd=0):
     """Put a film on the production board (plan 3.7) with its posting date and the kind of session that makes it:
     pipeline (tools/film_agent.py rebuilds an existing film through every gate), claude (a Claude Code session with
     the director prompt), manual (any agent, given the written protocol)."""
@@ -1513,7 +1514,7 @@ def prod_plan(film, post_on, runner="pipeline", priority=1, brief="", storyboard
         if e["state"] not in ("planned", "queued", "stopped", "failed", "needs_work"):
             raise ValueError(f"{film} is {e['state']}; stop it first to re-plan")
         e.update(post_on=post_on, runner=runner, priority=priority, **({"brief": brief} if brief else {}),
-                 **({"storyboard": storyboard} if storyboard else {}), **({"plan": plan} if plan else {}))
+                 **({"storyboard": storyboard} if storyboard else {}), **({"plan": plan} if plan else {}), **({"budget_usd": budget_usd} if budget_usd else {}))
         PR.event(e, "planned", post_on=post_on, runner=runner); reg["films"][film] = e
         return {k: e[k] for k in ("film", "post_on", "runner", "state")}
 
@@ -1574,6 +1575,7 @@ def prod_status(today=""):
                      if (PR.reg_dir() / e["film"] / f).exists() and ROOT in (PR.reg_dir() / e["film"] / f).resolve().parents}
             films.append({"film": e["film"], "post_on": e["post_on"], "runner": e["runner"], "state": e["state"], "schedule": PR.schedule(e, reg["lead_days"], d),
                           "plan": e.get("plan"), "channel": (e.get("plan") or {}).get("channel"),
+                          "cost_usd": e.get("cost_usd"), "costs": e.get("costs", []),   # WP-03: what its Claude Code sessions spent
                           "checkpoints": last, "escalation": e.get("escalation") if e["state"] == "escalated" else None,
                           "approved": (e.get("approvals") or [None])[-1], "narrowed": e.get("narrowed", []), "media": media,
                           "session": {k: v for k, v in (e.get("session") or {}).items() if k in ("runner", "started", "pid", "log")},
@@ -1586,7 +1588,10 @@ def prod_status(today=""):
         for f in films:
             counts[f["state"]] = counts.get(f["state"], 0) + 1
         chans = {c["id"]: {"name": c["name"], "colour": c["colour"]} for c in plan_channels()}   # WP-32: films by channel
+        nf = PR.reg_dir() / "notifications.jsonl"
+        notes = [json.loads(x) for x in nf.read_text().splitlines()[-20:]] if nf.exists() else []
         return {"today": d.isoformat(), "max_parallel": reg["max_parallel"], "lead_days": reg["lead_days"], "counts": counts, "channels": chans,
+                "notifications": notes[::-1], "budget_usd": reg.get("budget_usd"), "spent_usd": round(sum(e.get("cost_usd") or 0 for e in reg["films"].values()), 2),
                 "calendar": [{"week_of": k, "films": v} for k, v in sorted(weeks.items())], "films": films}
 
 
@@ -1595,6 +1600,21 @@ def _prod_entry(reg, film):
     if not e:
         raise KeyError(f"{film} is not in the production registry")
     return e
+
+
+@command("prod.session_prompt", film=("string", "a film running with a manual runner"))
+def prod_session_prompt(film):
+    """The prompt for any agent session making a film (WP-03): the production protocol (brief, checkpoints, how to
+    report) and the director prompt, ready to paste into a Claude Code session on this machine or in the cloud that
+    works in the film's workspace."""
+    from . import production as PR
+    with PR.registry(write=False) as reg:
+        e = _prod_entry(reg, film)
+    pd = Path(e.get("workspace") or "") / ".production" / "PRODUCTION.md"
+    if not pd.exists():
+        raise FileNotFoundError(f"{film} has no workspace yet: prod.launch it")
+    return {"film": film, "workspace": e["workspace"], "branch": e.get("branch"),
+            "prompt": pd.read_text() + "\n\n" + (ROOT / "docs" / "director-prompt.md").read_text()}
 
 
 @command("prod.stop", film=("string", "film"), reason=("string", "why", ""))
@@ -2321,6 +2341,11 @@ def test_golden(update=False, film=""):
         bad, meas = LQ.self_test(ROOT / "out" / "layouttest")
         failed += 1 if bad else 0
         results.append({"layout": "AI-look lint, style thresholds, seeded failures per style", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
+        from . import parity as PRT
+        r = PRT.check()
+        failed += 0 if r["ok"] else 1
+        results.append({"parity": "matrix references", "status": "ok" if r["ok"] else "FAIL", "measured": r["overall"], **({"cases": r["problems"]} if not r["ok"] else {})})
     if not film or film == "posting":   # posting with a human approval per post (WP-08)
         from . import posting as PST
         bad, meas = PST.self_test(ROOT / "out" / "postingtest_q")
@@ -2915,6 +2940,25 @@ def post_status(state=""):
         ps = sorted(q["posts"].values(), key=lambda p: (p["post_at"], p["film"], p["platform"]))
     rows = [{k: p.get(k) for k in ("id", "film", "platform", "post_at", "state", "approval", "flags", "blocked", "url", "export", "row", "cover")} for p in ps if not state or p["state"] == state]
     return {"counts": dict(Counter(p["state"] for p in ps)), "posts": rows}
+
+
+# ---------------- parity matrix (WP-41) ----------------
+@command("parity.check")
+def parity_check():
+    """The parity matrix (WP-41): validate parity/<tool>.json (commands named exist, every gap and partial names a work
+    package that exists, every chapter has capabilities) and measure coverage per professional tool and overall."""
+    from . import parity as PY_
+    return PY_.check()
+
+
+@command("parity.matrix")
+def parity_matrix():
+    """Write docs/parity-matrix.md from parity/<tool>.json: per tool and chapter, each capability in our own words, how
+    professionals use it, and Doodleberry's match (command, data, metric, partial with its WP, gap with its WP, n/a)."""
+    from . import parity as PY_
+    md, rep = PY_.matrix_md()
+    (ROOT / "docs" / "parity-matrix.md").write_text(md)
+    return {"file": "docs/parity-matrix.md", "ok": rep["ok"], "overall": rep["overall"], "problems": rep["problems"][:10]}
 
 
 @command("asset.check")

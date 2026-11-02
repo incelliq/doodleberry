@@ -739,11 +739,21 @@ Each film gets a git worktree next to the repository (`<repo>-films/<film>`, bra
 - **pipeline**: `tools/film_agent.py` rebuilds an existing film through every gate: research gate, voice (when the
   workspace has none), the first shot, the full render with QA (one round of `film.heal` if QA fails), a builder
   entry in the ledger, a commit on the branch. This is how every film is re-made after an engine change.
-- **claude**: Claude Code headless (`claude -p`, command in the registry's `runners.claude`) with the protocol and
-  `docs/director-prompt.md`, allowed to run `python -m dbe` and commit, for new films from a brief (`prod.plan` with
-  `brief` writes it into the workspace).
+- **claude**: Claude Code headless (`claude -p --output-format json --max-budget-usd N`, command in the registry's
+  `runners.claude`) with the protocol and `docs/director-prompt.md`, allowed to run `python -m dbe`, commit, read
+  and edit, and search and fetch the web for research, for new films from a brief (`prod.plan` with `brief` writes it
+  into the workspace). Each session stops at its budget (`budget_usd` on the film, else the board's, default 25).
+  When it ends, what it spent (dollars, minutes, turns, tokens) is read from its JSON result into the film's
+  `costs`; the board shows each film's spend and the total (WP-03).
 - **manual**: nothing is started; the protocol is written to `.production/PRODUCTION.md` in the workspace for any
-  agent, such as a cloud session, to follow.
+  agent to follow. `prod.session_prompt` (the board's "Copy session prompt") gives the protocol and the director
+  prompt ready to paste into a Claude Code session, here or in the cloud, working in that workspace.
+
+Owner notifications (WP-03): an escalation, a final ready for approval, a failed session, a final that still fails
+after the session's repairs, and a session stopped by its budget each notify the owner: a line in
+`productions/notifications.jsonl` (the board shows the latest), and a POST of the same JSON to every webhook in
+`productions/notify.json` (`{"webhooks": [{"url": ..., "events": ["escalated", "waiting_owner", ...]}]}`,
+machine-local) that asks for that kind. A webhook that fails is recorded and never stops production.
 
 The protocol is three checkpoint calls, `prod.checkpoint {film, stage, report}`, which a session in its workspace
 sends to the shared registry (`DBE_PRODUCTION`, set by the launcher). The orchestrator never takes the report's word:

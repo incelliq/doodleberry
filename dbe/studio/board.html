@@ -37,6 +37,7 @@
 <body>
 <header><h1>🫐 Production board</h1><span id="sum" class="muted"></span><label class="muted">channel <select id="chan"><option value="">all</option></select></label><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/">Studio ↗</a></header>
 <main>
+  <div id="notes" aria-label="owner notifications" style="margin-bottom:10px"></div>
   <div class="cal" id="cal" aria-label="posting calendar"></div>
   <div class="grid" id="grid"></div>
   <h2 style="font-size:15px;margin:20px 0 8px">Posting <span id="psum" class="muted" style="font-weight:400"></span></h2>
@@ -58,10 +59,12 @@ function card(f) {
   if (f.state === 'waiting_owner') acts.push(`<button class="primary" data-a="approve">Approve</button>`);
   if (f.state === 'approved') acts.push(`<button class="primary" data-a="merge">Merge</button>`);
   if (['running', 'queued'].includes(f.state)) acts.push(`<button data-a="narrow">Narrow…</button><button data-a="stop">Stop</button>`);
+  if (f.state === 'running' && f.session && f.session.runner === 'manual') acts.push(`<button data-a="prompt" title="the protocol and director prompt for any agent session">Copy session prompt</button>`);
   if (['stopped', 'failed', 'needs_work'].includes(f.state)) acts.push(`<button data-a="relaunch">Relaunch</button>`);
   if (f.state === 'planned') acts.push(`<button class="primary" data-a="launch">Launch</button>`);
   return `<div class="card ${f.state}" data-film="${f.film}">${f.media.poster ? `<img src="/${f.media.poster}?t=${Date.now()}" alt="">` : f.media.first ? `<img src="/${f.media.first}?t=${Date.now()}" alt="">` : ''}
     <h2>${chip(f.channel)}${f.film}</h2><div class="m">posts ${f.post_on} · ${f.runner} · <b>${f.state.replace('_', ' ')}</b></div>
+    ${f.cost_usd != null ? `<div class="m">sessions spent $${f.cost_usd.toFixed(2)}${f.costs.length ? ` · ${f.costs.slice(-1)[0].minutes} min, ${f.costs.slice(-1)[0].turns} turns` : ''}</div>` : ''}
     ${f.plan ? `<div class="m" title="${f.plan.title || ''}">plan ${f.plan.quarter} ${f.plan.role || ''} · start by ${f.plan.start_by} · facts locked by ${f.plan.fact_lock_by}${f.plan.review === 'expert' ? ' · <b>expert review</b>' : ''}</div>` : ''}
     <span class="pill s-${sch.status}">${sch.status.replace('_', ' ')}${sch.next ? ` · ${sch.next.replace('_', ' ')} by ${sch.due}` : ''}</span>
     <div class="steps">${steps}</div>
@@ -79,7 +82,8 @@ async function load() {
   if (sel.options.length !== ids.length + 1) sel.innerHTML = '<option value="">all</option>' + ids.map(c => `<option value="${c}">${s.channels[c].name}</option>`).join('');
   sel.value = want; sel.onchange = load;
   const keep = f => !want || f.channel === want;
-  $('sum').textContent = `${s.today} · ${Object.entries(s.counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`).join(' · ')} · up to ${s.max_parallel} at once`;
+  $('sum').textContent = `${s.today} · ${Object.entries(s.counts).map(([k, v]) => `${v} ${k.replace('_', ' ')}`).join(' · ')} · up to ${s.max_parallel} at once · spent $${(s.spent_usd || 0).toFixed(2)}`;
+  $('notes').innerHTML = (s.notifications || []).slice(0, 6).map(n => `<span class="pill ${n.kind === 'waiting_owner' ? 's-on_track' : 's-late'}" title="${n.at}">${n.at.slice(5, 16).replace('T', ' ')} ${n.film}: ${n.kind.replace('_', ' ')}</span>`).join('');
   $('cal').innerHTML = s.calendar.map(w => `<div class="wk"><h3>week of ${w.week_of}</h3>${w.films.filter(keep).map(f => `<span class="pill s-${f.status}" title="${f.post_on}${f.channel ? ' · ' + f.channel : ''}">${dot(f.channel)}${f.post_on.slice(5)} ${f.film}</span>`).join('')}</div>`).join('') || '<span class="muted">Nothing planned: python -m dbe prod.plan</span>';
   $('grid').innerHTML = s.films.filter(keep).map(card).join('');
   document.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => { const film = b.closest('.card').dataset.film, a = b.dataset.a;
@@ -89,6 +93,7 @@ async function load() {
       else if (a === 'stop') { if (!confirm(`Stop ${film}?`)) return; await api('prod.stop', { film, reason: 'from the board' }); }
       else if (a === 'relaunch') await api('prod.relaunch', { film });
       else if (a === 'launch') await api('prod.launch', { film });
+      else if (a === 'prompt') { const r = await api('prod.session_prompt', { film }); await navigator.clipboard.writeText(r.prompt).catch(() => {}); msg(`copied the session prompt for ${film} (workspace ${r.workspace})`); return; }
       else if (a === 'narrow') { const text = prompt('Narrow the scope to…'); if (!text) return; await api('prod.narrow', { film, text }); }
       else if (a === 'decide') { const d = b.dataset.d, note = d === 'narrow' ? prompt('Narrow the scope to…') : ''; if (d === 'narrow' && !note) return; await api('prod.decide', { film, decision: d, note }); }
     } catch (e) { return; } load(); });

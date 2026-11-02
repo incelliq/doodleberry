@@ -37,8 +37,11 @@ from . import ROOT
 
 STAGES = ["research", "first_render", "final"]
 DEFAULTS = {"lead_days": {"research": 10, "first_render": 6, "final": 3, "approved": 1}, "max_parallel": 3,
-            "runners": {"claude": ["claude", "-p", "{prompt}", "--permission-mode", "acceptEdits",
-                                   "--allowedTools", "Bash(python -m dbe:*),Bash(git add:*),Bash(git commit:*),Read,Edit,Write,Glob,Grep"]}}
+            "budget_usd": 25,   # per Claude Code session (WP-03): the session stops when it has spent this much
+            "runners": {"claude": ["claude", "-p", "{prompt}", "--output-format", "json", "--max-budget-usd", "{budget}", "--permission-mode", "acceptEdits",
+                                   "--allowedTools", "Bash(python -m dbe:*),Bash(git add:*),Bash(git commit:*),Bash(git status:*),Bash(ls:*),"
+                                   "Read,Edit,Write,Glob,Grep,WebSearch,WebFetch"]}}
+NOTIFY_ON = ("escalated", "waiting_owner", "failed", "needs_work", "budget")
 PY = os.environ.get("DBE_PY", sys.executable)
 
 
@@ -146,7 +149,8 @@ def start(e, reg):
         cmd = [PY, "tools/film_agent.py", e["film"]] + (["--fail-at", e["seed_fail"]] if e.get("seed_fail") else [])
     elif e["runner"] == "claude":
         prompt = (pd / "PRODUCTION.md").read_text() + "\n\n" + (ROOT / "docs" / "director-prompt.md").read_text()
-        cmd = [prompt if a == "{prompt}" else a for a in reg["runners"]["claude"]]
+        budget = str(e.get("budget_usd") or reg.get("budget_usd", DEFAULTS["budget_usd"]))
+        cmd = [prompt if a == "{prompt}" else budget if a == "{budget}" else a for a in reg["runners"]["claude"]]
     else:
         e.update(state="running", session={"runner": "manual", "started": now(), "pid": None, "protocol": str(pd / "PRODUCTION.md")})
         event(e, "waiting for a session", protocol=str(pd / "PRODUCTION.md")); return
@@ -202,20 +206,74 @@ def kill(e):
             os.killpg(pid, signal.SIGTERM)
 
 
+def session_cost(log):
+    """what a Claude Code session spent, from its JSON result (claude -p --output-format json): dollars, time, turns,
+    tokens; None for other runners"""
+    try:
+        txt = Path(log).read_text(errors="replace")
+    except OSError:
+        return None
+    for line in reversed(txt.strip().splitlines()):
+        line = line.strip()
+        if line.startswith("{") and "total_cost_usd" in line:
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            u = r.get("usage") or {}
+            return {"usd": round(r.get("total_cost_usd") or 0, 4), "minutes": round((r.get("duration_ms") or 0) / 60000, 1), "turns": r.get("num_turns"),
+                    "tokens": {"input": u.get("input_tokens", 0) + u.get("cache_creation_input_tokens", 0) + u.get("cache_read_input_tokens", 0),
+                               "output": u.get("output_tokens", 0)},
+                    "stopped": r.get("subtype") or r.get("terminal_reason"), "is_error": r.get("is_error")}
+    return None
+
+
+def notify(e, kind, **info):
+    """tell the owner (WP-03): every notification goes to productions/notifications.jsonl, and to each webhook in
+    productions/notify.json ({"webhooks": [{"url": ..., "events": [...]}]}, machine-local) that wants this kind"""
+    rec = {"at": now(), "film": e["film"], "kind": kind, "state": e.get("state"), "post_on": e.get("post_on"), **info}
+    d = reg_dir(); d.mkdir(parents=True, exist_ok=True)
+    with open(d / "notifications.jsonl", "a") as fh:
+        fh.write(json.dumps(rec) + "\n")
+    cfg = json.loads((d / "notify.json").read_text()) if (d / "notify.json").exists() else {}
+    sent = []
+    for h in cfg.get("webhooks", []):
+        if h.get("events") and kind not in h["events"]:
+            continue
+        import urllib.request
+        try:
+            req = urllib.request.Request(h["url"], data=json.dumps(rec).encode(), headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as r:
+                sent.append({"url": h["url"], "status": r.status})
+        except Exception as ex:   # a dead webhook must not stop production
+            sent.append({"url": h["url"], "error": str(ex)[:120]})
+    event(e, f"owner notified: {kind}", sent=len([x for x in sent if "status" in x]))
+    return sent
+
+
 def tick(reg):
-    """reap ended sessions and start queued films while there is room"""
+    """reap ended sessions (recording what a Claude Code session spent) and start queued films while there is room"""
     for e in reg["films"].values():
         s = e.get("session") or {}
+        if s.get("pid") and not s.get("ended") and not alive(s["pid"]):
+            s["ended"] = now()
+            c = session_cost(s.get("log", "")) if s.get("runner") == "claude" else None
+            if c:
+                e.setdefault("costs", []).append({"at": now(), **c}); e["cost_usd"] = round(sum(x["usd"] for x in e["costs"]), 4)
+                if str(c.get("stopped", "")).startswith("error_max_budget") or "budget" in str(c.get("stopped", "")):
+                    notify(e, "budget", spent_usd=c["usd"])
         if e["state"] == "running" and s.get("pid") and not alive(s["pid"]):
             passed = {c["stage"] for c in e.get("checkpoints", []) if c["verdict"] in ("ok", "ready")}
             finals = [c for c in e.get("checkpoints", []) if c["stage"] == "final"]
             if "final" not in passed and finals:   # it rendered, but QA still fails after the session's own repairs
                 e["state"] = "needs_work"; event(e, "session ended with a failing final render", reasons=finals[-1]["reasons"])
+                notify(e, "needs_work", reasons=finals[-1]["reasons"])
             elif "final" not in passed:
                 tail = ""
                 with contextlib.suppress(OSError):
                     tail = Path(s.get("log", "")).read_text(errors="replace")[-600:]
                 e["state"] = "failed"; event(e, "session ended before the final checkpoint", log_tail=tail)
+                notify(e, "failed", log_tail=tail[-300:])
     running = sum(e["state"] == "running" for e in reg["films"].values())
     for e in sorted(reg["films"].values(), key=lambda e: (e["post_on"], e.get("priority", 1))):
         if e["state"] == "queued" and running < reg["max_parallel"]:
@@ -308,8 +366,10 @@ def checkpoint(film, stage, report):
         event(e, f"checkpoint {stage}: {verdict}")
         if esc:
             e["state"] = "escalated"; e["escalation"] = {"at": now(), "reasons": reasons}
+            notify(e, "escalated", stage=stage, reasons=reasons)
         elif stage == "final" and verdict == "ready" and e["state"] == "running":
             e["state"] = "waiting_owner"
+            notify(e, "waiting_owner", measured={k: measured.get(k) for k in ("duration_s", "loudness_lufs", "checks_passed", "checks")})
         inbox = [m for m in e.get("inbox", []) if not m.get("delivered")]
         for m in inbox:
             m["delivered"] = now()
@@ -379,6 +439,21 @@ def self_test(scratch):
     def git(*a, cwd):
         return subprocess.run(["git", *a], cwd=cwd, capture_output=True, text=True, env=env)
     film = "direct-demo"; today = dt.date.today()
+    # WP-03: a local webhook receives the owner notifications
+    import http.server
+    import threading
+    got_hooks = []
+
+    class Hook(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            got_hooks.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+            self.send_response(204); self.end_headers()
+
+        def log_message(self, *a):
+            pass
+    srv = http.server.HTTPServer(("127.0.0.1", 0), Hook); threading.Thread(target=srv.serve_forever, daemon=True).start()
+    (repo / "productions").mkdir(exist_ok=True)
+    (repo / "productions" / "notify.json").write_text(json.dumps({"webhooks": [{"url": f"http://127.0.0.1:{srv.server_port}/hook", "events": list(NOTIFY_ON)}]}))
     try:
         run("prod.plan", {"film": film, "post_on": (today + dt.timedelta(days=12)).isoformat(), "runner": "manual"})
         run("prod.launch", {"film": film})
@@ -453,6 +528,16 @@ def self_test(scratch):
             if sch[days] != want:
                 fails.append(f"schedule {days} days out: {sch[days]}, want {want}")
         got["schedule"] = sch
+        kinds = [h["kind"] for h in got_hooks if h.get("film") == film]
+        got["notified"] = kinds
+        if "escalated" not in kinds or "waiting_owner" not in kinds:
+            fails.append(f"owner notifications: {kinds}")
+        lg = base / "session.log"   # what a Claude Code session spent, from its JSON result
+        lg.write_text("working...\n" + json.dumps({"type": "result", "subtype": "success", "total_cost_usd": 3.21, "duration_ms": 420000, "num_turns": 57,
+                                                   "usage": {"input_tokens": 10, "cache_read_input_tokens": 900000, "cache_creation_input_tokens": 50000, "output_tokens": 30000}}) + "\n")
+        c = session_cost(lg); got["cost_parse"] = c
+        if not c or c["usd"] != 3.21 or c["turns"] != 57 or c["tokens"]["input"] != 950010:
+            fails.append(f"session cost: {c}")
         # WP-06: a calendar row to a draft storyboard to a running session, in one command
         cal = json.loads((repo / "plan" / "channels" / "science" / "2027-Q1.json").read_text()); row = next(r for r in cal["rows"] if r.get("idea"))
         pb = run("plan.brief", {"quarter": "2027-Q1", "date": row["date"], "launch": True, "runner": "manual"})
@@ -473,6 +558,7 @@ def self_test(scratch):
             if vb.returncode == 0 or "draft" not in vb.stderr:
                 fails.append("voice.build voiced a draft storyboard")
     finally:
+        srv.shutdown()
         subprocess.run(["git", "worktree", "prune"], cwd=repo, capture_output=True)
         shutil.rmtree(base, ignore_errors=True)
     return fails, got
