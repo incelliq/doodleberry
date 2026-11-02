@@ -278,3 +278,13 @@ window), `street`, `farm` (crop rows, for plant explainers), `bedroom` (`opts.ni
 `opts.level` 0-1, `opts.paper` for an ink-on-paper look) and `stage` (presenter spotlight). With the five originals
 that is 16 sets. Icons: every Lucide icon (2015, ISC, `assets/icons/lucide.js`) as a kit element
 `{"type": "icon", "name": "droplets", "x", "y", "size", "color", "badge"}` that pops in.
+
+## Character generator and cast (plan 1.5)
+`cast.generate` makes an original, fully rigged humanoid from a short spec and registers it (CC0, the spec recorded as
+provenance): `build` (slim, average, broad), `age` (child, teen, adult, elder), `skin`, `hair` (short, bob, long, curly,
+bun, ponytail, spiky, bald, hijab), `top` (tee, shirt, hoodie, sweater, jacket, dress, overalls), `bottom` (trousers,
+shorts, skirt), `shoes`, `eyes`, `accessories` (glasses, beard, moustache, freckles, earrings, tie). Every character gets
+the template parts, blink, pupils with iris colour, four brows, eight mouths, hand poses, a `turn` control and springy
+hair, so it works with every clip and acting tool. `cast/generated/specs.json` holds the starting cast of twelve (Ama,
+Ravi, Mei, Olu, Sana, Kofi, Lena, Tomas, Nimal, Zara, Ike, Priya); all pass the drawing coach with no warnings.
+Strokes may set `"rule": "evenodd"` for shapes with holes (the hijab's face opening).

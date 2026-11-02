@@ -49,7 +49,7 @@
       // v0.3 raster part: original ink or paint as an image placed in artboard units
       if (st.image) { s += `<image href="${st.image}" x="${st.x}" y="${st.y}" width="${st.w}" height="${st.h}" preserveAspectRatio="none"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`; continue; }
       const fill = colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
-      s += `<path d="${st.d}" fill="${fill}"${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
+      s += `<path d="${st.d}" fill="${fill}"${st.rule ? ` fill-rule="${st.rule}"` : ''}${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
     }
     return s + '</g>';
   }

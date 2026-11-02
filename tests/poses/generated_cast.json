@@ -1,0 +1,4 @@
+{"size": [900, 700], "items": [
+ {"puppet": "cast/generated/ama.puppet.json", "x": 160, "y": 680, "pose": {"angles": {"upperarm_R": -80, "forearm_R": -40, "head": 6}, "mouth": "wide", "brows": "raised"}},
+ {"puppet": "cast/generated/sana.puppet.json", "x": 450, "y": 680, "pose": {"angles": {"upperarm_L": 30, "thigh_R": -20, "shin_R": 30}, "mouth": "smile", "look": [1, 0]}, "timeline": {"controls": {"turn": [[0, 0.8]]}, "blink": false}},
+ {"puppet": "cast/generated/olu.puppet.json", "x": 740, "y": 680, "pose": {"angles": {"upperarm_R": -150, "forearm_R": -20}, "mouth": "O", "eyes": "half", "hand_R_pose": "point"}}]}

@@ -233,6 +233,12 @@
     },
     "opacity": {
      "type": "number"
+    },
+    "rule": {
+     "enum": [
+      "nonzero",
+      "evenodd"
+     ]
     }
    }
   },
