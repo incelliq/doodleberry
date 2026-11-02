@@ -905,6 +905,106 @@ def film_data(name, refresh=False, revoice=False, render=False):
     return out
 
 
+# ---------------- Studio timeline (plan 3.1) ----------------
+@command("film.preview", name=("string", "film"))
+def film_preview(name):
+    """Write the film's player page (every frame is a pure function of time) for live preview and scrubbing."""
+    return {"page": str(_player_page(name).relative_to(ROOT))}
+
+
+@command("timeline.get", name=("string", "film"))
+def timeline_get(name):
+    """Everything the Studio timeline draws: per shot its resolved start/end, set and cast; per cast member the clip
+    layers (raw start as written, resolved start and end, length from the clip library), emotion and gaze keys; the
+    dialogue lines with words; the film length."""
+    d = _film(name); raw = _json(d / "shots.json"); res = _shots(name); tm = _json(d / "timing.json", {})
+    shots = []
+    for rs, rr in zip(raw["shots"], res["shots"]):
+        cast = []
+        for ci, (rc, cc) in enumerate(zip(rs.get("cast") or [], rr.get("cast") or [])):
+            p = _json(ROOT / cc["puppet"]); lib = _json(ROOT / "puppet" / "clips" / f"{p.get('template', 'humanoid')}.json", {"clips": {}})["clips"]
+            clips = []
+            for ki, (rk, kk) in enumerate(zip((rc.get("timeline") or {}).get("clips", []), (cc.get("timeline") or {}).get("clips", []))):
+                cl = lib.get(kk.get("clip")) or {}
+                dur = (cl.get("duration") or 1.0) / (kk.get("speed") or 1)
+                end = kk.get("end") if kk.get("end") is not None else (rr["end"] if cl.get("loop") else kk.get("start", 0) + dur)
+                clips.append({"i": ki, "clip": kk.get("clip"), "start": kk.get("start", 0), "end": round(min(end, rr["end"]), 3), "raw_start": rk.get("start", 0),
+                              "raw_end": rk.get("end"), "loop": bool(cl.get("loop")), "additive": bool(kk.get("additive")), "auto": bool(kk.get("auto")),
+                              "directed": bool(kk.get("directed")), "weight": kk.get("weight", 1)})
+            tl = cc.get("timeline") or {}
+            cast.append({"i": ci, "who": cc.get("speaker") or p.get("name") or f"cast {ci}", "puppet": cc["puppet"], "clips": clips,
+                         "emotion": tl.get("emotion") or [], "look": tl.get("look") or []})
+        shots.append({"id": rr["id"], "start": rr["start"], "end": rr["end"], "set": rr.get("set", "plain"), "renderer": rr.get("renderer", "svg"), "cast": cast})
+    return {"film": name, "length": res["shots"][-1]["end"], "fps": res.get("fps", 30), "shots": shots,
+            "lines": [{k: l[k] for k in ("id", "speaker", "text", "start", "end", "words") if k in l} for l in tm.get("lines", [])],
+            "clip_names": sorted({n for t in ("humanoid", "doodle") for n in _json(ROOT / "puppet" / "clips" / f"{t}.json", {"clips": {}})["clips"]})}
+
+
+def _retime(raw_value, new_t, timing):
+    """a new time in seconds, written the way the old one was: line-relative stays line-relative (same line, same
+    edge), so re-voicing still carries the edit; plain seconds stay seconds"""
+    if isinstance(raw_value, str):
+        m = _LINE_T.match(raw_value)
+        L = {l["id"]: l for l in (timing or {}).get("lines", [])}
+        if m and m.group(1) in L:
+            lid, edge = m.group(1), m.group(2)
+            near = lambda l: l["start"] - 0.5 <= new_t <= l["end"] + 1.0
+            if not near(L[lid]):   # moved away from its line: anchor to the line it now sits by
+                cand = [l for l in L.values() if near(l)]
+                if cand:
+                    l = min(cand, key=lambda l: abs(new_t - l["start"])); lid, edge = l["id"], "start" if new_t <= l["end"] else "end"
+            off = round(new_t - L[lid][edge], 3)
+            return f"{lid}.{edge}{'+' if off >= 0 else '-'}{abs(off)}"
+    return round(max(0.0, new_t), 3)
+
+
+@command("timeline.edit", name=("string", "film"), op=("string", "move_clip | resize_clip | add_clip | delete_clip"),
+         shot=("string", "shot id"), cast=("integer", "cast index in the shot"), index=("integer", "clip layer index (move, resize, delete)", -1),
+         start=("number", "new start in film seconds (move, add)", None), end=("number", "new end in film seconds (resize; null = the clip's own length)", None),
+         clip=("string", "clip name (add)", ""), anchor=("string", "for add: a line id to anchor the start to (line-relative)", ""))
+def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="", anchor=""):
+    """One timeline edit from the Studio (plan 3.1), written into shots.json: move a clip layer (its end moves with
+    it), resize its end, add a clip at a time (anchored to a line if given, so re-voicing keeps it on the words) or
+    delete one. Line-relative times stay line-relative. Returns the clip as stored."""
+    d = _film(name); raw = _json(d / "shots.json"); tm = _json(d / "timing.json", {}); res = _shots(name)
+    si = next((i for i, x in enumerate(raw["shots"]) if x["id"] == shot), None)
+    if si is None:
+        raise KeyError(f"no shot {shot}")
+    tl = raw["shots"][si]["cast"][cast].setdefault("timeline", {}); clips = tl.setdefault("clips", [])
+    rclips = (res["shots"][si]["cast"][cast].get("timeline") or {}).get("clips", [])
+    if op == "add":
+        op = "add_clip"
+    if op == "add_clip":
+        if not clip:
+            raise ValueError("add_clip needs clip")
+        st = _retime(f"{anchor}.start" if anchor else 0.0, float(start), tm) if anchor else round(float(start), 3)
+        k = {"clip": clip, "start": st, "weight": 3}
+        clips.append(k); stored = k
+    else:
+        if not 0 <= index < len(clips):
+            raise IndexError(f"no clip layer {index}")
+        k = clips[index]; rk = rclips[index]
+        if op == "move_clip":
+            dt = float(start) - float(rk.get("start", 0))
+            k["start"] = _retime(k.get("start", 0), float(start), tm)
+            if k.get("end") is not None:
+                k["end"] = _retime(k["end"], float(rk["end"]) + dt, tm)
+        elif op == "resize_clip":
+            if end is None:
+                k.pop("end", None)
+            else:
+                k["end"] = _retime(k.get("end") if k.get("end") is not None else k.get("start", 0), max(float(end), float(rk.get("start", 0)) + 0.1), tm)
+        elif op == "delete_clip":
+            clips.pop(index)
+        else:
+            raise ValueError(f"unknown op {op}")
+        k.pop("auto", None)   # a hand edit: the gesture planner keeps it from now on
+        stored = None if op == "delete_clip" else k
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    _player_page(name)
+    return {"stored": stored, "shot": shot, "cast": cast, "op": op}
+
+
 # ---------------- format templates (plan 2.15) ----------------
 @command("storyboard.check", name=("string", "film"))
 def storyboard_check(name):
@@ -1172,6 +1272,12 @@ def test_golden(update=False, film=""):
         d = np.abs(a - b); mean, over = float(d.mean()), float((d.max(-1) > 32).mean()); ok = mean <= tol["mean_abs"] and over <= tol["pixels_over_32"]
         failed += 0 if ok else 1
         results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
+    if not film or film == "timeline":   # Studio timeline re-timing (plan 3.1): anchored edits stay anchored
+        tmx = {"lines": [{"id": "a", "start": 1.0, "end": 2.0}, {"id": "b", "start": 4.0, "end": 5.5}]}
+        cases = [(("a.start+0.2", 1.5), "a.start+0.5"), (("a.end", 2.4), "a.end+0.4"), (("a.start", 4.3), "b.start+0.3"), ((0.7, 3.0), 3.0)]
+        bad = [(c, _retime(c[0], c[1], tmx), want) for c, want in cases if _retime(c[0], c[1], tmx) != want]
+        failed += 1 if bad else 0
+        results.append({"timeline": "retime", "status": "FAIL" if bad else "ok", **({"cases": bad} if bad else {})})
     for case in spec.get("lint", []):  # visual-lint cases: a film staged badly on purpose; the expected checks must fire
         if film and film != "lint":
             continue

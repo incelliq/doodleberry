@@ -527,3 +527,19 @@ storyboard from a format and a brief, then checks it:
   or after voicing, and lists facts still waiting for a source.
 `films/telescope-talk` came from the dialogue template and a three-question brief; it passed the storyboard check
 before voicing and the full QA after.
+
+## Studio timeline (plan 3.1)
+`python -m dbe serve` then http://127.0.0.1:8770/timeline?film=FILM (also linked from the Studio header). The page shows:
+- a live preview (the film's own player page, scaled): click or drag the ruler to scrub, Play (space) runs it
+  against `build/mix.wav`;
+- lanes: shots, one dialogue lane per speaker (lines with word ticks), and one lane per character with their clip
+  layers (hand-placed orange, planned from the voice grey, from directions purple; overlapping clips stack in rows,
+  looping base layers such as idle run as a thin bar);
+- editing: drag a clip to re-time it (its end moves with it), drag its right edge to change its length, double-click
+  a character's lane to add a clip, Delete removes the selected clip, ←/→ nudge one frame (Shift: ten), Ctrl+Z
+  undoes. Moves snap to frames, and to word starts within 6 px ("snap to words").
+Every edit goes through `timeline.edit` (`move_clip`, `resize_clip`, `add_clip`, `delete_clip`) into shots.json and
+the preview reloads. A time written line-relative stays line-relative (`l2.start+0.61`), re-anchored to the line
+the clip now sits by when it moves away from its old one, so re-voicing still carries the edit; a planned clip that
+is edited by hand loses its `auto` tag, so `acting.plan` keeps it. `timeline.get` returns what the page draws;
+`film.preview` writes the player page. `tools/timeline_check.mjs` drags a gesture in a headless browser.

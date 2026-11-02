@@ -25,6 +25,8 @@ class Handler(BaseHTTPRequestHandler):
         p = self.path.split("?")[0]
         if p in ("/", "/studio"):
             return self._send(200, STUDIO.read_bytes(), "text/html; charset=utf-8")
+        if p == "/timeline":   # plan 3.1: lanes, live scrub, drag to re-time
+            return self._send(200, (STUDIO.parent / "timeline.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/api":
             return self._send(200, describe())
         if p.startswith("/api/jobs/"):

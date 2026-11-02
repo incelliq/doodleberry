@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio Timeline</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a;
+          --auto: #b9b0a3; --hand: #e8743a; --directed: #7a5cc4; --shot: #3b6ea8; --say: #3f8f5a; --add: #c4a03a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; --auto: #6b6258; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; --auto: #6b6258; }
+  * { box-sizing: border-box; } body { margin: 0; font: 13px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select, input { font: inherit; padding: 4px 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #top { display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 12px 16px; align-items: start; }
+  #pv { width: 270px; height: 480px; overflow: hidden; border-radius: 10px; background: #000; position: relative; }
+  #pv iframe { width: 1080px; height: 1920px; border: 0; transform: scale(0.25); transform-origin: 0 0; pointer-events: none; }
+  #inspect { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 120px; }
+  #inspect h3 { margin: 0 0 6px; font-size: 14px; } .kv { color: var(--muted); } code { font: 12px ui-monospace, monospace; }
+  #tlwrap { margin: 0 16px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; position: relative; user-select: none; }
+  #tl { position: relative; min-height: 120px; }
+  .lane { position: relative; height: 34px; border-bottom: 1px solid var(--line); }
+  .lane .label { position: sticky; left: 0; z-index: 3; display: inline-block; width: 92px; height: 100%; padding: 8px 8px; background: var(--panel); border-right: 1px solid var(--line); color: var(--muted); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .blk { position: absolute; top: 5px; height: 24px; border-radius: 6px; padding: 3px 7px; font-size: 12px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: grab; }
+  .blk.shot { background: var(--shot); cursor: default; } .blk.say { background: var(--say); cursor: default; }
+  .blk.clip { background: var(--hand); } .blk.clip.auto { background: var(--auto); color: var(--ink); } .blk.clip.directed { background: var(--directed); }
+  .blk.clip.loop { opacity: .35; height: 5px; padding: 0; cursor: default; }
+  .blk.sel { outline: 3px solid var(--ink); outline-offset: 1px; }
+  .blk .grip { position: absolute; right: 0; top: 0; width: 8px; height: 100%; cursor: ew-resize; background: rgba(0,0,0,.18); }
+  .tick { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,.5); }
+  .emo { position: absolute; top: 1px; font-size: 10px; color: var(--muted); pointer-events: none; }
+  #ruler { height: 22px; position: relative; border-bottom: 1px solid var(--line); cursor: pointer; }
+  #ruler span { position: absolute; top: 3px; font-size: 11px; color: var(--muted); }
+  #head { position: absolute; top: 0; bottom: 0; width: 2px; background: #d33; z-index: 4; pointer-events: none; }
+  .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 4px 0 10px; vertical-align: -1px; }
+  #msg { color: var(--muted); }
+  @media (max-width: 700px) { #top { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Timeline</h1><select id="film"></select>
+  <button id="play" class="primary">▶ Play</button><span id="time">0.00 s</span>
+  <label>zoom <input id="zoom" type="range" min="40" max="400" value="110"></label>
+  <label><input id="snap" type="checkbox" checked> snap to words</label>
+  <button id="undo" title="Ctrl+Z">↶ Undo</button><span id="msg"></span><span style="flex:1"></span><a href="/">Studio ↗</a></header>
+<div id="top"><div id="pv"><iframe id="frame" title="preview"></iframe></div>
+  <div id="inspect"><h3>Select a clip</h3><div class="kv">Drag a gesture to re-time it, drag its right edge to change its length, double-click a character's lane to add a clip, Delete removes the selected one, ← → nudge one frame (Shift: ten). Every edit is written to shots.json; times anchored to a line stay anchored to it.</div>
+    <div class="legend" style="margin-top:8px"><span style="background:var(--hand)"></span>hand-placed<span style="background:var(--auto)"></span>planned from the voice<span style="background:var(--directed)"></span>from directions<span style="background:var(--say)"></span>dialogue<span style="background:var(--shot)"></span>shots</div></div></div>
+<div id="tlwrap"><div id="tl"></div></div>
+<audio id="aud" preload="auto"></audio>
+<script>
+const $ = id => document.getElementById(id), LABEL = 92;
+let film = null, T = null, pps = 110, now = 0, playing = false, sel = null, undo = [];
+const msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
+const X = t => LABEL + t * pps, TT = x => (x - LABEL) / pps;
+const fr = t => Math.round(t * (T ? T.fps : 30)) / (T ? T.fps : 30);
+function seek(t) { now = Math.max(0, Math.min(T ? T.length : 0, t)); $('time').textContent = now.toFixed(2) + ' s';
+  const w = $('frame').contentWindow; if (w && w.frameAtTime) try { w.frameAtTime(now); } catch (e) {}
+  const h = $('head'); if (h) h.style.left = X(now) + 'px'; }
+function wordStarts() { return T.lines.flatMap(l => (l.words || []).map(w => w.start)); }
+function snapT(t, px) { if (!$('snap').checked) return fr(t); let best = null; for (const s of wordStarts()) if (Math.abs(X(s) - X(t)) <= (px || 6) && (best === null || Math.abs(s - t) < Math.abs(best - t))) best = s; return best !== null ? best : fr(t); }
+function render() {
+  const W = X(T.length) + 40, tl = $('tl'); tl.style.width = W + 'px'; let h = '';
+  let r = '<div id="ruler">'; const step = pps > 200 ? 0.5 : pps > 80 ? 1 : 2; for (let t = 0; t <= T.length; t += step) r += `<span style="left:${X(t) - 4}px">${t % 1 ? t.toFixed(1) : t}</span>`; h += r + '</div>';
+  h += `<div class="lane"><span class="label">shots</span>` + T.shots.map(s => `<div class="blk shot" style="left:${X(s.start)}px;width:${(s.end - s.start) * pps - 2}px" title="${s.id} · ${s.set}">${s.id} · ${s.set}</div>`).join('') + '</div>';
+  const speakers = [...new Set(T.lines.map(l => l.speaker))];
+  for (const sp of speakers) h += `<div class="lane"><span class="label">🗨 ${sp}</span>` + T.lines.filter(l => l.speaker === sp).map(l => `<div class="blk say" style="left:${X(l.start)}px;width:${Math.max(6, (l.end - l.start) * pps - 2)}px" title="${l.id}: ${l.text.replace(/"/g, '&quot;')}">${l.text}` + (l.words || []).map(w => `<span class="tick" style="left:${(w.start - l.start) * pps}px"></span>`).join('') + '</div>').join('') + '</div>';
+  const who = []; T.shots.forEach(s => s.cast.forEach(c => { if (!who.includes(c.who)) who.push(c.who); }));
+  for (const w of who) {
+    // overlapping clips stack into rows, so none hides another; looping base layers run as a thin bar underneath
+    const items = []; T.shots.forEach(s => s.cast.filter(c => c.who === w).forEach(c => c.clips.forEach(k => items.push({ s, c, k, loop: k.loop && (k.clip === 'idle' || k.end >= s.end - 0.01) }))));
+    const rowsEnd = []; items.filter(it => !it.loop).sort((a, b) => a.k.start - b.k.start).forEach(it => {
+      let r = rowsEnd.findIndex(e => e <= it.k.start + 1e-6); if (r < 0) { r = rowsEnd.length; rowsEnd.push(0); } rowsEnd[r] = it.k.end; it.row = r; });
+    const nrows = Math.max(1, rowsEnd.length);
+    h += `<div class="lane" data-who="${w}" style="height:${10 + nrows * 27}px"><span class="label">🎭 ${w}</span>`;
+    for (const { s, c, k, loop, row } of items) { const cls = ['clip', k.auto ? 'auto' : k.directed ? 'directed' : '', loop ? 'loop' : ''].join(' ');
+      const isSel = sel && sel.shot === s.id && sel.cast === c.i && sel.index === k.i, top = loop ? 4 + nrows * 27 : 4 + row * 27;
+      h += `<div class="blk ${cls}${isSel ? ' sel' : ''}" data-shot="${s.id}" data-cast="${c.i}" data-i="${k.i}" style="left:${X(k.start)}px;top:${top}px;width:${Math.max(10, (k.end - k.start) * pps - 2)}px;z-index:${loop ? 1 : 2}" title="${k.clip} ${k.start.toFixed(2)}–${k.end.toFixed(2)} s · ${typeof k.raw_start === 'string' ? 'anchored ' + k.raw_start : 'at ' + k.raw_start + ' s'}">${loop ? '' : k.clip}${loop ? '' : '<span class="grip"></span>'}</div>`; }
+    T.shots.forEach(s => s.cast.filter(c => c.who === w).forEach(c => (c.emotion || []).forEach(([t, e]) => { if (typeof t === 'number') h += `<span class="emo" style="left:${X(t) + 2}px">${e}</span>`; })));
+    h += '</div>';
+  }
+  tl.innerHTML = h + '<div id="head"></div>'; seek(now); wire();
+}
+function inspect() {
+  if (!sel) return; const s = T.shots.find(x => x.id === sel.shot), c = s.cast.find(x => x.i === sel.cast), k = c.clips.find(x => x.i === sel.index); if (!k) return;
+  $('inspect').innerHTML = `<h3>${k.clip} · ${c.who} · ${s.id}</h3><div class="kv">start <code>${k.start.toFixed(3)} s</code> (written as <code>${JSON.stringify(k.raw_start)}</code>) · end <code>${k.end.toFixed(3)} s</code> · weight <code>${k.weight}</code>${k.additive ? ' · additive' : ''}${k.auto ? ' · planned (a hand edit keeps it)' : ''}${k.directed ? ' · from a direction' : ''}</div>`;
+}
+async function edit(args, note) {
+  const before = (await api('film.get', { name: film })).files['shots.json']; undo.push(before);
+  const r = await api('timeline.edit', { name: film, ...args }); msg(note + (r.stored ? ' → ' + JSON.stringify(r.stored.start) : ''));
+  await load(false);
+}
+function wire() {
+  document.querySelectorAll('.blk.clip:not(.loop)').forEach(el => {
+    el.onpointerdown = e => {
+      e.preventDefault(); const shot = el.dataset.shot, cast = +el.dataset.cast, index = +el.dataset.i; sel = { shot, cast, index };
+      document.querySelectorAll('.blk.sel').forEach(b => b.classList.remove('sel')); el.classList.add('sel'); inspect();
+      const s = T.shots.find(x => x.id === shot), k = s.cast.find(c => c.i === cast).clips.find(x => x.i === index);
+      const resize = e.target.classList.contains('grip'), x0 = e.clientX, l0 = parseFloat(el.style.left), w0 = parseFloat(el.style.width); let moved = false;
+      el.setPointerCapture(e.pointerId);
+      el.onpointermove = ev => { const dx = ev.clientX - x0; if (Math.abs(dx) > 2) moved = true;
+        if (resize) el.style.width = Math.max(10, w0 + dx) + 'px'; else { el.style.left = (l0 + dx) + 'px'; seek(TT(l0 + dx)); } };
+      el.onpointerup = async ev => { el.onpointermove = el.onpointerup = null; if (!moved) { seek(k.start); return; } const dx = ev.clientX - x0;
+        if (resize) { const ne = snapT(k.end + dx / pps); await edit({ op: 'resize_clip', shot, cast, index, end: ne }, `${k.clip} now ends at ${ne.toFixed(2)} s`); }
+        else { const ns = snapT(k.start + dx / pps); await edit({ op: 'move_clip', shot, cast, index, start: ns }, `${k.clip} moved to ${ns.toFixed(2)} s`); } };
+    };
+  });
+  document.querySelectorAll('.lane[data-who]').forEach(l => l.ondblclick = async e => {
+    if (e.target.closest('.blk')) return; const t = snapT(TT(e.clientX - $('tl').getBoundingClientRect().left));
+    const s = T.shots.find(x => t >= x.start && t < x.end); if (!s) return; const c = s.cast.find(x => x.who === l.dataset.who); if (!c) return;
+    const name = prompt(`Clip to add for ${c.who} at ${t.toFixed(2)} s:\n${T.clip_names.join(', ')}`, 'nod'); if (!name) return;
+    const line = T.lines.find(x => t >= x.start - 0.5 && t <= x.end + 1.5);
+    await edit({ op: 'add_clip', shot: s.id, cast: c.i, clip: name.trim(), start: t, anchor: line ? line.id : '' }, `added ${name} at ${t.toFixed(2)} s`);
+  });
+  $('ruler').onpointerdown = e => { const go = ev => seek(TT(ev.clientX - $('tl').getBoundingClientRect().left)); go(e); $('ruler').onpointermove = ev => ev.buttons && go(ev); };
+}
+async function load(reloadFrame = true) {
+  T = await api('timeline.get', { name: film }); const page = (await api('film.preview', { name: film })).page;
+  if (reloadFrame || true) { $('frame').src = '/' + page + '?captions=1&t=' + Date.now(); $('frame').onload = () => { const w = $('frame').contentWindow;
+    const ready = () => w.ready ? seek(now) : setTimeout(ready, 100); ready(); }; }
+  const a = T.film; $('aud').src = `/films/${a}/build/mix.wav?t=${Date.now()}`; render(); inspect();
+}
+$('zoom').oninput = e => { pps = +e.target.value; render(); };
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? '⏸ Pause' : '▶ Play';
+  if (playing) { const a = $('aud'); a.currentTime = now; a.play().catch(() => {}); const t0 = performance.now(), n0 = now;
+    const tick = () => { if (!playing) return; const t = a.paused || isNaN(a.duration) ? n0 + (performance.now() - t0) / 1000 : a.currentTime; seek(t); if (t >= T.length) { playing = false; $('play').textContent = '▶ Play'; return; } requestAnimationFrame(tick); }; tick(); }
+  else $('aud').pause(); };
+$('undo').onclick = async () => { const prev = undo.pop(); if (!prev) return msg('nothing to undo'); await api('film.write', { name: film, file: 'shots.json', content: prev }); msg('undone'); await load(); };
+document.onkeydown = async e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); return $('undo').onclick(); }
+  if (e.key === ' ' && e.target === document.body) { e.preventDefault(); return $('play').onclick(); }
+  if (!sel) return; const s = T.shots.find(x => x.id === sel.shot), k = s && s.cast.find(c => c.i === sel.cast).clips.find(x => x.i === sel.index); if (!k) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); const sv = sel; sel = null; return edit({ op: 'delete_clip', ...sv }, `deleted ${k.clip}`); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const n = (e.shiftKey ? 10 : 1) / T.fps * (e.key === 'ArrowLeft' ? -1 : 1);
+    return edit({ op: 'move_clip', ...sel, start: Math.max(0, fr(k.start + n)) }, `${k.clip} nudged to ${(k.start + n).toFixed(2)} s`); }
+};
+(async () => { const info = await api('engine.info'); const q = new URLSearchParams(location.search).get('film');
+  $('film').innerHTML = info.films.map(f => `<option ${f === q ? 'selected' : ''}>${f}</option>`).join(''); film = q || info.films[0];
+  $('film').value = film; $('film').onchange = e => { film = e.target.value; sel = null; undo = []; history.replaceState(null, '', '?film=' + film); load(); }; load(); })();
+</script>
+</body>
+</html>
