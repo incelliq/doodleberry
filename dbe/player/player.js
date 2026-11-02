@@ -23,7 +23,7 @@
   const libFor = p => (window.CLIPLIB || {})[p.template] || LIB;
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const INK = '#181e26', HAND = "'Patrick Hand','Fredoka',sans-serif";
+  const INK = '#181e26', HAND = "'Patrick Hand','Fredoka','Noto Sans Sinhala',sans-serif";
   function boilDefs(st, t) {
     const b = st.boil; if (!b) return '';
     const k = Math.floor(t * (b.fps || 12)) % (b.frames || 8);
@@ -39,7 +39,7 @@
   }
 
   // ---------- explainer scene library (plan 1.13): every element is a pure function of t ----------
-  const BODY = "'Fredoka',sans-serif", MONO = "'Atkinson Mono',monospace";
+  const BODY = "'Fredoka','Noto Sans Sinhala',sans-serif", MONO = "'Atkinson Mono',monospace";
   // brand defaults (films that set "brand": true get window.BRAND); explicit overlay values always win
   const BR = window.BRAND || null, BP = (BR && BR.palette) || {};
   const brandColor = (v, d) => v || (BR ? d : undefined);
@@ -96,6 +96,7 @@
       const wmk = (BR && BR.wordmark) || {};
       return `<text x="${x}" y="${y}" font-family="${BODY}" font-weight="700" font-size="${fs}" fill="${o.color || BP.ink || INK}">${esc(o.text || wmk.text || '')}<tspan fill="${o.accent || BP[(BR || {}).wordmark_accent] || '#1a62c2'}">${esc(o.accent_text ?? wmk.accent_text ?? '')}</tspan></text>`;
     }
+    if (window.KIT && KIT[o.type]) return KIT[o.type](o, t, { W, H, visemes: T.visemes || {}, pointOf: (tg, tt) => worldOf(tg, tt, CASTS) });  // explainer kit 2 (dbe/player/kit.js)
     return '';
   }
   // rows for a bubble: explicit \n wins, else greedy wrap
@@ -164,6 +165,7 @@
 
   // ---------- constraints and props (plan 1.2) ----------
   // a target is [x, y] in the frame, or {cast: i, part: "hand_R", at: [x, y]} (a point on another character)
+  let CASTS = [];
   function worldOf(tg, t, casts) {
     if (!tg) return null;
     if (Array.isArray(tg)) return tg;
@@ -198,7 +200,8 @@
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
     let world = set.draw(tq, sh.set_opts || {}, W, H), ink = '';
-    const heads = {}, casts = [];
+    if (sh.underlays && !bgOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
+    const heads = {}, casts = []; CASTS = casts;
     for (const c of sh.cast || []) {
       const p = PUP[c.puppet]; if (!p) continue;
       if (bgOnly) { // the set plate for other renderers keeps each character's ground shadow
@@ -234,5 +237,5 @@
   window.renderFrame = f => window.frameAtTime(t0 + f / FPS);
   window.FRAMES = Math.round((t1 - t0) * FPS);
   window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
-  (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
+  (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
 })();

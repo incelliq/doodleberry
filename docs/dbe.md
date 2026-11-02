@@ -210,3 +210,24 @@ Third-party rigs stay out of git (`assets/external/`, `cast/external/`); the rec
 and `assets/manifest.json` "external" records licence and source. Pepper and Carrot (Nikolai Mamashev, after David
 Revoy's Pepper&Carrot, CC-BY 4.0) are the showcase (`cast/recipes/pepper.json`, `cast/recipes/carrot.json`). Skinned meshes that span several parts become v0.5 mesh strokes (smooth knees, hips, skirts); single-bone
 meshes stay rigid layers. Limit: raster and mesh parts render in the SVG renderer only.
+
+## Explainer kit 2 and Sinhala text (from the reference reels)
+`dbe/player/kit.js` adds elements for history, science and motivational shorts. Put them in a shot's `overlays`
+(in front of the cast) or the new `underlays` (behind it). All are pure functions of time, seeded where random, and
+have a little idle life once settled (no dead frames).
+
+| Type | Does | Key fields |
+|---|---|---|
+| `draw` | paths draw themselves, then optionally fill | `paths`, `duration` or `until`, `stagger`, `stroke`, `width`, `fill` |
+| `title` | bold outlined words pop in one by one | `text`, `y`, `size`, `per_word`, `color`, `outline` |
+| `paper` | torn-paper sign with tape; `[bracketed]` words in the accent colour | `text` (lines), `y`, `size`, `accent`, `rotate` |
+| `roots` | a root system grows from a point (red taproot optional) | `x`, `y`, `depth`, `levels`, `branches`, `spread`, `seed`, `until`, `main` |
+| `section` | ground strata for cross-sections, with pebbles | `y`, `layers: [{h, color, pebbles}]`, `seed` |
+| `water` | a water body with a moving surface, a level that can change, flow lines along paths | `x`, `w`, `level: [[t, y]...]`, `bottom`, `flows: [{path, speed}]` |
+| `face` | a face for any object: eyes, pupils, brows, mouth; lip-sync from a speaker; blinks, gaze, moods | `x`/`y` or `attach: {cast, part, at}`, `speaker`, `look`, `mood`, `s` |
+
+`until` (like `start`, `end` and `t`) may be line-relative, so growth can finish exactly when a line starts.
+Text in every element, and in bubbles, cards and captions, may be Sinhala: font stacks fall back to Noto Sans Sinhala
+(OFL, `engine/fonts/`) per glyph, and the page waits for it to load. `films/kit-demo` uses every element.
+Gap: no clean Sinhala text-to-speech voice exists yet (the open MMS model is non-commercial), so Sinhala films are
+sound-off with music, or use a recorded human voice.

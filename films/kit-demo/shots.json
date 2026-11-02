@@ -1,0 +1,163 @@
+{
+ "title": "Roots First",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "plain",
+   "start": 0,
+   "end": 5.292,
+   "start_line": "wait",
+   "end_line": "then",
+   "tail": 1.2,
+   "underlays": [
+    {
+     "type": "section",
+     "y": 1110,
+     "seed": 4,
+     "layers": [
+      {
+       "h": 160,
+       "color": "#c79a63"
+      },
+      {
+       "h": 280,
+       "color": "#a87a4c",
+       "pebbles": 14
+      },
+      {
+       "h": 2000,
+       "color": "#7f5a37",
+       "pebbles": 18
+      }
+     ]
+    },
+    {
+     "type": "water",
+     "x": 0,
+     "w": 330,
+     "level": [
+      [
+       0,
+       1300
+      ],
+      [
+       "then.start",
+       1180
+      ]
+     ],
+     "bottom": 1600,
+     "start": 0,
+     "flows": [
+      {
+       "path": "M30 1500 C120 1460 200 1520 300 1470",
+       "speed": 160
+      },
+      {
+       "path": "M20 1560 C140 1530 220 1580 320 1540",
+       "speed": 110,
+       "opacity": 0.6
+      }
+     ]
+    },
+    {
+     "type": "roots",
+     "x": 540,
+     "y": 1110,
+     "depth": 560,
+     "seed": 9,
+     "levels": 3,
+     "branches": 2,
+     "start": 0.4,
+     "main": "#c0392b",
+     "color": "#2a1d14",
+     "width": 11,
+     "until": "then.start",
+     "spread": 0.8
+    },
+    {
+     "type": "draw",
+     "paths": [
+      "M540 1110 C536 1000 548 880 540 760",
+      "M540 1110 C556 990 566 860 572 720",
+      "M520 900 C480 870 455 880 430 860",
+      "M556 820 C600 790 630 800 660 780"
+     ],
+     "start": "then.start",
+     "duration": 0.9,
+     "stroke": "#1d4a2a",
+     "width": 14
+    }
+   ],
+   "overlays": [
+    {
+     "type": "paper",
+     "text": [
+      "[\u0d85\u0dc0\u0dd4\u0dbb\u0dd4\u0daf\u0dd4 5\u0d9a\u0dca]",
+      "\u0d9a\u0dd2\u0dc3\u0dd2\u0dc0\u0d9a\u0dca \u0db1\u0dd0\u0dc4\u0dd0..."
+     ],
+     "y": 230,
+     "size": 78,
+     "seed": 3,
+     "start": 0.3
+    },
+    {
+     "type": "face",
+     "x": 540,
+     "y": 1050,
+     "s": 0.9,
+     "speaker": "sprout",
+     "look": [
+      [
+       0,
+       [
+        0,
+        0
+       ]
+      ],
+      [
+       "wait.end",
+       [
+        -0.8,
+        0.6
+       ]
+      ],
+      [
+       "then.start",
+       [
+        0,
+        -0.6
+       ]
+      ]
+     ],
+     "mood": [
+      [
+       0,
+       "worried"
+      ],
+      [
+       "then.start",
+       "happy"
+      ]
+     ],
+     "seed": 2
+    },
+    {
+     "type": "title",
+     "text": "ROOTS FIRST!",
+     "y": 1720,
+     "size": 118,
+     "start": "then.start+0.3",
+     "color": "#9bd23c"
+    }
+   ],
+   "cast": []
+  }
+ ]
+}

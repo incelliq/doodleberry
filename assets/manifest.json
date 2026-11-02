@@ -85,6 +85,32 @@
    "used_by": [
     "explainer"
    ]
+  },
+  {
+   "path": "engine/fonts/NotoSansSinhala-400.woff2",
+   "license": "OFL-1.1",
+   "source": "npm @fontsource/noto-sans-sinhala 5.3.0 (Sinhala subset)",
+   "attribution": "Noto Sans Sinhala, Google (SIL Open Font License 1.1)",
+   "used_by": [
+    "player",
+    "captions"
+   ],
+   "kind": "font",
+   "name": "Noto Sans Sinhala",
+   "license_file": "engine/fonts/NotoSansSinhala-OFL.txt"
+  },
+  {
+   "path": "engine/fonts/NotoSansSinhala-700.woff2",
+   "license": "OFL-1.1",
+   "source": "npm @fontsource/noto-sans-sinhala 5.3.0 (Sinhala subset)",
+   "attribution": "Noto Sans Sinhala, Google (SIL Open Font License 1.1)",
+   "used_by": [
+    "player",
+    "captions"
+   ],
+   "kind": "font",
+   "name": "Noto Sans Sinhala",
+   "license_file": "engine/fonts/NotoSansSinhala-OFL.txt"
   }
  ],
  "generated": [
