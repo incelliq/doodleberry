@@ -222,5 +222,6 @@
    }
   }
  ],
- "post": "film"
+ "post": "film",
+ "foley": true
 }

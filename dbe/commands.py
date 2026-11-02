@@ -594,6 +594,11 @@ def film_render(name, only=None, aspect=""):
     cues = [{"t": sh["start"], "type": "whoosh", "gain": 0.7} for sh in s["shots"][1:]]
     for sh in s["shots"]:
         cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1)} for c in sh.get("cues", [])]
+    if s.get("foley"):  # automatic foley from the motion (plan 2.7)
+        page = _player_page(name)
+        r = subprocess.run(["node", "tools/foley.mjs", str(page)], cwd=ROOT, capture_output=True, text=True, timeout=1800)
+        if r.returncode == 0 and r.stdout.strip():
+            cues += json.loads(r.stdout.strip().splitlines()[-1])
     (d / "build" / "cues.json").write_text(json.dumps(sorted(cues, key=lambda c: c["t"])))
     total = s["shots"][-1]["end"]
     score = _json(d / "score.json", {}); score["length_s"] = total; (d / "score.json").write_text(json.dumps(score, indent=1))

@@ -217,6 +217,16 @@ def bell(hz, dur, amp=1.0):
 
 
 def sfx(kind):
+    if kind == 'step':  # soft shoe on a floor: low thump plus a little scuff
+        n = int(0.12 * SR); t = np.arange(n) / SR
+        x = np.sin(2 * np.pi * (95 + 25 * RNG.random()) * t) * np.exp(-t * 38) + 0.18 * lp(RNG.normal(0, 1, n), 2500) * np.exp(-t * 55)
+        return x
+    if kind == 'thud':  # landing: deeper body thump
+        n = int(0.22 * SR); t = np.arange(n) / SR
+        return np.sin(2 * np.pi * 62 * t * (1 - 0.3 * t)) * np.exp(-t * 18) + 0.25 * lp(RNG.normal(0, 1, n), 900) * np.exp(-t * 30)
+    if kind == 'swish':  # quick air movement
+        n = int(0.16 * SR); t = np.linspace(0, 1, n)
+        return bp(RNG.normal(0, 1, n), 1200, 5200) * np.sin(np.pi * t) ** 2
     if kind in ('pop', 'pop_small'):
         hi = 1.5 if kind == 'pop_small' else 1.0
         x = sweep(900 * hi, 320 * hi, 0.09) * env(int(0.09 * SR), 0.001, 0.035)
@@ -369,7 +379,7 @@ def sfx(kind):
 # ---------------- mix ----------------
 # each effect type's loudness relative to the narrator (LU); cue gains add on top,
 # and the effects bus is carved in the speech band while the narrator talks
-SFX_LEVEL = {'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
+SFX_LEVEL = {'step': -16, 'thud': -10, 'swish': -15, 'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
              'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
              'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11,
              'buzz': -12, 'swarm': -13, 'squirm': -12, 'stamp': -8, 'crack': -10, 'drill': -13, 'plane': -13,
@@ -516,7 +526,7 @@ def main():
             fx[i:j, 0] += (x * g * np.cos((p + 1) * np.pi / 4))[: j - i]
             fx[i:j, 1] += (x * g * np.sin((p + 1) * np.pi / 4))[: j - i]
         else:
-            add_st(fx, x, c['t'], g, 0.12 * np.sin(c['t'] * 2.3))
+            add_st(fx, x, c['t'], g, c['pan'] if 'pan' in c else 0.12 * np.sin(c['t'] * 2.3))   # foley cues carry their screen position
     fx = fx[:n]
     fx = fx + reverb(fx, ir, 0.16)
     # keep the effects' punch and sparkle, clear their speech band under words

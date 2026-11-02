@@ -315,3 +315,10 @@ without camera keys frames it automatically, as a pure function of time: a waist
 (from 0.3 s before the line), a wide shot fitting the whole cast otherwise, eased between; small punch-ins on emphasised
 words (long or exclaimed); seeded handheld drift; clamped so the frame never leaves the set; heads kept high, with room
 below for captions. Explicit `camera` keys always win.
+
+## Automatic foley (plan 2.7)
+`"foley": true` in shots.json adds sound cues found in the motion itself (`window.FOLEY` in the player, run by
+`tools/foley.mjs` during `film.render`): a footstep each time a walk clip's foot contact turns on, a thud when a
+character lands (hips decelerating after a drop) and on each bounce of a dropped prop (quieter each time), a swish when a
+hand passes 1400 px/s, and a small pop where a prop is caught. Each cue is panned by its screen position. New
+synthesised sounds in `engine/audio.py`: `step`, `thud`, `swish`; any cue may carry `pan` (-1 left .. 1 right).

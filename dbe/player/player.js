@@ -314,6 +314,41 @@
   window.frameAtTime = t => { stage.innerHTML = frameAt(t, bgOnly); };
   window.renderFrame = f => window.frameAtTime(t0 + f / FPS);
   window.FRAMES = Math.round((t1 - t0) * FPS);
+  // ---------- foley events (plan 2.7): footsteps on contacts, thuds on landings, swishes on fast moves, pops on catches ----------
+  // Returns [{t, type, gain, pan}] for the whole film, computed from the same poses the frames show.
+  function foleyEvents() {
+    const ev = [], dt = 1 / FPS, pan = x => Math.max(-0.8, Math.min(0.8, (x / W) * 2 - 1));
+    const prev = {};
+    for (const sh of S.shots) {
+      for (let t = sh.start; t < sh.end; t += dt) {
+        frameAt(t, false);   // sets CASTS for this instant
+        CASTS.forEach((cc, ci) => {
+          const key = sh.id + ':' + ci, pv = prev[key] || {};
+          const hip = Puppet.pointOf(cc.p, cc.p.parts.hip ? 'hip' : Object.keys(cc.p.parts)[0], null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip });
+          const hands = ['hand_R', 'hand_L'].filter(h => cc.p.parts[h]).map(h => Puppet.pointOf(cc.p, h, null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip }));
+          // footsteps: a foot's contact turning on
+          for (const f of ['foot_L', 'foot_R']) { const on = !!(cc.pose.contacts && cc.pose.contacts[f]);
+            if (on && pv[f] === false) ev.push({ t: +t.toFixed(3), type: 'step', gain: 0.8, pan: pan(cc.x) }); pv[f] = on; }
+          // landing: hips falling then stopping (the dust test of fx.js)
+          if (pv.hipY != null && pv.vy != null) { const vy = hip[1] - pv.hipY; if (pv.vy > 3 * cc.s && vy < pv.vy * 0.35 && (pv.fall || 0) > 12 * cc.s) ev.push({ t: +t.toFixed(3), type: 'thud', gain: 1, pan: pan(cc.x) });
+            pv.fall = vy > 0.5 ? (pv.fall || 0) + vy : 0; pv.vy = vy; } else if (pv.hipY != null) pv.vy = hip[1] - pv.hipY;
+          pv.hipY = hip[1];
+          // swish: a hand crossing 1400 px/s (once per fast move)
+          hands.forEach((h, i) => { const k = 'h' + i; if (pv[k]) { const v = Math.hypot(h[0] - pv[k][0], h[1] - pv[k][1]) / dt, fast = v > 1400 * Math.max(0.6, cc.s);
+            if (fast && !pv[k + 'f']) ev.push({ t: +t.toFixed(3), type: 'swish', gain: Math.min(1.2, v / 2000), pan: pan(h[0]) }); pv[k + 'f'] = fast; } pv[k] = h; });
+          prev[key] = pv;
+        });
+      }
+      // catches and drops: a prop arriving at the end of its travel, bounces of drops
+      for (const pr of sh.props || []) { const keys = pr.attach || [];
+        for (let k = 1; k < keys.length; k++) { const spec = keys[k][1] || {};
+          if (spec.drop) { const info = {}; propPos(pr, sh.end, CASTS, info); (info.bounces || []).forEach(([bt, bx], i) => ev.push({ t: +bt.toFixed(3), type: 'thud', gain: Math.max(0.3, 0.9 - i * 0.25), pan: pan(bx) })); continue; }
+          const arrive = spec.arrive != null ? spec.arrive : keys[k][0] + (pr.travel ?? 0.35); const pos = propPos(pr, arrive, CASTS);
+          if (arrive < sh.end) ev.push({ t: +arrive.toFixed(3), type: 'pop_small', gain: 0.9, pan: pan(pos ? pos[0] : W / 2) }); } }
+    }
+    return ev.sort((a, b) => a.t - b.t);
+  }
+  window.FOLEY = foleyEvents;
   window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
   (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
 })();

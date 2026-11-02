@@ -161,6 +161,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.4 Rig Canvas drawing upgrade | done: perfect-freehand ink with pressure, simplified strokes, gap-closing bucket fill, model sheets (canvas button and `puppet.sheet`). Open: expression boards for drawing swap sets side by side | this commit |
 | 2.3 Gesture planner | done: `acting.plan` (prosody-driven beats, aimed points, exclamations, questions, listener gaze/nods/blinks); dialogue-demo acted with no hand-placed clips. Open: semantic gestures from LLM tags, personality profiles (E13), a critic rating against hand-keyed acting | this commit |
 | 2.6 Camera grammar | done: `camera_auto` (speaker medium shots, wide shots between, eased; punch-ins on emphasis; handheld; clamped to the set; caption headroom) | this commit |
+| 2.7 Foley and spatial mix | done: `foley` (footsteps on contacts, landing and bounce thuds, swishes on fast hands, catch pops), panned by screen position; new step/thud/swish sounds. Open: surface types, Kenney CC0 samples, room reverb per set | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates
