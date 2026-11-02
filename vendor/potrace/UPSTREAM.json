@@ -1,0 +1,15 @@
+{
+ "name": "potrace",
+ "repository": "https://potrace.sourceforge.net/",
+ "version": "1.16",
+ "archive": "https://potrace.sourceforge.net/download/1.16/potrace-1.16.tar.gz",
+ "sha256": "be8248a17dedd6ccbaab2fcc45835bb0502d062e40fbded3bc56028ce5eb7acc",
+ "license": "GPL-2.0-or-later",
+ "class": "copyleft",
+ "license_files": ["COPYING", "AUTHORS"],
+ "files": "the whole 1.16 source release, unmodified",
+ "patches": [],
+ "use": "monochrome bitmap to vector tracing (scans and doodles to vector parts, WP-18)",
+ "build": ["./configure --prefix={out} --disable-shared --quiet", "make -j4 --quiet", "make install --quiet"],
+ "binary": "bin/potrace"
+}

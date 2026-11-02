@@ -135,6 +135,34 @@
    "used_by": [
     "canvas"
    ]
+  },
+  {
+   "path": "vendor/potrace/",
+   "kind": "code",
+   "name": "Potrace 1.16 (source)",
+   "license": "GPL-2.0-or-later",
+   "class": "copyleft",
+   "license_file": "vendor/potrace/COPYING",
+   "source": "https://potrace.sourceforge.net/",
+   "attribution": "Potrace 1.16 (source) (GPL-2.0-or-later)",
+   "used_by": [
+    "tools"
+   ],
+   "use": "bitmap to vector tracing (WP-18); built on request by vendor.build"
+  },
+  {
+   "path": "vendor/vtracer/",
+   "kind": "code",
+   "name": "VTracer 0.6.4 (source)",
+   "license": "MIT OR Apache-2.0",
+   "class": "permissive",
+   "license_file": "vendor/vtracer/LICENSE-MIT",
+   "source": "https://github.com/visioncortex/vtracer",
+   "attribution": "VTracer 0.6.4 (source) (MIT OR Apache-2.0)",
+   "used_by": [
+    "tools"
+   ],
+   "use": "colour raster to vector tracing (WP-18); built on request by vendor.build"
   }
  ],
  "generated": [

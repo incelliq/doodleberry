@@ -1,0 +1,13 @@
+{
+ "name": "three.js",
+ "repository": "https://github.com/mrdoob/three.js",
+ "version": "r160",
+ "license": "MIT",
+ "class": "permissive",
+ "license_files": [
+  "LICENSE"
+ ],
+ "files": "three.module.min.js and examples/jsm modules",
+ "patches": [],
+ "use": "3D renderer (three)"
+}

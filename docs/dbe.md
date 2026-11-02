@@ -831,3 +831,21 @@ ten health posts are marked.
 Facts labelled "re-analysis", "illustration" or "preliminary" show that label on screen while a line citing them plays
 (a tag at the top of the text-safe area, drawn with the captions by `film.render`). No existing film has labelled
 facts, so no golden frame changed.
+
+## Licence ledger and vendored code (WP-33)
+Doodleberry is in-house R&D, so any licence may be used; the ledger records which, so a public post can be judged.
+- `licence.ledger` lists every component with its licence class: manifest files and tools, vendored code, voices and
+  cast puppets. Classes: public-domain, permissive, attribution, weak-copyleft, copyleft, network-copyleft,
+  share-alike, source-available, non-commercial, research-only, proprietary (the owner's own work).
+- `film.provenance` lists what shaped a film (characters, voices, the third-party files its renderers and captions
+  use, and models recorded in the film's `provenance.json`) and flags what restricts a public post: voices not marked
+  clean, and non-commercial, research-only, share-alike or source-available inputs. `film.package` carries the flags
+  and `clear_to_post`.
+- Vendored code has an `UPSTREAM.json` next to it (repository, version, archive and sha256, licence and class,
+  licence files, what was taken, patches, a build recipe and the binary it makes). `vendor.check` (in
+  `python -m dbe test`) checks every record, its licence files and its manifest row; no class is refused.
+  `vendor.build NAME` builds a component in a copy, into `out/vendor-build/NAME/` (git-ignored).
+- Vendored so far: lottie-web, three.js and perfect-freehand (JavaScript, as before), and the sources of Potrace 1.16
+  (GPL-2.0-or-later, monochrome tracing) and VTracer 0.6.4 (MIT or Apache-2.0, colour tracing), unmodified, for
+  WP-18's scan-to-vector work. **Not built yet:** building runs the upstreams' own configure, make and cargo
+  scripts, which this environment's safety check refused to run without the owner's permission.

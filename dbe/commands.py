@@ -349,6 +349,53 @@ def film_credits(name):
     return {"path": str(out.relative_to(ROOT)), "credits": lines}
 
 
+# ---------------- licence ledger and vendored code (WP-33) ----------------
+@command("licence.ledger", cls=("string", "only this licence class (e.g. copyleft, non-commercial); empty for all", ""))
+def licence_ledger(cls=""):
+    """Every component with its licence class (WP-33): manifest files and tools, vendored code, voices, cast puppets.
+    In-house R&D may use any class; the classes non-commercial, research-only, share-alike and source-available are
+    flagged when they shape a film that is posted publicly (film.provenance)."""
+    from collections import Counter
+    from . import vendoring as V
+    rows = [r for r in V.ledger() if not cls or r["class"] == cls]
+    return {"by_class": dict(Counter(r["class"] for r in V.ledger())), "flagged_at_posting": sorted(V.FLAG_AT_POSTING), "rows": rows}
+
+
+@command("vendor.check")
+def vendor_check():
+    """Vendored code is recorded (WP-33): every UPSTREAM.json has its repository, version, licence and class, licence
+    files present, patches listed, and a row in assets/manifest.json; reports which components are built. No licence
+    class is refused."""
+    from . import vendoring as V
+    return V.check()
+
+
+@command("vendor.build", name=("string", "vendored component (vendor/<name>/UPSTREAM.json)"))
+def vendor_build(name):
+    """Build a vendored component with its upstream recipe, in a copy, into out/vendor-build/<name>/ (WP-33). This
+    runs the upstream's own build scripts (configure, make, cargo)."""
+    from . import vendoring as V
+    return V.build(name)
+
+
+@command("film.provenance", name=("string", "film"))
+def film_provenance(name):
+    """What shaped a film, each with its licence class (WP-33): characters, voices, the third-party files its
+    renderers and captions use, and models recorded in provenance.json. Flags what restricts a public post: voices not
+    marked clean, and non-commercial, research-only, share-alike or source-available inputs."""
+    from . import vendoring as V
+    d = _film(name); s = _shots(name, resolve=False)
+    cast = {e["path"]: e for e in _json(ROOT / "cast" / "index.json", {"puppets": []})["puppets"]}
+    files = []
+    for p in sorted({c["puppet"] for sh in s["shots"] for c in sh.get("cast", [])}):
+        e = cast.get(p, {}); files.append({"path": p, "license": e.get("license") or (_json(ROOT / p, {}) or {}).get("meta", {}).get("license", "")})
+    man = _json(ROOT / "assets" / "manifest.json", {"files": []})
+    uses = {"captions", "player"} | {f"renderer:{sh.get('renderer', 'svg')}" for sh in s["shots"]}
+    files += [{"path": f["path"], "license": f.get("license"), "class": f.get("class")} for f in man["files"] if set(f.get("used_by", [])) & uses]
+    status = {k: v.get("status", "unknown") for k, v in _voice_registry().items()}
+    return V.provenance(d, status, files)
+
+
 @command("puppet.lint", path=("string", "path to a .puppet.json"))
 def puppet_lint(path):
     """Check a puppet against its template (missing parts, swaps, raw colours)."""
@@ -2161,6 +2208,11 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "licence":   # licence ledger and vendored code (WP-33)
+        from . import vendoring as VND
+        bad, meas = VND.self_test(ROOT / "out")
+        failed += 1 if bad else 0
+        results.append({"licence": "classes, vendored records, posting flags", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "research":   # research gates (0.10) and the expert review gate (WP-05)
         from . import research as RSH
         bad, meas = RSH.self_test(ROOT / "out")
@@ -2376,7 +2428,9 @@ def film_package(name, cover_t=None):
            "- Which hook and cover were used; whether the title needs a (true) alternative",
            "- Any factual correction: log it on the film's page with the date, and fix every caption"]
     (pk / "posts.md").write_text("\n".join(md) + "\n"); (pk / "package.json").write_text(json.dumps(pkg, indent=1))
-    return {"package": str((pk / "posts.md").relative_to(ROOT)), "checks": checks, "chapters": len(chapters)}
+    prov = film_provenance(name)   # WP-33: inputs whose terms restrict a public film are flagged for the owner
+    return {"package": str((pk / "posts.md").relative_to(ROOT)), "checks": checks, "chapters": len(chapters),
+            "posting_flags": prov["flags"], "clear_to_post": prov["clear_to_post"]}
 
 
 @command("asset.check")

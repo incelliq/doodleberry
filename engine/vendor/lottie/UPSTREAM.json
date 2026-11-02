@@ -1,0 +1,13 @@
+{
+ "name": "lottie-web",
+ "repository": "https://github.com/airbnb/lottie-web",
+ "version": "5.12.2",
+ "license": "MIT",
+ "class": "permissive",
+ "license_files": [
+  "LICENSE.md"
+ ],
+ "files": "lottie.min.js (the release build)",
+ "patches": [],
+ "use": "Lottie renderer and export QA"
+}

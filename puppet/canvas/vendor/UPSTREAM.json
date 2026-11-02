@@ -1,0 +1,13 @@
+{
+ "name": "perfect-freehand",
+ "repository": "https://github.com/steveruizok/perfect-freehand",
+ "version": "1.2.3",
+ "license": "MIT",
+ "class": "permissive",
+ "license_files": [
+  "perfect-freehand-LICENSE.txt"
+ ],
+ "files": "perfect-freehand.js",
+ "patches": [],
+ "use": "pressure strokes in the Rig Canvas"
+}
