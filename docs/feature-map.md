@@ -80,7 +80,7 @@ covered, now added to their packages' scopes.
 |---|---|---|---|---|
 | Keyframes with easing | PRO | ✅ | – | |
 | Graph (curve) editor | PRO | ⬜ | P1 | curve editor: WP-19 |
-| Dope sheet / X-sheet: exposures, holds, animating on twos or threes | PRO | 🟡 | P1 | stepped timing per character or shot (1.9); exposure-sheet UI: WP-35 |
+| Dope sheet / X-sheet: exposures, holds, animating on twos or threes | PRO | 🟡 | P1 | stepped timing per character or shot (1.9); drawn levels carry an exposure sheet as data (`level.make`, `level.xsheet`, puppet v0.8); the exposure-sheet UI: WP-35 part 2 |
 | Nonlinear clip stack with fades and additive layers | PRO | ✅ | – | |
 | Action clip library | PRO | ✅ | – | 33 library clips (2.5) plus each character's own clips (3.3, 3.5) |
 | Pose library and blending | PRO | ✅ | – | presets plus per-character poses |
@@ -100,7 +100,7 @@ covered, now added to their packages' scopes.
 | Listener behaviour: whoever isn't speaking reacts | NEW | ✅ | – | listener gaze, nods and blinks in `acting.plan` (2.3) |
 | Crowds with variation | PRO | ⬜ | P2 | crowds: WP-42 |
 | Prop physics: drops, bounces, rolls | PRO | ✅ | – | throws, drops, bounces, rolls solved at bake time (2.19); multi-body: WP-09 |
-| Frame-by-frame drawn effects layer (hand-drawn splashes, smoke) | PRO (TVPaint, GP) | ⬜ | P2 | drawn effects as drawn levels: WP-35 |
+| Frame-by-frame drawn effects layer (hand-drawn splashes, smoke) | PRO (TVPaint, GP) | 🟡 | P2 | drawn levels play in films beside rigged puppets (`films/level-demo`: a campfire and a walk on twos); drawing them in Studio: WP-35 part 2 |
 | **Comedy timing toolkit:** scripted blinks on cue (one per dot of "..."), holds, double-takes, the long stare, the button move after the last line, rule-of-three escalation | NEW | ✅ | – | `acting.direct` gags and scripted blinks (2.11) |
 | Gag library: reusable beat patterns, e.g. stare plus slow push-in, shout plus camera shake, silent "..." bubble with blinks, tiny hop as a button | IDEA | ✅ | – | double take, long stare, slow burn, deadpan, button, rule of three (2.11); camera beats: WP-10 |
 | Hand-made timing per character or shot: animate on 12s, 8s or 6s while the film runs at 30 | PRO | ✅ | – | stepped timing on 12s, 8s or 6s (1.9) |
@@ -337,7 +337,8 @@ These come from stacking primitives we already have. Each one is cheap because t
 ## 14. What not to build
 - Photoreal or generative-video characters: they break consistency, editability and the licence trail. Use
   generative models only for licence-cleared backgrounds and props, if at all.
-- A full raster frame-by-frame paint suite (TVPaint territory). Import from Krita instead.
+- ~~A full raster frame-by-frame paint suite (TVPaint territory).~~ Moved to the plan (owner, 2 November 2026): hand-drawn
+  animation is WP-35 (drawn levels, puppet v0.8), with Pencil2D and the MyPaint brushes in (WP-34).
 - Proprietary runtimes we can't redistribute: no Spine runtime embedding and no Remotion. See `oss-research.md`.
 
 ## 15. Build order

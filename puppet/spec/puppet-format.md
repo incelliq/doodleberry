@@ -1,4 +1,4 @@
-# Puppet format v0.7 (`.puppet.json`)
+# Puppet format v0.8 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -172,3 +172,26 @@ gesture does not touch. Earlier loaders averaged gestures with idle, which halve
   the same shape as a clip library entry. `Acting.evaluate` merges them over the template's library (a character
   clip wins over a library clip of the same name), so shots, the bake, `dbe/geom.py` and every exporter play them.
   The Rig Canvas Pose tool records them from keyed poses; `poses` (v0.2) holds its saved single poses.
+
+## v0.8 additions: drawn levels (hand-drawn animation)
+A **drawn level** is a puppet of template `level` (WP-35): one `root` part and a swap set `level` whose shapes are the
+drawings and whose **`xsheet`** is the exposure sheet:
+
+```jsonc
+"swaps": {"level": {"anchor": "root", "z": 10,
+                    "shapes": {"d01": [stroke...], "d02": [stroke...]},           // raster strokes (scans, brushes, Pencil2D) or vector strokes
+                    "xsheet": {"fps": 24, "cells": ["d01", "d01", "d02", "d02"], "loop": true}}},   // one drawing per frame: runs are holds
+"clips": {"play": {"duration": 0.1667, "loop": true, "fadeIn": 0, "fadeOut": 0, "tracks": {}, "swaps": {"level": [[0, "d01"], [0.0833, "d02"]]}}}
+```
+
+- `cells` holds one drawing per frame at the level's own `fps`: a run of the same drawing is a hold, so timing on ones,
+  twos or threes, or any timing an animator writes, is data. Drawings may repeat (a cycle that comes back).
+- The xsheet is compiled into the clip `play` (v0.7 clip swap keys hold until the next key), so the loader, the bake,
+  `dbe/geom.py` and the exporters play a level like any swap. A shot casts it like a character, with
+  `"timeline": {"clips": [{"clip": "play", "start": 0}]}`, and can move, scale, flip and speed it up (`speed`).
+- **Clip fades** (`fadeIn`, `fadeOut` on a clip): the default blend a timeline uses for that clip when the layer does
+  not set its own (0.25 s otherwise). Level clips set 0: drawings cut, never cross-fade.
+- `ground` is where the drawings stand (by default the lowest ink across every drawing).
+- Commands: `level.make` (drawings plus timing), `level.xsheet` (retime, or write the cells), `level.from_pencil2d`
+  (a Pencil2D animation, with its holds), `level.onion` (onion-skin drawings around a frame). Raster drawings render
+  in the SVG renderer; vector drawings everywhere.

@@ -210,6 +210,16 @@
      },
      "contacts": {
       "type": "object"
+     },
+     "fadeIn": {
+      "type": "number",
+      "minimum": 0,
+      "description": "v0.8: default blend-in seconds when a timeline plays this clip (drawn levels: 0)"
+     },
+     "fadeOut": {
+      "type": "number",
+      "minimum": 0,
+      "description": "v0.8: default blend-out seconds (drawn levels: 0)"
      }
     }
    }
@@ -311,6 +321,30 @@
       "type": "object",
       "additionalProperties": {
        "type": "string"
+      }
+     }
+    },
+    "xsheet": {
+     "type": "object",
+     "description": "v0.8 drawn levels: the exposure sheet, one drawing name per frame at fps (runs are holds); compiled into the puppet's clip 'play'",
+     "required": [
+      "fps",
+      "cells"
+     ],
+     "properties": {
+      "fps": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "cells": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       },
+       "minItems": 1
+      },
+      "loop": {
+       "type": "boolean"
       }
      }
     }

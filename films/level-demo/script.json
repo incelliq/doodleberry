@@ -1,0 +1,17 @@
+{
+ "speakers": {
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 1.0,
+ "gap_s": 0.5,
+ "lines": [
+  {
+   "id": "come",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Come and sit by the fire!"
+  }
+ ]
+}

@@ -1,0 +1,1 @@
+window.CLIPLIB = window.CLIPLIB || {}; window.CLIPLIB.level = {"template": "level", "note": "Drawn levels (WP-35): a level plays its own clip 'play', compiled from its exposure sheet (swaps.level.xsheet); this library is empty on purpose.", "clips": {}, "presets": {}};

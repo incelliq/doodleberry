@@ -1,0 +1,89 @@
+{
+ "titles": [
+  {
+   "text": "Come and sit by the fire!",
+   "by": "Claude (WP-35 demo)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "A campfire, drawn by hand",
+   "by": "Claude (WP-35 demo)",
+   "checks": {
+    "ok": false,
+    "truth": {
+     "ok": false,
+     "problems": [
+      "off topic: no content word in common with the film"
+     ],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Sit by the fire tonight",
+   "by": "Claude (WP-35 demo)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "COME AND SIT",
+   "bottom": "BY THE FIRE!",
+   "by": "Claude (WP-35 demo)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "A CAMPFIRE",
+   "bottom": "DRAWN BY HAND",
+   "by": "Claude (WP-35 demo)",
+   "checks": {
+    "ok": false,
+    "problems": [
+     "off topic: no content word in common with the film"
+    ]
+   }
+  },
+  {
+   "top": "SIT BY",
+   "bottom": "THE FIRE",
+   "by": "Claude (WP-35 demo)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

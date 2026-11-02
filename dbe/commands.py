@@ -399,6 +399,13 @@ def film_provenance(name):
     return V.provenance(d, status, files)
 
 
+def _puppet_errors(puppet):
+    """schema errors for a puppet (puppet/spec/puppet.schema.json)"""
+    import jsonschema
+    return [f"{'/'.join(map(str, e.absolute_path)) or '(root)'}: {e.message[:120]}"
+            for e in jsonschema.Draft202012Validator(_json(ROOT / "puppet" / "spec" / "puppet.schema.json")).iter_errors(puppet)]
+
+
 @command("puppet.lint", path=("string", "path to a .puppet.json"))
 def puppet_lint(path):
     """Check a puppet against its template (missing parts, swaps, raw colours)."""
@@ -1109,7 +1116,7 @@ def puppet_save(path, puppet):
     f = (ROOT / p).resolve()
     if not str(f).startswith(str((ROOT / "cast").resolve()) + "/"):
         raise ValueError("puppets are saved under cast/")
-    errs = [f"{'/'.join(map(str, e.absolute_path)) or '(root)'}: {e.message[:120]}" for e in jsonschema.Draft202012Validator(_json(ROOT / "puppet" / "spec" / "puppet.schema.json")).iter_errors(puppet)]
+    errs = _puppet_errors(puppet)
     if errs:
         raise ValueError("not a valid puppet: " + "; ".join(errs[:5]))
     new = not f.exists(); f.parent.mkdir(parents=True, exist_ok=True)
@@ -2341,6 +2348,12 @@ def test_golden(update=False, film=""):
         bad, meas = LQ.self_test(ROOT / "out" / "layouttest")
         failed += 1 if bad else 0
         results.append({"layout": "AI-look lint, style thresholds, seeded failures per style", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "levels":   # drawn levels (WP-35): exposure sheets, compiled clips, the loader, Pencil2D import
+        from . import levels as LVL
+        bad, meas = LVL.self_test(ROOT / "out" / "leveltest")
+        failed += 1 if bad else 0
+        results.append({"levels": "timings, compiled clips, drawings over time in the loader, Pencil2D import", "status": "FAIL" if bad else "ok",
+                        "measured": {k: v for k, v in meas.items() if k != "cells"}, **({"cases": bad} if bad else {})})
     if not film or film == "oss":   # open-source parts behind commands (WP-34): Pencil2D, libmypaint, Inkscape
         from . import oss as OSS
         bad, meas = OSS.self_test(ROOT / "out" / "osstest")
@@ -2947,6 +2960,82 @@ def post_status(state=""):
     return {"counts": dict(Counter(p["state"] for p in ps)), "posts": rows}
 
 
+# ---------------- drawn levels (WP-35, puppet format v0.8) ----------------
+def _level_path(name):
+    if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{0,60}", name):
+        raise ValueError("level names are lower-case letters, digits, - and _")
+    return ROOT / "cast" / "levels" / f"{name}.puppet.json"
+
+
+@command("level.make", name=("string", "level name (cast/levels/<name>.puppet.json)"),
+         frames=("array", "drawings in order: PNG paths (all the level's size, transparent background)"),
+         timing=("string", "ones | twos | threes | fours, or a number of frames per drawing", "twos"),
+         holds=("array", "instead of timing: frames to hold each drawing, one per drawing", None),
+         fps=("integer", "the level's frame rate", 24), loop=("boolean", "", True), author=("string", "", ""),
+         license=("string", "", "LicenseRef-owner"))
+def level_make(name, frames, timing="twos", holds=None, fps=24, loop=True, author="", license="LicenseRef-owner"):
+    """A drawn level (WP-35): drawings with an exposure sheet, as a puppet a shot casts like any character. Each
+    drawing is trimmed to its ink; the xsheet (timing on ones, twos or threes, or holds per drawing) compiles into the
+    level's clip "play", which every renderer plays. Cast it with "timeline": {"clips": [{"clip": "play", "start": 0}]}."""
+    from PIL import Image
+    from . import levels as LV
+    fs = [ROOT / f if not Path(f).is_absolute() else Path(f) for f in frames]
+    size = list(Image.open(fs[0]).size)
+    tm = holds if holds else (int(timing) if str(timing).isdigit() else timing)
+    p = LV.make(name, [{"png": str(f)} for f in fs], size, tm, fps, loop, author, license)
+    errs = _puppet_errors(p)
+    if errs:
+        raise ValueError(f"level does not validate: {errs[:3]}")
+    out = _level_path(name); out.parent.mkdir(parents=True, exist_ok=True); out.write_text(json.dumps(p, separators=(",", ":")))
+    x = p["swaps"]["level"]["xsheet"]
+    return {"puppet": str(out.relative_to(ROOT)), "drawings": len(p["swaps"]["level"]["shapes"]), "frames": len(x["cells"]),
+            "seconds": round(len(x["cells"]) / fps, 3), "xsheet": LV.runs(x["cells"])}
+
+
+@command("level.xsheet", name=("string", "level"), timing=("string", "ones | twos | threes | fours, or frames per drawing", ""),
+         cells=("array", "explicit exposure cells, one drawing name per frame", None), fps=("integer", "", 0), loop=("boolean", "", True))
+def level_xsheet(name, timing="", cells=None, fps=0, loop=True):
+    """Retime a drawn level (WP-35): new holds for every drawing, or an explicit exposure sheet (one drawing per
+    frame: runs are holds, drawings may repeat); the level's clip is recompiled. Without changes, returns the sheet."""
+    from . import levels as LV
+    f = _level_path(name); p = _json(f)
+    if timing or cells is not None or fps:
+        LV.set_xsheet(p, timing=(int(timing) if str(timing).isdigit() else timing) or None, cells=cells, fps=fps or None, loop=loop)
+        f.write_text(json.dumps(p, separators=(",", ":")))
+    x = p["swaps"]["level"]["xsheet"]
+    return {"fps": x["fps"], "frames": len(x["cells"]), "seconds": round(len(x["cells"]) / x["fps"], 3), "loop": x.get("loop", True), "xsheet": LV.runs(x["cells"])}
+
+
+@command("level.from_pencil2d", name=("string", "level name"), file=("string", "a Pencil2D project (.pclx)"),
+         fps=("integer", "the project's frame rate", 24), end=("string", "last frame, or last", "last"))
+def level_from_pencil2d(name, file, fps=24, end="last"):
+    """Bring a hand-drawn Pencil2D animation in as a drawn level (WP-35, via WP-34): Pencil2D renders it headless,
+    identical consecutive frames become one drawing held for that many frames, so the artist's timing is kept."""
+    import shutil as _sh
+    import tempfile
+    from . import levels as LV, oss
+    with tempfile.TemporaryDirectory() as td:
+        fr = oss.pencil2d_render(ROOT / file if not Path(file).is_absolute() else Path(file), Path(td) / "f", end=end)
+        ds, cells = LV.from_frames(fr)
+        h, w = ds[0]["rgba"].shape[:2]
+        p = LV.make(name, ds, (w, h), 1, fps)
+        LV.set_xsheet(p, cells=cells)
+    errs = _puppet_errors(p)
+    if errs:
+        raise ValueError(f"level does not validate: {errs[:3]}")
+    out = _level_path(name); out.parent.mkdir(parents=True, exist_ok=True); out.write_text(json.dumps(p, separators=(",", ":")))
+    return {"puppet": str(out.relative_to(ROOT)), "drawings": len(ds), "frames": len(cells), "xsheet": LV.runs(cells)}
+
+
+@command("level.onion", name=("string", "level"), frame=("integer", "frame of the level (0-based)"),
+         before=("integer", "", 2), after=("integer", "", 1))
+def level_onion(name, frame, before=2, after=1):
+    """The drawings to show as onion skins around a frame of a drawn level (WP-35): previous and next drawings with
+    the opacity to draw them at (the Studio drawing page uses it)."""
+    from . import levels as LV
+    return {"frame": frame, "onion": [{"drawing": d, "offset": o, "opacity": a} for d, o, a in LV.onion(_json(_level_path(name)), frame, before, after)]}
+
+
 # ---------------- open-source parts behind commands (WP-34; docs/oss-integration.md) ----------------
 @command("brush.list")
 def brush_list():
@@ -3026,7 +3115,7 @@ def asset_check():
     known = [f["path"] for f in man["files"]] + [g["path"] for g in man.get("generated", [])]
     tracked = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout.split()
     pat = re.compile(r"(^engine/vendor/|\.(ttf|otf|woff2?|png|jpe?g|gif|webp|svg|wav|mp3|ogg|flac|glb|gltf|fbx|onnx)$)", re.I)
-    third = [t for t in tracked if pat.search(t) and not t.startswith(("tests/golden/", "dbe/", "puppet/canvas/")) and not t.endswith(("LICENSE", "LICENSE.md"))]
+    third = [t for t in tracked if pat.search(t) and not t.startswith(("tests/golden/", "dbe/", "puppet/canvas/")) and not t.endswith(("LICENSE", "LICENSE.md", "UPSTREAM.json"))]   # UPSTREAM.json: our own provenance records (WP-33)
     missing = [t for t in third if not any(t == k or (k.endswith("/") and t.startswith(k)) for k in known)]
     return {"third_party_files": len(third), "missing_from_manifest": missing, "ok": not missing}
 

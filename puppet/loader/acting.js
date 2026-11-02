@@ -60,8 +60,8 @@
       const clip = typeof L.clip === 'string' ? CLIPS[L.clip] : L.clip; if (!clip) continue;
       const speed = L.speed || 1, lt = (t - (L.start || 0)) * speed;
       const end = L.end ?? (clip.loop ? Infinity : (L.start || 0) + clip.duration / speed);
-      if (t < (L.start || 0) || t > end + (L.fadeOut ?? 0.25)) continue;
-      const fi = L.fadeIn ?? 0.25, fo = L.fadeOut ?? 0.25;
+      const fi = L.fadeIn ?? clip.fadeIn ?? 0.25, fo = L.fadeOut ?? clip.fadeOut ?? 0.25;   // v0.8: a clip may set its own fades (drawn levels cut, never fade)
+      if (t < (L.start || 0) || t > end + fo) continue;
       let w = (L.weight ?? 1) * (fi ? smooth(clamp((t - (L.start || 0)) / fi)) : 1) * (isFinite(end) && fo ? 1 - smooth(clamp((t - end) / fo)) : 1);
       if (w <= 0) continue;
       const s = sampleClip(clip, lt), g = L.gain ?? 1;   // gain scales the clip's motion (calmer or bigger acting)

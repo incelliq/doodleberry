@@ -1,0 +1,94 @@
+{
+ "title": "Campfire (drawn levels)",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "night",
+   "start": 0,
+   "end": "come.end+2.4",
+   "start_line": "come",
+   "end_line": "come",
+   "bubbles": true,
+   "cast": [
+    {
+     "puppet": "cast/levels/campfire.puppet.json",
+     "place": {
+      "x": 640,
+      "y": 1560,
+      "s": 1.25
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "play",
+        "start": 0
+       }
+      ]
+     }
+    },
+    {
+     "puppet": "cast/levels/doodle-walk.puppet.json",
+     "place": [
+      [
+       0,
+       {
+        "x": -250,
+        "y": 1600,
+        "s": 0.95
+       }
+      ],
+      [
+       "come.end+2.4",
+       {
+        "x": 480,
+        "y": 1600,
+        "s": 0.95
+       }
+      ]
+     ],
+     "timeline": {
+      "clips": [
+       {
+        "clip": "play",
+        "start": 0,
+        "speed": 0.667
+       }
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 870,
+      "y": 1600,
+      "s": 0.95
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": "come.start",
+        "additive": true
+       }
+      ],
+      "visemes_from": "ravi",
+      "springs": true
+     }
+    }
+   ]
+  }
+ ]
+}

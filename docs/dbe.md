@@ -69,6 +69,13 @@ environment variables below).
   `reminder.ics` for the person who posts it. Unapproved posts that are due are held, never sent. `post.done` records
   the published link; when all of a row's posts are out, the row is marked posted in the plan with every link.
   `post.status` and the board's Posting section show the queue, with Approve, Revoke and Posted buttons.
+- **Drawn levels** (WP-35, puppet format v0.8): hand-drawn animation as a sequence of drawings with an exposure
+  sheet. `level.make` builds one from drawings (PNG, transparent) and a timing (on ones, twos, threes, or holds per
+  drawing) into `cast/levels/<name>.puppet.json`; `level.xsheet` retimes it or writes the cells; `level.from_pencil2d`
+  brings in a Pencil2D animation with its holds; `level.onion` gives the onion-skin drawings around a frame. A shot
+  casts a level like a character and starts its clip `play`. `films/level-demo` plays a 12-drawing campfire and a
+  12-drawing walk cycle on twos beside Ravi (golden frames in `python -m dbe test`); its drawings are stand-ins made
+  by `tools/make_level_demo.py` with MyPaint strokes until the Studio drawing page exists.
 - **Open-source parts** (WP-34, decisions in `docs/oss-integration.md`): `brush.paint` and `brush.list` (libmypaint
   linked through ctypes, any MyPaint brush preset, pressure strokes onto a transparent PNG), `pencil2d.write` and
   `pencil2d.render` (a drawn level to and from a Pencil2D project, rendered headless with its holds),
