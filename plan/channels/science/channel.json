@@ -24,6 +24,8 @@
   "momo": "kokoro:af_heart",
   "priya": "kokoro:af_bella"
  },
+ "post_time": "18:30",
+ "timezone": "Asia/Colombo",
  "rules": {
   "post_days": [
    "mon",

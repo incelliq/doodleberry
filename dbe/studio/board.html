@@ -39,6 +39,8 @@
 <main>
   <div class="cal" id="cal" aria-label="posting calendar"></div>
   <div class="grid" id="grid"></div>
+  <h2 style="font-size:15px;margin:20px 0 8px">Posting <span id="psum" class="muted" style="font-weight:400"></span></h2>
+  <div class="grid" id="posts" aria-label="posting queue: nothing is posted without an approval"></div>
 </main>
 <script>
 const $ = id => document.getElementById(id); const msg = m => { $('msg').textContent = m; };
@@ -91,7 +93,25 @@ async function load() {
       else if (a === 'decide') { const d = b.dataset.d, note = d === 'narrow' ? prompt('Narrow the scope to…') : ''; if (d === 'narrow' && !note) return; await api('prod.decide', { film, decision: d, note }); }
     } catch (e) { return; } load(); });
 }
-load(); setInterval(load, 4000);
+async function loadPosts() {   // WP-08: one approval per post, by name
+  const s = await api('post.status'); const by = {};
+  for (const p of s.posts) (by[p.film + ' ' + p.post_at] = by[p.film + ' ' + p.post_at] || []).push(p);
+  $('psum').textContent = Object.entries(s.counts).map(([k, v]) => `${v} ${k}`).join(' · ') || 'nothing queued: python -m dbe post.queue';
+  $('posts').innerHTML = Object.entries(by).map(([k, ps]) => { const p0 = ps[0];
+    return `<div class="card ${ps.every(p => p.state === 'posted') ? 'merged' : ps.some(p => p.state === 'blocked') ? 'failed' : ps.some(p => p.state === 'queued') ? '' : 'running'}">
+      ${p0.cover ? `<img src="/${p0.cover}" alt="">` : ''}<h2>${p0.film}</h2><div class="m">posts ${p0.post_at.replace('T', ' ').slice(0, 16)}${p0.row ? ' · ' + p0.row.channel : ''}</div>
+      ${ps.map(p => `<div class="m"><b>${p.platform}</b> ${p.state}${p.approval ? ' · approved by ' + p.approval.by : ''}${p.blocked && p.blocked.length ? ' · <span class="why">' + p.blocked.join(', ') + '</span>' : ''}${p.flags && p.flags.length ? ' · <span class="why">flags: ' + p.flags.join('; ') + '</span>' : ''}${p.url ? ` · <a href="${p.url}" target="_blank">link</a>` : ''}
+        ${p.state === 'queued' || p.state === 'held' ? `<button data-p="approve" data-id="${p.id}" data-flags="${p.flags && p.flags.length ? 1 : ''}">Approve</button>` : ''}${p.state === 'approved' ? `<button data-p="revoke" data-id="${p.id}">Revoke</button>` : ''}${p.state === 'exported' ? `<button data-p="done" data-id="${p.id}">Posted…</button>` : ''}</div>`).join('')}</div>`; }).join('');
+  document.querySelectorAll('[data-p]').forEach(b => b.onclick = async () => { const id = b.dataset.id;
+    try {
+      if (b.dataset.p === 'approve') { const who = prompt('Approved by (your name)'); if (!who) return;
+        const acc = b.dataset.flags ? confirm('This post has posting flags. Accept them?') : false; if (b.dataset.flags && !acc) return;
+        await api('post.approve', { id, by: who, accept_flags: acc }); }
+      else if (b.dataset.p === 'revoke') await api('post.revoke', { id, reason: 'from the board' });
+      else if (b.dataset.p === 'done') { const url = prompt('Link to the published post'); if (!url) return; await api('post.done', { id, url }); }
+    } catch (e) { return; } loadPosts(); });
+}
+load(); loadPosts(); setInterval(load, 4000); setInterval(loadPosts, 8000);
 </script>
 </body>
 </html>

@@ -208,9 +208,9 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 | Interactive web films: branching, quizzes, click-to-explore | EMG | ⬜ | P2 | WP-30 |
 | **Posting package generator:** per-platform captions (takeaway in the first line, sources in a pinned comment, hashtags last), YouTube title, description and chapters, alt text, an engagement prompt, playlists, post dates | NEW | ✅ | – | `film.package` (0.13) |
 | **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | 🟡 | P1 | `title.check/propose/set`, `titles.status`: truth and newcomer checks, double-barrel thumbnails, back catalogue retitled (WP-07); audience polls between true options: WP-31 |
-| Publishing connectors and scheduler: upload and schedule per platform, always with human approval per post | IDEA | ⬜ | P2 | WP-08 |
+| Publishing connectors and scheduler: upload and schedule per platform, always with human approval per post | IDEA | 🟡 | P2 | `post.queue/approve/revoke/run/done/status` and the board's posting queue: one named approval per post, export with a calendar reminder, a connector interface (dry run only); platform API connectors need the owner's app credentials (WP-08) |
 | 48-hour metrics checklist and analytics ingestion per platform | NEW | ⬜ | P2 | WP-31 |
-| Multi-language audio tracks on the main channel vs separate dubbed channels, with revenue per geography considered | NEW | ⬜ | P2 | WP-08 |
+| Multi-language audio tracks on the main channel vs separate dubbed channels, with revenue per geography considered | NEW | 🟡 | P2 | localised versions go out as extra audio tracks on YouTube posts (WP-08); revenue per geography: WP-31 |
 
 ## 9. QA and review
 | Feature | Source | Status | Priority | Notes |
@@ -315,7 +315,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ✅ (2.13) |
 | E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | 🟡 boil, stepped timing, dedupe; unique-frame rendering: WP-15 |
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 · WP-23 |
-| E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | 🟡 planner and orchestrator (3.7, 3.8); calendar to storyboard to session in one command (`plan.brief` launch, WP-06); posting: WP-08 |
+| E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | 🟡 planner and orchestrator (3.7, 3.8); calendar to storyboard to session in one command (`plan.brief` launch, WP-06); posting with an approval per post (WP-08) |
 | E25 | Beat grid + edit lists + native aspect layouts | **One production, a week of posts:** a full film, an episode series, teasers and both aspect ratios, without re-animating. | ✅ (2.14) |
 | E26 | Facts ledger + posting generator + corrections log | **One source of truth for every word.** Captions, pinned sources, alt text and pages all derive from the same claims, so a correction reaches every surface. | ⬜ P1 · WP-27 |
 | E27 | Narration slots + sound-off master + voices | **Ship silent, voice later, dub anywhere:** any voice or language drops into the same timed slots. | ✅ (2.16) |

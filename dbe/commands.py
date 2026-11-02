@@ -2321,6 +2321,12 @@ def test_golden(update=False, film=""):
         bad, meas = LQ.self_test(ROOT / "out" / "layouttest")
         failed += 1 if bad else 0
         results.append({"layout": "AI-look lint, style thresholds, seeded failures per style", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "posting":   # posting with a human approval per post (WP-08)
+        from . import posting as PST
+        bad, meas = PST.self_test(ROOT / "out" / "postingtest_q")
+        failed += 1 if bad else 0
+        results.append({"posting": "approval gate, held and blocked posts, export and reminder, links close the row", "status": "FAIL" if bad else "ok",
+                        "measured": {k: v for k, v in meas.items() if k in ("run", "row")}, **({"cases": bad} if bad else {})})
     if not film or film == "channels":   # several series side by side (WP-32)
         from . import planner as PLN
         bad, meas = PLN.channels_self_test(ROOT / "out" / "channeltest")
@@ -2736,6 +2742,179 @@ def titles_status(films=None):
         rows.append({"film": n, "titles_passing": tp, "thumbnails_passing": hp, "rendered_cuts": cuts, "covers_missing": len(missing),
                      "ok": tp >= 2 and hp >= 1 and (not cuts or not missing)})
     return {"films": rows, "ok": all(r["ok"] for r in rows), "short": [r["film"] for r in rows if not r["ok"]]}
+
+
+# ---------------- posting with a human approval per post (plan 4.15, WP-08) ----------------
+def _post_at(date, channel=""):
+    """a calendar date at the channel's posting time, in its time zone (channel.json post_time and timezone)"""
+    import datetime as _dt
+    from zoneinfo import ZoneInfo
+    from . import planner as PL
+    ch = PL.channel(channel)
+    hh, mm = map(int, str(ch.get("post_time", "18:30")).split(":"))
+    return _dt.datetime.combine(_dt.date.fromisoformat(date), _dt.time(hh, mm), ZoneInfo(ch.get("timezone", "Asia/Colombo"))).isoformat()
+
+
+@command("post.queue", film=("string", "a finished film (film.package and cover.make done)"), quarter=("string", "the calendar quarter of its row", ""),
+         date=("string", "the row's posting date (default: the row whose film this is, or today)", ""), channel=CH_ARG,
+         platforms=("array", "only these platforms (default: every platform in dbe/profiles.json)", None),
+         require_merged=("boolean", "the film must be approved or merged on the production board", True))
+def post_queue(film, quarter="", date="", channel="", platforms=None, require_merged=True):
+    """Queue a film's posts (WP-08): one per platform, from its posting package (caption, title, the cover for that
+    platform, subtitles, audio tracks of its localised versions) at its calendar row's date and the channel's posting
+    time. A post whose package fails (title not true of the film, no subtitles, no sources) or that carries posting
+    flags (film.provenance) is marked; nothing is posted until a person approves it (post.approve)."""
+    from . import planner as PL, posting as PO, production as PR
+    d = _film(film)
+    if require_merged:
+        st = None
+        if (PR.reg_dir() / "registry.json").exists():
+            with PR.registry(write=False) as reg:
+                st = (reg["films"].get(film) or {}).get("state")
+        if st not in ("approved", "merged"):
+            raise PermissionError(f"{film} is not approved on the production board ({st or 'not on the board'})")
+    row = None
+    if quarter:
+        cal = _plan_cal(quarter, channel)
+        row = next((r for r in cal["rows"] if r.get("idea") and (r["date"] == date if date else r.get("film") == film)), None)
+        if not row:
+            raise ValueError(f"no row for {film} in {quarter}")
+        date = row["date"]
+    date = date or _today().isoformat()
+    pk = film_package(film)
+    pkg = _json(d / "build" / "package" / "package.json")
+    covs = {f"{c['cut']}--{c['platform']}": c["file"] for c in _json(d / "build" / "package" / "covers" / "covers.json", {"covers": []})["covers"]}
+    if platforms:
+        pkg["posts"] = {k: v for k, v in pkg["posts"].items() if k in platforms}
+    rowref = {"quarter": quarter, "date": date, "channel": PL.channel(channel)["id"], "title": row["title"]} if row else None
+    posts = PO.make_posts(film, pkg, covs, _post_at(date, channel), rowref, pk["posting_flags"])
+    with PO.queue() as q:
+        for pid, p in posts.items():
+            old = q["posts"].get(pid)
+            if old and old["state"] in ("exported", "posted"):
+                continue
+            PO.event(p, "queued", blocked=p["blocked"], flags=len(p["flags"])); q["posts"][pid] = p
+    return {"queued": sorted(posts), "post_at": _post_at(date, channel), "blocked": {k: v["blocked"] for k, v in posts.items() if v["blocked"]},
+            "flags": pk["posting_flags"]}
+
+
+@command("post.approve", id=("string", "post id (date-film-platform), or empty with film and date for all of a film's posts that day", ""),
+         film=("string", "film", ""), date=("string", "posting date", ""), by=("string", "who approves (a person)", ""),
+         accept_flags=("boolean", "the approver accepts the posting flags shown (non-clean voice, restricted inputs)", False),
+         note=("string", "", ""))
+def post_approve(id="", film="", date="", by="", accept_flags=False, note=""):
+    """A person approves a post (WP-08): recorded with their name and the time. A blocked post cannot be approved; a
+    post with posting flags only when the approver accepts them by name."""
+    from . import posting as PO
+    if not by.strip():
+        raise ValueError("an approval needs the approver's name")
+    out = []
+    with PO.queue() as q:
+        sel = [q["posts"][id]] if id else [p for p in q["posts"].values() if p["film"] == film and p["post_at"][:10] == date]
+        if not sel:
+            raise KeyError("no such post")
+        for p in sel:
+            if p["state"] == "blocked":
+                raise PermissionError(f"{p['id']} is blocked: {p['blocked']}")
+            if p["flags"] and not accept_flags:
+                raise PermissionError(f"{p['id']} has posting flags: {p['flags']}; approve with accept_flags to accept them")
+            if p["state"] in ("exported", "posted"):
+                continue
+            p["state"] = "approved"; p["approval"] = {"by": by, "at": PO.now().isoformat(), "note": note, **({"accepted_flags": p["flags"]} if p["flags"] else {})}
+            PO.event(p, "approved", by=by); out.append(p["id"])
+    return {"approved": out}
+
+
+@command("post.revoke", id=("string", "post id"), reason=("string", "why", ""))
+def post_revoke(id, reason=""):
+    """Withdraw an approval before the post goes out (WP-08)."""
+    from . import posting as PO
+    with PO.queue() as q:
+        p = q["posts"][id]
+        if p["state"] in ("exported", "posted"):
+            raise ValueError(f"{id} is already {p['state']}")
+        p["state"] = "held"; p.pop("approval", None); PO.event(p, "revoked", reason=reason)
+    return {"held": id}
+
+
+@command("post.run", at=("string", "the time to act as now (ISO 8601; default now)", ""))
+def post_run(at=""):
+    """Send what is due (WP-08): every approved post whose time has come goes through its platform's connector when
+    one is configured (productions/connectors.json), otherwise into an export folder (out/posting/<date>/<platform>/
+    <film>/: video, cover, caption and title, subtitles, audio tracks, reminder.ics) for a person to post. Posts that
+    are due but not approved are held and listed; they never leave."""
+    import datetime as _dt
+    from . import posting as PO
+    t = _dt.datetime.fromisoformat(at) if at else PO.now()
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=_dt.timezone.utc)
+    out_root = ROOT / "out" / "posting"; cons = PO.connectors(); res = {"exported": [], "posted": [], "held": [], "blocked": []}
+    with PO.queue() as q:
+        for p in sorted(q["posts"].values(), key=lambda p: p["post_at"]):
+            if _dt.datetime.fromisoformat(p["post_at"]) > t:
+                continue
+            if p["state"] in ("queued", "held"):
+                res["held"].append({"id": p["id"], "why": "no approval"}); continue
+            if p["state"] == "blocked":
+                res["blocked"].append({"id": p["id"], "why": p["blocked"]}); continue
+            if p["state"] != "approved":
+                continue
+            con = (cons.get(p["platform"]) or {}).get("connector")
+            if con in PO.CONNECTORS:
+                url = PO.CONNECTORS[con](p, out_root)
+                p["state"] = "posted"; p["url"] = url; PO.event(p, "posted", connector=con, url=url); res["posted"].append(p["id"])
+            else:
+                folder, files = PO.export(p, out_root)
+                p["state"] = "exported"; p["export"] = str(folder.relative_to(ROOT)); PO.event(p, "exported", folder=p["export"], files=files)
+                res["exported"].append({"id": p["id"], "folder": p["export"], "files": files})
+        rows_done = _post_rows_done(q)
+    res["rows_posted"] = rows_done
+    return res
+
+
+def _post_rows_done(q):
+    """mark calendar rows whose posts are all out as posted in the plan, with every link"""
+    from . import posting as PO
+    done = []
+    rows = {(p["row"]["quarter"], p["row"]["date"], p["row"]["channel"]): p["row"] for p in q["posts"].values() if p.get("row")}
+    for (qu, dte, ch), row in rows.items():
+        ps = PO.row_posts(q, row)
+        if ps and all(p["state"] == "posted" for p in ps):
+            cal = _plan_cal(qu, ch); r = next((x for x in cal["rows"] if x["date"] == dte and x.get("idea")), None)
+            if r and not r.get("posted"):
+                links = {p["platform"]: p["url"] for p in ps}
+                plan_posted(qu, dte, links.get("youtube") or next(iter(links.values())), ch)
+                cal = _plan_cal(qu, ch); r = next(x for x in cal["rows"] if x["date"] == dte and x.get("idea"))
+                r["posted"]["links"] = links; _plan_save(f"{qu}.json", cal, ch)
+                done.append({"quarter": qu, "date": dte, "channel": ch, "links": links})
+    return done
+
+
+@command("post.done", id=("string", "post id"), url=("string", "the link to the post, as published"))
+def post_done(id, url):
+    """A person reports a post they published from its export (WP-08); when every post of a calendar row is out, the
+    row is marked posted in the plan with all its links."""
+    from . import posting as PO
+    if not re.match(r"^(https?|dryrun)://", url):
+        raise ValueError("give the post's link")
+    with PO.queue() as q:
+        p = q["posts"][id]
+        if p["state"] not in ("exported", "approved"):
+            raise PermissionError(f"{id} is {p['state']}: only an approved post can be marked posted")
+        p["state"] = "posted"; p["url"] = url; PO.event(p, "posted", url=url, by="person")
+        rows = _post_rows_done(q)
+    return {"posted": id, "rows_posted": rows}
+
+
+@command("post.status", state=("string", "filter by state", ""))
+def post_status(state=""):
+    """The posting queue (WP-08): every post with its time, platform, state, approval, flags and link; counts."""
+    from . import posting as PO
+    from collections import Counter
+    with PO.queue(write=False) as q:
+        ps = sorted(q["posts"].values(), key=lambda p: (p["post_at"], p["film"], p["platform"]))
+    rows = [{k: p.get(k) for k in ("id", "film", "platform", "post_at", "state", "approval", "flags", "blocked", "url", "export", "row", "cover")} for p in ps if not state or p["state"] == state]
+    return {"counts": dict(Counter(p["state"] for p in ps)), "posts": rows}
 
 
 @command("asset.check")

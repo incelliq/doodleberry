@@ -57,6 +57,18 @@ environment variables below).
     stretch). Writes `build/package/covers/<cut>--<platform>.png` and `covers.json`.
   - **titles.status**: the back catalogue: per film, title and thumbnail candidates that pass today's check (facts
     change, so titles are re-checked) and covers missing for rendered cuts.
+- **Posting with a human approval per post** (plan 4.15, WP-08; `dbe/posting.py`): nothing is posted without a
+  person's approval of that post. `post.queue` makes one post per platform from a film's package (caption, title,
+  that platform's cover, subtitles, the audio of its localised versions as extra tracks on YouTube) at its calendar
+  row's date and the channel's `post_time` in its `timezone`; a post whose package fails (title not true, no
+  subtitles, facts without sources) is blocked, and one with posting flags (non-clean voice, restricted inputs) can be
+  approved only with the flags accepted. `post.approve` records the approver's name and time (`post.revoke` takes it
+  back). `post.run` sends what is due: through a connector where one is configured (`productions/connectors.json`,
+  machine-local; only a `dryrun` test connector ships, since platform APIs need the owner's own app credentials and
+  some an app review), otherwise into `out/posting/<date>/<platform>/<film>/` with the files, the text and a
+  `reminder.ics` for the person who posts it. Unapproved posts that are due are held, never sent. `post.done` records
+  the published link; when all of a row's posts are out, the row is marked posted in the plan with every link.
+  `post.status` and the board's Posting section show the queue, with Approve, Revoke and Posted buttons.
 - **research.check**: the research gate (sources, two independent sources for numbers, research log, fact-check clearance, safety clearance for sensitive briefs); renders refuse to start while it reports errors. See `docs/research-standard.md`.
 - **critic.pack / ledger.add**: review packets for fresh critic agents (role prompts in `dbe/critic/`), and the ledger of gates and critic rounds with before/after QA numbers.
 - **asset.check**: every tracked third-party file must be listed in `assets/manifest.json`.
