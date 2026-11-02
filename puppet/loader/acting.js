@@ -212,8 +212,12 @@
     return out;
   }
 
+  const OWN = new WeakMap();
+  function ownClips(puppet, CLIPS) { let m = OWN.get(puppet); if (!m || m.lib !== CLIPS) { m = { lib: CLIPS, all: { ...CLIPS, ...puppet.clips } }; OWN.set(puppet, m); } return m.all; }
+
   // ---------- evaluate everything at t ----------
   function evaluate(puppet, tl, t, CLIPS = {}, PRESETS = {}) {
+    if (puppet.clips) CLIPS = ownClips(puppet, CLIPS);   // v0.7: a character's own clips (Rig Canvas recordings) win over the library
     const base = presetAt(puppet, tl.poses, t, tl.poseBlend || 0.4, PRESETS) || { angles: {} };
     const ac = puppet.acting || {};
     const layers = (ac.tempo || ac.fade || ac.energy) ? (tl.clips || []).map(L => ({ ...L, speed: (L.speed || 1) * (ac.tempo || 1), fadeIn: L.fadeIn ?? ac.fade, fadeOut: L.fadeOut ?? ac.fade,

@@ -42,6 +42,7 @@
     <button id="t-ink" title="Draw an ink line (pressure sets width)">Ink line</button>
     <button id="t-bucket" title="Click inside an area outlined in ink to fill it (small gaps in the outline are closed)">Bucket</button>
     <button id="t-pivot" title="Drag joint dots to set pivots">Pivots</button>
+    <button id="t-pose" title="Pose the character: drag hands and feet (IK, Shift flips the bend), head, chest and hips; save poses and record clips">Pose</button>
   </span>
   <label>Width <input id="width" type="range" min="2" max="14" value="5"></label>
   <button id="undo">Undo</button><button id="clear">Clear slot</button>
@@ -50,7 +51,7 @@
     <select id="view" aria-label="View being drawn"></select></label>
   <span style="flex:1"></span>
   <button id="sheet" title="Open a model sheet: key poses, views and every expression">Sheet</button>
-  <button id="import">Import</button><button id="export">Export .puppet</button>
+  <button id="import">Import</button><button id="export">Export .puppet</button><button id="tocast" hidden title="Write this character into the project's cast (when the canvas is opened from Studio)">Save to cast</button>
   <input id="file" type="file" accept=".json,.puppet" hidden>
 </header>
 <main>
@@ -61,6 +62,14 @@
       <select id="action" aria-label="Preview action"></select>
       <select id="pview" aria-label="Preview view"></select></div>
     <svg id="preview" viewBox="0 0 600 1000" aria-label="Live puppet preview"></svg>
+    <div id="posePanel" hidden>
+      <h3>Pose</h3>
+      <div class="row"><label>mouth <select id="p-mouth"></select></label><label>brows <select id="p-brows"></select></label><label>eyes <select id="p-eyes"></select></label></div>
+      <div class="row"><button id="p-reset">Reset</button><button id="p-save" class="on">Save pose</button><select id="p-load" aria-label="Load a saved pose"></select><button id="p-del" title="Delete the selected pose">Delete</button></div>
+      <h3>Record a clip</h3>
+      <div class="row"><label>at <input id="p-t" type="number" min="0" step="0.1" value="0" style="width:64px"> s</label><button id="p-key">Key</button><button id="p-clip" class="on">Save clip</button></div>
+      <div id="p-keys" style="font-size:12px;color:var(--muted)">no keys yet: pose, set the time, press Key; repeat; then Save clip</div>
+    </div>
     <h3>Palette (colour by slot)</h3><div id="pal" class="pal"></div>
     <h3>Rig check</h3><ul id="lint" style="padding-left:18px;margin:0"></ul>
   </aside>
@@ -85,13 +94,14 @@
   // ---------- slots ----------
   // strokes for a slot in the current view; in another view a slot is inherited until something is drawn in it
   const ov = (create) => { if (!view) return null; P.views = P.views || {}; const v = P.views[view] = P.views[view] || { parts: {}, swaps: {} }; v.parts = v.parts || {}; v.swaps = v.swaps || {}; return v; };
-  function own(a) { const v = ov(); if (!v) return a.kind === 'part' ? P.parts[a.id].strokes : P.swaps[a.id].shapes[a.shape];
+  const swapList = (id, shape) => { P.swaps[id] = P.swaps[id] || { anchor: 'head', shapes: {} }; P.swaps[id].shapes = P.swaps[id].shapes || {}; return (P.swaps[id].shapes[shape] = P.swaps[id].shapes[shape] || []); };   // a template shape this character has not drawn yet
+  function own(a) { const v = ov(); if (!v) return a.kind === 'part' ? P.parts[a.id].strokes : swapList(a.id, a.shape);
     return a.kind === 'part' ? (v.parts[a.id] && v.parts[a.id].strokes) || null : ((v.swaps[a.id] || {}).shapes || {})[a.shape] || null; }
   function strokesOf(a) { // writable list (creates the view override on first use)
     const o = own(a); if (o) return o; const v = ov();
     if (a.kind === 'part') { v.parts[a.id] = { ...(v.parts[a.id] || {}), strokes: [] }; return v.parts[a.id].strokes; }
     v.swaps[a.id] = v.swaps[a.id] || { shapes: {} }; v.swaps[a.id].shapes = v.swaps[a.id].shapes || {}; return (v.swaps[a.id].shapes[a.shape] = []); }
-  const shown = a => own(a) || (a.kind === 'part' ? P.parts[a.id].strokes : P.swaps[a.id].shapes[a.shape]);
+  const shown = a => own(a) || (a.kind === 'part' ? P.parts[a.id].strokes : swapList(a.id, a.shape));
   const pivotOf = id => (view && P.views && P.views[view] && P.views[view].parts[id] && P.views[view].parts[id].pivot) || P.parts[id].pivot;
   const fresh = () => ({ ...P });  // Puppet caches merged views per object; a fresh shell sees edits immediately
   function views() {
@@ -105,7 +115,7 @@
   function slotList() {
     let h = '<h3>Body parts</h3>';
     for (const pt of T.parts) { const n = view ? (own({ kind: 'part', id: pt.id }) ? 1 : 0) : P.parts[pt.id].strokes.length; h += `<div class="slot ${active.kind === 'part' && active.id === pt.id ? 'active' : ''}" data-k="part" data-id="${pt.id}"><span>${pt.label}${pt.required ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; }
-    for (const sw of T.swaps) { h += `<h3>${sw.label}</h3>`; for (const k of sw.shapes) { const n = view ? ((own({ kind: 'swap', id: sw.id, shape: k }) || []).length) : P.swaps[sw.id].shapes[k].length; h += `<div class="slot ${active.kind === 'swap' && active.id === sw.id && active.shape === k ? 'active' : ''}" data-k="swap" data-id="${sw.id}" data-shape="${k}"><span>${k}${sw.required.includes(k) ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; } }
+    for (const sw of T.swaps) { h += `<h3>${sw.label}</h3>`; for (const k of sw.shapes) { const n = view ? ((own({ kind: 'swap', id: sw.id, shape: k }) || []).length) : (((P.swaps[sw.id] || {}).shapes || {})[k] || []).length; h += `<div class="slot ${active.kind === 'swap' && active.id === sw.id && active.shape === k ? 'active' : ''}" data-k="swap" data-id="${sw.id}" data-shape="${k}"><span>${k}${sw.required.includes(k) ? '' : ' <small>(opt.)</small>'}</span><span class="tick">${n ? '✓' : ''}</span></div>`; } }
     $('slots').innerHTML = h;
     $('slots').querySelectorAll('.slot').forEach(el => el.onclick = () => { active = el.dataset.k === 'part' ? { kind: 'part', id: el.dataset.id } : { kind: 'swap', id: el.dataset.id, shape: el.dataset.shape }; refresh(); });
   }
@@ -160,6 +170,7 @@
   svg.addEventListener('pointerdown', e => {
     svg.setPointerCapture(e.pointerId);
     const p = pt(e);
+    if (tool === 'pose') { poseGrab(p, e.shiftKey); return; }
     if (tool === 'pivot') { let best = null, bd = 30; for (const id of Object.keys(P.parts)) { const q = pivotOf(id), d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = id; } } dragPivot = best; return; }
     if (e.pointerType === 'pen') penPressure = true;
     if (tool === 'bucket') { bucket(p); return; }
@@ -167,11 +178,13 @@
   });
   svg.addEventListener('pointermove', e => {
     const p = pt(e);
+    if (tool === 'pose') { if (poseDrag) { poseMove(p, e.shiftKey); drawStage(); } return; }
     if (dragPivot) { const q = [Math.round(p[0]), Math.round(p[1])]; if (view) { const v = ov(); v.parts[dragPivot] = { ...(v.parts[dragPivot] || {}), pivot: q }; } else P.parts[dragPivot].pivot = q; drawStage(); return; }
     if (!live) return; const last = live[live.length - 1]; if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 2) return;
     live.push(p); drawStage();
   });
   svg.addEventListener('pointerup', () => {
+    if (tool === 'pose') { poseDrag = null; return; }
     if (dragPivot) { dragPivot = null; save(); refresh(); return; }
     if (!live) return; const live0 = live, pts = smooth(live); live = null;
     if (pts.length > 2) {
@@ -217,8 +230,91 @@
     save(); refresh();
   }
 
+  // ---------- pose mode (plan 3.3): drag hands and feet by IK, rotate head and chest, raise or lower the hips ----------
+  // The stage renders the puppet at its hip pivot on the ground line at scale 1, so stage points are artboard points.
+  let poseW = { angles: {}, offset: [0, 0] }, poseDrag = null, keys = [];
+  const LIMB_OF = { hand_R: 'arm_R', hand_L: 'arm_L', foot_R: 'leg_R', foot_L: 'leg_L' };
+  const rootX = () => P.parts.hip.pivot[0];
+  const ptOf = (part, at) => Puppet.pointOf(fresh(), part, at || null, rootX(), P.ground, { ...poseW, view });
+  function handles() {
+    const h = [];
+    for (const e of Object.keys(LIMB_OF)) if (P.parts[e]) h.push({ id: e, kind: 'ik', at: ptOf(e) });
+    if (P.parts.head) { const top = (P.anchors && P.anchors.bubble) ? ptOf('head', P.anchors.bubble) : ptOf('head', [P.parts.head.pivot[0], P.parts.head.pivot[1] - 120]); h.push({ id: 'head', kind: 'rot', at: top }); }
+    const chest = P.parts.torso ? 'torso' : null;
+    if (chest) { const c = P.parts[chest].pivot, top = P.parts.neck ? P.parts.neck.pivot : [c[0], c[1] - 150]; h.push({ id: chest, kind: 'rot', at: ptOf(chest, top) }); }
+    h.push({ id: 'hip', kind: 'lift', at: ptOf('hip') });
+    return h;
+  }
+  function poseGrab(p, flip) {
+    let best = null, bd = 34; for (const h of handles()) { const d = Math.hypot(h.at[0] - p[0], h.at[1] - p[1]); if (d < bd) { bd = d; best = h; } }
+    if (!best) return;
+    const piv = best.kind === 'rot' ? ptOf(best.id, P.parts[best.id].pivot) : null;
+    poseDrag = { ...best, start: p, piv, a0: poseW.angles[best.id] || 0, off0: [...(poseW.offset || [0, 0])],
+      feet: Object.fromEntries(['foot_L', 'foot_R'].filter(f => P.parts[f]).map(f => [f, ptOf(f)])) };   // where the feet stand when the drag begins
+  }
+  function poseMove(p, flip) {
+    const d = poseDrag, A = { ...poseW.angles };
+    if (d.kind === 'ik') { const [u, l, e, bend] = Acting.LIMBS[LIMB_OF[d.id]], off = poseW.offset || [0, 0];
+      Object.assign(A, Acting.ik2(fresh(), { ...poseW, angles: A }, u, l, e, [p[0] - off[0], p[1] - off[1]], bend * (flip ? -1 : 1))); }
+    else if (d.kind === 'rot') { const ang = q => Math.atan2(q[1] - d.piv[1], q[0] - d.piv[0]) * 180 / Math.PI;
+      let da = ang(p) - ang(d.start); while (da > 180) da -= 360; while (da < -180) da += 360; A[d.id] = Math.round((d.a0 + da) * 10) / 10; }
+    else if (d.kind === 'lift') {   // hips up or down with the feet kept planted (both legs re-solved by IK)
+      poseW.offset = [0, Math.max(-200, Math.min(160, Math.round(d.off0[1] + p[1] - d.start[1])))];
+      const cx = P.parts.hip.pivot[0];
+      for (const [f, at] of Object.entries(d.feet)) { const [u, l, e] = Acting.LIMBS[LIMB_OF[f]], tgt = [at[0] - poseW.offset[0], at[1] - poseW.offset[1]];
+        // the knee goes outward, away from the body's centre line (a front view splays both knees)
+        const tries = [1, -1].map(b => { const sol = Acting.ik2(fresh(), { ...poseW, angles: A }, u, l, e, tgt, b);
+          const knee = Puppet.pointOf(fresh(), l, null, rootX(), P.ground, { ...poseW, angles: { ...A, ...sol }, view }); return { sol, out: Math.abs(knee[0] - cx) }; });
+        Object.assign(A, tries[0].out >= tries[1].out ? tries[0].sol : tries[1].sol); } }
+    for (const [k, lim] of Object.entries(P.parts).map(([k, v]) => [k, v.limits]).filter(x => x[1])) if (A[k] != null) A[k] = Math.max(lim[0], Math.min(lim[1], A[k]));
+    poseW.angles = A;
+  }
+  function drawPose() {
+    let s = `<line x1="0" y1="${P.ground}" x2="600" y2="${P.ground}" stroke="#d8cfc0" stroke-width="2"/>`;
+    s += Puppet.render(fresh(), rootX(), P.ground, { ...poseW, view, blink: 0 });
+    for (const h of handles()) { const on = poseDrag && poseDrag.id === h.id, col = h.kind === 'ik' ? '#e8743a' : h.kind === 'rot' ? '#3b6ea8' : '#3f9a5a';
+      s += `<circle cx="${h.at[0]}" cy="${h.at[1]}" r="${on ? 15 : 12}" fill="${col}" fill-opacity="0.75" stroke="#fff" stroke-width="3"><title>${h.id}: ${h.kind === 'ik' ? 'drag to place (Shift flips the bend)' : h.kind === 'rot' ? 'drag to turn' : 'drag up or down'}</title></circle>`; }
+    svg.innerHTML = s;
+  }
+  const round = v => Math.round(v * 10) / 10;
+  const poseValue = () => ({ angles: Object.fromEntries(Object.entries(poseW.angles).filter(([, v]) => Math.abs(v) > 0.05).map(([k, v]) => [k, round(v)])),
+    ...(poseW.offset && poseW.offset[1] ? { offset: poseW.offset } : {}), ...Object.fromEntries(['mouth', 'brows', 'eyes'].filter(k => poseW[k]).map(k => [k, poseW[k]])) });
+  function posePanel() {
+    for (const k of ['mouth', 'brows', 'eyes']) { const shapes = Object.keys(((P.swaps || {})[k] || {}).shapes || {});
+      $('p-' + k).innerHTML = '<option value="">(rest)</option>' + shapes.map(n => `<option ${poseW[k] === n ? 'selected' : ''}>${n}</option>`).join('');
+      $('p-' + k).onchange = () => { poseW[k] = $('p-' + k).value || undefined; drawStage(); }; }
+    const names = Object.keys(P.poses || {});
+    $('p-load').innerHTML = '<option value="">load a pose…</option>' + names.map(n => `<option>${n}</option>`).join('');
+    $('p-keys').textContent = keys.length ? keys.map(k => k.t.toFixed(1) + ' s').join(' · ') : 'no keys yet: pose, set the time, press Key; repeat; then Save clip';
+    rebuildActions();
+  }
+  function rebuildActions() {
+    const cur = $('action').value, own = Object.keys(P.clips || {}), poses = Object.keys(P.poses || {});
+    $('action').innerHTML = (own.length ? '<optgroup label="This character">' + own.map(k => `<option value="clip:${k}">${k}</option>`).join('') + '</optgroup>' : '') +
+      (poses.length ? '<optgroup label="Saved poses">' + poses.map(k => `<option value="pose:${k}">${k}</option>`).join('') + '</optgroup>' : '') +
+      '<optgroup label="Clips">' + Object.keys(LIB.clips).map(k => `<option value="clip:${k}">${k}</option>`).join('') + '</optgroup>' +
+      '<optgroup label="Presets">' + Object.keys(LIB.presets).map(k => `<option value="pose:${k}">${k}</option>`).join('') + '</optgroup><option value="talk">lip-sync test</option>';
+    if ([...$('action').options].some(o => o.value === cur)) $('action').value = cur;
+  }
+  $('p-reset').onclick = () => { poseW = { angles: {}, offset: [0, 0] }; posePanel(); drawStage(); };
+  $('p-save').onclick = () => { const n = (prompt('Name this pose (it is saved in the character):', 'my_pose') || '').trim().replace(/\W+/g, '_'); if (!n) return;
+    P.poses = P.poses || {}; P.poses[n] = poseValue(); save(); posePanel(); $('action').value = 'pose:' + n; };
+  $('p-load').onchange = () => { const v = (P.poses || {})[$('p-load').value]; if (!v) return; poseW = { angles: { ...(v.angles || {}) }, offset: v.offset || [0, 0], mouth: v.mouth, brows: v.brows, eyes: v.eyes }; posePanel(); drawStage(); };
+  $('p-del').onclick = () => { const n = $('p-load').value; if (n && P.poses && P.poses[n] && confirm(`Delete pose "${n}"?`)) { delete P.poses[n]; save(); posePanel(); } };
+  $('p-key').onclick = () => { const t = Math.max(0, +$('p-t').value || 0); keys = keys.filter(k => Math.abs(k.t - t) > 1e-6).concat([{ t, pose: poseValue() }]).sort((a, b) => a.t - b.t);
+    $('p-t').value = (t + 0.5).toFixed(1); posePanel(); };
+  $('p-clip').onclick = () => { if (keys.length < 2) return alert('Key at least two poses at different times first.');
+    const n = (prompt('Name this clip (it is saved in the character):', 'my_clip') || '').trim().replace(/\W+/g, '_'); if (!n) return;
+    const parts = [...new Set(keys.flatMap(k => Object.keys(k.pose.angles)))], tracks = {};
+    for (const id of parts) tracks[id] = keys.map(k => [round(k.t), k.pose.angles[id] || 0]);
+    const clip = { duration: round(keys[keys.length - 1].t), tracks };
+    if (keys.some(k => k.pose.offset)) clip.offset = keys.map(k => [round(k.t), k.pose.offset || [0, 0]]);
+    for (const sw of ['mouth', 'brows', 'eyes']) if (keys.some(k => k.pose[sw])) clip.swaps = { ...(clip.swaps || {}), [sw]: keys.filter(k => k.pose[sw]).map(k => [round(k.t), k.pose[sw]]) };
+    P.clips = P.clips || {}; P.clips[n] = clip; P.version = '0.7'; keys = []; save(); posePanel(); $('action').value = 'clip:' + n; };
+
   // ---------- stage ----------
   function drawStage() {
+    if (tool === 'pose') return drawPose();
     let s = `<g fill="none" stroke="#c9bba8" stroke-width="2" stroke-dasharray="6 6">${T.guide.map(d => `<path d="${d}"/>`).join('')}</g>`;
     s += `<line x1="0" y1="${T.ground}" x2="600" y2="${T.ground}" stroke="#d8cfc0" stroke-width="2"/>`;
     if (onion) s += `<g opacity="0.35">${Puppet.render(fresh(), P.parts.hip.pivot[0], P.ground, { view })}</g>`;
@@ -246,7 +342,7 @@
   function previewPose(t) {
     const [kind, name] = $('action').value.split(':');
     const tl = { clips: [{ clip: 'idle', start: 0, fadeIn: 0 }], springs: true, look: [[0, [0.6, 0]]] };
-    if (kind === 'clip' && name !== 'idle') { const c = LIB.clips[name], d = c.duration + (c.loop ? 0 : 0.8); tl.clips.push({ clip: name, start: Math.floor(t / d) * d, weight: 2 }); }
+    if (kind === 'clip' && name !== 'idle') { const c = (P.clips || {})[name] || LIB.clips[name], d = c.duration + (c.loop ? 0 : 0.8); tl.clips.push({ clip: name, start: Math.floor(t / d) * d, weight: 2 }); }
     if (kind === 'pose') tl.poses = [[0, name]];
     if (kind === 'talk') tl.visemes = TALK.map(([k, v]) => [Math.floor(t / 1.3) * 1.3 + k, v]);
     const pv = $('pview').value; if (pv === 'turn') { const n = Object.keys(P.views || {})[0], c = Math.floor(t / 1.5); tl.view = [[c * 1.5, c % 2 ? n : 'front'], [c * 1.5 + 1.5, c % 2 ? 'front' : n]]; } else if (pv) tl.view = [[0, pv]];
@@ -255,8 +351,8 @@
   function tick(ms) { const t = ms / 1000; $('preview').innerHTML = `<line x1="0" y1="${P.ground}" x2="600" y2="${P.ground}" stroke="#d8cfc0" stroke-width="3"/>` + Puppet.render(fresh(), 300, P.ground, previewPose(t)); requestAnimationFrame(tick); }
 
   // ---------- toolbar ----------
-  const setTool = t => { tool = t; ['fill', 'ink', 'bucket', 'pivot'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); };
-  $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-bucket').onclick = () => setTool('bucket'); $('t-pivot').onclick = () => setTool('pivot');
+  const setTool = t => { tool = t; ['fill', 'ink', 'bucket', 'pivot', 'pose'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); $('posePanel').hidden = t !== 'pose'; if (t === 'pose') posePanel(); drawStage(); };
+  $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-bucket').onclick = () => setTool('bucket'); $('t-pivot').onclick = () => setTool('pivot'); $('t-pose').onclick = () => setTool('pose');
   $('sheet').onclick = () => { const svgTxt = Sheet.build(fresh(), (window.CLIPLIB || {})[P.template] || (window.CLIPLIB || {}).humanoid);
     const w = window.open('', '_blank'); if (!w) return; w.document.write(`<title>${(P.name || 'puppet')} model sheet</title><body style="margin:0;background:#ddd">${svgTxt}<p><a download="${(P.name || 'puppet').replace(/\W+/g, '_')}_sheet.svg" href="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgTxt)}">Download SVG</a></p></body>`); };
   $('undo').onclick = () => { const o = own(active); if (o) o.pop(); save(); refresh(); };
@@ -270,10 +366,16 @@
   $('export').onclick = () => { P.meta = { ...(P.meta || {}), created: new Date().toISOString().slice(0, 10) };
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(P, null, 1)], { type: 'application/json' })); a.download = (P.name || 'puppet').replace(/\W+/g, '_') + '.puppet.json'; a.click(); };
   $('import').onclick = () => $('file').click();
+  // opened from Studio (served by `python -m dbe serve`): save straight into cast/ through the API
+  if (location.protocol.startsWith('http')) fetch('/api').then(r => r.ok && ($('tocast').hidden = false)).catch(() => {});
+  $('tocast').onclick = async () => { const id = (prompt('Cast id (file cast/drawn/<id>.puppet.json, or an existing cast path):', (P.meta && P.meta.cast_path) || (P.name || 'character').toLowerCase().replace(/\W+/g, '_')) || '').trim(); if (!id) return;
+    const r = await (await fetch('/api/puppet.save', { method: 'POST', body: JSON.stringify({ path: id, puppet: P }) })).json();
+    alert(r.error ? 'Not saved: ' + r.error : `Saved ${r.result.path} (${r.result.poses} poses, ${r.result.clips} clips)`); };
   $('file').onchange = async () => { const f = $('file').files[0]; if (!f) return; try { P = JSON.parse(await f.text()); $('name').value = P.name || ''; save(); palette(); refresh(); } catch (e) { alert('Not a puppet file'); } };
 
   palette(); refresh(); requestAnimationFrame(tick);
-  window.RIG = { get puppet() { return P; }, load(p) { P = p; $('name').value = P.name || ''; palette(); refresh(); } }; // handle for scripted tests
+  window.RIG = { get puppet() { return P; }, load(p) { P = p; $('name').value = P.name || ''; palette(); refresh(); if (tool === 'pose') posePanel(); },
+    get pose() { return poseW; }, handles: () => handles() }; // handle for scripted tests
 })();
 </script>
 </body>

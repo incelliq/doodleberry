@@ -1,4 +1,4 @@
-# Puppet format v0.6 (`.puppet.json`)
+# Puppet format v0.7 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -166,3 +166,9 @@ template, N-bone FABRIK chains (tails, tentacles), Rig Canvas tabs for views and
 Blending (loader behaviour, all versions): foreground clips average by weight among themselves and override the base
 layer (`idle`, or any layer with `base: true`) per track in proportion to their weight; idle still fills tracks the
 gesture does not touch. Earlier loaders averaged gestures with idle, which halved them.
+
+## v0.7 additions: a character's own clips
+- **`clips`** `{name: {duration, loop, tracks, offset, swaps, contacts}}`: clips that belong to this character, in
+  the same shape as a clip library entry. `Acting.evaluate` merges them over the template's library (a character
+  clip wins over a library clip of the same name), so shots, the bake, `dbe/geom.py` and every exporter play them.
+  The Rig Canvas Pose tool records them from keyed poses; `poses` (v0.2) holds its saved single poses.

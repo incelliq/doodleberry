@@ -713,8 +713,11 @@ def qa_run(name, layout=True):
 DIRECTED_FIELDS = ("look", "emotion", "blinks", "place")
 
 
-def _clip_lib(template):
-    return _json(ROOT / "puppet" / "clips" / f"{template}.json", {"clips": {}})
+def _clip_lib(template, puppet=None):
+    lib = _json(ROOT / "puppet" / "clips" / f"{template}.json", {"clips": {}})
+    if puppet and puppet.get("clips"):   # v0.7: the character's own clips count as its abilities too
+        lib = {**lib, "clips": {**lib.get("clips", {}), **puppet["clips"]}}
+    return lib
 
 
 @command("acting.direct", name=("string", "film"), text=("string", "directions in plain English (default: the script lines' and shots' \"direction\" fields)", ""),
@@ -811,7 +814,7 @@ def puppet_abilities(puppet):
     mouths and brows are drawn, glances, blinks, lip-sync, turn, tail) and what each costly move would need drawn."""
     from . import director as DR
     p = _json(ROOT / puppet)
-    return DR.abilities(p, _clip_lib(p.get("template", "humanoid")))
+    return DR.abilities(p, _clip_lib(p.get("template", "humanoid"), p))
 
 
 @command("script.rigcheck", name=("string", "film"))
@@ -834,7 +837,7 @@ def script_rigcheck(name):
             for a in DR.parse(ctx, sent):
                 if a.get("error") or a.get("kind") == "unknown":
                     continue
-                c = res["shots"][si]["cast"][ctx.cast[a["who"]]]; p = _json(ROOT / c["puppet"]); lib = _clip_lib(p.get("template", "humanoid"))
+                c = res["shots"][si]["cast"][ctx.cast[a["who"]]]; p = _json(ROOT / c["puppet"]); lib = _clip_lib(p.get("template", "humanoid"), p)
                 need = DR.needs_of(a, p, lib)
                 e = per.setdefault(a["who"], {"puppet": c["puppet"], "free": [], "needs_drawings": {}})
                 label = a.get("clip") or a.get("gag") or a.get("emotion") or a["kind"]
@@ -922,7 +925,7 @@ def timeline_get(name):
     for rs, rr in zip(raw["shots"], res["shots"]):
         cast = []
         for ci, (rc, cc) in enumerate(zip(rs.get("cast") or [], rr.get("cast") or [])):
-            p = _json(ROOT / cc["puppet"]); lib = _json(ROOT / "puppet" / "clips" / f"{p.get('template', 'humanoid')}.json", {"clips": {}})["clips"]
+            p = _json(ROOT / cc["puppet"]); lib = {**_json(ROOT / "puppet" / "clips" / f"{p.get('template', 'humanoid')}.json", {"clips": {}})["clips"], **(p.get("clips") or {})}
             clips = []
             for ki, (rk, kk) in enumerate(zip((rc.get("timeline") or {}).get("clips", []), (cc.get("timeline") or {}).get("clips", []))):
                 cl = lib.get(kk.get("clip")) or {}
@@ -1003,6 +1006,26 @@ def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="",
     (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
     _player_page(name)
     return {"stored": stored, "shot": shot, "cast": cast, "op": op}
+
+
+@command("puppet.save", path=("string", "cast/.../x.puppet.json, or a bare id for cast/drawn/<id>.puppet.json"), puppet=("object", "the puppet"))
+def puppet_save(path, puppet):
+    """Write a puppet from the Rig Canvas into the project's cast (plan 3.3): checked against the puppet schema,
+    only under cast/; a new file is registered in the cast library. Poses and clips made by posing travel with it."""
+    import jsonschema
+    p = path if path.endswith(".puppet.json") else f"cast/drawn/{re.sub(r'[^a-z0-9_-]', '_', path.lower())}.puppet.json"
+    f = (ROOT / p).resolve()
+    if not str(f).startswith(str((ROOT / "cast").resolve()) + "/"):
+        raise ValueError("puppets are saved under cast/")
+    errs = [f"{'/'.join(map(str, e.absolute_path)) or '(root)'}: {e.message[:120]}" for e in jsonschema.Draft202012Validator(_json(ROOT / "puppet" / "spec" / "puppet.schema.json")).iter_errors(puppet)]
+    if errs:
+        raise ValueError("not a valid puppet: " + "; ".join(errs[:5]))
+    new = not f.exists(); f.parent.mkdir(parents=True, exist_ok=True)
+    puppet.setdefault("meta", {})["cast_path"] = str(f.relative_to(ROOT))
+    f.write_text(json.dumps(puppet))
+    if new:
+        cast_add(str(f.relative_to(ROOT)), f.stem.split(".")[0], (puppet.get("meta") or {}).get("author", "Rig Canvas"), (puppet.get("meta") or {}).get("license", "CC0-1.0"), "drawn in the Rig Canvas", rights="open")
+    return {"path": str(f.relative_to(ROOT)), "new": new, "poses": len(puppet.get("poses") or {}), "clips": len(puppet.get("clips") or {})}
 
 
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------

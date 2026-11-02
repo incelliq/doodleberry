@@ -183,6 +183,36 @@
      }
     }
    }
+  },
+  "clips": {
+   "type": "object",
+   "description": "v0.7: this character's own clips (same shape as a clip library entry: duration, loop, tracks, offset, swaps, contacts), recorded in the Rig Canvas; they win over library clips of the same name",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "duration"
+    ],
+    "properties": {
+     "duration": {
+      "type": "number"
+     },
+     "loop": {
+      "type": "boolean"
+     },
+     "tracks": {
+      "type": "object"
+     },
+     "offset": {
+      "type": "array"
+     },
+     "swaps": {
+      "type": "object"
+     },
+     "contacts": {
+      "type": "object"
+     }
+    }
+   }
   }
  },
  "$defs": {

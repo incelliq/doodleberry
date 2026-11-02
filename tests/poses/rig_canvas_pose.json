@@ -1,0 +1,62 @@
+{
+ "about": "v0.7 / plan 3.3: a pose made by dragging in the Rig Canvas (saved in the puppet) and a clip recorded from keyed poses, played through Acting.evaluate as films do",
+ "size": [
+  900,
+  700
+ ],
+ "items": [
+  {
+   "puppet": "tests/poses/ravi_posed.puppet.json",
+   "x": 200,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "poses": [
+     [
+      0,
+      "hooray"
+     ]
+    ],
+    "blink": false,
+    "springs": false
+   },
+   "t": 1
+  },
+  {
+   "puppet": "tests/poses/ravi_posed.puppet.json",
+   "x": 450,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "clips": [
+     {
+      "clip": "cheer_up",
+      "start": 0,
+      "fadeIn": 0
+     }
+    ],
+    "blink": false,
+    "springs": false
+   },
+   "t": 0.3
+  },
+  {
+   "puppet": "tests/poses/ravi_posed.puppet.json",
+   "x": 700,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "clips": [
+     {
+      "clip": "cheer_up",
+      "start": 0,
+      "fadeIn": 0
+     }
+    ],
+    "blink": false,
+    "springs": false
+   },
+   "t": 0.6
+  }
+ ]
+}
