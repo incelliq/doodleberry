@@ -216,7 +216,13 @@ def bell(hz, dur, amp=1.0):
     return amp * lp(x * np.minimum(1, t / 0.003) * np.exp(-t * 6), 9000)
 
 
-def sfx(kind):
+def sfx(kind, dur=None):
+    if kind == 'scratch':  # pen on paper while a drawing draws itself: short strokes of bright, gritty noise
+        d = max(0.15, min(8.0, dur or 1.0)); n = int(d * SR); t = np.arange(n) / SR
+        strokes = 0.55 + 0.45 * np.sin(2 * np.pi * (6.5 + 1.5 * np.sin(2 * np.pi * 0.7 * t)) * t) ** 2
+        grit = bp(RNG.normal(0, 1, n), 2200, 7500) * (1 + 0.6 * (RNG.random(n) > 0.97))
+        edge = np.minimum(1, np.minimum(t / 0.04, (d - t) / 0.08))
+        return grit * strokes * edge * 0.6
     if kind == 'step':  # soft shoe on a floor: low thump plus a little scuff
         n = int(0.12 * SR); t = np.arange(n) / SR
         x = np.sin(2 * np.pi * (95 + 25 * RNG.random()) * t) * np.exp(-t * 38) + 0.18 * lp(RNG.normal(0, 1, n), 2500) * np.exp(-t * 55)
@@ -379,7 +385,7 @@ def sfx(kind):
 # ---------------- mix ----------------
 # each effect type's loudness relative to the narrator (LU); cue gains add on top,
 # and the effects bus is carved in the speech band while the narrator talks
-SFX_LEVEL = {'step': -16, 'thud': -10, 'swish': -15, 'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
+SFX_LEVEL = {'scratch': -19, 'step': -16, 'thud': -10, 'swish': -15, 'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
              'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
              'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11,
              'buzz': -12, 'swarm': -13, 'squirm': -12, 'stamp': -8, 'crack': -10, 'drill': -13, 'plane': -13,
@@ -389,6 +395,8 @@ SFX_LEVEL = {'step': -16, 'thud': -10, 'swish': -15, 'pop': -7, 'pop_small': -10
 def presence(voice, n, attack=0.04, release=0.35):
     """0..1 control: how much the narrator is talking right now (10 ms frames)."""
     hop = int(0.01 * SR)
+    if not np.any(voice):   # no narrator (sound-off cut)
+        return np.zeros(n)
     fr = np.sqrt(np.convolve(voice ** 2, np.ones(hop) / hop, 'same')[::hop] + 1e-12)
     db = 20 * np.log10(fr)
     on = (db > db.max() - 35).astype(float)
@@ -495,13 +503,16 @@ def main():
     # ---- narrator: clean ends, even lines, gentle compression
     # a re-voiced narration (voicefx.py) replaces the raw one when the script asks for it
     fx_on = json.loads((film / 'script.json').read_text()).get('voice_fx')
-    voice, vsr = sf.read(b / ('voice_fx.wav' if fx_on else 'voice.wav'), dtype='float64')
-    assert vsr == SR
-    voice = np.pad(voice, (0, max(0, n - len(voice))))[:n]
-    voice = lp(hp(voice, 90, 2), 11000, 2)
-    voice = compress(level_lines(voice, timing['lines'], meter))
-    voice *= 10 ** ((-16 - meter.integrated_loudness(voice)) / 20)
     V = -16.0
+    if score.get('voice', True) is False:   # the sound-off cut (plan 2.13): music and effects only
+        voice = np.zeros(n)
+    else:
+        voice, vsr = sf.read(b / ('voice_fx.wav' if fx_on else 'voice.wav'), dtype='float64')
+        assert vsr == SR
+        voice = np.pad(voice, (0, max(0, n - len(voice))))[:n]
+        voice = lp(hp(voice, 90, 2), 11000, 2)
+        voice = compress(level_lines(voice, timing['lines'], meter))
+        voice *= 10 ** ((-16 - meter.integrated_loudness(voice)) / 20)
     pres = presence(voice, n)
     speaking = lambda t: pres[min(n - 1, int(t * SR))] > 0.5
 
@@ -516,7 +527,7 @@ def main():
     # ---- effects: each levelled to its type's target, dipped a little under speech
     fx = np.zeros((n + SR * 2, 2))
     for c in cues:
-        x = declick(hp(sfx(c['type']), 250))
+        x = declick(hp(sfx(c['type'], c.get('dur')), 250))
         L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
                  for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
         g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)

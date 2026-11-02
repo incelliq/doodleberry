@@ -151,10 +151,15 @@
     return svg + `<g font-family="${HAND}" fill="${INK}">${tspans}</g>`;
   }
   let BUBBLES = [], VIEW = [0, 0, 1];   // for visual lint: bubble boxes and the camera of the last frame drawn
-  function bubblesFor(sh, t, heads) {
+  // bubbles are laid out in screen space, after the camera, so a zoomed or moving shot never pushes them out of frame
+  function bubblesFor(sh, t, headsWorld, view) {
+    const [vx, vy, vz] = view || [W / 2, H / 2, 1], toS = ([x, y]) => [W / 2 + (x - vx) * vz, H / 2 + (y - vy) * vz];
+    const heads = {}; for (const [k, a] of Object.entries(headsWorld)) heads[k] = toS(a);
     const out = []; let idx = 0; BUBBLES = [];
-    AVOID = (sh.overlays || []).filter(o => (o.start == null || t >= o.start) && (o.end == null || t <= o.end)).map(overlayBox).filter(Boolean);
-    for (const a of Object.values(heads)) AVOID.push([a[0] - 150 * H / 1920 * (H > W ? 1 : 1.5), a[1] - 10, a[0] + 150 * H / 1920 * (H > W ? 1 : 1.5), a[1] + H * 0.22]);  // keep bubbles off the characters' heads and bodies
+    AVOID = (sh.overlays || []).filter(o => (o.start == null || t >= o.start) && (o.end == null || t <= o.end)).map(overlayBox).filter(Boolean)
+      .map(r => [...toS([r[0], r[1]]), ...toS([r[2], r[3]])]);
+    const hw = 150 * H / 1920 * (H > W ? 1 : 1.5) * vz;
+    for (const a of Object.values(heads)) AVOID.push([a[0] - hw, a[1] - 10, a[0] + hw, a[1] + H * 0.22 * vz]);  // keep bubbles off the characters' heads and bodies
     if (sh.bubbles !== false) for (const ln of T.lines || []) { // voiced lines become bubbles for speakers in the shot
       const who = heads[ln.speaker]; if (!who || !sh.bubbles) continue;
       const sl = (SCRIPT.lines || []).find(l => l.id === ln.id) || {};
@@ -240,7 +245,9 @@
     const frameFor = (list, single) => { if (!list.length) return [W / 2, H / 2, 1];
       const [x0, y0, x1, y1] = box(list), frac = single ? (o.medium ?? 0.62) : 1;   // singles: a medium shot, head to waist
       const bw = (x1 - x0) * 1.25, bh = (y1 - y0) * frac * 1.15;
-      const z = Math.min(single ? (o.zoom_single ?? 1.9) : zMax, Math.max(1, Math.min(W / bw, H * 0.82 / bh)));
+      const z = Math.min(single ? (sh.bubbles ? (o.zoom_bubble ?? 1.5) : (o.zoom_single ?? 1.9)) : zMax, Math.max(1, Math.min(W / bw, H * 0.82 / bh)));
+      // with speech bubbles a single keeps the head top at ~31% of the frame, leaving the bubble room above it
+      if (single && sh.bubbles) return [(x0 + x1) / 2, y0 + (H / 2 - H * (H > W ? 0.31 : 0.36)) / z, z];
       return [(x0 + x1) / 2, y0 + bh * 0.46 + (H / z) * 0.08, z]; };   // heads high, room below for captions
     const wide = frameFor(casts);
     const lines = (T.lines || []).filter(l => byName[l.speaker] && l.end > sh.start - 0.5 && l.start < sh.end + 0.5);
@@ -296,7 +303,7 @@
         return Puppet.pointOf(cc.p, part, null, st2.x, st2.y, { ...st2.pose, s: st2.s, flip: st2.flip }); };
       ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt, info) => propPos(pr, tt, casts, info) });
     }
-    if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('') + bubblesFor(sh, tq, heads); }
+    if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join(''); }
     world += st.boil ? `<g filter="url(#boil)">${ink}</g>` : ink;
     let svg = boilDefs(st, t) + world;
     if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)
@@ -306,6 +313,7 @@
     if (sh.camera_auto && !sh.camera && !bgOnly) { const [cx, cy, z] = autoCam(sh, tq, casts); VIEW = [cx, cy, z];   // camera grammar (plan 2.6)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z.toFixed(4)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})">${world}</g>`; }
     if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; VIEW = [cx, cy, z]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
+    if (!bgOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#boil)">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;
@@ -315,8 +323,14 @@
   const t0 = only ? only.start : 0, t1 = only ? only.end : S.shots[S.shots.length - 1].end;
   window.FILMTIME = { start: t0, end: t1, fps: FPS };
   window.frameAtTime = t => { stage.innerHTML = frameAt(t, bgOnly); };
-  window.renderFrame = f => window.frameAtTime(t0 + f / FPS);
-  window.FRAMES = Math.round((t1 - t0) * FPS);
+  // time warp (plan 2.13, the sound-off cut): shots.json "timewarp": [[cut time, film time], ...] knots, increasing;
+  // the cut is rendered on its own clock and each frame shows the film at the warped time (lines held for reading)
+  const WK = S.timewarp && S.timewarp.length > 1 ? S.timewarp : null;
+  const lerpK = (k, i, j, v) => { if (v <= k[0][i]) return k[0][j] + (v - k[0][i]); for (let n = 1; n < k.length; n++) if (v <= k[n][i]) { const a = k[n - 1], b = k[n]; return a[j] + (b[j] - a[j]) * (v - a[i]) / ((b[i] - a[i]) || 1); } return k[k.length - 1][j] + (v - k[k.length - 1][i]); };
+  const toFilm = tc => WK ? lerpK(WK, 0, 1, tc) : tc, toCut = tf => WK ? lerpK(WK, 1, 0, tf) : tf;
+  window.TIMEWARP = { toFilm, toCut };
+  window.renderFrame = f => window.frameAtTime(toFilm(toCut(t0) + f / FPS));
+  window.FRAMES = Math.round((toCut(t1) - toCut(t0)) * FPS);
   // ---------- foley events (plan 2.7): footsteps on contacts, thuds on landings, swishes on fast moves, pops on catches ----------
   // Returns [{t, type, gain, pan}] for the whole film, computed from the same poses the frames show.
   function foleyEvents() {
@@ -335,6 +349,11 @@
           // landing: hips falling then stopping (the dust test of fx.js)
           if (pv.hipY != null && pv.vy != null) { const vy = hip[1] - pv.hipY; if (pv.vy > 3 * cc.s && vy < pv.vy * 0.35 && (pv.fall || 0) > 12 * cc.s) ev.push({ t: +t.toFixed(3), type: 'thud', gain: 1, pan: pan(cc.x) });
             pv.fall = vy > 0.5 ? (pv.fall || 0) + vy : 0; pv.vy = vy; } else if (pv.hipY != null) pv.vy = hip[1] - pv.hipY;
+          // hop: hips leaving the ground fast (a boing per hop by default; "foley": {"hop": "swish" | false})
+          const hopSnd = (S.foley && S.foley.hop !== undefined) ? S.foley.hop : 'boing';
+          if (hopSnd && pv.hipY != null) { const vy = hip[1] - pv.hipY, up = vy < -5 * cc.s;
+            if (up && !pv.up && (pv.still || 0) >= 3) ev.push({ t: +t.toFixed(3), type: hopSnd, gain: hopSnd === 'boing' ? 0.55 : 0.8, pan: pan(cc.x) });
+            pv.up = up; pv.still = vy > -1.5 * cc.s ? (pv.still || 0) + 1 : (up ? pv.still : 0); }   // still = frames since the hips last rose
           pv.hipY = hip[1];
           // swish: a hand crossing 1400 px/s (once per fast move)
           hands.forEach((h, i) => { const k = 'h' + i; if (pv[k]) { const v = Math.hypot(h[0] - pv[k][0], h[1] - pv[k][1]) / dt, fast = v > 1400 * Math.max(0.6, cc.s);
@@ -342,6 +361,11 @@
           prev[key] = pv;
         });
       }
+      // pen-scratch ambience while kit drawings draw themselves (shots' underlays and overlays of type "draw")
+      if (!S.foley || S.foley.scratch !== false) for (const o of [...(sh.underlays || []), ...(sh.overlays || [])]) if (o.type === 'draw' && o.sound !== false) {
+        const n = (o.paths || [o.path]).length, dur = typeof o.until === 'number' ? Math.max(0.05, o.until - (o.start ?? 0)) : (typeof o.duration === 'number' ? o.duration : 1.2);
+        const stag = o.stagger ?? dur / Math.max(1, n), len = Math.min(sh.end - (o.start ?? 0), dur + stag * (n - 1));
+        if (len > 0.15) ev.push({ t: +(o.start ?? 0).toFixed(3), type: 'scratch', dur: +len.toFixed(3), gain: 1, pan: pan(o.x ?? W / 2) }); }
       // catches and drops: a prop arriving at the end of its travel, bounces of drops
       for (const pr of sh.props || []) { const keys = pr.attach || [];
         for (let k = 1; k < keys.length; k++) { const spec = keys[k][1] || {};

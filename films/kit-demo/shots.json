@@ -99,8 +99,8 @@
     {
      "type": "paper",
      "text": [
-      "[\u0d85\u0dc0\u0dd4\u0dbb\u0dd4\u0daf\u0dd4 5\u0d9a\u0dca]",
-      "\u0d9a\u0dd2\u0dc3\u0dd2\u0dc0\u0d9a\u0dca \u0db1\u0dd0\u0dc4\u0dd0..."
+      "[අවුරුදු 5ක්]",
+      "කිසිවක් නැහැ..."
      ],
      "y": 230,
      "size": 78,
@@ -178,5 +178,6 @@
    ],
    "cast": []
   }
- ]
+ ],
+ "soundoff": true
 }

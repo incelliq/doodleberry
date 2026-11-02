@@ -337,3 +337,27 @@ Characters who are wholly out of shot (the camera is on the other speaker) are s
 `lint`; it is advisory unless shots.json says `"qa": {"enforce": ["lint"]}`, which fails the film on any error.
 `python -m dbe test` includes `tests/lint/broken_staging.json`: the dialogue demo staged badly on purpose, and each
 listed check must fire.
+
+## Sound-off cut (plan 2.13)
+Most viewers scroll with the sound off, so every film can ship a second cut made for reading.
+`python -m dbe film.soundoff '{"name": "FILM"}'` (or `"soundoff": true` in shots.json, which makes `film.render`
+build it too) writes the derived film `FILM--soundoff` and copies its render to `build/final_soundoff.mp4`:
+- no voice: music and effects only (`score.json "voice": false` in the derived film; the music is not ducked);
+- every line spoken by someone on screen becomes a speech bubble; narration with nobody to speak it keeps the
+  word-timed captions (`"caption_lines"`);
+- each line is held long enough to read: 0.4 s plus its words at `wpm` (default 170), at least 1.2 s, at most
+  `max_stretch` (2.5) times its voiced length. Lines that still fall short are reported (`short_by_s`).
+
+The hold is a time warp, not a freeze: shots.json `"timewarp": [[cut time, film time], ...]` makes the SVG player
+render on the cut's clock and show the film at the warped time (`window.TIMEWARP`), so a held line plays its
+acting slower instead of stopping. Effect cues and captions are re-timed through the same warp. Only SVG-player
+shots can be warped for now.
+
+Speech bubbles are laid out in screen space after the camera (they used to be drawn in the world and could be
+zoomed out of frame), and in shots with bubbles `camera_auto` frames singles less tight (`zoom_bubble`, 1.5) with
+the head top at about 31% of the frame, leaving room for the bubble above it.
+
+Move-bound sound accents, added to automatic foley: a boing each time a character's hips leave the ground fast
+(`"foley": {"hop": "swish"}` or `false` to change it), and a pen-scratch bed (`scratch`, synthesised, with a
+duration) while a kit `draw` element draws itself (`"sound": false` on the element, or `"foley": {"scratch": false}`).
+Any cue may carry `dur` for sounds that last.

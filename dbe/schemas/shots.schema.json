@@ -364,6 +364,36 @@
   "foley": {
    "type": "boolean",
    "description": "automatic foley from the motion (plan 2.7)"
+  },
+  "timewarp": {
+   "description": "sound-off cut (plan 2.13): [[cut time, film time], ...] knots, increasing; written by film.soundoff",
+   "type": "array",
+   "items": {
+    "type": "array",
+    "minItems": 2,
+    "maxItems": 2,
+    "items": {
+     "type": "number"
+    }
+   }
+  },
+  "caption_lines": {
+   "description": "only these line ids are burned in as captions (the sound-off cut captions lines that get no bubble)",
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "soundoff": {
+   "description": "film.render also makes the bubble-only sound-off cut (true, or film.soundoff options)",
+   "oneOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "object"
+    }
+   ]
   }
  }
 }

@@ -585,7 +585,7 @@ def film_render(name, only=None, aspect=""):
             for k in ("highlight", "outline", "text"):
                 if bc.get(k) and k not in cs:
                     cs[k] = res(bc[k])
-        ass.write_text(make_ass(_json(d / "timing.json", {}), s.get("size", [1080, 1920]), **cs))
+        ass.write_text(make_ass(_cut_timing(s, _json(d / "timing.json", {}), s.get("caption_lines")), s.get("size", [1080, 1920]), **cs))
         capd = d / "build" / "picture_cap.mp4"
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-vf", f"subtitles={ass.relative_to(ROOT)}:fontsdir=engine/fonts",
               "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(capd)])
@@ -593,14 +593,17 @@ def film_render(name, only=None, aspect=""):
     # sound cues: a soft whoosh on every cut plus any cues the shots declare
     cues = [{"t": sh["start"], "type": "whoosh", "gain": 0.7} for sh in s["shots"][1:]]
     for sh in s["shots"]:
-        cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1)} for c in sh.get("cues", [])]
+        cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1), **({"dur": c["dur"]} if c.get("dur") else {})} for c in sh.get("cues", [])]
     if s.get("foley"):  # automatic foley from the motion (plan 2.7)
         page = _player_page(name)
         r = subprocess.run(["node", "tools/foley.mjs", str(page)], cwd=ROOT, capture_output=True, text=True, timeout=1800)
         if r.returncode == 0 and r.stdout.strip():
             cues += json.loads(r.stdout.strip().splitlines()[-1])
+    if s.get("timewarp"):  # the sound-off cut runs on its own clock
+        cues = [{**c, "t": round(_warp(s["timewarp"], c["t"], inverse=True), 3),
+                 **({"dur": round(_warp(s["timewarp"], c["t"] + c["dur"], inverse=True) - _warp(s["timewarp"], c["t"], inverse=True), 3)} if c.get("dur") else {})} for c in cues]
     (d / "build" / "cues.json").write_text(json.dumps(sorted(cues, key=lambda c: c["t"])))
-    total = s["shots"][-1]["end"]
+    total = _warp(s.get("timewarp"), s["shots"][-1]["end"], inverse=True)
     score = _json(d / "score.json", {}); score["length_s"] = total; (d / "score.json").write_text(json.dumps(score, indent=1))
     _run([PY, "engine/audio.py", f"films/{name}"])
     final = d / "build" / "final.mp4"
@@ -611,12 +614,16 @@ def film_render(name, only=None, aspect=""):
           *(["-movflags", "+faststart"] if M.get("faststart") else []), str(final)])
     # sidecar subtitles for platforms that take caption files
     from .captions import make_srt, make_vtt
-    tm = _json(d / "timing.json", {})
+    tm = _cut_timing(s, _json(d / "timing.json", {}))
     (d / "build" / "captions.srt").write_text(make_srt(tm)); (d / "build" / "captions.vtt").write_text(make_vtt(tm))
     qa = qa_run(name)
     mb = final.stat().st_size / 1e6
+    if s.get("soundoff") and not s.get("timewarp"):  # every film ships a voiced cut and a bubble-only cut (plan 2.13)
+        so = film_soundoff(name, **(s["soundoff"] if isinstance(s["soundoff"], dict) else {}))
+        qa = {**qa, "soundoff": {k: so.get(k) for k in ("final", "qa", "stretched_lines", "length_s")}}
     return {"rendered": done, "unchanged": skipped, "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
-            "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures"), "lint": qa.get("lint")}
+            "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures"), "lint": qa.get("lint"),
+            **({"soundoff": qa["soundoff"]} if qa.get("soundoff") else {})}
 
 
 @command("qa.run", name=("string", "film"), layout=("boolean", "also run the measured layout checks (frame fill, safe zones, type size, reading time, seams, cold open, mix)", True))
@@ -1263,6 +1270,93 @@ def _derive_aspect(name, aspect):
             shutil.copy(src / "build" / f, dst / "build" / f)
     (dst / "shots.json").write_text(json.dumps(restage(_shots(name, resolve=False), aspect), indent=1))
     return dst.name, tag
+
+
+# ---------------- sound-off cut (plan 2.13) ----------------
+def _warp(knots, t, inverse=False):
+    """film time -> cut time (inverse=True) or cut time -> film time, piecewise linear through [[cut, film], ...]"""
+    if not knots or len(knots) < 2:
+        return t
+    i, j = (1, 0) if inverse else (0, 1)
+    if t <= knots[0][i]:
+        return knots[0][j] + (t - knots[0][i])
+    for a, b in zip(knots, knots[1:]):
+        if t <= b[i]:
+            return a[j] + (b[j] - a[j]) * (t - a[i]) / ((b[i] - a[i]) or 1)
+    return knots[-1][j] + (t - knots[-1][i])
+
+
+def _cut_timing(s, tm, only=None):
+    """timing.json on the cut's clock (identity without a timewarp); only: keep these line ids"""
+    k = s.get("timewarp")
+    if not k and only is None:
+        return tm
+    w = lambda t: round(_warp(k, t, inverse=True), 3)
+    lines = [{**ln, "start": w(ln["start"]), "end": w(ln["end"]),
+              **({"words": [{**wd, "start": w(wd["start"]), "end": w(wd["end"])} for wd in ln["words"]]} if ln.get("words") else {})}
+             for ln in tm.get("lines", []) if only is None or ln.get("id") in only]
+    return {**tm, "lines": lines}
+
+
+def soundoff_plan(s, tm, wpm=170, max_stretch=2.5, min_hold=1.2):
+    """Knots that hold each line long enough to read with the sound off: 0.4 s + words at `wpm`, at least `min_hold`,
+    never more than `max_stretch` times its voiced length. Gaps between lines play at speed. Also decides which lines
+    get a speech bubble (a speaker on screen) and which need a caption (narration with nobody to speak it)."""
+    knots, off, stretched = [[0.0, 0.0]], 0.0, []
+    lines = sorted(tm.get("lines", []), key=lambda l: l["start"])
+    for ln in lines:
+        dur = max(0.05, ln["end"] - ln["start"])
+        words = len((ln.get("text") or "").split()) or len(ln.get("words") or []) or 1
+        need = max(min_hold, 0.4 + words * 60.0 / wpm)
+        new = min(max(dur, need), dur * max_stretch)
+        if new > dur + 0.02:
+            knots.append([round(ln["start"] + off, 4), round(ln["start"], 4)])
+            off += new - dur
+            knots.append([round(ln["end"] + off, 4), round(ln["end"], 4)])
+            stretched.append({"line": ln.get("id"), "voiced_s": round(dur, 2), "reading_s": round(new, 2), **({"short_by_s": round(need - new, 2)} if need > new + 0.02 else {})})
+    end = s["shots"][-1]["end"]
+    knots.append([round(end + off, 4), round(end, 4)])
+    bubbled, captioned = [], []
+    for ln in lines:
+        sh = next((x for x in s["shots"] if x["start"] <= ln["start"] < x["end"]), None)
+        speakers = {c.get("speaker") for c in (sh or {}).get("cast", [])}
+        (bubbled if sh and ln.get("speaker") in speakers and sh.get("renderer", "svg") == "svg" else captioned).append(ln.get("id"))
+    return {"knots": knots, "stretched": stretched, "bubbled": bubbled, "captioned": captioned, "length_s": round(end + off, 3)}
+
+
+@command("film.soundoff", name=("string", "film"), wpm=("number", "reading speed the lines are paced for (words per minute)", 170),
+         max_stretch=("number", "longest a line may be held, as a multiple of its voiced length", 2.5),
+         render=("boolean", "render the cut (false: only write the derived film and report the plan)", True))
+def film_soundoff(name, wpm=170, max_stretch=2.5, render=True):
+    """The sound-off cut (plan 2.13): the same film with no voice, every spoken line in a speech bubble (narration
+    with nobody on screen to speak it stays as a caption), each line held long enough to read, music and effects
+    re-timed to match. Built as the derived film <name>--soundoff and copied to build/final_soundoff.mp4."""
+    src = _film(name); s = _shots(name, resolve=False); sr = _shots(name); tm = _json(src / "timing.json", {})
+    if not s.get("shots") or not tm.get("lines"):
+        raise ValueError("film.soundoff needs a shots.json film with voiced lines (timing.json)")
+    bad = [sh["id"] for sh in sr["shots"] if sh.get("renderer", "svg") != "svg"]
+    if bad:
+        raise ValueError(f"film.soundoff re-times shots in the SVG player; shots {bad} use other renderers")
+    plan = soundoff_plan(sr, tm, wpm, max_stretch)
+    dst = FILMS / f"{name}--soundoff"; (dst / "build").mkdir(parents=True, exist_ok=True)
+    for f in ("script.json", "timing.json", "facts.json", "brief.md", "data.json"):
+        if (src / f).exists():
+            shutil.copy(src / f, dst / f)
+    score = _json(src / "score.json", {}); score["voice"] = False; (dst / "score.json").write_text(json.dumps(score, indent=1))
+    s2 = json.loads(json.dumps(s)); s2.pop("soundoff", None)
+    s2["timewarp"] = plan["knots"]; s2["caption_lines"] = plan["captioned"]
+    s2["captions"] = bool(plan["captioned"])
+    for sh in s2["shots"]:
+        if any(c.get("speaker") for c in sh.get("cast", [])):
+            sh["bubbles"] = True
+    (dst / "shots.json").write_text(json.dumps(s2, indent=1))
+    out = {"derived_film": dst.name, "length_s": plan["length_s"], "voiced_length_s": sr["shots"][-1]["end"],
+           "stretched_lines": plan["stretched"], "bubbled": plan["bubbled"], "captioned": plan["captioned"]}
+    if not render:
+        return out
+    r = film_render(dst.name)
+    shutil.copy(dst / "build" / "final.mp4", src / "build" / "final_soundoff.mp4")
+    return {**out, "final": f"films/{name}/build/final_soundoff.mp4", "qa": r.get("qa"), "lint": r.get("lint")}
 
 
 # ---------------- brand (plan 1.14) ----------------
