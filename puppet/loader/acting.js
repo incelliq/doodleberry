@@ -49,10 +49,13 @@
     if (clip.contacts) pose.contacts = Object.fromEntries(Object.entries(clip.contacts).map(([f, keys]) => [f, sampleKeys(keys, lt, loop)]));
     return pose;
   }
-  // layers: [{clip, start, speed=1, weight=1, fadeIn=0.25, fadeOut=0.25, end, additive}]
+  // layers: [{clip, start, speed=1, weight=1, fadeIn=0.25, fadeOut=0.25, end, additive, base}]
+  // Blending per track: foreground clips average by weight among themselves and override the base layer ("idle", or
+  // any layer with base: true) in proportion to their weight, so a gesture at weight 1 plays at full size over idle and
+  // idle still fills every track the gesture does not touch. Additive layers add on top.
   function evalStack(layers, t, CLIPS) {
-    const base = { angles: {} }, add = { angles: {} };
-    let wsum = 0; const offs = [];
+    const base = { angles: {} }, add = { angles: {} }, fg = {}, bg = {};
+    const offs = [];
     for (const L of layers || []) {
       const clip = typeof L.clip === 'string' ? CLIPS[L.clip] : L.clip; if (!clip) continue;
       const speed = L.speed || 1, lt = (t - (L.start || 0)) * speed;
@@ -62,13 +65,16 @@
       let w = (L.weight ?? 1) * (fi ? smooth(clamp((t - (L.start || 0)) / fi)) : 1) * (isFinite(end) && fo ? 1 - smooth(clamp((t - end) / fo)) : 1);
       if (w <= 0) continue;
       const s = sampleClip(clip, lt), g = L.gain ?? 1;   // gain scales the clip's motion (calmer or bigger acting)
-      const tgt = L.additive ? add : base;
-      for (const [k, v] of Object.entries(s.angles)) tgt.angles[k] = (tgt.angles[k] || 0) + v * w * g;
-      if (!L.additive) { wsum += w; if (s.offset) offs.push([g === 1 ? s.offset : s.offset.map(v => v * g), w]); for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) base[k] = v; }
+      if (L.additive) for (const [k, v] of Object.entries(s.angles)) add.angles[k] = (add.angles[k] || 0) + v * w * g;
+      else { const acc = (L.base || L.clip === 'idle') ? bg : fg; for (const [k, v] of Object.entries(s.angles)) { const a = acc[k] || (acc[k] = [0, 0]); a[0] += v * w * g; a[1] += w; } }
+      if (!L.additive) { if (s.offset) offs.push([g === 1 ? s.offset : s.offset.map(v => v * g), w]); for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) base[k] = v; }
       else { if (s.offset) add.offset = [(add.offset || [0, 0])[0] + s.offset[0] * w, (add.offset || [0, 0])[1] + s.offset[1] * w];  // additive moves (hops) stack on the base
         for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) add[k] = v; }
     }
-    if (wsum > 1) for (const k of Object.keys(base.angles)) base.angles[k] /= wsum;
+    for (const k of new Set([...Object.keys(fg), ...Object.keys(bg)])) {
+      const f = fg[k] || [0, 0], g2 = bg[k], fw = Math.min(1, f[1]), gv = g2 ? g2[0] / Math.max(1, g2[1]) : 0;
+      base.angles[k] = f[0] / Math.max(1, f[1]) + gv * (1 - fw);   // under weight 1 the gesture cross-fades with the base
+    }
     if (offs.length) { const ws = offs.reduce((a, [, w]) => a + w, 0); base.offset = [0, 1].map(i => offs.reduce((a, [o, w]) => a + o[i] * w, 0) / Math.max(1, ws)); }
     const out = { ...base, ...add, angles: { ...base.angles } };
     if (add.offset) out.offset = [(base.offset || [0, 0])[0] + add.offset[0], (base.offset || [0, 0])[1] + add.offset[1]];
@@ -154,6 +160,58 @@
     memo[hold] = out; HELD.set(vis, memo); return out;
   }
 
+  // ---------- v0.6: FABRIK chains (tails, tentacles, ropes) ----------
+  // puppet.chains.<name> = {parts: [p1, ..., pn] (each the parent of the next), tip: [x, y] (artboard, end of the last bone),
+  //   wave: {amp, freq, lag}}; timeline chains.<name> = [[t, [x, y]]] reach targets in artboard space.
+  // The chain is solved in artboard space with the root fixed, then written back as local angle changes.
+  function chainPoints(puppet, pose, ch) {
+    const M = P.matrices(puppet, pose), ap = (m, q) => [m[0] * q[0] + m[2] * q[1] + m[4], m[1] * q[0] + m[3] * q[1] + m[5]];
+    const pts = ch.parts.map(id => ap(M[puppet.parts[id].parent] || [1, 0, 0, 1, 0, 0], puppet.parts[id].pivot));
+    pts.push(ap(M[ch.parts[ch.parts.length - 1]], ch.tip)); return pts;
+  }
+  function fabrik(pts, target, iters = 12) {
+    const n = pts.length, len = pts.slice(1).map((q, i) => Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1])), root = pts[0].slice();
+    const total = len.reduce((a, b) => a + b, 0), P2 = pts.map(q => q.slice());
+    const toward = (a, b, l) => { const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1e-6; return [a[0] + (b[0] - a[0]) * l / d, a[1] + (b[1] - a[1]) * l / d]; };
+    if (Math.hypot(target[0] - root[0], target[1] - root[1]) >= total) { for (let i = 1; i < n; i++) P2[i] = toward(P2[i - 1], target, len[i - 1]); return P2; }
+    for (let it = 0; it < iters; it++) {
+      P2[n - 1] = target.slice(); for (let i = n - 2; i >= 0; i--) P2[i] = toward(P2[i + 1], P2[i], len[i]);
+      P2[0] = root.slice(); for (let i = 1; i < n; i++) P2[i] = toward(P2[i - 1], P2[i], len[i - 1]);
+      if (Math.hypot(P2[n - 1][0] - target[0], P2[n - 1][1] - target[1]) < 0.5) break;
+    }
+    return P2;
+  }
+  function solveChain(puppet, pose, ch, target) {
+    const cur = chainPoints(puppet, pose, ch), want = fabrik(cur, target);
+    const ang = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, wrap = d => { while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
+    let prevD = 0;
+    ch.parts.forEach((id, i) => { const d = wrap(ang(want[i], want[i + 1]) - ang(cur[i], cur[i + 1])); pose.angles[id] = (pose.angles[id] || 0) + wrap(d - prevD); prevD = d; });
+  }
+
+  // ---------- v0.6: emotion-aware mouth chart ----------
+  // timeline emotion = [[t, "happy" | "sad" | "angry" | "surprised" | "neutral"]]: the resting mouth (and any shape with
+  // an "<shape>_<emotion>" drawing) follows the emotion, and brows follow it unless something else sets them.
+  const MOUTH_CHARTS = { happy: { closed: 'smile' }, sad: { closed: 'frown' }, angry: { closed: 'frown' }, surprised: { closed: 'O' } };
+  const EMO_BROWS = { happy: 'raised', sad: 'worried', angry: 'angry', surprised: 'raised' };
+  function emotionalMouth(puppet, shape, emo) {
+    if (!emo || emo === 'neutral') return shape;
+    const sw = (puppet.swaps || {}).mouth || {}, shapes = sw.shapes || {};
+    if (shapes[shape + '_' + emo]) return shape + '_' + emo;
+    const chart = (sw.charts || {})[emo] || MOUTH_CHARTS[emo] || {}, m = chart[shape];
+    return m && shapes[m] ? m : shape;
+  }
+
+  // ---------- v0.6: animation principles (anticipation and overshoot) ----------
+  // An unsharp mask in time on the clip pose: a(t) + k (a(t) - blur(a)(t)). Before a move starts the blur already
+  // sees it coming and the joint dips the other way (anticipation); after it stops the joint carries past and settles
+  // (overshoot). Pure: it samples the same clip stack at neighbouring times. principles = {snap: 0..1, window: s}.
+  function principled(angles, sampleAt, t, pr) {
+    const k = pr.snap ?? 0.35, w = pr.window ?? 0.14; if (!k) return angles;
+    const offs = [-w, -w / 2, w / 2, w], wts = [1, 2, 2, 1], sm = offs.map(o => sampleAt(t + o)), out = { ...angles };
+    for (const id of Object.keys(angles)) { let b = 3 * angles[id], tw = 3; sm.forEach((a, i) => { b += wts[i] * (a[id] ?? angles[id]); tw += wts[i]; }); out[id] = angles[id] + k * (angles[id] - b / tw); }
+    return out;
+  }
+
   // ---------- evaluate everything at t ----------
   function evaluate(puppet, tl, t, CLIPS = {}, PRESETS = {}) {
     const base = presetAt(puppet, tl.poses, t, tl.poseBlend || 0.4, PRESETS) || { angles: {} };
@@ -163,7 +221,13 @@
     const stack = evalStack(layers, t, CLIPS);
     const pose = { ...base, ...stack, angles: { ...base.angles } };
     for (const [k, v] of Object.entries(stack.angles)) pose.angles[k] = (pose.angles[k] || 0) + v;
-    if (tl.visemes && tl.visemes.length && !pose.mouth) { let sh = 'closed'; for (const [ct, s] of heldVisemes(tl.visemes, tl.viseme_hold ?? (puppet.acting || {}).viseme_hold ?? 0)) { if (ct > t + 0.033) break; sh = s; } pose.mouth = sh; }
+    const pr = tl.principles ?? ac.principles;
+    if (pr) pose.angles = principled(pose.angles, s => { const b2 = presetAt(puppet, tl.poses, s, tl.poseBlend || 0.4, PRESETS) || { angles: {} }, s2 = evalStack(layers, s, CLIPS), a = { ...b2.angles };
+      for (const [k, v] of Object.entries(s2.angles)) a[k] = (a[k] || 0) + v; return a; }, t, pr);
+    const emo = tl.emotion ? sampleKeys(tl.emotion, t) : null;
+    if (tl.visemes && tl.visemes.length && !pose.mouth) { let sh = 'closed'; for (const [ct, s] of heldVisemes(tl.visemes, tl.viseme_hold ?? (puppet.acting || {}).viseme_hold ?? 0)) { if (ct > t + 0.033) break; sh = s; } pose.mouth = emotionalMouth(puppet, sh, emo); }
+    else if (emo && !pose.mouth) pose.mouth = emotionalMouth(puppet, 'closed', emo);
+    if (emo && !pose.brows && EMO_BROWS[emo] && ((puppet.swaps || {}).brows || {}).shapes && puppet.swaps.brows.shapes[EMO_BROWS[emo]]) pose.brows = EMO_BROWS[emo];
     if (tl.look) pose.look = sampleKeys(tl.look, t);
     if (tl.view) { pose.view = sampleKeys(tl.view, t); for (const [ts] of tl.view.slice(1)) { const d = Math.abs(t - ts); if (d < 0.09) pose.squash = Math.min(pose.squash ?? 1, 1 - 0.35 * (1 - d / 0.09)); } }
     if (tl.blink !== false) pose.blink = Math.max(pose.blink || 0, blinkAt(t, tl.seed || 0));
@@ -211,6 +275,15 @@
       const world = [at0[0] + hipX + (tl.travel || 0) * (t0 - t), Math.min(at0[1] + ground, ground - 2)];
       Object.assign(pose.angles, ik2(puppet, pose, u, l, e, [world[0] - (pose.offset || [0, 0])[0], world[1] - (pose.offset || [0, 0])[1]], bend));
     }
+    // chains: a living wave along each chain, then FABRIK reach targets
+    for (const [name, ch] of Object.entries(puppet.chains || {})) {
+      if (ch.wave && tl.chain_wave !== false) { const wv = ch.wave; ch.parts.forEach((id, i) => { pose.angles[id] = (pose.angles[id] || 0) + (wv.amp ?? 8) * Math.sin(2 * Math.PI * (wv.freq ?? 0.6) * t - i * (wv.lag ?? 0.7) + (tl.seed || 0)); }); }
+      const keys = (tl.chains || {})[name]; if (!keys) continue;
+      const tgt = sampleKeys(keys, t); if (tgt) solveChain(puppet, pose, ch, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]]);
+    }
+    // joint limits (v0.6): parts[id].limits = [min, max] degrees from the rest pose; everything above is clamped
+    const limit = () => { for (const [id, part] of Object.entries(puppet.parts)) if (part.limits && pose.angles[id] != null) pose.angles[id] = clamp(pose.angles[id], part.limits[0], part.limits[1]); };
+    limit();
     // springs: secondary parts lag their driver's world angle
     if (tl.springs !== false && puppet.springs) for (const [part, sp] of Object.entries(puppet.springs)) {
       const drv = sp.driver || puppet.parts[part].parent;
@@ -218,8 +291,9 @@
       const now = fn(t), lag = lagged(fn, t, sp);
       pose.angles[part] = (pose.angles[part] || 0) + clamp((lag - now) * (sp.gain ?? 1), -(sp.limit || 35), sp.limit || 35);
     }
+    if (tl.springs !== false && puppet.springs) limit();
     return pose;
   }
 
-  root.Acting = { evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS };
+  root.Acting = { evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
 })(typeof window !== 'undefined' ? window : globalThis);

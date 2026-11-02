@@ -1,0 +1,101 @@
+{
+ "about": "v0.6: FABRIK tail (rest, wave, reach target), joint limits, emotion-aware mouth and brows, full-size gesture over idle",
+ "size": [
+  900,
+  700
+ ],
+ "items": [
+  {
+   "puppet": "cast/generated/momo.puppet.json",
+   "x": 100,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "blink": false,
+    "springs": false,
+    "chain_wave": false
+   },
+   "t": 0
+  },
+  {
+   "puppet": "cast/generated/momo.puppet.json",
+   "x": 275,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "blink": false,
+    "springs": false
+   },
+   "t": 0.4
+  },
+  {
+   "puppet": "cast/generated/momo.puppet.json",
+   "x": 450,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "blink": false,
+    "springs": false,
+    "chain_wave": false,
+    "chains": {
+     "tail": [
+      [
+       0,
+       [
+        560,
+        330
+       ]
+      ]
+     ]
+    }
+   },
+   "t": 0
+  },
+  {
+   "puppet": "cast/generated/momo.puppet.json",
+   "x": 625,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "blink": false,
+    "emotion": [
+     [
+      0,
+      "happy"
+     ]
+    ],
+    "clips": [
+     {
+      "clip": "celebrate",
+      "start": 0,
+      "fadeIn": 0
+     }
+    ]
+   },
+   "t": 0.25
+  },
+  {
+   "puppet": "cast/generated/momo.puppet.json",
+   "x": 800,
+   "y": 680,
+   "s": 0.62,
+   "timeline": {
+    "blink": false,
+    "emotion": [
+     [
+      0,
+      "sad"
+     ]
+    ],
+    "clips": [
+     {
+      "clip": "sad",
+      "start": 0,
+      "fadeIn": 0
+     }
+    ]
+   },
+   "t": 1
+  }
+ ]
+}

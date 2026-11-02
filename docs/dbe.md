@@ -361,3 +361,18 @@ Move-bound sound accents, added to automatic foley: a boing each time a characte
 (`"foley": {"hop": "swish"}` or `false` to change it), and a pen-scratch bed (`scratch`, synthesised, with a
 duration) while a kit `draw` element draws itself (`"sound": false` on the element, or `"foley": {"scratch": false}`).
 Any cue may carry `dur` for sounds that last.
+
+## Clip library, chains and principles (plan 2.5)
+The humanoid library has 23 clips (doodle 10): idle, walk, run, jump, nod, shrug, think, surprised, wave_R/L,
+point_R/L, present_R/L, talk_beat, talk_open_palms, celebrate, clap, cross_arms, scratch_head, facepalm, sad, stomp.
+Jump, run and stomp carry foot contacts, so foley (step, landing thud, hop boing) and dust find them.
+
+Puppet format v0.6 (puppet/spec/puppet-format.md) adds joint limits, FABRIK chains, emotion-aware mouth charts and
+an anticipation/overshoot filter, all inside `Acting.evaluate`, so the bake, `dbe/geom.py` and every exporter get them
+from the baked angles. The generator takes `"tail": {"segments", "length", "color", "color2", "wag", "spikes"}`;
+Momo (cast/generated/momo) wears a dino hoodie with a six-segment tail. In a shot timeline:
+`"chains": {"tail": [[t, [x, y]]]}` (reach), `"emotion": [[t, "happy"]]`, `"principles": {"snap": 0.35}`.
+
+Clip blending changed: a gesture at weight 1 now plays at full size over idle (foreground clips override the base
+layer per track) instead of being averaged with it. The gesture planner's weight 3 still works. `films/clips-demo`
+shows all of it and renders the same in SVG, Lottie and Synfig.

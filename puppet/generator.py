@@ -203,8 +203,40 @@ def generate(spec):
                "cloth3": top.get("color2", "#f4f1e8"), "shoe": spec.get("shoes", "#f1f1ee"), "eye": "#ffffff", "iris": spec.get("eyes", "#5a3a22"),
                "ink": "#24160e", "blush": "#ff8f8a", "mouth": "#6a2420", "tongue": "#e27a76"}
     springs = {"hair_back": {"driver": "head", "freq": 2.2, "damping": 0.3, "gain": 1.3 if hs in ("long", "ponytail", "bun") else 0.8, "limit": 20}}
-    return {"format": "doodleberry.puppet", "version": "0.4", "name": name, "template": "humanoid", "artboard": T["artboard"], "ground": ground,
-            "palette": palette, "parts": parts, "swaps": swaps, "controls": {"turn": turn}, "springs": springs,
+    parts["head"]["limits"] = [-30, 30]   # v0.6 joint limit: no clip, look-at or spring can wring the neck
+    chains = {}
+    tail = spec.get("tail")
+    if tail:  # v0.6: a FABRIK tail (costume or creature): a chain of tapering segments behind the hips, curling up at the end
+        n = int(tail.get("segments", 5)); L = tail.get("length", 300) * wb; seg = L / n
+        hp = parts["hip"]["pivot"]; x0, y0 = hp[0] + 34 * wb, hp[1] + 30
+        r0, r1 = tail.get("root_width", 26) * wb, tail.get("tip_width", 7) * wb
+        palette_key = "tail"
+        prev, pts = "hip", []
+        for i in range(n + 1):  # rest curve: out to screen right and gently up
+            a = math.radians(-8 - 70 * (i / n) ** 1.6)
+            if i == 0:
+                pts.append((x0, y0))
+            else:
+                pts.append((pts[-1][0] + seg * math.cos(a), pts[-1][1] + seg * math.sin(a)))
+        ids = []
+        for i in range(n):
+            pid = f"tail_{i + 1}"; ids.append(pid)
+            ra, rb = r0 + (r1 - r0) * i / n, r0 + (r1 - r0) * (i + 1) / n
+            strokes = [{"d": capsule(pts[i], pts[i + 1], ra, rb), "fill": palette_key, "stroke": "ink", "width": 4}]
+            if tail.get("spikes", True) and i < n - 1:  # dino plates along the top
+                mx, my = (pts[i][0] + pts[i + 1][0]) / 2, (pts[i][1] + pts[i + 1][1]) / 2
+                dx, dy = pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]; d = math.hypot(dx, dy) or 1; nx, ny = dy / d, -dx / d
+                h = (ra + rb) / 2 * 0.9
+                strokes.append({"d": poly([(mx - dx * 0.25 + nx * ra * 0.8, my - dy * 0.25 + ny * ra * 0.8), (mx + nx * (ra + h), my + ny * (ra + h)), (mx + dx * 0.25 + nx * rb * 0.8, my + dy * 0.25 + ny * rb * 0.8)]),
+                                "fill": "tail2", "stroke": "ink", "width": 3})
+            parts[pid] = {"parent": prev, "pivot": [round(pts[i][0], 1), round(pts[i][1], 1)], "z": 4 - i * 0.01, "strokes": strokes, "limits": [-40, 40]}
+            prev = pid
+        palette["tail"] = tail.get("color", top.get("color", "#6fbf73")); palette["tail2"] = tail.get("color2", "#f2c14e")
+        chains["tail"] = {"parts": ids, "tip": [round(pts[-1][0], 1), round(pts[-1][1], 1)], "wave": {"amp": tail.get("wag", 7), "freq": 0.55, "lag": 0.7}}
+        for i, pid in enumerate(ids[1:], 1):
+            springs[pid] = {"driver": ids[i - 1], "freq": 2.6, "damping": 0.35, "gain": 0.7, "limit": 25}
+    return {"format": "doodleberry.puppet", "version": "0.6", "name": name, "template": "humanoid", "artboard": T["artboard"], "ground": ground,
+            "palette": palette, "parts": parts, "swaps": swaps, "controls": {"turn": turn}, "springs": springs, **({"chains": chains} if chains else {}),
             "anchors": {"bubble": [round(hc[0], 1), round(hc[1] - hry - 20, 1)]},
             "meta": {"author": "Doodleberry character generator", "license": "CC0-1.0", "generator": "puppet/generator.py", "spec": spec}}
 

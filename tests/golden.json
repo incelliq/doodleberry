@@ -58,7 +58,8 @@
  ],
  "poses": [
   "tests/poses/bend_and_turn.json",
-  "tests/poses/generated_cast.json"
+  "tests/poses/generated_cast.json",
+  "tests/poses/tail_chain.json"
  ],
  "imports": [
   {

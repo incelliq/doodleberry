@@ -1,0 +1,180 @@
+{
+ "title": "Clips demo",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "foley": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "stage",
+   "start": 0,
+   "end": "oh.end+0.7",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "place": {
+      "x": 360,
+      "y": 1500,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "jump",
+        "start": 0.6
+       },
+       {
+        "clip": "celebrate",
+        "start": "did.start-0.2",
+        "end": "nice.end"
+       },
+       {
+        "clip": "stomp",
+        "start": 5.0
+       },
+       {
+        "clip": "sad",
+        "start": "oh.start-0.6",
+        "end": "oh.end+0.5"
+       }
+      ],
+      "emotion": [
+       [
+        0,
+        "happy"
+       ],
+       [
+        4.8,
+        "angry"
+       ],
+       [
+        "oh.start-0.6",
+        "sad"
+       ]
+      ],
+      "chains": {
+       "tail": [
+        [
+         "did.start",
+         [
+          640,
+          250
+         ]
+        ],
+        [
+         "nice.end",
+         [
+          640,
+          250
+         ]
+        ]
+       ]
+      },
+      "principles": {
+       "snap": 0.35,
+       "window": 0.14
+      },
+      "springs": true,
+      "look": [
+       [
+        0,
+        [
+         0.6,
+         0
+        ]
+       ],
+       [
+        5.0,
+        [
+         0.3,
+         0.2
+        ]
+       ],
+       [
+        "oh.start-0.6",
+        [
+         0,
+         0.5
+        ]
+       ]
+      ],
+      "visemes_from": "momo"
+     },
+     "speaker": "momo"
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "place": {
+      "x": 800,
+      "y": 1500,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "clap",
+        "start": "did.end",
+        "end": "nice.end+0.4"
+       },
+       {
+        "clip": "scratch_head",
+        "start": 5.3
+       },
+       {
+        "clip": "facepalm",
+        "start": "oh.start"
+       },
+       {
+        "clip": "present_L",
+        "start": "oh.end+0.1"
+       }
+      ],
+      "emotion": [
+       [
+        0,
+        "happy"
+       ],
+       [
+        5.2,
+        "neutral"
+       ]
+      ],
+      "principles": {
+       "snap": 0.3
+      },
+      "springs": true,
+      "look": [
+       [
+        0,
+        [
+         -0.8,
+         0
+        ]
+       ]
+      ],
+      "visemes_from": "ravi"
+     },
+     "speaker": "ravi"
+    }
+   ],
+   "end_line": "oh",
+   "tail": 0.7
+  }
+ ]
+}

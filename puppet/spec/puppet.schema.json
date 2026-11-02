@@ -111,7 +111,7 @@
   },
   "acting": {
    "type": "object",
-   "description": "v0.5: per-character acting defaults",
+   "description": "v0.5/v0.6: per-character acting defaults",
    "properties": {
     "viseme_hold": {
      "type": "number"
@@ -127,6 +127,60 @@
     },
     "energy": {
      "type": "number"
+    },
+    "principles": {
+     "type": "object",
+     "description": "v0.6: anticipation and overshoot (unsharp mask in time on the clip pose)",
+     "properties": {
+      "snap": {
+       "type": "number"
+      },
+      "window": {
+       "type": "number"
+      }
+     }
+    }
+   }
+  },
+  "chains": {
+   "type": "object",
+   "description": "v0.6: FABRIK chains (tails, tentacles, ropes)",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "parts",
+     "tip"
+    ],
+    "properties": {
+     "parts": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "minItems": 2
+     },
+     "tip": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+     },
+     "wave": {
+      "type": "object",
+      "properties": {
+       "amp": {
+        "type": "number"
+       },
+       "freq": {
+        "type": "number"
+       },
+       "lag": {
+        "type": "number"
+       }
+      }
+     }
     }
    }
   }
@@ -174,6 +228,15 @@
      "items": {
       "$ref": "#/$defs/stroke"
      }
+    },
+    "limits": {
+     "description": "v0.6: joint limits, [min, max] degrees from the rest pose",
+     "type": "array",
+     "items": {
+      "type": "number"
+     },
+     "minItems": 2,
+     "maxItems": 2
     }
    }
   },
@@ -208,6 +271,16 @@
       "type": "array",
       "items": {
        "$ref": "#/$defs/stroke"
+      }
+     }
+    },
+    "charts": {
+     "type": "object",
+     "description": "v0.6: emotion -> {viseme shape: drawn shape} (mouth)",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
       }
      }
     }

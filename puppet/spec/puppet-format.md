@@ -1,4 +1,4 @@
-# Puppet format v0.5 (`.puppet.json`)
+# Puppet format v0.6 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -145,3 +145,24 @@ These resolve against `timing.json`, so acting stays on the words after a voice 
 ## Roadmap
 Mesh subdivision for very sharp bends, 3/4 views drawn from a turnaround
 template, N-bone FABRIK chains (tails, tentacles), Rig Canvas tabs for views and pose previews.
+
+## v0.6 additions: chains, joint limits, emotion charts, animation principles
+- **`parts[id].limits`** `[min, max]`: joint limits in degrees from the rest pose. `Acting.evaluate` clamps the
+  angle after clips, look-at, IK, pins and chains, and again after springs, so nothing can wring a joint past them.
+  Generated characters limit the neck to ±30°, tail segments to ±40°.
+- **`chains`** `{name: {parts: [p1, ..., pn], tip: [x, y], wave: {amp, freq, lag}}}`: an N-bone chain (tail,
+  tentacle, rope), each part the parent of the next, `tip` the end of the last bone in artboard space. `wave` adds a
+  travelling sine along the chain (a living tail; `chain_wave: false` in a timeline turns it off). A timeline
+  `chains: {name: [[t, [x, y]]]}` gives reach targets in artboard space, solved by FABRIK with the root fixed and
+  written back as local angles (then limited). Springs on chain parts add follow-through on top.
+- **`swaps.mouth.charts`** `{emotion: {shape: drawn shape}}`: the emotion-aware mouth chart. A timeline
+  `emotion: [[t, "happy" | "sad" | "angry" | "surprised" | "neutral"]]` maps the viseme through the chart (default:
+  happy and sad/angry turn the closed mouth into `smile`/`frown`, surprised into `O`), uses a drawn
+  `<shape>_<emotion>` when the puppet has one, and sets brows (raised, worried, angry) unless a clip sets them.
+- **`acting.principles`** `{snap, window}` (or timeline `principles`): anticipation and overshoot as an unsharp mask
+  in time on the clip pose, `a + snap * (a - blur(a))` with the blur over ±`window` seconds: a joint dips the other
+  way just before a move and carries past just after it stops. Pure (samples the clip stack at neighbouring times).
+
+Blending (loader behaviour, all versions): foreground clips average by weight among themselves and override the base
+layer (`idle`, or any layer with `base: true`) per track in proportion to their weight; idle still fills tracks the
+gesture does not touch. Earlier loaders averaged gestures with idle, which halved them.

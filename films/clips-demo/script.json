@@ -1,0 +1,5 @@
+{"speakers": {"momo": {"voice": "kokoro:af_heart", "fx": {"pitch": 1.2, "formant": 1.08, "range": 1.25}}, "ravi": {"voice": "kokoro:am_puck"}},
+ "lead_in_s": 2.3, "gap_s": 0.4,
+ "lines": [{"id": "did", "speaker": "momo", "fact": null, "text": "I did it!"},
+           {"id": "nice", "speaker": "ravi", "fact": null, "text": "Nice jump, Momo!", "pause": 2.6},
+           {"id": "oh", "speaker": "momo", "fact": null, "text": "Oh no. My tail.", "pause": 0.3}]}
