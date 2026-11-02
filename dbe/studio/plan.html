@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content Plan</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --ok: #3f9a5a; --warn: #c9821c; --bad: #c2413b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 12px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } h2 { font-size: 14px; margin: 0 0 6px; } a { color: var(--accent); } .muted { color: var(--muted); }
+  button, select { font: inherit; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  main { padding: 16px; display: grid; gap: 14px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .rules { display: flex; flex-wrap: wrap; gap: 6px; } .rule { padding: 2px 10px; border-radius: 999px; border: 1px solid var(--ok); color: var(--ok); font-size: 12px; }
+  .rule.bad { border-color: var(--bad); color: var(--bad); }
+  .weeks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+  .wk h3 { font-size: 12px; margin: 0 0 6px; color: var(--muted); }
+  .row { border-top: 1px solid var(--line); padding: 6px 0; } .row:first-of-type { border-top: 0; }
+  .t { font-weight: 600; } .chip { display: inline-block; font-size: 11px; padding: 0 7px; border-radius: 999px; background: var(--bg); color: var(--muted); margin-right: 4px; }
+  .chip.local { background: var(--accent); color: #fff; } .chip.locked { background: var(--ok); color: #fff; } .over { color: var(--bad); font-size: 12px; }
+  .stats { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+</style>
+</head>
+<body>
+<header><h1>🫐 Content plan</h1><select id="q" aria-label="quarter"></select><span id="sum" class="muted"></span><span style="flex:1"></span><span id="msg" class="muted"></span><a href="/board">Board ↗</a><a href="/">Studio ↗</a></header>
+<main>
+  <div class="box"><h2>Spread rules</h2><div class="rules" id="rules"></div><div id="fails" class="over"></div></div>
+  <div class="box stats" id="stats"></div>
+  <div class="weeks" id="weeks"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id); const msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
+const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const weekOf = s => { const d = new Date(s + 'T00:00:00Z'); const k = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - k); return d.toISOString().slice(0, 10); };
+async function load() {
+  const q = $('q').value; if (!q) return;
+  const [chk, tr, bank] = await Promise.all([api('plan.check', { quarter: q }), api('plan.track', { quarter: q }), api('plan.ideas')]);
+  $('rules').innerHTML = Object.entries(chk.rules).map(([k, v]) => `<span class="rule ${v.ok ? '' : 'bad'}" title="${(v.detail || []).join('; ')}">${v.ok ? '✓' : '✗'} ${k.replace(/_/g, ' ')}</span>`).join('');
+  $('fails').innerHTML = Object.entries(chk.rules).filter(([, v]) => !v.ok).map(([k, v]) => `${k}: ${(v.detail || []).join('; ')}`).join('<br>');
+  $('sum').textContent = `${chk.summary.posts} posts in ${chk.summary.slots} slots · ${chk.ok ? 'every rule satisfied' : 'rules failing'} · today ${tr.today}`;
+  $('stats').innerHTML = `<span><b>bank</b> ${bank.count} ideas</span><span><b>by sweep</b> ${Object.entries(bank.by_sweep).map(([k, v]) => k + ' ' + v).join(', ')}</span>
+    <span><b>planned by field</b> ${Object.entries(chk.summary.fields).map(([k, v]) => k + ' ' + v).join(', ')}</span><span><b>stages</b> ${Object.entries(tr.stages).map(([k, v]) => k + ' ' + v).join(', ')}</span>`;
+  const weeks = {}; for (const r of tr.rows) (weeks[weekOf(r.date)] = weeks[weekOf(r.date)] || []).push(r);
+  $('weeks').innerHTML = Object.entries(weeks).map(([w, rows]) => `<div class="box wk"><h3>week of ${w}</h3>${rows.map(r => r.idea ? `<div class="row">
+      <div><span class="muted">${DOW[(new Date(r.date + 'T00:00:00Z').getUTCDay() + 6) % 7]} ${r.date.slice(5)}</span> · <span class="t">${r.title}</span></div>
+      <div><span class="chip">${r.field}</span><span class="chip">${r.sweep.replace('_', ' ')}</span>${r.local ? '<span class="chip local">local</span>' : ''}<span class="chip">${r.role}</span>
+        <span class="chip ${r.fact_lock.status === 'locked' ? 'locked' : ''}">facts ${r.fact_lock.status} by ${r.fact_lock.by.slice(5)}</span><span class="chip">start by ${r.start_by.slice(5)}</span><span class="chip">${r.stage}</span></div>
+      ${r.overdue.length ? `<div class="over">${r.overdue.join('; ')}</div>` : ''}
+      ${r.film ? `<span class="muted">films/${r.film}</span>` : `<button data-brief="${r.date}">Brief</button> <button data-launch="${r.date}">Brief + board</button>`}</div>` : `<div class="row over">${r.date}: empty slot</div>`).join('')}</div>`).join('');
+  document.querySelectorAll('[data-brief],[data-launch]').forEach(b => b.onclick = async () => {
+    const r = await api('plan.brief', { quarter: q, date: b.dataset.brief || b.dataset.launch, launch: !!b.dataset.launch, runner: 'manual' }); msg(`wrote ${r.brief}`); load(); });
+}
+(async () => { const ls = await (await fetch('/api/plan.quarters', { method: 'POST', body: '{}' })).json();
+  const qs = (ls.result || []); $('q').innerHTML = qs.map(q => `<option>${q}</option>`).join('') || '<option value="">no calendar yet: plan.schedule</option>';
+  $('q').onchange = load; load(); setInterval(load, 15000); })();
+</script>
+</body>
+</html>

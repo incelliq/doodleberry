@@ -735,3 +735,52 @@ Each merge touched only its own film's folder. The run found two bugs, both fixe
 session had committed, and a hand-written ledger entry without metrics broke the ledger writer. A merge now refuses
 while the session runs or while the film's work is uncommitted. The claude runner is wired, but no Claude Code
 session was run in this test.
+
+## Content planner (plan 3.8)
+http://127.0.0.1:8770/plan (linked from Studio): the quarter's calendar by week, every spread rule with its verdict,
+the idea bank's counts, and each row's field, sweep, role, start-by date, fact-lock date and status and live stage,
+with **Brief** and **Brief + board** buttons. Files in `plan/` (in git: the studio's plan): `channel.json`,
+`ideas.json`, `<quarter>.json`.
+
+1. **Channel** (`plan.channel`): audience, topic fields, the locale for local stories, and the rules: posting days, the
+   weekly series (day, name, format), at most one post per field per week, days between posts in a field, local
+   stories per week, an analysis every N weeks, the tolerance for dated hooks, and lead and fact-lock days per sweep.
+2. **Sweeps** (`plan.sweep_prompt`): six research prompts for agents with web search: dated hooks (anniversaries,
+   international days, sky events, launches in the quarter, dates checked on official pages), recent developments
+   (with `fresh_until`), evergreen myths and questions (the series), tools, original analyses (data with its terms and
+   a published figure to check against) and local stories. Each asks for real sources the agent opened and nothing
+   invented, with research leads and cautions.
+3. **Idea bank** (`plan.ideas_add`, `plan.ideas`): ideas are briefs in waiting: a draft hook, angle, why now,
+   starting-point sources, research leads, cautions, field, sweep, format and score. Each is validated. Near-duplicates
+   are refused. Every cited URL is fetched: a source that does not exist (404, or a host that does not resolve) is
+   dropped, an idea left with none is refused, and the rest record "ok" or "blocked" (a site that refuses robots).
+4. **Schedule** (`plan.schedule`): dated hooks on their day (capped so each week keeps room for its series episode
+   and local story), the series slot, the analysis cadence, the local quota, then the open slots. An open slot goes to
+   a field with no post yet, then the least-used field, then the higher score; recent stories must still be fresh and
+   every idea must be startable by its lead time. Each row gets `start_by` and a `fact_lock` date: the day the film's
+   facts must be cleared by the fact gate (`ledger.add role=fact_gate verdict=cleared`).
+5. **Check** (`plan.check`): every rule, computed independently of the scheduler, so a hand-edited calendar is checked
+   the same way: slots filled, posts per week, topic diversity, field gap, local quota, analysis cadence, series
+   cadence, timeliness (dated hooks on the day, recent stories while fresh), lead times, a fact-lock date on every row,
+   an empty field getting the next open slot, no repeats, distinct topics (no two films on one subject in a quarter:
+   titles sharing two or more words and most of the shorter title, or title, angle and hook sharing most of their
+   words, with accents folded and plurals stripped), sources on every idea.
+6. **Brief and track**: `plan.brief` writes `films/<slug>/brief.md` from the idea (with `launch`, onto the production
+   board with its posting date: calendar to briefs to film sessions, feature map E24). `plan.track` reads the films
+   and the production registry and shows each row's stage (planned, briefed, in production, final ready, approved,
+   merged, posted), its fact-lock status from the film's ledger, and what is overdue. `plan.posted` records the link.
+
+Measured, for Q1 2027, planned on 2 November 2026: six research agents ran the six sweeps in parallel, taking 7 to 18
+minutes each, and returned 100 ideas: 20 dated hooks, 16 recent stories, 22 evergreen ideas (18 myths), 12 tools,
+12 analyses and 18 local stories. All passed validation and the duplicate check, and every source URL resolved.
+93 sources loaded; 3 refused automated requests and are recorded as "blocked". The agents reported what they dropped
+or demoted to research leads: pages they could not open, dates they could not confirm, and datasets whose licence
+did not allow reuse. The scheduler filled all 52 posting days (Mon, Wed, Fri, Sat). Each field got 8 to 10 posts;
+there were 14 dated hooks, 13 series episodes, 7 analyses, and at least one local story in every week. All 14 rules
+pass. Adding the topic rule caught four duplicate subjects across sweeps: perihelion, the reservoir cascades, the two
+monsoons, and Sri Lanka's kidney disease. A fifth, El Niño, was found once accents were folded. The rule errs on the
+side of caution: it also pairs two monsoon-wind ideas that are different films. Many ideas carry a Sri Lanka angle,
+so 35 of the 52 posts are local; the quota is a minimum, and the channel's rules can change that balance.
+`python -m dbe test` runs `planner.self_test` on a synthetic bank: the scheduler's quarter passes every rule, and five
+calendars broken on purpose are caught by the right rule.
+

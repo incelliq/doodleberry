@@ -1592,6 +1592,178 @@ def prod_merge(film):
         return {"film": film, "state": "merged", "files": changed}
 
 
+# ---------------- content planner (plan 3.8) ----------------
+def _plan_bank():
+    return _json(ROOT / "plan" / "ideas.json", {"note": "idea bank (plan 3.8): sweeps add ideas; the planner schedules them", "ideas": []})
+
+
+def _plan_save(name, obj):
+    (ROOT / "plan").mkdir(exist_ok=True); (ROOT / "plan" / name).write_text(json.dumps(obj, indent=1, ensure_ascii=False) + "\n")
+
+
+def _plan_cal(quarter):
+    c = _json(ROOT / "plan" / f"{quarter}.json")
+    if not c:
+        raise FileNotFoundError(f"no calendar for {quarter}: plan.schedule first")
+    return c
+
+
+@command("plan.quarters")
+def plan_quarters():
+    """Quarters that have a calendar in plan/, newest first."""
+    return sorted((f.stem for f in (ROOT / "plan").glob("*-Q*.json")), reverse=True)
+
+
+@command("plan.channel", update=("object", "fields to change (name, audience, fields, locale, languages, rules)", None))
+def plan_channel(update=None):
+    """The channel the content planner plans for (plan 3.8): audience, topic fields, locale for the local quota, and the
+    spread rules (posting days, the weekly series, topic diversity, field gap, local quota, analysis cadence, lead and
+    fact-lock days per sweep). plan/channel.json."""
+    from . import planner as PL
+    ch = PL.channel()
+    if update:
+        for k, v in update.items():
+            ch[k] = {**ch[k], **v} if isinstance(v, dict) and isinstance(ch.get(k), dict) else v
+        _plan_save("channel.json", ch)
+    return ch
+
+
+@command("plan.sweep_prompt", sweep=("string", "dated_hook | recent | evergreen | tool | analysis | local"), quarter=("string", "e.g. 2027-Q1"),
+         count=("integer", "ideas to ask for", 20))
+def plan_sweep_prompt(sweep, quarter, count=20):
+    """The research prompt for one sweep (plan 3.8), for a research agent with web search: what to find for this
+    channel and quarter, the sourcing rules (real, opened sources; nothing invented) and the exact JSON to return,
+    which plan.ideas_add accepts."""
+    from . import planner as PL
+    if sweep not in PL.SWEEPS:
+        raise ValueError(f"sweep is one of {PL.SWEEPS}")
+    return {"sweep": sweep, "prompt": PL.sweep_prompt(sweep, quarter, PL.channel(), count)}
+
+
+@command("plan.ideas_add", ideas=("array", "ideas in the sweep schema (plan.sweep_prompt)"), by=("string", "who found them (agent or person)"),
+         check_urls=("boolean", "fetch every cited URL and refuse sources that do not exist", True))
+def plan_ideas_add(ideas, by, check_urls=True):
+    """Add ideas to the bank (plan 3.8): each is checked (fields, sweep, a source URL, a date for dated hooks,
+    fresh_until for recent stories, data and terms for analyses), near-duplicates of banked ideas are refused, and
+    with check_urls every cited URL is fetched: an idea whose sources are all missing (404, or no such host) is
+    refused, a missing source is dropped from an idea that has others, and each source records what the check saw."""
+    from . import planner as PL
+    rej0 = []
+    if check_urls:
+        st = PL.check_sources(ideas); keep = []
+        for x in ideas:
+            srcs = [dict(s, checked=st.get(s.get("url"), "unchecked")) for s in x.get("sources", []) if isinstance(s, dict)]
+            good = [s for s in srcs if s["checked"] != "missing"]
+            data_missing = isinstance(x.get("data"), dict) and st.get(x["data"].get("url")) == "missing"
+            if not good or data_missing:
+                rej0.append({"title": x.get("title"), "why": ["sources not found: " + ", ".join(s["url"] for s in srcs if s["checked"] == "missing")]}); continue
+            keep.append({**x, "sources": good})
+        ideas = keep
+    bank = _plan_bank(); added, rejected = PL.add_ideas(bank, ideas, PL.channel(), by); rejected = rej0 + rejected
+    _plan_save("ideas.json", bank)
+    return {"added": len(added), "ids": added, "rejected": rejected, "bank": len(bank["ideas"])}
+
+
+@command("plan.ideas", sweep=("string", "filter", ""), field=("string", "filter", ""), status=("string", "filter", ""))
+def plan_ideas(sweep="", field="", status=""):
+    """The idea bank, filtered, with counts by sweep, field and status."""
+    from collections import Counter
+    ideas = [i for i in _plan_bank()["ideas"] if (not sweep or i["sweep"] == sweep) and (not field or i["field"] == field) and (not status or i["status"] == status)]
+    return {"count": len(ideas), "by_sweep": dict(Counter(i["sweep"] for i in ideas)), "by_field": dict(Counter(i["field"] for i in ideas)),
+            "by_status": dict(Counter(i["status"] for i in ideas)), "ideas": ideas}
+
+
+@command("plan.schedule", quarter=("string", "e.g. 2027-Q1"), planned_on=("string", "the day the plan is made (lead times count from it; default today)", ""))
+def plan_schedule(quarter, planned_on=""):
+    """Make the quarter's calendar (plan 3.8): dated hooks on their day, the weekly series, the analysis cadence, the
+    local quota, then the rest, an empty field getting the next slot; each row with a start-by date and a fact-lock
+    date. Writes plan/<quarter>.json (ideas used are marked planned) and returns plan.check's verdict."""
+    import datetime as _dt
+    from . import planner as PL
+    ch = PL.channel(); bank = _plan_bank(); po = _dt.date.fromisoformat(planned_on) if planned_on else _dt.date.today()
+    old = _json(ROOT / "plan" / f"{quarter}.json")
+    if old and any(r.get("film") for r in old["rows"]):
+        raise ValueError(f"{quarter} already has briefed rows; edit it rather than re-planning")
+    for i in bank["ideas"]:   # re-planning frees this quarter's ideas
+        if i["status"] == "planned" and i.get("quarter") == quarter:
+            i["status"] = "idea"
+    rows = PL.schedule(quarter, bank, ch, po)
+    used = {r["idea"] for r in rows if r.get("idea")}
+    for i in bank["ideas"]:
+        if i["id"] in used:
+            i["status"] = "planned"; i["quarter"] = quarter
+    cal = {"quarter": quarter, "planned_on": po.isoformat(), "channel": ch["name"], "rules": ch["rules"], "rows": rows}
+    _plan_save(f"{quarter}.json", cal); _plan_save("ideas.json", bank)
+    return PL.check(cal, bank, ch)
+
+
+@command("plan.check", quarter=("string", "e.g. 2027-Q1"))
+def plan_check(quarter):
+    """Check a quarter's calendar against every spread rule (plan 3.8), independently of how it was made: slots
+    filled, posts per week, topic diversity, field gap, local quota, analysis cadence, series cadence, dated hooks on
+    their day and recent stories while fresh, lead times, a fact-lock date on every row, an empty field getting the
+    next slot, no repeats, sources on every idea."""
+    from . import planner as PL
+    return PL.check(_plan_cal(quarter), _plan_bank(), PL.channel())
+
+
+@command("plan.track", quarter=("string", "e.g. 2027-Q1"), today=("string", "YYYY-MM-DD (default today)", ""))
+def plan_track(quarter, today=""):
+    """The live tracker (plan 3.8): every row with where it really is (planned, briefed, in production, final ready,
+    approved, merged, posted, from the films and the production registry), its fact-lock status (locked once the
+    film's ledger has a cleared fact gate) and what is overdue."""
+    from . import planner as PL, production as PR
+    reg = {}
+    if (PR.reg_dir() / "registry.json").exists():
+        with PR.registry(write=False) as r:
+            reg = r["films"]
+    rows = PL.track(_plan_cal(quarter), _plan_bank(), reg, _today(today))
+    from collections import Counter
+    return {"quarter": quarter, "today": _today(today).isoformat(), "stages": dict(Counter(r["stage"] for r in rows)),
+            "overdue": [r for r in rows if r["overdue"]], "rows": rows}
+
+
+@command("plan.brief", quarter=("string", "e.g. 2027-Q1"), date=("string", "the row's posting date"),
+         launch=("boolean", "also put it on the production board (prod.plan) with its posting date", False),
+         runner=("string", "production runner when launching: claude | manual", "claude"))
+def plan_brief(quarter, date, launch=False, runner="claude"):
+    """Turn a calendar row into a film brief (plan 3.8): films/<slug>/brief.md with the hook (draft), angle, why now,
+    starting-point sources, research leads, cautions, start-by and fact-lock dates; optionally onto the production
+    board (E24: calendar -> briefs -> film sessions)."""
+    from . import planner as PL
+    cal = _plan_cal(quarter); bank = _plan_bank(); ch = PL.channel()
+    row = next((r for r in cal["rows"] if r["date"] == date and r.get("idea")), None)
+    if not row:
+        raise ValueError(f"no planned row on {date}")
+    idea = next(i for i in bank["ideas"] if i["id"] == row["idea"])
+    film = row.get("film") or PL.slug(idea["title"])
+    d = FILMS / film
+    if (d / "script.json").exists():
+        raise FileExistsError(f"films/{film} already has a script")
+    d.mkdir(parents=True, exist_ok=True); text = PL.brief_md(idea, row, ch); (d / "brief.md").write_text(text)
+    row["film"] = film; idea["status"] = "briefed"; idea["film"] = film
+    _plan_save(f"{quarter}.json", cal); _plan_save("ideas.json", bank)
+    out = {"film": film, "brief": f"films/{film}/brief.md"}
+    if launch:
+        out["production"] = prod_plan(film, date, runner=runner, brief=text)
+    return out
+
+
+@command("plan.posted", quarter=("string", "e.g. 2027-Q1"), date=("string", "the row's posting date"), url=("string", "where it was posted"))
+def plan_posted(quarter, date, url):
+    """Mark a calendar row as posted, with its link (the tracker's last stage)."""
+    cal = _plan_cal(quarter); row = next((r for r in cal["rows"] if r["date"] == date and r.get("idea")), None)
+    if not row:
+        raise ValueError(f"no planned row on {date}")
+    row["posted"] = {"url": url, "at": _today().isoformat()}; _plan_save(f"{quarter}.json", cal)
+    bank = _plan_bank()
+    for i in bank["ideas"]:
+        if i["id"] == row["idea"]:
+            i["status"] = "posted"
+    _plan_save("ideas.json", bank)
+    return row
+
+
 # ---------------- storyboard strip and animatic (plan 3.2) ----------------
 def _board_frames(name):
     """one representative moment per shot: a moment into its first line (the picture as it speaks), else its middle"""
@@ -1964,6 +2136,11 @@ def test_golden(update=False, film=""):
         bad, meas = AO.self_test(_json(ROOT / "cast" / "generated" / "ravi.puppet.json"), _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"])
         failed += 1 if bad else 0
         results.append({"actout": "retarget round trips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "planner":   # content planner (plan 3.8): the scheduler's quarter passes the independent rule check
+        from . import planner as PLN
+        bad, meas = PLN.self_test()
+        failed += 1 if bad else 0
+        results.append({"planner": "spread rules on a synthetic quarter; broken calendars caught", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "production":   # production orchestrator (plan 3.7): worktrees, checkpoints, owner controls, merge
         from . import production as PRD
         bad, meas = PRD.self_test(ROOT / "out")

@@ -1,0 +1,3738 @@
+{
+ "note": "idea bank (plan 3.8): sweeps add ideas; the planner schedules them",
+ "ideas": [
+  {
+   "id": "I001",
+   "title": "The mosquitoes Colombo released on purpose",
+   "sweep": "local",
+   "field": "life & health",
+   "hook": "In 2020, Sri Lanka let mosquitoes loose in Colombo on purpose, to fight dengue.",
+   "angle": "How Wolbachia bacteria carried by Aedes aegypti block dengue virus inside the mosquito and spread through the wild population without genetic modification.",
+   "why_now": "Sri Lanka had a heavy dengue year in 2026 (over 93,000 cases by late August), and the Northeast Monsoon rains of December to early January come just before the quarter.",
+   "sources": [
+    {
+     "url": "https://worldmosquitoprogram.org/en/colombo",
+     "title": "Colombo | World Mosquito Program",
+     "date": "2023",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2026/08/22/dengue-cases-in-sri-lanka-surpass-93-000",
+     "title": "Dengue Cases In Sri Lanka Surpass 93,000",
+     "date": "2026-08-22",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Look for a peer-reviewed or MoH evaluation of dengue incidence in the CMC-D1 and Nugegoda release areas against control areas; the WMP page reports only preliminary establishment results (data updated June 2023).",
+    "Confirm the release dates (pages differ between 2018 and 2020-2021) and the 20 km2 / 240,000 residents coverage.",
+    "Get the year-end 2026 NDCU case and death totals.",
+    "Check whether the planned Western Province expansion has gone ahead."
+   ],
+   "cautions": [
+    "Don't claim the releases reduced dengue in Colombo; no outcome data was found.",
+    "Dengue deaths are a sensitive health topic; give symptoms and when to see a doctor only from MoH or WHO guidance.",
+    "WMP is the programme's own operator, not an independent evaluator."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I002",
+   "title": "The kidney disease with no known cause",
+   "sweep": "local",
+   "field": "life & health",
+   "hook": "In parts of Sri Lanka's dry zone, farmers' kidneys are failing, and doctors still can't say why.",
+   "angle": "How scientists hunt for the cause of a disease (CKDu) that isn't explained by diabetes or high blood pressure: water, metals, agrochemicals, heat, and why no single culprit has been proven.",
+   "why_now": "No date hook; it's a long-running local health question. It fits the dry-zone Maha harvest months and pairs with this quarter's water and drought stories.",
+   "sources": [
+    {
+     "url": "https://rti.org/rti-press-publication/chronic-kidney-disease-unknown-etiology-sri-lanka-quest-understanding-global-implications",
+     "title": "Chronic kidney disease of unknown etiology in Sri Lanka: Quest for understanding and global implications",
+     "date": "2014-05",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find recent reviews (2023-2026) of the leading hypotheses (groundwater hardness and fluoride, heavy metals, agrochemicals, heat stress and dehydration).",
+    "Get current prevalence figures by district from the Ministry of Health or published surveys.",
+    "Note the similar hot spots the RTI brief names in Central America and South Asia."
+   ],
+   "cautions": [
+    "The cause is contested. Don't present any single cause (for example glyphosate or arsenic) as settled; use myth_vs_data framing with care.",
+    "This is a sensitive health topic for affected communities; avoid fear-based framing and individual patient stories.",
+    "The RTI brief dates from 2014, so newer evidence is needed."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I003",
+   "title": "Why Sri Lanka needed its own antivenom",
+   "sweep": "local",
+   "field": "life & health",
+   "hook": "For decades, Sri Lankan snakebite victims were treated with antivenom made from Indian snakes.",
+   "angle": "How antivenom is made (venom, horses, antibodies), and why venom differs from region to region, so an antivenom raised against Indian snakes can work poorly on Sri Lankan Russell's vipers and doesn't cover the hump-nosed viper at all.",
+   "why_now": "No date hook: snakebite is a year-round rural hazard and paddy work peaks during the Maha season. Check whether the Sri Lanka-specific antivenom has an update before filming.",
+   "sources": [
+    {
+     "url": "https://www.aljazeera.com/features/2017/2/18/sri-lankas-antivenom-leap-forward",
+     "title": "Sri Lanka's antivenom leap forward",
+     "date": "2017-02-18",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find the current status of the AVRI / Instituto Clodomiro Picado / University of Peradeniya polyspecific antivenom (trial results, approval, rollout, local horse facility).",
+    "Check the 2016 community survey estimate (over 80,000 bites, 30,000 envenomings, 400 deaths a year) against the published paper.",
+    "Look for peer-reviewed evidence on geographic venom variation in Russell's viper (for example PMC8092856, PMC3936006)."
+   ],
+   "cautions": [
+    "Snakebite first aid must follow current WHO and Sri Lankan medical guidance: no tourniquets, cutting or sucking.",
+    "Status information is from 2017; don't imply the new antivenom is in routine use without confirmation.",
+    "Draw the snakes as original stylised designs, with no real injury imagery."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I004",
+   "title": "Your cinnamon might not be cinnamon",
+   "sweep": "local",
+   "field": "plants & farming",
+   "hook": "Most of the 'cinnamon' sold in shops comes from a different tree, and its chemistry is different.",
+   "angle": "True Ceylon cinnamon (Cinnamomum verum) and cassia are different plants. Cassia can contain up to about 1% coumarin, while Ceylon cinnamon has only traces, and you can tell the sticks apart by how the bark rolls.",
+   "why_now": "It follows the year-end baking season, and cinnamon is one of Sri Lanka's signature crops. The topic isn't tied to a date.",
+   "sources": [
+    {
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3385612/",
+     "title": "Assessment of Coumarin Levels in Ground Cinnamon Available in the Czech Retail Market",
+     "date": "2012-06-18",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the coumarin figures (up to 1% in cassia, about 0.004% in Ceylon) from primary sources, and check the current EFSA tolerable daily intake.",
+    "Get Sri Lanka's share of world true-cinnamon production from official export data; trade-press figures conflict (22% vs 80%).",
+    "Look into how cinnamon is peeled and quilled (thin layered bark) for the visuals."
+   ],
+   "cautions": [
+    "Don't overstate the health risks of cassia, or any health benefits of cinnamon; avoid medical advice.",
+    "Sri Lankan trade-press sources are promotional; rely on food-safety agencies."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I005",
+   "title": "The ancient lakes that pass water down a chain",
+   "sweep": "local",
+   "field": "plants & farming",
+   "hook": "Long before pumps, Sri Lankan farmers built chains of lakes where each one fed the next.",
+   "angle": "How the cascaded tank-village system (ellanga gammana) stores monsoon runoff in linked tanks across a micro-catchment, so water used upstream flows on to the next village's tank, buffering both drought and flood.",
+   "why_now": "Sri Lanka's 2026 El Niño drought (dried-up tanks, failed crops) and the Maha season brought forward make water storage a live topic this quarter.",
+   "sources": [
+    {
+     "url": "https://www.ft.lk/Agriculture/Sri-Lanka-designated-as-a-globally-important-agricultural-heritage-site/31-653552",
+     "title": "Sri Lanka designated as a globally important agricultural heritage site",
+     "date": "2018-04-20",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2026/08/17/major-el-ni%c3%b1o-impact-on-sri-lanka-in-coming-months",
+     "title": "Major El Niño Impact on Sri Lanka in Coming Months",
+     "date": "2026-08-17",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the FAO GIAHS dossier for the Palugaswewa cascades (the designation year is given as both 2017 and 2018).",
+    "Check the 226 plant species figure for the kattakaduwa, bund and tree belt.",
+    "Find hydrology studies on how cascades recycle drainage water and recharge groundwater."
+   ],
+   "cautions": [
+    "Avoid romanticising: the sources list low farm incomes, youth migration and tank degradation as current threats.",
+    "Dating claims for 'ancient' tanks vary; verify before stating an age."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)"
+  },
+  {
+   "id": "I006",
+   "title": "The year Sri Lanka went organic overnight",
+   "sweep": "local",
+   "field": "plants & farming",
+   "hook": "In 2021, a whole country banned chemical fertiliser almost overnight. Here's what happened to the rice.",
+   "angle": "Why switching a nation's farms to organic inputs in a single season cut yields: what nitrogen does for a rice plant, and why organic sources can't simply replace it at the same speed and scale.",
+   "why_now": "The quarter marks five years since the Maha 2021/22 harvest, the first full season under the ban.",
+   "sources": [
+    {
+     "url": "https://thebreakthrough.org/issues/food/sri-lankas-experiment-with-organic-farming-fails-miserably",
+     "title": "Sri Lanka's Experiment with Organic Farming Fails Miserably",
+     "date": "2022-03-08",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get official Department of Census and Statistics paddy production for Maha 2020/21 against Maha 2021/22.",
+    "Find the peer-reviewed yield estimates: Polonnaruwa farm study (24.5% reduction), the satellite / district working paper (over 30% Maha decline), and the Vavuniya crop-cut comparison; estimates range widely.",
+    "Confirm the ban dates (announced April/May 2021, partially lifted November 2021)."
+   ],
+   "cautions": [
+    "This is politically charged: present data, not blame, and don't attack organic farming in general.",
+    "The Breakthrough Institute is an advocacy think tank; use official statistics and peer-reviewed numbers in the script.",
+    "Yield-loss figures conflict (roughly 20% to over 50%); give ranges with their sources."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I007",
+   "title": "Where did Sri Lanka's blue whales go?",
+   "sweep": "local",
+   "field": "animals & ecology",
+   "hook": "The biggest animals on Earth used to gather off Mirissa every winter. Lately, almost nobody sees them.",
+   "angle": "Sri Lanka has its own blue whale population, with a distinctive 'Sri Lankan' song. The film explains how scientists track whales they can't see (song recordings, fluke photos, transects), and why a 2024 survey suggests sightings fell by more than 90%.",
+   "why_now": "December to April is the south-coast blue whale season, with encounters historically peaking in December and April. The Fridtjof Nansen survey results may also be out.",
+   "sources": [
+    {
+     "url": "https://news.mongabay.com/2025/04/blue-whale-decline-in-sri-lanka-tied-to-climate-and-human-activity/",
+     "title": "Blue whale decline in Sri Lanka tied to climate and human activity",
+     "date": "2025-04-30",
+     "checked": "ok"
+    },
+    {
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8062560/",
+     "title": "Multiple pygmy blue whale acoustic populations in the Indian Ocean: whale song identifies a possible new population",
+     "date": "2021-04-22",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the 2024 NARA transect study itself and any 2025-2026 sightings data.",
+    "Find the results of the Fridtjof Nansen coastal survey.",
+    "Check the Liyanage et al. 2023 seasonal-occurrence paper (J. Mar. Sci. Eng. 11(8):1523), which couldn't be opened here.",
+    "Check whether Seychelles photo-ID matches have been confirmed."
+   ],
+   "cautions": [
+    "The cause of the decline is speculative (warming, shipping, tourism disturbance, X-Press Pearl); don't assign blame.",
+    "A similar disappearance in 2011-2012 reversed, so the drop may be temporary.",
+    "729 sightings is not a population count; whales were counted more than once.",
+    "Use original drawn whales, not tour footage."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I008",
+   "title": "Why elephants and farmers keep colliding",
+   "sweep": "local",
+   "field": "animals & ecology",
+   "hook": "In 2025, Sri Lanka lost 397 wild elephants, and most of those deaths were linked to conflict with people.",
+   "angle": "Why human-elephant conflict happens (shrinking ranges, crops as easy food, fences that move the problem), and what the figures on gunshots, electrocution and train strikes show about where it happens.",
+   "why_now": "The full-year 2026 elephant death figures should come out around January, and Cabinet has approved drafting a new national action plan.",
+   "sources": [
+    {
+     "url": "https://www.dailymirror.lk/breaking-news/397-elephants-die-in-Sri-Lanka-in-2025-human-elephant-conflict-a-major-cause/108-328217",
+     "title": "397 elephants die in Sri Lanka in 2025, human-elephant conflict a major cause",
+     "date": "2025-12-18",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get final DWC figures for 2025 and 2026 (sources say 2023 was the worst year, at 488).",
+    "Find the human death counts for the same years.",
+    "Look for peer-reviewed evidence on which measures work (community fences, beehive fences, land-use planning)."
+   ],
+   "cautions": [
+    "Human deaths make this a sensitive topic; show no gore and no victim stories.",
+    "Hakka patas and poisoning are illegal methods; describe them without showing how.",
+    "The 397 figure is a mid-December partial count, and some outlets wrongly call it a record."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)"
+  },
+  {
+   "id": "I009",
+   "title": "Flamingos vs power lines in Mannar",
+   "sweep": "local",
+   "field": "animals & ecology",
+   "hook": "Every winter thousands of pink flamingos land in Mannar, and some never see the wire in front of them.",
+   "angle": "Why big, long-necked flocking birds are so bad at dodging cables (wingspan, low manoeuvrability, flying at dawn and dusk), and how wetlands and energy projects can coexist.",
+   "why_now": "Greater flamingos winter in Mannar from about November to March, which covers the whole quarter, and three were killed by power lines in 2026.",
+   "sources": [
+    {
+     "url": "https://news.mongabay.com/short-article/2026/06/power-lines-threaten-sri-lankas-iconic-migrant-flamingos/",
+     "title": "Power lines threaten Sri Lanka's iconic migrant flamingos",
+     "date": "2026-06-22",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.sundaytimes.lk/220123/news/long-legged-gregarious-pink-birds-colour-the-landscape-469705.html",
+     "title": "Long-legged gregarious pink birds colour the landscape",
+     "date": "2022-01-23",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find evidence on bird-flight diverters and line marking (the IUCN power-line collision report the Mongabay piece cites).",
+    "Get the migration timing and flyway route from ornithologists (University of Colombo, Field Ornithology Group).",
+    "Check the status of proposed Mannar wind projects near Vankalai Sanctuary."
+   ],
+   "cautions": [
+    "Keep it balanced: renewable energy isn't the villain, and placement and mitigation are the point.",
+    "Show no dead-bird imagery.",
+    "Sources disagree on whether Mannar is the first or last stop on the flyway; check with ornithologists."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)"
+  },
+  {
+   "id": "I010",
+   "title": "The gravity hole south of Sri Lanka",
+   "sweep": "local",
+   "field": "space & physics",
+   "hook": "Just south of Sri Lanka, the sea surface sits more than 100 metres lower than it 'should'.",
+   "angle": "Why gravity isn't the same everywhere on Earth: the Indian Ocean Geoid Low, the weakest-gravity patch on the planet, and the IISc model that traces it to hot, light mantle material 300-900 km down.",
+   "why_now": "No date hook: it's a surprising local superlative that suits a curiosity slot.",
+   "sources": [
+    {
+     "url": "https://theprint.in/science/did-you-know-theres-a-giant-gravity-hole-in-indian-ocean-iisc-scientists-may-have-found-out-why/1654654",
+     "title": "Did you know there's a giant 'gravity hole' in Indian Ocean? IISc scientists may have found out why",
+     "date": "2023-07-04",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read Pal & Ghosh (2023) in Geophysical Research Letters for the mechanism and the roughly 20-million-year age.",
+    "Check how the geoid is measured (satellite gravity missions such as GRACE and GOCE).",
+    "Confirm the 1948 Vening Meinesz discovery and the 3 million km2 extent."
+   ],
+   "cautions": [
+    "The mechanism is model-based and debated (plume vs slab remnant); say 'may'.",
+    "'Gravity hole' is a nickname: ships and people aren't noticeably lighter there, so avoid exaggeration.",
+    "Some coverage contradicts itself about plumes; follow the paper."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I011",
+   "title": "The orbit named after a Colombo resident",
+   "sweep": "local",
+   "field": "space & physics",
+   "hook": "The writer who imagined satellites parked in one spot in the sky spent much of his life in Sri Lanka.",
+   "angle": "Why an orbit about 35,786 km up takes exactly one day, so a satellite seems to hover over the same spot, and how Arthur C. Clarke's 1945 'Extra-Terrestrial Relays' article popularised the idea of using it for global communications.",
+   "why_now": "Clarke moved to Colombo in 1956 and died there on 19 March 2008, so the anniversary of his death falls in the quarter (a non-round year). The story pairs naturally with Raavana-1.",
+   "sources": [
+    {
+     "url": "https://lakdiva.org.lk/clarke/1945ww/",
+     "title": "The 1945 Proposal by Arthur C. Clarke for Geostationary Satellite Communications",
+     "date": "1945",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.todayifoundout.com/index.php/2024/09/the-surprisingly-interesting-story-behind-why-the-geosynchronous-region-around-the-earth-is-called-the-clark-orbit/",
+     "title": "The Surprisingly Interesting Story Behind Why the Geosynchronous Region Around the Earth is Called the Clark Orbit",
+     "date": "2024-09-12",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm Clarke's Sri Lanka dates (moved to Colombo 1956; died 19 March 2008) against a primary obituary.",
+    "Credit his predecessors (Potočnik / Noordung's book, dated 1928 or 1929 depending on the source) and check the claim about the 1968 Sri Lanka Broadcasting Corporation reminder.",
+    "Get the current count of geostationary satellites (the page says over 500 active in 2021)."
+   ],
+   "cautions": [
+    "Clarke didn't invent the orbit; present him as popularising its use for communications.",
+    "Draw an original stylised writer or no likeness at all; don't use photos or film imagery (2001 is copyrighted)."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I012",
+   "title": "Did a meteorite bring alien algae to Polonnaruwa?",
+   "sweep": "local",
+   "field": "space & physics",
+   "hook": "In 2012, a team claimed a rock that fell in Sri Lanka contained fossils from space.",
+   "angle": "How scientists test an extraordinary claim: confirming a rock is a meteorite, ruling out contamination (paddy water full of diatoms), and why the Polonnaruwa diatom claim didn't convince experts.",
+   "why_now": "The reported fall was on 29 December 2012, just before the quarter, and January opens the year's meteor-shower season.",
+   "sources": [
+    {
+     "url": "https://www.tpr.org/science-technology/2013-03-11/claims-of-a-meteorites-ancient-aquatic-fossils-spark-debate",
+     "title": "Claims Of A Meteorite's Ancient Aquatic Fossils Spark Debate",
+     "date": "2013-03-11",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check the Meteoritical Bulletin database for whether any Polonnaruwa fall was ever registered.",
+    "Look for later independent analyses of the samples.",
+    "Explain what diatoms are and why Earth-like species point to contamination."
+   ],
+   "cautions": [
+    "The claim's authors are public researchers; criticise the evidence, not the people.",
+    "Avoid 'debunked' unless a formal refutation is found; say 'not accepted'.",
+    "Check the timing of any meteor shower before using it as a hook."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)"
+  },
+  {
+   "id": "I013",
+   "title": "One island, two monsoons",
+   "sweep": "local",
+   "field": "earth & climate",
+   "hook": "Sri Lanka gets two monsoons from opposite directions, and this year El Niño is meddling with both.",
+   "angle": "Why the winds over Sri Lanka reverse twice a year (southwest May-September, northeast December-February), why the central hills make one side wet while the other stays dry, and how El Niño shifts the pattern.",
+   "why_now": "The Northeast Monsoon peaks in December-January. Sri Lanka's Department of Meteorology says the 2026 El Niño could be the strongest in nearly 75 years.",
+   "sources": [
+    {
+     "url": "https://newsfirst.lk/2026/08/17/major-el-ni%c3%b1o-impact-on-sri-lanka-in-coming-months",
+     "title": "Major El Niño Impact on Sri Lanka in Coming Months",
+     "date": "2026-08-17",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the Department of Meteorology's official four-season definition (two monsoons and two inter-monsoons) and the Maha/Yala season months.",
+    "Check how the 2026-27 Northeast Monsoon actually turned out (rainfall anomalies, floods).",
+    "Find a reliable explainer of the orographic rain-shadow effect of the central highlands."
+   ],
+   "cautions": [
+    "Forecasts change; verify what actually happened before narrating it.",
+    "Monsoon month boundaries differ between sources; use the Met Department's."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)"
+  },
+  {
+   "id": "I014",
+   "title": "How Cyclone Ditwah turned rain into landslides",
+   "sweep": "local",
+   "field": "earth & climate",
+   "hook": "In five days, Cyclone Ditwah dropped so much rain that mountainsides in Sri Lanka slid away.",
+   "angle": "Why the damage came mostly from rain rather than wind: saturated slopes on steep central highlands, runoff funnelled into crowded floodplains, and what attribution scientists could and couldn't say about warming's role.",
+   "why_now": "The quarter follows the first anniversary (late November), and the Northeast Monsoon brings a fresh landslide-risk season to the hills.",
+   "sources": [
+    {
+     "url": "https://www.worldweatherattribution.org/?p=7622",
+     "title": "Increasing heavy rainfall and extreme flood heights in a warming climate threaten densely populated regions across Sri Lanka and the Malacca Strait",
+     "date": "2025-12-10",
+     "checked": "blocked"
+    },
+    {
+     "url": "https://www.citizen.digital/news/death-toll-from-sri-lanka-floods-landslides-rises-to-334-disaster-agency-n373822",
+     "title": "Death toll from Sri Lanka floods, landslides rises to 334: disaster agency",
+     "date": "2025-11-30",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the final official death toll and rainfall totals from the DMC and the Department of Meteorology (tolls rose quickly in reporting).",
+    "Get NBRO guidance on landslide warning signs.",
+    "WWA: 1-in-30-year event, 28-160% more intense, with no overall attribution conclusion because the models couldn't match observed trends."
+   ],
+   "cautions": [
+    "This is a recent mass-casualty disaster: be respectful, show no victims, and don't make it entertaining.",
+    "Don't overclaim climate attribution; the WWA explicitly stopped short of quantifying it.",
+    "Include safety messaging only from official agencies."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I015",
+   "title": "The trees that slow a tsunami",
+   "sweep": "local",
+   "field": "earth & climate",
+   "hook": "Sri Lanka tried planting mangroves after the 2004 tsunami, and only about 3% of the saplings survived.",
+   "angle": "How mangroves protect coasts and store carbon, and why Sri Lanka switched from planting saplings to helping mangroves regrow naturally (restoring water flow), work that became a UN World Restoration Flagship.",
+   "why_now": "World Wetlands Day falls on 2 February, and the programme is working toward a 10,000-hectare target for 2030.",
+   "sources": [
+    {
+     "url": "https://srilanka.un.org/en/262045-mangrove-regeneration-sri-lanka-recognized-one-seven-un-world-restoration-flagships",
+     "title": "Mangrove Regeneration in Sri Lanka recognized as one of seven UN World Restoration Flagships",
+     "date": "2024-02-16",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find evidence on how much mangroves reduce wave energy (keep claims about stopping tsunamis modest).",
+    "Get current figures on restored hectares (about 500 ha since 2015, per the UN page).",
+    "Check the claim that Sri Lanka was the first nation to protect all its mangroves in 2015; it is unverified."
+   ],
+   "cautions": [
+    "The 2004 tsunami killed over 30,000 people in Sri Lanka; treat it respectfully.",
+    "Don't claim mangroves fully stop tsunamis.",
+    "The UN page mentions a celebrity announcer; leave that out."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)"
+  },
+  {
+   "id": "I016",
+   "title": "Steel made by the monsoon wind",
+   "sweep": "local",
+   "field": "tech & computing",
+   "hook": "More than a thousand years ago, Sri Lankans made steel using nothing but the wind.",
+   "angle": "How furnaces built on west-facing ridges at Samanalawewa used steady monsoon winds blowing over their front walls to draw air in and reach smelting temperatures, and how replica tests produced high-carbon steel.",
+   "why_now": "No date hook: it pairs with the quarter's monsoon stories and makes a striking local history-of-technology piece.",
+   "sources": [
+    {
+     "url": "https://archive.archaeology.org/9609/newsbriefs/srilanka.html",
+     "title": "Wind-Powered Furnaces",
+     "date": "1996-09",
+     "checked": "ok"
+    },
+    {
+     "url": "https://csmonitor.com/1996/0116/16032.html",
+     "title": "How Sri Lanka Used Wind to Make Steel",
+     "date": "1996-01-16",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read Juleff, G. (1996) 'An ancient wind-powered iron smelting technology in Sri Lanka', Nature 379, 60-63, for the airflow mechanism and dates.",
+    "Reconcile the site counts (41 furnaces at one site; 139 ironworking sites, 77 of them wind-based).",
+    "Treat the link to Damascus steel as unverified; check it before mentioning it."
+   ],
+   "cautions": [
+    "The Damascus-blade link is speculative; leave it out or flag it clearly.",
+    "Explain the aerodynamics accurately (a pressure difference over the wall) rather than 'wind blows into the furnace'."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I017",
+   "title": "Sri Lanka's first satellite was the size of a lunchbox",
+   "sweep": "local",
+   "field": "tech & computing",
+   "hook": "Sri Lanka's first satellite was a 10 cm cube built in about a year.",
+   "angle": "How a CubeSat works (standard 10 cm units, ride-share launch, release from the ISS, photos and a ground station), told through Raavana-1, built by two Arthur C. Clarke Institute engineers at Kyutech for the BIRDS-3 project.",
+   "why_now": "No date hook: it pairs with the Clarke orbit story and the growth of small satellites.",
+   "sources": [
+    {
+     "url": "https://iss.jaxa.jp/en/kiboexp/news/190625_jssod11.html",
+     "title": "Four CubeSats successfully deployed from \"Kibo\"!",
+     "date": "2019-06-25",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the launch (Cygnus NG-11, April 2019), deployment (17 June 2019), mass (about 1.05 kg) and mission end date.",
+    "Check whether Sri Lanka has launched or planned follow-up satellites.",
+    "Look into the five mission objectives and what the camera actually captured."
+   ],
+   "cautions": [
+    "Name the engineers only as public institutional figures, and don't draw them as likenesses.",
+    "Don't use Raavana mythology imagery in a way that could offend; keep it to the satellite."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I018",
+   "title": "Teaching an AI to speak Sinhala",
+   "sweep": "local",
+   "field": "tech & computing",
+   "hook": "Most chatbots are fluent in English and struggle with Sinhala. Here's how researchers in Moratuwa are changing that.",
+   "angle": "Why AI models handle 'low-resource' languages poorly (too little text, tokenizers that split Sinhala into fragments), and how SinLlama adds Sinhala tokens and continues training Llama-3-8B on 10 million Sinhala sentences.",
+   "why_now": "The SinLlama paper was revised in August 2026, and the model is public; local-language AI is a growing story.",
+   "sources": [
+    {
+     "url": "https://arxiv.org/abs/2508.09115",
+     "title": "SinLlama -- A Large Language Model for Sinhala",
+     "date": "2025-08-12",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read the latest version (v5, 2026-08-31) for results on news categorisation, sentiment and writing-style tasks.",
+    "Find a simple, accurate visual of tokenization for Sinhala script.",
+    "Check the licence for the Hugging Face release (polyglots/SinLlama_v01) before showing any outputs.",
+    "Check whether there are comparable Tamil efforts, for a fair Sri Lankan picture."
+   ],
+   "cautions": [
+    "'Largest Sinhala LLM' is the team's own claim, so don't repeat it.",
+    "Show no real chatbot UIs or brand logos; use original drawn interfaces.",
+    "The Llama licence covers what can be shown; avoid implying Meta endorsement."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (local sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I019",
+   "title": "Snakebite is far deadlier than the world counted",
+   "sweep": "recent",
+   "field": "life & health",
+   "hook": "Snakebites may kill up to half a million people a year, and most of them never make the official count.",
+   "angle": "How scientists estimate deaths that nobody records: combining hospital records, field surveys and maps to fill gaps where over half of at-risk countries keep no snakebite counts.",
+   "why_now": "A new global estimate (274,000 to 513,000 deaths a year) led by researchers from Sri Lanka's University of Kelaniya and LSTM is circulating in the press now; Sri Lanka's dry-zone harvest season keeps snakebite topical.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261029072117.htm",
+     "title": "Scientists reveal a hidden snakebite crisis killing up to 513,000 people a year",
+     "date": "2026-10-30",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Primary paper: Ediriweera, Kasturiratne et al., 'Estimates of global burden of snakebite: A literature review and geostatistical modelling study', PLOS Medicine 23(8): e1005201, published 2026-08-25, DOI 10.1371/journal.pmed.1005201",
+    "Sri Lanka's country-level estimate is in the paper's S4 Appendix; the paper notes regional variation 'even in small countries such as Sri Lanka'",
+    "Verify the earlier global estimate the new one replaces (reported as 20,000 to 94,000 deaths) before using a then-vs-now comparison",
+    "Check what the WHO and Sri Lanka's Ministry of Health say about first aid and getting to hospital, if the film mentions what to do"
+   ],
+   "cautions": [
+    "Sensitive health content: no graphic wounds; any first-aid advice must come from official guidance only",
+    "Ranges are model estimates with wide uncertainty; present them as ranges, not a single number",
+    "The paper itself dates from August 2026; the press coverage is from late October",
+    "Draw snakes as original stylised designs; avoid fear-mongering about specific species"
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "fresh_until": "2027-02-26",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I020",
+   "title": "Tea and your heart: the hot-cup catch",
+   "sweep": "recent",
+   "field": "life & health",
+   "hook": "Your daily cup of tea might be good for your heart, unless you drink it burning hot.",
+   "angle": "What an observational study of nearly 486,000 adults can and can't tell us: tea drinkers had about 11% lower risk of vascular disease, black tea looked more consistent than green, and 'burning hot' tea was linked to higher risk.",
+   "why_now": "Published in the Journal of Internal Medicine and covered from 1 November 2026; a natural fit for a country that grows and drinks black tea.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261031221203.htm",
+     "title": "Drinking tea may help protect your heart, but there's a surprising catch",
+     "date": "2026-11-01",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Habitual tea consumption is associated with lower cardiovascular disease risk', Journal of Internal Medicine (2026), DOI 10.1111/joim.70172; confirm publication date and cohort name",
+    "Confirm the 6 to 8 cups per day figure applies only to weekly tea drinkers and what 'moderate strength' means in the study",
+    "Source Sri Lankan tea facts (black tea share, consumption habits) separately from official tea-sector data"
+   ],
+   "cautions": [
+    "Observational association, not proof of cause; say 'linked to', not 'protects'",
+    "Cohort was adults in China; don't generalise uncritically to Sri Lankans",
+    "No mechanism or temperature threshold was found for the hot-tea risk; don't invent one",
+    "Avoid real tea brands or logos"
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "fresh_until": "2027-02-15",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I021",
+   "title": "The Nobel-winning trick of switching brain cells with light",
+   "sweep": "recent",
+   "field": "life & health",
+   "hook": "Scientists can flip a single brain cell on and off with a flash of light, and it just won a Nobel Prize.",
+   "angle": "How optogenetics works: a light-sensitive channel protein first found in a green alga is put into nerve cells, so light opens the channel and the cell fires.",
+   "why_now": "The 2026 Nobel Prize in Physiology or Medicine (announced 5 October 2026) went to Karl Deisseroth, Peter Hegemann and Georg Nagel for light-gated ion channels and optogenetics.",
+   "sources": [
+    {
+     "url": "https://www.wunc.org/2026-10-05/nobel-medicine-prize-goes-to-3-scientists-for-research-into-brain-activity",
+     "title": "Nobel medicine prize goes to 3 scientists for research into brain activity",
+     "date": "2026-10-05",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261018205037.htm",
+     "title": "Scientists win 2026 Nobel Prize for controlling brain cells with light",
+     "date": "2026-10-19",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check the official citation and press release on nobelprize.org (the site blocked automated fetch)",
+    "Confirm the channelrhodopsin and Chlamydomonas alga origin story from the Nobel committee's scientific background",
+    "Find a verified example of what optogenetics has revealed (in animals) and any human clinical trials, stated carefully"
+   ],
+   "cautions": [
+    "Don't draw the real laureates as caricatures; use original characters or text credits",
+    "Most work is in lab animals; handle animal research respectfully and don't imply it's a human therapy yet",
+    "Avoid 'mind control' framing"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-01",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I022",
+   "title": "Bait traps that teach rice to spot blast fungus",
+   "sweep": "recent",
+   "field": "plants & farming",
+   "hook": "Rice blast destroys enough rice every year to feed about 60 million people.",
+   "angle": "How plants 'see' a fungal attack: immune receptors carry a bait domain that grabs fungal molecules, and scientists engineered receptors that recognise two different fungal signals at once.",
+   "why_now": "Science Advances study from the John Innes Centre and Kobe University reported mid-October 2026; rice blast matters to Sri Lanka's paddy farmers in the Maha season.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261014015501.htm",
+     "title": "A fungus is threatening the world's food supply. Scientists just found a new defense",
+     "date": "2026-10-15",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Engineering plant tandem kinase immune receptors expands effector recognition profiles', Science Advances 12(39), DOI 10.1126/sciadv.aef2426; confirm exact publication date (likely late September 2026)",
+    "Verify the '60 million people' figure's original source",
+    "Find Sri Lankan Rice Research and Development Institute material on blast disease for the local angle"
+   ],
+   "cautions": [
+    "Early stage: tested in wheat protoplasts (single cells), not whole plants or fields",
+    "Engineered crops are a sensitive policy topic; don't imply farmers can get these plants",
+    "Paper date may be earlier than the press coverage"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "fresh_until": "2027-01-20",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I023",
+   "title": "Mixed crops beat drought and floods",
+   "sweep": "recent",
+   "field": "plants & farming",
+   "hook": "In years of drought and flood, the farms that grew more kinds of crops kept their yields steady.",
+   "angle": "Why crop diversification and cover crops make soil act like a sponge: deeper roots leave channels (biopores) that store more water, so yields swing less.",
+   "why_now": "Study of 13 Brazilian farms through droughts and floods published 22 October 2026; relevant as a strong El Nino threatens Sri Lanka's rainfall this quarter.",
+   "sources": [
+    {
+     "url": "https://phys.org/news/2026-10-crop-diversification-fields-extreme-weather.html",
+     "title": "Crop diversification protects fields from extreme weather and boosts productivity",
+     "date": "2026-10-30",
+     "checked": "blocked"
+    }
+   ],
+   "research_leads": [
+    "Paper: Meneghini et al., 'Crop diversification shapes soil multifunctionality under common hydroclimatic extremes', Agriculture, Ecosystems & Environment, DOI 10.1016/j.agee.2026.110792",
+    "Confirm the 'up to 76% above state average' versus 8% yield figures and what they compare",
+    "Look for a Sri Lankan crop rotation or cover-crop example from the Department of Agriculture before claiming local relevance"
+   ],
+   "cautions": [
+    "Small study (13 farms, Rio Grande do Sul, Brazil); don't overgeneralise",
+    "Avoid implying a single fix for climate risk to farmers"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-18",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I024",
+   "title": "Trees have 'muscles' that straighten them",
+   "sweep": "recent",
+   "field": "plants & farming",
+   "hook": "Bend a young tree over and it will pull itself straight again, even without knowing which way is up.",
+   "angle": "Trees sense their own shape (proprioception) and grow tension wood on one side that acts like a muscle, then switch sides to stop overshooting.",
+   "why_now": "INRAE study in New Phytologist covered 31 October 2026; a playful, visual story that also links to stopping cereal crops from falling over.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261030003006.htm",
+     "title": "Scientists discover the hidden “muscles” trees use to straighten themselves",
+     "date": "2026-10-31",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Proprioception drives tension wood formation for autotropic straightening and postural control in trees', New Phytologist (2026), DOI 10.1111/nph.71238",
+    "Get details of the rotating-platform setup (removes gravity and light cues) for accurate animation",
+    "Verify the claimed link to cereal lodging"
+   ],
+   "cautions": [
+    "Poplar saplings in a lab rig; no quantitative results in the press release",
+    "'Muscle' is a metaphor; say so"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-20",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I025",
+   "title": "Sri Lanka's cobra: two million years apart",
+   "sweep": "recent",
+   "field": "animals & ecology",
+   "hook": "Sri Lanka's cobra has been on its own for about two million years. So is it a different species?",
+   "angle": "How DNA tells lineages apart: 67 cobras and nine genetic markers show the Sri Lankan spectacled cobra is a distinct lineage, possibly split from India's by changing sea levels, yet scientists stop short of calling it a new species.",
+   "why_now": "Study in Molecular Phylogenetics and Evolution reported by Mongabay on 13 October 2026, reopening a debate about Sri Lanka's cobra.",
+   "sources": [
+    {
+     "url": "https://news.mongabay.com/2026/10/a-study-unravels-the-genetic-mystery-of-a-cobra-divided-by-sea/",
+     "title": "A study unravels the genetic mystery of a cobra divided by sea",
+     "date": "2026-10-13",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Spectacular Saga: Phylogenetics and phylogeography of the Indian spectacled cobra (Naja naja)', Molecular Phylogenetics and Evolution vol. 223, 108654 (2026); confirm date",
+    "History: 2022 proposal of Naja polyocellata and the 2023 rebuttal by Wuster and Tillack",
+    "Verify the land-bridge and sea-level explanation (the article says not proven)"
+   ],
+   "cautions": [
+    "Taxonomy is contested; do not say it is a new species",
+    "Cobras have cultural and religious significance in Sri Lanka; treat respectfully",
+    "Avoid encouraging people to handle snakes; draw an original cobra design"
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "fresh_until": "2027-02-09",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I026",
+   "title": "A touch that brings bleached coral back",
+   "sweep": "recent",
+   "field": "animals & ecology",
+   "hook": "A bleached coral came back to life in seven weeks, just by touching its healthy twin.",
+   "angle": "Why corals bleach (they lose their algae partners) and how touching a genetically identical healthy fragment let algae move across and multiply.",
+   "why_now": "Science Advances study from Stanford published 14 October 2026; described as the fastest documented bleaching recovery.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261017230025.htm",
+     "title": "A simple touch can bring dying corals back to life in just 7 weeks",
+     "date": "2026-10-19",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Rapid coral bleaching recovery via symbiont transfer from healthy corals', Science Advances 12(42), DOI 10.1126/sciadv.aeh1580",
+    "Confirm coral species used and lab conditions",
+    "For a Sri Lanka tie-in, find a verified source on recent bleaching on Sri Lankan reefs"
+   ],
+   "cautions": [
+    "Tiny lab experiment (10 fragment pairs); not a reef-scale fix",
+    "Avoid implying reefs are 'saved'"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-10",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I027",
+   "title": "Why crocodiles survived the dinosaur asteroid",
+   "sweep": "recent",
+   "field": "animals & ecology",
+   "hook": "The asteroid wiped out the dinosaurs. Crocodiles just went somewhere warm.",
+   "angle": "Crocodile relatives followed warm climates for about 250 million years; models show the tropics stayed warm enough after the impact for them to survive.",
+   "why_now": "Science Advances study from UCL covered 30 October 2026, using 7,000+ fossils and climate models over 245 million years.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261030002922.htm",
+     "title": "The asteroid killed the dinosaurs. Why did crocodiles survive?",
+     "date": "2026-10-30",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Climatic niche conservatism shapes the macroevolution, extinction, and survivorship of crocodile-line archosaurs', Science Advances 12(43), DOI 10.1126/sciadv.aeg2217",
+    "Check the sunlight-reduction scenarios (5%, 10%, 15%) and why 15% is considered unlikely",
+    "Optional local link: verify which crocodile species live in Sri Lanka from a wildlife authority source"
+   ],
+   "cautions": [
+    "Model-based reconstruction; other traits (size, diet, low energy needs) also mattered",
+    "Avoid drawing anything resembling famous cartoon crocodiles or dinosaurs"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-17",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I028",
+   "title": "Ghost particles from deep space win a Nobel",
+   "sweep": "recent",
+   "field": "space & physics",
+   "hook": "About 100 billion neutrinos pass through every square centimetre of you each second, and you never feel one.",
+   "angle": "What neutrinos are and how IceCube, a cubic kilometre of Antarctic ice, catches the rare flashes from high-energy neutrinos from beyond our galaxy.",
+   "why_now": "Francis Halzen won the 2026 Nobel Prize in Physics (announced 6 October 2026) for IceCube and the discovery of high-energy astrophysical neutrinos.",
+   "sources": [
+    {
+     "url": "https://www.dailymaverick.co.za/article/2026-10-06-francis-halzen-wins-2026-nobel-prize-in-physics",
+     "title": "Francis Halzen wins 2026 Nobel Prize in Physics",
+     "date": "2026-10-06",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/11/261101010533.htm",
+     "title": "IceCube detects ghost particles with 10 billion times the energy of solar neutrinos",
+     "date": "2026-11-02",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the official citation on nobelprize.org",
+    "Verify '100 billion neutrinos per square centimetre per second' and the 'roughly 10 billion times solar neutrino energy' figures",
+    "Get IceCube's design facts (strings, sensors, depth) from the IceCube collaboration"
+   ],
+   "cautions": [
+    "Don't caricature the laureate; use original characters",
+    "Use drawn visuals rather than copyrighted photos of the detector"
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-02",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I029",
+   "title": "Lucy arrives among Jupiter's Trojan asteroids",
+   "sweep": "recent",
+   "field": "space & physics",
+   "hook": "Jupiter has two swarms of asteroids that travel with it, and a spacecraft has just reached one for the first time.",
+   "angle": "What Trojan asteroids are (stable groups at L4 and L5, held by the Sun's and Jupiter's gravity) and why they're leftovers from the solar system's birth.",
+   "why_now": "NASA's Lucy entered the Trojan region on 28 October 2026 after 5 years and more than 2.2 billion miles; first flyby (Eurybates) is set for August 2027.",
+   "sources": [
+    {
+     "url": "https://science.nasa.gov/blogs/lucy/2026/10/28/nasas-lucy-reaches-trojan-asteroid-region-5-years-after-launch/",
+     "title": "NASA's Lucy Reaches Trojan Asteroid Region 5 Years After Launch",
+     "date": "2026-10-28",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the flyby schedule (Eurybates Aug 2027, Polymele Sep 2027, Leucus Apr 2028, Orus Nov 2028, Patroclus-Menoetius Mar 2033)",
+    "Explain Lagrange points simply; verify with NASA explainer material"
+   ],
+   "cautions": [
+    "No new images of Trojans yet; draw them rather than implying photos exist",
+    "Don't use NASA logos in a way that implies endorsement"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-24",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I030",
+   "title": "Perseverance breaks the off-world driving record",
+   "sweep": "recent",
+   "field": "space & physics",
+   "hook": "A robot on Mars has now driven farther than any vehicle on another world, and it mostly drives itself.",
+   "angle": "How Perseverance's AutoNav self-driving system plans routes on Mars, letting it beat Opportunity's 28.06-mile record in about five and a half years instead of nearly 15.",
+   "why_now": "Perseverance passed 28.10 miles (45.22 km) on 11 October 2026, and NASA extended its mission to about the end of 2028.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261020084818.htm",
+     "title": "NASA's Perseverance Mars rover just shattered the all-time off-world driving record",
+     "date": "2026-10-21",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check NASA/JPL's own release for the record date (sol 2,006) and distance",
+    "Verify AutoNav facts (over 90% of driving distance evaluated autonomously; up to 412 m per sol)",
+    "Confirm the Lunokhod 2 and Apollo 17 comparison figures"
+   ],
+   "cautions": [
+    "Record is for off-world driving distance specifically",
+    "Use drawn rover designs, not NASA footage presented as the film's own"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-07",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I031",
+   "title": "A strong El Nino and Sri Lanka's rains",
+   "sweep": "recent",
+   "field": "earth & climate",
+   "hook": "Warm water in the Pacific, half a world away, could decide how much rain Sri Lanka gets this season.",
+   "angle": "What El Nino is and how it can weaken the northeast monsoon that feeds Sri Lanka's dry zone, while the Indian Ocean Dipole can push the other way.",
+   "why_now": "NOAA says a strong-to-very-strong El Nino is likely through January to March 2027, exactly the planned quarter; Bay of Bengal cyclone Arnab (late October) formed during the event.",
+   "sources": [
+    {
+     "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+     "title": "ENSO: Diagnostic Discussion (8 October 2026)",
+     "date": "2026-10-08",
+     "checked": "ok"
+    },
+    {
+     "url": "https://science.nasa.gov/earth/earth-observatory/arnab-strikes-india/",
+     "title": "Arnab Strikes India",
+     "date": "2026-10-29",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Re-check the latest NOAA ENSO discussion (the URL updates monthly) and the Niño-3.4 value (+2.1 C on 8 Oct)",
+    "Get Sri Lanka Department of Meteorology statements on the northeast monsoon and Feb-April rainfall (e.g. CounterPoint, 4 Sept 2026, quoting the Director General)",
+    "Daily FT column (25 July 2026) on El Nino, IOD and the Northeast Monsoon as background only"
+   ],
+   "cautions": [
+    "Forecasts change; avoid predicting floods or drought as certain",
+    "Don't attribute any single weather event to El Nino",
+    "No real disaster footage; draw maps and characters"
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "fresh_until": "2027-02-05",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I032",
+   "title": "Thwaites Glacier could add twice as much sea level",
+   "sweep": "recent",
+   "field": "earth & climate",
+   "hook": "Warm seawater is sneaking kilometres under Antarctica's 'Doomsday Glacier'.",
+   "angle": "Why the grounding zone matters: seawater reaches several kilometres beneath the ice, and a new model that includes this doubles Thwaites' projected sea-level contribution to up to 30 mm by 2100.",
+   "why_now": "Nature Communications study (UC Irvine and NASA JPL) covered 28 October 2026.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261027063701.htm",
+     "title": "Antarctica's \"Doomsday Glacier\" could raise sea levels twice as much as predicted",
+     "date": "2026-10-28",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Sea-level contribution from Thwaites Glacier doubles in an observation-constrained ice-sheet model', Nature Communications 17 (2026), DOI 10.1038/s41467-026-77976-1; confirm date",
+    "Verify the 60% probability of unpinning from the Mouginot Ridge by 2100 and its assumptions",
+    "For an island-nation angle, find verified sea-level figures for Sri Lanka's coast before using them"
+   ],
+   "cautions": [
+    "'Doomsday' framing is sensational; 30 mm is a small number on its own and needs context",
+    "Model projections with assumptions; avoid catastrophising"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-15",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I033",
+   "title": "AI finds a shortcut for turning CO2 into fuel",
+   "sweep": "recent",
+   "field": "tech & computing",
+   "hook": "Scientists thought they understood this reaction. With 9,000 more steps, AI showed they were wrong.",
+   "angle": "How machine learning mapped a reaction network on a copper catalyst, from 152 to 9,389 reactions, correctly predicting methanol and revealing hydrogen can move as whole H2 molecules.",
+   "why_now": "Nature Communications paper from the Indian Institute of Science published 13 October 2026.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2026/10/261013015758.htm",
+     "title": "AI reveals a hidden chemical shortcut that could turn CO2 into fuel",
+     "date": "2026-10-13",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Paper: 'Data-driven massive reaction networks reveal mechanistic pathways underlying catalytic CO2 hydrogenation', Nature Communications (2026), DOI 10.1038/s41467-026-77080-4",
+    "Confirm the '40 times more CO2 conversion' comparison is between models, not real-world performance"
+   ],
+   "cautions": [
+    "Computational study, not a working fuel factory",
+    "Avoid suggesting this solves climate change; making methanol from CO2 needs energy and hydrogen"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-09",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I034",
+   "title": "An AI-designed gene editor protects rice",
+   "sweep": "recent",
+   "field": "tech & computing",
+   "hook": "A gene-editing tool designed by AI has been used to make rice that resists a crop disease.",
+   "angle": "How CRISPR edits genes and what it means that OpenCRISPR-1 was designed with AI; the team used it to make lab rice resistant to bacterial blight.",
+   "why_now": "University of Missouri study in aBIOTECH reported 27 October 2026; the tool is open source for research and commercial crop editing.",
+   "sources": [
+    {
+     "url": "https://phys.org/news/2026-10-rice-devastating-disease-gene-ai.html",
+     "title": "Rice plants can fight off devastating disease after gene editing with AI-designed tool",
+     "date": "2026-10-27",
+     "checked": "blocked"
+    }
+   ],
+   "research_leads": [
+    "Paper: Gupta et al., 'AI-designed OpenCRISPR-1 enables efficient targeted mutagenesis and prime editing in rice', aBIOTECH (2026), DOI 10.1016/j.abiote.2026.100054; confirm date",
+    "Check how OpenCRISPR-1 was designed (protein language model) from the developer's original publication",
+    "Check Sri Lanka's rules on gene-edited crops before any local framing"
+   ],
+   "cautions": [
+    "Lab line only; several years and regulatory review before farmers could grow it",
+    "Gene-edited food is a sensitive topic; stay neutral",
+    "Avoid company branding or logos"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "fresh_until": "2027-02-10",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (recent sweep, 2026-11-02)"
+  },
+  {
+   "id": "I035",
+   "title": "Hunt the Mosquito Nursery",
+   "sweep": "tool",
+   "field": "life & health",
+   "hook": "The most dangerous animal near your house might be living in a bottle cap of rainwater.",
+   "angle": "Dengue mosquitoes breed in small pockets of standing water, and NASA's free GLOBE Observer app walks you through finding one, photographing it, checking for larvae and tipping it out.",
+   "why_now": "January follows the northeast monsoon rains, and Sri Lanka's National Dengue Control Unit reported more January 2026 cases than January 2025, so a find-and-empty-it film lands when cases tend to climb.",
+   "sources": [
+    {
+     "url": "https://observer.globe.gov/do-globe-observer/mosquito-habitats",
+     "title": "Mosquito Habitats Overview - GLOBE Observer - GLOBE.gov",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2026/01/27/dengue-cases-spike-in-january-colombo-records-the-highest",
+     "title": "Dengue Cases Spike in January; Colombo Records the Highest",
+     "date": "2026-01-27",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the app's current steps (locate habitat, optional sample/count, optional larva ID, eliminate) and that it is free on Android and iOS",
+    "Get official NDCU / Epidemiology Unit figures for January 2026 versus January 2025 (News 1st reported 6,521 vs 4,970) rather than relying on press",
+    "Check whether the link between monsoon rain and the January rise is stated by NDCU or is only seasonal pattern",
+    "Find which container types Sri Lankan health officials list as the most common breeding sites"
+   ],
+   "cautions": [
+    "Health content: do not give medical advice; point viewers to symptoms guidance from the Ministry of Health and say 'see a doctor' for fever",
+    "Larva sampling involves handling water and possibly pupae; show only the core habitat-report step and emptying the container",
+    "App asks for location; remind viewers not to post photos that reveal their home address"
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I036",
+   "title": "Dengue Has a Family Tree",
+   "sweep": "tool",
+   "field": "life & health",
+   "hook": "Scientists can read a virus's family history like a phone's call log, and you can open it in your browser.",
+   "angle": "Nextstrain, an open-source viewer, turns thousands of virus genomes into a branching tree and a map, so you can see that 'dengue' is really several related virus types spreading around the world.",
+   "why_now": "Dengue is in Sri Lankan news every January, so a film on why 'dengue' is not one single virus pairs with the seasonal case rise.",
+   "sources": [
+    {
+     "url": "https://pubmed.ncbi.nlm.nih.gov/29790939/",
+     "title": "Nextstrain: real-time tracking of pathogen evolution - PubMed",
+     "date": "2018-12-01",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2026/01/27/dengue-cases-spike-in-january-colombo-records-the-highest",
+     "title": "Dengue Cases Spike in January; Colombo Records the Highest",
+     "date": "2026-01-27",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Open nextstrain.org/dengue and confirm which views exist (all serotypes, per-serotype trees) and whether Sri Lankan sequences appear",
+    "Confirm the number of dengue serotypes and how they are coloured in the viewer from Nextstrain's own documentation",
+    "Check the Nextstrain licence (open source, data sources such as GenBank) for showing redrawn screens in a film",
+    "Find what Sri Lankan health authorities have said about which serotypes circulate locally"
+   ],
+   "cautions": [
+    "Sensitive health topic: avoid claims about reinfection severity or immunity unless they come from WHO or Ministry of Health guidance",
+    "Overlaps with the mosquito-habitat idea; schedule them apart or merge",
+    "Redraw the interface as original art rather than screen-recording, and do not present the tree as a live outbreak forecast"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I037",
+   "title": "Photo-Diagnose a Sick Leaf",
+   "sweep": "tool",
+   "field": "plants & farming",
+   "hook": "Point your phone at a spotty leaf and an app will guess what is eating it.",
+   "angle": "Pl@ntNet's free 'Diseases & Pests' feature compares a photo of symptoms with an illustrated library, and it only gets better when experts add well-labelled pictures, which shows how image AI depends on its training data.",
+   "why_now": "The feature is new (available since February 2026, announced to users in September 2026), so it is still fresh for Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://plantnet.org/en/2026/09/14/plntnet-diseases-pests-eng/",
+     "title": "\"Diseases & Pests\" Pl@ntNet's feature for identifying threats to your crops",
+     "date": "2026-09-14",
+     "checked": "ok"
+    },
+    {
+     "url": "https://plantnet.org/en/",
+     "title": "Home - Pl@ntNet",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the current counts (post says 395 illustrated diseases/pest damage types and just over one hundred plant species)",
+    "Check whether crops grown in Sri Lanka (rice, tea, coconut, chilli) are covered; the post says coverage focuses first on key crops in France, with coffee well represented",
+    "Confirm the feature is free and how results are shown (ranked guesses with confidence)"
+   ],
+   "cautions": [
+    "An app guess is not a diagnosis; tell farmers to confirm with agricultural extension officers before spraying anything",
+    "Do not recommend pesticides or doses",
+    "Coverage is France-centred, so a Sri Lankan framing could mislead; keep it as a general 'how image AI learns' story unless local crops are covered"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I038",
+   "title": "Watch the Rice Turn Green from Space",
+   "sweep": "tool",
+   "field": "plants & farming",
+   "hook": "A satellite can tell when Sri Lanka's rice is ready before anyone walks into the field.",
+   "angle": "The free Copernicus Browser shows Sentinel-2 images with a vegetation index (NDVI) that glows where plants are healthy and green, so you can watch a paddy area green up and then fade at harvest during the Maha season.",
+   "why_now": "Jan-Mar falls in the Maha season, which the Department of Census and Statistics places from September to March, so viewers can watch harvest happen in real images.",
+   "sources": [
+    {
+     "url": "https://www.esa.int/Education/Copernicus_Browser_guide",
+     "title": "How to use Copernicus Browser in your classroom - ESA Education",
+     "date": "2026-10-09",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.statistics.gov.lk/Agriculture/StaticalInformation/PaddyStatistics",
+     "title": "Paddy Statistics - Department of Census and Statistics",
+     "date": "2026-11-02",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm that Copernicus Browser needs only a free account and that NDVI is a preset layer for Sentinel-2 L2A",
+    "Pick one paddy area (for example a major irrigation scheme) and check that cloud-free images exist across Maha; clouds may hide parts of the monsoon season",
+    "Use the DCS 2025/2026 Maha table for sown and harvested extent by district",
+    "Check Copernicus/ESA image terms for using redrawn or embedded Sentinel imagery"
+   ],
+   "cautions": [
+    "NDVI is a proxy for greenness, not yield; do not claim the app predicts harvest size",
+    "Cloud cover during the northeast monsoon can make images patchy"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I039",
+   "title": "Fifteen Minutes That Count Birds for the World",
+   "sweep": "tool",
+   "field": "animals & ecology",
+   "hook": "Count birds for fifteen minutes in February and scientists everywhere get your data.",
+   "angle": "The Great Backyard Bird Count turns short counts uploaded to eBird into a global snapshot, and mid-February is when winter migrants are still in Sri Lanka.",
+   "why_now": "The 30th Great Backyard Bird Count is scheduled for February 12-15, 2027, inside the quarter.",
+   "sources": [
+    {
+     "url": "https://www.audubon.org/community-science/great-backyard-bird-count",
+     "title": "About the Great Backyard Bird Count | Audubon",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.sundaytimes.lk/190217/news/count-the-birds-public-urged-to-join-global-initiative-336547.html",
+     "title": "Count the birds: Public urged to join global initiative | The Sunday Times Sri Lanka",
+     "date": "2019-02-17",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the 2027 dates and rules on birdcount.org (blocked to automated fetch; Audubon lists February 12-15, 2027)",
+    "Pull Sri Lanka's GBBC results from previous years (checklists, species) from the GBBC/eBird results pages",
+    "Check that FOGSL still promotes the count and get a local winter-visitor example (the 2019 article names the Greater Flamingo)",
+    "Confirm the minimum count time (15 minutes) for the current rules"
+   ],
+   "cautions": [
+    "Use drawn birds, not photos credited to photographers in the source article",
+    "Remind viewers not to disturb nesting birds or enter protected areas without permission"
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I040",
+   "title": "Every Whale Has a Fingerprint",
+   "sweep": "tool",
+   "field": "animals & ecology",
+   "hook": "That whale you saw off the coast may already have a name and a travel history.",
+   "angle": "Happywhale matches tourists' photos of whale tails and fins against huge photo-ID databases with image-matching software, so one holiday snapshot can tell scientists where an individual whale has been.",
+   "why_now": "Blue whales are seen off Mirissa during the December-April season, so Jan-Mar is when Sri Lankan whale-watchers are taking these photos.",
+   "sources": [
+    {
+     "url": "https://www.oceanicsociety.org/news-and-announcements/photographing-whales-for-science",
+     "title": "Photographing Whales for Science - Oceanic Society",
+     "date": "2025-09-30",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.ft.lk/FT-Lite/tharrrr-she-blows/6-67371",
+     "title": "Tharrrr she blows! | Daily FT",
+     "date": "2012-01-21",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check which species Happywhale can match; it is best known for humpback tail flukes, so confirm whether blue whales or other Sri Lankan species are supported",
+    "Find a recent scientific source for the Mirissa season and peak months (sources disagree on the peak)",
+    "Confirm Happywhale is free to use and what users are told after a match"
+   ],
+   "cautions": [
+    "Whale-watching boats crowding whales is a known welfare issue; do not encourage chasing whales, and mention responsible-watching guidance",
+    "Use original drawn whales; the source photos (e.g. named whale 'Picasso') are copyrighted",
+    "The species link to Sri Lanka is unconfirmed; drop the local framing if blue whales are not matched"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I041",
+   "title": "The Eclipse You Might Not Notice",
+   "sweep": "tool",
+   "field": "space & physics",
+   "hook": "On 21 February 2027 the Moon will slip into Earth's shadow, and most people won't spot a thing.",
+   "angle": "A penumbral lunar eclipse only dims the Moon slightly because it passes through the outer part of Earth's shadow; free open-source Stellarium lets you rewind and replay it to see why.",
+   "why_now": "NASA lists a penumbral lunar eclipse on 2027 February 20 at 23:14 TD (early 21 February in Sri Lanka), with Asia in the visibility zone.",
+   "sources": [
+    {
+     "url": "https://eclipse.gsfc.nasa.gov/LEdecade/LEdecade2021.html",
+     "title": "NASA - Lunar Eclipses: 2021 - 2030",
+     "date": "2013-12-09",
+     "checked": "ok"
+    },
+    {
+     "url": "https://stellarium.org/release/2026/09/28/stellarium-26.3.html",
+     "title": "Stellarium 26.3",
+     "date": "2026-09-28",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Convert the time to Sri Lanka time and confirm the Moon is above the horizon from Colombo at greatest eclipse (around 04:44 SLST by simple conversion; TD differs slightly from UTC)",
+    "Get the penumbral magnitude and how much dimming to expect from NASA's eclipse page for that date",
+    "Check the eclipse plays correctly in Stellarium and Stellarium Web for a Sri Lankan location"
+   ],
+   "cautions": [
+    "Do not overpromise a dramatic view; frame it as a myth-vs-data 'not every eclipse looks like the photos'",
+    "Pre-dawn observing: suggest viewing from home or with an adult, not alone in unsafe places"
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I042",
+   "title": "How Many Stars Can You See?",
+   "sweep": "tool",
+   "field": "space & physics",
+   "hook": "Count the stars in Orion tonight and you have measured light pollution.",
+   "angle": "Globe at Night asks you to compare the sky around one constellation with star charts of different magnitudes; the faintest chart you match tells scientists how bright your night sky is.",
+   "why_now": "Orion is the campaign constellation in January and February, with Canis Major in February and March, in both the northern and southern lists, and it is easy to find in the evening sky in this quarter.",
+   "sources": [
+    {
+     "url": "https://globeatnight.org/campaigns/",
+     "title": "Campaigns - Globe At Night",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://globeatnight.org/",
+     "title": "Home - Globe At Night",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find the official 2027 campaign dates (only 2026 dates were listed when checked)",
+    "Check which constellation is recommended for Sri Lanka's latitude in Jan-Mar 2027",
+    "Look for Globe at Night or other sky-brightness data from Sri Lanka to compare a city and a rural site"
+   ],
+   "cautions": [
+    "Night-time outdoor activity: suggest a safe, familiar spot",
+    "The report form asks for a street address; tell viewers to use the nearest public landmark rather than their home address"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I043",
+   "title": "See the Monsoon Wind Flip",
+   "sweep": "tool",
+   "field": "earth & climate",
+   "hook": "Twice a year the wind over Sri Lanka changes sides, and you can watch it happen live.",
+   "angle": "earth.nullschool.net animates supercomputer weather forecasts as flowing lines, so you can see the northeast monsoon wind arriving and why it brings rain to the north and east while the southwest stays drier.",
+   "why_now": "The Department of Meteorology's season calendar puts the northeast monsoon in December to February, so it is still blowing in January-February.",
+   "sources": [
+    {
+     "url": "https://science.nasa.gov/image-article/apod-2016-october-10-the-winds-of-earth/",
+     "title": "APOD: 2016 October 10 - The Winds of Earth - NASA Science",
+     "date": "2016-10-10",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2025/12/08/northeast-monsoon-gradually-establishing-over-sri-lanka",
+     "title": "Northeast Monsoon Gradually Establishing Over Sri Lanka",
+     "date": "2025-12-08",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the season calendar directly from meteo.gov.lk (search pointed to a Department of Meteorology presentation listing NE monsoon as December-February)",
+    "Confirm the data sources earth.nullschool currently uses (APOD says forecasts updated every three hours) and its licence for redrawing",
+    "Check DCS wording that Maha paddy is synonymous with the northeast monsoon to link to the rice idea"
+   ],
+   "cautions": [
+    "Sources disagree on monsoon start and end months; state the Met Department's dates",
+    "Do not present the map as a warning service; for floods point to the Department of Meteorology and DMC"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I044",
+   "title": "Take the Planet's Temperature",
+   "sweep": "tool",
+   "field": "earth & climate",
+   "hook": "There is a website that tells you how warm the whole planet was two days ago.",
+   "angle": "Copernicus Climate Pulse plots daily global air and sea-surface temperature from the ERA5 reanalysis, about two days behind real time, so you can compare this year with every other year on one chart.",
+   "why_now": "Copernicus publishes its annual Global Climate Highlights in January (the 2025 report came out on 14 January 2026), so the 2026 verdict should arrive in the quarter.",
+   "sources": [
+    {
+     "url": "https://climate.copernicus.eu/climate-pulse-tool-take-temperature-our-planet-glance",
+     "title": "Climate Pulse, a tool to take the temperature of our planet at a glance | Copernicus",
+     "date": "2024-02-28",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.ecmwf.int/en/about/media-centre/news/2025/2025-third-warmest-year",
+     "title": "2025 was the third-warmest year on record, Copernicus data show | ECMWF",
+     "date": "2026-01-14",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the release date of the Global Climate Highlights 2026 report",
+    "Explain 'reanalysis' simply: check C3S's own description of ERA5",
+    "Use only the final 2026 figures from the report, not preliminary Climate Pulse values"
+   ],
+   "cautions": [
+    "Climate numbers are revised; label any figure with its date and source",
+    "Avoid alarmist framing for a 13+ audience; focus on how the measurement works"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I045",
+   "title": "Teach a Computer in Two Minutes",
+   "sweep": "tool",
+   "field": "tech & computing",
+   "hook": "You can train your own AI tonight, without writing a single line of code.",
+   "angle": "Google's free Teachable Machine lets you show a webcam a few examples of two things, press train, and watch it learn, which shows how examples become a model and why bad examples make a bad model.",
+   "why_now": "A no-code way into AI suits the start of the school year in January; the 'AI learns from examples' idea also pairs with the Pl@ntNet disease film.",
+   "sources": [
+    {
+     "url": "https://blog.google/innovation-and-ai/products/teachable-machine/",
+     "title": "Teachable Machine 2.0 makes AI easier for everyone",
+     "date": "2019-11-07",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the tool is still live and free, and that training still happens in the browser with examples kept on-device",
+    "Check current project types (images, sounds, poses) and export options",
+    "Confirm the Sri Lankan school year start date for 2027 before using it as the why-now"
+   ],
+   "cautions": [
+    "Webcam use: tell viewers not to train on other people's faces without permission and not to share recordings of others",
+    "Show the interface redrawn, not Google branding; avoid implying endorsement",
+    "Why-now is weak; schedule flexibly"
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I046",
+   "title": "Map a Village from Your Sofa",
+   "sweep": "tool",
+   "field": "tech & computing",
+   "hook": "When floods hit Sri Lanka in 2016, strangers around the world drew its buildings onto a free map in days.",
+   "angle": "The open-source Tasking Manager splits a mapping job into small squares so volunteers can trace roads and buildings from satellite images into OpenStreetMap, giving rescuers maps they did not have.",
+   "why_now": "The northeast monsoon season brings flood risk to the north and east, and pre-mapping before a disaster is what helps most.",
+   "sources": [
+    {
+     "url": "https://wiki.openstreetmap.org/wiki/Tasking_Manager",
+     "title": "Tasking Manager - OpenStreetMap Wiki",
+     "date": "2025-09-03",
+     "checked": "ok"
+    },
+    {
+     "url": "https://lists.openstreetmap.org/pipermail/hot/2016-May/011940.html",
+     "title": "[HOT] A big thank you to HOT and OSM mappers from the Ministry of Disaster Management Sri Lanka",
+     "date": "2016-05-24",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find any open HOT or local OSM Sri Lanka projects in early 2027, and whether HOT activated for Cyclone Ditwah (late 2025); none was found",
+    "Get the 2016 activation's final numbers (buildings mapped) from the HOT mailing list or HOT reports",
+    "Confirm how a beginner signs up (OSM account) and validation steps"
+   ],
+   "cautions": [
+    "Disaster topic: avoid showing real victims or damage footage; use drawn maps",
+    "OpenStreetMap data is ODbL; credit 'OpenStreetMap contributors' for any map shown",
+    "Don't imply volunteers' mapping replaces official disaster agencies"
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (tool sweep, 2026-11-02)"
+  },
+  {
+   "id": "I047",
+   "title": "Does cracking your knuckles cause arthritis?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "hook": "That pop in your knuckles sounds like damage. Is it?",
+   "angle": "Where the pop comes from (a bubble in the joint fluid), and why studies comparing habitual knuckle-crackers with non-crackers found no clear extra arthritis.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.health.harvard.edu/pain/does-cracking-knuckles-cause-arthritis",
+     "title": "Does cracking knuckles cause arthritis?",
+     "date": "2020-07-06",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find the original studies Harvard summarises that compared hand arthritis in knuckle-crackers and non-crackers, and give their sample sizes.",
+    "Check the current imaging evidence on what makes the pop: a bubble forming versus a bubble collapsing. Harvard says bubbles bursting, and later work may disagree.",
+    "Harvard mentions weaker grip and at least two injury reports. Check those claims before using them."
+   ],
+   "cautions": [
+    "Health content: don't let the film read as 'cracking is good for you'. Keep it to 'no good evidence it causes arthritis'.",
+    "The details of the mechanism are still argued about, so narrate it at a level that stays true whichever way that goes."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I048",
+   "title": "Do we only use 10% of our brains?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "hook": "If you only used 10% of your brain, which 90% would you be happy to lose?",
+   "angle": "Brain injuries, surgery and brain scans have never found a large idle region. The brain is too costly an organ to carry spare.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.scientificamerican.com/article/do-we-really-use-only-10/",
+     "title": "Do we really use only 10 percent of our brains?",
+     "date": "2004-03-08",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get a current figure for how much of the body's energy the brain uses, from a primary or textbook source.",
+    "Beyerstein traces the myth to self-help writers misreading William James, and to Lowell Thomas's 1936 preface. Verify that history.",
+    "Find a recent fMRI review saying no region of the brain is permanently inactive."
+   ],
+   "cautions": [
+    "Don't name or depict real films or celebrities that use the myth (copyright and likeness).",
+    "Avoid a graphic portrayal of brain injury."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I049",
+   "title": "Does sugar make kids hyper?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "hook": "Scientists told parents their kids had eaten sugar. The kids hadn't, but the parents still saw them bouncing off the walls.",
+   "angle": "Blinded trials found no effect of sugar on children's behaviour. What adults expect shapes what they see.",
+   "why_now": "Festival sweets season, e.g. Thai Pongal in mid-January (confirm the 2027 date). It also works as a plain evergreen slot.",
+   "sources": [
+    {
+     "url": "https://pubmed.ncbi.nlm.nih.gov/7474248/",
+     "title": "The effect of sugar on behavior or cognition in children. A meta-analysis",
+     "date": "1995",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read the full Wolraich et al. 1995 JAMA meta-analysis: the number of trials, the doses, and the caveat that a small effect, or an effect in some children, can't be ruled out.",
+    "Find the original paper for the parental-expectation study, where mothers told their child had sugar rated the child as more hyperactive although every child got a placebo. Coverage attributes it to Hoover and Milich, 1994.",
+    "Check the 2008 BMJ 'festive medical myths' piece (Vreeman and Carroll) as a second source. It returned 403 when fetched."
+   ],
+   "cautions": [
+    "Don't let the film suggest sugar is harmless. Other health effects (teeth, weight) are a separate question and should be stated as such.",
+    "Critics say the trial doses were small compared with real-world intake. Mention that limit.",
+    "Use drawn children only. Avoid stereotyping parents."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I050",
+   "title": "Dengue mosquitoes only bite at night?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "hook": "Your mosquito net is up for the night. The mosquito that spreads dengue mostly bites in daylight.",
+   "angle": "The Aedes mosquitoes that spread dengue are daytime biters, so evening-only habits leave a gap. That changes when and how people protect themselves.",
+   "why_now": "Sri Lanka's northeast monsoon runs December to February, and the 2026 dengue count was already above 93,000 by late August. Check the National Dengue Control Unit's figures for the 2026 total and the seasonal peaks.",
+   "sources": [
+    {
+     "url": "https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue",
+     "title": "Dengue",
+     "date": "2025-08-21",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2026/08/22/dengue-cases-in-sri-lanka-surpass-93-000",
+     "title": "Dengue Cases In Sri Lanka Surpass 93,000",
+     "date": "2026-08-22",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the peak biting times of Aedes aegypti and Aedes albopictus in Sri Lanka from a local entomology study. WHO material describes peaks in the early morning and before dusk.",
+    "Get the latest 2026 total and the monthly pattern from Sri Lanka's National Dengue Control Unit.",
+    "Find the NDCU's advice on breeding sites, for the 'what you can do' beat."
+   ],
+   "cautions": [
+    "Sensitive health content: stick to WHO and NDCU wording, give no treatment or diagnosis advice, and point viewers to official guidance.",
+    "Don't frighten viewers or shame them. Don't show real patients or hospitals.",
+    "Case counts change quickly, so refresh every number right before release."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I051",
+   "title": "Does a tree grow out of the soil?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "hook": "A giant tree is built mostly out of something you can't see: air.",
+   "angle": "Van Helmont's willow gained a lot of weight while its soil barely changed. Apart from water, most of a plant's mass is carbon and oxygen taken from CO2 in the air.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://serendipstudio.org/exchange/files/PlantMassFromTN.pdf",
+     "title": "Teacher Notes for “Where does a tree's mass come from?”",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check van Helmont's original figures (tree weight gained and soil weight lost). Secondary sources disagree on the numbers.",
+    "Find a sourced split of a tree's mass: water (the teacher notes say roughly a half to two-thirds) versus dry organic matter, and the share of carbon and oxygen in that dry matter.",
+    "Look for a Sri Lankan example of a tree with known growth figures, as a local illustration."
+   ],
+   "cautions": [
+    "Keep 'mostly from air' accurate: a large part of a living tree's fresh mass is water from the soil, and roots take up minerals. Say 'its dry mass'."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I052",
+   "title": "Green tea and black tea come from different plants?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "hook": "Ceylon black tea and green tea come from the same bush. Only what happens after picking makes them different.",
+   "angle": "All true tea is Camellia sinensis. How far the leaf is allowed to oxidise after picking decides whether it ends up as green, oolong or black tea.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027. It has a strong Sri Lankan tie through tea estates and exports.",
+   "sources": [
+    {
+     "url": "https://www.ift.org/news-and-publications/food-technology-magazine/issues/2018/january/columns/processing-how-tea-is-processed",
+     "title": "processing how tea is processed",
+     "date": "2018-01-01",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "EDB Sri Lanka's 'Ceylon Green Tea' page (https://www.srilankabusiness.com/tea/green-tea.html, no date shown) says green tea exports began in 1982, production is mainly in Uva, and Sri Lanka supplies about 3% of global green-tea demand. Verify these with the Sri Lanka Tea Board.",
+    "Get the enzyme chemistry: polyphenol oxidase, and catechins turning into theaflavins and thearubigins.",
+    "Describe the steps of orthodox Ceylon black tea: withering, rolling, oxidation ('fermentation') and firing. The Tea Research Institute of Sri Lanka is a good source."
+   ],
+   "cautions": [
+    "Don't use real tea brands or estate logos.",
+    "Avoid health claims about green tea versus black tea.",
+    "Show plantation workers as drawn, respectful characters, and avoid stereotypes."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I053",
+   "title": "Are seedless watermelons GMOs?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "hook": "Seedless watermelon isn't a lab-built GMO. It's a cross between plants with different chromosome counts.",
+   "angle": "Crossing a tetraploid melon (4 chromosome sets) with a normal diploid (2 sets) gives triploid plants (3 sets), which can't make viable seeds. That is breeding, not gene insertion.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.nongmoproject.org/blog/that-watermelon-isnt-a-gmo-but-it-might-be-a-mutant/",
+     "title": "That Watermelon Isn’t a GMO! The Science Behind Seedless, Cubed and Colorful Melons",
+     "date": "2025-08-06",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the method (colchicine doubling, then the cross) from a university extension or breeding text.",
+    "Explain why seedless plants need a pollinator variety planted nearby.",
+    "Check whether seedless watermelon is grown or sold in Sri Lanka, for a possible local angle."
+   ],
+   "cautions": [
+    "The Non-GMO Project is a certification and advocacy organisation, so pair it with a neutral extension source.",
+    "The definitions are argued over: colchicine does alter chromosomes. Define 'GMO' carefully and don't take sides on GMO safety."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I054",
+   "title": "Why is Ceylon cinnamon a 'cigar' of paper-thin bark?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "hook": "Cut a real Ceylon cinnamon stick in half and it looks like a tiny cigar. Cassia looks like a rolled tube.",
+   "angle": "A Ceylon cinnamon stick is many fine, tightly rolled layers of bark. Cassia is one thick rolled layer and carries far more coumarin. How the bark is peeled explains the difference.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027. It's a Sri Lankan crop the audience knows from home.",
+   "sources": [
+    {
+     "url": "https://www.bfr.bund.de/en/service/frequently-asked-questions/topic/faq-on-coumarin-in-cinnamon-and-other-foods/",
+     "title": "FAQ on coumarin in cinnamon and other foods",
+     "date": "2012-09-27",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get Sri Lankan sources on the peeling and quilling steps and the grading of quills, e.g. the Department of Export Agriculture or EDB Sri Lanka.",
+    "Check the coumarin figures. BfR gives a tolerable daily intake of 0.1 mg per kg of body weight and says Ceylon cinnamon has only traces, while cassia averages about 3 g per kg; other sources give different multiples.",
+    "Confirm the species names (Cinnamomum verum, also called C. zeylanicum, versus cassia species)."
+   ],
+   "cautions": [
+    "Don't make medical claims about cinnamon and blood sugar.",
+    "Coumarin safety is a matter of dose. Don't make cassia sound poisonous.",
+    "Avoid real brand packaging."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I055",
+   "title": "Do goldfish have a 3-second memory?",
+   "sweep": "evergreen",
+   "field": "animals & ecology",
+   "hook": "Scientists taught goldfish to drive a little robot car on land. Not bad for a 3-second memory.",
+   "angle": "Conditioning experiments show fish remember sounds, places and feeding times for months. A 2022 study had goldfish steer a 'fish-operated vehicle' to a target.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.practicalfishkeeping.co.uk/features/articles/do-fish-have-a-three-second-memory",
+     "title": "Do fish have a three second memory?",
+     "date": "2016-06-13",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.nbcnews.com/news/world/israeli-scientists-teach-goldfish-drive-robotic-car-land-rcna11734",
+     "title": "Israeli scientists teach goldfish to drive a robotic car on land",
+     "date": "2022-01-11",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Identify the Israeli sound-conditioning study cited by Practical Fishkeeping (memory of 4-5 months): the species and the paper.",
+    "Read Givon et al. 2022, Behavioural Brain Research, the fish-operated vehicle paper: six goldfish and how the training worked.",
+    "Find a peer-reviewed review of fish memory to anchor the 'months' claim."
+   ],
+   "cautions": [
+    "The car study shows learning and navigation, not memory span directly. Word it carefully.",
+    "Practical Fishkeeping is a hobby magazine, so use primary papers for the numbers."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I056",
+   "title": "Are bats blind?",
+   "sweep": "evergreen",
+   "field": "animals & ecology",
+   "hook": "'Blind as a bat'? The flying foxes over Sri Lanka find fruit with their eyes.",
+   "angle": "All bats can see. Many fruit bats don't echolocate at all and have sharp eyesight, some even seeing ultraviolet, and insect-eating bats use both sight and sonar.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027. Sri Lanka has about 31 bat species.",
+   "sources": [
+    {
+     "url": "https://www.livescience.com/55986-are-bats-really-blind.html",
+     "title": "Are Bats Really Blind?",
+     "date": "2016-09-06",
+     "checked": "ok"
+    },
+    {
+     "url": "https://india.mongabay.com/2022/11/a-newly-described-cave-bat-in-sri-lanka-indicates-presence-of-more-species/",
+     "title": "A newly described cave bat in Sri Lanka indicates presence of more species",
+     "date": "2022-11-25",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the vision and echolocation of the Indian flying fox (Pteropus medius, formerly P. giganteus) from primary literature.",
+    "Find the study behind Live Science's claim that bats sometimes prefer sight to sound when hunting.",
+    "Check Sri Lanka's species count (31 per Mongabay: 3 fruit bats and 28 insectivorous; other sources say 30)."
+   ],
+   "cautions": [
+    "Don't link bats to disease scares. Keep the tone pro-conservation.",
+    "Footage of real bat colonies may be copyrighted. Draw them."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I057",
+   "title": "Do snakes drink milk?",
+   "sweep": "evergreen",
+   "field": "animals & ecology",
+   "hook": "Snakes don't drink milk. So why do cobras seem to sip from a bowl?",
+   "angle": "Snakes are carnivores, and milk isn't part of their diet. A captured cobra that 'drinks milk' has usually been kept without water, and the milk can make it ill.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://news.wildlifesos.org/debunking-common-myths-surrounding-snakes/",
+     "title": "Debunking Common Myths Surrounding Snakes!",
+     "date": "2021-08-17",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Ask a herpetologist or find veterinary literature on whether reptiles can digest lactose. The Wildlife SOS claim of 'lactose intolerant' needs a scientific source.",
+    "Find out how widespread the milk-offering belief is in Sri Lanka specifically, compared with India's Nag Panchami.",
+    "Find Sri Lankan sources on cobra (naya) welfare and on snake-bite safety for a responsible ending."
+   ],
+   "cautions": [
+    "Religious and cultural sensitivity: snakes are revered in Hindu and Buddhist traditions. Explain the biology without mocking anyone's worship.",
+    "Wildlife SOS is an advocacy group, and its account of how snakes are captured and starved needs independent support.",
+    "Never show handling a venomous snake as something to copy."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I058",
+   "title": "How does an elephant drink with its trunk?",
+   "sweep": "evergreen",
+   "field": "animals & ecology",
+   "hook": "An elephant's trunk isn't a straw. Watch where the water actually goes.",
+   "angle": "An elephant sucks water partway up its trunk, widening its nostrils to hold more, then blows it into its mouth. It doesn't drink through the trunk.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027. Elephants are a local favourite.",
+   "sources": [
+    {
+     "url": "https://www.snexplores.org/article/elephants-trunk-suction-biophysics-water-airflow",
+     "title": "Engineers surprised by the power of an elephant's trunk",
+     "date": "2021-06-23",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read the original paper (Schulz et al., 2021, Journal of the Royal Society Interface, on Zoo Atlanta's African elephant) for the volumes and flow speeds. SN Explores gives a starting nostril capacity of about 5 L that can grow by more than 60%, and a flow of about 3.7 L per second.",
+    "Check whether the findings carry over to Asian, and so Sri Lankan, elephants.",
+    "Find a sourced daily water intake for an Asian elephant."
+   ],
+   "cautions": [
+    "The study used one African elephant, so don't extrapolate to Sri Lankan elephants without a source.",
+    "Draw the elephants rather than using wildlife footage, and avoid scenes of captive elephants used for entertainment."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I059",
+   "title": "Is summer when Earth is closest to the Sun?",
+   "sweep": "evergreen",
+   "field": "space & physics",
+   "hook": "On 3 January 2027, Earth will be at its closest to the Sun all year. It's winter for half the planet.",
+   "angle": "Earth's orbit is nearly circular. Seasons come from the tilt of Earth's axis, which changes how directly sunlight hits you, not from distance.",
+   "why_now": "Perihelion falls inside the quarter: the US Naval Observatory gives 3 January 2027 at 02:33 UT, which is about 08:03 Sri Lanka time.",
+   "sources": [
+    {
+     "url": "https://earthsky.org/tonight/earth-comes-closest-to-sun-every-year-in-early-january/",
+     "title": "Earth at perihelion – closest to sun – on January 3",
+     "date": "2025-12-27",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the 2027 perihelion time on USNO's 'Earth's Seasons - Equinoxes, Solstices, Perihelion, and Aphelion' service (https://aa.usno.navy.mil/data/Earth_Seasons, no page date). Its data for 2027 lists perihelion on 3 January at 02:33 UT and aphelion on 5 July at 05:06 UT.",
+    "Get the perihelion and aphelion distances (about 147 versus 152 million km) and the roughly 3% difference from a NASA or USNO source.",
+    "Local twist: near the equator, Sri Lanka's 'seasons' are monsoons rather than summer and winter. Link to the monsoon explainer."
+   ],
+   "cautions": [
+    "Never show or suggest looking straight at the Sun.",
+    "Give the time in Sri Lanka time (UTC+5:30) and check the conversion."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I060",
+   "title": "Can you see the Great Wall of China from space?",
+   "sweep": "evergreen",
+   "field": "space & physics",
+   "hook": "China's first astronaut looked for the Great Wall from orbit. He couldn't see it.",
+   "angle": "The wall is very long but narrow. Seeing it from orbit depends on width and contrast, not length, and modern desert roads show up more readily than the ancient wall.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.scientificamerican.com/article/is-chinas-great-wall-visible-from-space/",
+     "title": "Is China's Great Wall Visible from Space?",
+     "date": "2008-02-21",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read NASA's 2005 feature 'China's Wall Less Great in View from Space' (archived) and the Leroy Chiao zoom-lens photo from the ISS, 2004.",
+    "Get the eye-resolution maths: wall width against orbital altitude.",
+    "Find which human-made features astronauts do report seeing with the naked eye."
+   ],
+   "cautions": [
+    "Show national pride respectfully. Don't mock China.",
+    "Don't use real astronauts' likenesses or NASA or CNSA photos without checking licences. Draw them.",
+    "'Visible from space' depends on altitude and conditions, so define 'low Earth orbit' and 'naked eye'."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I061",
+   "title": "Is there no gravity in space?",
+   "sweep": "evergreen",
+   "field": "space & physics",
+   "hook": "Climb a ladder up to the space station and you'd still weigh about 90% of what you do now.",
+   "angle": "Astronauts float because they and their station are falling around Earth together, in free fall, not because gravity has switched off.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.nasa.gov/learning-resources/for-kids-and-students/what-is-microgravity-grades-5-8/",
+     "title": "What Is Microgravity? (Grades 5-8)",
+     "date": "2012-02-15",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Use NASA's figures: the ISS at about 200-250 miles altitude, where gravity is about 90% of its strength at the surface.",
+    "Use Newton's cannonball thought experiment for the 'falling around Earth' visual.",
+    "Check the ISS orbital speed against a NASA source."
+   ],
+   "cautions": [
+    "Don't depict real astronauts or agency logos. Use original characters."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I062",
+   "title": "Why your phone's map needs Einstein",
+   "sweep": "evergreen",
+   "field": "space & physics",
+   "hook": "Without Einstein's relativity, your map app would drift by kilometres every day.",
+   "angle": "Clocks on GPS satellites run fast by about 38 microseconds a day: general relativity speeds them up and their orbital speed slows them down. Engineers correct for both.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.astronomy.ohio-state.edu/pogge.1/Ast162/Unit5/gps.html",
+     "title": "GPS and Relativity",
+     "date": "2017-03-11",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check Pogge's numbers (+45 microseconds a day from general relativity, -7 from special relativity, net +38, and an uncorrected error of about 10 km a day) against Ashby's Living Reviews in Relativity paper.",
+    "Explain how a receiver uses timing from 4 or more satellites to fix its position.",
+    "Check how the satellite clocks are adjusted before launch."
+   ],
+   "cautions": [
+    "Some physicists argue the '10 km per day' figure oversimplifies what receivers actually do. Phrase it as 'errors would build up quickly'.",
+    "Don't use the Google Maps or Apple Maps interface. Draw a generic map app."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I063",
+   "title": "Lightning never strikes the same place twice?",
+   "sweep": "evergreen",
+   "field": "earth & climate",
+   "hook": "The Empire State Building gets hit by lightning about 25 times a year.",
+   "angle": "Lightning favours tall, pointed, isolated objects, so the same spot can be hit again and again, sometimes several times in one storm.",
+   "why_now": "March is the start of Sri Lanka's first inter-monsoon season (March-April), when afternoon thunderstorms are common. That makes it a timely lightning-safety tie-in.",
+   "sources": [
+    {
+     "url": "https://www.mprnews.org/story/2014/07/08/when-lightning-strikes-tall-buildings",
+     "title": "When lightning strikes tall buildings",
+     "date": "2014-07-08",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.livescience.com/13704-empire-state-building-lightning-strike.html",
+     "title": "Video Captures Lightning Striking Empire State Building 3 Times",
+     "date": "2011-04-13",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.jma.go.jp/jma/en/Activities/qmws_2010/Presentation/S404_Dayananda.pdf",
+     "title": "Meteorological Observations and Instrumental Systems for Meteorological services in Sri Lanka (M.D. Dayananda, Department of Meteorology)",
+     "date": "2010",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "The NWS 'Lightning Myths' page (https://www.weather.gov/safety/lightning-myths, no date shown) gives an average of 23 strikes a year, while MPR quoting the NWS gives 25 and Martin Uman gives 20-25. Pick one sourced figure.",
+    "Get lightning-death and safety statistics for Sri Lanka from the Department of Meteorology or the Disaster Management Centre.",
+    "Explain why tall objects get hit: upward streamers and the shorter distance to the cloud."
+   ],
+   "cautions": [
+    "This is safety content: NWS says no place outdoors is safe in a thunderstorm. Use official Sri Lankan advice, and never suggest a risky 'shelter'.",
+    "Draw the buildings rather than using real lightning footage."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I064",
+   "title": "Do toilets flush the other way south of the equator?",
+   "sweep": "evergreen",
+   "field": "earth & climate",
+   "hook": "Tourists pay to watch water swirl 'the other way' at the equator. It's a trick.",
+   "angle": "The Coriolis effect is real and steers cyclones, but in a sink or toilet it is far too weak. The shape of the bowl and how the water went in decide the spin.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.scientificamerican.com/article/can-somebody-finally-sett/",
+     "title": "Does Water Flowing down a Drain Spin Differently Depending on the Hemisphere?",
+     "date": "2001-01-28",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.livescience.com/physics-mathematics/does-water-drain-in-different-directions-in-the-northern-and-southern-hemispheres",
+     "title": "Does water drain in different directions in the Northern and Southern hemispheres?",
+     "date": "2026-08-29",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find the carefully controlled tank experiments that did detect the Coriolis spin (MIT in the 1960s, and the later University of Sydney counterpart in Nature, mentioned by Live Science) and cite them.",
+    "Link to cyclones: why the Bay of Bengal cyclones that reach Sri Lanka spin anticlockwise.",
+    "Get a rough comparison of the strength of the Coriolis effect against the flow in a household drain."
+   ],
+   "cautions": [
+    "Don't say 'the Coriolis effect is a myth'. It is real at large scales.",
+    "Don't show real tourist operators or name them."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I065",
+   "title": "Why does Sri Lanka have two monsoons?",
+   "sweep": "evergreen",
+   "field": "earth & climate",
+   "hook": "Sri Lanka doesn't really have summer and winter. It has two monsoons.",
+   "angle": "The winds swing round twice a year. The northeast monsoon (December-February) soaks the north and east; the southwest monsoon (May-September) soaks the southwest and hill country.",
+   "why_now": "The northeast monsoon runs December-February, covering most of the quarter.",
+   "sources": [
+    {
+     "url": "https://www.jma.go.jp/jma/en/Activities/qmws_2010/Presentation/S404_Dayananda.pdf",
+     "title": "Meteorological Observations and Instrumental Systems for Meteorological services in Sri Lanka (M.D. Dayananda, Department of Meteorology)",
+     "date": "2010",
+     "checked": "ok"
+    },
+    {
+     "url": "https://newsfirst.lk/2025/12/08/northeast-monsoon-gradually-establishing-over-sri-lanka",
+     "title": "Northeast Monsoon Gradually Establishing Over Sri Lanka",
+     "date": "2025-12-08",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the current season definitions and rainfall maps from the Department of Meteorology (meteo.gov.lk did not load from here).",
+    "Explain the mechanism: land and sea heating, and the shift of the ITCZ, from a textbook or IMD source.",
+    "Check how the central hills split the rain between the wet zone and the dry zone."
+   ],
+   "cautions": [
+    "Keep the film about seasons. Link to any recent flood disaster only carefully, and don't show real victims.",
+    "Don't use copyrighted weather-channel graphics. Draw original maps."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I066",
+   "title": "Should you drain your phone to 0% before charging?",
+   "sweep": "evergreen",
+   "field": "tech & computing",
+   "hook": "Letting your phone die before you charge it doesn't help the battery. It wears it out faster.",
+   "angle": "'Battery memory' came from old nickel-cadmium cells. Lithium-ion cells have no memory and last longest with partial, shallow cycles.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries",
+     "title": "BU-808: How to Prolong Lithium-based Batteries",
+     "date": "2010-09-11",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Battery University's BU-808 (published 2010, updated 2026-01-16) says partial discharge is fine, there is no memory, and full discharges should be avoided. It also has a table of cycle life against depth of discharge. Verify the table with a peer-reviewed source.",
+    "Apple's 'Batteries - Why Lithium-ion?' page (https://www.apple.com/batteries/why-lithium-ion/, no date shown) says to charge whenever you want, with no need to discharge 100%. Use it as manufacturer support.",
+    "Check the nuance that a 'memory-like' effect has been reported in lithium iron phosphate cells (Paul Scherrer Institute)."
+   ],
+   "cautions": [
+    "Don't name or show phone brands.",
+    "Battery safety: avoid any advice about cheap chargers or heat beyond what official sources say."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I067",
+   "title": "Does incognito mode make you invisible online?",
+   "sweep": "evergreen",
+   "field": "tech & computing",
+   "hook": "Incognito mode hides your browsing from your own phone. It doesn't hide it from the internet.",
+   "angle": "Private browsing deletes history and cookies on your device. Websites, your school or employer's network and your internet provider can still see your activity.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://ctvnews.ca/sci-tech/google-to-destroy-browsing-data-to-settle-consumer-privacy-lawsuit-1.6829170",
+     "title": "Google to destroy browsing data to settle consumer privacy lawsuit",
+     "date": "2024-04-01",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Google's Chrome Help page 'Browse in Incognito mode' (https://support.google.com/chrome/answer/95464?hl=en, no date shown) says websites and organisations that manage your network, such as a school, employer or internet provider, may be able to observe activity in Incognito. Quote it.",
+    "Check the same point for Safari and Firefox private browsing, to keep the film brand-neutral.",
+    "Explain the difference between local and network privacy, and what a VPN does and doesn't do, from a neutral source such as EFF."
+   ],
+   "cautions": [
+    "The lawsuit involved a real company, so state it neutrally and accurately. Coverage reports that Google settled without making payments and said the suit was meritless; verify the exact wording before using it.",
+    "Don't show real browser interfaces or logos.",
+    "Privacy content for teens: don't suggest ways to dodge school or parental controls."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I068",
+   "title": "Do microwaves cook food from the inside out?",
+   "sweep": "evergreen",
+   "field": "tech & computing",
+   "hook": "If microwaves cooked from the inside out, why is the middle of your leftovers still cold?",
+   "angle": "Microwaves mainly heat the outer layers of thick food. The centre warms by ordinary conduction from those hot layers, which is why you stir and let food stand. Microwaved food isn't radioactive.",
+   "why_now": "Evergreen Myth Monday slot; no news peg needed, so it can fill any week of Jan-Mar 2027.",
+   "sources": [
+    {
+     "url": "https://www.fda.gov/radiation-emitting-products/resources-you-radiation-emitting-products/microwave-ovens",
+     "title": "Microwave Ovens",
+     "date": "2023-10-12",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find a sourced penetration depth for 2.45 GHz microwaves in food. The FDA page states the principle but gives no depth.",
+    "Get the FDA's wording that microwave energy doesn't make food radioactive.",
+    "Explain how a magnetron and the oven's metal box work, for an animation beat."
+   ],
+   "cautions": [
+    "Food-safety content: uneven heating can leave cold spots, so keep the FDA advice to stir and let food stand.",
+    "Don't show metal-in-microwave stunts.",
+    "Avoid real appliance brands."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (evergreen sweep, 2026-11-02)"
+  },
+  {
+   "id": "I069",
+   "title": "The kidney mystery in Sri Lanka's rice bowl",
+   "sweep": "dated_hook",
+   "field": "life & health",
+   "hook": "In some Sri Lankan farming districts, kidneys are failing, and scientists still can't agree why.",
+   "angle": "What kidneys do as the body's filters, and how scientists test competing suspects (water, metals, heat, farm chemicals) for chronic kidney disease of unknown cause (CKDu) without a final answer.",
+   "why_now": "World Kidney Day falls on Thursday 11 March 2027 (it is held on the second Thursday of March); the 2027 theme is 'Kidneys, Heart, and Metabolism: The Core of Your Health'.",
+   "sources": [
+    {
+     "url": "https://www.worldkidneyday.org/2027-campaign/",
+     "title": "World Kidney Day 2027 campaign: Kidneys, Heart, and Metabolism: The Core of Your Health",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.worldkidneyday.org/frequently-asked-questions/",
+     "title": "World Kidney Day: Frequently Asked Questions",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5102238/",
+     "title": "Chronic kidney disease of unknown etiology in Sri Lanka (Rajapakse, Shivanthan, Selvarajah; Int J Occup Environ Health 22(3):259-264)",
+     "date": "2016-07",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check the 2016 review's prevalence range (15.1-22.9% in Anuradhapura, Polonnaruwa, Badulla) against newer Ministry of Health / NCP data.",
+    "Look for the latest consensus papers (2020s) on CKDu causes, including heat stress and genetics.",
+    "Confirm what the 2027 WKD campaign materials say, to align the film's tone."
+   ],
+   "cautions": [
+    "Contested evidence: no single cause is established; do not blame any one agrochemical, water source or community.",
+    "Sensitive health topic for affected families; use drawn characters only, no real patients.",
+    "Avoid implying medical advice; point to doctors for symptoms."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "date": "2027-03-11",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I070",
+   "title": "The day TB got caught",
+   "sweep": "dated_hook",
+   "field": "life & health",
+   "hook": "For centuries tuberculosis killed without a known culprit, until one microscope slide on 24 March 1882 changed that.",
+   "angle": "How Robert Koch identified the bacterium behind TB, and how that discovery made diagnosis and treatment possible.",
+   "why_now": "World Tuberculosis Day is 24 March, the date in 1882 when Koch announced the discovery of the TB bacterium.",
+   "sources": [
+    {
+     "url": "https://www.who.int/campaigns/world-tb-day",
+     "title": "World Tuberculosis Day (WHO)",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.un.org/en/observances/list-days-weeks",
+     "title": "List of International Days and Weeks (United Nations)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find current WHO Global TB Report figures for the film's numbers.",
+    "Check Sri Lanka's National Programme for Tuberculosis Control and Chest Diseases for a local statistic.",
+    "Verify how Koch stained and grew the bacterium (Koch's 1882 lecture)."
+   ],
+   "cautions": [
+    "Health topic with stigma; keep it about the microbe and the science, not about ill people.",
+    "Do not give treatment advice; TB treatment must be medically supervised."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "date": "2027-03-24",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I071",
+   "title": "How Sri Lanka beat elephantiasis",
+   "sweep": "dated_hook",
+   "field": "life & health",
+   "hook": "A mosquito bite in childhood could mean swollen legs decades later, and Sri Lanka stopped it.",
+   "angle": "How lymphatic filariasis (elephantiasis) spreads through mosquitoes and how mosquito control, mass treatment and surveillance let Sri Lanka eliminate it as a public health problem.",
+   "why_now": "World Neglected Tropical Diseases Day is 30 January (recognised by WHA decision WHA74(18)).",
+   "sources": [
+    {
+     "url": "https://www.who.int/campaigns/world-ntd-day",
+     "title": "World Neglected Tropical Diseases Day - 30 January (WHO)",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.who.int/southeastasia/news/detail/03-06-2016-maldives-and-sri-lanka-eliminate-lymphatic-filariasis",
+     "title": "Maldives and Sri Lanka eliminate lymphatic filariasis (WHO SEARO news release)",
+     "date": "2016-06-03",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the life cycle of Wuchereria bancrofti and which mosquito species carry it in Sri Lanka.",
+    "Ask the Anti Filariasis Campaign (Sri Lanka) about post-elimination surveillance.",
+    "Check whether WHO has any newer note on Sri Lanka's status."
+   ],
+   "cautions": [
+    "Disability imagery can stigmatise; draw symptoms gently or not at all, no real patient photos.",
+    "'Eliminated as a public health problem' is not the same as zero cases; say it precisely."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-01-30",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I072",
+   "title": "The dhal that makes its own fertiliser",
+   "sweep": "dated_hook",
+   "field": "plants & farming",
+   "hook": "The parippu on your plate came from a plant that pulls fertiliser out of thin air.",
+   "angle": "How pulses (lentils, mung, cowpea) host root bacteria that fix nitrogen from the air into the soil, and why that matters for farms and diets.",
+   "why_now": "World Pulses Day (FAO) is 10 February.",
+   "sources": [
+    {
+     "url": "https://www.fao.org/world-pulses-day/en",
+     "title": "World Pulses Day | FAO",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.un.org/en/observances/list-days-weeks",
+     "title": "List of International Days and Weeks (United Nations)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Verify the root-nodule / Rhizobium mechanism from a plant science source.",
+    "Find Sri Lankan pulse crops grown locally (e.g. mung bean, cowpea) and Department of Agriculture data on production vs imports."
+   ],
+   "cautions": [
+    "Keep nutrition claims to what FAO states; avoid diet advice."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-02-10",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I073",
+   "title": "Can a forest make its own rain?",
+   "sweep": "dated_hook",
+   "field": "plants & farming",
+   "hook": "Every tree is a fountain running upside down.",
+   "angle": "How trees pull water from the soil and release it as vapour (transpiration), helping clouds and rain over forests like Sri Lanka's Sinharaja.",
+   "why_now": "The International Day of Forests (FAO) is 21 March.",
+   "sources": [
+    {
+     "url": "https://www.fao.org/international-day-of-forests/en",
+     "title": "International Day of Forests | FAO",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.un.org/en/observances/list-days-weeks",
+     "title": "List of International Days and Weeks (United Nations)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find peer-reviewed sources on transpiration and forest-rainfall feedbacks (e.g. Amazon 'flying rivers') before claiming forests make rain.",
+    "Verify Sinharaja facts (UNESCO World Heritage listing, endemism) on the UNESCO page, which blocked automated access."
+   ],
+   "cautions": [
+    "The size of the forest-rain effect is still researched; phrase as 'help make', not 'make'."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-03-21",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)"
+  },
+  {
+   "id": "I074",
+   "title": "Sri Lanka's water staircases",
+   "sweep": "dated_hook",
+   "field": "plants & farming",
+   "hook": "In Sri Lanka's dry zone, when one village tank fills up, it spills into the next one down the hill.",
+   "angle": "How the cascaded tank-village system stores monsoon rain in a chain of small reservoirs to irrigate paddy, buffering floods and droughts.",
+   "why_now": "World Water Day is 22 March; the FAO lists the Cascaded Tank-Village System as a Globally Important Agricultural Heritage System since 2017.",
+   "sources": [
+    {
+     "url": "https://www.un.org/en/observances/list-days-weeks",
+     "title": "List of International Days and Weeks (United Nations)",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.fao.org/giahs/giahs-around-the-world/sri-lanka-cascaded-tank-village-system/en",
+     "title": "Cascaded Tank-Village System, Sri Lanka | GIAHS | FAO",
+     "date": "2017",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Verify the age of the tank systems (often said to be ancient) with an archaeological or irrigation-history source.",
+    "Get one concrete cascade example (FAO cites Palugaswewa, Anuradhapura) and its scale.",
+    "Check the UN-Water 2027 World Water Day theme when announced."
+   ],
+   "cautions": [
+    "Avoid romanticising; some tanks are degraded or silted.",
+    "Do not overstate antiquity without a source."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-03-22",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I075",
+   "title": "Wetlands: nature's sponges",
+   "sweep": "dated_hook",
+   "field": "animals & ecology",
+   "hook": "Wetlands are disappearing three times faster than forests.",
+   "angle": "How wetlands soak up floodwater, filter it and shelter birds and fish, using a Sri Lankan lagoon or marsh as the drawn setting.",
+   "why_now": "World Wetlands Day is 2 February (the Ramsar Convention's day).",
+   "sources": [
+    {
+     "url": "https://www.un.org/en/observances/world-wetlands-day",
+     "title": "World Wetlands Day | United Nations",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the UN figures (about 35% of wetlands lost since 1970; three times faster than forests) against the Ramsar Global Wetland Outlook.",
+    "List Sri Lanka's Ramsar sites (e.g. Bundala) and Colombo's Ramsar Wetland City status from ramsar.org (blocked for automated access).",
+    "Confirm the Ramsar Convention signing date (2 February 1971)."
+   ],
+   "cautions": [
+    "Use drawn birds/landscapes, not copyrighted wildlife footage."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-02-02",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I076",
+   "title": "The underwater meadow the dugong eats",
+   "sweep": "dated_hook",
+   "field": "animals & ecology",
+   "hook": "Underwater meadows can hold up to 18% of the world's ocean carbon, and they feed sea cows.",
+   "angle": "What seagrass is (a flowering plant, not seaweed), why its meadows lock away carbon, and who depends on it, such as dugongs in Sri Lankan waters.",
+   "why_now": "World Seagrass Day is 1 March (UNGA resolution 76/265).",
+   "sources": [
+    {
+     "url": "https://www.un.org/en/observances/seagrass-day",
+     "title": "World Seagrass Day | United Nations",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Verify dugong presence and status in the Gulf of Mannar / Palk Bay / Puttalam lagoon with IUCN or Sri Lankan sources.",
+    "Check the '18% of oceanic carbon' and '22 of 72 species in decline' figures in the underlying UNEP/UN report."
+   ],
+   "cautions": [
+    "Dugongs are threatened; avoid giving precise locations that could aid poaching.",
+    "Original drawn dugong only; no copyrighted footage."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "date": "2027-03-01",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I077",
+   "title": "Why does a tortoise need a passport?",
+   "sweep": "dated_hook",
+   "field": "animals & ecology",
+   "hook": "Some animals can't cross a border without a permit, and a 1973 treaty is why.",
+   "angle": "How CITES lists species in appendices and controls their international trade to stop wild populations being emptied.",
+   "why_now": "World Wildlife Day is 3 March, the day CITES was signed in 1973.",
+   "sources": [
+    {
+     "url": "https://www.wildlifeday.org/en/about",
+     "title": "About World Wildlife Day",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.un.org/en/observances/world-wildlife-day",
+     "title": "World Wildlife Day | United Nations",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Find a Sri Lanka example on cites.org (e.g. whether the star tortoise was moved to Appendix I and who proposed it).",
+    "Check the 2027 World Wildlife Day theme once announced and adjust the angle."
+   ],
+   "cautions": [
+    "Wildlife trafficking is a crime topic; do not show how to smuggle.",
+    "Use original drawn animals."
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-03-03",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)"
+  },
+  {
+   "id": "I078",
+   "title": "The rings found by a blinking star",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "hook": "In 1977 astronomers discovered rings around Uranus without seeing them at all.",
+   "angle": "How a stellar occultation works: a star winked out several times before and after Uranus passed in front of it, revealing thin rings.",
+   "why_now": "50th anniversary: on 10 March 1977 observers watched Uranus pass in front of star SAO 158687 and found its rings.",
+   "sources": [
+    {
+     "url": "https://science.nasa.gov/uranus/exploration/",
+     "title": "Uranus: Exploration - NASA Science",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://news.mit.edu/2011/obit-elliot",
+     "title": "EAPS, physics professor James Elliot dies at 67 (MIT News)",
+     "date": "2011-03-05",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Read the 1977 Nature paper (Elliot, Dunham, Mink, 'The rings of Uranus', Nature 267:328) for how many dips were seen.",
+    "Confirm the observing platform (NASA Kuiper Airborne Observatory) and current ring count from NASA."
+   ],
+   "cautions": [
+    "Name the team accurately; avoid showing real people, draw an original astronomer character."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": false,
+   "date": "2027-03-10",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)"
+  },
+  {
+   "id": "I079",
+   "title": "Mars and Jupiter face the Sun head-on",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "hook": "This February, two planets line up exactly opposite the Sun, one week apart.",
+   "angle": "What opposition means (Earth between the Sun and a planet), why the planet looks brightest and rises at sunset, and why Mars only does it every two years or so.",
+   "why_now": "Jupiter reaches opposition on 11 February 2027 and Mars on 19 February 2027 (UT); both are easy evening/night targets from Sri Lanka.",
+   "sources": [
+    {
+     "url": "https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/phenomena_en.cgi?year=2027",
+     "title": "Celestial Phenomena 2027 (National Astronomical Observatory of Japan)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "NAOJ lists times in JST: Jupiter 2027-02-11 09:29 JST, Mars 2027-02-20 00:51 JST (= 19 Feb 15:51 UT, 21:21 Sri Lanka time); confirm with USNO/JPL.",
+    "Check Mars' distance and brightness at this (aphelic) opposition from an official ephemeris.",
+    "Verify the ~26-month interval between Mars oppositions."
+   ],
+   "cautions": [
+    "Local date for Mars opposition is 20 Feb in Japan but 19 Feb in Sri Lanka; state the time zone.",
+    "Avoid hype: this is not a close Mars opposition."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-02-19",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)"
+  },
+  {
+   "id": "I080",
+   "title": "Two eclipses, two weeks apart",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "hook": "On 6 February the Sun becomes a ring of fire; two weeks later the Moon barely dims. Same cause.",
+   "angle": "Why eclipses come in pairs during 'eclipse seasons', and why a penumbral lunar eclipse is so subtle, with the 21 February pre-dawn view from Sri Lanka.",
+   "why_now": "Annular solar eclipse 6 February 2027 (South America, Africa); penumbral lunar eclipse 20 February 2027, greatest at 23:12:50 UT (04:42 on 21 Feb Sri Lanka time), visible from Asia.",
+   "sources": [
+    {
+     "url": "https://science.nasa.gov/eclipses/future-eclipses/",
+     "title": "Future Eclipses - NASA Science",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://eclipse.gsfc.nasa.gov/LEplot/LEplot2001/LE2027Feb20N.pdf",
+     "title": "Penumbral Lunar Eclipse of 2027 Feb 20 (F. Espenak, NASA GSFC)",
+     "date": "2009-04-29",
+     "checked": "ok"
+    },
+    {
+     "url": "https://eclipse.gsfc.nasa.gov/LEdecade/LEdecade2021.html",
+     "title": "Lunar Eclipses: 2021-2030 (NASA GSFC)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "NASA GSFC plot: penumbral magnitude 0.9266, umbral magnitude -0.0569; confirm what dimming is visible to the naked eye.",
+    "Compute moonset time for Colombo on 21 Feb 2027 to confirm the greatest eclipse is above the horizon.",
+    "Get the 6 Feb annular path from NASA's solar eclipse page (GSFC solar pages returned 503)."
+   ],
+   "cautions": [
+    "Eye safety: the solar eclipse must never be viewed without proper filters, even though it is not visible from Sri Lanka.",
+    "Local date of the lunar eclipse in Sri Lanka is 21 Feb."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "date": "2027-02-20",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I081",
+   "title": "Uncertainty is not clumsiness",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "hook": "A century ago, one paper said you can never know exactly where a particle is and how fast it's moving.",
+   "angle": "What Heisenberg's uncertainty principle actually says (a limit built into nature, not bad instruments), with a drawn wave-packet analogy.",
+   "why_now": "100th anniversary: Heisenberg's paper 'Über den anschaulichen Inhalt der quantentheoretischen Kinematik und Mechanik' was received by Zeitschrift für Physik on 23 March 1927.",
+   "sources": [
+    {
+     "url": "https://link.springer.com/article/10.1007/BF01397280",
+     "title": "Über den anschaulichen Inhalt der quantentheoretischen Kinematik und Mechanik (W. Heisenberg, Zeitschrift für Physik 43, 172-198)",
+     "date": "1927-03",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Check a physics-education source for a correct plain-language statement (position-momentum relation, Delta x Delta p >= hbar/2).",
+    "Confirm the paper's received date (23 March 1927) is the right anniversary to anchor on."
+   ],
+   "cautions": [
+    "Common myth: 'observing disturbs it' is only part of the story; get a physicist to review the script.",
+    "Avoid quantum mysticism framing."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": false,
+   "date": "2027-03-23",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)"
+  },
+  {
+   "id": "I082",
+   "title": "Why the Moon doesn't fall (it does)",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "hook": "Isaac Newton died 300 years ago this month, and every satellite above Sri Lanka still follows his maths.",
+   "angle": "Newton's cannonball idea: the Moon and satellites are always falling toward Earth but moving sideways fast enough to keep missing.",
+   "why_now": "300th anniversary of Newton's death: Westminster Abbey records he died at Kensington on 20 March 1727 (Old Style dating).",
+   "sources": [
+    {
+     "url": "https://www.westminster-abbey.org/abbey-commemorations/commemorations/sir-isaac-newton",
+     "title": "Sir Isaac Newton | Westminster Abbey",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Calendar note: 20 March 1727 is Old Style (Julian); the Gregorian date is 31 March 1727, also inside the quarter. Confirm with the Royal Society or Newton Project.",
+    "Source the cannonball thought experiment from Newton's 'A Treatise of the System of the World'."
+   ],
+   "cautions": [
+    "Precision systems like GPS also need relativity corrections; don't claim Newton's maths is the whole story.",
+    "Draw an original Newton-inspired character only if style allows; no copyrighted portraits."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "date": "2027-03-20",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I083",
+   "title": "Closest to the Sun in January",
+   "sweep": "dated_hook",
+   "field": "earth & climate",
+   "hook": "On 3 January, Earth is closer to the Sun than on any other day of the year.",
+   "angle": "Seasons come from Earth's tilt, not its distance from the Sun, and near the equator in Sri Lanka the yearly rhythm is set by monsoons instead.",
+   "why_now": "Earth reaches perihelion on 3 January 2027 at 02:33 UT (08:03 Sri Lanka time).",
+   "sources": [
+    {
+     "url": "https://aa.usno.navy.mil/calculated/seasons?year=2027&tz=0.00&tz_sign=-1&tz_label=false&dst=false",
+     "title": "Earth's Seasons and Apsides, 2027 (U.S. Naval Observatory)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the perihelion/aphelion distances from USNO or JPL to show the small difference.",
+    "Use Sri Lanka Department of Meteorology climate data for the monsoon seasons."
+   ],
+   "cautions": [
+    "Classic misconception; ensure the tilt explanation is visually clear."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "date": "2027-01-03",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I084",
+   "title": "Equal night? Not quite",
+   "sweep": "dated_hook",
+   "field": "earth & climate",
+   "hook": "The equinox is supposed to mean equal day and night. It doesn't, not even in Sri Lanka.",
+   "angle": "What the equinox really is (the Sun crossing the celestial equator) and why sunrise/sunset definitions and refraction make daylight a little longer than 12 hours.",
+   "why_now": "March equinox: 20 March 2027 at 20:25 UT (01:55 on 21 March, Sri Lanka time).",
+   "sources": [
+    {
+     "url": "https://aa.usno.navy.mil/calculated/seasons?year=2027&tz=0.00&tz_sign=-1&tz_label=false&dst=false",
+     "title": "Earth's Seasons and Apsides, 2027 (U.S. Naval Observatory)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get Colombo sunrise/sunset times for 20-21 March 2027 from USNO to show day length.",
+    "Check the definition of sunrise (upper limb, refraction) on USNO."
+   ],
+   "cautions": [
+    "Local date is 21 March in Sri Lanka; state time zones."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "date": "2027-03-20",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I085",
+   "title": "What '70% chance of rain' really means",
+   "sweep": "dated_hook",
+   "field": "earth & climate",
+   "hook": "Your weather app says 70% chance of rain. Most people get that number wrong.",
+   "angle": "How forecasters run many simulations (ensembles) to turn uncertain weather into a probability, and how that helps warnings for Sri Lanka's monsoons.",
+   "why_now": "World Meteorological Day is 23 March; the 2027 theme is 'Trusted Science. Better Forecasts. Safer World.'",
+   "sources": [
+    {
+     "url": "https://wmo.int/news/campaigns/world-meteorological-day",
+     "title": "World Meteorological Day | WMO",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.un.org/en/observances/list-days-weeks",
+     "title": "List of International Days and Weeks (United Nations)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Verify the definition of probability of precipitation from a national met service.",
+    "Ask Sri Lanka's Department of Meteorology how they issue monsoon and cyclone warnings."
+   ],
+   "cautions": [
+    "Disaster warnings are safety-critical; tell viewers to follow official alerts."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "date": "2027-03-23",
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)"
+  },
+  {
+   "id": "I086",
+   "title": "The man inside every battery",
+   "sweep": "dated_hook",
+   "field": "tech & computing",
+   "hook": "Alessandro Volta died 200 years ago, and his name is printed on every battery you own.",
+   "angle": "How Volta's pile made the first steady electric current from stacked metals and wet layers, and how today's batteries (some using graphite like Sri Lanka's) work on the same idea.",
+   "why_now": "200th anniversary of Volta's death on 5 March 1827; Como, Pavia and Milan run a bicentenary programme through 2027.",
+   "sources": [
+    {
+     "url": "https://www.bibliotecadigitale.unipv.eu/items/896e0fff-9e22-488e-bb4a-b7014b555555",
+     "title": "Volta, Alessandro (Biblioteca Digitale, Università di Pavia)",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://alessandrovolta.it/en/",
+     "title": "200VOLTeVOLTA - Alessandro Volta bicentenary (Fondazione Alessandro Volta)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Pavia page: Volta announced his 'artificial electric organ' (the pile) in a letter to Joseph Banks dated 20 March 1800; confirm with Royal Society records.",
+    "Verify that the SI unit volt is named after him (BIPM SI brochure).",
+    "Check Sri Lanka vein graphite and its use in battery anodes with the Geological Survey and Mines Bureau."
+   ],
+   "cautions": [
+    "Don't show batteries being opened or short-circuited (safety).",
+    "Graphite-in-batteries link is a lead only until sourced."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "date": "2027-03-05",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I087",
+   "title": "Hello, London? The first public call across the ocean",
+   "sweep": "dated_hook",
+   "field": "tech & computing",
+   "hook": "100 years ago, a phone call crossed the Atlantic with no cable at all.",
+   "angle": "How the 1927 transatlantic telephone service sent voices by radio between transmitter and receiving stations, and how today's calls ride undersea fibre-optic cables instead.",
+   "why_now": "100th anniversary: the first official commercial transatlantic telephone call was made on 7 January 1927 between New York and London.",
+   "sources": [
+    {
+     "url": "https://www.loc.gov/static/programs/national-recording-preservation-board/documents/FirstTransatlanticTelephoneCall.pdf",
+     "title": "First Official Transatlantic Telephone Call (January 7, 1927) - National Recording Registry essay by Cary O'Dell with Sheldon Hochheiser, Library of Congress",
+     "date": "2020-07-30",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.comsoc.org/node/18956",
+     "title": "First Transatlantic Phone Call (IEEE Communications Society)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "LoC: route went New York - Rocky Point (radio) - Rugby, England; return via Cupar, Scotland - Houlton, Maine. Confirm with BT Archives.",
+    "Find which submarine cables land in Sri Lanka today for the modern half of the story (TeleGeography / operator pages)."
+   ],
+   "cautions": [
+    "The recording itself is historic audio; check rights before using any of it, or recreate with drawn characters and new voices."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "date": "2027-01-07",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I088",
+   "title": "AI is mostly multiplication",
+   "sweep": "dated_hook",
+   "field": "tech & computing",
+   "hook": "Behind every AI chatbot answer is a mountain of school-level maths: multiply, add, repeat.",
+   "angle": "How a neural network turns numbers into predictions using simple multiplication and addition repeated at enormous scale.",
+   "why_now": "International Day of Mathematics is 14 March; the 2027 theme is 'Mathematics, AI and Our Future'.",
+   "sources": [
+    {
+     "url": "https://www.idm314.org/",
+     "title": "International Day of Mathematics (IDM)",
+     "date": "2026",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm the IDM's UNESCO proclamation (2019) on unesco.org.",
+    "Have a machine-learning reviewer check the simplified neuron/weights explanation."
+   ],
+   "cautions": [
+    "Avoid hype or fear about AI; keep claims modest and accurate.",
+    "Don't depict real AI products' branding or interfaces."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "date": "2027-03-14",
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (dated_hook sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I089",
+   "title": "Do full moons really fill maternity wards?",
+   "sweep": "analysis",
+   "field": "life & health",
+   "hook": "Ask around a maternity ward and someone will tell you babies love a full moon. We lined up ten years of daily births to check.",
+   "angle": "How to test a folk claim with data: match every day's births to the Moon's phase and see whether full-moon days stand out from ordinary day-to-day noise.",
+   "why_now": "Each month of the quarter has a Poya full-moon holiday in Sri Lanka (Duruthu, Navam, Medin), so the full moon is already on viewers' calendars; Poya days stay public and bank holidays in 2027.",
+   "sources": [
+    {
+     "url": "https://www.em-consulte.com/article/426139/the-effect-of-the-lunar-cycle-on-frequency-of-birt",
+     "title": "The effect of the lunar cycle on frequency of births and birth complications (Arliss, Kaplan, Galvin, Am J Obstet Gynecol 192(5):1462-1464)",
+     "date": "2005",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.dailymirror.lk/breaking-news/2027-public-and-bank-holidays-gazetted/108-344844",
+     "title": "2027 public and bank holidays gazetted (Daily Mirror)",
+     "date": "2026-07-06",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get exact full-moon dates and times for 1994-2014 from the USNO moon-phases data service (aa.usno.navy.mil, 'public information') and assign each birth date a lunar phase.",
+    "Confirm the Arliss et al. 2005 result (564,039 North Carolina births, 1997-2001, 62 lunar cycles, no significant difference across 8 phases) from the full paper.",
+    "Check whether the SSA 2000-2014 file gives the same answer as the CDC/NCHS 1994-2003 file, and whether weekday and holiday effects (scheduled births) are larger than any lunar effect.",
+    "Confirm 2027 Poya dates (Duruthu, Navam, Medin) in the 2027 holiday gazette; search results gave Duruthu Poya as 22 January 2027 but the Central Bank page could not be opened.",
+    "Look for openly licensed Sri Lankan daily birth registrations; none were found or checked for licence."
+   ],
+   "cautions": [
+    "Pregnancy and birth topic: no medical advice, and nothing that could worry expectant parents.",
+    "The data are US births, not Sri Lankan; say so on screen.",
+    "Planned inductions and caesareans move births to weekdays, which can hide or fake patterns; explain this rather than over-claim.",
+    "Treat Poya and other lunar beliefs respectfully; the film tests a maternity-ward myth, not religious practice."
+   ],
+   "score": 4,
+   "format": "myth_vs_data",
+   "local": true,
+   "data": {
+    "source": "FiveThirtyEight 'births' dataset: US daily births 1994-2003 (CDC/NCHS) and 2000-2014 (Social Security Administration)",
+    "url": "https://github.com/fivethirtyeight/data/tree/master/births",
+    "terms": "CC BY 4.0 (Creative Commons Attribution 4.0 International, the fivethirtyeight/data repository LICENSE); the underlying CDC/NCHS and SSA counts are US government works",
+    "check": "Arliss et al. 2005: 564,039 births over 62 lunar cycles showed no significant differences in birth frequency across the eight lunar phases."
+   },
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)"
+  },
+  {
+   "id": "I090",
+   "title": "Where did Sri Lanka's extra 24 years of life come from?",
+   "sweep": "analysis",
+   "field": "life & health",
+   "hook": "A baby born in Sri Lanka in 1950 could expect to live about 53 years. A baby born in 2023? About 77.",
+   "angle": "What 'life expectancy at birth' really measures (an average pulled down by early deaths), and which ages Sri Lanka's gains came from, by comparing UN life tables across decades.",
+   "why_now": "Our World in Data's life-expectancy chart lists its next update for 2 December 2026, so the newest UN-based numbers should be out just before the quarter; UN WPP is revised every two years (latest confirmed: 2024).",
+   "sources": [
+    {
+     "url": "https://www.un.org/development/desa/pd/sites/www.un.org.development.desa.pd/files/undesa_pd_2024_wpp_2024_advance_unedited_0.pdf",
+     "title": "World Population Prospects 2024: Summary of Results (UN DESA Population Division)",
+     "date": "2024",
+     "checked": "ok"
+    },
+    {
+     "url": "https://ourworldindata.org/grapher/life-expectancy",
+     "title": "Life expectancy (Long-run data), Our World in Data",
+     "date": "2025-10-22",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Download WPP 2024 abridged life tables for Sri Lanka and decompose the 1950-2023 gain by age group, to test (not assume) how much came from fewer deaths of young children.",
+    "Check whether a WPP 2026 revision has been released and whether it changes Sri Lanka's figures.",
+    "OWID chart (WPP 2024) values to re-check: Sri Lanka 53.2 years (1950) and 77.5 (2023); India 72.0 and world 73.2 in 2023.",
+    "Compare with Sri Lanka's own vital registration figures (Registrar General / Department of Census and Statistics) and note their licence before use.",
+    "Look at the 2020-2021 COVID-19 dip and whether it shows in the Sri Lanka series."
+   ],
+   "cautions": [
+    "Child and maternal deaths are sensitive; keep the tone factual and avoid images of sick children.",
+    "Life expectancy at birth is not how long any one person will live; make that clear to avoid misreading.",
+    "WPP values are modelled estimates and change between revisions.",
+    "Avoid crediting a single policy for the gains unless the film's research supports it."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "UN DESA Population Division, World Population Prospects 2024 (life expectancy and life tables)",
+    "url": "https://population.un.org/wpp/",
+    "terms": "CC BY 3.0 IGO (Creative Commons Attribution 3.0 IGO, stated in the WPP 2024 Summary of Results); OWID's own charts are CC BY 4.0",
+    "check": "WPP 2024 Summary of Results: global life expectancy at birth reached 73.3 years in 2024, up 8.4 years since 1995."
+   },
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)"
+  },
+  {
+   "id": "I091",
+   "title": "The season Sri Lanka's rice harvest crashed",
+   "sweep": "analysis",
+   "field": "plants & farming",
+   "hook": "In one season, Sri Lanka's rice harvest fell by more than a third. Same fields, same farmers. What changed was the fertiliser.",
+   "angle": "Why rice plants need nitrogen and other nutrients, and what national paddy data show for output and yield before, during and after the 2021 chemical-fertiliser import ban.",
+   "why_now": "The 2026/27 Maha harvest falls in or near the quarter, five years after the 2021/22 Maha season; the film can compare the new season with the crash year.",
+   "sources": [
+    {
+     "url": "https://dailymirror.lk/business/National-average-rice-yield-hits-nearly-50-year-low-in-Maha-season-amid-fertiliser-ban/215-248502",
+     "title": "National average rice yield hits nearly 50-year-low in Maha season amid fertiliser ban (Daily Mirror)",
+     "date": "2022-11-14",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Get the Department of Census and Statistics paddy statistics by season (Maha 2020/21, 2021/22, 2022/23) to separate the two seasons that FAOSTAT's annual totals combine.",
+    "Re-check the DCS figures reported by Daily Mirror: Maha 2021/22 output down 37% to 1.93 million tonnes, average yield down 33.76% from 2020/21 Maha, harvested area 766,000 ha.",
+    "Compare with the HARTI farmer survey, which search results say found yield falls of over 50%; explain why survey and national figures differ.",
+    "Confirm the ban's start (May 2021) and reversal (November 2021) dates from primary government sources.",
+    "Confirm the 2026/27 Maha harvest timing with the Department of Agriculture."
+   ],
+   "cautions": [
+    "Politically charged; show data and plant science, not blame of named politicians.",
+    "Weather, fuel shortages and the 2022 economic crisis also affected farming; don't credit all of the fall to fertiliser without evidence.",
+    "Don't present organic farming as good or bad in general; this was a sudden nationwide switch.",
+    "Farmers' livelihoods were hit hard; keep the tone respectful."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "FAOSTAT Crops and livestock products (QCL): rice (paddy) area, yield and production, Sri Lanka",
+    "url": "https://www.fao.org/faostat/en/#data/QCL",
+    "terms": "CC BY 4.0 (Creative Commons Attribution 4.0 International, per FAO Database terms of use for corporate statistical databases such as FAOSTAT)",
+    "check": "Department of Census and Statistics via Daily Mirror (2022-11-14): 2021/22 Maha paddy output fell 37% to 1.93 million tonnes and average yield fell 33.76% versus 2020/21 Maha."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I092",
+   "title": "Is most of the world's cinnamon from Sri Lanka?",
+   "sweep": "analysis",
+   "field": "plants & farming",
+   "hook": "'Most of the world's cinnamon comes from Sri Lanka.' You've heard it. Let's check the numbers.",
+   "angle": "Two different trees are sold as 'cinnamon': true (Ceylon) cinnamon and cassia. Whether the claim is right depends on which one you count, and world statistics may lump them together.",
+   "why_now": "No fixed date; an evergreen myth-buster with a strong Sri Lankan angle that can fill a gap in the quarter.",
+   "sources": [
+    {
+     "url": "https://srilankabusiness.com/blog/ceylon-cinnamon-reigns-supreme-in-the-global-cinnamon-market.html",
+     "title": "Ceylon Cinnamon reigns supreme in the global Cinnamon market (Sri Lanka Export Development Board blog)",
+     "date": "2015-03-04",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.tridge.com/market-reports/2022-cinnamon-report",
+     "title": "2022 Cinnamon Report (Tridge)",
+     "date": "2022-03-11",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Confirm in FAOSTAT's item definitions whether 'Cinnamon and cinnamon-tree flowers, raw' includes cassia species.",
+    "Compute Sri Lanka's share of FAOSTAT world 'cinnamon' production over time, then compare with the EDB claims (70% of global pure-cinnamon production; over 85% of the world market for true cinnamon).",
+    "Find an independent source for true-cinnamon versus cassia production (e.g. a botanical or trade study) rather than relying on export-promotion figures.",
+    "Check the 2015 Piyasiri & Wijeratne study on Sri Lanka's cinnamon market share (2000-2013), reported in search results but not opened."
+   ],
+   "cautions": [
+    "EDB and trade-site figures are promotional or unsourced; treat them as claims to test, not facts.",
+    "Avoid health claims about cinnamon or cassia (e.g. coumarin) unless separately sourced.",
+    "Don't show real brand packaging or logos."
+   ],
+   "score": 3,
+   "format": "myth_vs_data",
+   "local": true,
+   "data": {
+    "source": "FAOSTAT Crops and livestock products (QCL): cinnamon production by country",
+    "url": "https://www.fao.org/faostat/en/#data/QCL",
+    "terms": "CC BY 4.0 (Creative Commons Attribution 4.0 International, per FAO Database terms of use for FAOSTAT)",
+    "check": "Tridge (2022-03-11): Indonesia, China, Vietnam and Sri Lanka together produced 98% of world cinnamon in 2020."
+   },
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)"
+  },
+  {
+   "id": "I093",
+   "title": "The winter visitors in Sri Lanka's skies",
+   "sweep": "analysis",
+   "field": "animals & ecology",
+   "hook": "Some of the birds in Sri Lanka this January don't live here. Bird-watchers' records show when they arrive and when they leave.",
+   "angle": "How migration shows up in data: plot month-by-month sightings of a winter migrant in Sri Lanka from eBird records to show the August-to-April season and the spring departure.",
+   "why_now": "January to March is the second half of the migrant season, and departures begin around March, so viewers can still see the birds before they go.",
+   "sources": [
+    {
+     "url": "https://news.mongabay.com/2019/10/as-birds-winter-in-sri-lanka-one-enthusiast-makes-sure-their-memory-stays/",
+     "title": "As birds winter in Sri Lanka, one enthusiast makes sure their memory stays (Mongabay)",
+     "date": "2019-10-25",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+     "title": "EOD - eBird Observation Dataset (GBIF)",
+     "date": "2026-10-27",
+     "checked": "blocked"
+    }
+   ],
+   "research_leads": [
+    "Choose one or two clearly migratory species with a Sri Lankan ornithologist (e.g. Field Ornithology Group of Sri Lanka) and confirm their status.",
+    "Normalise sightings by number of checklists per month so that tourist-season birding effort doesn't fake a peak.",
+    "Check the 2009 Taprobanica avifauna checklist, which search results say lists 203 purely migrant species, against Mongabay's 'more than 200'.",
+    "Mongabay says some species (e.g. brown shrike) arrive in early to mid October and others leave in March; confirm with the data."
+   ],
+   "cautions": [
+    "Observer effort varies a lot by month and place; say that the counts are records, not bird numbers.",
+    "Don't show exact locations of sensitive or threatened species.",
+    "If other GBIF datasets are added, keep only CC0 or CC BY records and drop CC BY-NC ones.",
+    "Birds should be drawn as original characters, not traced from photos."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "GBIF: EOD - eBird Observation Dataset (Cornell Lab of Ornithology), occurrences in Sri Lanka",
+    "url": "https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+    "terms": "CC BY 4.0 (dataset licence as recorded by the GBIF API: creativecommons.org/licenses/by/4.0)",
+    "check": "Mongabay (2019-10-25): more than 200 migratory bird species visit Sri Lanka from early August through April."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I094",
+   "title": "How hot is too hot for a coral?",
+   "sweep": "analysis",
+   "field": "animals & ecology",
+   "hook": "Corals are animals, and a few weeks of too-warm water can turn a whole reef white.",
+   "angle": "What NOAA's 'Degree Heating Weeks' count, and how often the reefs off Sri Lanka have crossed the bleaching-alert thresholds since 1985.",
+   "why_now": "NOAA's Climate Prediction Center (8 October 2026) says a strong-to-very strong El Niño is likely through January-March 2027, and NOAA warned in June 2026 that El Niño could bring widespread bleaching back.",
+   "sources": [
+    {
+     "url": "https://www.nesdis.noaa.gov/news/worlds-fourth-mass-coral-bleaching-event-likely-ended-2025",
+     "title": "World's Fourth Mass Coral Bleaching Event Likely Ended in 2025 (NOAA NESDIS)",
+     "date": "2026-06-02",
+     "checked": "ok"
+    },
+    {
+     "url": "https://coralreefwatch.noaa.gov/product/vs/description.php",
+     "title": "NOAA Coral Reef Watch Satellite Virtual Stations Time Series Graph Description",
+     "date": "2020-06-08",
+     "checked": "ok"
+    },
+    {
+     "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+     "title": "ENSO Diagnostic Discussion (NOAA Climate Prediction Center)",
+     "date": "2026-10-08",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "List which CRW regional virtual stations cover Sri Lanka (an 'Eastern Sri Lanka' station appears in CRW alert pages) and download their daily DHW series.",
+    "Count years with DHW of 4 or more (Alert Level 1) and 8 or more (Alert Level 2) and check them against bleaching reports from Sri Lankan marine scientists (e.g. 1998, 2016, 2024).",
+    "Check whether Indian Ocean warming tends to lag El Niño, and by how long, from peer-reviewed sources before linking the two on screen.",
+    "Confirm when Sri Lanka's seas are usually warmest from the CRW climatology in the station file."
+   ],
+   "cautions": [
+    "Satellite heat stress is not the same as observed bleaching; say 'heat stress' unless field reports confirm bleaching.",
+    "Don't forecast bleaching for a specific reef; give probabilities and NOAA's own wording.",
+    "Use drawn reefs, not real underwater footage.",
+    "Avoid doom framing; mention that corals can recover if heat stress is short."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "NOAA Coral Reef Watch daily 5 km Regional Virtual Stations (SST, HotSpot, Degree Heating Week, alert level, 1985-present)",
+    "url": "https://coralreefwatch.noaa.gov/product/vs/description.php",
+    "terms": "NOAA/NESDIS STAR product disclaimer: 'Users are free to use the images or information hosted on this site as they wish' with credit to NOAA/NESDIS STAR (US government work)",
+    "check": "NOAA NESDIS (2026-06-02): bleaching-level heat stress hit 84% of the world's coral reef area from early 2023 to mid-2025, with mass bleaching in at least 83 countries and territories. CRW thresholds: Alert Level 1 at DHW 4, Alert Level 2 at DHW 8."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I095",
+   "title": "Closest to the Sun, and it's winter?",
+   "sweep": "analysis",
+   "field": "space & physics",
+   "hook": "On 3 January 2027 Earth is the closest it gets to the Sun all year, and half the planet is in winter.",
+   "angle": "Seasons come from Earth's tilt, not its distance: a short script compares the small change in sunlight from distance (about 7%) with the much bigger change from tilt, and shows why near the equator, where Sri Lanka is, the year runs on monsoons more than winter and summer.",
+   "why_now": "Perihelion is on 3 January 2027 at 02:33 UTC (08:03 in Sri Lanka), at the very start of the quarter; the March equinox (20 March 2027, 20:25 UTC) closes it.",
+   "sources": [
+    {
+     "url": "https://science.nasa.gov/science-research/earth-science/milankovitch-orbital-cycles-and-their-role-in-earths-climate/",
+     "title": "Milankovitch (Orbital) Cycles and Their Role in Earth's Climate (NASA Science)",
+     "date": "2020-02-27",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Pull perihelion, aphelion and equinox dates for 2027 from the USNO Earth's Seasons service and Earth-Sun distances from JPL Horizons or the NASA Earth Fact Sheet.",
+    "Compute noon sunlight intensity over the year for Colombo and for a high-latitude city to show tilt versus distance.",
+    "Check with the Sri Lanka Department of Meteorology which months are hottest in Colombo before saying so on screen.",
+    "Re-check NASA's figures: perihelion about 3 January, aphelion about 4 July, a 5.1 million km (3.4%) difference and about 6.8% more incoming sunlight in January than July."
+   ],
+   "cautions": [
+    "A very common misconception; avoid mocking viewers who believed it.",
+    "Keep orbit diagrams to scale or clearly say they are not (the orbit is nearly a circle).",
+    "Don't claim specific Sri Lankan weather for a date."
+   ],
+   "score": 5,
+   "format": "myth_vs_data",
+   "local": true,
+   "data": {
+    "source": "US Naval Observatory Earth's Seasons data service (equinoxes, solstices, perihelion and aphelion, 1700-2100)",
+    "url": "https://aa.usno.navy.mil/data/Earth_Seasons",
+    "terms": "Public information, US government work: USNO site notice says 'All information on this site is considered public information and may be distributed or copied unless otherwise specified' (credit requested)",
+    "check": "NASA Science: perihelion on or about 3 January; perihelion-aphelion difference about 5.1 million km (3.4%); about 6.8% more incoming solar radiation in January than July. USNO API: perihelion 2027-01-03 02:33 UTC."
+   },
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)"
+  },
+  {
+   "id": "I096",
+   "title": "Why the sky is filling up with satellites",
+   "sweep": "analysis",
+   "field": "space & physics",
+   "hook": "In 2016 the world launched about 220 satellites. In 2025 it launched more than 4,500.",
+   "angle": "What changed: cheap, mass-produced small satellites and huge constellations, shown by counting objects per year and per orbit in an open catalogue of everything launched.",
+   "why_now": "Jonathan McDowell's yearly summary for 2025 is dated 4 February 2026, so a 2026 summary may land in the quarter (not confirmed); his GCAT catalogue was last updated 1 November 2026.",
+   "sources": [
+    {
+     "url": "https://planet4589.org/space/papers/space25.1.4.pdf",
+     "title": "Space Activities in 2025 (Jonathan McDowell, Rev 1.4)",
+     "date": "2026-02-04",
+     "checked": "ok"
+    },
+    {
+     "url": "https://planet4589.org/space/gcat/",
+     "title": "GCAT: General Catalog of Artificial Space Objects (Jonathan's Space Report)",
+     "date": "2026-11-01",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Count GCAT payloads by launch year and orbit class (LEO, SSO, GEO) and check against McDowell's Table 4 (payloads launched per year).",
+    "Look up Sri Lanka's first satellite (Raavana-1, a CubeSat) in GCAT to add a local beat; not yet verified.",
+    "Compare with other counts (e.g. Space.com: SpaceX 165 orbital flights in 2025) and explain why totals differ.",
+    "Check debris numbers (32,207 catalogued objects in orbit at end of 2025) and what share are working satellites."
+   ],
+   "cautions": [
+    "Counts differ by definition (launches, payloads, catalogued objects); always say which one is shown.",
+    "Don't draw real company logos or rockets with branding.",
+    "Discuss space debris without alarmism; avoid claims about collision risk unless sourced."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": false,
+   "data": {
+    "source": "GCAT: General Catalog of Artificial Space Objects (Jonathan McDowell)",
+    "url": "https://planet4589.org/space/gcat/",
+    "terms": "CC BY 4.0 (page states 'Licence: CC-BY-4.0 Creative Commons/Attribution')",
+    "check": "McDowell, Space Activities in 2025: 329 orbital launch attempts (321 reaching orbit); 4,526 payloads launched in 2025 versus 221 in 2016; 32,207 catalogued objects in orbit at end of 2025."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I097",
+   "title": "How El Niño reaches Sri Lanka's rain",
+   "sweep": "analysis",
+   "field": "earth & climate",
+   "hook": "A patch of warm water on the far side of the planet may be changing how much rain falls on Sri Lanka this season.",
+   "angle": "Using satellite-plus-gauge rainfall for Sri Lanka and NOAA's El Niño index, compare October-December and January-March rain in past El Niño years with other years.",
+   "why_now": "NOAA CPC (8 October 2026) is under an El Niño Advisory and says a strong-to-very strong El Niño is likely through January-March 2027; the ONI for July-September 2026 was +2.16.",
+   "sources": [
+    {
+     "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+     "title": "ENSO Diagnostic Discussion (NOAA Climate Prediction Center)",
+     "date": "2026-10-08",
+     "checked": "ok"
+    },
+    {
+     "url": "https://hess.copernicus.org/articles/23/1905/2019/",
+     "title": "Identifying El Niño-Southern Oscillation influences on rainfall with classification models: implications for water resource management of Sri Lanka (De Silva & Hornberger, HESS 23, 1905-1929)",
+     "date": "2019-04-09",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Average CHIRPS rainfall over Sri Lanka (or the Mahaweli and Kelani basins) for Oct-Dec and Jan-Mar, 1981 to now, and split by ONI El Niño years.",
+    "Re-check De Silva & Hornberger's finding: during El Niño, rainfall rises in October-December and falls in the following January-March.",
+    "Read Zubair & Ropelewski (2006, J. Climate 19:1567-1575) on the strengthening ENSO-northeast monsoon link; the abstract was not reachable.",
+    "Add the Indian Ocean Dipole as a second driver, and check the November 2026 CPC update (due 12 November 2026)."
+   ],
+   "cautions": [
+    "Not a weather forecast: speak in tendencies and probabilities, not 'there will be floods' or 'drought'.",
+    "Floods and droughts hurt people; avoid real disaster footage and keep advice to official sources.",
+    "El Niño is one driver among several; past patterns may not repeat."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "CHIRPS v2 daily/monthly rainfall (UCSB Climate Hazards Center) with NOAA CPC Oceanic Niño Index (ONI)",
+    "url": "https://www.chc.ucsb.edu/data/chirps",
+    "terms": "CHIRPS: public domain ('Pete Peterson has waived all copyright and related or neighboring rights to CHIRPS'; 'in the public domain as registered with Creative Commons'). ONI: NOAA/NWS information in the public domain (weather.gov disclaimer)",
+    "check": "De Silva & Hornberger 2019: during El Niño events rainfall increases in October-December and decreases in January-March in Sri Lanka's Mahaweli and Kelani basins. CPC: ONI JAS 2026 = +2.16; Niño-3.4 +2.1°C in September 2026."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I098",
+   "title": "How much has Sri Lanka warmed?",
+   "sweep": "analysis",
+   "field": "earth & climate",
+   "hook": "2023 to 2025 were, on average, more than 1.5 °C warmer than pre-industrial times, the first three-year stretch on record to do that. So what about Sri Lanka?",
+   "angle": "Global averages hide local differences: pull reanalysis temperatures for the grid cells over Sri Lanka and compare its warming since 1940 with the global trend.",
+   "why_now": "Copernicus releases its Global Climate Highlights each January (the 2025 edition came out on 14 January 2026), so the 2026 verdict should land at the start of the quarter.",
+   "sources": [
+    {
+     "url": "https://www.ecmwf.int/en/about/media-centre/news/2025/2025-third-warmest-year",
+     "title": "2025 was the third-warmest year on record, Copernicus data show (ECMWF)",
+     "date": "2026-01-14",
+     "checked": "ok"
+    },
+    {
+     "url": "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview",
+     "title": "ERA5 hourly data on single levels from 1940 to present (Copernicus Climate Data Store)",
+     "date": "2026-11-02",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Use ERA5 monthly 2 m temperature over land cells only (Sri Lanka is small next to the 0.25° grid; mask the sea).",
+    "Compare with Sri Lanka Department of Meteorology station records, checking their licence first.",
+    "Also look at warm nights (minimum temperatures), which may matter more for health; source any health claims separately.",
+    "Re-check the headline figures in the January 2027 Copernicus release before scripting."
+   ],
+   "cautions": [
+    "Reanalysis is a model-data blend, not thermometer readings; say so simply.",
+    "Avoid alarmist framing, and don't give heat-health advice without a health source.",
+    "Don't confuse a single year's anomaly with the long-term Paris 1.5 °C limit (which refers to 20-year averages)."
+   ],
+   "score": 4,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "Copernicus Climate Change Service ERA5 reanalysis (2 m temperature, 1940-present)",
+    "url": "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=overview",
+    "terms": "CC-BY licence (as listed on the Climate Data Store dataset page)",
+    "check": "ECMWF/Copernicus (2026-01-14): 2025 was 1.47 °C above 1850-1900 and third-warmest; 2024 was 1.60 °C; 2023-2025 averaged more than 1.5 °C."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  },
+  {
+   "id": "I099",
+   "title": "AI's appetite for computing, by the numbers",
+   "sweep": "analysis",
+   "field": "tech & computing",
+   "hook": "The computing power used to train the biggest AI models has been growing about five times every year.",
+   "angle": "What 'training compute' means, and what growing 5x a year does over a few years, re-plotted from an open database of notable AI models.",
+   "why_now": "The database was updated on 2 November 2026 and keeps adding new models, so the film can use the newest frontier models; AI tools are now part of how teenage viewers study.",
+   "sources": [
+    {
+     "url": "https://epoch.ai/trends",
+     "title": "Trends in AI (Epoch AI)",
+     "date": "2026-02-05",
+     "checked": "ok"
+    },
+    {
+     "url": "https://epoch.ai/data/notable-ai-models",
+     "title": "Data on AI models (Epoch AI)",
+     "date": "2026-11-02",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Fit a log-linear trend to training compute for frontier models since 2020 and check it against Epoch's 5x per year (90% CI 4-6x; doubling every 4.6-6.0 months).",
+    "Turn FLOP into a viewer-friendly comparison (e.g. years of a phone's processor), checking the phone figure from a separate source.",
+    "Check how Epoch estimates compute for closed models and how uncertain those estimates are."
+   ],
+   "cautions": [
+    "Compute for closed models is estimated, not reported; show error bars or say 'about'.",
+    "Don't equate compute with intelligence or make predictions about AI abilities.",
+    "No real company logos or branded chatbot characters; energy or water claims need their own sources."
+   ],
+   "score": 3,
+   "format": "explainer",
+   "local": false,
+   "data": {
+    "source": "Epoch AI, Data on AI models (notable AI models: training compute, parameters, dates)",
+    "url": "https://epoch.ai/data/notable-ai-models",
+    "terms": "CC BY 4.0 (Creative Commons Attribution; 'free to use, distribute, and reproduce provided the source and authors are credited')",
+    "check": "Epoch AI Trends (updated 2026-02-05): training compute for frontier language models has grown about 5x per year since 2020."
+   },
+   "status": "idea",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)"
+  },
+  {
+   "id": "I100",
+   "title": "Sri Lanka's rooftops vs its dams",
+   "sweep": "analysis",
+   "field": "tech & computing",
+   "hook": "Sri Lanka's rooftop solar panels can now push out more power at once than all its big hydro dams. So why do the dams still make about three times more electricity?",
+   "angle": "The difference between capacity (megawatts: how much at once) and energy (gigawatt-hours: how much over a year), and why sunshine hours set how much a solar panel really makes.",
+   "why_now": "Full-year 2026 electricity figures start appearing early in the year, and rooftop solar is still growing fast; the film can show the newest totals. (Check whether January-March is a high-output solar period in Sri Lanka before saying so.)",
+   "sources": [
+    {
+     "url": "https://www.pucsl.gov.lk/wp-content/uploads/2026/04/Renewable-Generation-Report-Q4-2025.pdf",
+     "title": "Renewable Generation Report, Quarter 04 2025 (Public Utilities Commission of Sri Lanka)",
+     "date": "2026",
+     "checked": "ok"
+    },
+    {
+     "url": "https://ember-energy.org/data/electricity-data-explorer/",
+     "title": "Electricity Data Explorer (Ember)",
+     "date": "2026-10-30",
+     "checked": "ok"
+    }
+   ],
+   "research_leads": [
+    "Ember's yearly file covers Sri Lanka: solar 0.34 TWh (2.0%) in 2019 rising to 1.40 TWh (8.0%) in 2024; check for 2025 values.",
+    "PUCSL Q4 2025: at 31 Dec 2025, rooftop solar capacity 2,120 MW (CEB) + 352 MW (LECO) versus major hydro 1,533 MW; 2025 generation: rooftop solar 1,938 GWh versus major hydro 6,306 GWh.",
+    "Compute capacity factors (energy / (capacity x 8,760 h)) for solar and hydro and check them against published values.",
+    "Check the monthly pattern of solar output in Sri Lanka (PUCSL or CEB monthly data) before claiming any season is sunniest."
+   ],
+   "cautions": [
+    "Solar tariffs and grid limits are live policy debates; explain the physics and avoid taking sides.",
+    "PUCSL and Ember totals may differ by method (e.g. rooftop solar estimates); say which is used.",
+    "Don't name or show installer companies or brands."
+   ],
+   "score": 5,
+   "format": "explainer",
+   "local": true,
+   "data": {
+    "source": "Ember yearly electricity data (generation, capacity and share by source; includes Sri Lanka)",
+    "url": "https://ember-energy.org/data/yearly-electricity-data/",
+    "terms": "CC BY 4.0 (Ember: 'All content is released under a Creative Commons Attribution Licence (CC-BY-4.0)')",
+    "check": "PUCSL Q4 2025 report: 2025 generation major hydro 6,306 GWh (35%), CEB coal 4,870 GWh (27%), NCRE 4,660 GWh (26%), thermal oil 2,216 GWh (12%); rooftop solar 1,938 GWh."
+   },
+   "status": "planned",
+   "added": "2026-11-02",
+   "by": "research agent (analysis sweep, 2026-11-02)",
+   "quarter": "2027-Q1"
+  }
+ ]
+}

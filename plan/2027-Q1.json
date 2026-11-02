@@ -1,0 +1,872 @@
+{
+ "quarter": "2027-Q1",
+ "planned_on": "2026-11-02",
+ "channel": "Doodleberry science shorts",
+ "rules": {
+  "post_days": [
+   "mon",
+   "wed",
+   "fri",
+   "sat"
+  ],
+  "series": {
+   "day": "mon",
+   "name": "Myth Monday",
+   "sweeps": [
+    "evergreen"
+   ],
+   "format": "myth_vs_data"
+  },
+  "max_field_per_week": 1,
+  "min_field_gap_days": 4,
+  "local_per_week": 1,
+  "analysis_every_weeks": 2,
+  "dated_hook_tolerance_days": 1,
+  "lead_days": {
+   "dated_hook": 14,
+   "recent": 10,
+   "evergreen": 10,
+   "tool": 10,
+   "analysis": 21,
+   "local": 14
+  },
+  "fact_lock_days": {
+   "default": 4,
+   "analysis": 6
+  }
+ },
+ "rows": [
+  {
+   "date": "2027-01-01",
+   "idea": "I100",
+   "title": "Sri Lanka's rooftops vs its dams",
+   "sweep": "analysis",
+   "field": "tech & computing",
+   "local": true,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2026-12-11",
+   "fact_lock": {
+    "by": "2026-12-26",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-02",
+   "idea": "I083",
+   "title": "Closest to the Sun in January",
+   "sweep": "dated_hook",
+   "field": "earth & climate",
+   "local": true,
+   "role": "dated hook",
+   "format": "myth_vs_data",
+   "start_by": "2026-12-19",
+   "fact_lock": {
+    "by": "2026-12-29",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-04",
+   "idea": "I047",
+   "title": "Does cracking your knuckles cause arthritis?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2026-12-25",
+   "fact_lock": {
+    "by": "2026-12-31",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-06",
+   "idea": "I087",
+   "title": "Hello, London? The first public call across the ocean",
+   "sweep": "dated_hook",
+   "field": "tech & computing",
+   "local": false,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2026-12-23",
+   "fact_lock": {
+    "by": "2027-01-02",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-08",
+   "idea": "I025",
+   "title": "Sri Lanka's cobra: two million years apart",
+   "sweep": "recent",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "local",
+   "format": "explainer",
+   "start_by": "2026-12-29",
+   "fact_lock": {
+    "by": "2027-01-04",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-09",
+   "idea": "I028",
+   "title": "Ghost particles from deep space win a Nobel",
+   "sweep": "recent",
+   "field": "space & physics",
+   "local": false,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2026-12-30",
+   "fact_lock": {
+    "by": "2027-01-05",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-11",
+   "idea": "I051",
+   "title": "Does a tree grow out of the soil?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-01",
+   "fact_lock": {
+    "by": "2027-01-07",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-13",
+   "idea": "I093",
+   "title": "The winter visitors in Sri Lanka's skies",
+   "sweep": "analysis",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2026-12-23",
+   "fact_lock": {
+    "by": "2027-01-07",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-15",
+   "idea": "I019",
+   "title": "Snakebite is far deadlier than the world counted",
+   "sweep": "recent",
+   "field": "life & health",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-01-05",
+   "fact_lock": {
+    "by": "2027-01-11",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-16",
+   "idea": "I065",
+   "title": "Why does Sri Lanka have two monsoons?",
+   "sweep": "evergreen",
+   "field": "earth & climate",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-01-06",
+   "fact_lock": {
+    "by": "2027-01-12",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-18",
+   "idea": "I055",
+   "title": "Do goldfish have a 3-second memory?",
+   "sweep": "evergreen",
+   "field": "animals & ecology",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-08",
+   "fact_lock": {
+    "by": "2027-01-14",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-20",
+   "idea": "I010",
+   "title": "The gravity hole south of Sri Lanka",
+   "sweep": "local",
+   "field": "space & physics",
+   "local": true,
+   "role": "local",
+   "format": "explainer",
+   "start_by": "2027-01-06",
+   "fact_lock": {
+    "by": "2027-01-16",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-22",
+   "idea": "I004",
+   "title": "Your cinnamon might not be cinnamon",
+   "sweep": "local",
+   "field": "plants & farming",
+   "local": true,
+   "role": "open slot",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-08",
+   "fact_lock": {
+    "by": "2027-01-18",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-23",
+   "idea": "I016",
+   "title": "Steel made by the monsoon wind",
+   "sweep": "local",
+   "field": "tech & computing",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-01-09",
+   "fact_lock": {
+    "by": "2027-01-19",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-25",
+   "idea": "I061",
+   "title": "Is there no gravity in space?",
+   "sweep": "evergreen",
+   "field": "space & physics",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-15",
+   "fact_lock": {
+    "by": "2027-01-21",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-27",
+   "idea": "I097",
+   "title": "How El Niño reaches Sri Lanka's rain",
+   "sweep": "analysis",
+   "field": "earth & climate",
+   "local": true,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2027-01-06",
+   "fact_lock": {
+    "by": "2027-01-21",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-29",
+   "idea": "I006",
+   "title": "The year Sri Lanka went organic overnight",
+   "sweep": "local",
+   "field": "plants & farming",
+   "local": true,
+   "role": "open slot",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-15",
+   "fact_lock": {
+    "by": "2027-01-25",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-01-30",
+   "idea": "I071",
+   "title": "How Sri Lanka beat elephantiasis",
+   "sweep": "dated_hook",
+   "field": "life & health",
+   "local": true,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-01-16",
+   "fact_lock": {
+    "by": "2027-01-26",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-01",
+   "idea": "I075",
+   "title": "Wetlands: nature's sponges",
+   "sweep": "dated_hook",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-01-18",
+   "fact_lock": {
+    "by": "2027-01-28",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-03",
+   "idea": "I052",
+   "title": "Green tea and black tea come from different plants?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "local": true,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-24",
+   "fact_lock": {
+    "by": "2027-01-30",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-05",
+   "idea": "I035",
+   "title": "Hunt the Mosquito Nursery",
+   "sweep": "tool",
+   "field": "life & health",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-01-26",
+   "fact_lock": {
+    "by": "2027-02-01",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-06",
+   "idea": "I030",
+   "title": "Perseverance breaks the off-world driving record",
+   "sweep": "recent",
+   "field": "space & physics",
+   "local": false,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-01-27",
+   "fact_lock": {
+    "by": "2027-02-02",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-08",
+   "idea": "I066",
+   "title": "Should you drain your phone to 0% before charging?",
+   "sweep": "evergreen",
+   "field": "tech & computing",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-01-29",
+   "fact_lock": {
+    "by": "2027-02-04",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-10",
+   "idea": "I072",
+   "title": "The dhal that makes its own fertiliser",
+   "sweep": "dated_hook",
+   "field": "plants & farming",
+   "local": true,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-01-27",
+   "fact_lock": {
+    "by": "2027-02-06",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-12",
+   "idea": "I096",
+   "title": "Why the sky is filling up with satellites",
+   "sweep": "analysis",
+   "field": "space & physics",
+   "local": false,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2027-01-22",
+   "fact_lock": {
+    "by": "2027-02-06",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-13",
+   "idea": "I007",
+   "title": "Where did Sri Lanka's blue whales go?",
+   "sweep": "local",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-01-30",
+   "fact_lock": {
+    "by": "2027-02-09",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-15",
+   "idea": "I063",
+   "title": "Lightning never strikes the same place twice?",
+   "sweep": "evergreen",
+   "field": "earth & climate",
+   "local": true,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-05",
+   "fact_lock": {
+    "by": "2027-02-11",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-17",
+   "idea": "I050",
+   "title": "Dengue mosquitoes only bite at night?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "local": true,
+   "role": "open slot",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-07",
+   "fact_lock": {
+    "by": "2027-02-13",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-19",
+   "idea": "I017",
+   "title": "Sri Lanka's first satellite was the size of a lunchbox",
+   "sweep": "local",
+   "field": "tech & computing",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-02-05",
+   "fact_lock": {
+    "by": "2027-02-15",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-20",
+   "idea": "I080",
+   "title": "Two eclipses, two weeks apart",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "local": true,
+   "role": "dated hook",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-06",
+   "fact_lock": {
+    "by": "2027-02-16",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-22",
+   "idea": "I048",
+   "title": "Do we only use 10% of our brains?",
+   "sweep": "evergreen",
+   "field": "life & health",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-12",
+   "fact_lock": {
+    "by": "2027-02-18",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-24",
+   "idea": "I091",
+   "title": "The season Sri Lanka's rice harvest crashed",
+   "sweep": "analysis",
+   "field": "plants & farming",
+   "local": true,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2027-02-03",
+   "fact_lock": {
+    "by": "2027-02-18",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-26",
+   "idea": "I014",
+   "title": "How Cyclone Ditwah turned rain into landslides",
+   "sweep": "local",
+   "field": "earth & climate",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-02-12",
+   "fact_lock": {
+    "by": "2027-02-22",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-02-27",
+   "idea": "I018",
+   "title": "Teaching an AI to speak Sinhala",
+   "sweep": "local",
+   "field": "tech & computing",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-02-13",
+   "fact_lock": {
+    "by": "2027-02-23",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-01",
+   "idea": "I076",
+   "title": "The underwater meadow the dugong eats",
+   "sweep": "dated_hook",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "dated hook",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-15",
+   "fact_lock": {
+    "by": "2027-02-25",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-03",
+   "idea": "I060",
+   "title": "Can you see the Great Wall of China from space?",
+   "sweep": "evergreen",
+   "field": "space & physics",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-21",
+   "fact_lock": {
+    "by": "2027-02-27",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-05",
+   "idea": "I086",
+   "title": "The man inside every battery",
+   "sweep": "dated_hook",
+   "field": "tech & computing",
+   "local": true,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-02-19",
+   "fact_lock": {
+    "by": "2027-03-01",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-06",
+   "idea": "I002",
+   "title": "The kidney disease with no known cause",
+   "sweep": "local",
+   "field": "life & health",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-02-20",
+   "fact_lock": {
+    "by": "2027-03-02",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-08",
+   "idea": "I064",
+   "title": "Do toilets flush the other way south of the equator?",
+   "sweep": "evergreen",
+   "field": "earth & climate",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-26",
+   "fact_lock": {
+    "by": "2027-03-04",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-10",
+   "idea": "I069",
+   "title": "The kidney mystery in Sri Lanka's rice bowl",
+   "sweep": "dated_hook",
+   "field": "life & health",
+   "local": true,
+   "role": "dated hook",
+   "format": "myth_vs_data",
+   "start_by": "2027-02-24",
+   "fact_lock": {
+    "by": "2027-03-06",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-12",
+   "idea": "I094",
+   "title": "How hot is too hot for a coral?",
+   "sweep": "analysis",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2027-02-19",
+   "fact_lock": {
+    "by": "2027-03-06",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-13",
+   "idea": "I088",
+   "title": "AI is mostly multiplication",
+   "sweep": "dated_hook",
+   "field": "tech & computing",
+   "local": false,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-02-27",
+   "fact_lock": {
+    "by": "2027-03-09",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-15",
+   "idea": "I053",
+   "title": "Are seedless watermelons GMOs?",
+   "sweep": "evergreen",
+   "field": "plants & farming",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-03-05",
+   "fact_lock": {
+    "by": "2027-03-11",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-17",
+   "idea": "I039",
+   "title": "Fifteen Minutes That Count Birds for the World",
+   "sweep": "tool",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "open slot",
+   "format": "explainer",
+   "start_by": "2027-03-07",
+   "fact_lock": {
+    "by": "2027-03-13",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-19",
+   "idea": "I084",
+   "title": "Equal night? Not quite",
+   "sweep": "dated_hook",
+   "field": "earth & climate",
+   "local": true,
+   "role": "dated hook",
+   "format": "myth_vs_data",
+   "start_by": "2027-03-05",
+   "fact_lock": {
+    "by": "2027-03-15",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-20",
+   "idea": "I082",
+   "title": "Why the Moon doesn't fall (it does)",
+   "sweep": "dated_hook",
+   "field": "space & physics",
+   "local": false,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-03-06",
+   "fact_lock": {
+    "by": "2027-03-16",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-22",
+   "idea": "I074",
+   "title": "Sri Lanka's water staircases",
+   "sweep": "dated_hook",
+   "field": "plants & farming",
+   "local": true,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-03-08",
+   "fact_lock": {
+    "by": "2027-03-18",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-24",
+   "idea": "I070",
+   "title": "The day TB got caught",
+   "sweep": "dated_hook",
+   "field": "life & health",
+   "local": false,
+   "role": "dated hook",
+   "format": "explainer",
+   "start_by": "2027-03-10",
+   "fact_lock": {
+    "by": "2027-03-20",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-26",
+   "idea": "I056",
+   "title": "Are bats blind?",
+   "sweep": "evergreen",
+   "field": "animals & ecology",
+   "local": true,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-03-16",
+   "fact_lock": {
+    "by": "2027-03-22",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-27",
+   "idea": "I098",
+   "title": "How much has Sri Lanka warmed?",
+   "sweep": "analysis",
+   "field": "earth & climate",
+   "local": true,
+   "role": "analysis",
+   "format": "explainer",
+   "start_by": "2027-03-06",
+   "fact_lock": {
+    "by": "2027-03-21",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-29",
+   "idea": "I067",
+   "title": "Does incognito mode make you invisible online?",
+   "sweep": "evergreen",
+   "field": "tech & computing",
+   "local": false,
+   "role": "Myth Monday",
+   "format": "myth_vs_data",
+   "start_by": "2027-03-19",
+   "fact_lock": {
+    "by": "2027-03-25",
+    "status": "open"
+   },
+   "status": "planned"
+  },
+  {
+   "date": "2027-03-31",
+   "idea": "I001",
+   "title": "The mosquitoes Colombo released on purpose",
+   "sweep": "local",
+   "field": "life & health",
+   "local": true,
+   "role": "local",
+   "format": "explainer",
+   "start_by": "2027-03-17",
+   "fact_lock": {
+    "by": "2027-03-27",
+    "status": "open"
+   },
+   "status": "planned"
+  }
+ ]
+}

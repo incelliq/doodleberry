@@ -1,0 +1,49 @@
+{
+ "name": "Doodleberry science shorts",
+ "audience": "curious general viewers on phones (9:16), ages 13 and up; no prior science assumed",
+ "fields": [
+  "life & health",
+  "plants & farming",
+  "animals & ecology",
+  "space & physics",
+  "earth & climate",
+  "tech & computing"
+ ],
+ "locale": "Sri Lanka",
+ "languages": [
+  "en"
+ ],
+ "rules": {
+  "post_days": [
+   "mon",
+   "wed",
+   "fri",
+   "sat"
+  ],
+  "series": {
+   "day": "mon",
+   "name": "Myth Monday",
+   "sweeps": [
+    "evergreen"
+   ],
+   "format": "myth_vs_data"
+  },
+  "max_field_per_week": 1,
+  "min_field_gap_days": 4,
+  "local_per_week": 1,
+  "analysis_every_weeks": 2,
+  "dated_hook_tolerance_days": 1,
+  "lead_days": {
+   "dated_hook": 14,
+   "recent": 10,
+   "evergreen": 10,
+   "tool": 10,
+   "analysis": 21,
+   "local": 14
+  },
+  "fact_lock_days": {
+   "default": 4,
+   "analysis": 6
+  }
+ }
+}
