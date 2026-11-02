@@ -31,7 +31,7 @@
     "cast": {"type": "array", "items": {"$ref": "#/$defs/cast"}},
     "camera": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{"$ref": "#/$defs/time"}, {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number"}}]}},
     "cues": {"type": "array", "items": {"type": "object", "required": ["t", "type"], "properties": {"t": {"$ref": "#/$defs/time"}, "type": {"type": "string"}, "gain": {"type": "number"}}}},
-    "captions": {"type": "boolean"}, "style": {"type": "object"}, "overlays": {"type": "array"}, "underlays": {"type": "array"}, "bubbles": {}, "extra_bubbles": {"type": "array"}}}
+    "captions": {"type": "boolean"}, "style": {"type": "object"}, "overlays": {"type": "array"}, "underlays": {"type": "array"}, "fx": {"type": "object"}, "bubbles": {}, "extra_bubbles": {"type": "array"}}}
  },
  "properties": {
   "title": {"type": "string"},

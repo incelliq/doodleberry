@@ -231,3 +231,12 @@ Text in every element, and in bubbles, cards and captions, may be Sinhala: font 
 (OFL, `engine/fonts/`) per glyph, and the page waits for it to load. `films/kit-demo` uses every element.
 Gap: no clean Sinhala text-to-speech voice exists yet (the open MMS model is non-commercial), so Sinhala films are
 sound-off with music, or use a recorded human voice.
+
+## Motion effects (plan 2.20)
+`"fx"` on a shot turns on effects computed from the motion itself (`dbe/player/fx.js`), so nothing is placed by hand
+and any frame renders on its own:
+- `speed_lines: true | {"parts": ["hand_R", "hand_L"], "min": 650}`: three tapered strokes trail a part whose speed in
+  the frame passes `min` px/s;
+- `dust: true | {"min_drop": 14}`: puffs at the feet when a character lands (its hips decelerate sharply after a drop);
+- `impacts: true`: a star burst where a prop arrives at the end of its travel (a catch or a drop).
+Off by default, so existing films are unchanged. `films/fx-demo` is the props demo with all three on.

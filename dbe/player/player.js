@@ -178,6 +178,18 @@
     return [(w[0] - x) / (s * flip) + hip[0], (w[1] - y) / s + (p.ground ?? p.artboard[1])];
   }
   // props switch parents over time: attach [[t, {cast, part, at} | {x, y}], ...]; each switch travels on an arc
+  function propPos(pr, t, casts) {
+    const keys = pr.attach || []; if (!keys.length || t < keys[0][0]) return null;
+    let k = 0; while (k + 1 < keys.length && keys[k + 1][0] <= t) k++;
+    const at = spec => Array.isArray(spec) ? spec : (spec.x != null ? [spec.x, spec.y] : worldOf(spec, t, casts));
+    let pos = at(keys[k][1]);
+    const travel = pr.travel ?? 0.35, since = t - keys[k][0];
+    if (k > 0 && since < travel && pos) {
+      const from = at(keys[k - 1][1]) || pos, u = since / travel, e = u * u * (3 - 2 * u), lift = (pr.arc ?? 140) * 4 * u * (1 - u);
+      pos = [from[0] + (pos[0] - from[0]) * e, from[1] + (pos[1] - from[1]) * e - lift];
+    }
+    return pos;
+  }
   function propSVG(pr, t, casts) {
     const keys = pr.attach || []; if (!keys.length || t < keys[0][0]) return '';
     let k = 0; while (k + 1 < keys.length && keys[k + 1][0] <= t) k++;
@@ -213,12 +225,21 @@
       const [x, y, s, flip] = placeAt(c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tq);
       if (tl.lookat) tl.lookat = [].concat(tl.lookat).map(la => ({ ...la, target_local: toLocal(p, worldOf(la.target, tq, casts), x, y, s, flip) }));
       const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
-      casts.push({ p, x, y, s, flip, pose });
+      casts.push({ p, x, y, s, flip, pose, c, tl, L });
       if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`;
       ink += Puppet.render(p, x, y, { ...pose, s, flip });
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
     if (!bgOnly) ink += (sh.props || []).map(pr => propSVG(pr, tq, casts)).join('');
+    if (!bgOnly && sh.fx && window.FX) {  // motion effects from the motion itself (dbe/player/fx.js)
+      const memo = {};
+      const pointAt = (ci, part, tt) => { const cc = casts[ci]; if (!cc || tt < (sh.start || 0)) return null;
+        const key = ci + ':' + tt.toFixed(4); let st2 = memo[key];
+        if (!st2) { const [x2, y2, s2, f2] = placeAt(cc.c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tt); const tl2 = { ...cc.tl }; delete tl2.lookat;
+          st2 = memo[key] = { x: x2, y: y2, s: s2, flip: f2, pose: Acting.evaluate(cc.p, tl2, tt, cc.L.clips, cc.L.presets) }; }
+        return Puppet.pointOf(cc.p, part, null, st2.x, st2.y, { ...st2.pose, s: st2.s, flip: st2.flip }); };
+      ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt) => propPos(pr, tt, casts) });
+    }
     if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('') + bubblesFor(sh, tq, heads); }
     world += st.boil ? `<g filter="url(#boil)">${ink}</g>` : ink;
     let svg = boilDefs(st, t) + world;

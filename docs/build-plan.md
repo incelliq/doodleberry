@@ -152,6 +152,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.1 Bendy limbs | done for vector limbs: arc bend with thickness kept and an attachment correction, in SVG and Grease Pencil; Synfig and Lottie stay rigid. Raster mesh warp done in v0.5 (mesh strokes) | this commit |
 | 1.3 Drawing import | done: `puppet.import` (layered SVG, PSD, ORA by layer name; pivots estimated, 9-unit mean error), `puppet.export_layers` (round trip for repainting), `puppet.from_blend` (Blender cut-out rigs: Pepper and Carrot showcase, CC-BY; demo film `pepper-carrot` passes QA). Mesh deformation for raster parts done (puppet v0.5 mesh strokes, smooth skinning). Open: Krita .kra direct | this commit |
 | 1.15 Explainer kit 2 (from reference reels) | done: `dbe/player/kit.js` (draw-on paths, pop-in titles, torn-paper signs, growing roots, ground sections, water with level and flow, object faces with lip-sync), `underlays`, Sinhala text everywhere (Noto Sans Sinhala). Open: Sinhala voice (no clean TTS), hand prop, time-lapse growth curves | this commit |
+| 2.20 Motion effects | done for SVG: speed lines, landing dust, prop impact stars from the motion (`fx` on a shot). Open: smear frames, motion arcs, effects in other renderers | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates
