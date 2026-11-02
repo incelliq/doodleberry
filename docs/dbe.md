@@ -288,3 +288,13 @@ the template parts, blink, pupils with iris colour, four brows, eight mouths, ha
 hair, so it works with every clip and acting tool. `cast/generated/specs.json` holds the starting cast of twelve (Ama,
 Ravi, Mei, Olu, Sana, Kofi, Lena, Tomas, Nimal, Zara, Ike, Priya); all pass the drawing coach with no warnings.
 Strokes may set `"rule": "evenodd"` for shapes with holes (the hijab's face opening).
+
+## Rig Canvas drawing upgrade and model sheets (plan 1.4)
+The Rig Canvas (`puppet/canvas/index.html`) now has:
+- **Ink** strokes from perfect-freehand (MIT, vendored): pen pressure when there is a pen, speed-simulated pressure with a
+  mouse; outlines simplified (Ramer-Douglas-Peucker) so drawings stay light. Fill shapes are simplified the same way.
+- **Bucket**: click inside an area outlined in ink and it fills with the selected palette slot; gaps up to about 10 px in
+  the outline are closed for you, the fill is tucked under the ink, and an open outline is refused with a message.
+- **Sheet**: a model sheet of the character (rest, wave, turned both ways, every drawn view; every mouth, brow, eye state
+  and gaze close up), downloadable as SVG. `puppet.sheet` renders the same sheet to PNG (`tools/sheet.mjs`,
+  `puppet/loader/sheet.js`).

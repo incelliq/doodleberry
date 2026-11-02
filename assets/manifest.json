@@ -123,6 +123,18 @@
    "used_by": [
     "player"
    ]
+  },
+  {
+   "path": "puppet/canvas/vendor/perfect-freehand.js",
+   "kind": "library",
+   "name": "perfect-freehand 1.2.3",
+   "license": "MIT",
+   "license_file": "puppet/canvas/vendor/perfect-freehand-LICENSE.txt",
+   "source": "npm perfect-freehand 1.2.3 (dist/cjs, wrapped as a browser global)",
+   "attribution": "perfect-freehand, Steve Ruiz (MIT)",
+   "used_by": [
+    "canvas"
+   ]
   }
  ],
  "generated": [

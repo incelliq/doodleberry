@@ -40,6 +40,7 @@
   <span class="row" role="group" aria-label="Tool">
     <button id="t-fill" class="on" title="Draw a closed shape filled with the selected palette slot">Fill shape</button>
     <button id="t-ink" title="Draw an ink line (pressure sets width)">Ink line</button>
+    <button id="t-bucket" title="Click inside an area outlined in ink to fill it (small gaps in the outline are closed)">Bucket</button>
     <button id="t-pivot" title="Drag joint dots to set pivots">Pivots</button>
   </span>
   <label>Width <input id="width" type="range" min="2" max="14" value="5"></label>
@@ -48,6 +49,7 @@
   <label title="Draw another view of the character (side, three-quarter...). Parts you don't redraw are inherited from the front.">View
     <select id="view" aria-label="View being drawn"></select></label>
   <span style="flex:1"></span>
+  <button id="sheet" title="Open a model sheet: key poses, views and every expression">Sheet</button>
   <button id="import">Import</button><button id="export">Export .puppet</button>
   <input id="file" type="file" accept=".json,.puppet" hidden>
 </header>
@@ -67,6 +69,8 @@
 <script src="../templates/humanoid.js"></script>
 <script src="../loader/acting.js"></script>
 <script src="../clips/humanoid.js"></script>
+<script src="vendor/perfect-freehand.js"></script>
+<script src="../loader/sheet.js"></script>
 <script>
 (function () {
   const T = window.TEMPLATES.humanoid;
@@ -124,6 +128,26 @@
       d += ` C${fx(p1[0] + (p2[0] - p0[0]) / 6)} ${fx(p1[1] + (p2[1] - p0[1]) / 6)} ${fx(p2[0] - (p3[0] - p1[0]) / 6)} ${fx(p2[1] - (p3[1] - p1[1]) / 6)} ${fx(p2[0])} ${fx(p2[1])}`; }
     return d + ' Z';
   }
+  // Ramer-Douglas-Peucker: drop points within `tol` of the line through their neighbours (drawings stay light)
+  function simplify(pts, tol) {
+    if (pts.length < 3) return pts;
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1; const stack = [[0, pts.length - 1]];
+    while (stack.length) { const [a, b] = stack.pop(); let best = -1, bd = tol;
+      const [ax, ay] = pts[a], [bx, by] = pts[b], L = Math.hypot(bx - ax, by - ay) || 1;
+      for (let i = a + 1; i < b; i++) { const d = Math.abs((bx - ax) * (ay - pts[i][1]) - (ax - pts[i][0]) * (by - ay)) / L; if (d > bd) { bd = d; best = i; } }
+      if (best > 0) { keep[best] = 1; stack.push([a, best], [best, b]); } }
+    return pts.filter((_, i) => keep[i]);
+  }
+  // ink: perfect-freehand outline (pressure from the pen, or simulated from speed with a mouse), simplified
+  let penPressure = false;
+  function freehandPath(pts, w) {
+    const PF = window.PerfectFreehand; if (!PF) return inkPath(pts, w);
+    const out = simplify(PF.getStroke(pts, { size: w, thinning: 0.6, smoothing: 0.55, streamline: 0.45, simulatePressure: !penPressure }), 0.35);
+    if (out.length < 3) return '';
+    let d = `M${fx(out[0][0])} ${fx(out[0][1])} Q`;
+    for (let i = 0; i < out.length; i++) { const a = out[i], b = out[(i + 1) % out.length]; d += `${fx(a[0])} ${fx(a[1])} ${fx((a[0] + b[0]) / 2)} ${fx((a[1] + b[1]) / 2)} `; }
+    return d + 'Z';
+  }
   function inkPath(pts, w) { // pressure-tapered filled outline
     const n = pts.length; if (n < 2) return '';
     const L = [], R = [];
@@ -137,6 +161,8 @@
     svg.setPointerCapture(e.pointerId);
     const p = pt(e);
     if (tool === 'pivot') { let best = null, bd = 30; for (const id of Object.keys(P.parts)) { const q = pivotOf(id), d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = id; } } dragPivot = best; return; }
+    if (e.pointerType === 'pen') penPressure = true;
+    if (tool === 'bucket') { bucket(p); return; }
     live = [p];
   });
   svg.addEventListener('pointermove', e => {
@@ -147,14 +173,49 @@
   });
   svg.addEventListener('pointerup', () => {
     if (dragPivot) { dragPivot = null; save(); refresh(); return; }
-    if (!live) return; const pts = smooth(live); live = null;
+    if (!live) return; const live0 = live, pts = smooth(live); live = null;
     if (pts.length > 2) {
       const w = +$('width').value;
-      const st = tool === 'ink' ? { d: inkPath(pts, w * 1.6), fill: 'ink' } : { d: closedPath(pts.filter((_, i) => i % 2 === 0 || i === pts.length - 1)), fill: fillSlot, stroke: 'ink', width: w };
+      const st = tool === 'ink' ? { d: freehandPath(live0, w * 1.8), fill: 'ink' } : { d: closedPath(simplify(pts, 1.2)), fill: fillSlot, stroke: 'ink', width: w };
       strokesOf(active).push(st); save();
     }
     refresh();
   });
+
+  // ---------- bucket: fill the region the ink encloses, closing small gaps ----------
+  function bucket(p) {
+    const Wd = 600, Hd = 1000, GAP = 5, cv = document.createElement('canvas'); cv.width = Wd; cv.height = Hd;
+    const g = cv.getContext('2d'); g.fillStyle = '#000'; g.strokeStyle = '#000'; g.lineJoin = g.lineCap = 'round';
+    for (const st of shown(active)) { const path = new Path2D(st.d);
+      if (st.fill === 'ink') g.fill(path); else if (st.stroke && st.stroke !== 'none') { g.lineWidth = st.width || 3; g.stroke(path); } }
+    const a = g.getImageData(0, 0, Wd, Hd).data, wall = new Uint8Array(Wd * Hd);
+    for (let i = 0; i < Wd * Hd; i++) wall[i] = a[i * 4 + 3] > 60 ? 1 : 0;
+    const dilate = (m, r) => { const t = new Uint8Array(m.length), o = new Uint8Array(m.length);   // separable square max filter
+      for (let y = 0; y < Hd; y++) for (let x = 0; x < Wd; x++) { let v = 0; for (let k = -r; k <= r && !v; k++) { const xx = x + k; if (xx >= 0 && xx < Wd) v = m[y * Wd + xx]; } t[y * Wd + x] = v; }
+      for (let y = 0; y < Hd; y++) for (let x = 0; x < Wd; x++) { let v = 0; for (let k = -r; k <= r && !v; k++) { const yy = y + k; if (yy >= 0 && yy < Hd) v = t[yy * Wd + x]; } o[y * Wd + x] = v; }
+      return o; };
+    const closed = dilate(wall, GAP), sx = Math.round(p[0]), sy = Math.round(p[1]);
+    if (closed[sy * Wd + sx]) { alert('Click inside the outlined area, not on the line.'); return; }
+    const reg = new Uint8Array(Wd * Hd), q = [sy * Wd + sx]; reg[q[0]] = 1; let leaks = false;
+    while (q.length) { const i = q.pop(), x = i % Wd, y = (i / Wd) | 0;
+      if (x === 0 || y === 0 || x === Wd - 1 || y === Hd - 1) { leaks = true; break; }
+      for (const j of [i - 1, i + 1, i - Wd, i + Wd]) if (!reg[j] && !closed[j]) { reg[j] = 1; q.push(j); } }
+    if (leaks) { alert('That area is not closed: join the outline (gaps up to about ' + GAP * 2 + ' px are closed for you).'); return; }
+    const grown = dilate(reg, GAP + 2);   // undo the gap closing and tuck the fill under the ink
+    // trace the outer boundary of the region (marching squares, first contour found from the left)
+    const at = (x, y) => x >= 0 && y >= 0 && x < Wd && y < Hd && grown[y * Wd + x] ? 1 : 0;
+    let start = -1; for (let i = 0; i < Wd * Hd && start < 0; i++) if (grown[i]) start = i;
+    let x = start % Wd, y = (start / Wd) | 0, dir = 0; const pts = []; const DX = [1, 0, -1, 0], DY = [0, 1, 0, -1];
+    const x0 = x, y0 = y; let guard = 0;
+    do { // square tracing (Moore-style): turn left on a filled cell, right on an empty one
+      pts.push([x, y]);
+      for (let k = 0; k < 4; k++) { const nd = (dir + 3 + k) % 4, nx = x + DX[nd], ny = y + DY[nd]; if (at(nx, ny)) { dir = nd; x = nx; y = ny; break; } }
+    } while ((x !== x0 || y !== y0) && ++guard < 200000);
+    const outline = simplify(pts, 1.1);
+    if (outline.length < 3) return;
+    strokesOf(active).unshift({ d: closedPath(outline), fill: fillSlot });   // under the ink
+    save(); refresh();
+  }
 
   // ---------- stage ----------
   function drawStage() {
@@ -194,8 +255,10 @@
   function tick(ms) { const t = ms / 1000; $('preview').innerHTML = `<line x1="0" y1="${P.ground}" x2="600" y2="${P.ground}" stroke="#d8cfc0" stroke-width="3"/>` + Puppet.render(fresh(), 300, P.ground, previewPose(t)); requestAnimationFrame(tick); }
 
   // ---------- toolbar ----------
-  const setTool = t => { tool = t; ['fill', 'ink', 'pivot'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); };
-  $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-pivot').onclick = () => setTool('pivot');
+  const setTool = t => { tool = t; ['fill', 'ink', 'bucket', 'pivot'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); };
+  $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-bucket').onclick = () => setTool('bucket'); $('t-pivot').onclick = () => setTool('pivot');
+  $('sheet').onclick = () => { const svgTxt = Sheet.build(fresh(), (window.CLIPLIB || {})[P.template] || (window.CLIPLIB || {}).humanoid);
+    const w = window.open('', '_blank'); if (!w) return; w.document.write(`<title>${(P.name || 'puppet')} model sheet</title><body style="margin:0;background:#ddd">${svgTxt}<p><a download="${(P.name || 'puppet').replace(/\W+/g, '_')}_sheet.svg" href="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgTxt)}">Download SVG</a></p></body>`); };
   $('undo').onclick = () => { const o = own(active); if (o) o.pop(); save(); refresh(); };
   $('clear').onclick = () => { if (!confirm(view ? `Remove the "${view}" drawing of this slot (it will inherit the front again)?` : 'Clear everything drawn in this slot?')) return;
     if (view) { const v = ov(); if (active.kind === 'part') delete v.parts[active.id]; else if (v.swaps[active.id]) delete v.swaps[active.id].shapes[active.shape]; } else strokesOf(active).length = 0; save(); refresh(); };

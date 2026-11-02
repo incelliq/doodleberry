@@ -1062,6 +1062,15 @@ def puppet_coach(source, out=""):
     return res
 
 
+@command("puppet.sheet", path=("string", "a .puppet.json"), out=("string", "PNG to write (default next to the puppet)", ""))
+def puppet_sheet(path, out=""):
+    """Model sheet: the character in key poses and views (rest, wave, turned both ways, every drawn view) and every
+    expression close up (mouths, brows, eyes, gaze), on one page. The Rig Canvas shows the same sheet."""
+    pp = _inside(path, True); op = _inside(out) if out else pp.with_name(pp.name.split(".")[0] + ".sheet.png")
+    _run(["node", "tools/sheet.mjs", str(pp), str(op)], timeout=300)
+    return {"sheet": str(op.relative_to(ROOT))}
+
+
 @command("puppet.export_layers", path=("string", "a .puppet.json"), out=("string", "output .svg, .ora or .psd inside the repo"),
          pivots=("boolean", "add a pivots layer with a dot per joint", True))
 def puppet_export_layers(path, out, pivots=True):

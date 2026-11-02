@@ -158,6 +158,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 1.7 Toon shading and post | done: `style.toon` cel shadows and rim light (SVG), `post` presets (grade, vignette, seeded grain, LUT). Open: cross-dissolves, sub-frame motion blur, toon in other renderers | this commit |
 | 1.6 Sets and props | done: 11 new aspect-independent sets (16 total) incl. reservoir cross-section and stage; 2015 Lucide icons (ISC) as a kit element; all in the manifest. Open: map board (Natural Earth + d3-geo), anatomy plates (Servier, CC BY), Kenney prop packs | this commit |
 | 1.5 Cast variety | done: `cast.generate` (parametric original characters: build, age, skin, 9 hairstyles incl. hijab, 7 tops, 3 bottoms, accessories), 12 registered cast members, golden pose case. Open: Open Peeps/Humaaans conversion, outfits as swap sets | this commit |
+| 1.4 Rig Canvas drawing upgrade | done: perfect-freehand ink with pressure, simplified strokes, gap-closing bucket fill, model sheets (canvas button and `puppet.sheet`). Open: expression boards for drawing swap sets side by side | this commit |
 | 2.10 Speech bubbles | mostly done: say, shout, whisper; voice-synced reveal; collision-aware placement. Open: thought clouds, narration boxes | this commit |
 
 ## Decision gates
