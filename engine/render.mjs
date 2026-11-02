@@ -24,8 +24,10 @@ async function openPage(browser) {
   const ctx = await browser.newContext({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   page.on('pageerror', e => { console.error('page error:', e.message); process.exit(1); });
-  await page.goto('file://' + path.join(film, 'index.html'));
-  await page.waitForFunction(() => window.FILM && window.FILM.ready === true);
+  // --base http://host:port/ serves the repo over HTTP (3D films fetch GLB models, which file:// pages cannot)
+  const base = opt('base', null), root = path.resolve(film, '..', '..');
+  await page.goto(base ? base.replace(/\/?$/, '/') + path.relative(root, film).split(path.sep).join('/') + '/index.html' : 'file://' + path.join(film, 'index.html'));
+  await page.waitForFunction(() => window.FILM && window.FILM.ready === true, null, { timeout: base ? 300000 : 30000 });
   await page.evaluate(() => document.fonts.ready);
   const meta = await page.evaluate(() => ({ ...window.FILM }));
   await page.setViewportSize({ width: meta.width, height: meta.height });

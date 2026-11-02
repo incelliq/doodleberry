@@ -82,7 +82,5 @@
    "fact": "herb",
    "text": "Not a tree at all. A giant herb!"
   }
- ],
- "allow_restricted_voices": true,
- "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
+ ]
 }

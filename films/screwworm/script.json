@@ -185,7 +185,5 @@
    "fact": "once",
    "text": "We beat this fly once, not with poison, but with one strange fact. She only mates once. Now, we have to do it again."
   }
- ],
- "allow_restricted_voices": true,
- "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
+ ]
 }

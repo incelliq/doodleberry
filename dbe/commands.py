@@ -1007,6 +1007,10 @@ def film_revoice(name, map=None, build=True, rebuild=False):
             v["voice"] = swap(v.get("voice"))
     if s.get("voice"):
         s["voice"] = swap(s["voice"])
+    voices_now = [v.get("voice") for v in (s.get("speakers") or {}).values()] + ([s["voice"]] if s.get("voice") else [])
+    if all(reg.get(v, {}).get("status") == "clean" for v in voices_now if v):  # no longer internal-only
+        for k in ("allow_restricted_voices", "voice_licence_note"):
+            s.pop(k, None)
     sp.write_text(json.dumps(s, indent=1, ensure_ascii=False))
     out = {"film": name, "changed": changed}
     if not build or (not changed and not rebuild):
@@ -1029,9 +1033,21 @@ def film_revoice(name, map=None, build=True, rebuild=False):
             scene.write_text(re.sub(r"const END = [\d.]+;", f"const END = {sc['length_s']};", scene.read_text(), count=1))
     if s.get("voice_fx"):
         _run([PY, "engine/voicefx.py", F])
-    _run(["node", "engine/render.mjs", F, "--dump-cues"], timeout=1800)
-    _run([PY, "engine/audio.py", F], timeout=1800)
-    _run(["node", "engine/render.mjs", F, "--workers", str(max(1, (os.cpu_count() or 2) - 1))], timeout=7200)
+    is3d = any(k in ((d / "index.html").read_text() + (d / "scene.js").read_text()) for k in (".glb", "three.module", "THREE"))
+    srv, base = None, []
+    if is3d:  # 3D films fetch GLB models: serve the repo over HTTP for the render
+        import socket
+        sk = socket.socket(); sk.bind(("127.0.0.1", 0)); port = sk.getsockname()[1]; sk.close()
+        srv = subprocess.Popen([sys.executable, "-m", "http.server", str(port), "--bind", "127.0.0.1"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        base = ["--base", f"http://127.0.0.1:{port}/"]
+        import time; time.sleep(1.0)
+    try:
+        _run(["node", "engine/render.mjs", F, "--dump-cues", *base], timeout=3600)
+        _run([PY, "engine/audio.py", F], timeout=1800)
+        _run(["node", "engine/render.mjs", F, "--workers", str(max(1, (os.cpu_count() or 2) - 1)), *base], timeout=7200 * (3 if is3d else 1))
+    finally:
+        if srv:
+            srv.terminate()
     mix = d / "build" / "mix.wav"
     length = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(mix)], capture_output=True, text=True).stdout or 0)
     _run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(d / "build" / "picture.mp4"), "-i", str(mix), "-map", "0:v", "-map", "1:a",

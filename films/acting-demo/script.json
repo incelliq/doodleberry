@@ -32,7 +32,5 @@
    "fact": null,
    "text": "Got it!"
   }
- ],
- "allow_restricted_voices": true,
- "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
+ ]
 }

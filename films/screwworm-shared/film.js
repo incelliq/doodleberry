@@ -262,7 +262,7 @@
     if (cp > 0.01 && fadeCan > 0.01) {
       let can = sh('M-70 -150 L70 -150 L70 150 L-70 150 Z', '#8a9aa8', { depth: 12 }) + sh('M-40 -190 L40 -190 L40 -150 L-40 -150 Z', '#5a6a78', { depth: 5 }) + sh('M-12 -220 L20 -220 L20 -190 L-12 -190 Z', '#c0c8d0', { depth: 3 });
       can += `<rect x="-70" y="-60" width="140" height="110" fill="#f6e04a" stroke="${INK}" stroke-width="5"/>` + txt(0, 6, 'POISON', 34, INK) + `<path d="M-20 26 L20 26" stroke="${INK}" stroke-width="5"/>`;
-      s += G(tf(540, 820, -8, cp), can, `opacity="${f2(fadeCan)}"`);
+      s += G(tf(540, 820, -8 + 2.5 * Math.sin(t * 2.4), cp), can, `opacity="${f2(fadeCan)}"`);   // gentle sway: no dead frames
       if (t > tP) s += G('', cross(540, 820, 3.2 * popS(t, tP)), `opacity="${f2(fadeCan)}"`);
     }
     // flies multiply

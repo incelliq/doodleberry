@@ -1,12 +1,53 @@
 {
-  "length_s": 54.9,
-  "bpm": 96,
-  "offset_s": 0.0,
-  "note": "tense under the hook and the x-ray, lighter under the explainer, lift on the sterile-fly fix",
-  "sections": [
-    {"kind": "intro",   "from_beat": 0,  "to_beat": 28, "chords": ["Dm", "Bb", "Gm", "Am"]},
-    {"kind": "reflect", "from_beat": 28, "to_beat": 54, "chords": ["Dm", "Bb", "F", "C"]},
-    {"kind": "main",    "from_beat": 54, "to_beat": 70, "chords": ["Dm", "Bb", "F", "C"]},
-    {"kind": "finale",  "from_beat": 70, "to_beat": 88, "chords": ["F", "C", "Bb", "C"], "end_chord": "F"}
-  ]
+ "length_s": 63.972,
+ "bpm": 96,
+ "offset_s": 0.0,
+ "note": "tense under the hook and the x-ray, lighter under the explainer, lift on the sterile-fly fix",
+ "sections": [
+  {
+   "kind": "intro",
+   "from_beat": 0,
+   "to_beat": 28,
+   "chords": [
+    "Dm",
+    "Bb",
+    "Gm",
+    "Am"
+   ]
+  },
+  {
+   "kind": "reflect",
+   "from_beat": 28,
+   "to_beat": 54,
+   "chords": [
+    "Dm",
+    "Bb",
+    "F",
+    "C"
+   ]
+  },
+  {
+   "kind": "main",
+   "from_beat": 54,
+   "to_beat": 70,
+   "chords": [
+    "Dm",
+    "Bb",
+    "F",
+    "C"
+   ]
+  },
+  {
+   "kind": "finale",
+   "from_beat": 70,
+   "to_beat": 88,
+   "chords": [
+    "F",
+    "C",
+    "Bb",
+    "C"
+   ],
+   "end_chord": "F"
+  }
+ ]
 }

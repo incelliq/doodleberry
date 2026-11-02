@@ -1,7 +1,7 @@
 {
  "speakers": {
   "nar": {
-   "voice": "en_US-ryan-high"
+   "voice": "kokoro:am_michael"
   }
  },
  "length_scale": 1.04,
@@ -61,7 +61,5 @@
    "fact": "duo",
    "text": "Watch the full story: how two scientists beat it with an X-ray machine."
   }
- ],
- "allow_restricted_voices": true,
- "voice_licence_note": "Uses voices marked restricted/unclear in voices/registry.json: internal test only. Re-voice with clean voices (kristin, norman, bryce, cori, ...) before publishing."
+ ]
 }
