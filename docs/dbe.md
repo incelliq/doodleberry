@@ -509,3 +509,21 @@ Every number on screen or in the narration can come from `data.json`, written by
   lines and re-renders only those shots (shot hashes cover only the lines and mouth cues a shot shows).
 `films/data-demo` charts an illustrative club log (labelled as demo data). Changing one month in `analysis/cache/log.csv`
 re-rendered the chart shot and the "best month" shot and re-voiced their two lines; the intro shot stayed as it was.
+
+## Format templates (plan 2.15)
+`python -m dbe film.from_template '{"name": "NEW", "format": "dialogue", "brief": {...}}'` writes a whole
+storyboard from a format and a brief, then checks it:
+- formats (`dbe/formats.py`): `myth_vs_data` (myth, question, finding, why, source), `dialogue` (topic and
+  `exchanges` of q/a; the learner asks, the expert answers, E28), `wonder_story` (imagine, build, reveal, reflect),
+  `we_reran_it` (old_claim, new_finding, changed, source), `anniversary` (years, event, changed, now) and `series`
+  (`parts`, each with its own format; edit.json splits it into episodes). Any beat's text can be overridden in
+  `lines`, roles recast in `cast` (default expert Ravi, learner Momo, narrator Priya), sets in `sets`;
+- every film gets script.json with narration slots (135 wpm, draft timing), one shot per scene (line-relative,
+  listeners added in conversation scenes, an auto camera when two or more are on screen, a float camera when none),
+  kit signs held words / 3 + 1.2 s, prediction prompts ("What do you think?") that stay up through the question and
+  a silent count before the reveal, charts from `data`, citations, and facts marked `needs_check` until sourced;
+- `python -m dbe storyboard.check '{"name": "FILM"}'` runs the cold-open rule (a character in frame one, words by
+  1.5 s) and the reading-time rules (signs up long enough, captions at most 3.2 words/s) on the storyboard before
+  or after voicing, and lists facts still waiting for a source.
+`films/telescope-talk` came from the dialogue template and a three-question brief; it passed the storyboard check
+before voicing and the full QA after.

@@ -905,6 +905,58 @@ def film_data(name, refresh=False, revoice=False, render=False):
     return out
 
 
+# ---------------- format templates (plan 2.15) ----------------
+@command("storyboard.check", name=("string", "film"))
+def storyboard_check(name):
+    """The cold-open and reading-time rules on a storyboard, before or after voicing (with slots the timing is known
+    before any voice): a character in frame one and the first words by 1.5 s; every sign, title or bubble up for
+    words / 3 + 1 s; captions at most 3.2 words/s. Also lists facts still waiting for a source (the research gate)."""
+    from . import layout_qa as LQ
+    d = _film(name); res = _shots(name); tm = _json(d / "timing.json", {})
+    co = LQ.cold_open(res["shots"], tm, res.get("size", [1080, 1920])); rd = LQ.reading_time(res["shots"], tm)
+    facts = _json(d / "facts.json", {"facts": []}).get("facts", [])
+    checks = {"cold_open": bool(co["character_in_frame_one"] and co["first_text_s"] is not None and co["first_text_s"] <= 1.5),
+              "reading_time": not rd["too_short"] and rd["caption_words_per_s"] <= 3.2}
+    return {"ok": all(checks.values()), "checks": checks, "cold_open": co, "reading": rd,
+            "facts_need_sources": [f["id"] for f in facts if not f.get("source")]}
+
+
+@command("film.from_template", name=("string", "new film"), format=("string", "myth_vs_data | dialogue | wonder_story | we_reran_it | anniversary | series"),
+         brief=("object", "the brief: the fields the format needs (see dbe/formats.py), optional cast {role: id}, lines {beat: text}, facts, data"))
+def film_from_template(name, format, brief):
+    """Format templates (plan 2.15): build a storyboard from a format and a brief: script with narration slots
+    (135 wpm, draft timing so it can be checked and cut before voicing), shots (one per scene, line-relative), kit
+    signs held long enough to read, prediction prompts with a silent count before reveals, facts (gated until
+    sourced), data for charts, edit.json for a series; then run storyboard.check."""
+    from . import formats as FM
+    if not re.match(r"^[a-z0-9][a-z0-9_-]*$", name):
+        raise ValueError("film name: lowercase letters, digits, - and _")
+    d = FILMS / name
+    if d.exists() and (d / "script.json").exists():
+        raise FileExistsError(f"films/{name} exists")
+    lines, shots, facts, edit = FM.storyboard(format, brief)
+    d.mkdir(parents=True, exist_ok=True)
+    voices = {"ravi": "kokoro:am_michael", "momo": "kokoro:af_heart", "priya": "kokoro:af_bella"}
+    spk = {l["speaker"] for l in lines}
+    script = {"title": brief.get("title", name), "format": format,
+              "speakers": {k: ({"voice": voices.get(k, "kokoro:af_sarah"), **({"fx": {"pitch": 1.2, "formant": 1.08, "range": 1.25}} if k == "momo" else {})}) for k in sorted(spk)},
+              "lead_in_s": 0.6, "gap_s": 0.45, "lines": lines}
+    (d / "script.json").write_text(json.dumps(script, indent=1, ensure_ascii=False))
+    (d / "shots.json").write_text(json.dumps({"title": brief.get("title", name), "size": [1080, 1920], "fps": 30, "captions": True, "shots": shots}, indent=1, ensure_ascii=False))
+    (d / "facts.json").write_text(json.dumps({"facts": facts}, indent=1, ensure_ascii=False))
+    (d / "score.json").write_text(json.dumps({"length_s": 30, "bpm": 96, "offset_s": 0, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 64, "chords": ["F", "Am", "Dm", "C"], "end_chord": "F"}]}, indent=1))
+    if brief.get("data"):
+        (d / "data.json").write_text(json.dumps(brief["data"], indent=1, ensure_ascii=False))
+    if edit:
+        (d / "edit.json").write_text(json.dumps(edit, indent=1))
+    (d / "brief.md").write_text(f"# {brief.get('title', name)}\n\nFormat: {format} ({FM.TEMPLATES.get(format, {}).get('about', 'series of parts')}).\n\n"
+                                + "\n".join(f"- {k}: {v}" for k, v in brief.items() if isinstance(v, (str, int, float))) + "\n")
+    sl = script_slots(name)
+    chk = storyboard_check(name)
+    return {"film": f"films/{name}", "lines": len(lines), "shots": [s_["id"] for s_ in shots], "length_s": sl["length_s"], "storyboard": chk,
+            "next": ["voice.build", "acting.plan", "acting.direct (optional)", "film.render"] + (["research: source the facts"] if chk["facts_need_sources"] else [])}
+
+
 @command("film.heal", name=("string", "film"), rounds=("integer", "most render-and-repair rounds", 3),
          revoice=("boolean", "allow re-voicing slower when captions flow too fast", False))
 def film_heal(name, rounds=3, revoice=False):

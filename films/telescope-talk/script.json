@@ -1,0 +1,104 @@
+{
+ "title": "Why telescopes work",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about telescopes?",
+   "slot": [
+    0.6,
+    3.361
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Why does a telescope show things we cannot see?",
+   "slot": [
+    4.411,
+    4.25
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Its big lens or mirror gathers far more light than your eye can.",
+   "slot": [
+    9.111,
+    6.028
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "So it is more about light than zoom?",
+   "slot": [
+    15.589,
+    3.806
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Mostly, yes. More light means fainter things become visible.",
+   "slot": [
+    19.845,
+    4.25
+   ]
+  },
+  {
+   "id": "q3",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Then why do big telescopes look so huge?",
+   "slot": [
+    24.545,
+    3.806
+   ]
+  },
+  {
+   "id": "a3",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "A wider mirror catches more light, so astronomers build them wide.",
+   "slot": [
+    28.801,
+    5.139
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "That makes sense now.",
+   "slot": [
+    34.39,
+    2.028
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

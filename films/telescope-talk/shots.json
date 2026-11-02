@@ -1,0 +1,520 @@
+{
+ "title": "Why telescopes work",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "start": 0,
+   "end": "q1.start-0.3",
+   "start_line": "hook",
+   "end_line": "hook",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1540,
+      "s": 1.15
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.884,
+        "end": 1.784,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 1.659,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "set_opts": {
+    "board": [
+     "Why telescopes",
+     "work"
+    ]
+   }
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "classroom",
+   "start": "q1.start-0.3",
+   "end": "q2.start-0.3",
+   "start_line": "q1",
+   "end_line": "a1",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 4.47,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 5.545,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 6.315,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 15.189,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        4.411,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        8.961,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       15.489
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 8.711,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_L",
+        "start": 12.047,
+        "end": 12.947,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        4.261,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        9.111,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       9.011
+      ]
+     }
+    }
+   ],
+   "set_opts": {
+    "board": [
+     "Why telescopes",
+     "work"
+    ]
+   }
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "classroom",
+   "start": "q2.start-0.3",
+   "end": "q3.start-0.3",
+   "start_line": "q2",
+   "end_line": "a2",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 15.749,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 16.769,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 24.145,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        15.589,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        19.695,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       24.445
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 19.445,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 21.236,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.845,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        15.439,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        19.845,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       19.745
+      ]
+     }
+    }
+   ],
+   "set_opts": {
+    "board": [
+     "Why telescopes",
+     "work"
+    ]
+   }
+  },
+  {
+   "id": "s4",
+   "renderer": "svg",
+   "set": "classroom",
+   "start": "q3.start-0.3",
+   "end": "button.end+1.2",
+   "start_line": "q3",
+   "end_line": "button",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 25.813,
+        "end": 26.713,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 26.363,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 33.99,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_R",
+        "start": 34.39,
+        "end": 35.29,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        24.545,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        28.651,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        34.39,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       34.29
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 28.401,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 30.986,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 28.811,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 36.468,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        24.395,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        28.801,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        34.24,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       28.701,
+       36.768
+      ]
+     }
+    }
+   ],
+   "set_opts": {
+    "board": [
+     "Why telescopes",
+     "work"
+    ]
+   }
+  }
+ ]
+}
