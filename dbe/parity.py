@@ -59,7 +59,7 @@ def check(tools=None):
             if not c.get("capability") or not c.get("pro_use"):
                 probs.append(f"{cid}: capability or professional use missing")
             if k in ("command", "partial"):
-                cmds = [r for r in refs if re.fullmatch(r"[a-z_]+\.[a-z_.]+", r)]
+                cmds = [r for r in refs if r in COMMANDS or re.fullmatch(r"[a-z_]+\.[a-z_.]+", r)]
                 bad = [r for r in cmds if r not in COMMANDS]
                 if bad:
                     probs.append(f"{cid}: no such command {bad}")

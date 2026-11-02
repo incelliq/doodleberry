@@ -172,7 +172,7 @@ Pro-tool attributions come from general product knowledge, not a fresh audit. Ch
 |---|---|---|---|---|
 | Renderer routing per shot (SVG, Synfig, Grease Pencil, Lottie) | NEW | ✅ | – | |
 | Composited character layers over the animated set | NEW | ✅ | – | |
-| Video, Lottie, web player, Synfig and Grease Pencil project exports | PRO/NEW | ✅ | – | |
+| Video, Lottie, web player, Synfig and Grease Pencil project exports | PRO/NEW | 🟡 | – | video, Lottie, web player and Synfig projects (`export.*`); the Grease Pencil path renders frames and a JSON bake but saves no `.blend` project yet (found by the WP-41 parity sweep): WP-14 |
 | WebM and ProRes with alpha, GIF/APNG, stickers | PRO | ⬜ | P1 | alpha video, GIF, APNG: WP-23 |
 | OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | 🟡 | P1 | `film.cuts` writes OTIO per cut (2.14); FCPXML, EDL and round trips: WP-22 |
 | Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | ⬜ | P2 | sprite sheets and game formats: WP-30 |
