@@ -300,7 +300,7 @@ def resolve_times(obj, timing):
 
     def walk(o):
         if isinstance(o, dict):
-            return {k: (t_of(v) if k in ("start", "end", "t", "until") and isinstance(v, str) and k != "clip" else walk(v)) for k, v in o.items()}
+            return {k: (t_of(v) if k in ("start", "end", "t", "until", "arrive") and isinstance(v, str) and k != "clip" else walk(v)) for k, v in o.items()}
         if isinstance(o, list):
             if len(o) == 2 and isinstance(o[0], str) and _LINE_T.match(o[0]):
                 return [t_of(o[0]), walk(o[1])]

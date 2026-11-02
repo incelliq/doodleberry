@@ -178,12 +178,40 @@
     return [(w[0] - x) / (s * flip) + hip[0], (w[1] - y) / s + (p.ground ?? p.artboard[1])];
   }
   // props switch parents over time: attach [[t, {cast, part, at} | {x, y}], ...]; each switch travels on an arc
-  function propPos(pr, t, casts) {
+  // v2.19 cartoon physics for props. A key spec may ask for
+  //   "flight": "ballistic"  a true gravity arc that leaves the previous parent at the key time and lands on this target
+  //                          exactly `travel` later (or at "arrive", which may be line-relative): sync survives re-voicing
+  //   "drop": {"floor": y, "x": x, "e": 0.5, "roll": 0.6}  released at the key time: falls, bounces and rolls to rest
+  // Gravity is pr.gravity px/s^2 (default 2600). Both are deterministic functions of time.
+  function dropSim(pr, from, d, t0, t) {   // fixed-step integration from the release; returns {pos, bounces, spin}
+    const g = pr.gravity ?? 2600, r = pr.r || 34, floor = (d.floor ?? 1500) - r, e = d.e ?? 0.5, dt = 1 / 240;
+    let x = from[0], y = from[1], vy = d.vy ?? 0;
+    const tFall = Math.sqrt(Math.max(0, 2 * (floor - y) / g)) || 0.3;
+    let vx = d.vx ?? (d.x != null ? (d.x - x) / (tFall + 0.35) : 0), spin = 0;
+    const bounces = []; let tt = t0;
+    while (tt + dt <= t) {
+      vy += g * dt; x += vx * dt; y += vy * dt; tt += dt;
+      if (y >= floor) { y = floor; if (vy > 60) bounces.push([tt, x, floor + r]); vy = vy > 60 ? -vy * e : 0; vx *= vy === 0 ? (1 - (d.roll_friction ?? 2.2) * dt) : (d.roll ?? 0.8); }
+      spin += vx * dt / r * 57.3;
+    }
+    return { pos: [x, y], bounces, spin };
+  }
+  function propPos(pr, t, casts, info) {
     const keys = pr.attach || []; if (!keys.length || t < keys[0][0]) return null;
     let k = 0; while (k + 1 < keys.length && keys[k + 1][0] <= t) k++;
-    const at = spec => Array.isArray(spec) ? spec : (spec.x != null ? [spec.x, spec.y] : worldOf(spec, t, casts));
-    let pos = at(keys[k][1]);
-    const travel = pr.travel ?? 0.35, since = t - keys[k][0];
+    const at = spec => Array.isArray(spec) ? spec : (spec.x != null && !spec.drop ? [spec.x, spec.y] : worldOf(spec, t, casts));
+    const spec = keys[k][1];
+    if (spec && spec.drop && k > 0) {   // released from the previous parent: fall, bounce, roll
+      const from = at(keys[k - 1][1]); if (!from) return null;
+      const sim = dropSim(pr, from, spec.drop, keys[k][0], t); if (info) { info.bounces = sim.bounces; info.spin = sim.spin; }
+      return sim.pos;
+    }
+    let pos = at(spec);
+    const travel = spec && spec.arrive != null ? Math.max(0.05, spec.arrive - keys[k][0]) : (pr.travel ?? 0.35), since = t - keys[k][0];
+    if (k > 0 && since < travel && pos && spec && spec.flight === 'ballistic') {   // exact projectile: lands on the target at the end of travel
+      const from = at(keys[k - 1][1]) || pos, g = pr.gravity ?? 2600, T = travel, vy = (pos[1] - from[1] - g * T * T / 2) / T;
+      return [from[0] + (pos[0] - from[0]) * since / T, from[1] + vy * since + g * since * since / 2];
+    }
     if (k > 0 && since < travel && pos) {
       const from = at(keys[k - 1][1]) || pos, u = since / travel, e = u * u * (3 - 2 * u), lift = (pr.arc ?? 140) * 4 * u * (1 - u);
       pos = [from[0] + (pos[0] - from[0]) * e, from[1] + (pos[1] - from[1]) * e - lift];
@@ -191,17 +219,9 @@
     return pos;
   }
   function propSVG(pr, t, casts) {
-    const keys = pr.attach || []; if (!keys.length || t < keys[0][0]) return '';
-    let k = 0; while (k + 1 < keys.length && keys[k + 1][0] <= t) k++;
-    const at = spec => Array.isArray(spec) ? spec : (spec.x != null ? [spec.x, spec.y] : worldOf(spec, t, casts));
-    let pos = at(keys[k][1]);
-    const travel = pr.travel ?? 0.35, since = t - keys[k][0];
-    if (k > 0 && since < travel && pos) {
-      const from = at(keys[k - 1][1]) || pos, u = since / travel, e = u * u * (3 - 2 * u), lift = (pr.arc ?? 140) * 4 * u * (1 - u);
-      pos = [from[0] + (pos[0] - from[0]) * e, from[1] + (pos[1] - from[1]) * e - lift];
-    }
+    const info = {}, pos = propPos(pr, t, casts, info);
     if (!pos) return '';
-    const r = pr.r || 34, spin = pr.spin ? t * pr.spin : 0;
+    const r = pr.r || 34, spin = info.spin != null ? info.spin : (pr.spin ? t * pr.spin : 0);
     if (pr.svg) return `<g transform="translate(${pos[0].toFixed(1)} ${pos[1].toFixed(1)}) rotate(${spin.toFixed(1)})">${pr.svg}</g>`;
     return `<g transform="translate(${pos[0].toFixed(1)} ${pos[1].toFixed(1)}) rotate(${spin.toFixed(1)})"><circle r="${r}" fill="${pr.color || '#e8603c'}" stroke="${INK}" stroke-width="5"/>` +
       `<path d="M${-r} 0 Q0 ${r * 0.5} ${r} 0 M0 ${-r} Q${r * 0.45} 0 0 ${r}" fill="none" stroke="${INK}" stroke-width="3" opacity="0.55"/></g>`;
@@ -238,7 +258,7 @@
         if (!st2) { const [x2, y2, s2, f2] = placeAt(cc.c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tt); const tl2 = { ...cc.tl }; delete tl2.lookat;
           st2 = memo[key] = { x: x2, y: y2, s: s2, flip: f2, pose: Acting.evaluate(cc.p, tl2, tt, cc.L.clips, cc.L.presets) }; }
         return Puppet.pointOf(cc.p, part, null, st2.x, st2.y, { ...st2.pose, s: st2.s, flip: st2.flip }); };
-      ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt) => propPos(pr, tt, casts) });
+      ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt, info) => propPos(pr, tt, casts, info) });
     }
     if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('') + bubblesFor(sh, tq, heads); }
     world += st.boil ? `<g filter="url(#boil)">${ink}</g>` : ink;

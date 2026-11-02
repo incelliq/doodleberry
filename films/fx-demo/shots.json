@@ -184,17 +184,24 @@
         "at": [
          424,
          492
-        ]
+        ],
+        "flight": "ballistic",
+        "arrive": "catch.end+0.45"
        }
       ],
       [
        "got.end+0.8",
        {
-        "x": 600,
-        "y": 1410
+        "drop": {
+         "floor": 1452,
+         "x": 620,
+         "e": 0.55,
+         "roll": 0.75
+        }
        }
       ]
-     ]
+     ],
+     "gravity": 2600
     }
    ],
    "fx": {

@@ -61,8 +61,13 @@
     let out = '';
     for (const pr of props) {
       if (pr.impact === false) continue;
-      const keys = pr.attach || [], travel = pr.travel ?? 0.35;
+      const keys = pr.attach || [];
+      const info = {}; propPos(pr, t, info);   // drops report their bounces
+      for (const [bt, bx, by] of info.bounces || []) { const age = t - bt; if (age < 0 || age > life) continue;
+        const u = age / life; out += `<ellipse cx="${f1(bx)}" cy="${f1(by)}" rx="${f1((pr.r || 34) * (1 + 1.5 * u))}" ry="${f1((pr.r || 34) * 0.25 * (1 + u))}" fill="none" stroke="${INK}" stroke-width="3" opacity="${f3(1 - u)}"/>`; }
       for (let k = 1; k < keys.length; k++) {
+        if (keys[k][1] && keys[k][1].drop) continue;
+        const travel = keys[k][1] && keys[k][1].arrive != null ? keys[k][1].arrive - keys[k][0] : (pr.travel ?? 0.35);
         const age = t - (keys[k][0] + travel);
         if (age < 0 || age > life) continue;
         const pos = propPos(pr, t); if (!pos) continue;

@@ -240,3 +240,13 @@ and any frame renders on its own:
 - `dust: true | {"min_drop": 14}`: puffs at the feet when a character lands (its hips decelerate sharply after a drop);
 - `impacts: true`: a star burst where a prop arrives at the end of its travel (a catch or a drop).
 Off by default, so existing films are unchanged. `films/fx-demo` is the props demo with all three on.
+
+## Cartoon physics for props (plan 2.19, first part)
+A prop's attach key can ask for physics (SVG player; deterministic, so frames stay pure):
+- `"flight": "ballistic"`: a true gravity arc from the previous parent to this target, landing exactly at the end of
+  `travel`, or at `"arrive"`, which may be line-relative (`"arrive": "catch.end+0.45"`): the catch stays on the words
+  after re-voicing or translation.
+- `"drop": {"floor": y, "x": x, "e": 0.55, "roll": 0.75}`: released at the key time, the prop falls, bounces with
+  restitution `e`, rolls towards `x` and spins as it rolls. With `fx.impacts` on, each bounce draws a ring.
+`gravity` (px/s², default 2600) is set per prop. Multi-body scenes (stacks, tumbling objects) are the next step, with the
+deterministic Rapier 2D build measured in the brainstorm.
