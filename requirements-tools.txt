@@ -3,3 +3,9 @@ psd-tools==1.26.0   # MIT: PSD layers in and out
 mediapipe==1.2.0    # Apache-2.0: Act it out (plan 3.5); its native library needs libEGL (apt install libegl1)
 opencolorio==2.6.0  # BSD-3-Clause: colour management with the built-in ACES configs (film.master, WP-37)
 OpenEXR==3.5.3      # BSD-3-Clause: multi-pass EXR masters (film.master, WP-37)
+opentimelineio==0.18.1          # Apache-2.0: editor hand-off timelines (film.handoff, WP-22)
+otio-cmx3600-adapter==1.0.0     # Apache-2.0: CMX 3600 EDL
+otio-fcp-adapter==1.0.0         # Apache-2.0: Final Cut Pro 7 XML (Resolve, Premiere)
+otio-fcpx-xml-adapter==1.0.0    # Apache-2.0: FCPXML
+otio-kdenlive-adapter==0.0.3    # MIT: Kdenlive projects (for Kdenlive before 25.04, which opens OTIO natively)
+otio-mlt-adapter==0.3.0         # MIT: MLT XML for melt

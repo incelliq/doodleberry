@@ -430,6 +430,15 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   compared with the film's own render.
 - `image.scopes {image}`: histogram, waveform and vectorscope of a frame.
 
+## Editor hand-off (WP-22)
+`film.handoff {name}` (after `film.render`) writes `films/<name>/build/handoff/`: the shots as rendered (`media/`), the
+stems at their mixed level (`audio/voice.wav`, `music.wav`, `sfx.wav`), the captions (SRT, VTT; also markers in the
+timelines), each shot's camera per frame (`camera/<shot>.chan` for Nuke-style tools, `.csv` of the 2D camera) and the
+cut as timeline.otio (OpenTimelineIO), timeline.kdenlive (KDE's adapter; Kdenlive 25.04 and later open the
+OTIO file natively), timeline.mlt, timeline.xml (Final Cut Pro 7 XML: DaVinci Resolve, Premiere), timeline.fcpxml
+and timeline.edl (CMX 3600, picture). Every file is read back with OTIO (clips, stem tracks, length); melt plays the
+Kdenlive project and renders the MLT one, compared with the shots frame by frame in YUV (identical on our films).
+
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
 and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their

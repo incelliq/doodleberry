@@ -1553,12 +1553,11 @@
      "capability": "EDL publishing: each clip exported as a video, plus an edit list that an editing program can rebuild.",
      "pro_use": "Hands the animatic to editorial.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "film.cuts",
-       "WP-22"
+       "film.handoff"
       ],
-      "note": "film.cuts writes OTIO per cut; FCPXML and EDL are in WP-22."
+      "note": "Each shot is handed off as a video with an EDL (and OTIO, FCP XML, Kdenlive) that rebuilds the cut."
      }
     },
     {

@@ -319,6 +319,30 @@
    "license": "BSD-3-Clause",
    "class": "permissive",
    "use": "multi-pass EXR masters (WP-37); pip-installed, not committed"
+  },
+  {
+   "name": "OpenTimelineIO 0.18.1 with the CMX 3600, FCP 7 XML and FCPXML adapters (1.0.0)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "use": "editor hand-off timelines (film.handoff, WP-22); pip-installed, not committed"
+  },
+  {
+   "name": "otio-kdenlive-adapter 0.0.3 (KDE) and otio-mlt-adapter 0.3.0",
+   "license": "MIT",
+   "class": "permissive",
+   "use": "Kdenlive and MLT projects in the hand-off (WP-22); pip-installed, not committed"
+  },
+  {
+   "name": "MLT 7.22 (melt) and frei0r plugins (Ubuntu packages)",
+   "license": "LGPL-2.1-or-later / GPL-2.0-or-later",
+   "class": "copyleft",
+   "use": "renders the hand-off's MLT project to check it frame for frame (WP-22); driven as a separate program"
+  },
+  {
+   "name": "Kdenlive 23.08.5 (Ubuntu package), optional",
+   "license": "GPL-3.0-or-later",
+   "class": "copyleft",
+   "use": "the editor the hand-off targets (WP-22); not driven by any command"
   }
  ],
  "external": [

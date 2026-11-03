@@ -2224,10 +2224,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "export.lottie",
+       "film.handoff",
        "WP-22"
       ],
-      "note": "Lottie JSON for web and AE workflows; editor hand-offs are WP-22"
+      "note": "Lottie JSON for web and AE workflows, and editor hand-offs (FCP XML, FCPXML, EDL) that After Effects and Premiere import; a native AE project is WP-22."
      }
     },
     {

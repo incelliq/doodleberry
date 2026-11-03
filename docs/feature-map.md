@@ -184,7 +184,7 @@ covered, now added to their packages' scopes.
 | Composited character layers over the animated set | NEW | ✅ | – | |
 | Video, Lottie, web player, Synfig and Grease Pencil project exports | PRO/NEW | 🟡 | – | video, Lottie, web player and Synfig projects (`export.*`); the Grease Pencil path renders frames and a JSON bake but saves no `.blend` project yet (found by the WP-41 parity sweep): WP-14 |
 | WebM and ProRes with alpha, GIF/APNG, stickers | PRO | ⬜ | P1 | alpha video, GIF, APNG: WP-23 |
-| OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | 🟡 | P1 | `film.cuts` writes OTIO per cut (2.14); FCPXML, EDL and round trips: WP-22 |
+| OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | ✅ | – | `film.handoff`: OTIO, Kdenlive, MLT, FCP 7 XML (Resolve, Premiere), FCPXML and EDL with shots, stems, captions and camera tracks; melt renders the cut byte for byte (WP-22) |
 | Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | ⬜ | P2 | sprite sheets and game formats: WP-30 |
 | Aspect-ratio re-staging (9:16 ↔ 16:9 ↔ 1:1 by re-blocking, not cropping) | IDEA | ✅ | – | `film.render` with `aspect` re-stages from the data (1.12); one command for all three: WP-24 |
 | Parallel render workers, frame reuse, static-layer cache | NEW | ✅ | – | browser per worker, frame dedupe (0.1); static-layer cache: WP-15 |
@@ -372,7 +372,7 @@ Which open-source pieces implement which features. Licences were verified by the
 | Lottie packaging with palette themes (§7) | dotLottie | MIT | ⬜ P2 · WP-23 |
 | Post effects: grain, LUT, vignette, xfade, motion blur (§4, §7) | ffmpeg filter graphs; accumulation blur in-house; SVT-AV1 film-grain | in stack | 🟡 grain, LUT, vignette (1.7); dissolves, motion blur: WP-15 |
 | 3D pass compositing (§4) | oiiotool; three.js toon stack | Apache-2.0 / MIT | ⬜ P2 · WP-42 |
-| Editor hand-off (§7) | OpenTimelineIO (+ EDL/FCPXML adapters); `melt` for round trips | Apache-2.0 / LGPL | 🟡 OTIO per cut (2.14) · WP-22 |
+| Editor hand-off (§7) | OpenTimelineIO (+ EDL/FCPXML adapters); `melt` for round trips | Apache-2.0 / LGPL | ✅ `film.handoff` (WP-22) |
 | Cast variety (§1, §10) | Open Peeps, Humaaans → puppets | CC0 | ✅ (1.5); Open Peeps, Humaaans: WP-16 |
 | Props, icons, SFX (§4, §6) | Kenney, Tabler, Lucide, Phosphor, Fluent Emoji | CC0 / MIT / ISC / MIT | ✅ Lucide icons, props (1.6); Kenney: WP-13, WP-16 |
 | Medical and map shots (§4) | Servier Medical Art; Natural Earth + d3-geo | CC BY 4.0 / PD | ⬜ P1 · WP-16 |

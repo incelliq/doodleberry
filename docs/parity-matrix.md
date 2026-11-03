@@ -17,14 +17,14 @@ Overall: 1396 capabilities; covered 37%, covered or partial 69% (of those that a
 | Blender Grease Pencil | 26 | 150 | 9 | 23 | 1 | 52 | 56 | 9 | 23% | 60% |
 | Toon Boom Harmony | 25 | 182 | 25 | 47 | 0 | 52 | 50 | 8 | 41% | 71% |
 | Moho Pro | 34 | 186 | 24 | 42 | 1 | 63 | 38 | 18 | 40% | 77% |
-| Foundry Nuke | 32 | 189 | 27 | 25 | 2 | 39 | 56 | 40 | 36% | 62% |
-| OpenToonz | 26 | 191 | 32 | 33 | 1 | 49 | 66 | 10 | 36% | 64% |
+| Foundry Nuke | 32 | 189 | 28 | 25 | 2 | 39 | 55 | 40 | 37% | 63% |
+| OpenToonz | 26 | 191 | 33 | 33 | 1 | 49 | 65 | 10 | 37% | 64% |
 | Synfig Studio | 26 | 169 | 34 | 38 | 2 | 42 | 40 | 13 | 47% | 74% |
-| TVPaint Animation | 26 | 168 | 29 | 13 | 1 | 69 | 48 | 8 | 27% | 70% |
+| TVPaint Animation | 26 | 168 | 30 | 13 | 1 | 68 | 48 | 8 | 28% | 70% |
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 36, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 36, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-40 17, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -250,7 +250,7 @@ Sources: [Adobe After Effects User Guide (official, helpx.adobe.com)](https://he
 | Multi-frame rendering that uses many CPU cores at once. | Large speed-ups on long or heavy renders. | **command**: `film.render`, `shot.render` (Rendering runs a browser per worker on frame ranges and dedupes identical frames.) |
 | Command-line rendering (aerender) for unattended and scripted renders. | Render farms and overnight batches. | **command**: `film.render`, `shot.render` (Every render is a command (CLI, HTTP with async jobs, MCP).) |
 | Network rendering and watch-folder rendering across several machines. | Splitting big jobs across a farm. | **gap**: WP-38 (Single machine; distributed render workers and a shared cache are WP-38.) |
-| Exporting a composition as a Premiere Pro project for editing. | Moving finished graphics into the edit with structure intact. | **partial**: `film.cuts`, WP-22 (film.cuts writes OTIO per cut; FCPXML and EDL with stems and captions are WP-22.) |
+| Exporting a composition as a Premiere Pro project for editing. | Moving finished graphics into the edit with structure intact. | **partial**: `film.handoff`, WP-22 (film.handoff writes the cut as OTIO, FCP 7 XML (Premiere, Resolve), FCPXML, EDL and Kdenlive with stems and captions; a native Premiere project is WP-22.) |
 | Notifications when a render finishes (desktop or mobile). | Artists leave long renders running and get pinged. | **gap**: WP-20 (Async jobs exist but no progress events or webhooks; WP-20 (and owner notifications in WP-03).) |
 | Rendering audio along with picture and as separate stems. | Sound teams get clean stems for final mixing. | **command**: `film.render` (The mix writes stems and a music-only version; film.cuts reuses the master's stems.) |
 
@@ -847,7 +847,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 | Flash (SWF) movie export | Legacy web delivery | **n/a** (Obsolete format; export.lottie and export.web cover the web) |
 | Quick OpenGL frame exports | Fast previews and animatics | **command**: `film.animatic`, `film.storyboard` (Stills and an animatic in seconds) |
 | Layout image export (layered) for background artists | Painters receive the camera framing | **partial**: `puppet.export_layers`, WP-16 (Characters export as layers; set layouts do not) |
-| Export to After Effects | Compositing in another package | **partial**: `export.lottie`, WP-22 (Lottie JSON for web and AE workflows; editor hand-offs are WP-22) |
+| Export to After Effects | Compositing in another package | **partial**: `film.handoff`, WP-22 (Lottie JSON for web and AE workflows, and editor hand-offs (FCP XML, FCPXML, EDL) that After Effects and Premiere import; a native AE project is WP-22.) |
 | Batch rendering of many scenes | Overnight renders on render machines | **partial**: `film.render`, `prod.launch`, WP-38 (Parallel workers per machine and films in parallel sessions; a render farm is WP-38) |
 | Cryptomattes and multi-pass EXR output | Compositors isolate objects after rendering | **partial**: `film.master`, WP-37 (Multi-pass EXR masters exist (beauty, line, fill, matte); cryptomattes are WP-37.) |
 
@@ -1094,7 +1094,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | New document, new workspace and new from template. | Gives consistent project setups per show. | **command**: `film.create`, `film.from_template` (Format templates draft the script, shots and timing.) |
-| Gather media: copy every external file a project uses into its folder. | Used to archive and hand projects to other studios. | **partial**: `film.provenance`, `export.web`, WP-22 (film.provenance lists what shaped a film, and export.web inlines everything for the player. A gathered hand-off package with stems is WP-22.) |
+| Gather media: copy every external file a project uses into its folder. | Used to archive and hand projects to other studios. | **partial**: `film.handoff`, WP-22 (film.handoff gathers the shots, stems and captions a cut uses into one folder; gathering a project's source files is WP-22.) |
 | Save as older file versions and strip comments and tags. | Used to share with collaborators on older versions. | **n/a** (There is a single in-house format, versioned (puppet 'version'). Older files stay valid in newer loaders.) |
 | Project settings: size, frame rate (including 23.976), background, depth of field, 3D camera, stereo and noise grain. | Sets the delivery spec for a show. | **partial**: `film.render`, WP-36 (The QA bar is fixed at 1080x1920 at 30 fps, and other aspects use film.render's 'aspect'. Grain is in the finishing presets. Depth of field is WP-36, and higher-frame-rate or 4K masters are WP-37.) |
 | Import images, image sequences, movies, SVG, audio, OBJ models and other Moho documents. | Brings outside art, plates and assets into a scene. | **partial**: `puppet.import`, `puppet.from_ink`, `puppet.from_blend`, WP-35 (Characters can come from SVG, PSD, ORA, photos and Blender rigs. Image sequences and movies as scene layers are WP-35 and WP-42.) |
@@ -1275,7 +1275,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 | Write renders as image sequences or movies with codec, bit depth, compression, alpha and colourspace options. | EXR to grading, ProRes to editorial, H.264 for review. | **partial**: `film.render`, `shot.render`, `export.web`, WP-23, WP-37 (Output is H.264 MP4 by platform profile (and Lottie, Synfig, web player exports); ProRes/WebM with alpha, GIF and APNG are WP-23, EXR masters WP-37.) |
 | Multi-layer EXR input and output carrying many named passes in one file. | CG lighters deliver one EXR per frame with all AOVs; comps write multi-pass masters. | **command**: `film.master` (film.master writes multi-layer EXRs (beauty, line, fill, matte) per frame, read by OpenImageIO and ffmpeg.) |
 | Inspect, edit and copy file metadata (timecode, camera and lens data, colour info) and pass it downstream. | Driving a comp from camera metadata, stamping timecode, tracking where an element came from. | **partial**: `film.provenance`, `film.credits`, `film.get`, WP-26 (Doodleberry records what shaped a film (provenance.json, licence classes, credits) at film level, not per-frame image metadata; C2PA content credentials on finals are WP-26.) |
-| Timecode and frame-number offsets on writes to match editorial. | Renders slot straight into the editor's timeline. | **partial**: `film.cuts`, WP-22 (film.cuts writes an .srt and an OpenTimelineIO edit on each cut's clock; EDL/FCPXML with timecode is WP-22.) |
+| Timecode and frame-number offsets on writes to match editorial. | Renders slot straight into the editor's timeline. | **partial**: `film.handoff`, WP-22 (Hand-off timelines and EDLs carry the film's frame rate and timecode from zero; offsets to match an editorial start are WP-22.) |
 | Burned-in slates and shot information (text driven by metadata) for dailies. | Every review clip shows shot, version, frame and artist. | **partial**: `film.storyboard`, `critic.pack`, WP-19 (Storyboard contact sheets and critic packets carry shot notes and times beside stills; a burn-in on review video belongs with the review room (WP-19).) |
 
 ### Reformatting elements
@@ -1572,14 +1572,14 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Conforming an edit from EDL or XML against media. | Rebuilding the editor's cut for VFX turnover. | **gap**: WP-22 (FCPXML and EDL hand-off with a round trip through melt is WP-22.) |
+| Conforming an edit from EDL or XML against media. | Rebuilding the editor's cut for VFX turnover. | **partial**: `film.handoff`, WP-22 (Our cuts go out as EDL and XML that conform against the handed-off media (read back by OTIO, rendered by melt byte for byte); conforming others' edits is WP-22.) |
 | Timeline editing tools: ripple, roll, slip, slide, razor and retime. | Trimming and adjusting the cut in the finishing tool. | **partial**: `timeline.edit`, `film.cuts`, WP-19 (timeline.edit moves, resizes, adds and deletes clip layers; dragging lines and shots is WP-19.) |
 | Real-time effects on timeline clips (grade, transform, text), including masked multichannel effects (Nuke 16). | Quick temp fixes and looks during review. | **partial**: `film.render`, WP-36 (Film-wide post finishing only; per-shot effects come with WP-36.) |
 | Create Comp: send a timeline shot to a linked comp script and bring renders back as versions. | Round tripping between editorial and comp. | **n/a** (Edit and comp are the same data: shots in shots.json are rendered and joined by film.render, so there is nothing to round-trip.) |
 | Annotations drawn on frames during review. | Supervisors mark exactly what to fix. | **partial**: `review.add`, `review.list`, `review.fix`, WP-19 (Text notes are pinned to frames and turned into data edits; drawn annotations and notes about camera and gaze are WP-19.) |
 | Sync review: several remote people in one playback session. | Remote dailies. | **gap**: WP-19 (The review room (WP-19) adds review on a phone; shared sessions should join it.) |
 | Versions and snapshots of shots, swapped and compared on the timeline. | Choosing between takes and rolling back. | **partial**: `prod.launch`, `shot.render`, WP-19 (Each film session has its own git branch and renderer comparisons can be rendered side by side; a visual diff between two versions is WP-19.) |
-| Exporting shots, transcodes and edit decisions for hand-off. | Turnover to vendors and delivery to editorial. | **partial**: `film.cuts`, `film.package`, WP-22 (Cuts with .srt and OTIO, and posting packages; FCPXML and EDL are WP-22.) |
+| Exporting shots, transcodes and edit decisions for hand-off. | Turnover to vendors and delivery to editorial. | **command**: `film.handoff` (film.handoff packages the shots, stems, captions, camera tracks and the cut in OTIO, FCP 7 XML, FCPXML, EDL, Kdenlive and MLT.) |
 | Contact sheet view with pick and tag modes (Nuke 16). | Selecting takes and tagging shots visually. | **command**: `film.storyboard`, `qa.run`, `critic.pack` (Contact sheets are written as files; there is no interactive pick or tag mode (cover.make picks cover frames by score).) |
 | Tags on shots and clips for tracking status and notes. | Marking shots as approved, needing work, or omitted. | **partial**: `review.list`, `prod.status`, WP-19 (Note statuses and film states exist; per-shot tags belong with the review room (WP-19).) |
 
@@ -1908,7 +1908,7 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 | Preproduction board panel for laying out story panels (1.7; Tahoma2D refactored its own board in 1.6). | Boards and timing live in the same tool as animation. | **command**: `film.storyboard`, `film.animatic` |
 | Interchange of layered cel animation through the Open Cel Animation format (export 1.7, import 1.8). | Move drawn animation between Krita, Blender and other cel tools. | **partial**: `puppet.export_layers`, `export.synfig`, `export.lottie`, WP-22 (Rig exports exist (layered files, Synfig, Lottie); OCA in and out would join WP-22's hand-off formats.) |
 | Exposure-sheet interchange: XDTS integration (1.8), plus sheet export to PDF and TVPaint JSON (1.6). | Timing sheets exchanged with Japanese studios and other paint tools. | **gap**: WP-35 (Belongs with the exposure sheet in WP-35.) |
-| Camera track export (1.7). | Camera moves reused in a compositing or 3D tool. | **gap**: WP-22 (Camera keys are data but are not exported; it should join WP-22 (editor hand-off).) |
+| Camera track export (1.7). | Camera moves reused in a compositing or 3D tool. | **command**: `film.handoff` (Each shot's camera per frame is exported as a Nuke .chan (the perspective camera the 3D sets use) and a CSV of the 2D camera.) |
 | Navigation tags and coloured cell marks on the timeline (1.6, 1.7). | Jump to story points in long scenes. | **data**: `script.json line ids`, `review.json` (Lines are named anchors that shots and clips reference; review notes are pinned to frames.) |
 | Screentone fills (1.8). | Manga-style tone shading. | **gap**: WP-15 (Joins WP-15's medium and style passes.) |
 | Stroke replication (symmetry-style drawing) and improved perspective/assistant guides (1.8). | Symmetrical props and correct perspective in backgrounds. | **gap**: WP-18 |
@@ -2413,7 +2413,7 @@ Sources: [TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and s
 | Turning the board into an animatic by setting clip durations, with sound and camera moves. | Directors judge pacing before committing to animation. | **command**: `film.animatic`, `shot.render` (film.animatic holds stills over the mix or voice in seconds (no camera moves); an SVG draft render gives a moving animatic with the camera.) |
 | PDF publishing of the storyboard with layout options. | Printed boards for meetings and clients. | **command**: `film.storyboard` (Writes contact.pdf (shots per page with notes) and strip.png.) |
 | HTML publishing: a web page whose thumbnails play their animation and camera move on hover. | Shares boards with remote reviewers without software. | **partial**: `export.web`, `film.storyboard`, WP-19 (export.web makes a self-contained interactive player of the film; a board page that plays each shot on hover would join WP-19 (review on a phone).) |
-| EDL publishing: each clip exported as a video, plus an edit list that an editing program can rebuild. | Hands the animatic to editorial. | **partial**: `film.cuts`, WP-22 (film.cuts writes OTIO per cut; FCPXML and EDL are in WP-22.) |
+| EDL publishing: each clip exported as a video, plus an edit list that an editing program can rebuild. | Hands the animatic to editorial. | **command**: `film.handoff` (Each shot is handed off as a video with an EDL (and OTIO, FCP XML, Kdenlive) that rebuilds the cut.) |
 | A bridge between clips (12.1): faint views of the previous clip's last frame and the next clip's first. | Checks continuity across cuts while drawing. | **partial**: `qa.run`, WP-19 (qa.run measures seam smoothness at cuts; visual continuity checks (screen direction, eyeline) are in WP-19.) |
 
 ### Import / Export

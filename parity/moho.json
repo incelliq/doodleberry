@@ -1792,11 +1792,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.provenance",
-       "export.web",
+       "film.handoff",
        "WP-22"
       ],
-      "note": "film.provenance lists what shaped a film, and export.web inlines everything for the player. A gathered hand-off package with stems is WP-22."
+      "note": "film.handoff gathers the shots, stems and captions a cut uses into one folder; gathering a project's source files is WP-22."
      }
     },
     {

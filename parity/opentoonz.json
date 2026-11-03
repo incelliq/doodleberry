@@ -2615,11 +2615,11 @@
      "capability": "Camera track export (1.7).",
      "pro_use": "Camera moves reused in a compositing or 3D tool.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-22"
+       "film.handoff"
       ],
-      "note": "Camera keys are data but are not exported; it should join WP-22 (editor hand-off).",
+      "note": "Each shot's camera per frame is exported as a Nuke .chan (the perspective camera the 3D sets use) and a CSV of the 2D camera.",
       "added_to_scope": true
      }
     },

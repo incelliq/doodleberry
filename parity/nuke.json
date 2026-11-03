@@ -382,10 +382,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.cuts",
+       "film.handoff",
        "WP-22"
       ],
-      "note": "film.cuts writes an .srt and an OpenTimelineIO edit on each cut's clock; EDL/FCPXML with timecode is WP-22."
+      "note": "Hand-off timelines and EDLs carry the film's frame rate and timecode from zero; offsets to match an editorial start are WP-22."
      }
     },
     {
@@ -2441,11 +2441,12 @@
      "capability": "Conforming an edit from EDL or XML against media.",
      "pro_use": "Rebuilding the editor's cut for VFX turnover.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.handoff",
        "WP-22"
       ],
-      "note": "FCPXML and EDL hand-off with a round trip through melt is WP-22."
+      "note": "Our cuts go out as EDL and XML that conform against the handed-off media (read back by OTIO, rendered by melt byte for byte); conforming others' edits is WP-22."
      }
     },
     {
@@ -2531,13 +2532,11 @@
      "capability": "Exporting shots, transcodes and edit decisions for hand-off.",
      "pro_use": "Turnover to vendors and delivery to editorial.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "film.cuts",
-       "film.package",
-       "WP-22"
+       "film.handoff"
       ],
-      "note": "Cuts with .srt and OTIO, and posting packages; FCPXML and EDL are WP-22."
+      "note": "film.handoff packages the shots, stems, captions, camera tracks and the cut in OTIO, FCP 7 XML, FCPXML, EDL, Kdenlive and MLT."
      }
     },
     {

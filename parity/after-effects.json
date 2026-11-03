@@ -1959,10 +1959,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.cuts",
+       "film.handoff",
        "WP-22"
       ],
-      "note": "film.cuts writes OTIO per cut; FCPXML and EDL with stems and captions are WP-22."
+      "note": "film.handoff writes the cut as OTIO, FCP 7 XML (Premiere, Resolve), FCPXML, EDL and Kdenlive with stems and captions; a native Premiere project is WP-22."
      }
     },
     {

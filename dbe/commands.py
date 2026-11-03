@@ -2396,6 +2396,14 @@ def test_golden(update=False, film=""):
         bad, meas = _master_test()
         failed += 1 if bad else 0
         results.append({"master": "multi-pass ACEScg EXR read by oiiotool and ffmpeg; the colour round trip is exact", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "handoff":   # editor hand-off (WP-22): every interchange format reads back; melt renders the cut byte for byte
+        from . import handoff as HOF
+        if HOF.shutil.which("melt"):   # (this function imports shutil locally further down)
+            bad, meas = HOF.self_test(ROOT / "out" / "handofftest")
+        else:
+            bad, meas = [], {"skipped": "melt not installed (apt-get install melt)"}
+        failed += 1 if bad else 0
+        results.append({"handoff": "OTIO, Kdenlive, FCP7 XML, FCPXML and EDL read back; melt renders the cut identically", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -4447,3 +4455,67 @@ def _master_test():
     if not (0 < meas["line_coverage"] < meas["fill_coverage"] and 0 < meas["matte_coverage"] < 1):
         bad.append({"passes": meas})
     return bad, meas
+
+
+# ---------------- editor hand-off (WP-22) ----------------
+def _sample_keys(keys, t):
+    """the player's key sampling (smoothstep between keys)"""
+    if t <= keys[0][0]:
+        return keys[0][1]
+    for (t0, v0), (t1, v1) in zip(keys, keys[1:]):
+        if t <= t1:
+            k = min(1, max(0, (t - t0) / ((t1 - t0) or 1))); k = k * k * (3 - 2 * k)
+            return [a + (b - a) * k for a, b in zip(v0, v1)]
+    return keys[-1][1]
+
+
+@command("film.handoff", name=("string", "film"), melt=("boolean", "render the MLT project with melt and compare frames with ours", True))
+def film_handoff(name, melt=True):
+    """Hand a rendered film to an editor (WP-22): build/handoff/ holds the shots, the stems (voice, music, sfx), the
+    captions and the cut as OpenTimelineIO, Kdenlive, MLT, Final Cut Pro 7 XML (Resolve, Premiere), FCPXML and CMX 3600
+    EDL, plus each shot's camera per frame (.chan, .csv). Reads every file back with OTIO, opens the Kdenlive project
+    with melt, and renders the MLT project with melt to compare its frames with the film's own picture."""
+    from . import handoff as HO
+    d = _film(name); s = _shots(name)
+    W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
+    b = d / "build"
+    if not (b / "picture.mp4").exists():
+        raise FileNotFoundError("render the film first (film.render)")
+    out = b / "handoff"; shutil.rmtree(out, ignore_errors=True)
+    for sub in ("media", "audio", "camera"):
+        (out / sub).mkdir(parents=True)
+    shots = []
+    for sh in s["shots"]:
+        src = b / "shots" / f"{sh['id']}.mp4"
+        shutil.copy(src, out / "media" / src.name)
+        n = HO._frames(src)
+        shots.append((sh["id"], f"media/{src.name}", n))
+        spec = _json(b / "shots" / f"{sh['id']}.spec.json", {}) or {}
+        keys = spec.get("camera") or [[sh["start"], [W / 2, H / 2, 1]]]
+        HO.chan([_sample_keys(keys, sh["start"] + f / fps) for f in range(n)], W, H, out / "camera" / sh["id"])
+    stems = []
+    for st in ("voice", "music", "sfx"):
+        if (b / "stems" / f"{st}.wav").exists():
+            shutil.copy(b / "stems" / f"{st}.wav", out / "audio" / f"{st}.wav"); stems.append((st, f"audio/{st}.wav"))
+    caps = []
+    for c in ("captions.srt", "captions.vtt"):
+        if (b / c).exists():
+            shutil.copy(b / c, out / c)
+    if (out / "captions.srt").exists():
+        caps = HO._srt(out / "captions.srt")
+    title = ((_json(d / "titles.json", {}) or {}).get("titles") or [{}])[0].get("text") or s.get("title", name)
+    tl = HO.timeline(name, title, fps, shots, stems, caps)
+    written = HO.write_all(tl, out, [W, H], fps)
+    back = HO.read_back(out, fps)
+    res = {"handoff": str(out.relative_to(ROOT)), "shots": [x[0] for x in shots], "frames": sum(x[2] for x in shots), "stems": [x[0] for x in stems],
+           "captions": len(caps), "written": written, "read_back": back}
+    # melt plays the Kdenlive project (MLT XML underneath) and renders the MLT one
+    # (a Kdenlive timeline has an endless black track under the cut, so melt plays it to the cut's last frame)
+    total = sum(x[2] for x in shots)
+    kd = subprocess.run(["melt", "timeline.kdenlive", "in=0", f"out={total - 1}", "-consumer", "null", "real_time=0", "terminate_on_pause=1"],
+                        cwd=out, capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL)
+    res["melt_plays_kdenlive"] = kd.returncode == 0
+    if melt:
+        res["melt_round_trip"] = HO.melt_round_trip(out, fps, W, H, shots)
+    (out / "README.txt").write_text(f"{title}\n\n{HO.__doc__}\nMeasured: {json.dumps({k: res[k] for k in ('read_back', 'melt_plays_kdenlive')}, indent=1)}\n")
+    return res
