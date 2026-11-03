@@ -177,6 +177,48 @@
     "studio"
    ],
    "use": "waveform lanes and draggable cues on the Studio sound page (WP-40)"
+  },
+  {
+   "path": "dbe/studio/vendor/react/",
+   "kind": "code",
+   "name": "React 18.3.1 (UMD production build)",
+   "license": "MIT",
+   "class": "permissive",
+   "license_file": "dbe/studio/vendor/react/LICENSE",
+   "source": "https://github.com/facebook/react",
+   "attribution": "React 18.3.1 (MIT)",
+   "used_by": [
+    "studio"
+   ],
+   "use": "the Studio graph page (WP-20)"
+  },
+  {
+   "path": "dbe/studio/vendor/react-dom/",
+   "kind": "code",
+   "name": "React DOM 18.3.1 (UMD production build)",
+   "license": "MIT",
+   "class": "permissive",
+   "license_file": "dbe/studio/vendor/react-dom/LICENSE",
+   "source": "https://github.com/facebook/react",
+   "attribution": "React DOM 18.3.1 (MIT)",
+   "used_by": [
+    "studio"
+   ],
+   "use": "the Studio graph page (WP-20)"
+  },
+  {
+   "path": "dbe/studio/vendor/xyflow/",
+   "kind": "code",
+   "name": "React Flow (@xyflow/react) 12.12.1 (UMD build and stylesheet)",
+   "license": "MIT",
+   "class": "permissive",
+   "license_file": "dbe/studio/vendor/xyflow/LICENSE",
+   "source": "https://github.com/xyflow/xyflow",
+   "attribution": "React Flow (MIT)",
+   "used_by": [
+    "studio"
+   ],
+   "use": "the Studio graph page (WP-20)"
   }
  ],
  "generated": [

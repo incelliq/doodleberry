@@ -20,6 +20,26 @@ def command(_cmd, /, **schema):
     return wrap
 
 
+# ---------- progress events (WP-20) ----------
+# A long command reports how far it has got with progress(stage=..., ...). The HTTP server's async jobs collect the
+# events (GET /api/jobs/<id>) and post each to a webhook when one was given; DBE_PROGRESS=stderr prints them for the CLI.
+import contextvars
+import os
+import sys
+import time
+
+PROGRESS = contextvars.ContextVar("dbe_progress", default=None)
+
+
+def progress(**ev):
+    ev.setdefault("at", round(time.time(), 2))
+    sink = PROGRESS.get()
+    if sink:
+        sink(ev)
+    elif os.environ.get("DBE_PROGRESS") == "stderr":
+        print(json.dumps(ev), file=sys.stderr, flush=True)
+
+
 def call(name, args=None):
     if name not in COMMANDS:
         raise KeyError(f"unknown command {name}; try engine.commands")

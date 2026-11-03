@@ -1,0 +1,16 @@
+{
+ "name": "@xyflow/react",
+ "repository": "https://github.com/xyflow/xyflow",
+ "version": "12.12.1",
+ "archive": "https://registry.npmjs.org/@xyflow/react/-/react-12.12.1.tgz",
+ "sha256": "ffd8b20eff216cebc74bb73611f3885b88a9c489aba272d74d89440ce3c06e05",
+ "integrity": "sha512-g41OHmP+GL5wDBQKpgYt8AF6RlB4CrABtiStXhCMqdItK6gPdSpsuDk8V0YtdyvIvMPTjDJvkuLkz0JbSYu5Cw==",
+ "license": "MIT",
+ "class": "permissive",
+ "license_files": [
+  "LICENSE"
+ ],
+ "files": "dist/umd/index.js (as reactflow.umd.js) and dist/style.css from the npm package, unmodified; the page supplies window.jsxRuntime from React.createElement",
+ "patches": [],
+ "use": "the node view of a film's data flow on the Studio graph page (/graph, WP-20)"
+}

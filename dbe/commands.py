@@ -154,6 +154,8 @@ def voice_build(name):
         raise ValueError(f"script.json is a draft storyboard ({sc['draft']}); rewrite the lines after research and remove \"draft\" before voicing")
     voice_check(name)
     out = _run([PY, "engine/voice.py", f"films/{name}", "--voices-dir", VOICES])
+    from . import graph as GR
+    GR.record(FILMS / name, "voice", GR.voice_inputs(FILMS / name))
     t = _json(FILMS / name / "timing.json", {})
     return {"duration": t.get("duration"), "lines": len(t.get("lines", [])), "speakers_with_visemes": list((t.get("visemes") or {}).keys()), "log": out}
 
@@ -544,9 +546,23 @@ def _player_page(name):
     return d / "build" / "player.html"
 
 
-def _render_page(page, query, out):
-    url = "file://" + str(page) + "?" + query
-    _run(["node", "tools/three/run3d.mjs", url, str(out), "4"])
+RENDER_LOG = ROOT / "out" / "render_log.jsonl"   # every page render: frames, captured, seconds (WP-20 estimates)
+
+
+def _render_page(page, query, out, log=None):
+    """render a frame-pure page to MP4 with tools/three/run3d.mjs; with `log`, the run (frames, how many were captured
+    and reused, seconds) is appended to out/render_log.jsonl for render.estimate"""
+    import time
+    url = "file://" + str(page) + "?" + query; t0 = time.time()
+    lines = _run(["node", "tools/three/run3d.mjs", url, str(out), "4"])
+    secs = time.time() - t0
+    m = next((re.search(r"(\d+) frames \((\d+) reused\)", l) for l in lines if re.search(r"frames \(\d+ reused\)", l)), None)
+    rec = {"frames": int(m.group(1)), "reused": int(m.group(2)), "seconds": round(secs, 2), "plate": "static plate" in " ".join(lines)} if m else {"seconds": round(secs, 2)}
+    if log is not None:
+        RENDER_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with RENDER_LOG.open("a") as f:
+            f.write(json.dumps({**log, **rec, "query": query, "at": round(time.time(), 1)}) + "\n")
+    return rec
 
 
 def _set_video(name, sh, bdir):
@@ -586,15 +602,20 @@ def shot_render(name, shot, renderer=""):
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
     out = bdir / (f"{shot}.mp4" if renderer == own else f"{shot}.{renderer}.mp4")
     pre, post = _handles(_shots(name), shot, fps) if renderer == own else (0, 0)
+    import time as _time
+    t_start = _time.time(); feat = _render_features(sh, baked)
+    from . import estimate as ES
+    s_res = _shots(name); pr = ES.probe_get(_probe_key(name, next(x for x in s_res["shots"] if x["id"] == shot), s_res))
+    lg = {"film": name, "shot": shot, "renderer": renderer, **feat, **({"ms_probe": pr["ms_per_frame"]} if pr else {})}
     if renderer == "svg" and (pre or post):   # handles for transitions (WP-15): rendered, then the shot itself cut from them
         hd = bdir / f"{shot}.hd.mp4"
-        _render_page(_player_page(name), f"shot={shot}&pre={pre / fps}&post={post / fps}", hd)
+        _render_page(_player_page(name), f"shot={shot}&pre={pre / fps}&post={post / fps}", hd, log=lg)
         _cut_frames(hd, pre, baked["frames"], out)
         hk = _json(Path(str(hd) + ".keys.json"))
         if hk:   # the exact shot's frame keys, cut from the handles' like its frames
             Path(str(out) + ".keys.json").write_text(json.dumps({**hk, "frames": hk["frames"][pre:pre + baked["frames"]]}))
     elif renderer == "svg":
-        _render_page(_player_page(name), f"shot={shot}", out)
+        _render_page(_player_page(name), f"shot={shot}", out, log=lg)
     elif renderer == "synfig":
         # characters by Synfig (alpha), over the animated set from the player
         setv = _set_video(name, sh, bdir)
@@ -625,7 +646,10 @@ window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);a
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(out), "-vf", f"tpad=start_mode=clone:start_duration={pre / fps}:stop_mode=clone:stop_duration={post / fps}",
               "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(bdir / f"{shot}.hd.mp4")])
     if renderer == own:   # record what was rendered, so film.render reuses this shot while it is unchanged
-        (bdir / f"{shot}.hash").write_text(_shot_hash(name, next(x for x in _shots(name)["shots"] if x["id"] == shot), _shots(name)))
+        s_now = _shots(name); rs_ = next(x for x in s_now["shots"] if x["id"] == shot)
+        (bdir / f"{shot}.hash").write_text(_shot_hash(name, rs_, s_now))
+        from . import graph as GR   # WP-20: what it was made from, so the graph can say why it goes stale
+        GR.record(_film(name), f"shot:{shot}", GR.shot_inputs(name, rs_, s_now, _json(_film(name) / "timing.json", {}), ENGINE_FILES), _time.time() - t_start)
     return {"shot": shot, "renderer": renderer, "frames": baked["frames"], "path": str(out.relative_to(ROOT))}
 
 
@@ -754,6 +778,15 @@ def _join_shots(d, s, fps, pic):
     return made
 
 
+def _render_features(sh, baked):
+    """what makes a shot slow or fast to render (WP-20 estimates)"""
+    st = sh.get("style") or {}
+    return {"frames": baked["frames"], "fps": baked.get("fps", 30), "step": st.get("step"), "boil": bool(st.get("boil")),
+            "camera": bool(sh.get("camera") or sh.get("camera_auto") or st.get("float")), "comp": bool(sh.get("comp")),
+            "cast": len(sh.get("cast", [])), "raster": any("image" in json.dumps((_json(ROOT / c["puppet"]) or {}).get("parts", {}))[:200000] for c in sh.get("cast", [])),
+            "set": sh.get("set", "plain"), "fx": bool(sh.get("fx") or sh.get("props")), "overlays": len(sh.get("overlays", [])) + len(sh.get("underlays", []))}
+
+
 def _shot_hash(name, sh, s):
     """content hash of everything a shot's picture depends on: the resolved shot, film size/fps, puppets and clip
     libraries, lip-sync data for its speakers, and the renderer code. Unchanged hash = the old render is still right."""
@@ -837,6 +870,122 @@ def _mix_inputs(name, s):
     return total
 
 
+@command("render.estimate", name=("string", "film"), shots=("array", "shot ids to estimate (default: the shots a render would redo now)", None),
+         all=("boolean", "every shot, as if nothing were rendered", False), exclude_self=("boolean", "leave this film's own past renders out of the model (to check it)", False),
+         probe=("boolean", "time a few frames of each shot first (a few seconds a shot; cached by the shot's render hash)", True))
+def render_estimate(name, shots=None, all=False, exclude_self=False, probe=True):
+    """How long a render will take, before it starts (WP-20): each shot's frames times this machine's measured rate
+    (out/render_log.jsonl, fitted: start-up, per captured frame by kind of shot (boil, plate, raster parts), per
+    reused frame), the frames it will capture guessed from its last render or its step rate, plus the film's
+    assembly, sound and QA as fitted on past film renders."""
+    from . import estimate as ES
+    s = _shots(name); fps = s.get("fps", 30); m = ES.fit(exclude=name if exclude_self else None)
+    if all:
+        ids = [x["id"] for x in s["shots"]]
+    elif shots is not None:
+        ids = list(shots)
+    else:
+        d = _film(name); ids = []
+        for x in s["shots"]:
+            hf = d / "build" / "shots" / f"{x['id']}.hash"
+            if not (d / "build" / "shots" / f"{x['id']}.mp4").exists() or not hf.exists() or hf.read_text().strip() != _shot_hash(name, x, s):
+                ids.append(x["id"])
+    out = []
+    for x in s["shots"]:
+        if x["id"] not in ids:
+            continue
+        if x.get("renderer", "svg") != "svg":
+            out.append({"shot": x["id"], "renderer": x.get("renderer"), "seconds": None, "basis": "no rate measured for this renderer"}); continue
+        pre, post = _handles(s, x["id"], fps)
+        feat = _render_features(x, {"frames": int(round((x["end"] - x["start"]) * fps)) + pre + post, "fps": fps})
+        hist = ES.last_render(name, x["id"], exclude=name if exclude_self else None)
+        pk = _probe_key(name, x, s); pr = ES.probe_get(pk)
+        if pr is None and probe:
+            q = f"shot={x['id']}" + (f"&pre={pre / fps}&post={post / fps}" if pre or post else "")
+            r_ = subprocess.run(["node", "tools/probe_rate.mjs", f"file://{_player_page(name)}?{q}", "4", "2"], cwd=ROOT, capture_output=True, text=True, timeout=600)
+            if r_.returncode == 0 and r_.stdout.strip():
+                pr = json.loads(r_.stdout.strip().splitlines()[-1]); ES.probe_put(pk, pr)
+        secs, cap, basis, k = ES.shot_seconds(m, feat, hist, (pr or {}).get("ms_per_frame"))
+        out.append({"shot": x["id"], "frames": feat["frames"], "captured": cap, "kind": k, "seconds": secs, "basis": basis, **({"probe_ms": pr["ms_per_frame"]} if pr else {})})
+    # after the shots: this film's own last time when there is one; else frames and probed drawing work; else length
+    allx = [x for x in s["shots"]]; frames_all = sum(int(round((x["end"] - x["start"]) * fps)) for x in allx)
+    probes = [ES.probe_get(_probe_key(name, x, s)) for x in allx]
+    work = sum(int(round((x["end"] - x["start"]) * fps)) * p_["ms_per_frame"] / 1000 for x, p_ in zip(allx, probes)) if all(probes) else None
+    if name in m.get("after_by_film", {}):
+        over, over_basis = m["after_by_film"][name], "this film's last render"
+    elif work is not None and "o2" in m:
+        over, over_basis = m["o0"] + m["o1f"] * frames_all + m["o2"] * work, "frames and probed drawing work"
+    else:
+        over, over_basis = m.get("o0_len", m["o0"]) + m["o1"] * s["shots"][-1]["end"], "film length"
+    over = round(max(5.0, over), 1)
+    total = round(sum(x["seconds"] or 0 for x in out) + over, 1)
+    return {"film": name, "shots": out, "after_shots_s": over, "after_basis": over_basis, "seconds": total,
+            "model": {k: (round(v, 4) if isinstance(v, float) else v) for k, v in m.items()}}
+
+
+def _probe_key(name, x, s):
+    return f"{name}:{x['id']}:{_shot_hash(name, x, s)}"
+
+
+@command("graph.get", name=("string", "film"))
+def graph_get(name):
+    """A film's data flow as a graph (WP-20): facts, script, voice, each shot, the picture, the mix, the final film and
+    QA, with each node's state (fresh, stale, waiting on a stale node, missing) and, for a stale node, the inputs
+    that changed since it was made (for a shot's own entry, the paths in it: cast[0].timeline.look), plus an
+    estimate of re-making what is stale."""
+    from . import graph as GR
+    g = GR.build(name, _shots(name), _json(_film(name) / "timing.json", {}), ENGINE_FILES)
+    shots_stale = [n["id"][5:] for n in g["nodes"] if n["kind"] == "shot" and n["state"] in ("stale", "missing")]
+    try:
+        g["estimate"] = render_estimate(name, shots=shots_stale, probe=False) if g["stale"] else {"seconds": 0, "shots": []}   # probes already made only
+    except Exception as e:
+        g["estimate"] = {"error": str(e)[:200]}
+    return g
+
+
+@command("graph.cook", name=("string", "film"), node=("string", "node id: shot:<id>, voice, script, mix, picture, final or qa"))
+def graph_cook(name, node):
+    """Make a node again and what lies downstream of it, nothing else (WP-20): a shot re-renders that shot alone,
+    then the picture, mix, final and QA; the voice (or script) re-voices, then re-renders the shots whose lines
+    changed; the mix, picture, final or QA re-assemble without rendering any shot. Returns the nodes made (their
+    records changed), the ones left as they were, the seconds taken and the estimate given beforehand."""
+    import time
+    from . import graph as GR
+    d = _film(name)
+    g0 = graph_get(name); ids = {n["id"] for n in g0["nodes"]}
+    if node not in ids:
+        raise ValueError(f"no node {node}; nodes: {', '.join(sorted(ids))}")
+    made0 = {n["id"]: n.get("made") for n in g0["nodes"]}
+    est = None; t0 = time.time()
+    if node.startswith("shot:"):
+        est = render_estimate(name, shots=[node[5:]]); film_render(name, only=[node[5:]])
+    elif node in ("voice", "script"):
+        voice_build(name); est = render_estimate(name); film_render(name)
+    elif node in ("mix", "picture", "final", "qa", "score", "sound", "facts"):
+        est = render_estimate(name, shots=[]); film_render(name, only=[])
+    else:
+        raise ValueError(f"{node} is not made by a command")
+    g1 = graph_get(name)
+    made = [n["id"] for n in g1["nodes"] if n.get("made") and n.get("made") != made0.get(n["id"])]
+    return {"node": node, "downstream": GR.downstream(g0, node), "made": made, "left": sorted(i for i in ids if i not in made and i in made0 and made0[i]),
+            "seconds": round(time.time() - t0, 1), "estimate_s": (est or {}).get("seconds"), "stale_after": g1["stale"]}
+
+
+@command("render.bench_estimate", films=("array", "films to render in full (each is estimated first, from the other films' renders only)"))
+def render_bench_estimate(films):
+    """Check render estimates against real renders (WP-20): for each film, estimate a full render from the other
+    films' rows of the render log, then render every shot again and compare."""
+    import time
+    rows = []
+    for f in films:
+        est = render_estimate(f, all=True, exclude_self=True)
+        for x in _shots(f)["shots"]:
+            (_film(f) / "build" / "shots" / f"{x['id']}.hash").unlink(missing_ok=True)
+        t0 = time.time(); film_render(f); secs = time.time() - t0
+        rows.append({"film": f, "estimate_s": est["seconds"], "measured_s": round(secs, 1), "error": round((est["seconds"] - secs) / secs, 3)})
+    return {"films": rows, "worst_error": max(abs(r["error"]) for r in rows) if rows else None}
+
+
 @command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default: only shots whose inputs changed", None),
          aspect=("string", "render another aspect ratio from the same film: 16:9 | 9:16 | 1:1 (default: the film's own)", ""))
 def film_render(name, only=None, aspect=""):
@@ -853,17 +1002,34 @@ def film_render(name, only=None, aspect=""):
                     shutil.copy(FILMS / dname / "build" / f, FILMS / name / "build" / to)
             return {**r, "aspect": aspect, "final": f"films/{name}/build/final_{tag}.mp4", "derived_film": dname}
     _require_valid(name)
+    import time as _time
+    from . import progress
+    t_film = _time.time()
     d = _film(name); s = _shots(name); fps = s.get("fps", 30)
     done = []
     skipped = []
+    todo = []
     for sh in s["shots"]:
         mp4 = d / "build" / "shots" / f"{sh['id']}.mp4"; hf = d / "build" / "shots" / f"{sh['id']}.hash"
         hsh = _shot_hash(name, sh, s)
         stale = not mp4.exists() or not hf.exists() or hf.read_text().strip() != hsh
-        if (only is None and stale) or (only is not None and (sh["id"] in only or not mp4.exists())):
-            done.append(shot_render(name, sh["id"])); hf.write_text(hsh)
+        todo.append((sh, hsh, (only is None and stale) or (only is not None and (sh["id"] in only or not mp4.exists()))))
+    try:   # WP-20: an estimate first, so progress can be told as a share of it
+        est = render_estimate(name, shots=[sh["id"] for sh, _, go in todo if go])
+    except Exception:
+        est = None
+    est_total = (est or {}).get("seconds") or 0
+    pct = lambda: min(99, round(100 * (_time.time() - t_film) / est_total)) if est_total else None
+    progress(stage="film", film=name, shots_to_render=[sh["id"] for sh, _, go in todo if go], estimate_s=est_total or None, percent=0)
+    for sh, hsh, go in todo:
+        hf = d / "build" / "shots" / f"{sh['id']}.hash"
+        if go:
+            progress(stage="shot", shot=sh["id"], state="rendering", estimate_s=next((x["seconds"] for x in (est or {}).get("shots", []) if x["shot"] == sh["id"]), None), percent=pct())
+            t_sh = _time.time(); done.append(shot_render(name, sh["id"])); hf.write_text(hsh)
+            progress(stage="shot", shot=sh["id"], state="done", seconds=round(_time.time() - t_sh, 1), percent=pct())
         else:
             skipped.append(sh["id"])
+    progress(stage="assemble", percent=pct())
     pic = d / "build" / "picture.mp4"
     transitions = _join_shots(d, s, fps, pic)
     if s.get("post"):  # finishing (plan 1.7): grade, vignette, grain, LUT, before captions so text stays crisp
@@ -907,6 +1073,15 @@ def film_render(name, only=None, aspect=""):
     if s.get("soundoff") and not s.get("timewarp"):  # every film ships a voiced cut and a bubble-only cut (plan 2.13)
         so = film_soundoff(name, **(s["soundoff"] if isinstance(s["soundoff"], dict) else {}))
         qa = {**qa, "soundoff": {k: so.get(k) for k in ("final", "qa", "stretched_lines", "length_s")}}
+    from . import graph as GR   # WP-20: what the picture, mix, final and QA were made from
+    GR.record(d, "picture", GR.picture_inputs(d, s)); GR.record(d, "mix", GR.mix_inputs(d))
+    GR.record(d, "final", GR.final_inputs(d, s)); GR.record(d, "qa", GR.qa_inputs(d))
+    secs_film = _time.time() - t_film
+    RENDER_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with RENDER_LOG.open("a") as f_:   # the whole film: shots and everything after them (assembly, sound, captions, QA)
+        f_.write(json.dumps({"film": name, "kind": "film", "seconds": round(secs_film, 2), "shots_rendered": [x["shot"] for x in done],
+                             "length_s": round(s["shots"][-1]["end"], 3), "estimate_s": est_total or None, "at": round(_time.time(), 1)}) + "\n")
+    progress(stage="finished", seconds=round(secs_film, 1), estimate_s=est_total or None, percent=100)
     fk = _frame_keys(d, s, fps)
     if fk:
         (d / "build" / "frame_keys.json").write_text(json.dumps({"fps": fps, "keys": fk}))
@@ -2963,6 +3138,14 @@ def test_golden(update=False, film=""):
         bad, meas = _gaze_test()
         failed += 1 if bad else 0
         results.append({"gaze": "a gaze note is fixed and verified by the critic, and the diff marks exactly the frames that changed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "graph":   # WP-20: a stale node says what changed, and re-making it touches only what follows
+        bad, meas = _graph_test()
+        failed += 1 if bad else 0
+        results.append({"graph": "a changed shot shows the change and re-makes alone with what follows; the page does the same with progress", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "estimate":   # WP-20: render estimates against the renders measured here (leave one film out)
+        bad, meas = _estimate_test()
+        failed += 1 if bad else 0
+        results.append({"estimate": "each film's full render is estimated within 20% from the other films' renders", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
         bad, meas = _kra_test()
         failed += 1 if bad else 0
@@ -5375,6 +5558,111 @@ def _gaze_test():
             bad.append(f"diff page: {page}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _graph_test():
+    """WP-20 on a copy of data-demo (three shots; when it has been voiced here): rendered in full, every node is fresh;
+    the bar chart in shot s2 is made to grow over 1.6 s instead of 1.2 s: s2 is stale with the path that changed
+    (overlays[0].duration), s1 and s3 stay fresh and the picture, mix, final and QA wait; graph.cook re-makes s2 and
+    what follows only. Then the Studio page: Momo in s3 moved 20 px, clicked, shown, re-made with progress events."""
+    import socket, time
+    bad, meas = [], {}
+    src = FILMS / "data-demo"
+    if not (src / "build" / "voice.wav").exists():
+        return [], {"skipped": "data-demo is not voiced here (voice.build)"}
+    name = "zz-graphcheck"; tmp = FILMS / name; shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(src, tmp, ignore=shutil.ignore_patterns("package", "master", "qa", "handoff", "versions", "diff", "review", "*.inputs.json", "graph.json"))
+    try:
+        for f in (tmp / "build" / "shots").glob("*.hash"):
+            f.unlink()
+        film_render(name)
+        g = graph_get(name); meas["after_full_render"] = {n["id"]: n["state"] for n in g["nodes"] if n["state"] != "source"}
+        if g["stale"]:
+            bad.append(f"stale after a full render: {g['stale']}")
+        sj = json.loads((tmp / "shots.json").read_text()); sj["shots"][1]["overlays"][0]["duration"] = 1.6
+        (tmp / "shots.json").write_text(json.dumps(sj, indent=1))
+        g = graph_get(name); st = {n["id"]: n for n in g["nodes"]}
+        s2 = st["shot:s2"]; paths = [p_ for w in s2.get("why", []) for p_ in (w.get("paths") or [])]
+        meas["after_edit"] = {k: v["state"] for k, v in st.items() if v["state"] != "source"}; meas["why_s2"] = s2.get("why"); meas["estimate_s"] = (g.get("estimate") or {}).get("seconds")
+        if s2["state"] != "stale" or "overlays[0].duration" not in paths or st["shot:s1"]["state"] != "fresh" or st["shot:s3"]["state"] != "fresh" \
+                or any(st[k]["state"] != "waiting" for k in ("picture", "mix", "final", "qa")):
+            bad.append(f"after the edit: {meas['after_edit']}, why {s2.get('why')}")
+        r = graph_cook(name, "shot:s2"); meas["cook"] = {k: r[k] for k in ("made", "left", "seconds", "estimate_s", "stale_after")}
+        if sorted(r["made"]) != sorted(["shot:s2", "picture", "mix", "final", "qa"]) or "shot:s1" not in r["left"] or "shot:s3" not in r["left"] or r["stale_after"]:
+            bad.append(f"cook: {meas['cook']}")
+        # the page: move Momo in s3, click it, re-make it from the page
+        sj = json.loads((tmp / "shots.json").read_text()); sj["shots"][2]["cast"][0]["place"]["x"] = 520
+        (tmp / "shots.json").write_text(json.dumps(sj, indent=1))
+        port = 8793
+        srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            for _ in range(50):
+                with socket.socket() as s_:
+                    if s_.connect_ex(("127.0.0.1", port)) == 0:
+                        break
+                time.sleep(0.2)
+            pr = subprocess.run(["node", "tools/graph_check.mjs", str(port), name, "shot:s3", "cook"], cwd=ROOT, capture_output=True, text=True, timeout=1900)
+            page = json.loads(pr.stdout.strip().splitlines()[-1]) if pr.stdout.strip() else {"error": pr.stderr[-300:]}
+            # a job with a webhook: every progress event is POSTed to it
+            import http.server, threading, urllib.request
+            got = []
+            class Hook(http.server.BaseHTTPRequestHandler):
+                def do_POST(self):
+                    got.append(json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))); self.send_response(204); self.end_headers()
+                def log_message(self, *a_):
+                    pass
+            hs = http.server.HTTPServer(("127.0.0.1", 0), Hook); threading.Thread(target=hs.serve_forever, daemon=True).start()
+            hook = f"http://127.0.0.1:{hs.server_address[1]}/events"
+            req = urllib.request.Request(f"http://127.0.0.1:{port}/api/film.render?async=1&webhook={hook}", data=json.dumps({"name": name, "only": []}).encode())
+            jid = json.loads(urllib.request.urlopen(req, timeout=30).read())["job"]
+            for _ in range(900):
+                time.sleep(1); job = json.loads(urllib.request.urlopen(f"http://127.0.0.1:{port}/api/jobs/{jid}", timeout=30).read())
+                if job.get("status") != "running":
+                    break
+            time.sleep(1.5); hs.shutdown()
+            meas["webhook"] = {"job_status": job.get("status"), "events_on_job": [e["stage"] for e in job.get("events", [])], "posted": [e["stage"] for e in got]}
+            if job.get("status") != "done" or not {"start", "film", "assemble", "finished", "done"} <= set(meas["webhook"]["posted"]):
+                bad.append(f"webhook: {meas['webhook']}")
+        finally:
+            srv.terminate()
+        meas["page"] = page
+        why_paths = [p_ for w in page.get("why", []) for p_ in (w.get("paths") or [])]
+        ev = (page.get("cooked") or {}).get("events") or []
+        if page.get("errors") or page.get("error") or page.get("state") != "stale" or "cast[0].place.x" not in why_paths or page.get("after") != "fresh" \
+                or sorted((page.get("cooked") or {}).get("made") or []) != sorted(["shot:s3", "picture", "mix", "final", "qa"]) or "shot:s3:done" not in ev:
+            bad.append(f"page: {page}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _estimate_test():
+    """WP-20: for every film whose last render in out/render_log.jsonl redid all its shots, the estimate made from
+    the other films' rows only (render.estimate exclude_self) must be within 20% of the seconds measured. The model
+    is checked on itself too: it fits, and a step-12 shot is guessed to capture about 12/30 of its frames. Skipped
+    (with the reason) until three films have been rendered in full here (render.bench_estimate does that)"""
+    from . import estimate as ES
+    bad, meas = [], {}
+    m = ES.fit(); feat = {"frames": 300, "fps": 30, "step": 12, "boil": True, "camera": False, "comp": False, "raster": False}
+    _, cap, _, _ = ES.shot_seconds(m, feat)
+    if not 115 <= cap <= 125:
+        bad.append(f"a 300-frame shot on 12s should capture about 121 frames, guessed {cap}")
+    last = {}
+    for r in ES.rows():
+        if r.get("kind") == "film" and (FILMS / r["film"]).exists():
+            ids = [x["id"] for x in _shots(r["film"])["shots"]]
+            if sorted(r.get("shots_rendered") or []) == sorted(ids):
+                last[r["film"]] = r
+    if len(last) < 3:
+        return bad, {"skipped": f"{len(last)} film(s) rendered in full here; render.bench_estimate renders the benchmark films"}
+    rows = []
+    for f, r in sorted(last.items()):
+        e = render_estimate(f, all=True, exclude_self=True)["seconds"]; err = (e - r["seconds"]) / r["seconds"]
+        rows.append({"film": f, "estimate_s": e, "measured_s": r["seconds"], "error": round(err, 3)})
+    meas["films"] = rows; meas["worst"] = max(abs(x["error"]) for x in rows)
+    if meas["worst"] > 0.2:
+        bad.append(f"estimates off by up to {meas['worst']:.0%}")
     return bad, meas
 
 def _kra_test():

@@ -40,6 +40,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "draw.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/sound":      # WP-40: waveform lanes, drag a foley hit, swap a music section, remix
             return self._send(200, (STUDIO.parent / "sound.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/graph":      # WP-20: the film's data flow, what is stale and why, re-make one node and what follows
+            return self._send(200, (STUDIO.parent / "graph.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/diff":       # WP-19: two versions of a film, the frames that changed marked, before and after side by side
             return self._send(200, (STUDIO.parent / "diff.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
@@ -73,15 +75,34 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, {"error": "not found"})
         name = self.path[5:].split("?")[0]
         args = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0) or 0)) or b"{}")
-        if "async=1" in self.path:  # long renders: run in a thread, poll /api/jobs/<id>
+        if "async=1" in self.path:  # long renders: run in a thread, poll /api/jobs/<id> (progress events, WP-20)
             jid = f"job{len(JOBS) + 1}"
-            JOBS[jid] = {"status": "running", "command": name}
+            from urllib.parse import parse_qs, urlparse
+            hook = (parse_qs(urlparse(self.path).query).get("webhook") or [None])[0]   # each event is also POSTed here
+            JOBS[jid] = {"status": "running", "command": name, "events": [], **({"webhook": hook} if hook else {})}
+
+            def post(ev):
+                import urllib.request
+                try:
+                    urllib.request.urlopen(urllib.request.Request(hook, data=json.dumps(ev).encode(), headers={"Content-Type": "application/json"}), timeout=5)
+                except Exception as e:   # a webhook that fails never stops the job
+                    JOBS[jid].setdefault("webhook_errors", []).append(str(e)[:200])
+
+            def sink(ev):
+                ev = {"job": jid, "command": name, **ev}; JOBS[jid]["events"].append(ev)
+                if "percent" in ev:
+                    JOBS[jid]["percent"] = ev["percent"]
+                if hook:
+                    threading.Thread(target=post, args=(ev,), daemon=True).start()
 
             def run():
+                from . import PROGRESS, progress
+                PROGRESS.set(sink); progress(stage="start")
                 try:
-                    JOBS[jid] = {"status": "done", "command": name, "result": call(name, args)}
+                    res = call(name, args)
+                    JOBS[jid].update(status="done", result=res); progress(stage="done", percent=100)
                 except Exception as e:
-                    JOBS[jid] = {"status": "error", "command": name, "error": str(e)}
+                    JOBS[jid].update(status="error", error=str(e)); progress(stage="error", error=str(e)[:300])
             threading.Thread(target=run, daemon=True).start()
             return self._send(202, {"job": jid})
         try:

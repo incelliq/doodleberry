@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Film Graph</title>
+<link rel="stylesheet" href="/dbe/studio/vendor/xyflow/style.css">
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a;
+          --fresh: #3f9a5a; --stale: #d9822b; --waiting: #c9b25a; --missing: #9a8f84; --unknown: #8a9bb0; --source: #5b7fb3; --cooking: #3b6ea8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } html, body { height: 100%; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select { font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); } button:disabled { opacity: .5; }
+  #wrap { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+  #flow { min-height: 420px; }
+  #side { background: var(--panel); border-left: 1px solid var(--line); padding: 12px 14px; overflow: auto; }
+  #side h2 { font-size: 15px; margin: 0 0 6px; } .muted { color: var(--muted); } code { font: 12px ui-monospace, monospace; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-size: 12px; }
+  .why li { margin-bottom: 4px; } #bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 8px 0; } #bar i { display: block; height: 100%; width: 0; background: var(--cooking); }
+  .gnode { padding: 6px 10px; border-radius: 10px; border: 2px solid; background: var(--panel); color: var(--ink); min-width: 120px; font-size: 13px; }
+  .gnode small { display: block; color: var(--muted); font-size: 11px; }
+  @media (max-width: 760px) { #wrap { grid-template-columns: 1fr; } #side { border-left: 0; border-top: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Film graph</h1><select id="film" aria-label="Film"></select><span id="est" class="muted"></span><span id="msg" class="muted"></span>
+  <span style="flex:1"></span><a href="/timeline">Timeline ↗</a> <a href="/">Studio ↗</a></header>
+<div id="wrap"><div id="flow"></div>
+  <aside id="side"><div class="muted">Each box is something the film is made of. Green is up to date; orange has an input that changed since it was
+    made; yellow waits on something before it; grey was never made here. Click a box to see what changed, and re-make it with
+    only what lies downstream of it.</div><div id="info"></div></aside></div>
+<script src="/dbe/studio/vendor/react/react.production.min.js"></script>
+<script src="/dbe/studio/vendor/react-dom/react-dom.production.min.js"></script>
+<script>   // React Flow's UMD build expects the JSX runtime as a global: React.createElement does the same job
+  window.jsxRuntime = { Fragment: React.Fragment, jsx: (t, p, k) => React.createElement(t, k === undefined ? p : { ...p, key: k }), jsxs: (t, p, k) => React.createElement(t, k === undefined ? p : { ...p, key: k }) };
+</script>
+<script src="/dbe/studio/vendor/xyflow/reactflow.umd.js"></script>
+<script>
+const $ = id => document.getElementById(id), msg = m => { $('msg').textContent = m; }, h = React.createElement;
+async function api(cmd, args = {}, q = '') { const r = await fetch('/api/' + cmd + q, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result ?? j; }
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COL = { source: 0, voice: 1, shot: 2, picture: 3, mix: 3, final: 4, qa: 5 };
+let film = null, G = null, selected = null, cooking = null, setRF = null;
+function layout(g) {
+  const perCol = {};
+  return g.nodes.map(n => {
+    const c = COL[n.kind] ?? 0, row = (perCol[c] = (perCol[c] ?? -1) + 1);
+    const state = cooking && cooking.has(n.id) ? 'cooking' : n.state, colour = css('--' + state) || '#888';
+    return { id: n.id, position: { x: 30 + c * 210, y: 30 + row * 86 + (c === 3 ? 60 : 0) + (c >= 4 ? 120 : 0) },
+      data: { label: h('div', { className: 'gnode', style: { borderColor: colour } }, n.label, h('small', null, state + (n.why && n.why.length && n.state === 'stale' ? ` · ${n.why.length} change(s)` : ''))) },
+      style: { padding: 0, border: 0, background: 'transparent', width: 'auto' }, sourcePosition: 'right', targetPosition: 'left' };
+  });
+}
+function edges(g) { return g.edges.map((e, i) => ({ id: 'e' + i, source: e.from, target: e.to, animated: !!(cooking && cooking.has(e.to)), style: { stroke: css('--muted') } })); }
+function App() {
+  const [nodes, setNodes] = React.useState([]), [eds, setEds] = React.useState([]);
+  React.useEffect(() => { setRF = g => { setNodes(layout(g)); setEds(edges(g)); }; if (G) setRF(G); }, []);
+  return h(ReactFlow.ReactFlow, { nodes, edges: eds, fitView: true, nodesDraggable: true, onNodeClick: (_, n) => show(n.id), proOptions: { hideAttribution: true } },
+    h(ReactFlow.Background, { gap: 18, size: 1 }), h(ReactFlow.Controls, { showInteractive: false }));
+}
+function show(id) {
+  selected = id; const n = G.nodes.find(x => x.id === id); window.GRAPH_SELECTED = n;
+  const colour = css('--' + n.state);
+  let html = `<h2>${n.label}</h2><span class="chip" style="background:${colour}">${n.state}</span>`;
+  if (n.state === 'source') html += `<p class="muted">a file people and agents edit: <code>${n.file}</code></p>`;
+  if (n.why && n.why.length) html += `<p><b>${n.state === 'stale' ? 'Changed since it was made' : 'Why'}:</b></p><ul class="why">` + n.why.map(w => `<li><b>${w.input}</b> ${w.change}${w.paths ? ': ' + w.paths.map(p => `<code>${p}</code>`).join(', ') : ''}</li>`).join('') + '</ul>';
+  if (n.waits_on) html += `<p class="muted">waits on: ${n.waits_on.join(', ')}</p>`;
+  if (n.made) html += `<p class="muted">made ${new Date(n.made * 1000).toLocaleString()}${n.seconds ? ` in ${n.seconds} s` : ''}</p>`;
+  const cookable = n.state !== 'source' || ['script'].includes(n.id);
+  if (cookable) html += `<button class="primary" id="cook" ${cooking ? 'disabled' : ''}>Re-make this and what follows</button><div id="bar"><i></i></div><div id="events" class="muted"></div>`;
+  $('info').innerHTML = html;
+  if (cookable) $('cook').onclick = () => cook(id);
+}
+async function cook(id) {
+  const g0 = G; const down = new Set([id]); const kids = {}; for (const e of G.edges) (kids[e.from] = kids[e.from] || []).push(e.to);
+  const st = [id]; while (st.length) for (const k of kids[st.pop()] || []) if (!down.has(k)) { down.add(k); st.push(k); }
+  cooking = down; setRF(G); $('cook').disabled = true;
+  const job = (await (await fetch('/api/graph.cook?async=1', { method: 'POST', body: JSON.stringify({ name: film, node: id }) })).json()).job;
+  let r = null;
+  while (true) {
+    await new Promise(res => setTimeout(res, 1000)); r = await (await fetch('/api/jobs/' + job)).json();
+    const evs = r.events || []; const last = evs[evs.length - 1] || {};
+    if ($('bar')) $('bar').firstChild.style.width = (r.percent ?? last.percent ?? 0) + '%';
+    if ($('events')) $('events').textContent = evs.slice(-3).map(e => e.stage + (e.shot ? ' ' + e.shot : '') + (e.state ? ' ' + e.state : '') + (e.seconds ? ` (${e.seconds} s)` : '')).join(' · ');
+    if (r.status !== 'running') break;
+  }
+  cooking = null; window.COOK_RESULT = r;
+  if (r.status === 'error') { msg(r.error); } else { msg(`made ${r.result.made.length} node(s) in ${r.result.seconds} s (estimated ${r.result.estimate_s} s)`); }
+  await load(); show(id);
+}
+async function load() {
+  G = await api('graph.get', { name: film }); window.GRAPH = G;
+  const e = G.estimate || {}; $('est').textContent = G.stale.length ? `${G.stale.length} node(s) to re-make · about ${Math.round(e.seconds || 0)} s` : 'everything up to date';
+  if (setRF) setRF(G); window.GRAPH_READY = true;
+}
+(async () => {
+  ReactDOM.createRoot($('flow')).render(h(ReactFlow.ReactFlowProvider, null, h(App)));
+  const films = (await api('engine.info')).films || [];
+  const want = new URLSearchParams(location.search).get('film');
+  $('film').innerHTML = films.map(f => `<option ${f === want ? 'selected' : ''}>${f}</option>`).join('');
+  film = want || $('film').value; $('film').onchange = () => { film = $('film').value; history.replaceState(null, '', '?film=' + film); load(); };
+  await load();
+})();
+</script>
+</body>
+</html>

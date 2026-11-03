@@ -1,0 +1,16 @@
+{
+ "name": "react",
+ "repository": "https://github.com/facebook/react",
+ "version": "18.3.1",
+ "archive": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+ "sha256": "8d9bed01a672e7eaf387942d781ad47c6a43089a30a0306060f9fd5ac7870347",
+ "integrity": "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==",
+ "license": "MIT",
+ "class": "permissive",
+ "license_files": [
+  "LICENSE"
+ ],
+ "files": "umd/react.production.min.js from the npm package, unmodified",
+ "patches": [],
+ "use": "React for the Studio graph page (React Flow needs it; WP-20)"
+}

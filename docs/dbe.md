@@ -263,6 +263,41 @@ already working (117 of 195 frames). So:
   `DBE_DEDUPE=0` captures every frame and `DBE_KEEP_FRAMES=dir` keeps the PNGs. The `stepped` test lays three
   frames over the plate and compares them with the frames drawn whole.
 
+## Film graph, estimates and progress (WP-20)
+**The graph.** `graph.get` returns a film's data flow: facts, script, score and sound edits (the files people edit),
+the voice and timing, each shot, the picture (shots joined), the mix, the final film and QA, with edges between
+them. Whenever a node is made (`voice.build`, a shot render, `film.render`) what it was made from is recorded with
+it, each input as a content hash (`build/graph.json`, `build/shots/<id>.inputs.json`), and for a shot also its
+resolved entry in shots.json. Comparing that record with the inputs as they are now gives each node a state:
+**fresh**; **stale**, with the inputs that changed ("the shot's entry in shots.json: `overlays[0].duration`",
+"puppet cast/generated/momo.puppet.json", "line l2", "renderer code dbe/player/player.js"); **waiting** on a stale node
+upstream; **missing** (never made here); or **unknown** (made before records were kept). `graph.cook` makes a node
+again and only what lies downstream of it: a shot re-renders alone, then the picture, mix, final and QA are made
+again from it and the other shots' renders as they were; the voice re-voices and re-renders the shots whose lines
+moved; the mix, picture, final or QA re-assemble without rendering a shot. It returns the nodes made and the ones
+left alone. The Studio page http://127.0.0.1:8770/graph?film=FILM draws the graph with React Flow (vendored with
+React 18, `dbe/studio/vendor/`): colours by state, a click shows what changed, and **Re-make this and what
+follows** runs `graph.cook` as a job with a progress bar.
+
+**Estimates.** `render.estimate` says how long a render will take before it starts: per shot, frames times this
+machine's measured rate, plus the film's work after the shots. Every shot render appends a row to
+`out/render_log.jsonl` (frames, captured and reused, seconds, what kind of shot), every film render one with its
+total. Per-frame cost varies by a factor of three or more between sets and effects (a classroom about 0.2 s a frame
+with four workers, a night sky with stars 0.6 s, a boiled raster doodle over a second), so the estimate *probes* each
+shot: `tools/probe_rate.mjs` renders a few of its frames the way the renderer will (four browsers, the plate when
+there is one) and times them; probes are cached by the shot's render hash (`out/probe_cache.json`) and each render's
+row carries its probe, so the model `seconds = a + k * probe * captured + c * reused` is fitted on probe-and-render
+pairs. The frames a shot will capture come from its last render or its step rate. The work after the shots (join,
+captions, sound, QA, lint) is this film's own last time when there is one, else `o0 + o1 * frames + o2 * frames x
+probe` (lint, foley and the layout probes draw frames in the browser). `render.bench_estimate` renders benchmark
+films in full and compares each with the estimate made from the *other* films' rows only.
+
+**Progress and webhooks.** Long commands report progress (`progress(stage=..., percent=...)` in `dbe/__init__.py`):
+`film.render` says which shots it will render and the estimate, each shot as it starts and ends, assembly, and the
+end, with a percent of the estimate. An HTTP call with `?async=1` runs as a job: `GET /api/jobs/<id>` has its events
+and percent, and `?async=1&webhook=URL` also POSTs each event to URL (failures are noted on the job, never stop it);
+`DBE_PROGRESS=stderr` prints events from the CLI.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when
