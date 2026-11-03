@@ -286,6 +286,27 @@
    "class": "permissive",
    "source": "https://github.com/dimforge/rapier",
    "use": "multi-body physics bakes (physics.solve, WP-09); installed into tools/physics/node_modules by tools/setup.sh physics, not committed"
+  },
+  {
+   "name": "RIFE 4.9 frame interpolation (ONNX, yuvraj108c/rife-onnx, sha256 76e4cef9...)",
+   "license": "MIT",
+   "class": "permissive",
+   "source": "https://github.com/hzwer/Practical-RIFE",
+   "use": "in-between proposals for drawn levels (level.inbetween, WP-43); fetched into ~/.cache/doodleberry/models, not committed. The ONNX conversion has no card of its own; upstream code and weights are MIT"
+  },
+  {
+   "name": "Depth Anything V2 Small (ONNX, onnx-community/depth-anything-v2-small, sha256 afb6a5c2...)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "source": "https://huggingface.co/depth-anything/Depth-Anything-V2-Small",
+   "use": "relative depth for depth planes (depth.planes, WP-43); fetched into ~/.cache/doodleberry/models, not committed"
+  },
+  {
+   "name": "Depth Anything V2 Base (ONNX, onnx-community/depth-anything-v2-base), optional",
+   "license": "CC-BY-NC-4.0",
+   "class": "non-commercial",
+   "source": "https://huggingface.co/depth-anything/Depth-Anything-V2-Base",
+   "use": "optional higher-quality depth (depth.planes model=depth_base); outputs are flagged at posting"
   }
  ],
  "external": [

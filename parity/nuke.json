@@ -1657,11 +1657,11 @@
      "capability": "Generating depth maps from footage.",
      "pro_use": "Fog, depth of field and relighting on plates.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-43"
+       "depth.planes"
       ],
-      "note": "WP-43 scopes depth estimates (Depth Anything) for parallax on paintings and photos."
+      "note": "depth.planes estimates relative depth (Depth Anything V2 Small, 99.7% of pixel pairs ordered right on our 3D renders) and cuts a picture into depth planes for the compositor."
      }
     },
     {
@@ -2421,11 +2421,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "actout.clip",
-       "voice.build",
+       "level.inbetween",
+       "depth.planes",
        "WP-43"
       ],
-      "note": "MediaPipe pose and face, Whisper and Kokoro run behind commands; general models (depth, segmentation) are WP-43, SAM cut suggestions WP-18."
+      "note": "MediaPipe pose and face, Whisper, Kokoro, RIFE (in-betweens) and Depth Anything (depth) run behind commands on onnxruntime; segmentation and a general model node are WP-43."
      }
     }
    ]

@@ -350,7 +350,8 @@ probe results). Only the tools now named in `docs/build-plan.md` are listed here
 | manifold3d 3.5.4 | Apache-2.0 [R] | 1.7 | 2D `CrossSection` offsets as an alternative to pyclipr |
 | SAM 2 / 2.1 checkpoints | Apache-2.0 [R] | 1.8b | the SA-V dataset has separate terms; CPU is slow, so suggestions only |
 | Poly Haven, ambientCG | CC0 [R] | 1.6 | record each file in the manifest |
-| Depth Anything V2 **Small** | Apache-2.0 [R] | 1.6 | Base, Large and Giant are CC-BY-NC-4.0: **NC**, do not use |
+| Depth Anything V2 **Small** | Apache-2.0 [R] | 1.6 | in use (WP-43, `depth.planes`, ONNX on CPU). Base, Large and Giant are CC-BY-NC-4.0: **NC**; Base is wired as an option whose outputs the posting gate flags |
+| RIFE 4.9 (Practical-RIFE), ONNX conversion | MIT (upstream; the conversion has no card) [R] | WP-43 | in use: `level.inbetween` proposes in-betweens for drawn levels; 92% accepted on held-out drawings against 58% for holds |
 | music21 10.5.2 | BSD-3 [R] | 2.14 | |
 | FluidSynth | LGPL-2.1 [R] | 2.14 | **COPYLEFT**: run as a separate process |
 | GeneralUser GS 2.0.1 | permissive [R] | 2.14 | sample provenance not guaranteed by its author: review before published films |

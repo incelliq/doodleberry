@@ -5,7 +5,7 @@ camera so it sits behind the 2D puppets exactly.
 
 REQ: {size: [W, H], fps, start, frames: [frame numbers to render] | count, camera: [[t, [cx, cy, zoom]]], floor: y px,
       kind: "city", seed, blocks: {count, min_dist, depth: [near, far], width, height: [lo, hi]}, palette: [...],
-      sky: "#..", ground: "#..", ink: "#..", line: 1.4, samples: 1, ink_lines: true}
+      sky: "#..", ground: "#..", ink: "#..", line: 1.4, samples: 1, ink_lines: true, zpass: false (EXR with depth)}
 
 The camera maps the 2D stage exactly: 1 px = 1 cm on the stage plane (y = 0), the camera stands D0 = 12 m in front,
 pans with the 2D camera centre and dollies in by its zoom, so a point on the stage plane lands where the 2D renderer
@@ -166,11 +166,19 @@ cam.rotation_euler = (math.radians(90), 0, 0)
 keys = R.get("camera") or [[0, [W / 2, H / 2, 1]]]
 frames = R.get("frames") or list(range(R.get("count", 1)))
 os.makedirs(OUT, exist_ok=True)
+if R.get("zpass"):   # WP-43: depth ground truth, a multilayer EXR with the picture and the camera distance per pixel
+    sc.view_layers[0].use_pass_z = True
+    ims = sc.render.image_settings
+    if hasattr(ims, "media_type"):   # Blender 5: pick the multilayer media type, then its only format
+        ims.media_type = "MULTI_LAYER_IMAGE"
+    ims.file_format = "OPEN_EXR_MULTILAYER"
+    sc.render.image_settings.color_depth = "32"
+    sc.render.use_freestyle = False
 for f in frames:
     t = R.get("start", 0) + f / fps
     cx, cy, z = sample_keys(keys, t)
     cam.location = ((cx - W / 2) * K, -D0 / z, -(cy - H / 2) * K)
     sc.frame_set(1)
-    sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.png")
+    sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.{'exr' if R.get('zpass') else 'png'}")
     bpy.ops.render.render(write_still=True)
 print("rendered", len(frames), "frames to", OUT)

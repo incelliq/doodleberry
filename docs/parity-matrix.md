@@ -17,14 +17,14 @@ Overall: 1396 capabilities; covered 36%, covered or partial 68% (of those that a
 | Blender Grease Pencil | 26 | 150 | 8 | 23 | 1 | 53 | 56 | 9 | 23% | 60% |
 | Toon Boom Harmony | 25 | 182 | 25 | 47 | 0 | 50 | 52 | 8 | 41% | 70% |
 | Moho Pro | 34 | 186 | 24 | 42 | 1 | 62 | 39 | 18 | 40% | 77% |
-| Foundry Nuke | 32 | 189 | 22 | 25 | 2 | 37 | 63 | 40 | 33% | 58% |
-| OpenToonz | 26 | 191 | 29 | 33 | 1 | 48 | 70 | 10 | 35% | 61% |
+| Foundry Nuke | 32 | 189 | 23 | 25 | 2 | 37 | 62 | 40 | 34% | 58% |
+| OpenToonz | 26 | 191 | 30 | 33 | 1 | 48 | 69 | 10 | 35% | 62% |
 | Synfig Studio | 26 | 169 | 34 | 38 | 2 | 42 | 40 | 13 | 47% | 74% |
 | TVPaint Animation | 26 | 168 | 28 | 13 | 1 | 70 | 48 | 8 | 26% | 70% |
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 45, WP-23 23, WP-16 23, WP-43 21, WP-20 20, WP-34 19, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 45, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -754,7 +754,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 |---|---|---|
 | Posing a hierarchy with a transform tool | Main cut-out animation workflow | **data**: puppet poses, acting timeline angles (Agents pose through data; people pose in the Rig Canvas and save with puppet.save) |
 | Keyframes and inbetweens with eases | Pose-to-pose cut-out animation | **data**: puppet clips, `shots.json shots[].cast[].timeline.clips` (Clips stack with fades and additive layers) |
-| Breakdown Assistant: blend between neighbouring key poses to make breakdowns (new in 25) | Faster breakdowns with a slider rather than hand-posing | **partial**: `timeline.edit`, WP-43 (Clip blending gives weighted mixes; in-between assistance is WP-43) |
+| Breakdown Assistant: blend between neighbouring key poses to make breakdowns (new in 25) | Faster breakdowns with a slider rather than hand-posing | **partial**: `level.inbetween`, WP-43 (Clip blending gives weighted mixes and drawn levels get in-between proposals (level.inbetween); breakdowns for cut-out puppets are WP-43.) |
 | Swapping drawings over time | Hand poses and mouth changes in a cut | **data**: acting timeline swaps, puppet swaps (drawing.requests lists swaps a character lacks) |
 | Onion skin for cut-out poses | Compare poses across frames | **gap**: WP-18 (Onion skin in the Rig Canvas boards is WP-18) |
 | Flipping parts and mirroring poses | Reuse a pose for the opposite side | **partial**: `shots.json shots[].cast[].place flip`, WP-11 (Whole-character flip and mirrored clip pairs exist; per-part flip is not built) |
@@ -1453,7 +1453,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Generating depth maps from footage. | Fog, depth of field and relighting on plates. | **gap**: WP-43 (WP-43 scopes depth estimates (Depth Anything) for parallax on paintings and photos.) |
+| Generating depth maps from footage. | Fog, depth of field and relighting on plates. | **command**: `depth.planes` (depth.planes estimates relative depth (Depth Anything V2 Small, 99.7% of pixel pairs ordered right on our 3D renders) and cuts a picture into depth planes for the compositor.) |
 | Point clouds and meshes reconstructed from footage. | Rebuilding a set for projection and placement. | **n/a** (No photographed sets.) |
 | Modelling simple geometry aligned to a plate (ModelBuilder). | Quick projection geometry. | **n/a** (No plates.) |
 | 3D particle systems with emitters, forces and collisions. | Debris, smoke and sparks in the comp. | **gap**: WP-42 (Falls within the named work package's scope.) |
@@ -1566,7 +1566,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 |---|---|---|
 | Training a network from a few artist-finished frames to repeat the task across a shot (CopyCat). | Clean-up, beauty work or mattes on long shots from a handful of examples. | **gap**: WP-43 (WP-43 brings models in as assistants whose output a person or critic accepts.) |
 | Large-scale training across many shots (BigCat, Nuke 17). | Show-wide models trained on whole sequences. | **gap**: WP-43 (Falls within the named work package's scope.) |
-| Running pre-trained PyTorch models as nodes (CatFileCreator, Inference). | Using community or in-house models inside the comp. | **partial**: `actout.clip`, `voice.build`, WP-43 (MediaPipe pose and face, Whisper and Kokoro run behind commands; general models (depth, segmentation) are WP-43, SAM cut suggestions WP-18.) |
+| Running pre-trained PyTorch models as nodes (CatFileCreator, Inference). | Using community or in-house models inside the comp. | **partial**: `level.inbetween`, `depth.planes`, WP-43 (MediaPipe pose and face, Whisper, Kokoro, RIFE (in-betweens) and Depth Anything (depth) run behind commands on onnxruntime; segmentation and a general model node are WP-43.) |
 
 ### Timeline editing and review in Nuke Studio and Hiero
 
@@ -1685,7 +1685,7 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 | Selection with move, rotate, scale and distort, by stroke, region or matching style. | Artists rescale or reposition part of a drawing between frames. | **gap**: WP-18 (Lasso and transform are listed in the feature map under WP-18 and WP-34.) |
 | Converting raster drawings to vectors (centre-line strokes or outline fills). | Scanned roughs become editable vector levels. | **gap**: WP-18 (Vector tracing (VTracer, potrace) of scans is WP-18; today scans stay raster parts.) |
 | Key, breakdown and in-between drawing workflow with drawings numbered automatically from the timeline. | Leads draw keys, assistants fill breakdowns and in-betweens. | **gap**: WP-35 (Keys with in-between assistance on drawn levels are WP-35 (proposals from WP-43).) |
-| Automatic in-betweens between two vector extremes with linear or eased spacing. | Saves assistants' time on simple moves and holds. | **gap**: WP-43 (In-between proposals for drawn levels and morphs between views are WP-43.) |
+| Automatic in-betweens between two vector extremes with linear or eased spacing. | Saves assistants' time on simple moves and holds. | **command**: `level.inbetween`, `level.accept` (level.inbetween proposes in-betweens between drawn drawings (RIFE 4.9, measured: 92% accepted against 58% for holds on held-out true drawings) and level.accept takes them into the exposure sheet. Vector extremes with eased spacing are WP-43.) |
 | Rotoscoping by drawing over imported video or image sequences. | Reference footage gives realistic timing for complex actions. | **partial**: `actout.clip`, WP-35 (actout.clip turns a filmed take into motion on a rig (not traced drawings); drawing over footage needs drawn levels (WP-35).) |
 | Onion skin in relative and fixed modes, tinted for earlier and later frames, per level or whole scene. | Essential for judging spacing while drawing frame by frame. | **gap**: WP-35 (The Rig Canvas shows the character's rest pose faintly behind the part being drawn; onion skins over time are WP-35.) |
 | Shift and trace: a light table showing neighbouring keys that can be offset, rotated or placed along a path. | In-betweeners line up arcs before tracing the middle drawing. | **gap**: WP-35 |
@@ -2467,7 +2467,7 @@ Sources: [TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and s
 | Blurs: Gaussian, radial, directional, median, chroma, and motion blur. | Depth, speed and softening in compositing. | **partial**: `film.render`, WP-36, WP-15 (post.grade accepts ffmpeg filters on the whole frame. Per-layer blurs and depth of field are in WP-36, and sub-frame motion blur in WP-15.) |
 | Colour correction: curves, histogram, adjustment sliders, tint and colour replacement, black-and-white, multi-colour replace. | Matches shots and sets mood. | **partial**: `film.render`, WP-37 (Post presets, grade filters and a LUT file apply to the whole frame. Colour management (OCIO, ACES) is in WP-37, and per-layer correction in WP-36.) |
 | Scan clean-up effects: dust cleaner, black-and-white and colour scan cleaners, colour eraser, line colorize. | Prepares scanned paper animation and recolours line art. | **partial**: `puppet.from_ink`, WP-35 (Ink thresholding and speck removal are in puppet.from_ink. Recolouring the lines of drawn frames is in WP-35.) |
-| Distortions: bump and displacement maps, warp grid, four-point perspective, kaleidoscope, tornado and wave, optical flow. | Heat haze, water, impact wobbles and retiming. | **partial**: `shots.json: style.boil`, WP-36, WP-43 (Boil uses cycled displacement fields. Other distortions are in WP-36; optical-flow in-betweening is in WP-43.) |
+| Distortions: bump and displacement maps, warp grid, four-point perspective, kaleidoscope, tornado and wave, optical flow. | Heat haze, water, impact wobbles and retiming. | **partial**: `level.inbetween`, WP-36 (Boil uses cycled displacement fields and flow-based in-betweening proposes drawings (level.inbetween); other distortions are in WP-36.) |
 | Keying: chroma, luma, colour and cross keyers, plus alpha control. | Pulls mattes from footage or from colour-coded drawings. | **gap**: WP-36 (Mattes are in the compositor's scope; Doodleberry rarely uses live footage.) |
 | Motion effects: path tools and a path recorder, a pixel tracker, a shaker, stabilisation. | Attaches elements to moving footage, shakes the camera on impacts, steadies scans. | **partial**: `shots.json props path`, WP-36 (Handheld drift, keyed placement and paths for characters and props exist; tracking footage is WP-36.) |
 | Rendering generators: lighting, volumetric light, lens flare, Perlin noise and plasma, patterns, backgrounds, simple and multi-line text, timecode. | Generated elements for backgrounds, titles and lighting. | **partial**: `shots.json: overlays (title, sign, text, card)`, `shots.json: style.toon rim`, WP-36 (Text and title elements, sets drawn in code, and toon rims exist. Volumetric light, flares and glows are in WP-36; a timecode burn-in is in WP-19.) |

@@ -402,6 +402,21 @@ change re-cooks that node and what reads it: a crowd edit does not render the ci
 zooms its planes in true perspective (`"zoom": "dolly"`), so the 2D planes and the 3D render share one camera exactly.
 Frames with images wait until they have decoded. `films/city-parade` is the demo.
 
+## ML assists, in-house (WP-43, part 1)
+Models used as assistants whose output is data a person accepts, on CPU (onnxruntime), pinned by sha256
+(`dbe/assists.py`, fetched by `bash tools/setup.sh models` or on first use):
+- `level.inbetween {name, pairs, t}` proposes in-between drawings for a drawn level with RIFE 4.9 (MIT); each proposal
+  is a drawing `<a>-<b>` with status `proposed`, not exposed until `level.accept {name, drawings, reject}` takes it
+  into the exposure sheet (it takes the second half of the first drawing's hold) or drops it.
+- `depth.planes {image, planes, model, film}` estimates relative depth with Depth Anything V2 (Small: Apache-2.0;
+  Base: CC BY-NC 4.0) and cuts the picture into far-to-near layers with suggested compositor depths.
+- Every output records its model and licence class (a level's `meta.assists`, a film's `provenance.json`), and
+  `film.provenance` (the posting gate) flags non-commercial or research-only ones.
+- `assist.bench` measures each against its baseline on our own material: in-betweens against holds and dissolves on
+  held-out true drawings of the level demo (accepted when the line art is within 2 px: RIFE 92%, holds 58%, dissolves
+  50%); depth against "lower is nearer" on Geometry Nodes renders with their true depth (pixel pairs ordered right:
+  99.7% against 88.6%).
+
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
 and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their

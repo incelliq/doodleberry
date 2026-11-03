@@ -1956,11 +1956,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json: style.boil",
-       "WP-36",
-       "WP-43"
+       "level.inbetween",
+       "WP-36"
       ],
-      "note": "Boil uses cycled displacement fields. Other distortions are in WP-36; optical-flow in-betweening is in WP-43."
+      "note": "Boil uses cycled displacement fields and flow-based in-betweening proposes drawings (level.inbetween); other distortions are in WP-36."
      }
     },
     {

@@ -59,6 +59,9 @@ print("kokoro timed model:", kokoro_voice.timed_model(d) or "skipped (needs the 
 from dbe import actout
 for kind in actout.MODEL_FILES:
     print("mediapipe", kind, actout.model_path(kind))
+from dbe import assists   # WP-43: RIFE 4.9 (in-betweens) and Depth Anything V2 Small (depth), pinned by sha256
+for name in ("rife49", "depth_small"):
+    print("assist", name, assists.model_path(name))
 PYEOF
 }
 

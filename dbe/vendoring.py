@@ -131,7 +131,7 @@ def ledger():
     return rows
 
 
-def provenance(film_dir, voice_status, credits_files):
+def provenance(film_dir, voice_status, credits_files, models=None):
     """what shaped a film, with its licence class, and the posting flags: voices not marked clean, and
     non-commercial, research-only, share-alike or source-available inputs.
     voice_status: {voice id: status}; credits_files: [{path, license}] from film.credits"""
@@ -149,7 +149,8 @@ def provenance(film_dir, voice_status, credits_files):
         used.append({"kind": "asset", "id": f.get("path") or f.get("name"), "license": f.get("license"), "class": c})
         if c in FLAG_AT_POSTING:
             flags.append(f"{f.get('path') or f.get('name')} is {c} ({f.get('license')})")
-    for m in json.loads((d / "provenance.json").read_text()).get("models", []) if (d / "provenance.json").exists() else []:
+    recorded = json.loads((d / "provenance.json").read_text()).get("models", []) if (d / "provenance.json").exists() else []
+    for m in recorded + list(models or []):
         c = m.get("class") or classify(m.get("license"))   # models that shaped outputs (WP-43 assists write these)
         used.append({"kind": "model", "id": m.get("name"), "license": m.get("license"), "class": c})
         if c in FLAG_AT_POSTING:

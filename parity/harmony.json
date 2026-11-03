@@ -1461,10 +1461,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "timeline.edit",
+       "level.inbetween",
        "WP-43"
       ],
-      "note": "Clip blending gives weighted mixes; in-between assistance is WP-43"
+      "note": "Clip blending gives weighted mixes and drawn levels get in-between proposals (level.inbetween); breakdowns for cut-out puppets are WP-43."
      }
     },
     {

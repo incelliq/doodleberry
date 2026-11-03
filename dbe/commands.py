@@ -396,7 +396,10 @@ def film_provenance(name):
     uses = {"captions", "player"} | {f"renderer:{sh.get('renderer', 'svg')}" for sh in s["shots"]}
     files += [{"path": f["path"], "license": f.get("license"), "class": f.get("class")} for f in man["files"] if set(f.get("used_by", [])) & uses]
     status = {k: v.get("status", "unknown") for k, v in _voice_registry().items()}
-    return V.provenance(d, status, files)
+    models = []   # WP-43: models that shaped a puppet the film uses (a level's proposed in-betweens, for example)
+    for p in sorted({c["puppet"] for sh in s["shots"] for c in sh.get("cast", [])}):
+        models += [{**m, "output": f"{p}: {m.get('output', '')}"} for m in ((_json(ROOT / p, {}) or {}).get("meta") or {}).get("assists", [])]
+    return V.provenance(d, status, files, models)
 
 
 def _puppet_errors(puppet):
@@ -2385,6 +2388,10 @@ def test_golden(update=False, film=""):
         bad, meas = _proc_test()
         failed += 1 if bad else 0
         results.append({"proc": "graph re-cooks only changed nodes; cooks and Blender renders are deterministic", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "assists":   # ML assists (WP-43): each beats its baseline; outputs carry licence classes to posting
+        bad, meas = _assists_test()
+        failed += 1 if bad else 0
+        results.append({"assists": "in-betweens and depth beat their baselines; assist outputs flagged at posting by licence", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -4128,4 +4135,143 @@ def _proc_test():
         meas["city_parade"] = {"cached_now": base["cached"], "crowd_seed_changes_keys_of": changed}
         if changed != ["crowd"]:
             bad.append({"city_parade_keys": changed})
+    return bad, meas
+
+
+# ---------------- ML assists, in-house (WP-43) ----------------
+@command("level.inbetween", name=("string", "level"), pairs=("array", "[[drawing, drawing], ...] (default: each pair of neighbouring drawings in the exposure sheet)", None),
+         t=("number", "where between the two (0..1)", 0.5))
+def level_inbetween(name, pairs=None, t=0.5):
+    """Propose in-between drawings for a drawn level (WP-43): RIFE 4.9 (MIT) draws the drawing between two neighbours;
+    each proposal is stored as a drawing named "<a>-<b>" with status "proposed" and is not exposed until the animator
+    accepts it (level.accept). The model is recorded in the level's meta.assists, so films using it list it."""
+    from . import assists as AS, levels as LV
+    f = _level_path(name); p = _json(f)
+    sw = p["swaps"]["level"]; cells = sw["xsheet"]["cells"]
+    if not pairs:
+        order = [r[0] for r in LV.runs(cells)]
+        pairs = [[a, b] for a, b in zip(order, order[1:] + ([order[0]] if sw["xsheet"].get("loop", True) else []))
+                 if a != b and not a.count("-") and not b.count("-")]
+    made = []
+    for a, b in pairs:
+        A, B = LV.drawing_rgba(p, a), LV.drawing_rgba(p, b)
+        mid = AS.inbetween(A, B, float(t), "rife")
+        nm = f"{a}-{b}"
+        st = LV.raster_stroke(mid)
+        if not st:
+            continue
+        sw["shapes"][nm] = [st]
+        sw.setdefault("proposals", {})[nm] = {"between": [a, b], "t": float(t), "model": "rife49", "status": "proposed"}
+        made.append(nm)
+    AS.record(p, "rife49", f"in-betweens of level {name}")
+    f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"proposed": made, "accept_with": "level.accept"}
+
+
+@command("level.accept", name=("string", "level"), drawings=("array", "proposed in-betweens to accept", None), reject=("array", "proposed in-betweens to drop", None))
+def level_accept(name, drawings=None, reject=None):
+    """Accept or drop proposed in-betweens (WP-43). An accepted in-between takes the second half of the first drawing's
+    run in the exposure sheet (a drawing on twos becomes two drawings on ones), so the timing keeps its length; a
+    drawing on ones has no room and is reported. Dropped proposals are deleted."""
+    from . import levels as LV
+    f = _level_path(name); p = _json(f)
+    sw = p["swaps"]["level"]; props = sw.get("proposals", {})
+    for nm in reject or []:
+        if nm in props:
+            props.pop(nm); sw["shapes"].pop(nm, None)
+    cells, placed, no_room = list(sw["xsheet"]["cells"]), [], []
+    for nm in drawings or []:
+        pr = props.get(nm)
+        if not pr:
+            raise ValueError(f"{nm} is not a proposed in-between of {name}")
+        a, b = pr["between"]
+        i, hit = 0, False
+        while i < len(cells):
+            j = i
+            while j < len(cells) and cells[j] == cells[i]:
+                j += 1
+            nxt = cells[j % len(cells)] if j < len(cells) or sw["xsheet"].get("loop", True) else None
+            if cells[i] == a and nxt == b:
+                if j - i >= 2:
+                    for k in range(i + (j - i + 1) // 2, j):
+                        cells[k] = nm
+                    hit = True
+                else:
+                    no_room.append(nm)
+            i = j
+        if hit:
+            pr["status"] = "accepted"; placed.append(nm)
+    LV.set_xsheet(p, cells=cells)
+    f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"accepted": placed, "no_room": sorted(set(no_room) - set(placed)), "dropped": list(reject or []), "xsheet": LV.runs(cells)}
+
+
+@command("depth.planes", image=("string", "a picture (path in the repo)"), planes=("integer", "how many depth planes", 3),
+         model=("string", "depth_small (Apache-2.0) | depth_base (CC BY-NC 4.0: flagged at posting)", "depth_small"),
+         film=("string", "the film the layers are for (records the model in its provenance and writes films/<film>/layers/)", ""))
+def depth_planes(image, planes=3, model="depth_small", film=""):
+    """Split a picture (a painted background, a photo) into depth planes for the compositor's parallax (WP-43): Depth
+    Anything V2 estimates relative depth, the picture is cut at depth quantiles into far-to-near RGBA layers, each with
+    a suggested plane depth. Returns compositor planes ready for shots.json "comp"."""
+    from PIL import Image
+    from . import assists as AS
+    src = ROOT / image
+    import numpy as np
+    rgb = np.asarray(Image.open(src).convert("RGB"))
+    layers = AS.planes(rgb, int(planes), model)
+    out_dir = (FILMS / film / "layers") if film else (ROOT / "out" / "depth")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    comp = []
+    for i, (rgba, d) in enumerate(layers):
+        fn = out_dir / f"{src.stem}_d{i}.png"
+        Image.fromarray(rgba, "RGBA").save(fn)
+        rel = f"../layers/{fn.name}" if film else str(fn.relative_to(ROOT))
+        comp.append({"id": f"{src.stem}_d{i}", "depth": d, "items": [{"type": "plate", "src": rel, "count": 1}]})
+    if film:
+        AS.record(FILMS / film, model, f"depth planes of {image}")
+    return {"planes": comp, "model": model, "licence": AS.REGISTRY[model]["license"], "files": [str((out_dir / f"{src.stem}_d{i}.png").relative_to(ROOT)) for i in range(len(layers))]}
+
+
+@command("assist.bench", which=("string", "inbetween | depth | all", "all"))
+def assist_bench(which="all"):
+    """Measure each ML assist against its baseline on our own material (WP-43): in-betweens (RIFE) against holding the
+    drawing and a cross-dissolve on the drawn-level demo's held-out true drawings; depth (Depth Anything V2 Small)
+    against "lower in the frame is nearer" on Geometry Nodes city renders with their true depth."""
+    from . import assists as AS
+    out = {}
+    if which in ("inbetween", "all"):
+        out["inbetween"] = AS.bench_inbetween()
+    if which in ("depth", "all"):
+        out["depth"] = AS.bench_depth(ROOT / "out" / "depthtruth")
+    return out
+
+
+def _assists_test():
+    """WP-43 checks: RIFE in-betweens are accepted more often than holds or dissolves on held-out true drawings, Depth
+    Anything orders depth better than "lower is nearer" on Geometry Nodes renders, and assist outputs reach the posting
+    gate with their licence class (a non-commercial model is flagged, permissive ones are not)"""
+    import shutil
+    from . import assists as AS, vendoring as V
+    bad, meas = [], {}
+    ib = AS.bench_inbetween(); acc = ib["acceptance"]
+    meas["inbetween_acceptance"] = acc
+    if not (acc["rife"] > acc["hold"] and acc["rife"] > acc["dissolve"]):
+        bad.append({"inbetween": acc})
+    if BLENDER:
+        dp = AS.bench_depth(ROOT / "out" / "depthtruth")
+        meas["depth_ordinal"] = {"model": dp["model"], "y_prior": dp["y_prior"]}
+        if not dp["model"] > dp["y_prior"]:
+            bad.append({"depth": dp})
+    tmp = ROOT / "out" / "assisttest"; shutil.rmtree(tmp, ignore_errors=True)
+    flags = {}
+    for case, model in (("small", "depth_small"), ("base", "depth_base")):
+        d = tmp / case; d.mkdir(parents=True)
+        AS.record(d, model, "depth planes of a test picture")
+        flags[case] = V.provenance(d, {}, [])["flags"]
+    lvl = {"meta": {}}; AS.record(lvl, "rife49", "in-betweens of a level")
+    d = tmp / "level"; d.mkdir(parents=True)
+    pv = V.provenance(d, {}, [], lvl["meta"]["assists"])
+    meas["posting"] = {"depth_small": flags["small"], "depth_base": flags["base"], "rife_level": {"listed": [u["id"] for u in pv["used"]], "flags": pv["flags"]}}
+    if flags["small"] or not flags["base"] or pv["flags"] or "rife49" not in [u["id"] for u in pv["used"]]:
+        bad.append({"posting": meas["posting"]})
     return bad, meas

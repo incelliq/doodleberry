@@ -98,6 +98,11 @@ def check(deep=True):
     from . import physics as PHY   # WP-09: deterministic Rapier for physics.solve (an npm package in tools/physics)
     add("node package @dimforge/rapier2d-deterministic-compat", "tools", PHY.available(), False, str(PHY.PKG) if PHY.available() else "not installed",
         "bash tools/setup.sh physics   (deterministic Rapier 0.21: physics.solve, WP-09)")
+    from . import assists as ASM   # WP-43 ML assists: model files (fetched by tools/setup.sh models, or on first use)
+    for name in ("rife49", "depth_small"):
+        mp = ASM.MODELS / ASM.REGISTRY[name]["file"]
+        add(f"assist model {name}", "tools", mp.exists(), False, str(mp) if mp.exists() else "not downloaded",
+            "bash tools/setup.sh models   (or let level.inbetween / depth.planes fetch it on first use)")
     egl = ctypes.util.find_library("EGL")
     add("system library libEGL", "tools", egl, False, egl or "missing (MediaPipe's native library needs it)", "apt-get install -y libegl1 libgles2")
     kd = VOICES / "kokoro"
