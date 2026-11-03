@@ -2694,7 +2694,7 @@
        "engine.commands",
        "WP-20"
       ],
-      "note": "Any command runs from the CLI, with async jobs over HTTP. A cost and time estimate before rendering, plus progress events, is WP-20."
+      "note": "Any command runs from the CLI, with async jobs over HTTP that report progress events; render.estimate gives the time before rendering (WP-20)."
      }
     }
    ]

@@ -269,7 +269,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "No per-element cost breakdown. WP-20 brings a measured cost and time estimate before rendering; per-element profiling should join it."
+      "note": "render.estimate gives a measured time per shot (probed: capture, encode, bake) before rendering (WP-20); a per-element breakdown inside a shot is not there."
      }
     },
     {
@@ -1974,7 +1974,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "Async jobs exist but no progress events or webhooks; WP-20 (and owner notifications in WP-03)."
+      "note": "Async jobs report progress events (shots, assembly, percent of the estimate) and POST them to a webhook (WP-20); owner notifications are WP-03."
      }
     },
     {

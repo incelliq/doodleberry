@@ -270,8 +270,8 @@ covered, now added to their packages' scopes.
 |---|---|---|---|---|
 | One command registry → CLI, HTTP, MCP, Studio | NEW | ✅ | – | |
 | Async jobs | NEW | ✅ | – | |
-| Progress events and webhooks | NEW | ⬜ | P1 | WP-20 |
-| Cost and time estimate before rendering | NEW | ⬜ | P1 | WP-20 |
+| Progress events and webhooks | NEW | ✅ | – | `film.render` progress events; `?async=1` jobs with events and `&webhook=` (WP-20) |
+| Cost and time estimate before rendering | NEW | ✅ | – | `render.estimate`: measured history and per-shot probes; within 16.5% on six benchmark films (WP-20) |
 | Specialist agents: director, animator, editor, critic, fact-checker | IDEA | ⬜ | P1 | WP-21 |
 | Natural-language editing ("make Pip turn when she says Blender") | NEW | 🟡 | P0 | `acting.direct`, `review.fix`, `timeline.edit`; chat: WP-21 |
 | Python and JS SDKs, recipes, templates | NEW | ⬜ | P2 | not planned: the CLI, HTTP API and MCP expose every command |

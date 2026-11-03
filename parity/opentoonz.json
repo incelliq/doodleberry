@@ -1983,7 +1983,7 @@
        "film.render",
        "WP-15"
       ],
-      "note": "Shots are re-rendered only when their content hash changes, repeated frames are linked and static sets are drawn once as plates (WP-15); node-level re-cook is WP-20."
+      "note": "Shots are re-rendered only when their content hash changes, repeated frames are linked, static sets are drawn once as plates (WP-15), and graph.cook re-makes one node and what follows (WP-20)."
      }
     }
    ]

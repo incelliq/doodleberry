@@ -1197,7 +1197,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "React Flow node view is WP-20"
+      "note": "The Studio /graph page is a React Flow node view of the film's data flow (WP-20)"
      }
     },
     {

@@ -169,7 +169,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "WP-20 adds the graph view of facts, script, shots and renders with per-node cache state; WP-36 makes it the compositor's editor."
+      "note": "graph.get and the Studio /graph page show facts, script, voice, shots, picture, mix, final and QA with each node's state and what changed (WP-20); WP-36 makes it the compositor's editor."
      }
     },
     {
@@ -2344,7 +2344,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "Progress events and webhooks for long jobs are WP-20."
+      "note": "Long jobs report progress events and post them to webhooks (WP-20)."
      }
     },
     {

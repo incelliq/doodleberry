@@ -333,7 +333,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "Jobs run async but report no progress events; progress events and webhooks are WP-20."
+      "note": "Jobs run async and report progress events, posted to webhooks when given (WP-20)."
      }
     },
     {
@@ -2150,7 +2150,7 @@
        "film.render",
        "WP-20"
       ],
-      "note": "Renders run as async jobs; progress events and webhooks are WP-20 (owner notifications WP-03)."
+      "note": "Renders run as async jobs with progress events and webhooks (WP-20); owner notifications are WP-03."
      }
     },
     {
@@ -2162,7 +2162,7 @@
       "ref": [
        "WP-20"
       ],
-      "note": "A cost and time estimate before rendering (frames times measured renderer rate) is WP-20."
+      "note": "render.estimate gives the time before rendering from measured rates and per-shot probes (WP-20)."
      }
     },
     {
