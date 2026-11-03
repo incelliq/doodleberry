@@ -1231,11 +1231,12 @@
      "capability": "Port filtering and multi-layer write outputs",
      "pro_use": "Split one comp into many outputs",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.master",
        "WP-37"
       ],
-      "note": "Multi-pass output is WP-37"
+      "note": "Multi-layer EXR output (beauty, line, fill, matte); port filtering is WP-37."
      }
     }
    ]
@@ -2248,11 +2249,12 @@
      "capability": "Cryptomattes and multi-pass EXR output",
      "pro_use": "Compositors isolate objects after rendering",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.master",
        "WP-37"
       ],
-      "note": "OpenEXR multi-pass is WP-37"
+      "note": "Multi-pass EXR masters exist (beauty, line, fill, matte); cryptomattes are WP-37."
      }
     }
    ]

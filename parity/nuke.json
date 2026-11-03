@@ -353,11 +353,11 @@
      "capability": "Multi-layer EXR input and output carrying many named passes in one file.",
      "pro_use": "CG lighters deliver one EXR per frame with all AOVs; comps write multi-pass masters.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "film.master"
       ],
-      "note": "WP-37 scopes OpenEXR multi-pass output (beauty, line, shadow, mattes)."
+      "note": "film.master writes multi-layer EXRs (beauty, line, fill, matte) per frame, read by OpenImageIO and ffmpeg."
      }
     },
     {
@@ -477,11 +477,12 @@
      "capability": "Arbitrary named channels grouped into layers beyond RGBA (up to 1023 per script), flowing through the tree together.",
      "pro_use": "Carrying render passes, mattes, depth and motion vectors alongside the beauty image.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.master",
        "WP-37"
       ],
-      "note": "Doodleberry renders a single RGB picture; multi-pass output (beauty, line, shadow, mattes) is WP-37."
+      "note": "Masters carry named layers (beauty, line, fill, matte); depth, motion vectors and arbitrary channels are WP-37."
      }
     },
     {
@@ -1235,11 +1236,11 @@
      "capability": "OCIO colour management: a working space, input transforms per file, output transforms, any config.",
      "pro_use": "Consistent colour across every department and tool.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "film.master"
       ],
-      "note": "OpenColorIO is in WP-37."
+      "note": "OpenColorIO working space ACEScg with the sRGB texture input transform and display transforms back (film.master, film.from_master)."
      }
     },
     {
@@ -1247,11 +1248,11 @@
      "capability": "ACES workflows (ACEScg working space; ACES 2.0 in Nuke 17).",
      "pro_use": "Industry-standard colour pipeline for VFX and features.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "film.master"
       ],
-      "note": "Falls within the named work package's scope."
+      "note": "ACEScg masters under the ACES 2.1 studio config (OpenColorIO 2.6)."
      }
     },
     {
@@ -1259,11 +1260,12 @@
      "capability": "Viewer display transforms and looks.",
      "pro_use": "Viewing the same linear data as it will appear on each display.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.from_master",
        "WP-37"
       ],
-      "note": "Falls within the named work package's scope."
+      "note": "The ACES 2.1 output transform is offered as a review view (view=aces); looks are WP-37."
      }
     },
     {
@@ -1283,11 +1285,11 @@
      "capability": "Scopes: histogram, waveform and vectorscope.",
      "pro_use": "Measuring levels and colour objectively instead of by eye.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "image.scopes"
       ],
-      "note": "No per-frame scopes; brand.check measures palette contrast and colour-blind separation. Should join WP-37.",
+      "note": "image.scopes draws an RGB histogram, a luma waveform and a vectorscope for a frame, with clipping figures.",
       "added_to_scope": true
      }
     },

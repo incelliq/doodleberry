@@ -2341,12 +2341,11 @@
      "capability": "Faster handling of projects above 4K (12.1).",
      "pro_use": "Feature-film and print resolutions.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "film.render",
-       "WP-37"
+       "film.master"
       ],
-      "note": "Vector art renders at any resolution; 4K masters and EXR passes are in WP-37."
+      "note": "film.master renders 4K (or any multiple of the film size) EXR masters; vector art stays sharp at any size."
      }
     }
    ]

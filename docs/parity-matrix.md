@@ -9,22 +9,22 @@ Match: **command** (an existing command does it), **data** (a field of the film 
 measure), **partial** (partly there; the WP that finishes it), **gap** (missing; the WP that closes it), **n/a**
 (not relevant to an agent-run studio).
 
-Overall: 1396 capabilities; covered 36%, covered or partial 68% (of those that apply).
+Overall: 1396 capabilities; covered 37%, covered or partial 69% (of those that apply).
 
 | Tool | Chapters | Capabilities | Command | Data | Metric | Partial | Gap | n/a | Covered | Covered or partial |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Adobe After Effects | 19 | 161 | 29 | 33 | 1 | 40 | 45 | 13 | 43% | 70% |
-| Blender Grease Pencil | 26 | 150 | 8 | 23 | 1 | 53 | 56 | 9 | 23% | 60% |
-| Toon Boom Harmony | 25 | 182 | 25 | 47 | 0 | 50 | 52 | 8 | 41% | 70% |
-| Moho Pro | 34 | 186 | 24 | 42 | 1 | 62 | 39 | 18 | 40% | 77% |
-| Foundry Nuke | 32 | 189 | 23 | 25 | 2 | 37 | 62 | 40 | 34% | 58% |
-| OpenToonz | 26 | 191 | 30 | 33 | 1 | 48 | 69 | 10 | 35% | 62% |
+| Adobe After Effects | 19 | 161 | 30 | 33 | 1 | 41 | 43 | 13 | 43% | 71% |
+| Blender Grease Pencil | 26 | 150 | 9 | 23 | 1 | 52 | 56 | 9 | 23% | 60% |
+| Toon Boom Harmony | 25 | 182 | 25 | 47 | 0 | 52 | 50 | 8 | 41% | 71% |
+| Moho Pro | 34 | 186 | 24 | 42 | 1 | 63 | 38 | 18 | 40% | 77% |
+| Foundry Nuke | 32 | 189 | 27 | 25 | 2 | 39 | 56 | 40 | 36% | 62% |
+| OpenToonz | 26 | 191 | 32 | 33 | 1 | 49 | 66 | 10 | 36% | 64% |
 | Synfig Studio | 26 | 169 | 34 | 38 | 2 | 42 | 40 | 13 | 47% | 74% |
-| TVPaint Animation | 26 | 168 | 28 | 13 | 1 | 70 | 48 | 8 | 26% | 70% |
+| TVPaint Animation | 26 | 168 | 29 | 13 | 1 | 69 | 48 | 8 | 27% | 70% |
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 45, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 36, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -172,9 +172,9 @@ Sources: [Adobe After Effects User Guide (official, helpx.adobe.com)](https://he
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Project bit depth of 8, 16 or 32-bit float, with linear-light blending. | High-end compositing avoids banding and blends light realistically. | **gap**: WP-37 (8-bit sRGB pipeline (Chromium capture to H.264); higher bit depth and EXR are WP-37.) |
+| Project bit depth of 8, 16 or 32-bit float, with linear-light blending. | High-end compositing avoids banding and blends light realistically. | **partial**: `film.master`, WP-37 (Masters are half-float linear ACEScg; compositing inside the player stays 8-bit sRGB (linear-light blending is WP-37).) |
 | ICC colour management: a working space, per-footage input profiles and output simulation. | Colour stays consistent across cameras, design files and deliverables. | **gap**: WP-37 (Everything is assumed sRGB (Grease Pencil colours are converted to linear internally); colour management is WP-37.) |
-| OpenColorIO and ACES colour management with display and view transforms plus OCIO effects. | Film and VFX pipelines share one colour space across every app. | **gap**: WP-37 (Planned in WP-37 (OpenColorIO, ACES).) |
+| OpenColorIO and ACES colour management with display and view transforms plus OCIO effects. | Film and VFX pipelines share one colour space across every app. | **command**: `film.master` (film.master manages colour with OpenColorIO 2.6 and its built-in ACES 2.1 studio config (ACEScg working space); film.from_master applies the inverse texture transform or the ACES output transform for review.) |
 | Colour correction effects: curves, levels, hue and saturation, colour balance, Lumetri, and LUT application. | Grading shots to a look and matching elements to each other. | **data**: `shots.json post {preset, grade, lut, vignette, grain}` (Film-wide finishing with presets (crisp, film, warm, cool, paper, noir), arbitrary ffmpeg grade filters and a .cube LUT. Per-shot grades and a colour script are WP-37.) |
 | HDR monitoring of compositions in HLG or PQ on local and external displays (25.2) and HDR metadata on export (25.4). | HDR deliverables are judged on a real HDR display while working. | **gap**: WP-37 (SDR only; an HDR master is in WP-37.) |
 | Colour scopes (waveform, vectorscope, histogram) for judging exposure and colour. | Graders check legal levels and balance objectively. | **partial**: `brand.check`, WP-24 (brand.check measures palette contrast and colour-blind separation; checks on rendered frames (colour-blind, flash) are WP-24. No scopes.) |
@@ -549,7 +549,7 @@ Sources: [Blender Manual: Grease Pencil (table of contents)](https://docs.blende
 |---|---|---|
 | Strokes rendered in EEVEE with SMAA thresholds and SSAA sample count for anti-aliasing. | Clean, smooth lines in final renders. | **command**: `shot.render` (renderer 'grease-pencil' renders with EEVEE at half resolution and upscales; DBE_GP_SAMPLES sets the samples.) |
 | Motion blur steps for strokes. | Natural blur on fast moves. | **gap**: WP-15 (Sub-frame motion blur on fast shots is WP-15.) |
-| A dedicated Grease Pencil render pass and per-view-layer inclusion. | Comp drawings separately from 3D. | **partial**: `shot.render`, WP-37 (Characters render with alpha and are composited over the set video; multi-pass output is WP-37.) |
+| A dedicated Grease Pencil render pass and per-view-layer inclusion. | Comp drawings separately from 3D. | **command**: `film.master` (Characters render with alpha over the set, and film.master writes beauty, line, fill and matte passes.) |
 | Transparent background rendering for compositing. | Lay drawn characters over painted or live backgrounds. | **command**: `shot.render` (The grease-pencil path renders RGBA frames composited over the SVG set by ffmpeg.) |
 | Output resolution, frame rate and colour view transform. | Deliver to spec. | **metric**: `qa.run` (qa.run checks 1080x1920 and 30 fps; the renderer uses the Standard view transform. Colour management (OCIO, ACES) is WP-37.) |
 | Save the drawing as a native, editable project for further work in the tool. | Hand a shot to a Blender artist for hand-finishing. | **gap**: WP-14 (shot.render writes build/shots/<id>.gp.json and frames, not a .blend; the feature map lists Grease Pencil project export as done, which WP-01 should correct. Saving the .blend fits WP-14 (renderer parity).) |
@@ -722,7 +722,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 | Groups, backdrops and waypoints to organise large graphs | Keep complex rigs and comps readable | **gap**: WP-20 (React Flow node view is WP-20) |
 | Display nodes to preview any branch | Inspect one part of the comp | **partial**: `shot.render`, WP-20 (A shot renders alone, or in another renderer for comparison; per-node preview is WP-20) |
 | Node and rig caching to speed up heavy scenes | Interactive playback of complex rigs | **partial**: `film.render`, WP-15 (Content-hash per shot and frame dedupe; static-layer cache is WP-15) |
-| Port filtering and multi-layer write outputs | Split one comp into many outputs | **gap**: WP-37 (Multi-pass output is WP-37) |
+| Port filtering and multi-layer write outputs | Split one comp into many outputs | **partial**: `film.master`, WP-37 (Multi-layer EXR output (beauty, line, fill, matte); port filtering is WP-37.) |
 
 ### Camera
 
@@ -849,7 +849,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 | Layout image export (layered) for background artists | Painters receive the camera framing | **partial**: `puppet.export_layers`, WP-16 (Characters export as layers; set layouts do not) |
 | Export to After Effects | Compositing in another package | **partial**: `export.lottie`, WP-22 (Lottie JSON for web and AE workflows; editor hand-offs are WP-22) |
 | Batch rendering of many scenes | Overnight renders on render machines | **partial**: `film.render`, `prod.launch`, WP-38 (Parallel workers per machine and films in parallel sessions; a render farm is WP-38) |
-| Cryptomattes and multi-pass EXR output | Compositors isolate objects after rendering | **gap**: WP-37 (OpenEXR multi-pass is WP-37) |
+| Cryptomattes and multi-pass EXR output | Compositors isolate objects after rendering | **partial**: `film.master`, WP-37 (Multi-pass EXR masters exist (beauty, line, fill, matte); cryptomattes are WP-37.) |
 
 ### Library & Templates
 
@@ -1102,7 +1102,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Real-time media connection: imported images update live when they are edited in another program. | Lets painters revise art while animators keep working. | **partial**: `puppet.export_layers`, `puppet.import`, WP-18 (There is a round trip by export and re-import, but no live link. Krita .kra import is WP-18.) |
 | Preview renders and preview animations (lower quality, quick). | Used to check timing and look before a full render. | **command**: `film.animatic`, `film.preview`, `shot.render` (The animatic takes seconds, the player preview is live, and one shot can be rendered alone.) |
 | Export animation to video and image sequences: MP4 (H.264 default in 14.5, H.265), MOV ProRes with alpha, AVI, PNG/TIFF/WebP/PSD sequences, animated GIF and SVG sequences. | Delivers to editors, platforms and compositors. | **partial**: `film.render`, `shot.render`, WP-23 (film.render delivers H.264 per the platform profiles. WebM and ProRes with alpha, GIF and APNG are WP-23.) |
-| OpenEXR export and import with bit depth, colour spaces (including ACEScg) and compression (14.5). | High-precision frames for compositing and post. | **gap**: WP-37 (OpenEXR multi-pass output and OCIO/ACES are in WP-37.) |
+| OpenEXR export and import with bit depth, colour spaces (including ACEScg) and compression (14.5). | High-precision frames for compositing and post. | **partial**: `film.master`, WP-37 (EXR export in half float with ACEScg (OCIO); EXR import is WP-37.) |
 | Moho Exporter: a batch render queue in a separate process, with per-item status and reruns (14.5). | Renders a whole episode's scenes overnight. | **partial**: `film.render`, `prod.status`, WP-38 (Async jobs, incremental re-render by content hash, and parallel film sessions on the board already exist. Distributed render workers are WP-38.) |
 | Export to game engines and Blender (14.4): glTF/GLB with rig, actions and Smart Bones as morph targets; FBX for Unity. | Lets 2D characters run inside games and 3D pipelines. | **gap**: WP-30 (Lottie (export.lottie) and Synfig (export.synfig) exist. Game runtime export (Godot, sprite sheets) is WP-30.) |
 | Export a single frame to SVG. | Used for print, marketing stills and vector hand-off. | **partial**: `film.storyboard`, `puppet.sheet`, WP-23 (Stills and model sheets exist (PNG, plus SVG from the Rig Canvas sheet). Print-ready transparent stills are WP-23.) |
@@ -1273,7 +1273,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 |---|---|---|
 | Read image sequences and movies in many formats (EXR, DPX, TIFF, PNG, JPEG, QuickTime, MXF, NotchLC) with a colourspace per file. | Bringing plates, CG renders and stock elements into a comp. | **partial**: `puppet.import`, `puppet.from_ink`, `doodle.snap`, `puppet.from_blend`, WP-36, WP-37 (Images enter as puppets (layered drawings, scans, photos, Blender rigs) or set background plates; a generic footage layer in a shot is WP-36 and EXR/OpenImageIO reading is WP-37.) |
 | Write renders as image sequences or movies with codec, bit depth, compression, alpha and colourspace options. | EXR to grading, ProRes to editorial, H.264 for review. | **partial**: `film.render`, `shot.render`, `export.web`, WP-23, WP-37 (Output is H.264 MP4 by platform profile (and Lottie, Synfig, web player exports); ProRes/WebM with alpha, GIF and APNG are WP-23, EXR masters WP-37.) |
-| Multi-layer EXR input and output carrying many named passes in one file. | CG lighters deliver one EXR per frame with all AOVs; comps write multi-pass masters. | **gap**: WP-37 (WP-37 scopes OpenEXR multi-pass output (beauty, line, shadow, mattes).) |
+| Multi-layer EXR input and output carrying many named passes in one file. | CG lighters deliver one EXR per frame with all AOVs; comps write multi-pass masters. | **command**: `film.master` (film.master writes multi-layer EXRs (beauty, line, fill, matte) per frame, read by OpenImageIO and ffmpeg.) |
 | Inspect, edit and copy file metadata (timecode, camera and lens data, colour info) and pass it downstream. | Driving a comp from camera metadata, stamping timecode, tracking where an element came from. | **partial**: `film.provenance`, `film.credits`, `film.get`, WP-26 (Doodleberry records what shaped a film (provenance.json, licence classes, credits) at film level, not per-frame image metadata; C2PA content credentials on finals are WP-26.) |
 | Timecode and frame-number offsets on writes to match editorial. | Renders slot straight into the editor's timeline. | **partial**: `film.cuts`, WP-22 (film.cuts writes an .srt and an OpenTimelineIO edit on each cut's clock; EDL/FCPXML with timecode is WP-22.) |
 | Burned-in slates and shot information (text driven by metadata) for dailies. | Every review clip shows shot, version, frame and artist. | **partial**: `film.storyboard`, `critic.pack`, WP-19 (Storyboard contact sheets and critic packets carry shot notes and times beside stills; a burn-in on review video belongs with the review room (WP-19).) |
@@ -1292,7 +1292,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Arbitrary named channels grouped into layers beyond RGBA (up to 1023 per script), flowing through the tree together. | Carrying render passes, mattes, depth and motion vectors alongside the beauty image. | **gap**: WP-37 (Doodleberry renders a single RGB picture; multi-pass output (beauty, line, shadow, mattes) is WP-37.) |
+| Arbitrary named channels grouped into layers beyond RGBA (up to 1023 per script), flowing through the tree together. | Carrying render passes, mattes, depth and motion vectors alongside the beauty image. | **partial**: `film.master`, WP-37 (Masters carry named layers (beauty, line, fill, matte); depth, motion vectors and arbitrary channels are WP-37.) |
 | Shuffling channels between layers (Shuffle). | Pulling one render pass into RGB to grade or inspect it. | **gap**: WP-36 (Needs a channel-aware compositor (WP-36).) |
 | Alpha handling with premultiply and unpremultiply to keep edges clean under colour correction. | Avoiding dark or bright fringes when grading a foreground element. | **partial**: `shot.render`, WP-36 (Internally Synfig and Grease Pencil characters are rendered with alpha and composited over the set video; user-level premultiplication control comes with the compositor (WP-36).) |
 | Copying channels from one stream to another (Copy, ChannelMerge). | Taking a matte from one render and applying it to another. | **gap**: WP-36 (Falls within the named work package's scope.) |
@@ -1396,11 +1396,11 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 | Range-based correction of shadows, midtones and highlights, with saturation and contrast. | Targeted fixes without keying. | **partial**: `film.render`, WP-36 (Possible through ffmpeg filters in post.grade, film-wide only.) |
 | Curve-based correction: hue against saturation or luminance, and RGB curves. | Shifting one colour range, such as skies or skin. | **partial**: `film.render`, WP-36 (ffmpeg curves and hue filters in post.grade; no per-layer curves.) |
 | Applying LUT files (.cube, .3dl). | Show looks and conversions supplied by the colourist. | **data**: `shots.json post.lut` (A .cube LUT in post finishing.) |
-| OCIO colour management: a working space, input transforms per file, output transforms, any config. | Consistent colour across every department and tool. | **gap**: WP-37 (OpenColorIO is in WP-37.) |
-| ACES workflows (ACEScg working space; ACES 2.0 in Nuke 17). | Industry-standard colour pipeline for VFX and features. | **gap**: WP-37 (Falls within the named work package's scope.) |
-| Viewer display transforms and looks. | Viewing the same linear data as it will appear on each display. | **gap**: WP-37 (Falls within the named work package's scope.) |
+| OCIO colour management: a working space, input transforms per file, output transforms, any config. | Consistent colour across every department and tool. | **command**: `film.master` (OpenColorIO working space ACEScg with the sRGB texture input transform and display transforms back (film.master, film.from_master).) |
+| ACES workflows (ACEScg working space; ACES 2.0 in Nuke 17). | Industry-standard colour pipeline for VFX and features. | **command**: `film.master` (ACEScg masters under the ACES 2.1 studio config (OpenColorIO 2.6).) |
+| Viewer display transforms and looks. | Viewing the same linear data as it will appear on each display. | **partial**: `film.from_master`, WP-37 (The ACES 2.1 output transform is offered as a review view (view=aces); looks are WP-37.) |
 | CDL import and export for grading round trips. | Matching the on-set or editorial grade in comp. | **gap**: WP-37 (Falls within the named work package's scope.) |
-| Scopes: histogram, waveform and vectorscope. | Measuring levels and colour objectively instead of by eye. | **gap**: WP-37 (No per-frame scopes; brand.check measures palette contrast and colour-blind separation. Should join WP-37.) |
+| Scopes: histogram, waveform and vectorscope. | Measuring levels and colour objectively instead of by eye. | **command**: `image.scopes` (image.scopes draws an RGB histogram, a luma waveform and a vectorscope for a frame, with clipping figures.) |
 | Automatic colour matching of one shot to a reference (MatchGrade, NukeX). | Matching inserts and pick-ups to the hero shot. | **gap**: WP-37 (Colour is palette data so shots already agree; a colour script and grades per scene are WP-37, palette variants WP-16.) |
 
 ### Filtering and spatial effects
@@ -1645,7 +1645,7 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 |---|---|---|
 | Scene settings that start from project defaults, with the option to save a scene's settings back as the new default. | Supervisors tune one scene and promote its settings to the whole show. | **data**: `shots.json size`, `shots.json fps`, `plan/channels/<id>.json brand` (Size and fps per film; brand kit, cast and voices inherited from the channel (WP-32).) |
 | Working units: inches, millimetres, centimetres, animation fields or pixels. | Paper animators lay out in fields to match their peg-bar paper. | **n/a** (Doodleberry works in pixels on fixed artboards (puppets in artboard units, frames 1080x1920); field units are a paper convention.) |
-| Scene frame rate, plus rendering at another rate by stretching. | The same scene is delivered at 24, 25 or 30 fps for cinema, PAL or NTSC. | **partial**: `film.create`, WP-37 (fps is set per film (30 is the QA bar) and stepped timing gives 12s, 8s or 6s; masters at other or higher frame rates are WP-37.) |
+| Scene frame rate, plus rendering at another rate by stretching. | The same scene is delivered at 24, 25 or 30 fps for cinema, PAL or NTSC. | **partial**: `film.master`, WP-37 (fps is set per film and masters render at any rate (frames are functions of time); stretching footage is WP-37.) |
 | Camera definition: frame size, aspect ratio, pixel resolution and DPI with locks, and saved resolution presets. | Layout sets the camera once per show so every scene renders to spec. | **command**: `film.render` (shots.json size sets the frame; film.render with aspect 16:9 or 1:1 re-stages the film natively (not a crop), with per-aspect overrides in shots.json aspects.) |
 | Viewer colour calibration through a 3D look-up table for a target colour space. | Colourists preview on calibrated monitors to match broadcast or cinema targets. | **gap**: WP-37 (A LUT can be applied to the output (shots.json post.lut), but display calibration and colour management (OpenColorIO, ACES) are WP-37.) |
 | Limits on undo memory and raster memory to keep long sessions stable. | Artists on heavy raster scenes cap memory to avoid crashes. | **n/a** (Renders are headless, frame-pure and per shot; there is no long interactive editing session to tune.) |
@@ -1840,13 +1840,13 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 | Output to image sequences and movies (PNG, TIF, TGA, MP4, WebM, GIF, MOV, APNG, sprite sheets). | Deliverables for editorial, web and games. | **partial**: `film.render`, `export.web`, `export.lottie`, WP-23 (MP4 (H.264/AAC), web player and Lottie exist; WebM and ProRes with alpha, GIF and APNG are WP-23, sprite sheets WP-30.) |
 | High bit depth, floating-point and linear-light rendering with gamma control. | Clean gradients and correct light blending for film delivery. | **gap**: WP-37 |
 | Rendering with an alpha channel. | Hand transparent animation to compositing. | **partial**: `shot.render`, WP-23 (Synfig and Grease Pencil render characters with alpha internally before compositing; alpha deliverables are WP-23.) |
-| Multiple rendering: separate outputs per column or FX branch. | Passes for later compositing (line, paint, shadow). | **gap**: WP-37 (OpenEXR multi-pass output (beauty, line, shadow, mattes) is WP-37.) |
+| Multiple rendering: separate outputs per column or FX branch. | Passes for later compositing (line, paint, shadow). | **command**: `film.master` (film.master renders separate passes (beauty, line, fill, matte) as layers of each EXR.) |
 | Stereoscopic output with a camera offset. | 3D cinema and VR releases. | **gap**: WP-37 (Not planned; it should join WP-37 as a delivery profile.) |
 | Frame range and step settings for partial renders. | Re-render only a fixed section or every nth frame for tests. | **partial**: `film.render`, `shot.render`, WP-20 (film.render takes only (a set of shots); arbitrary frame ranges would join WP-20's re-cook-only-what-changed work.) |
 | Soundtrack merged into movie output. | Picture and sound delivered together for review. | **command**: `film.render` (Voices, score and effects are mixed to -14 LUFS and muxed; stems are kept.) |
 | Batch render tasks with priorities and dependencies, saved and reloaded. | Render queues run overnight. | **partial**: `prod.launch`, `prod.status`, WP-38 (Commands run as async jobs and production sessions queue beyond max_parallel; a render queue across workers is WP-38.) |
 | Multithreaded, tiled rendering to control memory on heavy scenes. | Large frames render without running out of memory. | **command**: `film.render` (One browser per CPU on frame ranges, frame-hash dedupe of repeats.) |
-| Clapperboard (slate) frames added to renders. | Editorial identifies scene, take and version from the first frames. | **gap**: WP-37 (No slate; it should join WP-37's delivery profiles (or WP-22 editor hand-off).) |
+| Clapperboard (slate) frames added to renders. | Editorial identifies scene, take and version from the first frames. | **command**: `film.master` (Masters start with a slate (title, resolution, fps, frames, colour, passes, OCIO config, version) as an EXR and a PNG.) |
 
 ### Using the Toonz farm
 
@@ -1913,7 +1913,7 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 | Screentone fills (1.8). | Manga-style tone shading. | **gap**: WP-15 (Joins WP-15's medium and style passes.) |
 | Stroke replication (symmetry-style drawing) and improved perspective/assistant guides (1.8). | Symmetrical props and correct perspective in backgrounds. | **gap**: WP-18 |
 | New effects: Flow effect series and Floor Bump (1.7), Smoother and lazy-brush style effects (1.8). | Painterly flow-driven distortion and line smoothing. | **gap**: WP-36 |
-| OpenEXR image support (1.6) and floating-point linear rendering (1.7). | Film-grade intermediates. | **gap**: WP-37 |
+| OpenEXR image support (1.6) and floating-point linear rendering (1.7). | Film-grade intermediates. | **partial**: `film.master`, WP-37 (Half-float linear (ACEScg) EXR output exists; EXR input is WP-37.) |
 | Multithreaded FFmpeg encoding (1.6) and faster MP4 renders with audio (1.7). | Shorter turnaround for review movies. | **command**: `film.render` (Parallel capture plus -tune animation encoding.) |
 | Pasting images from the system clipboard, custom panels and a see-through main window (1.7, 1.8). | Interactive conveniences for artists. | **n/a** (Desktop UI conveniences; Doodleberry is driven by commands.) |
 | Camera capture for stop motion and pencil tests, with camera calibration (1.6); Tahoma2D adds DSLR support through Canon SDK and gphoto. | Capture paper pencil tests or puppets frame by frame. | **gap**: WP-35 (actout.clip uses a webcam for performance capture, not frame capture; stop-motion capture should join WP-35 (drawn levels as image sequences).) |
@@ -2516,7 +2516,7 @@ Sources: [TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and s
 | A search engine across brushes, panels, shortcuts, clips, layers, library and projects (12.1). | Finds tools and assets quickly in large configurations. | **command**: `engine.commands`, `cast.list` (Commands are listed with their schemas, and the cast library lists puppets with licence and voice.) |
 | Loop playback over a selected frame range (12.1). | Reviews one action repeatedly while fixing it. | **partial**: `film.preview`, WP-19 (The player scrubs and plays; range loops in review are in WP-19.) |
 | Official ProRes encoding on every operating system (12.1). | Broadcast and post-production deliveries. | **gap**: WP-23 (ProRes with alpha is in WP-23.) |
-| Faster handling of projects above 4K (12.1). | Feature-film and print resolutions. | **partial**: `film.render`, WP-37 (Vector art renders at any resolution; 4K masters and EXR passes are in WP-37.) |
+| Faster handling of projects above 4K (12.1). | Feature-film and print resolutions. | **command**: `film.master` (film.master renders 4K (or any multiple of the film size) EXR masters; vector art stays sharp at any size.) |
 
 ### Licenses
 

@@ -3,6 +3,17 @@
  "bpm": 100,
  "offset_s": 0,
  "sections": [
-  {"kind": "main", "from_beat": 0, "to_beat": 17, "chords": ["C", "G", "Am", "F"], "end_chord": "C"}
+  {
+   "kind": "main",
+   "from_beat": 0,
+   "to_beat": 17,
+   "chords": [
+    "C",
+    "Am",
+    "F",
+    "C"
+   ],
+   "end_chord": "C"
+  }
  ]
 }

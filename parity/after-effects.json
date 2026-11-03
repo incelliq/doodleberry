@@ -1258,11 +1258,12 @@
      "capability": "Project bit depth of 8, 16 or 32-bit float, with linear-light blending.",
      "pro_use": "High-end compositing avoids banding and blends light realistically.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.master",
        "WP-37"
       ],
-      "note": "8-bit sRGB pipeline (Chromium capture to H.264); higher bit depth and EXR are WP-37."
+      "note": "Masters are half-float linear ACEScg; compositing inside the player stays 8-bit sRGB (linear-light blending is WP-37)."
      }
     },
     {
@@ -1282,11 +1283,11 @@
      "capability": "OpenColorIO and ACES colour management with display and view transforms plus OCIO effects.",
      "pro_use": "Film and VFX pipelines share one colour space across every app.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "film.master"
       ],
-      "note": "Planned in WP-37 (OpenColorIO, ACES)."
+      "note": "film.master manages colour with OpenColorIO 2.6 and its built-in ACES 2.1 studio config (ACEScg working space); film.from_master applies the inverse texture transform or the ACES output transform for review."
      }
     },
     {

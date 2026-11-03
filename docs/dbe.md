@@ -417,6 +417,19 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   50%); depth against "lower is nearer" on Geometry Nodes renders with their true depth (pixel pairs ordered right:
   99.7% against 88.6%).
 
+## Film-grade masters (WP-37, part 1)
+- `film.master {name, scale: 2, fps: 0, passes}` renders the film from the SVG player at `scale` times its size (4K for
+  a 1080x1920 film) and any frame rate, in four passes (beauty; line: the visible ink, un-composited from white;
+  fill: flat colour without ink; matte: the characters' coverage), and writes one multi-layer OpenEXR per frame:
+  half float, premultiplied, ACEScg through OpenColorIO 2.6's built-in ACES 2.1 studio config, lossless ZIP. The
+  package in `films/<name>/build/master/` adds a slate (EXR and PNG), the mixed audio (24-bit WAV), captions and a
+  checksum manifest, and records that OpenImageIO and ffmpeg read the files.
+- `film.from_master {name, size, view}` derives the social encode from the master (`build/final_from_master.mp4`): the
+  beauty layer back to sRGB (the inverse texture transform, so the colours are exactly the artist's; `view: "aces"`
+  gives the ACES output transform for review), scaled and encoded with the master's audio, checked by the QA bar and
+  compared with the film's own render.
+- `image.scopes {image}`: histogram, waveform and vectorscope of a frame.
+
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
 and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their

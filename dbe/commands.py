@@ -2392,6 +2392,10 @@ def test_golden(update=False, film=""):
         bad, meas = _assists_test()
         failed += 1 if bad else 0
         results.append({"assists": "in-betweens and depth beat their baselines; assist outputs flagged at posting by licence", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "master":   # film-grade masters (WP-37): ACEScg multi-pass EXR, exact round trip, reference readers
+        bad, meas = _master_test()
+        failed += 1 if bad else 0
+        results.append({"master": "multi-pass ACEScg EXR read by oiiotool and ffmpeg; the colour round trip is exact", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -4274,4 +4278,172 @@ def _assists_test():
     meas["posting"] = {"depth_small": flags["small"], "depth_base": flags["base"], "rife_level": {"listed": [u["id"] for u in pv["used"]], "flags": pv["flags"]}}
     if flags["small"] or not flags["base"] or pv["flags"] or "rife49" not in [u["id"] for u in pv["used"]]:
         bad.append({"posting": meas["posting"]})
+    return bad, meas
+
+
+# ---------------- film-grade colour and delivery (WP-37) ----------------
+def _master_frame(job):
+    from . import master as MA
+    frames_dir, f, out, meta = job
+    MA.write_exr(out, MA.layers_for(frames_dir, f), {**meta, "frame": f})
+    return f
+
+
+@command("film.master", name=("string", "film"), scale=("integer", "times the film size (2: 4K for a 1080x1920 film)", 2),
+         fps=("integer", "frame rate of the master (0: the film's own; higher works, frames are functions of time)", 0),
+         passes=("array", "beauty, line, fill, matte", None))
+def film_master(name, scale=2, fps=0, passes=None):
+    """Render a film's master (WP-37): every frame at `scale` times its size as a multi-pass OpenEXR (beauty, line,
+    fill, matte layers; half float, premultiplied, ACEScg through OpenColorIO's ACES 2.1 studio config, lossless ZIP),
+    with a slate, the mixed audio, captions and a checksum manifest in films/<name>/build/master/ (a cinema-style
+    package). Checks the files with reference readers (oiiotool, ffmpeg). The social encodes come from this master
+    (film.from_master)."""
+    import shutil
+    import time
+    from multiprocessing import Pool
+    from . import master as MA
+    d = _film(name); s = _shots(name)
+    passes = passes or ["beauty", "line", "fill", "matte"]
+    out = d / "build" / "master"; shutil.rmtree(out, ignore_errors=True)
+    tmp = d / "build" / "master_png"; shutil.rmtree(tmp, ignore_errors=True)
+    t0 = time.time()
+    r = subprocess.run(["node", "tools/master.mjs", str(_player_page(name)), str(tmp), str(scale), str(fps or s.get("fps", 30)), ",".join(passes)],
+                       cwd=ROOT, capture_output=True, text=True, timeout=14400)
+    if r.returncode != 0:
+        raise RuntimeError(f"master render failed: {(r.stderr or r.stdout)[-1500:]}")
+    info = [json.loads(l) for l in r.stdout.splitlines() if l.startswith("{")]
+    n, mfps, size = info[0]["frames"], info[0]["fps"], info[0]["size"]
+    t_render = time.time() - t0
+    (out / "exr").mkdir(parents=True)
+    meta = {"film": name, "colorspace": MA.WORK, "ocio_config": MA.CONFIG, "passes": ",".join(passes), "fps": mfps, "software": "Doodleberry (SVG player, WP-37)"}
+    jobs = [(str(tmp), f, str(out / "exr" / f"{name}.{f:05d}.exr"), meta) for f in range(n)]
+    with Pool(max(1, (os.cpu_count() or 2))) as pool:
+        list(pool.imap_unordered(_master_frame, jobs, chunksize=2))
+    t_exr = time.time() - t0 - t_render
+    title = (_json(d / "titles.json", {}) or {}).get("titles", [{}])[0].get("text") or s.get("title", name)
+    sinfo = {"title": title, "film": name, "resolution": f"{size[0]} x {size[1]}", "fps": mfps, "frames": n, "duration": f"{n / mfps:.2f} s",
+             "colour": f"{MA.WORK} (ACES 2.1), half float, premultiplied", "passes": ", ".join(passes), "ocio": MA.CONFIG.replace("ocio://", ""),
+             "version": subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()}
+    MA.slate(out / "slate.png", sinfo, size)
+    sl = MA._png(out / "slate.png")
+    MA.write_exr(out / "exr" / f"{name}.slate.exr", {"beauty": {"R": MA.to_space(sl[..., :3], MA.SRC_SPACE, MA.WORK)[..., 0], "G": MA.to_space(sl[..., :3], MA.SRC_SPACE, MA.WORK)[..., 1],
+                                                               "B": MA.to_space(sl[..., :3], MA.SRC_SPACE, MA.WORK)[..., 2], "A": sl[..., 3]}}, {**meta, "frame": "slate"})
+    (out / "audio").mkdir()
+    final = d / "build" / "final.mp4"
+    if final.exists():
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(final), "-vn", "-ac", "2", "-ar", "48000", "-c:a", "pcm_s24le", str(out / "audio" / "mix.wav")], check=True)
+    for cap in ("captions.srt", "captions.vtt"):
+        if (d / "build" / cap).exists():
+            shutil.copy(d / "build" / cap, out / cap)
+    shutil.rmtree(tmp, ignore_errors=True)
+    # reference readers: OpenImageIO lists the layers; ffmpeg decodes the beauty layer
+    first = out / "exr" / f"{name}.00000.exr"
+    oi = subprocess.run(["oiiotool", "--info", "-v", str(first)], capture_output=True, text=True).stdout
+    ff = subprocess.run(["ffmpeg", "-v", "error", "-layer", "beauty", "-i", str(first), "-frames:v", "1", "-f", "null", "-"], capture_output=True, text=True)
+    chans = next((l.split(":", 1)[1].strip() for l in oi.splitlines() if "channel list" in l), "")
+    readers = {"oiiotool": {"ok": f"{size[0]} x {size[1]}" in oi and "beauty.R" in chans, "channels": chans},
+               "ffmpeg": {"ok": ff.returncode == 0, "error": ff.stderr[-300:]}}
+    manifest = {"film": name, "title": title, "size": size, "fps": mfps, "frames": n, "colour": {"space": MA.WORK, "config": MA.CONFIG, "encoding": "half, premultiplied"},
+                "passes": passes, "slate": "exr/" + f"{name}.slate.exr", "readers": readers}
+    manifest["checksums"] = MA.checksums(out)
+    (out / "MANIFEST.json").write_text(json.dumps(manifest, indent=1))
+    gb = sum(p.stat().st_size for p in out.rglob("*") if p.is_file()) / 1e9
+    return {"master": str(out.relative_to(ROOT)), "frames": n, "size": size, "fps": mfps, "passes": passes, "readers": readers,
+            "seconds": {"render": round(t_render, 1), "exr": round(t_exr, 1)}, "gigabytes": round(gb, 2)}
+
+
+@command("film.from_master", name=("string", "film"), size=("array", "encode size (default: the film's own)", None),
+         view=("string", "texture (back exactly as the artist's colours) | aces (the ACES 2.1 output transform, for review)", "texture"))
+def film_from_master(name, size=None, view="texture"):
+    """Derive the social encode from the master (WP-37): each EXR's beauty layer goes from ACEScg back to sRGB through
+    OpenColorIO, is scaled to the delivery size and encoded (H.264, the master's mixed audio) to
+    build/final_from_master.mp4, then checked by the film QA bar. Reports how close it is to the film's own render."""
+    import math
+    import numpy as np
+    from PIL import Image
+    from . import master as MA
+    d = _film(name); s = _shots(name); out = d / "build" / "master"
+    man = _json(out / "MANIFEST.json")
+    if not man:
+        raise FileNotFoundError("no master: run film.master first")
+    W, H = size or s.get("size", [1080, 1920])
+    dst = d / "build" / "final_from_master.mp4"
+    frames = sorted((out / "exr").glob(f"{name}.[0-9]*.exr"))
+    cmd = ["ffmpeg", "-v", "error", "-y", "-f", "image2pipe", "-framerate", str(man["fps"]), "-c:v", "png", "-i", "-"]
+    if (out / "audio" / "mix.wav").exists():
+        cmd += ["-i", str(out / "audio" / "mix.wav"), "-c:a", "aac", "-b:a", "192k", "-shortest"]
+    cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "16", "-pix_fmt", "yuv420p", "-tune", "animation", "-movflags", "+faststart", str(dst)]
+    pr = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    probe = {}
+    for i, f in enumerate(frames):
+        rgb = MA.display(MA.read_exr(f), view)
+        im = Image.fromarray(rgb).resize((W, H), Image.LANCZOS)
+        if i in (0, len(frames) // 2, len(frames) - 1):
+            probe[i] = np.asarray(im).astype(np.float32)
+        import io as _io
+        b = _io.BytesIO(); im.save(b, "PNG", compress_level=1); pr.stdin.write(b.getvalue())
+    pr.stdin.close(); pr.wait()
+    if pr.returncode != 0:
+        raise RuntimeError("encode failed")
+    # closeness to the film's own render (its final.mp4), frame by frame at three points
+    psnr = {}
+    own = d / "build" / "final.mp4"
+    if own.exists():
+        for i, a in probe.items():
+            raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(own), "-vf", f"select=eq(n\\,{i})", "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+            if len(raw) == W * H * 3:
+                b = np.frombuffer(raw, np.uint8).reshape(H, W, 3).astype(np.float32)
+                mse = float(((a - b) ** 2).mean())
+                psnr[i] = round(10 * math.log10(255 ** 2 / max(mse, 1e-9)), 2)
+    qa = subprocess.run([PY, "engine/qa.py", f"films/{name}", "--video", "build/final_from_master.mp4"], cwd=ROOT, capture_output=True, text=True)
+    return {"encode": str(dst.relative_to(ROOT)), "frames": len(frames), "size": [W, H], "view": view, "psnr_vs_own_render_db": psnr,
+            "qa": (qa.stdout or qa.stderr)[-1200:]}
+
+
+@command("image.scopes", image=("string", "a picture (path in the repo)"), out=("string", "where to write the scopes PNG", "out/scopes.png"))
+def image_scopes(image, out="out/scopes.png"):
+    """Scopes for a frame (WP-37): RGB histogram, luma waveform and vectorscope side by side; returns the luma range and
+    how much of the picture is clipped."""
+    import numpy as np
+    from PIL import Image
+    from . import master as MA
+    a = np.asarray(Image.open(ROOT / image).convert("RGB"))
+    Image.fromarray(MA.scopes(a)).save(ROOT / out)
+    Y = 0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2]
+    return {"scopes": out, "luma": [int(Y.min()), int(Y.max())], "clipped_white": round(float((a >= 255).all(axis=2).mean()), 4),
+            "clipped_black": round(float((a <= 0).all(axis=2).mean()), 4)}
+
+
+def _master_test():
+    """WP-37 checks on a short span of stretch-demo at 1x: the four passes become one ACEScg EXR (layers, AP1
+    chromaticities) that oiiotool and ffmpeg read, the beauty layer converts back to exactly the rendered pixels, the
+    line pass keeps only visible ink, and scopes compute"""
+    import shutil
+    import numpy as np
+    from . import master as MA
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "mastertest"; shutil.rmtree(tmp, ignore_errors=True)
+    r = subprocess.run(["node", "tools/master.mjs", str(_player_page("stretch-demo")), str(tmp), "1", "30", "beauty,line,fill,matte", "3.0", "3.1"],
+                       cwd=ROOT, capture_output=True, text=True, timeout=600)
+    if r.returncode != 0:
+        return [{"render": r.stderr[-400:]}], meas
+    ex = tmp / "t.exr"
+    MA.write_exr(ex, MA.layers_for(tmp, 0), {"film": "stretch-demo", "colorspace": MA.WORK})
+    oi = subprocess.run(["oiiotool", "--info", "-v", str(ex)], capture_output=True, text=True).stdout
+    ff = subprocess.run(["ffmpeg", "-v", "error", "-layer", "beauty", "-i", str(ex), "-frames:v", "1", "-f", "null", "-"], capture_output=True, text=True)
+    back = MA.display(MA.read_exr(ex)).astype(int)
+    own = (MA._png(tmp / "beauty" / "f_00000.png")[..., :3] * 255 + 0.5).astype(int)
+    line = MA.read_exr(ex, "line"); fill = MA.read_exr(ex, "fill"); matte = MA.read_exr(ex, "matte")
+    meas = {"channels": next((l.split(":", 1)[1].strip() for l in oi.splitlines() if "channel list" in l), ""),
+            "chromaticities_ap1": "0.713, 0.293, 0.165, 0.83, 0.128, 0.044, 0.32168, 0.33767" in oi, "ffmpeg_reads": ff.returncode == 0,
+            "round_trip_max_error": int(np.abs(back - own).max()), "line_coverage": round(float((line[..., 3] > 0.5).mean()), 4),
+            "fill_coverage": round(float((fill[..., 3] > 0.5).mean()), 4), "matte_coverage": round(float((matte[..., 3] > 0.5).mean()), 4)}
+    sc = MA.scopes(np.clip(back, 0, 255).astype(np.uint8))
+    meas["scopes"] = list(sc.shape)
+    if not (meas["chromaticities_ap1"] and meas["ffmpeg_reads"] and "beauty.R" in meas["channels"] and "matte.A" in meas["channels"]):
+        bad.append({"readers": meas})
+    if meas["round_trip_max_error"] > 1:
+        bad.append({"round_trip": meas["round_trip_max_error"]})
+    if not (0 < meas["line_coverage"] < meas["fill_coverage"] and 0 < meas["matte_coverage"] < 1):
+        bad.append({"passes": meas})
     return bad, meas

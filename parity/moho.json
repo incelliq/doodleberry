@@ -1896,11 +1896,12 @@
      "capability": "OpenEXR export and import with bit depth, colour spaces (including ACEScg) and compression (14.5).",
      "pro_use": "High-precision frames for compositing and post.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.master",
        "WP-37"
       ],
-      "note": "OpenEXR multi-pass output and OCIO/ACES are in WP-37."
+      "note": "EXR export in half float with ACEScg (OCIO); EXR import is WP-37."
      }
     },
     {

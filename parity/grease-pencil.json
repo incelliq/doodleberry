@@ -2092,12 +2092,11 @@
      "capability": "A dedicated Grease Pencil render pass and per-view-layer inclusion.",
      "pro_use": "Comp drawings separately from 3D.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "shot.render",
-       "WP-37"
+       "film.master"
       ],
-      "note": "Characters render with alpha and are composited over the set video; multi-pass output is WP-37."
+      "note": "Characters render with alpha over the set, and film.master writes beauty, line, fill and matte passes."
      }
     },
     {

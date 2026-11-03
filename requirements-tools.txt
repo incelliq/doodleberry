@@ -1,3 +1,5 @@
 # optional tools for drawing import and export (python -m pip install -r requirements-tools.txt)
 psd-tools==1.26.0   # MIT: PSD layers in and out
 mediapipe==1.2.0    # Apache-2.0: Act it out (plan 3.5); its native library needs libEGL (apt install libegl1)
+opencolorio==2.6.0  # BSD-3-Clause: colour management with the built-in ACES configs (film.master, WP-37)
+OpenEXR==3.5.3      # BSD-3-Clause: multi-pass EXR masters (film.master, WP-37)

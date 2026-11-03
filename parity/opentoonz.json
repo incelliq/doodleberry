@@ -509,10 +509,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.create",
+       "film.master",
        "WP-37"
       ],
-      "note": "fps is set per film (30 is the QA bar) and stepped timing gives 12s, 8s or 6s; masters at other or higher frame rates are WP-37."
+      "note": "fps is set per film and masters render at any rate (frames are functions of time); stretching footage is WP-37."
      }
     },
     {
@@ -2158,11 +2158,11 @@
      "capability": "Multiple rendering: separate outputs per column or FX branch.",
      "pro_use": "Passes for later compositing (line, paint, shadow).",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "film.master"
       ],
-      "note": "OpenEXR multi-pass output (beauty, line, shadow, mattes) is WP-37."
+      "note": "film.master renders separate passes (beauty, line, fill, matte) as layers of each EXR."
      }
     },
     {
@@ -2235,11 +2235,11 @@
      "capability": "Clapperboard (slate) frames added to renders.",
      "pro_use": "Editorial identifies scene, take and version from the first frames.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-37"
+       "film.master"
       ],
-      "note": "No slate; it should join WP-37's delivery profiles (or WP-22 editor hand-off).",
+      "note": "Masters start with a slate (title, resolution, fps, frames, colour, passes, OCIO config, version) as an EXR and a PNG.",
       "added_to_scope": true
      }
     }
@@ -2677,11 +2677,12 @@
      "capability": "OpenEXR image support (1.6) and floating-point linear rendering (1.7).",
      "pro_use": "Film-grade intermediates.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "film.master",
        "WP-37"
       ],
-      "note": ""
+      "note": "Half-float linear (ACEScg) EXR output exists; EXR input is WP-37."
      }
     },
     {

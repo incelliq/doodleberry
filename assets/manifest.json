@@ -307,6 +307,18 @@
    "class": "non-commercial",
    "source": "https://huggingface.co/depth-anything/Depth-Anything-V2-Base",
    "use": "optional higher-quality depth (depth.planes model=depth_base); outputs are flagged at posting"
+  },
+  {
+   "name": "OpenColorIO 2.6.0 (Python, opencolorio on PyPI) with the built-in ACES 2.1 studio config",
+   "license": "BSD-3-Clause",
+   "class": "permissive",
+   "use": "colour management for film masters (film.master, film.from_master, WP-37); pip-installed, not committed"
+  },
+  {
+   "name": "OpenEXR 3.5.3 (Python, OpenEXR on PyPI)",
+   "license": "BSD-3-Clause",
+   "class": "permissive",
+   "use": "multi-pass EXR masters (WP-37); pip-installed, not committed"
   }
  ],
  "external": [

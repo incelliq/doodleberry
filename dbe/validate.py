@@ -80,6 +80,12 @@ def film(d):
             for _, pose in (c.get("timeline") or {}).get("poses", []):
                 if "__presets__:" + str(pose) not in have and pose not in (json.loads(pp.read_text()).get("poses") or {}):
                     warns.append(f"shot {s['id']}: pose {pose!r} is neither a {tpl} preset nor one of the puppet's poses")
+    score = json.loads((d / "score.json").read_text()) if (d / "score.json").exists() else None
+    palette = {"F", "Dm", "Bb", "C", "Gm", "Am"}   # engine/audio.py CHORDS: the music engine's F major palette
+    for sec in (score or {}).get("sections", []):
+        bad = sorted({c for c in sec.get("chords", []) + ([sec["end_chord"]] if sec.get("end_chord") else []) if c not in palette})
+        if bad:
+            errs.append(f"score.json: chords {bad} are not in the palette ({', '.join(sorted(palette))})")
     nums = [(s["id"], s["start"], s["end"]) for s in shots["shots"] if isinstance(s["start"], (int, float)) and isinstance(s["end"], (int, float))]
     for a, b in zip(nums, nums[1:]):
         if abs(a[2] - b[1]) > 1e-6:
