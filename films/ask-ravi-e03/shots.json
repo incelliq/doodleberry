@@ -54,6 +54,12 @@
       ],
       "springs": true,
       "visemes_from": "momo",
+      "emotion": [
+       [
+        0.4,
+        "neutral"
+       ]
+      ],
       "look": [
        [
         0.6,
@@ -76,11 +82,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -112,7 +114,7 @@
      "place": {
       "x": 300,
       "y": 1540,
-      "s": 1.05
+      "s": 1.338
      },
      "timeline": {
       "clips": [
@@ -144,6 +146,12 @@
       ],
       "springs": true,
       "visemes_from": "momo",
+      "emotion": [
+       [
+        5.1,
+        "neutral"
+       ]
+      ],
       "look": [
        [
         5.3,
@@ -171,7 +179,7 @@
      "place": {
       "x": 780,
       "y": 1540,
-      "s": 1.05
+      "s": 1.338
      },
      "timeline": {
       "clips": [
@@ -204,6 +212,12 @@
       ],
       "springs": true,
       "visemes_from": "ravi",
+      "emotion": [
+       [
+        9.8,
+        "neutral"
+       ]
+      ],
       "look": [
        [
         5.15,
@@ -236,11 +250,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -263,7 +273,9 @@
    "end_line": "button",
    "bubbles": false,
    "camera_auto": {
-    "handheld": 0.3
+    "handheld": 0.3,
+    "zoom_single": 1.55,
+    "zoom": 1.2
    },
    "cast": [
     {
@@ -272,7 +284,7 @@
      "place": {
       "x": 300,
       "y": 1540,
-      "s": 1.05
+      "s": 1.317
      },
      "timeline": {
       "clips": [
@@ -305,6 +317,12 @@
       ],
       "springs": true,
       "visemes_from": "momo",
+      "emotion": [
+       [
+        16.722,
+        "neutral"
+       ]
+      ],
       "look": [
        [
         16.922,
@@ -339,7 +357,7 @@
      "place": {
       "x": 780,
       "y": 1540,
-      "s": 1.05
+      "s": 1.317
      },
      "timeline": {
       "clips": [
@@ -393,6 +411,12 @@
       ],
       "springs": true,
       "visemes_from": "ravi",
+      "emotion": [
+       [
+        19.2,
+        "neutral"
+       ]
+      ],
       "look": [
        [
         16.772,
@@ -433,11 +457,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]

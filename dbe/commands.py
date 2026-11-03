@@ -3788,7 +3788,7 @@ def farm_render(name, workers=3, pin=True, cache=True, fresh=False, assemble=Tru
            "rendered": len(done), "from_cache": sum(1 for r in rows if r["from"] == "cache"), "queue": str(q.relative_to(ROOT)), "peak_rss_mb": peak,
            "one_core_s": round(sum(x["seconds"] for x in done), 1)}   # the same shots one after another on one core
     if assemble:
-        r = film_render(name); out["render"] = {"skipped": len(r.get("skipped") or []), "qa_failures": sorted(k for k, v in (r.get("qa") or {}).items() if v is False)}
+        r = film_render(name); out["render"] = {"skipped": len(r.get("unchanged") or []), "qa_failures": sorted(k for k, v in (r.get("qa") or {}).items() if v is False)}
     out["total_wall_s"] = round(_t.time() - t0, 1)
     return out
 
@@ -9254,10 +9254,16 @@ def _farm_test():
         film_from_template(name, "dialogue", _farm_brief(6)); voice_build(name); retime(name); acting_plan(name)
         one = farm_render(name, workers=1, fresh=True, cache=False, assemble=False)
         shots = sorted((FILMS / name / "build" / "shots").glob("s*.mp4")); shots = [p for p in shots if p.name.count(".") == 1]
-        md1 = {p.name: _framemd5(p) for p in shots}
-        three = farm_render(name, workers=3, fresh=True, cache=True, assemble=True)
-        md3 = {p.name: _framemd5(p) for p in shots}
+        md1 = {p.name: _framemd5(p) for p in shots}; keys1 = {p.name: (_json(Path(str(p) + ".keys.json"), {}) or {}).get("frames") for p in shots}
+        three = farm_render(name, workers=3, fresh=True, cache=False, assemble=True)   # rendered, not taken from any cache
+        md3 = {p.name: _framemd5(p) for p in shots}; keys3 = {p.name: (_json(Path(str(p) + ".keys.json"), {}) or {}).get("frames") for p in shots}
         diff = [k for k in md1 if md1[k] != md3.get(k)]
+        meas["three_from"] = {r["shot"]: r["from"] for r in three["shots"]}
+        for k in diff:   # where, and whether the frame's markup (what was drawn) or only its pixels (how it was rasterised) changed
+            f = next((i for i, (x, y) in enumerate(zip(md1[k], md3[k])) if x != y), None)
+            ka, kb = (keys1.get(k) or [None] * (f + 1 if f is not None else 1)), (keys3.get(k) or [])
+            meas.setdefault("first_differing_frame", {})[k] = {"frame": f, "of": len(md1[k]), "frames_differing": sum(x != y for x, y in zip(md1[k], md3[k])),
+                                                                "markup_differs": (ka[f] != kb[f]) if f is not None and f < len(ka) and f < len(kb) else None}
         ratio = round(three["shots_wall_s"] / max(1e-6, one["shots_wall_s"]), 3)
         meas.update({"one_worker_s": one["shots_wall_s"], "three_workers_s": three["shots_wall_s"], "ratio": ratio, "busy": three["worker_busy_s"],
                      "frames": sum(len(v) for v in md1.values()), "shots_differing": diff, "assembled": three.get("render")})
@@ -9272,13 +9278,15 @@ def _farm_test():
             bad.append(f"three workers took {ratio} of one worker's time (the best split of these shots: {ideal})")
         if (three.get("render") or {}).get("skipped") != len(shots):
             bad.append(f"assembly re-rendered shots: {three.get('render')}")
-        for p in shots:
+        from . import farm as FM
+        for p in shots:   # the shared cache: what the three workers rendered goes in, then every shot comes back from it
+            FM.cache_put((p.parent / p.name.replace(".mp4", ".hash")).read_text().strip(), p)
             p.unlink()
         again = farm_render(name, workers=3, cache=True, assemble=False)
         meas["second_run"] = {"from_cache": again["from_cache"], "rendered": again["rendered"], "wall_s": again["shots_wall_s"]}
         if again["from_cache"] != len(shots) or again["rendered"]:
             bad.append(f"the cache did not serve every shot: {meas['second_run']}")
-        if [_framemd5(p) for p in shots] != [md1[p.name] for p in shots]:
+        if [_framemd5(p) for p in shots] != [md3[p.name] for p in shots]:
             bad.append("cached shots differ from the rendered ones")
     finally:
         shutil.rmtree(FILMS / name, ignore_errors=True)
