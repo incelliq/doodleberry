@@ -51,7 +51,8 @@ def degrades(renderer, shot):
     return sorted(k for k, ok in DEGRADES.items() if renderer not in ok and (k != "line boil" or st.get("boil")))
 
 
-SHOT_EXTRAS = ("props", "fx", "comp")   # drawn by the SVG renderer around the characters, not by the characters
+SHOT_EXTRAS = ("props", "fx")   # drawn by the SVG renderer around the characters, not by them (compositor planes move
+                                # the characters themselves, with parallax, so they still refuse the comparison)
 
 
 def needs(shot, puppets):
@@ -196,7 +197,7 @@ def run(name, shot, times=None, renderers=("synfig", "lottie", "grease-pencil"),
     times = times or [round(dur * k, 3) for k in (0.2, 0.5, 0.8)]
     out = ROOT / "out" / "rparity" / name / shot; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
     refp = stills_svg(C, name, shot, times, out); ref = [silhouette(p) for p in refp]; refc = [rgba(p) for p in refp]
-    # parity compares the characters drawn alone: shot-level extras (props, effects, planes, toon) are not part of it,
+    # parity compares the characters drawn alone: shot-level extras (props, effects) are not part of it,
     # so they do not refuse the comparison (shot.render still refuses them for a full render); they are listed instead
     cast_sh = {k: v for k, v in sh.items() if k not in SHOT_EXTRAS}
     res = {"film": name, "shot": shot, "times": times, "needs": sorted(needs(cast_sh, puppets)), "not_compared": sorted(needs(sh, puppets) - needs(cast_sh, puppets)),
