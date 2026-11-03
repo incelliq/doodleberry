@@ -153,12 +153,12 @@
   {
    "path": "vendor/vtracer/",
    "kind": "code",
-   "name": "VTracer 0.6.4 (source)",
+   "name": "VTracer 0.6.5 (source)",
    "license": "MIT OR Apache-2.0",
    "class": "permissive",
    "license_file": "vendor/vtracer/LICENSE-MIT",
    "source": "https://github.com/visioncortex/vtracer",
-   "attribution": "VTracer 0.6.4 (source) (MIT OR Apache-2.0)",
+   "attribution": "VTracer 0.6.5 (source) (MIT OR Apache-2.0)",
    "used_by": [
     "tools"
    ],

@@ -1,15 +1,20 @@
 {
  "name": "vtracer",
  "repository": "https://github.com/visioncortex/vtracer",
- "version": "0.6.4",
- "archive": "https://crates.io/api/v1/crates/vtracer/0.6.4/download",
- "sha256": "0284600a455d51806b914892342e6048de96fbbecccca846b47d41df9951b493",
+ "version": "0.6.5",
+ "archive": "https://crates.io/api/v1/crates/vtracer/0.6.5/download",
+ "sha256": "c2307187c5c99e7387f3158a29b0be541b99b06c5c492598b77644bf5603bd0c",
  "license": "MIT OR Apache-2.0",
  "class": "permissive",
- "license_files": ["LICENSE-MIT", "LICENSE-APACHE"],
- "files": "the 0.6.4 crate, unmodified",
+ "license_files": [
+  "LICENSE-MIT",
+  "LICENSE-APACHE"
+ ],
+ "files": "the 0.6.5 crate, unmodified",
  "patches": [],
  "use": "colour raster to vector tracing (painted doodles and scans to vector parts, WP-18)",
- "build": ["cargo build --release --quiet --bin vtracer --target-dir {out}"],
+ "build": [
+  "cargo build --release --quiet --bin vtracer --target-dir {out}"
+ ],
  "binary": "release/vtracer"
 }

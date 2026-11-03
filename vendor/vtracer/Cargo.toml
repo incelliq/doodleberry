@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "vtracer"
-version = "0.6.4"
+version = "0.6.5"
 authors = ["Chris Tsang <chris.2y3@outlook.com>"]
 build = false
 autolib = false
@@ -33,6 +33,7 @@ repository = "https://github.com/visioncortex/vtracer/"
 
 [features]
 python-binding = ["pyo3"]
+wasm = ["fastrand/js"]
 
 [lib]
 name = "vtracer"
@@ -50,7 +51,7 @@ path = "src/main.rs"
 version = "2.33.3"
 
 [dependencies.fastrand]
-version = "1.8"
+version = "2.3"
 
 [dependencies.image]
 version = "0.23.10"
