@@ -517,6 +517,52 @@ bubbles (the row limit was tuned for English); bar charts keep a left-to-right a
 and posting text are translated but covers are not re-made per language; there is no machine translation (every
 string comes from a translator's file).
 
+## Analytics and a plan that re-ranks itself (WP-31)
+What each post did lives with the plan, in `plan/channels/<id>/analytics.json`: one record per post (a calendar row
+on one platform, known from the row's `posted` links), with dated snapshots of its numbers (earlier reads are kept),
+its retention curve and its countries. **In:** `analytics.import` reads the CSV a creator downloads from YouTube
+Studio, TikTok Studio or Instagram's insights (headers matched by name; unknown ones are reported and can be mapped
+with `columns`; a totals row is skipped; durations, percentages and thousands separators parsed), a country
+breakdown (`kind=geography`) or one post's retention export (`kind=retention`), and matches each row to a post by its
+link, the video id in its link, or its title; `analytics.youtube_api` reads the same numbers from the YouTube Analytics
+API with the owner's token (production registry `connectors.json`; nothing ships with one). TikTok's and
+Instagram's numbers come by export: their APIs need app review. Simulated numbers (`synthetic=true`, for rehearsals
+and tests) mark their posts and can never be mixed with measured ones or teach a real plan.
+
+**The 48-hour checklist** (`analytics.checklist`): each post's reads at 1, 24 and 48 hours and nine checks judged
+against this channel: views against its median at the same age, the share that stayed rather than swiped, the hook's
+hold at 3 s, percentage viewed, shares, saves, comments and subscribers per thousand views, click-through; each
+check that needs attention names its action (the cold open, a hook variant, pacing, the payoff, the end card, title and
+thumbnail). **Retention onto the film** (`analytics.retention`): the curve laid over the film's shots and lines, the
+percent lost per second in each and against the curve's own smooth decay, the three places that lose most beyond it.
+**Lessons** (`analytics.lessons`, E11): every mapped post pooled: hook hold by format, and whether faster lines lose
+viewers faster, with the pace above which they do when the correlation is clear (r >= 0.4). **Hook tests**
+(`analytics.hooks`): alternative openings (`variants.hooks`) posted separately, their hold compared with Beta
+posteriors; a variant wins at 0.95, else the test says undecided. **Polls** (`analytics.poll`): a poll between a
+film's true titles (titles.json, WP-07) within the platform's option count and length; with the votes, a Dirichlet
+posterior picks the title at 0.9 and records it as chosen.
+
+**Re-ranking** (`analytics.effects`, `plan.rerank`): a post's performance is log2 of its 48-hour views over the
+platform's median (a doubling is +1), averaged over its platforms. The effects of fields, sweeps, formats, local or
+not and calendar roles are estimated together by ridge regression (features that travel together, such as local
+stories in one field, are told apart; each pulled toward zero as if by three pseudo-posts). Every idea's score becomes
+its own score plus half its features' effects, explained point by point; `plan.rerank` plans the quarter with those
+scores and as it would have been without them, under the same rules, and each row says why it holds what it holds:
+unchanged, moved (its slot went to another idea and the rules placed it elsewhere) or entered the quarter, with the
+measured reasons; the ideas that left are listed with theirs; plan.check checks the result. Per-feature means were
+tried first: they could not tell the local effect from the fields it travels with, and scores clamped at 5 made the
+explanations compare equal scores. **Business** (`analytics.business`, Studio page `/business`): revenue and views by
+platform and country, RPM, revenue by month, the films that earn most, catalogue value (the last complete month's
+revenue carried forward two years with the channel's own decay), and what performed; with no measured posts the page
+says so (rehearsal numbers only with `?synthetic=1`).
+
+**Rehearsal and the done-when.** No film has been posted yet, so there are no measured numbers: the `analytics` test
+rehearses the whole loop in a scratch plan on simulated numbers (Q1 2027's 52 rows posted on three platforms, their
+exports made with known effects: space & physics x2, the tool sweep x0.57, local stories x1.3, imported at 1, 24 and
+48 hours): the effects come back with the right signs (+0.56, -0.23, +0.13 after shrinkage), Q2 is re-planned with 8
+ideas entering, 35 moving and 8 leaving, every row explained and plan.check passing. Q2 2027's real calendar is planned
+with `plan.rerank {"quarter": "2027-Q2"}` once Q1's posts have their 48-hour numbers (from April 2027).
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

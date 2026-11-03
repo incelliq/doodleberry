@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Channel Business</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --bar: #3b6ea8; --good: #3f9a5a; --bad: #c0563a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; --bar: #6f9bd1; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; --bar: #6f9bd1; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } h2 { font-size: 15px; margin: 0 0 8px; } a { color: var(--accent); }
+  select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  main { padding: 16px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); max-width: 1200px; margin: 0 auto; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; }
+  .tiles { grid-column: 1 / -1; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .tile b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; } .muted { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; } td, th { padding: 4px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  td.n, th.n { text-align: right; } .bar { height: 8px; background: var(--bar); border-radius: 4px; min-width: 2px; }
+  .pos { color: var(--good); } .neg { color: var(--bad); } .note { grid-column: 1 / -1; }
+  @media (max-width: 520px) { main { padding: 12px; } }
+</style>
+</head>
+<body>
+<header><h1>Channel business</h1><select id="channel" aria-label="Channel"></select><span id="msg" class="muted"></span><span style="flex:1"></span><a href="/board">Board ↗</a> <a href="/">Studio ↗</a></header>
+<main id="main"><div class="card note muted">Loading…</div></main>
+<script>
+const $ = id => document.getElementById(id), esc = s => String(s ?? '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) throw new Error(j.error); return j.result ?? j; }
+const money = v => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = v => Number(v || 0).toLocaleString('en-US');
+function bars(rows, key, label = x => x[0], fmt = money) {   // rows: [[name, obj]]
+  const max = Math.max(...rows.map(r => r[1][key] || 0), 1);
+  return `<table>${rows.map(r => `<tr><td>${esc(label(r))}</td><td class="n">${fmt(r[1][key])}</td><td style="width:40%"><div class="bar" style="width:${(100 * (r[1][key] || 0) / max).toFixed(1)}%"></div></td></tr>`).join('')}</table>`;
+}
+async function load() {
+  const ch = $('channel').value, synth = new URLSearchParams(location.search).get('synthetic') === '1';
+  let b, e;
+  try { [b, e] = await Promise.all([api('analytics.business', { channel: ch, synthetic: synth }), api('analytics.effects', { channel: ch, synthetic: synth })]); }
+  catch (err) { $('main').innerHTML = `<div class="card note">${esc(err.message)}</div>`; return; }
+  window.BUSINESS = b; window.EFFECTS = e;
+  if (!e.posts && !b.total_revenue) {
+    $('main').innerHTML = `<div class="card note"><h2>No measured posts yet</h2><p class="muted">Numbers arrive with <code>analytics.import</code> (a YouTube Studio, TikTok Studio or Instagram export) or <code>analytics.youtube_api</code>. Simulated numbers from rehearsals are never shown here unless the page is opened with <code>?synthetic=1</code>.</p></div>`;
+    window.BUSINESS_READY = true; return;
+  }
+  const plat = Object.entries(b.by_platform), geo = Object.entries(b.by_country).slice(0, 12), months = Object.entries(b.by_month).map(([m, v]) => [m, { revenue: v }]);
+  const eff = Object.values(e.effects).slice(0, 12);
+  $('main').innerHTML = (synth ? '<div class="card note"><b>Rehearsal:</b> simulated numbers, not measured ones.</div>' : '') +
+    `<div class="tiles"><div class="tile"><span class="muted">Revenue to date</span><b>${money(b.total_revenue)}</b></div>` +
+    `<div class="tile"><span class="muted">Catalogue value, next ${b.catalogue_value.next_months} months</span><b>${money(b.catalogue_value.value)}</b><span class="muted">half-life ${b.catalogue_value.half_life_months} months</span></div>` +
+    `<div class="tile"><span class="muted">Posts measured</span><b>${num(e.posts)}</b></div>` +
+    plat.map(([p, v]) => `<div class="tile"><span class="muted">RPM, ${esc(p)}</span><b>${v.rpm == null ? '–' : money(v.rpm)}</b><span class="muted">${num(v.views)} views</span></div>`).join('') + `</div>` +
+    `<div class="card"><h2>Revenue by platform</h2>${bars(plat, 'revenue')}</div>` +
+    `<div class="card"><h2>Revenue by country</h2>${geo.length ? bars(geo, 'revenue') : '<p class="muted">No country breakdown imported (analytics.import kind=geography).</p>'}</div>` +
+    `<div class="card"><h2>Revenue by month</h2>${bars(months, 'revenue')}</div>` +
+    `<div class="card"><h2>Films that earn most</h2><table>${b.top_films.map(([f, r]) => `<tr><td>${esc(f)}</td><td class="n">${money(r)}</td></tr>`).join('')}</table></div>` +
+    `<div class="card" style="grid-column:1/-1"><h2>What performed</h2><p class="muted">Each feature's effect on 48-hour views against the platform median (log2: +1 is twice the median), estimated together and shrunk toward zero; these re-rank the idea bank (plan.rerank).</p>` +
+    `<table><tr><th>feature</th><th>value</th><th class="n">posts</th><th class="n">views vs median</th><th class="n">effect</th></tr>${eff.map(x => `<tr><td>${esc(x.feature)}</td><td>${esc(x.value)}</td><td class="n">${x.n}</td><td class="n">${(2 ** x.mean).toFixed(2)}×</td><td class="n ${x.effect >= 0 ? 'pos' : 'neg'}">${x.effect >= 0 ? '+' : ''}${x.effect.toFixed(2)}</td></tr>`).join('')}</table></div>`;
+  window.BUSINESS_READY = true;
+}
+(async () => {
+  const chs = await api('plan.channels').catch(() => ({ channels: [] }));
+  const list = (Array.isArray(chs) ? chs : chs.channels || []).map(c => c.id || c); $('channel').innerHTML = list.map(c => `<option>${esc(c)}</option>`).join('') || '<option value="">default</option>';
+  const want = new URLSearchParams(location.search).get('channel'); if (want) $('channel').value = want;
+  $('channel').onchange = load; await load();
+})();
+</script>
+</body>
+</html>

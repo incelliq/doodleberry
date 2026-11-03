@@ -42,6 +42,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "sound.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/graph":      # WP-20: the film's data flow, what is stale and why, re-make one node and what follows
             return self._send(200, (STUDIO.parent / "graph.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/business":   # WP-31: revenue by platform and country, RPM, catalogue value, what performed
+            return self._send(200, (STUDIO.parent / "business.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/diff":       # WP-19: two versions of a film, the frames that changed marked, before and after side by side
             return self._send(200, (STUDIO.parent / "diff.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip

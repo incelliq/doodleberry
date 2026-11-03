@@ -144,7 +144,7 @@ covered, now added to their packages' scopes.
 | Storyboard strip auto-generated from `shots.json` | PRO (Storyboard Pro) | ✅ | – | `film.storyboard` (3.2) |
 | Animatic with temp voice | PRO | ✅ | – | svg draft render |
 | Hook and title variants | NEW | ✅ | – | `variants.hooks` |
-| Beat sheet and retention-curve planning | NEW | ⬜ | P1 | retention curves mapped to shots: WP-31 |
+| Beat sheet and retention-curve planning | NEW | 🟡 | P1 | `analytics.retention`: a post's retention curve laid over its shots and lines (WP-31); planning beats from it before a film is made is open |
 | Series bible and episode continuity (outfits, props, running gags) | NEW | ⬜ | P2 | continuity memory: WP-28 |
 | **Series format:** an episode is a data template (lines, moves, beats, blinks, stares). A new episode means editing data only | NEW | ✅ | – | series template and `edit.json` (2.14, 2.15) |
 | Rig-aware writing: the writer agent drafts jokes the characters' rigs can actually perform, and flags lines that need a new pose | IDEA | ✅ | – | `script.rigcheck` (2.12) |
@@ -218,10 +218,10 @@ covered, now added to their packages' scopes.
 | Platform packs: safe zones, thumbnails, titles, descriptions | NEW | ✅ | – | `film.package` platform files (0.13) |
 | Interactive web films: branching, quizzes, click-to-explore | EMG | ⬜ | P2 | WP-30 |
 | **Posting package generator:** per-platform captions (takeaway in the first line, sources in a pinned comment, hashtags last), YouTube title, description and chapters, alt text, an engagement prompt, playlists, post dates | NEW | ✅ | – | `film.package` (0.13) |
-| **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | 🟡 | P1 | `title.check/propose/set`, `titles.status`: truth and newcomer checks, double-barrel thumbnails, back catalogue retitled (WP-07); audience polls between true options: WP-31 |
+| **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | 🟡 | P1 | `title.check/propose/set`, `titles.status`: truth and newcomer checks, double-barrel thumbnails, back catalogue retitled (WP-07); audience polls between true options: `analytics.poll` (WP-31) |
 | Publishing connectors and scheduler: upload and schedule per platform, always with human approval per post | IDEA | 🟡 | P2 | `post.queue/approve/revoke/run/done/status` and the board's posting queue: one named approval per post, export with a calendar reminder, a connector interface (dry run only); platform API connectors need the owner's app credentials (WP-08) |
-| 48-hour metrics checklist and analytics ingestion per platform | NEW | ⬜ | P2 | WP-31 |
-| Multi-language audio tracks on the main channel vs separate dubbed channels, with revenue per geography considered | NEW | 🟡 | P2 | localised versions go out as extra audio tracks on YouTube posts (WP-08); revenue per geography: WP-31 |
+| 48-hour metrics checklist and analytics ingestion per platform | NEW | ✅ | – | `analytics.checklist`; `analytics.import` (YouTube Studio, TikTok Studio, Instagram exports) and `analytics.youtube_api` (WP-31) |
+| Multi-language audio tracks on the main channel vs separate dubbed channels, with revenue per geography considered | NEW | 🟡 | P2 | localised versions go out as extra audio tracks on YouTube posts (WP-08); revenue per geography: `analytics.business` (WP-31) |
 
 ## 9. QA and review
 | Feature | Source | Status | Priority | Notes |
@@ -233,7 +233,7 @@ covered, now added to their packages' scopes.
 | Frame comments that become data edits | IDEA | ✅ | – | `review.add`, `review.fix` (3.4) |
 | Visual diff between film versions | NEW | ✅ | – | `film.diff` and Studio `/diff`: changed frames exactly, from per-frame keys; before/after side by side (WP-19) |
 | Health and claims risk review | NEW | ✅ | – | expert review in `research.check` (omits per fact) and the approval gate on the board (WP-05) |
-| Retention analytics fed back into hooks and pacing | EMG | ⬜ | P2 | WP-31 |
+| Retention analytics fed back into hooks and pacing | EMG | ✅ | – | `analytics.retention`, `analytics.lessons`, `analytics.hooks` (WP-31) |
 | **Frame-fill metric:** share of bare background below 40% per scene, measured every 3 s on the final encode; tallest bare band; a 360 px look test | NEW | ✅ | – | `qa.run` (0.11) |
 | **Safe-zone text check:** every word's box inside the platform-safe area (9:16: x 64–960, y 200–1560), with platform UI mock overlays (right rail, caption block, top bar) | NEW | ✅ | – | `qa.run` (0.11) |
 | Minimum type sizes per aspect (9:16: headline 64, body 40, label 30, floor 26 px; 16:9: 56/34/24) | NEW | ✅ | – | `qa.run` (0.11) |
@@ -263,7 +263,7 @@ covered, now added to their packages' scopes.
 | **Public corrections log:** dated, on the original page; covers titles, thumbnails and social cards; credits critics; separates "what we got wrong" | NEW | ⬜ | P1 | WP-27 |
 | Independence rules: no sponsor that makes what a film assesses; disclose access without payment; disclose ownership changes the day they happen | NEW | ⬜ | P2 | WP-27 |
 | Community intake: send-a-myth, challenges, early-preview reviewers, paired collaborations with other creators | IDEA | ⬜ | P2 | WP-27 |
-| Business dashboard: revenue by platform and geography, RPM, catalogue value, pre-sale readiness | IDEA | ⬜ | P2 | WP-31 |
+| Business dashboard: revenue by platform and geography, RPM, catalogue value, pre-sale readiness | IDEA | 🟡 | P2 | `analytics.business` and the Studio page /business (WP-31); pre-sale readiness is open |
 
 ## 11. Agent and developer platform
 | Feature | Source | Status | Priority | Notes |
@@ -313,7 +313,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E8 | Live web player + data | **Personalised films rendered in the viewer's browser:** their name, language and region, at zero server cost. | ⬜ P2 · WP-30 |
 | E9 | Real-time puppet + webcam tracking | **Live 2D avatars of the cast** for streams and classrooms, VTuber-style. | ⬜ P2 · WP-12 |
 | E10 | QA bar + agent + data edits | **Self-healing renders.** The agent reads a QA failure (a still stretch, loudness, a caption collision), edits the timeline and re-renders until it passes. This session did it by hand for the idle clip. | ✅ `film.heal` (2.9) |
-| E11 | Hook variants + analytics | **Self-optimising openings.** Retention data picks hooks and pacing for the next film. | ⬜ P2 · WP-31 |
+| E11 | Hook variants + analytics | **Self-optimising openings.** Retention data picks hooks and pacing for the next film. | ✅ `analytics.hooks` (Beta posteriors), `analytics.lessons` (WP-31); waits for posted films |
 | E12 | Facts ledger + script tags | **Living films.** When a source updates a number, the affected shots re-render; an auto "sources" end card cites them. | 🟡 `film.data` (2.17); living films: WP-27 |
 | E13 | Cast personality + gesture planner | **Characters that act in character** across films and agents: a shy character never points broadly. | ⬜ P1 · WP-10 |
 | E14 | Provenance hashes + determinism | **Verifiable content credentials.** Anyone can re-render and check a frame matches its signed recipe. | ⬜ P2 · WP-26 |
@@ -333,7 +333,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E28 | Misconception and dialogue formats + the cast | **Characters as learner and expert:** the format with the strongest published learning gains, natural for cartoons. | ✅ (2.15) |
 | E29 | Measured layout rules + films as data | **Layout auto-repair:** the agent moves and resizes text and pictures until frame fill, safe zones, type sizes and reading time all pass (extends E10). | ✅ (2.18) |
 | E30 | Brand kit + templates + deterministic renders | **Rebrand the whole catalogue:** a new identity re-renders every film, cover and post. | 🟡 brand inheritance (1.14); kits per channel (WP-32); re-rendering a whole catalogue in a new identity: WP-27 |
-| E31 | Analytics + idea bank + calendar | **A plan that re-ranks itself** on what actually performs, per platform. | ⬜ P2 · WP-31 |
+| E31 | Analytics + idea bank + calendar | **A plan that re-ranks itself** on what actually performs, per platform. | ✅ `plan.rerank`: effects by ridge regression, every row explained (WP-31); rehearsed on simulated numbers, the first real use is Q2 2027 |
 
 ## 14. What not to build
 - Photoreal or generative-video characters: they break consistency, editability and the licence trail. Use

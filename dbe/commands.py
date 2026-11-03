@@ -3039,6 +3039,253 @@ def plan_posted(quarter, date, url, channel=""):
     return row
 
 
+# ---------------- analytics (WP-31) ----------------
+def _an(channel=""):
+    from . import analytics as AN
+    from . import planner as PL
+    d = PL.chan_dir(channel); return AN, d, AN.load(d), AN.posts_from_calendars(d)
+
+
+def _an_mark(st, matched, synthetic):
+    """real and simulated numbers never mix in one post"""
+    for pid in set(matched):
+        if st["posts"][pid].get("synthetic", synthetic) != synthetic:
+            raise ValueError(f"{pid} holds {'simulated' if not synthetic else 'measured'} numbers already; keep rehearsals in a scratch plan (DBE_PLAN)")
+        st["posts"][pid]["synthetic"] = synthetic
+
+
+@command("analytics.import", path=("string", "an export file (CSV from YouTube Studio, TikTok Studio, Instagram insights; or canonical JSON)"),
+         platform=("string", "youtube | tiktok | instagram | facebook | x | linkedin"), as_of=("string", "when the export was taken (ISO date-time; default now)", ""),
+         kind=("string", "totals (one row per post) | geography (rows by country) | retention (one post's curve)", "totals"),
+         post=("string", "for a retention export: the post (date-platform, e.g. 2027-01-04-youtube)", ""),
+         duration_s=("number", "for a retention export in % of the video: its length (default: the film's)", 0),
+         columns=("object", "extra header -> canonical name (views, likes, comments, shares, saves, subs, avg_view_s, avg_pct, stayed_pct, revenue, url, title, ...)", None),
+         synthetic=("boolean", "the numbers are simulated (rehearsals and tests): the posts are marked and never teach a real plan", False), channel=CH_ARG)
+def analytics_import(path, platform, as_of="", kind="totals", post="", duration_s=0, columns=None, synthetic=False, channel=""):
+    """Read a platform's export into the channel's analytics (WP-31): each row matched to a posted calendar row by its
+    link, the video id in its link, or its title, and added as a dated snapshot (earlier reads are kept), or a
+    country breakdown, or a retention curve. Unknown headers and unmatched rows are reported, never guessed."""
+    import datetime as _dt
+    AN, d, st, posts = _an(channel)
+    f = _inside(path, True) if not Path(path).is_absolute() else Path(path)
+    as_of = as_of or _dt.datetime.now().isoformat(timespec="seconds")
+    if f.suffix == ".json":
+        j = json.loads(f.read_text()); rows, unknown = j.get("rows", j if isinstance(j, list) else []), []
+    else:
+        rows, unknown = AN.read_export(f.read_text(encoding="utf-8-sig"), columns)
+    if kind == "retention":
+        if post not in posts:
+            raise ValueError(f"no posted row {post!r} (posts: {', '.join(sorted(posts)[:8])}...)")
+        fl = posts[post].get("film"); dur = duration_s or (float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                                                                        str(FILMS / fl / "build" / "final.mp4")])[-1]) if fl and (FILMS / fl / "build" / "final.mp4").exists() else 0)
+        n = AN.add_retention(st, posts, post, rows, dur); AN.save(d, st)
+        return {"post": post, "points": n, "unknown_headers": unknown}
+    matched, unmatched = AN.ingest(st, posts, rows, platform, as_of, kind)
+    _an_mark(st, matched, synthetic)
+    AN.save(d, st)
+    return {"matched": len(matched), "posts": sorted(set(matched)), "unmatched": unmatched, "unknown_headers": unknown, "as_of": as_of}
+
+
+@command("analytics.youtube_api", start=("string", "first day (YYYY-MM-DD)"), end=("string", "last day (YYYY-MM-DD)"), as_of=("string", "the read's time (default now)", ""),
+         channel=CH_ARG)
+def analytics_youtube_api(start, end, as_of="", channel=""):
+    """Read this channel's posted YouTube videos from the YouTube Analytics API (WP-31): views, likes, comments,
+    shares, subscribers gained, average view duration and percentage, estimated revenue, per video. Needs the owner's
+    OAuth access token in the production registry (connectors.json: {"youtube_analytics": {"access_token": ...}});
+    without it, export from YouTube Studio and use analytics.import."""
+    import datetime as _dt, urllib.parse, urllib.request
+    from . import production as PR
+    AN, d, st, posts = _an(channel)
+    cfg = (_json(PR.reg_dir() / "connectors.json", {}) or {}).get("youtube_analytics") or {}
+    if not cfg.get("access_token"):
+        raise PermissionError("no YouTube Analytics credentials (production registry connectors.json: youtube_analytics.access_token); export from YouTube Studio and use analytics.import")
+    ids = {}
+    for pid, p in posts.items():
+        m = re.search(r"(?:v=|youtu\.be/|shorts/)([\w-]{6,})", p.get("url") or "")
+        if p["platform"] == "youtube" and m:
+            ids[m.group(1)] = pid
+    if not ids:
+        return {"matched": 0, "note": "no posted YouTube rows with a video id in their link"}
+    metrics = "views,likes,comments,shares,subscribersGained,averageViewDuration,averageViewPercentage,estimatedRevenue"
+    q = urllib.parse.urlencode({"ids": "channel==MINE", "startDate": start, "endDate": end, "metrics": metrics, "dimensions": "video", "filters": "video==" + ",".join(ids)})
+    base = os.environ.get("DBE_YT_ANALYTICS_URL") or cfg.get("base_url") or "https://youtubeanalytics.googleapis.com/v2/reports"
+    req = urllib.request.Request(f"{base}?{q}", headers={"Authorization": f"Bearer {cfg['access_token']}"})
+    j = json.loads(urllib.request.urlopen(req, timeout=30).read())
+    names = {"video": "video_id", "subscribersGained": "subs", "averageViewDuration": "avg_view_s", "averageViewPercentage": "avg_pct", "estimatedRevenue": "revenue"}
+    cols = [names.get(c["name"], c["name"]) for c in j.get("columnHeaders", [])]
+    rows = [dict(zip(cols, r)) for r in j.get("rows", [])]
+    for r in rows:
+        r["url"] = (posts.get(ids.get(r.get("video_id"))) or {}).get("url")
+    matched, unmatched = AN.ingest(st, posts, rows, "youtube", as_of or _dt.datetime.now().isoformat(timespec="seconds"), source="youtube-analytics-api")
+    _an_mark(st, matched, False)
+    AN.save(d, st)
+    return {"matched": len(matched), "unmatched": unmatched}
+
+
+@command("analytics.checklist", post=("string", "post id: date-platform (e.g. 2027-01-04-youtube); empty: every post that is 48 hours old or less behind", ""), channel=CH_ARG)
+def analytics_checklist(post="", channel=""):
+    """The 48-hour checklist (WP-31): each post's reads at 1, 24 and 48 hours, and every check judged against this
+    channel (views against its median at the same age, the share that stayed, the hook's hold at 3 s, percentage viewed,
+    shares, saves, comments and subscribers per thousand views, click-through), with the action each points to."""
+    AN, d, st, posts = _an(channel)
+    ids = [post] if post else sorted(st["posts"])
+    if post and post not in st["posts"]:
+        raise ValueError(f"no numbers for {post} yet (analytics.import)")
+    return {"posts": [AN.checklist(st, i) for i in ids]}
+
+
+@command("analytics.retention", post=("string", "post id (date-platform)"), channel=CH_ARG)
+def analytics_retention(post, channel=""):
+    """A post's retention curve laid over its film (WP-31): per shot and per line, the percent of viewers lost, per
+    second, and against the curve's own smooth decay, with the three places that lose the most beyond it (the hook's
+    hold at 3 s too)."""
+    AN, d, st, posts = _an(channel)
+    p = st["posts"].get(post) or {}
+    if not p.get("retention"):
+        raise ValueError(f"no retention curve for {post} (analytics.import kind=retention)")
+    fl = p.get("film")
+    if not fl or not (FILMS / fl).exists():
+        raise ValueError(f"{post} has no film here to map onto")
+    s = _shots(fl); tm = _cut_timing(s, _json(FILMS / fl / "timing.json", {}))
+    return {"post": post, "film": fl, **AN.retention_map(p, s["shots"], tm.get("lines", []))}
+
+
+@command("analytics.lessons", channel=CH_ARG)
+def analytics_lessons(channel=""):
+    """What retention says for the next films (WP-31, E11): every post with a retention curve and a film here, laid
+    over its lines, pooled: the hook's hold at 3 s by format, and whether faster lines lose viewers faster (with the
+    pace above which they do, when the evidence is clear)."""
+    AN, d, st, posts = _an(channel); maps = []
+    for pid, p in st["posts"].items():
+        fl = p.get("film")
+        if not p.get("retention") or not fl or not (FILMS / fl).exists():
+            continue
+        tm = _cut_timing(_shots(fl), _json(FILMS / fl / "timing.json", {})); m = AN.retention_map(p, _shots(fl)["shots"], tm.get("lines", []))
+        wps = {l["id"]: len(l.get("words") or l.get("text", "").split()) / max(0.3, l["end"] - l["start"]) for l in tm.get("lines", [])}
+        for l in m.get("lines", []):
+            l["wps"] = round(wps.get(l["what"].split(":")[0], 0), 2)
+        maps.append({**m, "format": p.get("format"), "post": pid})
+    return {"posts": len(maps), **AN.lessons(maps)}
+
+
+@command("analytics.hooks", variants=("object", "variant name -> post id (the first is the control), e.g. {\"A\": \"2027-01-04-youtube\", \"B\": \"2027-01-05-youtube\"}"),
+         metric=("string", "hold_3s (retention at 3 s) | stayed (share that stayed to watch)", "hold_3s"), channel=CH_ARG)
+def analytics_hooks(variants, metric="hold_3s", channel=""):
+    """Hook variants compared (WP-31, E11): the films' alternative openings (variants.hooks) posted as separate posts,
+    their hook hold compared as proportions of each post's viewers with Beta posteriors; a variant wins when it beats
+    the control with probability 0.95 or more, else the test is undecided and says so."""
+    AN, d, st, posts = _an(channel)
+    for n, pid in variants.items():
+        if pid not in st["posts"]:
+            raise ValueError(f"no numbers for {pid}")
+    return AN.compare_hooks(st, variants, metric)
+
+
+@command("analytics.poll", film=("string", "film"), platform=("string", "youtube (community), x, instagram (story), linkedin, facebook"), counts=("array", "votes per option, once the poll has closed", None))
+def analytics_poll(film, platform, counts=None):
+    """An audience poll between a film's true titles (WP-31): the titles of titles.json whose checks passed, as many
+    as the platform's poll holds and short enough for its options. With the votes, the most preferred option and its
+    probability of being so (Dirichlet posterior); at 0.9 or more it becomes the film's chosen title."""
+    from . import analytics as AN
+    d = _film(film); t = _json(d / "titles.json", {"titles": []}); pl = AN.make_poll(t, platform)
+    if "error" in pl or counts is None:
+        return pl
+    if len(counts) != len(pl["options"]):
+        raise ValueError(f"{len(pl['options'])} options, {len(counts)} counts")
+    r = AN.poll_result(pl["options"], counts)
+    if r["winner"]:
+        i = next(k for k, x in enumerate(t["titles"]) if x["text"] == r["winner"])
+        t.setdefault("chosen", {})["title"] = i; t.setdefault("polls", []).append({"platform": platform, **r})
+        (d / "titles.json").write_text(json.dumps(t, indent=1, ensure_ascii=False))
+    return {**pl, **r}
+
+
+@command("analytics.effects", quarters=("array", "quarters to learn from (default all)", None), synthetic=("boolean", "use simulated numbers (rehearsals only)", False), channel=CH_ARG)
+def analytics_effects(quarters=None, synthetic=False, channel=""):
+    """What performed (WP-31): each posted row's performance (log2 of its 48-hour views over the platform's median,
+    averaged over platforms) and the effect of each field, sweep, format, local or not, and calendar role, shrunk
+    toward zero by three pseudo-posts."""
+    AN, d, st, posts = _an(channel)
+    rows = AN.perf(st, synthetic=synthetic, quarters=quarters)
+    return {"rows": rows, "effects": dict(sorted(AN.effects(rows).items(), key=lambda kv: -abs(kv[1]["effect"]))), "posts": len(rows)}
+
+
+@command("plan.rerank", quarter=("string", "the quarter to plan, e.g. 2027-Q2"), learn_from=("array", "quarters whose measured posts teach it (default: every earlier one)", None),
+         planned_on=("string", "the day the plan is made (default today)", ""), synthetic=("boolean", "learn from simulated numbers (rehearsals only)", False), channel=CH_ARG)
+def plan_rerank(quarter, learn_from=None, planned_on="", synthetic=False, channel=""):
+    """A plan that re-ranks itself (WP-31): every idea in the bank is scored from what performed (analytics.effects:
+    its field, sweep, format and local effects; 3 is neutral), the quarter is planned with those scores and also as it
+    would have been without them, and each row says why it holds what it holds: unchanged, moved (another idea took its
+    slot and the rules placed it elsewhere), or entered the quarter, with the measured reasons for its score; the ideas
+    that left the quarter are listed with theirs. The rules (dated hooks, the series, quotas, spacing) are the same as plan.schedule's
+    and plan.check checks the result."""
+    import copy, datetime as _dt
+    from . import planner as PL
+    AN, d, st, posts = _an(channel)
+    learn = learn_from or sorted({p.get("quarter") for p in st["posts"].values() if p.get("quarter") and p["quarter"] < quarter})
+    rows = AN.perf(st, synthetic=synthetic, quarters=learn); eff = AN.effects(rows)
+    if not rows:
+        raise ValueError(f"no measured posts in {learn or 'any quarter'} to learn from (analytics.import)")
+    ch = PL.channel(channel); bank = _plan_bank(channel); po = _dt.date.fromisoformat(planned_on) if planned_on else _dt.date.today()
+    old = _json(d / f"{quarter}.json")
+    if old and any(r.get("film") for r in old["rows"]):
+        raise ValueError(f"{quarter} already has briefed rows; edit it rather than re-planning")
+    for i in bank["ideas"]:
+        if i["status"] == "planned" and i.get("quarter") == quarter:
+            i["status"] = "idea"
+    base = copy.deepcopy(bank)
+    for i in base["ideas"]:
+        i["score"] = i.get("score_base", i.get("score", 3))
+    before = {r["date"]: r for r in PL.schedule(quarter, base, ch, po)}
+    why = {}
+    for i in bank["ideas"]:
+        i.setdefault("score_base", i.get("score", 3))
+        sc, parts = AN.score_idea(i, eff, base=i["score_base"]); i["score"] = sc; why[i["id"]] = (sc, parts)
+        i["score_why"] = AN.explain(parts)
+    new = PL.schedule(quarter, bank, ch, po)
+    sc_of = {i["id"]: i.get("score", 3) for i in bank["ideas"]}; base_of = {i["id"]: i["score_base"] for i in bank["ideas"]}
+    title_of = {i["id"]: i["title"] for i in bank["ideas"]}
+    was_at = {r["idea"]: d_ for d_, r in before.items() if r and r.get("idea")}
+    now_ids = {r["idea"] for r in new if r.get("idea")}
+    changed = moved = 0
+    for r in new:
+        if not r.get("idea"):
+            continue
+        reasons = AN.explain(why[r["idea"]][1])
+        if before.get(r["date"], {}) and before[r["date"]].get("idea") == r["idea"]:
+            r["why"] = f"unchanged (score {sc_of[r['idea']]}: {reasons})"
+        elif r["idea"] in was_at:
+            moved += 1
+            r["why"] = f"moved from {was_at[r['idea']]}: the slot it had went to another idea, the rules placed it here (score {sc_of[r['idea']]})"
+            r["moved_from"] = was_at[r["idea"]]
+        else:
+            changed += 1
+            r["why"] = f"entered the quarter: score {sc_of[r['idea']]} (it was {base_of[r['idea']]}): {reasons}"
+    left = [{"idea": i, "title": title_of[i], "score": sc_of[i], "was": base_of[i], "why": AN.explain(why[i][1]), "date": was_at[i]}
+            for i in was_at if i not in now_ids]
+    used = {r["idea"] for r in new if r.get("idea")}
+    for i in bank["ideas"]:
+        if i["id"] in used:
+            i["status"] = "planned"; i["quarter"] = quarter
+    top = sorted(eff.values(), key=lambda e: -abs(e["effect"]))[:8]
+    cal = {"quarter": quarter, "planned_on": po.isoformat(), "channel": ch["name"], "channel_id": ch["id"], "rules": ch["rules"], "rows": new,
+           "rerank": {"learned_from": learn, "posts": len(rows), "synthetic": synthetic, "rows_changed": changed, "rows_moved": moved, "left": left,
+                      "effects": [{k: e[k] for k in ("feature", "value", "n", "mean", "effect")} for e in top]}}
+    _plan_save(f"{quarter}.json", cal, channel); _plan_save("ideas.json", bank, channel)
+    return {"quarter": quarter, "learned_from": learn, "posts": len(rows), "rows": len([r for r in new if r.get("idea")]), "rows_changed": changed, "rows_moved": moved,
+            "left": left[:20],
+            "effects": cal["rerank"]["effects"], "why": [{"date": r["date"], "why": r.get("why")} for r in new if r.get("idea")][:60], "check": PL.check(cal, bank, ch)}
+
+
+@command("analytics.business", synthetic=("boolean", "simulated numbers (rehearsals only)", False), channel=CH_ARG)
+def analytics_business(synthetic=False, channel=""):
+    """The business dashboard (WP-31): revenue and views by platform and by country, revenue per thousand views,
+    revenue by month, the films that earn most, and the catalogue's value (the last month's revenue carried two years
+    forward with the channel's own decay). The Studio page /business shows it."""
+    AN, d, st, posts = _an(channel)
+    return AN.business(st, synthetic=synthetic)
+
+
 @command("plan.cross", quarter=("string", "e.g. 2027-Q1"), same_week=("boolean", "flag two channels posting the same subject in one week", True))
 def plan_cross(quarter, same_week=True):
     """Every channel's quarter side by side, week by week (WP-32): posts per channel, and (when same_week) the weeks in
@@ -3893,6 +4140,10 @@ def test_golden(update=False, film=""):
         bad, meas = _stickers_test()
         failed += 1 if bad else 0
         results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy, iMessage and as Telegram, Discord and Slack emoji within each platform's limits; TGS alike in lottie-web and rlottie; the pack as a dotLottie whose themes draw alike in the dotLottie player and lottie-web", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "analytics":   # WP-31: exports in, checklist, retention onto films, experiments, polls, a re-ranked plan, the business view
+        bad, meas = _analytics_test()
+        failed += 1 if bad else 0
+        results.append({"analytics": "exports read and matched; a rehearsal on simulated numbers: effects recovered, Q2 re-ranked with every row explained and plan.check passing; checklist, retention on shots and lines, hook test, poll, business view, API connector", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "l10n":   # WP-25: world languages end to end
         bad, meas = _l10n_test()
         failed += 1 if bad else 0
@@ -6620,6 +6871,171 @@ def _stickers_test():
         pass
     shutil.rmtree(STICKERS / "ztest-pip", ignore_errors=True)
     return bad, meas
+
+def _analytics_test():
+    """WP-31, a rehearsal on simulated numbers in a scratch plan (DBE_PLAN), so the real plan is never touched.
+    Exports: YouTube-, TikTok- and Instagram-style CSVs read (durations, percentages, thousands separators, a totals
+    row skipped, unknown headers reported). Q1 2027's rows are marked posted on three platforms and their numbers made
+    with known effects (space & physics x2, the tool sweep x0.57, local stories x1.3); imported at 1, 24 and 48 hours
+    through analytics.import, the effects must come back with the right signs, and plan.rerank must plan Q2 with every
+    row explained, plan.check passing, and space ideas no rarer and tool ideas no commoner than without re-ranking.
+    Checklist: three reads and every check judged. Retention: a drop put inside one line is found there. Hooks: a
+    clearly better variant wins, equal ones stay undecided. Poll: a clear vote picks the title, a close one does not.
+    Business: platform revenue adds up. The YouTube Analytics connector reads a local stand-in for the API."""
+    import os, http.server, threading, copy, math, socket, time
+    import datetime as dt
+    from . import analytics as AN
+    from . import planner as PL
+    bad, meas = [], {}
+    # exports
+    yt = "Content,Video title,Video publish time,Views,Watch time (hours),Average view duration,Average percentage viewed (%),Estimated revenue (USD),Mystery\nTotal,,,9999,1,0:00:30,50,9,x\nabc123XYZ,A film,2027-01-04,\"1,234\",5.5,0:00:31,71.5%,$1.20,?\n"
+    rows, unk = AN.read_export(yt)
+    tt, _ = AN.read_export("Video link,Total views,Total likes,Add to Favorites,Average watch time\nhttps://www.tiktok.com/@x/video/1,500,40,7,12.5s\n")
+    ig, _ = AN.read_export("Permalink,Plays,Saves,Shares\nhttps://www.instagram.com/reel/abc/,900,12,30\n")
+    meas["exports"] = {"youtube": rows, "unknown": unk, "tiktok": tt, "instagram": ig}
+    if not (len(rows) == 1 and rows[0]["views"] == 1234 and rows[0]["avg_view_s"] == 31 and rows[0]["avg_pct"] == 71.5 and rows[0]["revenue"] == 1.2 and unk == ["Mystery"]
+            and tt[0]["saves"] == 7 and tt[0]["avg_view_s"] == 12.5 and ig[0]["views"] == 900):
+        bad.append(f"exports: {meas['exports']}")
+    # the rehearsal
+    tmp = ROOT / "out" / "analytics_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    shutil.copytree(PL.PLAN, tmp / "plan")
+    old_env = {k: os.environ.get(k) for k in ("DBE_PLAN", "DBE_PRODUCTION", "DBE_YT_ANALYTICS_URL")}
+    os.environ["DBE_PLAN"] = str(tmp / "plan"); os.environ["DBE_PRODUCTION"] = str(tmp / "prod"); (tmp / "prod").mkdir()
+    try:
+        d = PL.chan_dir(""); cal = _json(d / "2027-Q1.json"); n = 0
+        for r in cal["rows"]:
+            if r.get("idea"):
+                n += 1; vid = f"SIM{n:05d}x"
+                r["posted"] = {"at": r["date"] + "T18:30:00", "links": {"youtube": f"https://youtube.com/shorts/{vid}", "tiktok": f"https://www.tiktok.com/@sim/video/{n}",
+                                                                          "instagram": f"https://www.instagram.com/reel/{vid}/"}}
+        (d / "2027-Q1.json").write_text(json.dumps(cal, indent=1))
+        posts = AN.posts_from_calendars(d)
+        true = {"field=space & physics": 1.0, "sweep=tool": -0.8, "local=True": 0.4}
+        exports = AN.simulate(posts, true, seed=3)
+        imported = 0
+        for (plat, h), text in sorted(exports.items()):
+            # each post was read h hours after it went out: one import per post date keeps the ages right
+            for date in sorted({p["date"] for p in posts.values() if p["platform"] == plat}):
+                lines = text.splitlines(); head = lines[0]
+                body = [l for l in lines[1:] if any(posts[pid]["url"] in l for pid in posts if posts[pid]["date"] == date and posts[pid]["platform"] == plat)]
+                f = tmp / f"{plat}_{h}_{date}.csv"; f.write_text("\n".join([head] + body) + "\n")
+                at = (dt.datetime.fromisoformat(date + "T18:30:00") + dt.timedelta(hours=h)).isoformat()
+                imported += analytics_import(str(f), plat, as_of=at, synthetic=True)["matched"]
+        meas["imported_snapshots"] = imported
+        eff = analytics_effects(synthetic=True)["effects"]
+        got = {k: eff.get(k, {}).get("effect") for k in true}
+        meas["effects"] = got
+        if not (got["field=space & physics"] and got["field=space & physics"] > 0.3 and got["sweep=tool"] is not None and got["sweep=tool"] < -0.2 and (got["local=True"] or 0) > 0.1):
+            bad.append(f"effects not recovered: {got}")
+        # next quarter: more ideas, then a re-ranked plan
+        ch = PL.channel(""); bank = _plan_bank("")
+        PL.add_ideas(bank, PL.synthetic_bank(ch, "2027-Q2", seed=9, offset=700)["ideas"], ch, "rehearsal")
+        _plan_save("ideas.json", bank, "")
+        rr = plan_rerank("2027-Q2", planned_on="2027-03-10", synthetic=True)
+        cal2 = _json(d / "2027-Q2.json"); rows2 = [r for r in cal2["rows"] if r.get("idea")]
+        share = lambda rows_, f, v: sum(1 for r in rows_ if r.get(f) == v) / max(1, len(rows_))
+        # the same quarter without re-ranking, for comparison
+        base = copy.deepcopy(_plan_bank(""))
+        for i in base["ideas"]:
+            i["score"] = i.get("score_base", i.get("score", 3))
+            if i.get("quarter") == "2027-Q2" and i["status"] == "planned":
+                i["status"] = "idea"
+        rows0 = [r for r in PL.schedule("2027-Q2", base, ch, dt.date(2027, 3, 10)) if r.get("idea")]
+        meas["rerank"] = {"rows": rr["rows"], "changed": rr["rows_changed"], "moved": rr["rows_moved"], "left": len(rr["left"]), "left_example": (rr["left"][:1] or [None])[0], "check_ok": rr["check"].get("ok"), "explained": all(r.get("why") for r in rows2),
+                          "space_share": [round(share(rows0, "field", "space & physics"), 2), round(share(rows2, "field", "space & physics"), 2)],
+                          "tool_share": [round(share(rows0, "sweep", "tool"), 2), round(share(rows2, "sweep", "tool"), 2)], "example": rows2[0].get("why") if rows2 else None}
+        mr = meas["rerank"]
+        if not (mr["changed"] > 0 and mr["check_ok"] and mr["explained"] and mr["left"] and mr["space_share"][1] >= mr["space_share"][0] and mr["tool_share"][1] <= mr["tool_share"][0]):
+            bad.append(f"rerank: {mr}")
+        # checklist
+        st = AN.load(d); pid = sorted(st["posts"])[0]; ck = analytics_checklist(pid)["posts"][0]
+        meas["checklist"] = {"reads": {k: (v if isinstance(v, str) else v.get("views")) for k, v in ck["reads"].items()}, "states": {c["check"]: c["state"] for c in ck["checks"]}}
+        if any(v == "not read yet" for v in ck["reads"].values()) or not any(c["state"] in ("ok", "attention") for c in ck["checks"]):
+            bad.append(f"checklist: {meas['checklist']}")
+        # retention onto a film's shots and lines (data-demo): a drop put inside its line l2
+        tm = _cut_timing(_shots("data-demo"), _json(FILMS / "data-demo" / "timing.json", {})); l2 = next(l for l in tm["lines"] if l["id"] == "l2")
+        curve = [[t / 2, 100 * math.exp(-0.03 * t / 2) - (18 if t / 2 > (l2["start"] + l2["end"]) / 2 else 0)] for t in range(0, 20)]
+        rm = AN.retention_map({"retention": curve}, _shots("data-demo")["shots"], tm["lines"])
+        meas["retention"] = {"worst": [w["what"][:24] for w in rm["worst"]], "hold_3s": rm["hold_3s"]}
+        if not any(w["kind"] == "line" and w["what"].startswith("l2") for w in rm["worst"][:2]):
+            bad.append(f"retention: {meas['retention']}")
+        # lessons: fast lines made to lose more, across many posts
+        rnd_ = __import__("random").Random(5); maps_ = []
+        for k in range(6):
+            ls = []
+            for j in range(5):
+                w = 1.5 + rnd_.random() * 3; ls.append({"what": f"l{j}", "wps": round(w, 2), "lost_per_s": round(0.4 + 0.9 * w + rnd_.gauss(0, 0.4), 2)})
+            maps_.append({"hold_3s": 70 + 10 * (k % 2), "format": "myth_vs_data" if k % 2 else "explainer", "lines": ls})
+        le = AN.lessons(maps_); meas["lessons"] = {k: le.get(k) for k in ("pace", "advice", "hook_advice")}
+        if not (le.get("advice") and le["pace"]["r"] >= 0.4 and "myth_vs_data" in (le.get("hook_advice") or "")):
+            bad.append(f"lessons: {meas['lessons']}")
+        # hooks
+        st2 = {"posts": {"a": {"platform": "youtube", "snapshots": [{"hours": 48, "views": 5000}], "retention": [[0, 100], [3, 60], [10, 40]]},
+                         "b": {"platform": "youtube", "snapshots": [{"hours": 48, "views": 5000}], "retention": [[0, 100], [3, 75], [10, 50]]},
+                         "c": {"platform": "youtube", "snapshots": [{"hours": 48, "views": 5000}], "retention": [[0, 100], [3, 60.4], [10, 40]]}}}
+        h1, h2 = AN.compare_hooks(st2, {"A": "a", "B": "b"}), AN.compare_hooks(st2, {"A": "a", "C": "c"})
+        meas["hooks"] = {"clear": h1["winner"], "close": h2["winner"]}
+        if h1["winner"] != "B" or h2["decided"]:
+            bad.append(f"hooks: {meas['hooks']}")
+        # poll (a scratch copy of data-demo's titles)
+        zz = FILMS / "zz-poll"; shutil.rmtree(zz, ignore_errors=True); shutil.copytree(FILMS / "data-demo", zz, ignore=shutil.ignore_patterns("build"))
+        try:
+            p_clear = analytics_poll("zz-poll", "youtube", [140, 60]); p_close = AN.poll_result(["a", "b"], [50, 52])
+            meas["poll"] = {"options": p_clear.get("options"), "winner": p_clear.get("winner"), "chosen": _json(zz / "titles.json")["chosen"]["title"], "close_winner": p_close["winner"]}
+            if not p_clear.get("winner") or p_close["winner"]:
+                bad.append(f"poll: {meas['poll']}")
+        finally:
+            shutil.rmtree(zz, ignore_errors=True)
+        # business
+        b = analytics_business(synthetic=True); st = AN.load(d)
+        want = round(sum((p["snapshots"][-1].get("revenue") or 0) for p in st["posts"].values()), 2)
+        meas["business"] = {"total": b["total_revenue"], "rpm": {k: v["rpm"] for k, v in b["by_platform"].items()}, "catalogue": b["catalogue_value"]}
+        if abs(b["total_revenue"] - want) > 0.05 or not b["catalogue_value"]["value"]:
+            bad.append(f"business: {meas['business']} vs {want}")
+        # the Studio page, served from the scratch plan
+        sk = socket.socket(); sk.bind(("127.0.0.1", 0)); port = sk.getsockname()[1]; sk.close()
+        srv_ = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            for _ in range(50):
+                with socket.socket() as s_:
+                    if s_.connect_ex(("127.0.0.1", port)) == 0:
+                        break
+                time.sleep(0.2)
+            pr = subprocess.run(["node", "tools/business_check.mjs", str(port)], cwd=ROOT, capture_output=True, text=True, timeout=300)
+            page = json.loads(pr.stdout.strip().splitlines()[-1]) if pr.stdout.strip() else {"error": pr.stderr[-300:]}
+        finally:
+            srv_.terminate()
+        meas["page"] = page
+        if page.get("error") or any(v.get("errors") or v.get("sideScroll") for v in page.values() if isinstance(v, dict)) or \
+                not (page["synthetic_1280"]["rehearsal"] and page["synthetic_1280"]["tiles"] >= 4 and page["synthetic_1280"]["effectRows"] > 5 and page["measured_1280"]["empty"]):
+            bad.append(f"business page: {page}")
+        # the YouTube Analytics connector, against a local stand-in
+        vid = re.search(r"shorts/(\w+)", next(p["url"] for p in posts.values() if p["platform"] == "youtube")).group(1)
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                ok = self.headers.get("Authorization") == "Bearer test-token" and vid in self.path
+                body = json.dumps({"columnHeaders": [{"name": "video"}, {"name": "views"}, {"name": "likes"}, {"name": "averageViewPercentage"}],
+                                   "rows": [[vid, 4321, 210, 77.5]] if ok else []}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.end_headers(); self.wfile.write(body)
+            def log_message(self, *a):
+                pass
+        srv = http.server.HTTPServer(("127.0.0.1", 0), H); threading.Thread(target=srv.serve_forever, daemon=True).start()
+        (tmp / "prod" / "connectors.json").write_text(json.dumps({"youtube_analytics": {"access_token": "test-token"}}))
+        os.environ["DBE_YT_ANALYTICS_URL"] = f"http://127.0.0.1:{srv.server_address[1]}/v2/reports"
+        try:
+            ya = analytics_youtube_api("2027-01-01", "2027-03-31", as_of="2027-04-01T00:00:00")
+        except ValueError as e:   # the stand-in's numbers land on a post that holds simulated ones: refused, as it must be
+            ya = {"refused": str(e)[:80]}
+        srv.shutdown()
+        meas["youtube_api"] = ya
+        if not ya.get("refused"):
+            bad.append(f"youtube api: measured numbers were mixed into a simulated post: {ya}")
+    finally:
+        for k, v in old_env.items():
+            os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
 
 def _l10n_test():
     """WP-25. Strings: every string of data-demo has a key, the Arabic file translates them all, a translation that
