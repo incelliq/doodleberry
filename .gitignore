@@ -16,3 +16,6 @@ tmp_imp/
 productions/
 # per-film session notes in workspaces
 .production/
+
+# scratch copies of films made (and removed) by python -m dbe test
+films/zz-*/
