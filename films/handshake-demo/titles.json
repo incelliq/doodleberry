@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "Pip meets Tam",
+   "by": "Claude (engine demo, WP-11)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Hi, I am Pip",
+   "by": "Claude (engine demo, WP-11)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "HI!",
+   "bottom": "PIP MEETS TAM",
+   "by": "Claude (engine demo, WP-11)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

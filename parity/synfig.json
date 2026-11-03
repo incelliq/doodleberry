@@ -1590,11 +1590,12 @@
      "capability": "Spline converters (spline, vertex, tangent, width, segment): bind a value to a point or tangent along a path.",
      "pro_use": "Objects travelling along paths and orienting to them.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "shots.json place.path",
        "WP-11"
       ],
-      "note": "Follow-path constraints and walking along a path are WP-11; props travel on arcs only."
+      "note": "A character's position is bound to a spline (place.path, by arc length); binding other values to spline points or tangents is WP-11."
      }
     },
     {

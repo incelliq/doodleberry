@@ -675,11 +675,13 @@
      "capability": "Spatial interpolation and editable motion paths in the viewer, with auto-orient along the path.",
      "pro_use": "Moves follow designed arcs; a plane or arrow turns to face where it is going.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "shots.json place.path",
+       "interact.solve",
        "WP-11"
       ],
-      "note": "Travel is straight or ballistic (props, with motion arcs from fx.arcs); follow-path constraints and walking along a path are WP-11."
+      "note": "Characters walk along Catmull-Rom paths at constant speed (with ease), facing the way they go; props travel straight or ballistic with motion arcs (fx.arcs). Editing paths in a viewer and follow-path for props are WP-11."
      }
     },
     {

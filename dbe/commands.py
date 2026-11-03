@@ -2377,6 +2377,10 @@ def test_golden(update=False, film=""):
         bad, meas = _motion_test()
         failed += 1 if bad else 0
         results.append({"motion": "siteswaps, contacts on the beat grid, Rapier bakes rerun byte-equal", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "interact":   # interaction and locomotion (WP-11): paths, planted feet, IK/FK, handshakes
+        bad, meas = _interact_test()
+        failed += 1 if bad else 0
+        results.append({"interact": "path walks without foot sliding, IK/FK blends, hands that meet", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -3596,6 +3600,11 @@ def restage(s, aspect):
             pl = c.get("place")
             if isinstance(pl, list):
                 c["place"] = [[t, place(p)] for t, p in pl]
+            elif isinstance(pl, dict) and "path" in pl:   # a walk along a path (WP-11): move its points and scale
+                pa = pl["path"]
+                pts = [place({"x": x, "y": y}) for x, y in pa.get("points", [])]
+                c["place"] = {**pl, "path": {**pa, "points": [[q["x"], q["y"]] for q in pts], **({"s": round(pa.get("s", 1) * k * grow, 4)} if "s" in pa or "s_by_y" not in pa else {}),
+                                              **({"speed": round(pa["speed"] * k, 2)} if "speed" in pa else {})}}
             elif isinstance(pl, dict):
                 c["place"] = place(pl)
         for o in sh.get("overlays", []):
@@ -3932,4 +3941,110 @@ def _motion_test():
                                "physics_keys_on_grid": all(abs(k["film"] / 0.3 - round(k["film"] / 0.3)) < 1e-6 for k in r["keys"]), "physics_keys": len(r["keys"])}
         if not (same and r["juggle"]["on_grid"] and meas["juggle_demo"]["physics_keys_on_grid"] and r["keys"]):
             bad.append({"juggle_demo": meas["juggle_demo"]})
+    return bad, meas
+
+
+# ---------------- interaction and locomotion (WP-11) ----------------
+def _node_json(args, timeout=600):
+    r = subprocess.run(["node", *map(str, args)], cwd=ROOT, capture_output=True, text=True, timeout=timeout)
+    if r.returncode != 0:
+        raise RuntimeError(f"{args[0]} failed: {(r.stderr or r.stdout)[-1500:]}")
+
+
+def _interact_into(name, raw, shot):
+    """solve the shot's interact block into the raw shots.json shot (in memory); returns the solve summary"""
+    import tempfile
+    rs = _raw_shot(raw, shot)
+    if not rs.get("interact"):
+        raise ValueError(f"shot {shot} has no interact block")
+    tm = _json(FILMS / name / "timing.json", {})
+    res = resolve_times(rs, tm)
+    blk = {k: v for k, v in res["interact"].items() if k != "solved"}
+    req = {"fps": raw.get("fps", 30), "start": res["start"], "end": res["end"], "interact": blk,
+           "cast": [{"puppet": c["puppet"], "place": c.get("place"), "timeline": {k: v for k, v in (c.get("timeline") or {}).items() if k != "visemes_from"}} for c in res["cast"]]}
+    with tempfile.TemporaryDirectory(prefix="interact_") as td:
+        a, b = Path(td) / "req.json", Path(td) / "out.json"
+        a.write_text(json.dumps(req))
+        _node_json(["tools/interact.mjs", "solve", a, b])
+        out = json.loads(b.read_text())
+    for ci, o in enumerate(out["cast"]):
+        c = rs["cast"][ci]
+        tl = c.setdefault("timeline", {})
+        if o.get("place"):
+            c["place"] = o["place"]
+        if o["clips"] or any(x.get("solved") == "interact" for x in tl.get("clips", [])):
+            tl["clips"] = [x for x in tl.get("clips", []) if x.get("solved") != "interact"] + o["clips"]
+        add = o["timeline"]
+        cur = tl.get("lookat")
+        cur = cur if isinstance(cur, list) else ([cur] if cur else [])
+        looks = [x for x in cur if x.get("solved") != "interact"] + add.get("lookat", [])
+        if looks:
+            tl["lookat"] = looks
+        else:
+            tl.pop("lookat", None)
+        for k in ("pins", "view"):
+            if k in add:
+                tl[k] = add[k]
+        for k in ("ik", "ik_weight"):
+            if k in add:
+                tl[k] = {**tl.get(k, {}), **add[k]}
+    rs["interact"] = {**{k: v for k, v in rs["interact"].items() if k != "solved"}, "solved": {"walks": out["walks"], "handshakes": out["handshakes"]}}
+    return {"walks": out["walks"], "handshakes": out["handshakes"]}
+
+
+@command("interact.solve", name=("string", "film"), shot=("string", "shot id"),
+         block=("object", "an interact block to store first ({walks, handshakes, eye_contact}); empty: the shot's own", None))
+def interact_solve(name, shot, block=None):
+    """Interaction and locomotion (WP-11): walks along curved paths (Catmull-Rom through the points; the root speed
+    matches the walk clip's stride and the walk ends on a passing step; feet planted while the root moves), handshakes
+    (one character holds out a hand to the meeting point and pumps it, the other takes that hand: an IK target on
+    another character, blended in and out by IK/FK weights) and eye contact (heads look at each other in a window).
+    Writes places and timeline keys into shots.json; times may be line-relative or "arrive"."""
+    d = _film(name)
+    raw = _json(d / "shots.json")
+    if block:
+        _raw_shot(raw, shot)["interact"] = block
+    res = _interact_into(name, raw, shot)
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    return res
+
+
+@command("interact.measure", name=("string", "film"), shot=("string", "shot id"))
+def interact_measure(name, shot):
+    """The WP-11 measurements on the baked frames every renderer reads: how far a planted foot moves in the frame
+    while it is in contact (max and mean px per frame, per walking character) and how far apart the two hands are
+    during each solved handshake (max px)."""
+    import tempfile
+    s, sh, bdir, _ = _bake(name, shot)
+    hands = []
+    for h in ((sh.get("interact") or {}).get("solved") or {}).get("handshakes", []):
+        hands.append({"a": h["a"], "b": h["b"], "start": h["start"], "end": h["end"]})
+    with tempfile.TemporaryDirectory(prefix="measure_") as td:
+        o, op = Path(td) / "m.json", Path(td) / "opts.json"
+        op.write_text(json.dumps({"hands": hands}))
+        _node_json(["tools/interact.mjs", "measure", bdir / f"{shot}.spec.json", bdir / f"{shot}.baked.json", o, op])
+        m = json.loads(o.read_text())
+    m["ok"] = all(f["max_slide_px"] <= 1.0 for f in m["feet"]) and all(h["max_gap_px"] <= 2.0 for h in m["hands"])
+    return m
+
+
+def _interact_test():
+    """WP-11 checks: loader pieces (path speed and facing, exact contact starts, IK/FK weights, targets on other
+    characters), and handshake-demo re-solved from its block gives exactly the committed shot, with planted feet that
+    slide at most 1 px per frame and hands that meet within 2 px on the baked frames every renderer reads."""
+    bad, meas = [], {}
+    r = subprocess.run(["node", "tools/interact.mjs", "selftest"], cwd=ROOT, capture_output=True, text=True, timeout=300)
+    st = json.loads(r.stdout or "{}") if r.returncode == 0 else {"ok": False, "error": r.stderr[-500:]}
+    meas["loader"] = st
+    if not st.get("ok"):
+        bad.append({"loader": st})
+    if (FILMS / "handshake-demo").exists():
+        raw = _json(FILMS / "handshake-demo" / "shots.json")
+        before = json.dumps(raw, sort_keys=True)
+        _interact_into("handshake-demo", raw, "s1")
+        same = json.dumps(raw, sort_keys=True) == before
+        m = interact_measure("handshake-demo", "s1")
+        meas["handshake_demo"] = {"resolve_equal": same, "feet": [{k: f[k] for k in ("cast", "max_slide_px", "mean_slide_px", "planted_frames")} for f in m["feet"]], "hands": m["hands"]}
+        if not (same and m["ok"] and m["feet"] and m["hands"]):
+            bad.append({"handshake_demo": meas["handshake_demo"]})
     return bad, meas

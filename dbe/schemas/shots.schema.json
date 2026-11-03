@@ -94,6 +94,10 @@
     "speed": {
      "type": "number",
      "exclusiveMinimum": 0
+    },
+    "phase": {
+     "type": "number",
+     "description": "clip seconds to start into the clip (WP-11)"
     }
    }
   },
@@ -137,13 +141,24 @@
      "type": "object"
     },
     "travel": {
-     "type": "number"
+     "type": [
+      "number",
+      "object"
+     ]
     },
     "set": {
      "type": "object"
     },
     "seed": {
      "type": "number"
+    },
+    "ik_weight": {
+     "type": "object",
+     "description": "WP-11 IK/FK blend per limb: [[t, 0..1]]"
+    },
+    "ik_bend": {
+     "type": "object",
+     "description": "which way an elbow or knee bends per limb (1 or -1)"
     }
    }
   },
@@ -164,6 +179,9 @@
      "oneOf": [
       {
        "$ref": "#/$defs/place"
+      },
+      {
+       "$ref": "#/$defs/path_place"
       },
       {
        "type": "array",
@@ -629,6 +647,107 @@
          "body"
         ]
        }
+      }
+     }
+    },
+    "interact": {
+     "type": "object",
+     "description": "WP-11 interaction and locomotion (interact.solve): walks along paths, handshakes, eye contact",
+     "properties": {
+      "walks": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "cast",
+         "points"
+        ]
+       }
+      },
+      "handshakes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "a",
+         "b"
+        ]
+       }
+      },
+      "eye_contact": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "a",
+         "b"
+        ]
+       }
+      },
+      "solved": {
+       "type": "object"
+      }
+     }
+    }
+   }
+  },
+  "path_place": {
+   "type": "object",
+   "required": [
+    "path"
+   ],
+   "description": "WP-11: walk along a path (Catmull-Rom through the points, frame px); see puppet/loader/acting.js pathAt",
+   "properties": {
+    "path": {
+     "type": "object",
+     "required": [
+      "points"
+     ],
+     "properties": {
+      "points": {
+       "type": "array",
+       "minItems": 1,
+       "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+         "type": "number"
+        }
+       }
+      },
+      "start": {
+       "$ref": "#/$defs/time"
+      },
+      "end": {
+       "$ref": "#/$defs/time"
+      },
+      "speed": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "ease": {
+       "type": "number",
+       "minimum": 0
+      },
+      "s": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "s_by_y": {
+       "type": "array",
+       "minItems": 4,
+       "maxItems": 4,
+       "items": {
+        "type": "number"
+       }
+      },
+      "face": {
+       "enum": [
+        "auto",
+        1,
+        -1
+       ]
       }
      }
     }

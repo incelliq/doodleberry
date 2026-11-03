@@ -1444,11 +1444,12 @@
      "capability": "Motion paths: objects move along a drawn path, optionally turning to its direction, with keys snapped to path points.",
      "pro_use": "Flying objects and smooth arcs without many keys.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "shots.json place.path",
        "WP-11"
       ],
-      "note": "Follow-path constraints and walking along a path are WP-11; ballistic prop arcs exist in the SVG player."
+      "note": "Characters walk along drawn paths and turn to face their direction (place.path); props travel on ballistic arcs. Follow-path for props with keys snapped to path points is WP-11."
      }
     },
     {

@@ -9,6 +9,9 @@
 //     look: [[0, [1, 0]], [4, [-1, 0.3]]],               // gaze keys
 //     ik: { arm_R: [[1, [460, 420]]] },                  // reach targets in artboard space over time (a null key lets go)
 //     ik_bend: { arm_L: 1 },                             // which way an elbow or knee bends (default from LIMBS)
+//     ik_weight: { arm_R: [[2, 0], [2.4, 1]] },          // IK/FK blend per limb: 0 = the clips' pose, 1 = the reach target
+//     lookat: [{part: 'head', target: [x, y] | {cast, part}, limit: 30, start, end, ease: 0.3}],   // a window eases in and out
+//     pins: {...}, travel: {path: {...}},                 // planted feet stay put while the root walks a path (WP-11)
 //     pins: { foot_L: 'auto', foot_R: 'auto' },          // keep planted feet planted during walks
 //     springs: true,                                     // hair/tie/coat follow-through (from puppet.springs)
 //     blinks: [t, ...], blink: false,                   // scripted blinks; false turns off automatic blinking
@@ -50,7 +53,7 @@
     if (clip.contacts) pose.contacts = Object.fromEntries(Object.entries(clip.contacts).map(([f, keys]) => [f, sampleKeys(keys, lt, loop)]));
     return pose;
   }
-  // layers: [{clip, start, speed=1, weight=1, fadeIn=0.25, fadeOut=0.25, end, additive, base}]
+  // layers: [{clip, start, speed=1, weight=1, fadeIn=0.25, fadeOut=0.25, end, additive, base, phase=0 (clip seconds to start into the clip)}]
   // Blending per track: foreground clips average by weight among themselves and override the base layer ("idle", or
   // any layer with base: true) in proportion to their weight, so a gesture at weight 1 plays at full size over idle and
   // idle still fills every track the gesture does not touch. Additive layers add on top.
@@ -59,7 +62,7 @@
     const offs = [];
     for (const L of layers || []) {
       const clip = typeof L.clip === 'string' ? CLIPS[L.clip] : L.clip; if (!clip) continue;
-      const speed = L.speed || 1, lt = (t - (L.start || 0)) * speed;
+      const speed = L.speed || 1, lt = (t - (L.start || 0)) * speed + (L.phase || 0);
       const end = L.end ?? (clip.loop ? Infinity : (L.start || 0) + clip.duration / speed);
       const fi = L.fadeIn ?? clip.fadeIn ?? 0.25, fo = L.fadeOut ?? clip.fadeOut ?? 0.25;   // v0.8: a clip may set its own fades (drawn levels cut, never fade)
       if (t < (L.start || 0) || t > end + fo) continue;
@@ -213,6 +216,98 @@
     return out;
   }
 
+  // ---------- v0.8 walking along a path (WP-11) ----------
+  // place.path = {points: [[x, y], ...] (frame px, a Catmull-Rom curve through them), start: t, speed: px/s | end: t,
+  //               ease: s (speed up and slow down), s: scale | s_by_y: [y0, s0, y1, s1] (perspective), face: "auto" | 1 | -1}
+  // pathAt(path, t) -> [x, y, s, flip]: the root at time t, at constant speed along the arc length; pure.
+  const PATHS = new WeakMap();
+  function pathTable(path) {
+    let T = PATHS.get(path); if (T) return T;
+    const P = path.points || [[0, 0]], pts = [];
+    if (P.length < 2) pts.push(P[0] || [0, 0]);
+    for (let i = 0; i < P.length - 1; i++) {
+      const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+      for (let k = 0; k < 32; k++) { const u = k / 32, u2 = u * u, u3 = u2 * u;
+        pts.push([0, 1].map(j => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u3))); }
+    }
+    if (P.length >= 2) pts.push(P[P.length - 1]);
+    const len = [0]; for (let i = 1; i < pts.length; i++) len.push(len[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    T = { pts, len, L: len[len.length - 1] }; PATHS.set(path, T); return T;
+  }
+  function pathDist(path, t) {   // distance travelled at t (trapezoid speed profile with `ease` seconds at each end)
+    const T = pathTable(path), st = path.start || 0, L = T.L;
+    const dur = path.end != null ? Math.max(1e-3, path.end - st) : L / Math.max(1e-3, path.speed || 150);
+    const e = Math.min(path.ease || 0, dur / 2), v = L / Math.max(1e-6, dur - e), u = clamp(t - st, 0, dur);
+    if (!e) return L * u / dur;
+    if (u < e) return v * u * u / (2 * e);
+    if (u > dur - e) { const r = dur - u; return L - v * r * r / (2 * e); }
+    return v * e / 2 + v * (u - e);
+  }
+  function pathAt(path, t) {
+    const T = pathTable(path), d = pathDist(path, t), { pts, len } = T;
+    let i = 1; while (i < len.length - 1 && len[i] < d) i++;
+    const a = pts[i - 1] || pts[0], b = pts[i] || a, k = len[i] > len[i - 1] ? (d - len[i - 1]) / (len[i] - len[i - 1]) : 0;
+    const x = a[0] + (b[0] - a[0]) * k, y = a[1] + (b[1] - a[1]) * k;
+    let flip = path.face === 1 || path.face === -1 ? path.face : 1;
+    if (path.face == null || path.face === 'auto') {   // face the way the path heads (looking back past flat bits)
+      let j = Math.min(Math.max(i, 1), pts.length - 1); while (j > 1 && Math.abs(pts[j][0] - pts[j - 1][0]) < 1e-6) j--;
+      let dx = pts[j][0] - pts[j - 1][0]; if (Math.abs(dx) < 1e-6) { let m = 1; while (m < pts.length - 1 && Math.abs(pts[m][0] - pts[0][0]) < 1e-6) m++; dx = pts[m][0] - pts[0][0]; }
+      flip = dx < 0 ? -1 : 1;
+    }
+    let s = path.s ?? 1;
+    if (path.s_by_y) { const [y0, s0, y1, s1] = path.s_by_y; s = s0 + (s1 - s0) * clamp((y - y0) / ((y1 - y0) || 1), -1, 2); }
+    return [x, y, s, flip];
+  }
+  // where a cast entry stands at t: {x, y, s, flip}, keyed [[t, {...}]], or {path: {...}}
+  function placeAt(pl, t) {
+    if (!pl) return null;
+    if (pl.path) return pathAt(pl.path, t);
+    if (Array.isArray(pl)) return sampleKeys(pl.map(([k, v]) => [k, [v.x, v.y, v.s ?? 1, v.flip ?? 1]]), t);
+    return [pl.x, pl.y, pl.s ?? 1, pl.flip ?? 1];
+  }
+
+  // when the current contact of a foot began: exact, from the dominant clip's contact keys (no stepping back)
+  function contactStart(layers, t, foot, CLIPS) {
+    let best = null;
+    for (const L of layers || []) {
+      if (L.additive) continue;
+      const clip = typeof L.clip === 'string' ? CLIPS[L.clip] : L.clip; if (!clip || !clip.contacts || !clip.contacts[foot]) continue;
+      const st = L.start || 0, speed = L.speed || 1, fi = L.fadeIn ?? clip.fadeIn ?? 0.25, fo = L.fadeOut ?? clip.fadeOut ?? 0.25;
+      const end = L.end ?? (clip.loop ? Infinity : st + clip.duration / speed);
+      if (t < st || t > end + fo) continue;
+      const w = (L.weight ?? 1) * (fi ? smooth(clamp((t - st) / fi)) : 1) * (isFinite(end) && fo ? 1 - smooth(clamp((t - end) / fo)) : 1);
+      if (w < 0.5) continue;
+      const keys = clip.contacts[foot], loop = clip.loop ? clip.duration : 0, lt = (t - st) * speed + (L.phase || 0);
+      const ph = loop ? ((lt % loop) + loop) % loop : clamp(lt, 0, clip.duration);
+      let i = 0; while (i + 1 < keys.length && keys[i + 1][0] < ph) i++;
+      if (!keys[i][1]) continue;
+      let j = i, back = 0;
+      for (let n = 0; n < keys.length; n++) {
+        if (j > 0) { if (!keys[j - 1][1]) break; j--; }
+        else if (loop && keys[keys.length - 1][1] && keys.length > 1) { j = keys.length - 1; back += loop; }
+        else break;
+      }
+      const startPh = keys[j][0] - back, from = st + (fi ? fi / 2 : 0);
+      best = Math.max(from, t - (ph - startPh) / speed);
+    }
+    return best;
+  }
+
+  // Targets that the caller resolves before evaluate (it knows where everyone stands): an IK key value or a look-at
+  // target may be {x, y} (a frame point) or {cast, part, at} (a point on another character). toLocal(frame point)
+  // gives this puppet's artboard point; worldOf(target, t) a frame point (null when unknown, which drops it).
+  const isRef = v => v && typeof v === 'object' && !Array.isArray(v);
+  function crossRefs(tl) {
+    return Object.values(tl.ik || {}).some(keys => keys.some(([, v]) => isRef(v) && v.cast != null)) || [].concat(tl.lookat || []).some(la => isRef(la.target) && la.target.cast != null);
+  }
+  function resolveTargets(tl, t, toLocal, worldOf) {
+    const out = { ...tl };
+    const res = v => { if (!isRef(v)) return v; const w = v.cast != null ? worldOf(v, t) : [v.x, v.y]; return w ? toLocal(w) : null; };
+    if (tl.ik) { out.ik = {}; for (const [limb, keys] of Object.entries(tl.ik)) { const r = keys.map(([k, v]) => [k, res(v)]); if (r.every(([, v]) => v == null || Array.isArray(v))) out.ik[limb] = r; } }
+    if (tl.lookat) out.lookat = [].concat(tl.lookat).map(la => { if (la.target_local) return la; const tg = Array.isArray(la.target) ? toLocal(la.target) : res(la.target); return tg ? { ...la, target_local: tg } : null; }).filter(Boolean);
+    return out;
+  }
+
   const OWN = new WeakMap();
   function ownClips(puppet, CLIPS) { let m = OWN.get(puppet); if (!m || m.lib !== CLIPS) { m = { lib: CLIPS, all: { ...CLIPS, ...puppet.clips } }; OWN.set(puppet, m); } return m.all; }
 
@@ -254,8 +349,9 @@
     }
     // look-at constraint: rotate a part so its aim vector points at a target (artboard coordinates), clamped
     for (const la of [].concat(tl.lookat || [])) {
-      const tgt = la.target_local || la.target; if (!tgt || !puppet.parts[la.part]) continue;
-      const w = la.weight ?? 1, lim = la.limit ?? 30, part = puppet.parts[la.part];
+      const tgt = la.target_local || la.target; if (!Array.isArray(tgt) || !puppet.parts[la.part]) continue;
+      const ez = la.ease ?? 0.3, win = (la.start != null ? smooth(clamp((t - la.start) / ez + 1)) : 1) * (la.end != null ? 1 - smooth(clamp((t - la.end) / ez)) : 1);
+      const w = (la.weight ?? 1) * win, lim = la.limit ?? 30, part = puppet.parts[la.part]; if (w <= 0) continue;
       const M = P.matrices(puppet, pose), par = part.parent && M[part.parent];
       const pv = par ? [par[0] * part.pivot[0] + par[2] * part.pivot[1] + par[4], par[1] * part.pivot[0] + par[3] * part.pivot[1] + par[5]] : part.pivot;
       const aim = la.aim || [1, 0], cur = Math.atan2(aim[1], aim[0]) + (par ? Math.atan2(par[1], par[0]) : 0) + ((pose.angles[la.part] || 0) * Math.PI / 180);
@@ -265,20 +361,31 @@
     }
     // IK reach targets
     for (const [limb, keys] of Object.entries(tl.ik || {})) {
-      const tgt = sampleKeys(keys, t); if (!tgt) continue;
+      const tgt = sampleKeys(keys, t); if (!Array.isArray(tgt) || !LIMBS[limb]) continue;   // unresolved targets are skipped
+      const wk = (tl.ik_weight || {})[limb], w = wk ? clamp(sampleKeys(wk, t) ?? 1) : 1; if (w <= 0) continue;
       const [u, l, e, bend0] = LIMBS[limb], bend = (tl.ik_bend || {})[limb] ?? bend0;
-      Object.assign(pose.angles, ik2(puppet, pose, u, l, e, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]], bend));
+      const sol = ik2(puppet, pose, u, l, e, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]], bend);
+      for (const [k, v] of Object.entries(sol)) { let d = v - (pose.angles[k] || 0); while (d > 180) d -= 360; while (d < -180) d += 360; pose.angles[k] = (pose.angles[k] || 0) + d * w; }
     }
-    // foot pins: during contact phases a foot stays where it first touched down
+    // foot pins: during contact phases a foot stays where it first touched down. tl.travel is the root's speed along x
+    // in artboard px/s, or {path} (the cast's place.path): the planted point keeps its x in the frame while the root moves.
     if (tl.pins) for (const foot of ['foot_L', 'foot_R']) {
       if (!tl.pins[foot] || !pose.contacts || !pose.contacts[foot]) continue;
       const limb = foot === 'foot_L' ? 'leg_L' : 'leg_R', [u, l, e, bend] = LIMBS[limb];
-      // find when this contact began (step back in small steps), and where the foot was then
-      let t0 = t; for (let k = 0; k < 60; k++) { const s = evalStack(layers, t0 - 1 / 60, CLIPS); if (!s.contacts || !s.contacts[foot]) break; t0 -= 1 / 60; }
+      const t0 = contactStart(layers, t, foot, CLIPS); if (t0 == null) continue;
       const p0 = evalStack(layers, t0, CLIPS);
-      const at0 = P.pointOf(puppet, e, null, 0, 0, { angles: { ...base.angles, ...p0.angles }, offset: p0.offset || [0, 0] });
-      const hipX = (puppet.parts.hip.pivot[0]), ground = puppet.ground;
-      const world = [at0[0] + hipX + (tl.travel || 0) * (t0 - t), Math.min(at0[1] + ground, ground - 2)];
+      const a0 = { ...base.angles }; for (const [k, v] of Object.entries(p0.angles)) a0[k] = (a0[k] || 0) + v;   // as evaluate combines them
+      const at0 = P.pointOf(puppet, e, null, 0, 0, { angles: a0, offset: p0.offset || [0, 0], view: tl.view ? sampleKeys(tl.view, t0) : pose.view });
+      const hipX = (puppet.parts.hip.pivot[0]), ground = puppet.ground, fy = Math.min(at0[1], -2);
+      let world;
+      if (tl.travel && typeof tl.travel === 'object' && tl.travel.path) {
+        const [x0, y0, s0, f0] = pathAt(tl.travel.path, t0), [x1, y1, s1, f1] = pathAt(tl.travel.path, t);
+        // the planted point keeps its place in the frame along x (no sliding); its height is the clip's own (the heel
+        // rolls up at the end of a step), and up and down the frame is depth in a 2.5D stage, so it rides on the ground
+        // line under the hips (a foot pinned in y as well would leave the leg straining or crushed)
+        const Wx = x0 + at0[0] * s0 * f0, now = P.pointOf(puppet, e, null, 0, 0, { angles: pose.angles, offset: pose.offset || [0, 0], view: pose.view });
+        world = [(Wx - x1) / (s1 * f1) + hipX, Math.min(now[1], -2) + ground];
+      } else world = [at0[0] + hipX + (tl.travel || 0) * (t0 - t), fy + ground];
       Object.assign(pose.angles, ik2(puppet, pose, u, l, e, [world[0] - (pose.offset || [0, 0])[0], world[1] - (pose.offset || [0, 0])[1]], bend));
     }
     // chains: a living wave along each chain, then FABRIK reach targets
@@ -301,5 +408,5 @@
     return pose;
   }
 
-  root.Acting = { evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
+  root.Acting = { pathAt, pathDist, pathTable, placeAt, contactStart, resolveTargets, crossRefs, evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
 })(typeof window !== 'undefined' ? window : globalThis);

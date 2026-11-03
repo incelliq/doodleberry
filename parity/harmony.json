@@ -962,10 +962,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json shots[].cast[].place",
+       "shots.json place.path",
        "WP-11"
       ],
-      "note": "Point-to-point travel; follow-path constraints are WP-11; props draw motion arcs (fx.arcs)"
+      "note": "Characters walk along Catmull-Rom paths (place.path) with ease in and out; props draw motion arcs (fx.arcs). Tension, bias and continuity handles are WP-11."
      }
     },
     {

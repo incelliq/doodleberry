@@ -213,7 +213,8 @@ def run(name, shot, times=None, renderers=("synfig", "lottie", "grease-pencil"),
 
 
 BENCH = [("pip-park", "s1"), ("pip-park", "s2"), ("pip-park", "s3"), ("direct-demo", "s1"), ("dialogue-demo", "s1"), ("clips-demo", "s1"),
-         ("nib-hello", "s1"), ("level-demo", "s1"), ("fx-demo", "s1"), ("props-demo", "s1"), ("night-planes", "s1")]
+         ("nib-hello", "s1"), ("level-demo", "s1"), ("fx-demo", "s1"), ("props-demo", "s1"), ("night-planes", "s1"),
+         ("juggle-demo", "s1"), ("handshake-demo", "s1")]
 
 
 def bench(shots=None):

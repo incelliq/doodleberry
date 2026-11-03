@@ -137,7 +137,7 @@ A stroke can be a texture on a triangle mesh whose vertices follow several parts
 
 ## Acting timelines (used by `puppet/loader/acting.js`)
 `{clips: [{clip, start, end, weight, fadeIn, additive}], poses: [[t, name]], visemes: [[t, shape]] | visemes_from: speaker,
-look: [[t, [x, y]]], view: [[t, name]], blinks: [t, ...] (scripted), blink: false (no automatic blinks), ik: {arm_R: [[t, [x, y]]]} (a null target lets the limb go), ik_bend: {arm_L: 1} (which way the elbow or knee bends), pins: {foot_L, foot_R}, travel, springs: true}`.
+look: [[t, [x, y]]], view: [[t, name]], blinks: [t, ...] (scripted), blink: false (no automatic blinks), ik: {arm_R: [[t, [x, y]]]} (a null target lets the limb go), ik_bend: {arm_L: 1} (which way the elbow or knee bends), ik_weight: {arm_R: [[t, 0..1]]} (IK/FK blend), pins: {foot_L, foot_R}, travel (px/s, or {path}: feet planted while the root walks place.path), springs: true}`. Look-at targets and IK key values may be `{x, y}` (a frame point) or `{cast, part, at}` (another character), which the player and the bake resolve; a clip layer may start `phase` seconds into its clip.
 Clips come from the template's library (idle, walk, talk_beat, wave_R, point_R, nod, shrug, think, surprised...).
 In a film's `shots.json`, any time can be written relative to a spoken line: `"mid.start+0.9"`, `"end.end-0.2"`.
 These resolve against `timing.json`, so acting stays on the words after a voice change or translation.

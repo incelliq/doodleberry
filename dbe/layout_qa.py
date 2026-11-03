@@ -167,7 +167,7 @@ def cold_open(shots_resolved, timing, size):
     on = []
     for c in first.get("cast", []):
         pl = c.get("place", {})
-        x = pl[0][1]["x"] if isinstance(pl, list) else pl.get("x", W / 2)
+        x = pl[0][1]["x"] if isinstance(pl, list) else (pl["path"]["points"][0][0] if "path" in pl else pl.get("x", W / 2))
         on.append(-60 <= x <= W + 60 and abs(x - W / 2) < W * 0.62)
     for o in first.get("overlays", []):   # a kit character (a face) counts when it is up from the first frame
         if o.get("type") == "face" and (o.get("start") or 0) <= 1 / 30 and -60 <= o.get("x", W / 2) <= W + 60:

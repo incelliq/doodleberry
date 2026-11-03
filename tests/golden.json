@@ -81,6 +81,14 @@
     5.9,
     8.5
    ]
+  },
+  {
+   "film": "handshake-demo",
+   "shot": "s1",
+   "times": [
+    2.0,
+    6.4
+   ]
   }
  ],
  "poses": [

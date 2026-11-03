@@ -1017,10 +1017,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json: timeline ik / pins",
+       "shots.json timeline ik_weight",
        "WP-11"
       ],
-      "note": "Two-bone and FABRIK IK, foot pins, joint limits, look-at and parent switching exist. Copy-rotation and follow-path constraints are in WP-11."
+      "note": "Two-bone and FABRIK IK with IK/FK blending and targets on other characters, foot pins along paths, joint limits, look-at and parent switching exist. Copy-rotation constraints are in WP-11."
      }
     },
     {

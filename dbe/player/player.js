@@ -8,7 +8,7 @@
   stage.setAttribute('viewBox', `0 0 ${W} ${H}`); stage.style.width = W + 'px'; stage.style.height = H + 'px';
   const words = (T.lines || []).flatMap(l => l.words.map(w => ({ ...w, speaker: l.speaker })));
   const shotAt = t => S.shots.reduce((a, s) => (t >= s.start ? s : a), S.shots[0]);
-  const placeAt = (pl, t) => Array.isArray(pl) ? Acting.sampleKeys(pl.map(([k, v]) => [k, [v.x, v.y, v.s ?? 1, v.flip ?? 1]]), t) : [pl.x, pl.y, pl.s ?? 1, pl.flip ?? 1];
+  const placeAt = (pl, t) => Acting.placeAt(pl, t);   // {x, y, s, flip}, keyed, or {path} (WP-11 walks along a path)
 
   function captions(t, style) {
     const w = words.filter(v => v.start <= t + 0.05 && v.end + 0.2 > t);
@@ -191,7 +191,8 @@
       if (Math.abs(tt - tq) < 1e-9) return cc;
       const key = ci + ':' + tt.toFixed(4); let st2 = memo[key];
       if (!st2) { const [x2, y2, s2, f2] = placeAt(cc.c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tt); const tl2 = { ...cc.tl }; delete tl2.lookat;
-        st2 = memo[key] = { p: cc.p, x: x2, y: y2, s: s2, flip: f2, pose: Acting.evaluate(cc.p, tl2, tt, cc.L.clips, cc.L.presets) }; }
+        const tl3 = Acting.resolveTargets(tl2, tt, w => toLocal(cc.p, w, x2, y2, s2, f2), () => null);
+        st2 = memo[key] = { p: cc.p, x: x2, y: y2, s: s2, flip: f2, pose: Acting.evaluate(cc.p, tl3, tt, cc.L.clips, cc.L.presets) }; }
       return st2; };
     return { fps: FPS, poseAt,
       at: (tg, tt) => { if (!tg) return null; if (Array.isArray(tg)) return tg; const c = poseAt(tg.cast, tt); if (!c) return null;
@@ -251,10 +252,20 @@
       }
       const tl = { ...(c.timeline || {}) }, L = libFor(p);
       if (tl.visemes_from) { tl.visemes = (T.visemes || {})[tl.visemes_from] || []; delete tl.visemes_from; }
+      if (c.place && c.place.path && tl.pins && tl.travel == null) tl.travel = { path: c.place.path };   // planted feet on a path walk
       const [x, y, s, flip] = placeAt(c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tq);
-      if (tl.lookat) tl.lookat = [].concat(tl.lookat).map(la => ({ ...la, target_local: toLocal(p, worldOf(la.target, tq, casts), x, y, s, flip) }));
-      const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
-      casts.push({ p, x, y, s, flip, pose, c, tl, L });
+      // pass 1: targets on other characters wait until everyone has a pose (WP-11: handshakes, eye contact)
+      const loc = w => toLocal(p, w, x, y, s, flip);
+      const tl1 = Acting.resolveTargets(tl, tq, loc, () => null);
+      const pose = Acting.evaluate(p, tl1, tq, L.clips, L.presets);
+      casts.push({ p, x, y, s, flip, pose, c, tl, L, loc, cross: Acting.crossRefs(tl) });
+    }
+    if (!bgOnly) {   // pass 2: characters that reach for or look at someone, against everyone's first-pass pose
+      const first = casts.map(cc => ({ ...cc }));
+      for (const cc of casts) if (cc.cross) cc.pose = Acting.evaluate(cc.p, Acting.resolveTargets(cc.tl, tq, cc.loc, (tg, tt) => worldOf(tg, tt, first)), tq, cc.L.clips, cc.L.presets);
+    }
+    for (const cc of bgOnly ? [] : casts) {
+      const { p, x, y, s, flip, pose, c } = cc;
       const shadow = st.shadow !== false && !castOnly ? `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>` : '';
       const drawn = Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}) });
       if (onPlane(c)) planeInk[c.plane] = (planeInk[c.plane] || '') + shadow + drawn;

@@ -56,9 +56,9 @@ covered, now added to their packages' scopes.
 | Bone hierarchy, FK | PRO | ✅ | – | |
 | Two-bone IK with targets and foot pins | PRO | ✅ | – | `acting.js` |
 | N-bone IK chains (FABRIK): tails, tentacles, spines | PRO (Spine, Moho) | ✅ | – | FABRIK chains with a living wave, puppet v0.6 (2.5) |
-| IK/FK switching and blending | PRO | ⬜ | P2 | IK/FK switching and blending: WP-11 |
+| IK/FK switching and blending | PRO | ✅ | – | timeline `ik_weight` per limb blends the clips' pose and the reach target over time (WP-11) |
 | Joint limits | PRO | ✅ | – | puppet v0.6 joint limits (2.5) |
-| Constraints: look-at, copy rotation, follow path, parent switching (prop moves hand to hand) | PRO | 🟡 | P0 | look-at and parent switching with arcs (1.2); copy rotation and follow path: WP-11 |
+| Constraints: look-at, copy rotation, follow path, parent switching (prop moves hand to hand) | PRO | 🟡 | P0 | look-at (with time windows) and parent switching with arcs (1.2); characters follow paths and reach for each other (WP-11 part 1); copy rotation and follow path for props: WP-11 |
 | Swap sets (mouths, eyes, hands) | PRO | ✅ | – | |
 | Drawing substitution driven by angle or control | PRO (Harmony) | 🟡 | P1 | controls drive swaps (1.2); substitution by a part's angle: WP-11 |
 | Smart bones / driven keys / corrective drawings | PRO (Moho) | ✅ | – | `controls` with driven keys for angles, shifts, swaps and z (1.2) |
@@ -84,7 +84,7 @@ covered, now added to their packages' scopes.
 | Nonlinear clip stack with fades and additive layers | PRO | ✅ | – | |
 | Action clip library | PRO | ✅ | – | 33 library clips (2.5) plus each character's own clips (3.3, 3.5) |
 | Pose library and blending | PRO | ✅ | – | presets plus per-character poses |
-| Walk along a path with foot planting | PRO | 🟡 | P1 | straight travel with foot pins; paths: WP-11 |
+| Walk along a path with foot planting | PRO | ✅ | – | `place.path` (Catmull-Rom, ease, perspective scale) with feet planted along it; `interact.solve` matches the stride (WP-11; under 1 px of slide, measured) |
 | Procedural life: breathing, blinks, gaze saccades, weight shift, fidgets | PRO/NEW | ✅ | – | fidgets missing |
 | Lip-sync from audio phonemes | PRO | ✅ | – | |
 | Lip-sync cross-check without a transcript (Rhubarb) | PRO | ✅ | – | `lipsync.check` in-house; Rhubarb compared when installed (2.2) |
@@ -96,7 +96,7 @@ covered, now added to their packages' scopes.
 | 3D mocap retargeted to 2D | NEW | 🟡 | P2 | video to 2D clips with `actout.clip` (3.5); BVH and CMU mocap to 2D: WP-12 |
 | Animation principles as filters: anticipation, overshoot, follow-through, arcs | IDEA | ✅ | – | anticipation and overshoot filter (2.5), springs for follow-through; motion arcs on props (WP-09) |
 | Smears and motion lines on fast moves | PRO | ✅ | – | speed lines, dust, impact stars from the motion (2.20); smear frames, stretch, squash and motion arcs on props (WP-09) |
-| Multi-character interaction: handshake, hug, hand-off, eye contact | NEW | ⬜ | P1 | handshake, hug, hand-off, eye contact: WP-11 |
+| Multi-character interaction: handshake, hug, hand-off, eye contact | NEW | 🟡 | P1 | handshakes and eye contact (`interact.solve`, IK targets on another character, every renderer); hand-offs through props (1.2); hug: WP-11 |
 | Listener behaviour: whoever isn't speaking reacts | NEW | ✅ | – | listener gaze, nods and blinks in `acting.plan` (2.3) |
 | Crowds with variation | PRO | ⬜ | P2 | crowds: WP-42 |
 | Prop physics: drops, bounces, rolls | PRO | ✅ | – | throws, drops, bounces, rolls solved at bake time (2.19); juggling and multi-body Rapier scenes on the beat (WP-09) |

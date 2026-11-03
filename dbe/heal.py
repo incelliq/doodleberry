@@ -168,7 +168,7 @@ def apply(raw, repairs, resolved, size):
             o["end"] = round(min(res[sh["id"]]["end"], ro["start"] + e[3]), 3); o.pop("until", None)
         elif e[0] == "grow":
             for c in sh.get("cast") or []:
-                if isinstance(c.get("place"), dict):
+                if isinstance(c.get("place"), dict) and "path" not in c["place"]:
                     c["place"]["s"] = round(min(1.6, c["place"].get("s", 1) * e[1]), 3)
         elif e[0] == "camera_auto":
             ca = sh["camera_auto"] if isinstance(sh["camera_auto"], dict) else {}
@@ -176,7 +176,7 @@ def apply(raw, repairs, resolved, size):
             ca[e[1]] = round(max(1.1, ca.get(e[1], dflt) + e[2]), 2); sh["camera_auto"] = ca
         elif e[0] == "shrink":
             c = sh["cast"][e[1]]
-            if isinstance(c.get("place"), dict):
+            if isinstance(c.get("place"), dict) and "path" not in c["place"]:
                 p = c["place"]; p["s"] = round(p.get("s", 1) * 0.88, 3); p["x"] = round(W / 2 + (p.get("x", W / 2) - W / 2) * 0.85, 1)
         elif e[0] == "bubbles_off":
             sh["bubbles"] = False

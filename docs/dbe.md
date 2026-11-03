@@ -366,6 +366,23 @@ effects and the Node solvers.
   sha256 in the block; a rerun reproduces it byte for byte (`python -m dbe test '{"film": "motion"}'`).
 - Timeline `ik_bend` (`{"arm_L": 1}`) picks which way an elbow or knee bends; a `null` IK key lets the limb go.
 
+## Interaction and locomotion (WP-11, part 1)
+- A cast entry may walk a path: `"place": {"path": {"points": [[x, y], ...], "start": t, "speed": px/s | "end": t,
+  "ease": s, "s": 0.7 | "s_by_y": [y0, s0, y1, s1], "face": "auto"}}`. The root follows a Catmull-Rom curve through the
+  points by arc length and faces the way it goes; the player, the bake and so every renderer use the same
+  `Acting.pathAt`. With `pins`, a planted foot keeps its place along x while the root moves (up and down the frame is
+  depth: it rides the ground line under the hips) and keeps the clip's heel roll.
+- Timeline `ik_weight` (`{"arm_R": [[t, 0], [t2, 1]]}`) blends between the clips' pose and the IK reach target. IK key
+  values and look-at targets may be `{x, y}` (a frame point) or `{cast, part, at}` (a point on another character): the
+  player and the bake evaluate everyone once, then those with such targets again against the others' first poses.
+  Look-at entries take `start`, `end` and `ease`. A clip layer may start `phase` seconds into its clip.
+- `interact.solve {name, shot}` reads the shot's `"interact"` block: `walks` (`{cast, points, start, speed, ease,
+  s_by_y, view}`: the clip's speed matches the root to the stride measured over a whole stance, the clip starts at
+  mid-stance and ends on a passing step), `handshakes` (`{a, b, start | "arrive", hold, pumps, amp, reach, arm}`: b
+  holds out a hand to the meeting point and pumps it, a takes b's hand; both blended in and out) and `eye_contact`
+  (`{a, b, start, end}`). `interact.measure` reports planted-foot slide and hand gaps on the baked frames (the
+  `interact` test requires at most 1 px and 2 px). `films/handshake-demo` is the demo.
+
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
 and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their

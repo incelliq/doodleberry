@@ -706,11 +706,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "puppet parts[].limits",
-       "acting timeline lookat",
+       "shots.json timeline ik_weight",
        "WP-11"
       ],
-      "note": "Joint limits and the look-at constraint exist. Copy-rotation and follow-path constraints are WP-11."
+      "note": "Joint limits, look-at (with time windows), IK/FK blending and IK targets on other characters exist. Copy-rotation constraints and follow-path for parts are WP-11."
      }
     },
     {
@@ -721,9 +720,10 @@
       "kind": "partial",
       "ref": [
        "shots.json props attach",
+       "interact.solve",
        "WP-11"
       ],
-      "note": "A prop switches parent (hand to hand, a throw, a drop) along an arc. Character-to-character handshakes and hand-offs are WP-11."
+      "note": "Props switch parents (hand to hand, throws, drops); characters reach for each other's parts (interact.solve handshakes: an IK target on another character, blended in and out). Re-parenting a character's own parts over time is WP-11."
      }
     }
    ]
@@ -753,10 +753,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json props arc",
+       "shots.json place.path",
        "WP-11"
       ],
-      "note": "Props travel on arcs between parents. Follow-path constraints and walking along a path are WP-11."
+      "note": "Characters walk along drawn curves (place.path), turning to face the way they go; follow-path for props and other layers is WP-11."
      }
     },
     {
@@ -1487,10 +1487,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "timeline.edit",
+       "interact.solve",
        "WP-11"
       ],
-      "note": "The library walk clip plays with straight travel and foot pins. A parametric walk designer and walking along paths are WP-11."
+      "note": "interact.solve walks a character along a curved path with the stride matched to the clip and feet planted (measured under 1 px of slide); a parametric walk designer (stride, bounce, style) is WP-11."
      }
     },
     {
