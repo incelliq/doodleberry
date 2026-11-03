@@ -35,6 +35,14 @@ REGISTRY = {
     "depth_base": {"file": "depth_anything_v2_base.onnx", "url": "https://huggingface.co/onnx-community/depth-anything-v2-base/resolve/main/onnx/model.onnx",
                    "sha256": None, "license": "CC-BY-NC-4.0", "class": "non-commercial",
                    "source": "Depth Anything V2 Base (onnx-community/depth-anything-v2-base)", "task": "depth"},
+    # WP-18: click-to-mask cut suggestions. Two graphs, each with its weights in an external .onnx_data file.
+    "sam21_tiny": {"file": "sam21_tiny/vision_encoder.onnx", "license": "Apache-2.0", "class": "permissive",
+                   "source": "SAM 2.1 Hiera tiny (Meta, facebookresearch/sam2, Apache-2.0), ONNX by onnx-community/sam2.1-hiera-tiny-ONNX", "task": "segmentation",
+                   "files": {f: (f"https://huggingface.co/onnx-community/sam2.1-hiera-tiny-ONNX/resolve/814a066640debee5a91e70aa401fb8e17e030503/onnx/{f.split('/')[1]}", h) for f, h in (
+                       ("sam21_tiny/vision_encoder.onnx", "4f30aacd3aaefbca81a0b7fe4c1fc96345570ea0a6f80ced599493d1b3be2e8c"),
+                       ("sam21_tiny/vision_encoder.onnx_data", "e83df9866a5afe68ea7f0f721f18f65137fc3acbf0da1c74e946d363e09c69cc"),
+                       ("sam21_tiny/prompt_encoder_mask_decoder.onnx", "874414704c5d686db7d206a35f6e15d26563d50c8c4468fccc6739bd7e491dcf"),
+                       ("sam21_tiny/prompt_encoder_mask_decoder.onnx_data", "e9874d900dd4134ed60eab1e97910327c2419e0b2954485d8fd6e7f1a1470f47"))}},
 }
 _SESS = {}
 
@@ -42,6 +50,16 @@ _SESS = {}
 def model_path(name):
     """the model file, downloaded on first use and checked against its pinned hash"""
     m = REGISTRY[name]
+    if m.get("files"):   # several files (graphs with external weights): each downloaded and checked
+        for f, (url, sha) in m["files"].items():
+            q = MODELS / f
+            if not q.exists():
+                q.parent.mkdir(parents=True, exist_ok=True); tmp = q.with_suffix(q.suffix + ".part")
+                urllib.request.urlretrieve(url, tmp); tmp.rename(q)
+            h = hashlib.sha256(q.read_bytes()).hexdigest()
+            if h != sha:
+                raise RuntimeError(f"{f}: sha256 {h[:16]} is not the pinned {sha[:16]}")
+        return MODELS / m["file"]
     p = MODELS / m["file"]
     if not p.exists():
         MODELS.mkdir(parents=True, exist_ok=True)
@@ -55,12 +73,15 @@ def model_path(name):
     return p
 
 
-def session(name):
-    if name not in _SESS:
+def session(name, file=None):
+    """an onnxruntime session for a model (file: another graph of a several-file model)"""
+    key = (name, file)
+    if key not in _SESS:
         import onnxruntime as ort
         so = ort.SessionOptions(); so.intra_op_num_threads = max(1, (os.cpu_count() or 2))
-        _SESS[name] = ort.InferenceSession(str(model_path(name)), so, providers=["CPUExecutionProvider"])
-    return _SESS[name]
+        p = model_path(name)
+        _SESS[key] = ort.InferenceSession(str(MODELS / file if file else p), so, providers=["CPUExecutionProvider"])
+    return _SESS[key]
 
 
 def record(target, model, output):
@@ -242,3 +263,41 @@ def bench_depth(tmp, model="depth_small"):
         rows.append({"pairs": n, "model": round(acc_m, 3), "y_prior": round(acc_p, 3)})
     return {"frames": rows, "model": round(float(np.mean([r["model"] for r in rows])), 3),
             "y_prior": round(float(np.mean([r["y_prior"] for r in rows])), 3), "which": model}
+
+
+# ---------------- click-to-mask (SAM 2.1 tiny; WP-18) ----------------
+_EMB = {}
+
+
+def sam_embed(image_path, cache=None):
+    """SAM 2.1's image embeddings for a picture (about 4 s on 4 CPUs), kept in memory and in `cache` (.npz) if given"""
+    from PIL import Image
+    key = hashlib.sha256(Path(image_path).read_bytes()).hexdigest()
+    if key in _EMB:
+        return _EMB[key]
+    if cache and Path(cache).exists():
+        z = np.load(cache)
+        if str(z["key"]) == key:
+            _EMB[key] = ([z["e0"], z["e1"], z["e2"]], tuple(int(v) for v in z["size"])); return _EMB[key]
+    im = Image.open(image_path).convert("RGB"); W, H = im.size
+    x = np.asarray(im.resize((1024, 1024), Image.BILINEAR)).astype(np.float32) / 255
+    x = ((x - np.array([0.485, 0.456, 0.406])) / np.array([0.229, 0.224, 0.225])).transpose(2, 0, 1)[None].astype(np.float32)
+    e = session("sam21_tiny").run(None, {"pixel_values": x})
+    if cache:
+        np.savez(cache, key=key, e0=e[0], e1=e[1], e2=e[2], size=np.array([W, H]))
+    _EMB[key] = (e, (W, H))
+    return _EMB[key]
+
+
+def sam_mask(image_path, points, cache=None):
+    """points: [[x, y, 1 (inside) or 0 (outside)], ...] in image pixels -> (boolean mask, predicted IoU)"""
+    from PIL import Image
+    e, (W, H) = sam_embed(image_path, cache)
+    pts = np.array([[[[p[0] * 1024 / W, p[1] * 1024 / H] for p in points]]], np.float32)
+    lab = np.array([[[int(p[2]) if len(p) > 2 else 1 for p in points]]], np.int64)
+    r = session("sam21_tiny", "sam21_tiny/prompt_encoder_mask_decoder.onnx").run(None, {
+        "input_points": pts, "input_labels": lab, "input_boxes": np.zeros((1, 0, 4), np.float32),
+        "image_embeddings.0": e[0], "image_embeddings.1": e[1], "image_embeddings.2": e[2]})
+    iou, masks = r[0][0, 0], r[1][0, 0]; k = int(iou.argmax())
+    m = np.asarray(Image.fromarray(masks[k].astype(np.float32)).resize((W, H), Image.BILINEAR)) > 0
+    return m, float(iou[k])

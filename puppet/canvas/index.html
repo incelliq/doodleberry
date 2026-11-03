@@ -50,7 +50,7 @@
   <label title="Draw another view of the character (side, three-quarter...). Parts you don't redraw are inherited from the front.">View
     <select id="view" aria-label="View being drawn"></select></label>
   <span style="flex:1"></span>
-  <button id="sheet" title="Open a model sheet: key poses, views and every expression">Sheet</button>
+  <button id="sheet" title="Open a model sheet or a board to check the character on model">Sheet</button><select id="sheetkind" aria-label="which sheet"><option value="sheet">model sheet</option><option value="mouth">mouth chart</option><option value="expressions">expressions</option><option value="turnaround">turnaround</option></select>
   <button id="import">Import</button><button id="export">Export .puppet</button><button id="tocast" hidden title="Write this character into the project's cast (when the canvas is opened from Studio)">Save to cast</button>
   <input id="file" type="file" accept=".json,.puppet" hidden>
 </header>
@@ -356,8 +356,9 @@
   // ---------- toolbar ----------
   const setTool = t => { tool = t; ['fill', 'ink', 'bucket', 'pivot', 'pose'].forEach(k => $('t-' + k).classList.toggle('on', k === t)); $('posePanel').hidden = t !== 'pose'; if (t === 'pose') posePanel(); drawStage(); };
   $('t-fill').onclick = () => setTool('fill'); $('t-ink').onclick = () => setTool('ink'); $('t-bucket').onclick = () => setTool('bucket'); $('t-pivot').onclick = () => setTool('pivot'); $('t-pose').onclick = () => setTool('pose');
-  $('sheet').onclick = () => { const svgTxt = Sheet.build(fresh(), (window.CLIPLIB || {})[P.template] || (window.CLIPLIB || {}).humanoid);
-    const w = window.open('', '_blank'); if (!w) return; w.document.write(`<title>${(P.name || 'puppet')} model sheet</title><body style="margin:0;background:#ddd">${svgTxt}<p><a download="${(P.name || 'puppet').replace(/\W+/g, '_')}_sheet.svg" href="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgTxt)}">Download SVG</a></p></body>`); };
+  $('sheet').onclick = () => { const kind = $('sheetkind').value, lib = (window.CLIPLIB || {})[P.template] || (window.CLIPLIB || {}).humanoid;
+    const svgTxt = kind === 'sheet' ? Sheet.build(fresh(), lib) : Sheet.board(fresh(), kind, lib);   // boards (WP-18): mouth chart, expressions, turnaround
+    const w = window.open('', '_blank'); if (!w) return; w.document.write(`<title>${(P.name || 'puppet')} ${kind === 'sheet' ? 'model sheet' : kind}</title><body style="margin:0;background:#ddd">${svgTxt}<p><a download="${(P.name || 'puppet').replace(/\W+/g, '_')}_${kind}.svg" href="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgTxt)}">Download SVG</a></p></body>`); };
   $('undo').onclick = () => { const o = own(active); if (o) o.pop(); save(); refresh(); };
   $('clear').onclick = () => { if (!confirm(view ? `Remove the "${view}" drawing of this slot (it will inherit the front again)?` : 'Clear everything drawn in this slot?')) return;
     if (view) { const v = ov(); if (active.kind === 'part') delete v.parts[active.id]; else if (v.swaps[active.id]) delete v.swaps[active.id].shapes[active.shape]; } else strokesOf(active).length = 0; save(); refresh(); };

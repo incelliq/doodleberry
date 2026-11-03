@@ -302,7 +302,7 @@ def abilities(p, lib):
     for what, ok, draw in (("glance / look at", "pupils" in sw, ["pupils (eye whites with movable irises)"]),
                            ("blink", "half" in shapes.get("eyes", set()) and "closed" in shapes.get("eyes", set()), ["eyes: half, closed"]),
                            ("lip-sync", len(shapes.get("mouth", set())) >= 4, ["mouth: closed, small, mid, wide (O, FV, smile, frown help)"]),
-                           ("turn (three-quarter)", "turn" in (p.get("controls") or {}), ["three-quarter view or a turn control"]),
+                           ("turn (three-quarter)", "turn" in (p.get("controls") or {}) or "three_quarter" in (p.get("views") or {}), ["three-quarter view or a turn control"]),
                            ("tail / chain", bool(p.get("chains")), ["a chain of parts (tail)"])):
         (free if ok else costly).append({"move": what, **({} if ok else {"draw": draw})})
     return {"name": p.get("name"), "template": p.get("template"), "free": free, "costly": costly}

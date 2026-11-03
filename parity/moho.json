@@ -1859,7 +1859,7 @@
        "puppet.import",
        "WP-18"
       ],
-      "note": "There is a round trip by export and re-import, but no live link. Krita .kra import is WP-18."
+      "note": "There is a round trip by export and re-import (Krita .kra read directly), but no live link (WP-18)."
      }
     },
     {

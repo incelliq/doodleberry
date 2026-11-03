@@ -2423,9 +2423,10 @@
       "ref": [
        "level.inbetween",
        "depth.planes",
+       "doodle.click",
        "WP-43"
       ],
-      "note": "MediaPipe pose and face, Whisper, Kokoro, RIFE (in-betweens) and Depth Anything (depth) run behind commands on onnxruntime; segmentation and a general model node are WP-43."
+      "note": "MediaPipe pose and face, Whisper, Kokoro, RIFE (in-betweens), Depth Anything (depth) and SAM 2.1 (click-to-mask cuts, doodle.click) run behind commands on onnxruntime; segmentation in the comp and a general model node are WP-43."
      }
     }
    ]

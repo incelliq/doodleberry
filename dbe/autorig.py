@@ -50,6 +50,68 @@ def prepare(photo, out_png, long_side=900):
     return {"size": list(im.size), "crop": list(box), "scale": round(k, 4)}
 
 
+def split_page(photo, out_dir, min_share=0.08):
+    """a page with several doodles -> one photo per doodle (upright, each cropped to its own ink, the others' ink
+    painted out with the paper colour), left to right then top to bottom. Strokes are grouped by closing gaps of
+    about 2.5% of the page and filling the loops (so eyes and mouths drawn inside a head stay with it); groups with
+    less than min_share of the ink are specks, left out. -> [{photo, box, ink_share}]"""
+    ink = _ink()
+    out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
+    im = ImageOps.exif_transpose(Image.open(photo)).convert("RGB")
+    s = min(1.0, 1400 / max(im.size)); small = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS) if s < 1 else im
+    tmp = out_dir / "page.probe.png"; small.save(tmp)
+    A = ink.extract(str(tmp)); tmp.unlink()
+    mask = A > 0.35
+    if mask.sum() < 50:
+        raise ValueError("no drawing found: photograph dark pen lines on light paper, filling most of the frame")
+    g = max(3, int(round(0.025 * max(mask.shape))))
+    pad = g + 2
+    grown = ndimage.binary_dilation(np.pad(mask, pad), iterations=g)
+    grown = ndimage.binary_fill_holes(grown)[pad:-pad, pad:-pad]
+    lab, n = ndimage.label(grown, np.ones((3, 3)))
+    total = float(mask.sum()); groups = []
+    for i in range(1, n + 1):
+        own = mask & (lab == i); share = own.sum() / total
+        if share < min_share:
+            continue
+        ys, xs = np.nonzero(own); groups.append({"i": i, "share": round(float(share), 3), "box": [int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())]})
+    if not groups:
+        raise ValueError("no doodle large enough on the page")
+    # reading order: rows (boxes whose vertical spans overlap), then left to right
+    groups.sort(key=lambda gr: (gr["box"][1], gr["box"][0]))
+    rows = []
+    for gr in groups:
+        r = next((r for r in rows if gr["box"][1] <= max(x["box"][3] for x in r) and gr["box"][3] >= min(x["box"][1] for x in r)), None)
+        (r.append(gr) if r is not None else rows.append([gr]))
+    order = [gr for r in rows for gr in sorted(r, key=lambda gr: gr["box"][0])]
+    paper = tuple(int(v) for v in np.median(np.asarray(small)[~ndimage.binary_dilation(mask, iterations=3)], axis=0))
+    big = np.asarray(im).copy()
+    out = []
+    for k, gr in enumerate(order):
+        others = (lab != gr["i"]) & (lab > 0)
+        o_big = np.asarray(Image.fromarray((others * 255).astype(np.uint8)).resize(im.size, Image.NEAREST)) > 0
+        page = big.copy(); page[o_big] = paper
+        x0, y0, x1, y1 = (v / s for v in gr["box"]); m = 0.06 * max(x1 - x0, y1 - y0)
+        box = (max(0, int(x0 - m)), max(0, int(y0 - m)), min(im.width, int(x1 + m)), min(im.height, int(y1 + m)))
+        f = out_dir / f"doodle{k + 1}.png"; Image.fromarray(page).crop(box).save(f)
+        out.append({"photo": str(f), "box": list(box), "ink_share": gr["share"]})
+    return out
+
+
+def synthetic_page(kinds=("nib", "cat"), seed=5):
+    """a phone-photo-like page with several synthetic doodles side by side -> (PIL image, [truth per doodle])"""
+    from PIL import ImageFilter
+    tiles = [synthetic_doodle(k, seed=seed + i) for i, k in enumerate(kinds)]
+    gap = 40; W = sum(t[0].width for t in tiles) + gap * (len(tiles) - 1); H = max(t[0].height for t in tiles)
+    page = np.full((H, W, 3), (236, 233, 224), np.int16); x = 0; truths = []
+    for im, tr in tiles:   # the ink of each doodle on one sheet of paper
+        a = np.asarray(im).astype(np.int16); ink_ = a.mean(axis=2) < 150
+        page[:a.shape[0], x:x + a.shape[1]][ink_] = a[ink_]; truths.append({**tr, "offset": [x, 0]}); x += im.width + gap
+    g = np.linspace(255, 205, W)[None, :, None] / 255
+    page = np.clip(page * g + np.random.default_rng(seed).integers(-6, 7, (H, W, 1)), 0, 255).astype(np.uint8)
+    return Image.fromarray(page).filter(ImageFilter.GaussianBlur(0.5)), truths
+
+
 def _hull(pts):
     pts = sorted(set(map(tuple, pts)))
     if len(pts) < 3:
@@ -192,7 +254,7 @@ def suggest(photo, name="Doodle", ink_hex="#1c1e24"):
         side = {"L": [], "R": []}; head_extra = []
         for i in range(1, cn + 1):
             c = cl == i; a = int(c.sum())
-            if a < max(10, 0.0015 * area):
+            if a < max(10, min(0.0015 * area, 6 * w * w)):   # a stroke a few line widths long (not a share of the page: short arms count)
                 continue
             ys, xs = np.nonzero(c); x, y = xs.mean(), ys.mean()
             if y > cy1 - 0.05 * ch and ys.max() > cy1:      # below the body: legs and feet stay with the body

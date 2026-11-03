@@ -74,7 +74,7 @@ node_deps() {
 }
 
 oss_deps() {
-  local need="" pkgs="pencil2d inkscape synfig libmypaint-1.5-1 mypaint-brushes opencolorio-tools openimageio-tools melt frei0r-plugins"
+  local need="" pkgs="pencil2d inkscape synfig libmypaint-1.5-1 mypaint-brushes opencolorio-tools openimageio-tools melt frei0r-plugins krita xvfb"
   for p in $pkgs; do dpkg -s "$p" >/dev/null 2>&1 || need="$need $p"; done
   if [ -z "$need" ]; then echo "oss: all installed"; return; fi
   echo "oss: installing$need"

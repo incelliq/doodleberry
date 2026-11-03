@@ -353,6 +353,18 @@
    "use": "renders the hand-off's MLT project to check it frame for frame (WP-22); driven as a separate program"
   },
   {
+   "name": "SAM 2.1 Hiera tiny (Meta), ONNX export by onnx-community/sam2.1-hiera-tiny-ONNX (revision 814a0666)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "use": "click-to-mask cut suggestions for doodles (doodle.click, WP-18); downloaded on first use to the model cache and pinned by sha256, not committed; recorded in a puppet's meta.assists when a cut comes from it"
+  },
+  {
+   "name": "Krita 5.2.2 (Ubuntu package), optional",
+   "license": "GPL-3.0-or-later",
+   "class": "copyleft",
+   "use": "saves .kra files from OpenRaster for the .kra import test (WP-18), run under xvfb-run as a separate program; .kra files are read by our own reader (dbe/drawing_import.py), not by Krita"
+  },
+  {
    "name": "Kdenlive 23.08.5 (Ubuntu package), optional",
    "license": "GPL-3.0-or-later",
    "class": "copyleft",

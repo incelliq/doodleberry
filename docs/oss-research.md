@@ -348,7 +348,7 @@ probe results). Only the tools now named in `docs/build-plan.md` are listed here
 |---|---|---|---|
 | Rapier 2D, deterministic JS build (`@dimforge/rapier2d-deterministic-compat` 0.21.0) | Apache-2.0 [R] | 2.19 | not MIT; keep the NOTICE; measured bit-identical reruns in Node |
 | manifold3d 3.5.4 | Apache-2.0 [R] | 1.7 | 2D `CrossSection` offsets as an alternative to pyclipr |
-| SAM 2 / 2.1 checkpoints | Apache-2.0 [R] | 1.8b | the SA-V dataset has separate terms; CPU is slow, so suggestions only |
+| SAM 2 / 2.1 checkpoints | Apache-2.0 [R] | 1.8b | the SA-V dataset has separate terms; CPU is slow, so suggestions only. In use (WP-18): the tiny model's ONNX export (onnx-community), 4 s to encode a doodle photo on 4 CPUs, 0.3 to 0.5 s a tap |
 | Poly Haven, ambientCG | CC0 [R] | 1.6 | record each file in the manifest |
 | Depth Anything V2 **Small** | Apache-2.0 [R] | 1.6 | in use (WP-43, `depth.planes`, ONNX on CPU). Base, Large and Giant are CC-BY-NC-4.0: **NC**; Base is wired as an option whose outputs the posting gate flags |
 | RIFE 4.9 (Practical-RIFE), ONNX conversion | MIT (upstream; the conversion has no card) [R] | WP-43 | in use: `level.inbetween` proposes in-betweens for drawn levels; 92% accepted on held-out drawings against 58% for holds |
@@ -364,6 +364,7 @@ probe results). Only the tools now named in `docs/build-plan.md` are listed here
 | usd-core 26.11 | TOST-1.0 [R] | brainstorm 5.9 | Apache-2.0 with a modified trademark section; not OSI/SPDX-listed |
 | NVIDIA Warp 1.18 | Apache-2.0 [R] | brainstorm 5C | relicensed from a NVIDIA licence in 2025 |
 | Blender (Geometry Nodes, headless) | GPL [R] | brainstorm 5B | already used as a subprocess; keep it that way |
+| Krita 5.2.2 (Ubuntu package) | GPL-3.0-or-later [R] | WP-18 | `.kra` files are read by our own reader (tiles, LZF); Krita itself only saves the test's `.kra` under xvfb-run, as a separate program |
 
 **Add to "explicitly avoid":** ToonCrafter (generative video; licence unclear), Stable Audio Open (Stability Community
 License, revenue-capped, **SRC-AVAIL**), Depth Anything V2 Base/Large/Giant (**NC**), pymeshlab in-process (GPL-3),

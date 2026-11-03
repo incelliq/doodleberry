@@ -35,9 +35,13 @@
     <label class="big primary" style="border-radius:10px;background:var(--accent);color:#fff;cursor:pointer">Take a photo<input id="photo" type="file" accept="image/*" capture="environment" hidden></label>
     <div class="row"><label for="cname" class="muted">Name</label><input id="cname" value="Nib" size="10"></div></section>
   <section id="s2" hidden><h2>2 · Check the cuts</h2>
+    <div class="row" id="pick" hidden></div>
     <div class="muted">Each coloured shape moves on its own. Drag a dot to move where it bends. Tap a name to leave that piece on the body.</div>
     <div class="stage" id="cutstage"><img id="pimg" alt="your doodle"><svg class="over" id="over"></svg></div>
     <div class="row" id="chips"></div><div id="notes"></div>
+    <div class="row"><button id="tapcut" title="tap a piece on the photo and it is cut for you (SAM 2.1, on this computer)">✂ Tap to cut</button>
+      <select id="tappart" aria-label="which piece"><option value="arm_L">left arm</option><option value="arm_R">right arm</option><option value="tail">tail</option><option value="head">head</option></select>
+      <span class="muted" id="tapmsg"></span></div>
     <button class="big primary" id="ok">Looks right</button></section>
   <section id="s3" hidden><h2>3 · See it move and talk</h2>
     <svg class="char" id="char" role="img" aria-label="your doodle, moving"></svg>
@@ -55,7 +59,7 @@
 <script src="/puppet/loader/puppet.js"></script><script src="/puppet/loader/acting.js"></script><script src="/puppet/clips/doodle.js"></script><script src="/puppet/clips/humanoid.js"></script>
 <script>
 const $ = id => document.getElementById(id); const msg = m => { $('msg').textContent = m; };
-let D = null, spec = null, puppet = null, tl = { clips: [{ clip: 'idle', start: 0 }], blink: true }, t0 = performance.now(), voiceT = null, req = null, strokes = [];
+let P = null, D = null, spec = null, puppet = null, tl = { clips: [{ clip: 'idle', start: 0 }], blink: true }, t0 = performance.now(), voiceT = null, req = null, strokes = [];
 const COL = { head: '#e8743a', arm_L: '#3f7fd0', arm_R: '#3f9a5a', tail: '#a24fc9', eyes: '#c9821c', mouth: '#d0405a' };
 async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
 const shown = id => { $(id).hidden = false; $(id).scrollIntoView({ behavior: 'smooth', block: 'start' }); };
@@ -64,10 +68,21 @@ $('photo').onchange = async e => {
   const f = e.target.files[0]; if (!f) return; const t = performance.now(); msg('reading your drawing…');
   const ext = (f.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
   const up = await (await fetch('/upload?ext=' + ext, { method: 'POST', body: f })).json(); if (up.error) return msg(up.error);
-  D = await api('doodle.snap', { photo: up.path, name: $('cname').value || 'Doodle' }); spec = D.spec;
-  window.SNAP_SECONDS = (performance.now() - t) / 1000; msg(`found: ${D.found.shape}, ${D.found.eyes || 0} eyes, mouth ${D.found.mouth || 'none'}`);
-  $('line').value = `Hi! I'm ${$('cname').value || 'Doodle'}, and I just got drawn!`; drawCuts(); shown('s2');
+  // a page may hold several doodles (WP-18): each becomes its own puppet; pick one to check, the others wait
+  const base = $('cname').value || 'Doodle';
+  P = await api('doodle.page', { photo: up.path, names: [base] });
+  window.SNAP_SECONDS = (performance.now() - t) / 1000; window.PAGE = P;
+  $('pick').hidden = P.count < 2;
+  $('pick').innerHTML = P.count < 2 ? '' : `<span class="muted">${P.count} doodles on this page:</span>` + P.doodles.map((d, i) => `<button class="chip" data-pick="${i}">${d.name}</button>`).join('');
+  document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => pick(+b.dataset.pick));
+  pick(0); shown('s2');
 };
+function pick(i) {
+  D = P.doodles[i]; spec = D.spec; $('cname').value = D.name;
+  document.querySelectorAll('[data-pick]').forEach(b => b.classList.toggle('primary', +b.dataset.pick === i));
+  msg(`found: ${D.found.shape}, ${D.found.eyes || 0} eyes, mouth ${D.found.mouth || 'none'}`);
+  $('line').value = `Hi! I'm ${D.name}, and I just got drawn!`; $('s3').hidden = $('s4').hidden = $('s5').hidden = true; drawCuts();
+}
 function drawCuts() {
   const [W, H] = D.size; $('pimg').src = '/' + D.photo + '?t=' + Date.now(); const o = $('over'); o.setAttribute('viewBox', `0 0 ${W} ${H}`);
   const polys = Object.entries(spec.parts).filter(([, p]) => p.poly).map(([k, p]) => `<polygon points="${p.poly.map(q => q.join(',')).join(' ')}" fill="${COL[k] || '#888'}" fill-opacity=".18" stroke="${COL[k] || '#888'}" stroke-width="3"/>`)
@@ -84,11 +99,17 @@ function drawCuts() {
 // drag pivots (and the mouth centre) in photo pixels
 (() => { let drag = null; const o = $('over');
   const at = e => { const pt = o.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(o.getScreenCTM().inverse()); };
-  o.addEventListener('pointerdown', e => { const c = e.target.closest('circle'); if (!c) return; drag = c; o.setPointerCapture(e.pointerId); });
+  o.addEventListener('pointerdown', async e => { const c = e.target.closest('circle');
+    if (!c && window.TAPCUT) {   // click-to-mask (WP-18): the tapped piece is cut by SAM 2.1 on the server
+      const p = at(e), part = $('tappart').value; $('tapmsg').textContent = 'cutting…';
+      const r = await api('doodle.click', { id: D.id, part, points: [[Math.round(p.x), Math.round(p.y)]], spec });
+      spec = r.spec; spec._edited = true; delete spec.photo; window.TAP_RESULT = r; $('tapmsg').textContent = `${part}: ${Math.round(r.iou * 100)}% sure`; drawCuts(); return; }
+    if (!c) return; drag = c; o.setPointerCapture(e.pointerId); });
   o.addEventListener('pointermove', e => { if (!drag) return; const p = at(e); drag.setAttribute('cx', p.x); drag.setAttribute('cy', p.y); });
   o.addEventListener('pointerup', e => { if (!drag) return; const p = at(e), q = [Math.round(p.x), Math.round(p.y)];
     if (drag.dataset.part) spec.parts[drag.dataset.part].pivot = q; else spec.swaps.mouth.talk.center = q; spec._edited = true; drag = null; drawCuts(); });
 })();
+$('tapcut').onclick = () => { window.TAPCUT = !window.TAPCUT; $('tapcut').classList.toggle('primary', window.TAPCUT); $('tapmsg').textContent = window.TAPCUT ? 'tap the piece on the photo' : ''; };
 $('ok').onclick = async () => {
   if (spec._edited) { msg('cutting again…'); const s = { ...spec }; delete s._edited; await api('doodle.cut', { id: D.id, spec: s }); }
   puppet = await (await fetch('/' + D.puppet + '?t=' + Date.now())).json(); tl = { clips: [{ clip: 'idle', start: 0 }], blink: true }; t0 = performance.now();

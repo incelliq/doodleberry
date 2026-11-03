@@ -5,7 +5,8 @@
 Sources:
 - SVG (Inkscape layers or plain groups): vector parts. Transforms, styles, gradients (first stop), <use> and the basic
   shapes are flattened into path data in artboard units.
-- PSD (psd-tools, MIT; run with DBE_PY) and OpenRaster .ora (what Krita, GIMP and MyPaint export): raster parts.
+- PSD (psd-tools, MIT; run with DBE_PY), OpenRaster .ora (what Krita, GIMP and MyPaint export) and Krita's own .kra
+  (read directly: maindoc.xml's layer tree, each paint layer's LZF-compressed tiles; WP-18): raster parts.
 
 Layer names (case, spaces and punctuation ignored):
 - a template part: `head`, `upperarm_R`, `Upper arm R`, `upper arm right`, `lower leg left`, `hips`;
@@ -314,6 +315,111 @@ def read_psd(path):
     return {"kind": "raster", "size": [psd.width, psd.height], "items": items, "hidden": hidden}
 
 
+# ---------------- Krita .kra (WP-18): the layer tree in maindoc.xml, each paint layer as LZF-compressed tiles ----------------
+def lzf_decompress(src, out_len):
+    """liblzf decompression (the codec Krita compresses tiles with)"""
+    out = bytearray(out_len); ip = op = 0; n = len(src)
+    while ip < n:
+        ctrl = src[ip]; ip += 1
+        if ctrl < 32:                         # a run of ctrl + 1 literal bytes
+            ln = ctrl + 1; out[op:op + ln] = src[ip:ip + ln]; ip += ln; op += ln
+        else:                                 # a back reference
+            ln = ctrl >> 5; ref = op - ((ctrl & 0x1F) << 8) - 1
+            if ln == 7:
+                ln += src[ip]; ip += 1
+            ref -= src[ip]; ip += 1; ln += 2
+            if ref < 0:
+                raise ValueError("corrupt LZF data")
+            if ref + ln <= op:                # no overlap: copy at once
+                out[op:op + ln] = out[ref:ref + ln]
+            else:
+                for k in range(ln):
+                    out[op + k] = out[ref + k]
+            op += ln
+    if op != out_len:
+        raise ValueError(f"LZF data gave {op} bytes, expected {out_len}")
+    return bytes(out)
+
+
+def read_kra_layer(blob, default=None):
+    """a Krita tiled layer file (VERSION 2) -> (RGBA numpy array, x0, y0) in layer coordinates, or None if empty"""
+    import numpy as np
+    head = {}; pos = 0
+    for _ in range(5):
+        nl = blob.index(b"\n", pos); k, v = blob[pos:nl].decode().split(" ", 1); head[k] = v; pos = nl + 1
+    if head.get("VERSION") != "2":
+        raise ValueError(f"Krita tile format version {head.get('VERSION')} is not supported (version 2 is)")
+    tw, th, ps, n = int(head["TILEWIDTH"]), int(head["TILEHEIGHT"]), int(head["PIXELSIZE"]), int(head["DATA"])
+    if ps not in (4, 8):
+        raise ValueError(f"Krita layer with {ps} bytes per pixel: convert the image to 8- or 16-bit RGBA in Krita")
+    tiles = []
+    for _ in range(n):
+        nl = blob.index(b"\n", pos); x, y, codec, size = blob[pos:nl].decode().split(","); pos = nl + 1
+        size = int(size); data = blob[pos:pos + size]; pos += size
+        raw_len = tw * th * ps
+        if data[0] == 1:                      # compressed: planar (all of channel 0, then 1, ...)
+            planar = np.frombuffer(lzf_decompress(data[1:], raw_len), np.uint8).reshape(ps, tw * th)
+            px = planar.T.reshape(th, tw, ps)
+        else:                                 # raw: interleaved
+            px = np.frombuffer(data[1:1 + raw_len], np.uint8).reshape(th, tw, ps)
+        tiles.append((int(x), int(y), px))
+    if not tiles:
+        return None
+    x0 = min(t[0] for t in tiles); y0 = min(t[1] for t in tiles)
+    x1 = max(t[0] for t in tiles) + tw; y1 = max(t[1] for t in tiles) + th
+    canvas = np.zeros((y1 - y0, x1 - x0, ps), np.uint8)
+    if default is not None and len(default) == ps:
+        canvas[:] = np.frombuffer(default, np.uint8)
+    for x, y, px in tiles:
+        canvas[y - y0:y - y0 + th, x - x0:x - x0 + tw] = px
+    if ps == 8:                               # 16-bit little-endian channels -> 8-bit
+        canvas = (canvas.view("<u2") >> 8).astype(np.uint8)
+    rgba = canvas[..., [2, 1, 0, 3]]          # Krita stores BGRA
+    return rgba, x0, y0
+
+
+def read_kra(path):
+    z = zipfile.ZipFile(path)
+    doc = ET.fromstring(z.read("maindoc.xml"))
+    ns = doc.tag.split("}")[0] + "}" if doc.tag.startswith("{") else ""
+    img = doc.find(f"{ns}IMAGE"); W, H = int(img.get("width")), int(img.get("height")); docname = img.get("name")
+    if not (img.get("colorspacename") or "RGBA").startswith("RGBA"):
+        raise ValueError(f"Krita image in {img.get('colorspacename')}: convert it to RGB/Alpha (Image > Convert Image Color Space)")
+    allr, skipped = [], []
+
+    def walk(layers_el, names, hid):
+        for ch in layers_el.findall(f"{ns}layer"):   # maindoc.xml lists the top layer first
+            nm = ch.get("name") or ""; kind = ch.get("nodetype")
+            h2 = hid or ch.get("visible") == "0"
+            if kind == "grouplayer":
+                sub = ch.find(f"{ns}layers")
+                if sub is not None:
+                    walk(sub, names + ([nm] if nm else []), h2)
+            elif kind == "paintlayer":
+                f = f"{docname}/layers/{ch.get('filename')}"
+                if f not in z.namelist():
+                    continue
+                dflt = z.read(f + ".defaultpixel") if f + ".defaultpixel" in z.namelist() else None
+                got = read_kra_layer(z.read(f), dflt)
+                if got is None:
+                    continue
+                arr, tx, ty = got
+                im = Image.fromarray(arr, "RGBA"); bb = im.getchannel("A").getbbox()   # tiles are 64 px: crop to the drawing, as ORA and PSD layers are
+                if bb is None:
+                    continue
+                im = im.crop(bb); tx += bb[0]; ty += bb[1]
+                allr.append({"names": names + [nm], "image": im, "x": int(float(ch.get("x", 0))) + tx, "y": int(float(ch.get("y", 0))) + ty,
+                             "opacity": int(ch.get("opacity", 255)) / 255, "hid": h2})
+            else:
+                skipped.append({"layer": nm, "kind": kind, "why": "only paint layers and groups are read: convert it to a paint layer in Krita"})
+    walk(img.find(f"{ns}layers"), [], False)
+    allr.reverse()  # painter order: bottom first
+    for i, r in enumerate(allr):
+        r["order"] = i
+    items = [r for r in allr if not r["hid"]]; hidden = [r for r in allr if r["hid"]]
+    return {"kind": "raster", "size": [W, H], "items": items, "hidden": hidden, "skipped": skipped}
+
+
 def read_source(path):
     ext = Path(path).suffix.lower()
     if ext == ".svg":
@@ -323,8 +429,8 @@ def read_source(path):
     if ext in (".psd", ".psb"):
         return read_psd(path)
     if ext == ".kra":
-        raise ValueError("Krita .kra: export as OpenRaster (.ora) or PSD from Krita (File > Export), keeping the layers")
-    raise ValueError(f"unsupported drawing format {ext} (use .svg, .ora or .psd)")
+        return read_kra(path)
+    raise ValueError(f"unsupported drawing format {ext} (use .svg, .ora, .psd or .kra)")
 
 
 # ---------------- masks and pivots ----------------
@@ -474,6 +580,7 @@ def build(source, opts=None):
     tparts = {p["id"]: p for p in T["parts"]}
     tswaps = {s["id"]: s for s in T.get("swaps", [])}
     by_target, markers, report = {}, {"pivot": {}, "anchor": {}}, {"layers": {}, "unmatched": [], "skipped": [], "hidden": len(src["hidden"])}
+    report["skipped"] += [f"{k['layer']} ({k['kind']}: {k['why']})" for k in src.get("skipped", [])]
     ground_recs = []
     for r in src["items"] + [dict(h, hidden=True) for h in src["hidden"]]:
         c = classify(r["names"], T)

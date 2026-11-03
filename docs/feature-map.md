@@ -32,11 +32,11 @@ covered, now added to their packages' scopes.
 | Vector drawing: pressure ink, filled shapes, palette slots | PRO | ✅ | – | Rig Canvas |
 | Brush engine: stabiliser, tapered and textured brushes, gap-closing fill, eraser, lasso, transform | PRO | 🟡 | P1 | pressure strokes, simplify, gap-closing fill in the Rig Canvas (1.4); stabiliser, textured brushes, lasso, transform: WP-18, WP-34; textured natural-media brushes as a command: `brush.paint` with the MyPaint presets (WP-34) |
 | Raster parts (PNG/painted) with pivots | PRO (Moho, Spine, Live2D) | ✅ | – | puppet v0.3 raster parts (`puppet.from_ink`, `doodle.snap`); SVG, Synfig and Lottie (render.parity, WP-14); Grease Pencil refuses them |
-| Import layered PSD/Krita/SVG/AI, auto-splitting parts by layer name | PRO (Character Animator, Moho) | 🟡 | P0 | `puppet.import` reads layered SVG, PSD and ORA (1.3); Krita .kra and AI: WP-18 |
+| Import layered PSD/Krita/SVG/AI, auto-splitting parts by layer name | PRO (Character Animator, Moho) | 🟡 | P0 | `puppet.import` reads layered SVG, PSD, ORA (1.3) and Krita .kra directly (WP-18); AI: WP-18 |
 | Paper sketch → vector (scan or photo, then trace) | NEW | ⬜ | P1 | vector tracing (VTracer, potrace): WP-18 |
 | Templates with ghost guides (humanoid, quadruped, bird, blob, object-with-face) | PRO/NEW | 🟡 | P1 | humanoid and doodle templates; ghost guides for drawing requests (3.6); quadruped, bird, object: WP-16 |
-| Model sheet and turnaround board (front, 3/4, side, back) with height lines | PRO | 🟡 | P1 | `puppet.sheet` model sheets (1.4); turnaround board with height lines: WP-18 |
-| Expression sheet and mouth-chart boards with onion skin | PRO | 🟡 | P1 | swap slots exist; side-by-side boards with onion skin: WP-18 |
+| Model sheet and turnaround board (front, 3/4, side, back) with height lines | PRO | ✅ | – | `puppet.sheet` model sheets (1.4); `puppet.board` turnaround with the front view's height lines and an off-model check, in the Rig Canvas (WP-18) |
+| Expression sheet and mouth-chart boards with onion skin | PRO | ✅ | – | `puppet.board` mouth chart and expressions, side by side over an onion ghost, in the Rig Canvas (WP-18) |
 | Costumes and outfits as swap sets; accessories | PRO | ⬜ | P1 | outfits as swap sets: WP-16 |
 | Colour models and palette variants (night, sick, cold) | PRO | 🟡 | P2 | runtime recolour exists; drawn levels have named colour styles that repaint every drawing (`level.colour`, WP-35); palette variants per scene: WP-16 |
 | Rig linter: missing slots, raw colours, gaps at joints, pivot sanity | NEW | ✅ | – | `puppet.lint` and `puppet.coach` (joint gaps under bending, pivots, proportions) (1.10) |
@@ -44,7 +44,7 @@ covered, now added to their packages' scopes.
 | Character DNA: shape language, proportions and line weight as parameters for generating relatives (siblings, crowds) | IDEA | 🟡 | P2 | `cast.generate` builds parametric originals (1.5); a family look as parameters: WP-16 |
 | Character bible: personality, voice, gesture tendencies, continuity notes | NEW | 🟡 | P1 | cast registry has personality and voice; full bible: WP-16 |
 | **Ink-fidelity import:** a photo or scan of any medium (pen, pencil, marker, crayon, watercolour) becomes a clean line that keeps the artist's real texture. Lighting is flattened by dividing by a blurred copy, ink is thresholded to alpha, and specks are removed | NEW | ✅ | – | `puppet.from_ink` (1.8) and `doodle.snap` (3.6) |
-| Multi-character page detection: find each character on a page and ignore sums, spirals, hands, pens and shadows | IDEA | ⬜ | P2 | several characters on one page: WP-18 |
+| Multi-character page detection: find each character on a page and ignore sums, spirals, hands, pens and shadows | IDEA | 🟡 | P2 | `doodle.page` splits a page into one doodle per ink group, specks left out (WP-18); telling sums, spirals, hands, pens and shadows from characters: WP-18 |
 | Mask-based part cutting over one ink layer, with overlap seams that hide cuts (for example at the neck) and suggested cuts at narrow joints | NEW | ✅ | – | dbe/ink.py cuts one ink layer by polygons with overlap seams (1.8) |
 | Pivot and cut suggestions: an overlay proposes cut lines and pivots; the artist confirms with a tap | IDEA | ✅ | – | `doodle.snap` suggests cuts and pivots; /doodle shows them to confirm and drag (3.6); polygon editing: WP-18 |
 | **Drawing coach:** checks a drawing before import and explains how to draw for animation (longer limbs, small gaps at joints, separate eyes, a consistent scale, one character per area) | IDEA | ✅ | – | `puppet.coach` (1.10) |
@@ -292,7 +292,7 @@ covered, now added to their packages' scopes.
 | Review room on mobile: approve, comment on a frame | NEW | ⬜ | P1 | WP-19 |
 | Tablet and pencil support | PRO | 🟡 | P1 | pointer pressure works; WP-18 |
 | **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ✅ | – | Studio /doodle and `doodle.snap/cut/say/keep` (plan 3.6): photo to talking in about 11 s |
-| Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ✅ | – | `drawing.requests` / `drawing.fulfil` (plan 3.6): swap shapes and parts drawn over a ghost; pupils, views and chains go to the Rig Canvas |
+| Drawing request queue: when a script needs a pose the rig can't do, the artist gets a request with a ghost guide; the drawing slots straight into the rig | IDEA | ✅ | – | `drawing.requests` / `drawing.fulfil` (plan 3.6): swap shapes, parts, pupils and a three-quarter view drawn over a ghost (WP-18); chains go to the Rig Canvas |
 | **Production board:** calendar, per-film status, checkpoints, measurements and critic verdicts, with approve and stop controls | NEW | ✅ | – | Studio /board (plan 3.7): calendar, schedule against posting dates, checkpoints, measurements, approve, stop, narrow, merge |
 | Live plan tracker shared with collaborators | NEW | 🟡 | P2 | `plan.track` and /plan (3.8); sharing: WP-39 |
 
@@ -322,7 +322,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E17 | Same acting → many renderers | **Style A/B tests.** Render one performance flat, Synfig-smooth or Grease Pencil-sketchy, then pick per audience or platform. | ✅ |
 | E18 | Data films + aspect ratios | **Re-blocked formats.** A 16:9 version re-stages characters and camera rather than cropping a 9:16 film. | ✅ (1.12) |
 | E19 | Ink-fidelity import + rigging + voice + shot data | **Doodle to series.** Any notebook doodle becomes a talking, acting series character in minutes, in the artist's own line. | ✅ `doodle.snap`, `doodle.keep` (3.6) |
-| E20 | Rig ability inventory + writer agent + Rig Canvas | **Human-in-the-loop production queue.** Scripts stay within what rigs can do; a missing pose becomes a drawing request; the new drawing joins the rig and the shot re-renders. | ✅ P1 (swap shapes and parts; poses and views still in the Rig Canvas) |
+| E20 | Rig ability inventory + writer agent + Rig Canvas | **Human-in-the-loop production queue.** Scripts stay within what rigs can do; a missing pose becomes a drawing request; the new drawing joins the rig and the shot re-renders. | ✅ P1 (swap shapes, parts, pupils and a three-quarter view; poses and chains still in the Rig Canvas) |
 | E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ✅ (2.13) |
 | E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | 🟡 boil, stepped timing, dedupe; unique-frame rendering: WP-15 |
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 · WP-23 |

@@ -84,7 +84,8 @@ def check(deep=True):
                                        ("blender", "tools", False, "bash tools/setup.sh blender   (Blender 5.2 LTS: the Grease Pencil renderer needs 4.3 or newer)"),
                                        ("pencil2d", "tools", False, "bash tools/setup.sh oss   (Pencil2D: drawn levels, WP-34)"),
                                        ("inkscape", "tools", False, "bash tools/setup.sh oss   (Inkscape: path booleans, WP-34)"),
-                                       ("melt", "tools", False, "apt-get install -y melt   (editor round trips)")):
+                                       ("melt", "tools", False, "apt-get install -y melt   (editor round trips)"),
+                                       ("krita", "tools", False, "bash tools/setup.sh oss   (Krita: .kra round-trip test, WP-18; .kra files are read without it)")):
         p = shutil.which(tool)
         add(f"program {tool}", group, p, required, p or "not on PATH", fix)
     node_path = _run(["npm", "root", "-g"])[1] if shutil.which("npm") else ""

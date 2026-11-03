@@ -1369,6 +1369,29 @@ def doodle_snap(photo, name="Doodle"):
             "found": spec["found"], "spec": {k: v for k, v in spec.items() if k != "found"}, "built": built}
 
 
+@command("doodle.page", photo=("string", "a phone photo of a page with one or more pen doodles"),
+         names=("array", "a name per doodle, left to right then top to bottom (missing names: Doodle 1, Doodle 2, ...)", None))
+def doodle_page(photo, names=None):
+    """A page with several doodles (WP-18): each drawing on the page becomes its own doodle puppet. The page is split
+    where the ink falls into separate groups (gaps closed, loops filled, so eyes stay with their head; specks left
+    out), each group is cropped with the others painted out, and each crop goes through doodle.snap. Returns the
+    doodles in reading order, each as doodle.snap returns it, with its box on the page."""
+    import hashlib
+    from . import autorig as AR
+    src = Path(photo) if Path(photo).is_absolute() else ROOT / photo
+    if not src.is_file():
+        raise FileNotFoundError(f"no photo at {photo}")
+    pid = hashlib.sha256(src.read_bytes()).hexdigest()[:12]
+    work = DOODLES / f"page-{pid}"
+    crops = AR.split_page(src, work)
+    names = list(names or [])
+    out = []
+    for i, c in enumerate(crops):
+        nm = names[i] if i < len(names) and names[i] else (f"Doodle {i + 1}" if len(crops) > 1 else "Doodle")
+        out.append({**doodle_snap(c["photo"], nm), "name": nm, "box": c["box"]})
+    return {"page": pid, "count": len(out), "doodles": out}
+
+
 @command("doodle.cut", id=("string", "doodle id from doodle.snap"), spec=("object", "the ink spec with confirmed or moved cuts and pivots"))
 def doodle_cut(id, spec):
     """Step 2: rebuild a doodle puppet from confirmed cuts and pivots (parts' polygons and pivots, swaps' boxes;
@@ -1379,7 +1402,88 @@ def doodle_cut(id, spec):
             raise ValueError(f"doodle parts are head, arm_L, arm_R, tail (and body as the rest), not {pid}")
         if "pivot" not in ps or ("poly" in ps and len(ps["poly"]) < 3):
             raise ValueError(f"{pid} needs a pivot and a polygon of 3 or more points")
-    return {"id": id, "puppet": str((d / "doodle.puppet.json").relative_to(ROOT)), "built": _doodle_build(d, spec)}
+    built = _doodle_build(d, spec)
+    used = sorted({ps["assist"] for ps in (spec.get("parts") or {}).values() if ps.get("assist")})
+    if used:   # cuts suggested by a model (doodle.click): the puppet's provenance says so
+        from . import assists as A
+        pz = _json(d / "doodle.puppet.json")
+        for mdl in used:
+            A.record(pz, mdl, "cut polygons: " + ", ".join(k for k, ps in spec["parts"].items() if ps.get("assist") == mdl))
+        (d / "doodle.puppet.json").write_text(json.dumps(pz))
+    return {"id": id, "puppet": str((d / "doodle.puppet.json").relative_to(ROOT)), "built": built, **({"assists": used} if used else {})}
+
+
+@command("doodle.click", id=("string", "doodle id from doodle.snap"), part=("string", "head | arm_L | arm_R | tail"),
+         points=("array", "taps on the photo: [[x, y], ...] inside the piece, [x, y, 0] for a tap outside it (photo pixels)"),
+         spec=("object", "the ink spec being checked (default: the doodle's last one)", None))
+def doodle_click(id, part, points, spec=None):
+    """Click-to-mask cuts (WP-18): taps on the photo give that piece's cut from SAM 2.1 tiny (an in-house assist,
+    recorded in the puppet's provenance when the cut is used). The mask, with the ink it touches, is grown by the line
+    width and outlined; a new piece gets a pivot where it comes nearest the rest of the drawing (for the head, the
+    bottom of the mask). Returns the spec with that piece replaced (pass it to doodle.cut), the polygon and how sure
+    the model is. The first tap on a photo takes about 4 s (the picture is encoded once and cached)."""
+    import time
+    import numpy as np
+    from scipy import ndimage
+    from . import assists as A, autorig as AR
+    if part not in ("head", "arm_L", "arm_R", "tail"):
+        raise ValueError("part is head, arm_L, arm_R or tail")
+    if not points or not all(isinstance(q, (list, tuple)) and len(q) in (2, 3) for q in points):
+        raise ValueError("points: [[x, y], ...] or [x, y, 0] for outside")
+    d = _doodle_dir(id); photo = d / "photo.png"
+    spec = json.loads(json.dumps(spec)) if spec else {k: v for k, v in _json(d / "spec.json").items() if k != "photo"}
+    t0 = time.time()
+    m, iou = A.sam_mask(photo, points, cache=d / "sam.npz")
+    ink = AR._ink().extract(str(photo)) > 0.35
+    edt = ndimage.distance_transform_edt(ink); w = float(max(2.0, 2 * np.percentile(edt[ink], 90))) if ink.any() else 3.0
+    m = m | (ink & ndimage.binary_dilation(m, iterations=int(w) + 1))   # the line around a filled region belongs to it
+    lab, n = ndimage.label(m, np.ones((3, 3)))
+    if n > 1:   # keep the piece that was tapped (or the largest)
+        hit = {int(lab[int(q[1]), int(q[0])]) for q in points if (len(q) < 3 or q[2]) and 0 <= int(q[1]) < m.shape[0] and 0 <= int(q[0]) < m.shape[1]} - {0}
+        sizes = ndimage.sum(m, lab, range(1, n + 1))
+        keep = hit or {int(np.argmax(sizes)) + 1}
+        m = np.isin(lab, list(keep))
+    if m.sum() < 20:
+        raise ValueError("nothing found there: tap on the piece itself")
+    m = ndimage.binary_fill_holes(m)
+    core = None
+    if part != "head":   # a limb: drop the body and head loops it touches (the drawing filled, thin strokes opened away)
+        g = int(max(2, round(w * 1.5))); pad = g + 2   # the loops' insides (as autorig finds them), out to their lines
+        mc = ndimage.binary_closing(np.pad(ink, pad), iterations=g)[pad:-pad, pad:-pad] | ink
+        lab, n = ndimage.label(ndimage.binary_fill_holes(mc) & ~mc)
+        ys_, xs_ = np.nonzero(ink); area = (np.ptp(xs_) + 1) * (np.ptp(ys_) + 1)
+        big = [i + 1 for i, a_ in enumerate(ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))) if a_ > 0.015 * area]
+        core = ndimage.binary_dilation(np.isin(lab, big), iterations=int(w) + 1) if big else np.zeros_like(ink)
+        limb = m & ~ndimage.binary_dilation(core, iterations=int(w * 1.5) + 1)
+        if limb.sum() >= 20:
+            lab, n = ndimage.label(limb, np.ones((3, 3))); m = lab == (int(np.argmax(ndimage.sum(limb, lab, range(1, n + 1)))) + 1) if n > 1 else limb
+    poly = AR._poly(ndimage.binary_dilation(m, iterations=int(w)), w)
+    old = (spec.get("parts") or {}).get(part) or {}
+    ys, xs = np.nonzero(m)
+    if old.get("pivot"):
+        pivot = old["pivot"]
+    elif part == "head":
+        pivot = [int(round(xs.mean())), int(ys.max())]
+    else:   # where the limb comes nearest the body
+        if core is not None and core.any():
+            # along the stroke's own direction from its end nearest the body, to where it meets the body's line
+            dist = ndimage.distance_transform_edt(~core)
+            k = int(np.argmin(dist[ys, xs])); c0 = np.array([xs.mean(), ys.mean()])
+            v = np.linalg.svd(np.stack([xs, ys], 1) - c0, full_matrices=False)[2][0]
+            if np.dot(v, [xs[k], ys[k]] - c0) < 0:
+                v = -v
+            q = np.array([xs[k], ys[k]], float); body_line = ink & ndimage.binary_dilation(core, iterations=int(w) + 1)
+            for _ in range(int(4 * w) + 10):
+                xi, yi = int(round(q[0])), int(round(q[1]))
+                if not (0 <= yi < ink.shape[0] and 0 <= xi < ink.shape[1]) or body_line[yi, xi]:
+                    break
+                q += v
+            pivot = [int(round(q[0])), int(round(q[1]))]
+        else:
+            k = int(np.argmax(ys)); pivot = [int(xs[k]), int(ys[k])]
+    parent = old.get("parent") or ("body" if part != "head" else "body")
+    spec.setdefault("parts", {})[part] = {**old, "poly": poly, "pivot": pivot, "parent": parent, "z": old.get("z", {"head": 20, "tail": 8}.get(part, 12)), "assist": "sam21_tiny"}
+    return {"id": id, "part": part, "poly": poly, "pivot": pivot, "iou": round(iou, 3), "pixels": int(m.sum()), "seconds": round(time.time() - t0, 2), "spec": spec}
 
 
 @command("doodle.say", puppet=("string", "puppet file (a doodle from doodle.snap, or any character)"), text=("string", "the line to say"),
@@ -1461,12 +1565,14 @@ def drawing_requests(puppet, film=""):
             for lbl in c.get("draw", []):
                 needs.setdefault(lbl, []).append(c["move"])
     qp = RQ.queue_path(rel); q = _json(qp, {"puppet": rel, "requests": []})
-    have = {(r.get("swap"), r.get("shape"), r.get("part"), r.get("what")) for r in q["requests"]}
+    # needs once left to the Rig Canvas that are now drawn over a ghost (pupils, a turned view: WP-18) are asked again
+    q["requests"] = [r for r in q["requests"] if not (r["status"] == "rig_canvas" and RQ.parse_need(r["need"])[0]["kind"] != "canvas")]
+    have = {(r.get("swap"), r.get("shape"), r.get("part"), r.get("what"), r.get("view")) for r in q["requests"]}
     for r in RQ.make_requests(p, needs):
-        k = (r.get("swap"), r.get("shape"), r.get("part"), r.get("what"))
+        k = (r.get("swap"), r.get("shape"), r.get("part"), r.get("what"), r.get("view"))
         if k in have:
             continue
-        r["id"] = f"r{len(q['requests']) + 1}"
+        r["id"] = f"r{max([int(x['id'][1:]) for x in q['requests'] if x['id'][1:].isdigit()] + [0]) + 1}"
         if film:
             r["film"] = film
         q["requests"].append(r); have.add(k)
@@ -2329,6 +2435,126 @@ def variants_hooks(name):
 
 
 # ---------------- tests ----------------
+
+def _doodle_click_test(snap, meas):
+    """WP-18 click-to-mask: with each limb of the cat left out of the spec, one tap on its stroke (two thirds of the
+    way out) must cut it again (IoU with the automatic cut >= 0.7, pivot within 22 px of where it was drawn), and the
+    puppet cut from it must record SAM 2.1 in its provenance"""
+    import math
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from . import autorig as AR
+    bad, got = [], {}
+    _, truth = AR.synthetic_doodle("cat")
+    info = AR.prepare(ROOT / "out" / "doodletest" / "cat_photo.png", ROOT / "out" / "doodletest" / "cat_click_probe.png")
+    k, (ox, oy) = info["scale"], info["crop"][:2]
+    spec = snap["spec"]; W, H = snap["size"]
+    ink = AR._ink().extract(str(ROOT / snap["photo"])) > 0.35; iy, ix = np.nonzero(ink)
+    def mask(poly):
+        m = Image.new("L", (W, H), 0); ImageDraw.Draw(m).polygon([tuple(q) for q in poly], fill=255); return np.asarray(m) > 0
+    last = None
+    for part in ("arm_L", "arm_R", "tail"):
+        auto = spec["parts"][part]; am = mask(auto["poly"]); pv = auto["pivot"]
+        sel = am[iy, ix]; px, py = ix[sel], iy[sel]; d = np.hypot(px - pv[0], py - pv[1]); j = int(np.argmin(abs(d - 0.66 * d.max())))
+        sp = {**spec, "parts": {q: v for q, v in spec["parts"].items() if q != part}}
+        r = doodle_click(snap["id"], part, [[int(px[j]), int(py[j])]], sp); bm = mask(r["poly"])
+        t = [(truth[part][0] - ox) * k, (truth[part][1] - oy) * k]
+        got[part] = {"iou_with_auto_cut": round(float((am & bm).sum() / (am | bm).sum()), 3), "pivot_error_px": round(math.dist(r["pivot"], t) / k, 1),
+                     "model_iou": r["iou"], "seconds": r["seconds"]}
+        if got[part]["iou_with_auto_cut"] < 0.7 or got[part]["pivot_error_px"] > 22:
+            bad.append(f"click {part}: {got[part]}")
+        last = r
+    c = doodle_cut(snap["id"], last["spec"]); pz = _json(ROOT / c["puppet"])
+    got["provenance"] = [a["name"] for a in (pz.get("meta") or {}).get("assists", [])]
+    if "tail" not in pz["parts"] or "sam21_tiny" not in got["provenance"]:
+        bad.append(f"click cut: parts {sorted(pz['parts'])}, provenance {got['provenance']}")
+    doodle_cut(snap["id"], {q: v for q, v in spec.items()})   # back to the automatic cuts
+    meas["click"] = got
+    return bad
+
+
+def _doodle_page_test(work, meas):
+    """WP-18: a page with two doodles becomes two puppets, and one gains pupils and a three-quarter view through
+    drawing requests alone (drawings made on the ghost guides, as a person would)"""
+    import math, shutil
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from scipy import ndimage
+    from . import autorig as AR, drawreq as RQ
+    bad = []
+    im, _ = AR.synthetic_page(); im.save(work / "page.png")
+    for d in DOODLES.glob("page-*"):
+        shutil.rmtree(d)
+    pg = doodle_page(str((work / "page.png").relative_to(ROOT)), ["Nib", "Miso"])
+    for d in pg["doodles"]:   # a clean queue for each
+        shutil.rmtree(DOODLES / d["id"]); shutil.rmtree(ROOT / "out" / "requests" / d["id"], ignore_errors=True)
+    pg = doodle_page(str((work / "page.png").relative_to(ROOT)), ["Nib", "Miso"])
+    parts = [sorted(_json(ROOT / d["puppet"])["parts"]) for d in pg["doodles"]]
+    meas["page"] = {"doodles": pg["count"], "parts": parts}
+    if pg["count"] != 2 or not {"head", "arm_L", "arm_R"} <= set(parts[0]) or not {"head", "arm_L", "arm_R", "tail"} <= set(parts[1]):
+        return [f"page: {meas['page']}"]
+    rel = pg["doodles"][1]["puppet"]; pz = _json(ROOT / rel); W, H = map(int, pz["artboard"])
+    q = drawing_requests(rel)
+    rq = {r.get("swap") or r.get("view"): r for r in q["requests"] if r["status"] == "open"}
+    if "pupils" not in rq or "three_quarter" not in rq or not all((ROOT / rq[k].get("ghost", "")).is_file() for k in ("pupils", "three_quarter")):
+        return [f"page: pupils and three-quarter requests with ghosts, got {sorted(rq)}"]
+    ink = (20, 20, 20, 255)
+    eyes = RQ._alpha_art(pz, pz["swaps"]["eyes"]["shapes"]["open"][0]) > 0.35
+    lab, _ = ndimage.label(ndimage.binary_fill_holes(eyes))
+    dr = Image.new("RGBA", (W, H), (0, 0, 0, 0)); g = ImageDraw.Draw(dr)
+    for sl in ndimage.find_objects(lab):   # a dot in each eye
+        cy, cx = (sl[0].start + sl[0].stop) / 2, (sl[1].start + sl[1].stop) / 2; r = (sl[1].stop - sl[1].start) * 0.18
+        g.ellipse([cx - r, cy - r, cx + r, cy + r], fill=ink)
+    dr.save(work / "pupils.png")
+    hb = RQ._part_box(pz, "head"); cx = (hb[0] + hb[2]) / 2; rx = ry = (hb[2] - hb[0]) / 2 * 0.86; hy = hb[3] - ry - 6; ox = rx * 0.15
+    dr = Image.new("RGBA", (W, H), (0, 0, 0, 0)); g = ImageDraw.Draw(dr)   # the head turned right: wider on the far side, ears moved over
+    g.line([(cx + ox + rx * math.cos(a) * (1.06 if math.cos(a) > 0 else 0.9), hy + ry * math.sin(a)) for a in (2 * math.pi * i / 90 for i in range(91))], fill=ink, width=5, joint="curve")
+    for ex, sc in ((cx + ox - rx * 0.35, 0.8), (cx + ox + rx * 0.62, 1.0)):
+        top = hy - ry * 0.92; g.line([(ex - 18 * sc, top + 8), (ex - 4 * sc, top - 40 * sc), (ex + 18 * sc, top + 4)], fill=ink, width=5, joint="curve")
+    dr.save(work / "turn.png")
+    got = {}
+    for k, f in (("pupils", "pupils.png"), ("three_quarter", "turn.png")):
+        r = drawing_fulfil(rel, rq[k]["id"], str((work / f).relative_to(ROOT))); got[k] = {"verified": r["verified"], "now_free": r["now_free"]}
+    meas["page"]["fulfil"] = got
+    if not got["pupils"]["verified"] or "glance / look at" not in got["pupils"]["now_free"] or not got["three_quarter"]["verified"] or "turn (three-quarter)" not in got["three_quarter"]["now_free"]:
+        bad.append(f"page fulfil: {got}")
+    # the rig moves: pupils follow the look, the turned view redraws the head and slides the face
+    pz = _json(ROOT / rel); hip = pz["parts"]["hip"]["pivot"]; poses = [{}, {"look": [-1, 0]}, {"look": [1, 0]}, {"view": "three_quarter"}]
+    spec = {"size": [W * len(poses), H], "bg": "#ffffff", "items": [{"puppet": rel, "x": hip[0] + i * W, "y": pz["ground"], "s": 1, "pose": {"blink": 0, **ps}} for i, ps in enumerate(poses)]}
+    (work / "page_poses.json").write_text(json.dumps(spec)); _run(["node", "tools/pose_still.mjs", str(work / "page_poses.json"), str(work / "page_poses.png")], timeout=300)
+    a = np.asarray(Image.open(work / "page_poses.png").convert("L")).astype(int) < 128
+    tiles = [a[:, i * W:(i + 1) * W] for i in range(len(poses))]
+    xs = lambda t: float(np.nonzero(t[int(hb[1]):int(hb[3]), int(hb[0]):int(hb[2])])[1].mean())
+    eye_rows = slice(int(min(np.nonzero(eyes)[0])), int(max(np.nonzero(eyes)[0])) + 1)
+    L_, R_ = tiles[1][eye_rows], tiles[2][eye_rows]   # where the ink differs between looking left and right: the pupils
+    meas["page"]["moves"] = {"pupils_dx": round(float(np.nonzero(R_ & ~L_)[1].mean() - np.nonzero(L_ & ~R_)[1].mean()), 1), "movable": pz["swaps"]["pupils"]["movable"],
+                             "turn_head_dx": round(xs(tiles[3]) - xs(tiles[0]), 1), "turn_changed_px": int((tiles[3] != tiles[0]).sum())}
+    if meas["page"]["moves"]["pupils_dx"] < pz["swaps"]["pupils"]["movable"] or meas["page"]["moves"]["turn_head_dx"] < 4 or (tiles[3][int(hb[3]) + 40:] != tiles[0][int(hb[3]) + 40:]).sum() > 50:
+        bad.append(f"page poses: {meas['page']['moves']}")   # (below the head nothing changes with the view)
+    # the phone page: the same photo gives two doodles to pick from, and the picked one's requests to draw
+    import socket, subprocess, time
+    for d in DOODLES.glob("page-*"):
+        shutil.rmtree(d)
+    port = 8798
+    srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(50):
+            with socket.socket() as s_:
+                if s_.connect_ex(("127.0.0.1", port)) == 0:
+                    break
+            time.sleep(0.2)
+        r = subprocess.run(["node", "tools/doodle_page_check.mjs", str(port), str(work / "page.png")], cwd=ROOT, capture_output=True, text=True, timeout=900)
+        out = json.loads(r.stdout.strip().splitlines()[-1]) if r.stdout.strip() else {"error": r.stderr[-400:]}
+    finally:
+        srv.terminate(); srv.wait(timeout=20)
+    meas["page"]["phone_page"] = out
+    tap = out.get("tapped") or {}
+    if out.get("errors") or out.get("error") or len(out.get("chips", [])) != 2 or "tail" not in out.get("parts", []) or not out.get("pupils") or not out.get("turn") \
+            or "arm_L" in out.get("without_arm", ["arm_L"]) or "arm_L" not in tap.get("parts", []) or tap.get("iou", 0) < 0.5:
+        bad.append(f"phone page: {out}")
+    return bad
+
+
 @command("test", update=("boolean", "rewrite the golden frames instead of comparing", False),
          film=("string", "only cases for this film", ""))
 def test_golden(update=False, film=""):
@@ -2426,6 +2652,14 @@ def test_golden(update=False, film=""):
         bad, meas = _sound_test()
         failed += 1 if bad else 0
         results.append({"sound": "a foley hit moved and a music span swapped in Studio land at the right frame after a remix", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "boards":   # Rig Canvas boards (WP-18): mouth chart, expressions, turnaround with an off-model check
+        bad, meas = _boards_test()
+        failed += 1 if bad else 0
+        results.append({"boards": "mouth chart, expression and turnaround boards render; a view drawn off model is caught", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
+        bad, meas = _kra_test()
+        failed += 1 if bad else 0
+        results.append({"kra": "Krita .kra layers match their OpenRaster source pixel for pixel; a puppet imports the same from either", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -2504,6 +2738,8 @@ def test_golden(update=False, film=""):
             meas["fulfil"] = {"verified": r["verified"], "now_free": r["now_free"]}
             if not r["verified"] or "emotion happy" not in r["now_free"]:
                 bad.append(f"fulfil: {r['verified']}, now free {r['now_free']}")
+        bad += _doodle_page_test(work, meas)
+        bad += _doodle_click_test(snap, meas)
         if (Path(VOICES) / "kokoro" / "voices-v1.0.bin").exists():
             sy = doodle_say(snap["puppet"], "Hi! I'm Miso.")
             meas["say"] = {"visemes": sy["visemes"], "seconds": sy["duration"], "clips": [c["clip"] for c in sy["timeline"]["clips"]]}
@@ -3535,7 +3771,7 @@ def _inside(p, must_exist=False):
     return q
 
 
-@command("puppet.import", source=("string", "layered drawing inside the repo: .svg (Inkscape layers or groups), .psd or .ora (Krita/GIMP export)"),
+@command("puppet.import", source=("string", "layered drawing inside the repo: .svg (Inkscape layers or groups), .psd, .ora (Krita/GIMP export) or Krita .kra"),
          out=("string", "where to write the .puppet.json"),
          template=("string", "humanoid | doodle (default: guessed from the layer names)", ""), name=("string", "character name", ""),
          z=("string", "document (layer order) | template (template draw order)", "document"),
@@ -3574,6 +3810,52 @@ def puppet_sheet(path, out=""):
     pp = _inside(path, True); op = _inside(out) if out else pp.with_name(pp.name.split(".")[0] + ".sheet.png")
     _run(["node", "tools/sheet.mjs", str(pp), str(op)], timeout=300)
     return {"sheet": str(op.relative_to(ROOT))}
+
+
+@command("puppet.board", path=("string", "a .puppet.json"), kind=("string", "mouth | expressions | turnaround"),
+         out=("string", "PNG to write (default next to the puppet)", ""), tolerance=("number", "turnaround: how far a view's landmark may sit from the front view's, as a share of the height", 0.03))
+def puppet_board(path, kind, out="", tolerance=0.03):
+    """Boards for checking a character on model (WP-18), the same the Rig Canvas opens: the mouth chart (every mouth
+    side by side over an onion skin of the closed mouth), expressions (brows, eyes, gaze and emotions over the neutral
+    face) and the turnaround (every view, and each mirrored for the other side, on one ground line with the front
+    view's height lines across them). For a turnaround the landmarks of each view (top of head, eyes, chin, hips,
+    knees) are measured against the front view's, and views off by more than `tolerance` of the height are listed."""
+    from . import drawreq as RQ, geom as G
+    if kind not in ("mouth", "expressions", "turnaround"):
+        raise ValueError("kind is mouth, expressions or turnaround")
+    pp = _inside(path, True); op = _inside(out) if out else pp.with_name(pp.name.split(".")[0] + f".{kind}.png")
+    _run(["node", "tools/sheet.mjs", str(pp), str(op), kind], timeout=300)
+    res = {"board": str(op.relative_to(ROOT)), "kind": kind}
+    p = _json(pp)
+    if kind == "mouth":
+        res["shapes"] = list(((p.get("swaps") or {}).get("mouth") or {}).get("shapes", {}))
+    if kind == "turnaround":
+        def marks(view):
+            q = G.in_view(p, view) if view else p; out_ = {}
+            tree = {"head"}; grew = True   # the head and what hangs from it (hair, ears, a hat), as the board draws it
+            while grew:
+                grew = False
+                for pid, pt in q["parts"].items():
+                    if pid not in tree and pt.get("parent") in tree:
+                        tree.add(pid); grew = True
+            hb = RQ._union([RQ._part_box(q, pid) for pid in tree] + [RQ._swap_box(q, k) for k in ("eyes", "pupils", "mouth", "brows") if k in (q.get("swaps") or {})])
+            if hb:
+                out_["top of head"] = round(hb[1], 1)
+            eb = RQ._swap_box(q, "eyes")
+            if eb:
+                out_["eyes"] = round((eb[1] + eb[3]) / 2, 1)
+            for k, pid in (("chin", "head"), ("hips", "hip"), ("knees", "shin_L")):
+                if pid in q["parts"]:
+                    out_[k] = round(q["parts"][pid]["pivot"][1], 1)
+            return out_
+        front = marks(None); tall = max(1.0, p["ground"] - min(front.values(), default=0))
+        res["heights"] = {"front": front}; res["off_model"] = []
+        for v in (p.get("views") or {}):
+            m = marks(v); res["heights"][v] = m
+            for k, y in m.items():
+                if k in front and abs(y - front[k]) > tolerance * tall:
+                    res["off_model"].append({"view": v, "landmark": k, "front": front[k], "view_y": y, "off_share": round(abs(y - front[k]) / tall, 3)})
+    return res
 
 
 @command("puppet.export_layers", path=("string", "a .puppet.json"), out=("string", "output .svg, .ora or .psd inside the repo"),
@@ -4632,6 +4914,77 @@ def sound_audacity(name):
     files = SD.audacity(b / "audacity", [b / "stems" / f"{k}.wav" for k in lanes["stems"]], lanes["cues"], lanes["sections"])
     return {"files": [str(Path(f).relative_to(ROOT)) for f in files]}
 
+
+
+
+def _boards_test():
+    """WP-18 boards: Pip's mouth chart, expressions and turnaround render (with the onion ghost drawn in each close-up),
+    its side view is on model, and a copy whose side view stands 40 units taller at the hips is listed as off model"""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    work = ROOT / "out" / "boardtest"; work.mkdir(parents=True, exist_ok=True)
+    for kind in ("mouth", "expressions", "turnaround"):
+        r = puppet_board("puppet/examples/pip.puppet.json", kind, f"out/boardtest/pip.{kind}.png")
+        im = np.asarray(Image.open(ROOT / r["board"]).convert("RGB")).astype(int); ghost = 0
+        if kind == "mouth":   # the onion: the same chart with the closed mouth left empty differs where the ghost was drawn
+            q = _json(ROOT / "puppet/examples/pip.puppet.json"); q["swaps"]["mouth"]["shapes"]["closed"] = []
+            (work / "pip_noclosed.puppet.json").write_text(json.dumps(q))
+            r2 = puppet_board("out/boardtest/pip_noclosed.puppet.json", "mouth", "out/boardtest/pip_noclosed.mouth.png")
+            ghost = int((np.abs(im - np.asarray(Image.open(ROOT / r2["board"]).convert("RGB")).astype(int)).max(axis=2) > 24).sum())
+        meas[kind] = {"size": list(im.shape[1::-1]), **({"ghost_px": ghost} if kind == "mouth" else {}), **({"off_model": r["off_model"]} if kind == "turnaround" else {}),
+                      **({"shapes": len(r["shapes"])} if kind == "mouth" else {})}
+        if kind == "mouth" and (len(r["shapes"]) < 8 or ghost < 200):
+            bad.append(f"mouth chart: {meas[kind]}")
+        if kind == "turnaround" and r["off_model"]:
+            bad.append(f"turnaround: Pip's side view is listed off model: {r['off_model']}")
+    p = _json(ROOT / "puppet/examples/pip.puppet.json")
+    hip = p["parts"]["hip"]["pivot"]
+    p.setdefault("views", {}).setdefault("side", {}).setdefault("parts", {})["hip"] = {**p["views"]["side"].get("parts", {}).get("hip", {}), "pivot": [hip[0], hip[1] - 40]}
+    (work / "pip_off.puppet.json").write_text(json.dumps(p))
+    r = puppet_board("out/boardtest/pip_off.puppet.json", "turnaround", "out/boardtest/pip_off.turnaround.png")
+    meas["seeded_off_model"] = r["off_model"]
+    if not any(o["view"] == "side" and o["landmark"] == "hips" for o in r["off_model"]):
+        bad.append(f"turnaround: a side view 40 units taller at the hips was not caught: {r['off_model']}")
+    return bad, meas
+
+def _kra_test():
+    """WP-18: tests/fixtures/kra/tiny.kra was saved by Krita 5.2.2 from tiny.ora (groups, a hidden swap shape, a hidden
+    sketch layer; ICC profiles and previews stripped): every layer must read back pixel for pixel, in the same order and
+    visibility. With Krita installed, a puppet exported as .ora, saved by Krita as .kra, imports identically from both."""
+    import importlib.util, shutil, subprocess
+    import numpy as np
+    from PIL import Image
+    sp = importlib.util.spec_from_file_location("drawing_import", ROOT / "dbe" / "drawing_import.py"); di = importlib.util.module_from_spec(sp); sp.loader.exec_module(di)
+    fx = ROOT / "tests" / "fixtures" / "kra"; bad, meas = [], {}
+    k, o = di.read_kra(fx / "tiny.kra"), di.read_ora(fx / "tiny.ora")
+    W, H = o["size"]
+    def px(r):
+        c = Image.new("RGBA", (W, H), (0, 0, 0, 0)); c.paste(r["image"], (r["x"], r["y"]), r["image"]); return np.asarray(c).astype(int)
+    lay = lambda src: [("/".join(r["names"]), r["hid"]) for r in sorted(src["items"] + src["hidden"], key=lambda r: r["order"])]
+    if lay(k) != lay(o) or k["size"] != o["size"]:
+        bad.append(f"layers {lay(k)} vs {lay(o)}")
+    ko = {"/".join(r["names"]): r for r in k["items"] + k["hidden"]}
+    worst = max(int(np.abs(px(ko["/".join(r["names"])]) - px(r)).max()) for r in o["items"] + o["hidden"] if "/".join(r["names"]) in ko)
+    meas["fixture"] = {"layers": len(ko), "max_pixel_difference": worst}
+    if worst:
+        bad.append(f"fixture pixels differ by up to {worst}")
+    krita = shutil.which("krita"); xvfb = shutil.which("xvfb-run")
+    if krita and xvfb:
+        work = ROOT / "out" / "kratest"; shutil.rmtree(work, ignore_errors=True); work.mkdir(parents=True)
+        puppet_export_layers("puppet/examples/pip.puppet.json", "out/kratest/pip.ora")
+        subprocess.run([xvfb, "-a", krita, "--nosplash", "pip.ora", "--export", "--export-filename", "pip.kra"], cwd=work, capture_output=True, timeout=600)
+        if not (work / "pip.kra").is_file():
+            bad.append("krita did not save pip.kra")
+        else:
+            outs = {f: _json(ROOT / puppet_import(f"out/kratest/pip.{f}", f"out/kratest/pip_{f}.puppet.json", name="Pip")["puppet"]) for f in ("ora", "kra")}
+            same = json.dumps({x: y for x, y in outs["ora"].items() if x != "meta"}, sort_keys=True) == json.dumps({x: y for x, y in outs["kra"].items() if x != "meta"}, sort_keys=True)
+            meas["krita_round_trip"] = {"parts": len(outs["kra"]["parts"]), "identical": same}
+            if not same:
+                bad.append("pip imports differently from .kra and .ora")
+    else:
+        meas["krita_round_trip"] = "skipped: krita or xvfb-run not installed"
+    return bad, meas
 
 def _sound_test():
     """WP-40 checks: cue edits and music swaps (pure), and, when fx-demo has been rendered, the Studio sound page on a

@@ -336,7 +336,7 @@
        "puppet.import",
        "WP-18"
       ],
-      "note": "puppet.import reads layered SVG, PSD and ORA and builds a rig from layer names (parts, swaps, pivot markers); Krita .kra and Illustrator .ai import are WP-18."
+      "note": "puppet.import reads layered SVG, PSD, ORA and Krita .kra and builds a rig from layer names (parts, swaps, pivot markers); Illustrator .ai import is WP-18."
      }
     },
     {

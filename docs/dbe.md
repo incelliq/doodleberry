@@ -496,6 +496,16 @@ The Rig Canvas (`puppet/canvas/index.html`) now has:
 - **Sheet**: a model sheet of the character (rest, wave, turned both ways, every drawn view; every mouth, brow, eye state
   and gaze close up), downloadable as SVG. `puppet.sheet` renders the same sheet to PNG (`tools/sheet.mjs`,
   `puppet/loader/sheet.js`).
+- **Boards** (WP-18, the menu beside Sheet; `puppet.board` renders them to PNG): the **mouth chart** puts every mouth
+  shape side by side in close-up, each with a blue onion ghost of the closed mouth, so size, placement and line
+  weight can be compared; **expressions** does the same for brows, eyes, gaze and the five emotions, over a ghost of
+  the neutral face; the **turnaround** stands the front view, every other view and each view mirrored (the other
+  side) on one ground line at one scale, with the front view's height lines across them (top of head with what
+  hangs from it, eyes, chin, hips, knees, ground). Boxes are measured on the rendered drawing (`getBBox`), so any
+  path data and raster parts count. For a turnaround `puppet.board` also measures each view's landmarks against the
+  front's and lists views off by more than `tolerance` (3% of the height). The `boards` test renders Pip's three
+  boards (the mouth chart's ghost shows as 798 changed pixels when the closed mouth is emptied), finds the side view
+  on model, and catches a copy whose side view stands 40 units taller at the hips (4.9% off).
 
 ## Gesture planner (plan 2.3)
 `acting.plan` makes every speaking cast member act from the script and the voice, with no hand-placed clips. Emphasis
@@ -871,10 +881,54 @@ artboard, the related drawing it has a little stronger, and a dashed box where t
 `drawing.fulfil` lifts the ink inside the box (`ink.extract`), stores it as the swap shape (a new swap if needed, e.g.
 brows) or part (a tail, pivoted where the stroke is nearest the body), saves the character, and closes the request
 only when the rig check no longer lists it, reporting the moves that became free; with `render` it re-renders the
-film that asked. Pupils, a turn view and chains are rigged rather than drawn, so they are listed for the Rig Canvas.
+film that asked. Since WP-18, pupils and a turned view are drawn over a ghost too (below); chains and missing clips
+are still listed for the Rig Canvas.
 Drawn shapes are raster strokes (SVG renderer). `python -m dbe test` cuts three synthetic doodles (head and body,
 blob, cat with a tail and ears; pivots within 11 px), snaps the cat, builds its queue, draws raised brows into the box
 and checks happy and surprised become free, and voices a line when Kokoro is installed.
+
+**A page of doodles, pupils and a turned view (WP-18).** `doodle.page` takes a photo of a page with several
+doodles: the ink is grouped by closing gaps of about 2.5% of the page and filling loops (eyes stay with their head),
+groups under 8% of the ink are specks, and each group is cropped with the others painted out in the paper colour
+and goes through `doodle.snap`, in reading order (`names` gives each its name). The phone page always calls it and
+shows a chip per doodle when there are several. Two more requests are drawn over ghosts:
+- **pupils**: the box is the eyes, shown stronger; the dots drawn there become the `pupils` swap. Ink of the eyes
+  within a few pixels of them is painted out of the open eyes (a drawn dot would otherwise stay), and `movable` is
+  0.6 of the room the eye leaves around the pupil. `look` then moves them in every renderer.
+- **three-quarter view**: the box is the head; the person draws the head turned to the right without a face. It
+  becomes `views.three_quarter.parts.head`, and the face swaps (eyes, pupils, mouth, brows) get shapes in that view
+  slid toward the side it faces and narrowed with the head (the mapping is kept in `meta.face_map`, so pupils drawn
+  later follow it). A timeline turns the character with `view: [[t, "three_quarter"], ...]`, and the rig check
+  counts the view as the turn ability.
+The `doodle` test splits a synthetic page of a person and a cat into two puppets (the cat with its tail), draws dots
+in the cat's eyes and a turned head on their ghosts, checks both requests close and free "glance / look at" and
+"turn (three-quarter)", renders looks left and right (pupils 20.7 px apart, `movable` 10.2) and the turned view (the
+head 28 px to the right, nothing below the head changed), and runs the phone page in Chromium
+(`tools/doodle_page_check.mjs`): two chips, the second picked with its tail, pupils and three-quarter requests listed.
+The arm finder no longer drops short arms: a side stroke counts from six square line widths, not 0.15% of the
+drawing's box.
+
+**Tap to cut (WP-18, plan 1.8b).** When a cut is wrong or missing, `doodle.click` takes taps on the photo
+(`[x, y]` inside the piece, `[x, y, 0]` outside) and cuts that piece with SAM 2.1 tiny (Apache-2.0; onnx-community's
+ONNX export, two graphs with external weights, pinned by sha256 in `dbe/assists.py` and downloaded on first use):
+the picture is encoded once (about 4 s on 4 CPUs; cached in `out/doodle/<id>/sam.npz`) and each tap then takes
+0.3 to 0.5 s. The mask takes the ink around it and is outlined, grown by the line width. For a limb the head and
+body loops are taken off it (their insides as autorig finds them, out to their lines), and a new limb is pivoted by
+following the stroke's own direction from its end nearest the body to the body's line; a head pivots at the bottom
+of its mask. The page's **✂ Tap to cut** button and piece menu do this; `doodle.cut` records SAM 2.1 in the
+puppet's `meta.assists` when a cut came from it. Measured on the synthetic cat, each limb left out and cut again
+with one tap on its stroke: left arm IoU 0.83 with the automatic cut and pivot 10.4 px from where it was drawn
+(automatic: 10.5), right arm 0.79 and 7.5 px (8.5), tail 0.97 and 5.4 px (3.2). On the phone page, the left arm
+of the second doodle on a page, removed and tapped back, returns with the model 65% sure.
+
+**Krita .kra import (WP-18).** `puppet.import` reads `.kra` files directly (`dbe/drawing_import.py`): the layer
+tree from `maindoc.xml` (groups give swap sets, hidden layers count as for ORA), and each paint layer's tiles
+(version 2: 64-px tiles, LZF-compressed planar BGRA, or raw), cropped to the drawing. 8-bit RGBA is tested; 16-bit
+layers are converted down, and other colour spaces or layer kinds (vector, file, fill, filter layers) are reported
+in `skipped` with what to do in Krita. The `kra` test reads `tests/fixtures/kra/tiny.kra` (saved by Krita 5.2.2
+from `tiny.ora`: groups, a hidden swap shape, a hidden sketch layer) and finds every layer identical to the ORA's,
+pixel for pixel; with Krita installed (`tools/setup.sh oss`, run under `xvfb-run`), Pip exported as ORA and saved
+by Krita as `.kra` imports identically from both (18 parts).
 
 ## Production orchestrator and board (plan 3.7)
 http://127.0.0.1:8770/board (linked from Studio): a posting calendar by week, and a card per film with its state,

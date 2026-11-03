@@ -153,7 +153,7 @@ Goal: every format, every audience, and a trustworthy library others can contrib
 | 0.8 / 0.13 Subtitles, encode profiles, posting package | done | f6a03f4 |
 | 0.10 / 0.12 Research gates and critic loop | done | f77ba03 |
 | 0.11 Measured layout QA | done (advisory until calibrated per style) | 0a1b167 |
-| 1.8 Ink import and raster parts | core done: `puppet.from_ink`, raster parts in the SVG renderer. Open: auto cut and pivot suggestions, multi-character pages, raster parts in other renderers | this commit |
+| 1.8 Ink import and raster parts | core done: `puppet.from_ink`, raster parts in the SVG renderer. Auto cuts and pivots: `doodle.snap` (3.6); multi-character pages and SAM 2.1 click-to-mask (1.8b): WP-18 part 1. Open: raster parts in other renderers | this commit |
 | 1.9 Hand-made look | done: boil, stepped timing, paper set, ink signs and overlays | this commit |
 | 1.11 Doodle template | done: template and clip library (hop, wave, tilt, wag, talk, lean, shake) | this commit |
 | 1.12 Native dual-aspect | done: `film.render aspect=16:9 / 1:1`, auto re-staging plus overrides, landscape set designs, aspect-aware bubbles, captions and QA | this commit |
