@@ -25,6 +25,6 @@ if (cook) {
   }
   cooked = await pg.evaluate(() => window.COOK_RESULT && { status: window.COOK_RESULT.status, made: (window.COOK_RESULT.result || {}).made, events: (window.COOK_RESULT.events || []).map(e => e.stage + (e.shot ? ':' + e.shot : '') + (e.state ? ':' + e.state : '')) });
 }
-const after = await pg.evaluate(n => (window.GRAPH.nodes.find(x => x.id === n) || {}).state, node);
-console.log(JSON.stringify({ boxes, state: sel && sel.state, why: (sel && sel.why) || [], text: why.slice(0, 300), progress: [...new Set(progressSeen)].slice(-6), cooked, after, errors }));
+const afterNode = await pg.evaluate(n => window.GRAPH.nodes.find(x => x.id === n) || {}, node), after = afterNode.state, afterWhy = afterNode.why;
+console.log(JSON.stringify({ boxes, state: sel && sel.state, why: (sel && sel.why) || [], text: why.slice(0, 300), progress: [...new Set(progressSeen)].slice(-6), cooked, after, afterWhy, errors }));
 await b.close();
