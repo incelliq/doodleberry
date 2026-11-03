@@ -83,6 +83,12 @@ environment variables below).
   threes, and play it at the level's rate. `level.new`, `level.get`, `level.draw` (one drawing from the page, a new
   name placed in the sheet), `level.delete_drawing` and `level.list` serve it; `python -m dbe test` (levels) drives
   the page with a pointer like an animator (`tools/draw_check.mjs`).
+  Part 3: **`level.cleanup`** turns rough drawings into clean ones (construction lines fainter than `keep` and specks
+  go; one ink colour if asked); **`level.capture`** is a pencil test: a photo of a drawing on paper loses its lighting
+  and paper, is fitted into the frame and lined up with the drawing before it (phase correlation of the ink, a digital
+  peg bar), then joins the sheet; **`level.colour`** paints with named colour styles: a point inside a closed shape
+  fills it under the line, a painted drawing's areas are carried to every other drawing, and changing a style
+  repaints them all. The page has Capture (the phone's camera or a file), Clean up, Paint, Style and Carry colours.
 - **Open-source parts** (WP-34, decisions in `docs/oss-integration.md`): `brush.paint` and `brush.list` (libmypaint
   linked through ctypes, any MyPaint brush preset, pressure strokes onto a transparent PNG), `pencil2d.write` and
   `pencil2d.render` (a drawn level to and from a Pencil2D project, rendered headless with its holds),

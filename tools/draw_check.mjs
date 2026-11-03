@@ -24,8 +24,16 @@ for (const cx of [0.5, 0.75]) {
 await p.click('[data-tool="brush"]'); await stroke([[0.1, 0.85], [0.5, 0.8], [0.9, 0.85]]);
 await p.waitForTimeout(1500); await p.click('#save'); await p.waitForFunction(() => document.getElementById('msg').textContent.startsWith('saved'));
 await p.click('[data-time="2"]'); await p.waitForTimeout(800);
+// colour: a style, paint the first ball, carry it to the others
+await p.evaluate(async lvl => { await fetch('/api/level.colour', { method: 'POST', body: JSON.stringify({ name: lvl, styles: { ball: '#e8603c' } }) }); }, level);
+await p.click('.cell[data-i="0"]'); await p.evaluate(async lvl => { const s = document.getElementById('lv'); s.dispatchEvent(new Event('change')); }, level);
+await p.waitForTimeout(1200); await p.click('.cell[data-i="0"]'); await p.waitForTimeout(300);
+await p.click('[data-tool="paint"]'); { const r = await box(); await p.mouse.click(r.x + 0.25 * r.w, r.y + 0.5 * r.h); }
+await p.waitForFunction(() => document.getElementById('msg').textContent.startsWith('painted'), null, { timeout: 30000 });
+await p.click('#carry'); await p.waitForFunction(() => document.getElementById('msg').textContent.startsWith('colours carried'), null, { timeout: 30000 });
 await p.click('#play'); await p.waitForTimeout(700); await p.screenshot({ path: out + '/draw_play.png' }); await p.click('#play');
 await p.screenshot({ path: out + '/draw_page.png' });
 const lv = await p.evaluate(async lvl => (await (await fetch('/api/level.get', { method: 'POST', body: JSON.stringify({ name: lvl }) })).json()).result, level);
-console.log(JSON.stringify({ cells: lv.cells, drawings: Object.fromEntries(Object.entries(lv.drawings).map(([k, v]) => [k, v.map(s => [s.x, s.y, s.w, s.h])])), onion, errs }));
+const painted = Object.fromEntries(Object.entries(lv.paint || {}).map(([k, v]) => [k, v.length]));
+console.log(JSON.stringify({ painted, cells: lv.cells, drawings: Object.fromEntries(Object.entries(lv.drawings).map(([k, v]) => [k, v.map(s => [s.x, s.y, s.w, s.h])])), onion, errs }));
 await b.close();

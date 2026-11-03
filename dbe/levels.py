@@ -133,6 +133,172 @@ def from_frames(frames):
     return drawings, cells
 
 
+# ---------------------------------------------------------------- cleanup, capture, registration (WP-35 part 3)
+def stroke_rgba(st, size):
+    """a raster stroke back into a full-size RGBA array"""
+    from PIL import Image
+    W, H = size; out = np.zeros((H, W, 4), np.uint8)
+    im = Image.open(io.BytesIO(base64.b64decode(st["image"].split(",", 1)[1]))).convert("RGBA").resize((int(st["w"]), int(st["h"])))
+    a = np.asarray(im); x, y = int(st["x"]), int(st["y"])
+    x0, y0, x1, y1 = max(0, x), max(0, y), min(W, x + a.shape[1]), min(H, y + a.shape[0])
+    if x1 > x0 and y1 > y0:
+        out[y0:y1, x0:x1] = a[y0 - y:y1 - y, x0 - x:x1 - x]
+    return out
+
+
+def drawing_rgba(p, name, sid="level", role=None):
+    """a drawing composited to a full-size RGBA array (only strokes of `role` when given: line or paint)"""
+    from PIL import Image
+    W, H = p["artboard"]; base = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for st in p["swaps"][sid]["shapes"].get(name, []):
+        if "image" in st and (role is None or st.get("role", "line") == role):
+            base.alpha_composite(Image.fromarray(stroke_rgba(st, (W, H)), "RGBA"))
+    return np.asarray(base)
+
+
+def clean_rgba(a, keep=0.45, min_speck=12, ink=None):
+    """rough lines -> clean lines: faint construction strokes (alpha under `keep`) go, specks go, the rest is inked
+    at full strength with soft edges kept; ink: a colour for every line, or None to keep each line's own"""
+    from scipy import ndimage
+    al = a[..., 3].astype(np.float32) / 255
+    mask = al >= keep
+    lab, n = ndimage.label(mask, np.ones((3, 3)))
+    if n:
+        sizes = ndimage.sum(mask, lab, range(1, n + 1))
+        mask = np.isin(lab, [i + 1 for i, s_ in enumerate(sizes) if s_ >= min_speck])
+    soft = np.clip((al - keep * 0.6) / (1 - keep * 0.6), 0, 1)
+    soft = np.where(ndimage.binary_dilation(mask, iterations=1), np.maximum(soft, mask * 1.0), 0)
+    out = a.copy()
+    if ink:
+        c = ink.lstrip("#"); out[..., :3] = [int(c[i:i + 2], 16) for i in (0, 2, 4)]
+    out[..., 3] = (soft * 255).round().astype(np.uint8)
+    return out
+
+
+def photo_to_ink(photo_rgb, size, ink="#24160e", threshold=(225, 75), min_speck=25, margin=0.06):
+    """a photo or scan of a drawing on paper -> ink on a transparent level-sized canvas, fitted inside the frame
+    (lighting divided out, paper removed, specks dropped; the method of dbe/ink.py)"""
+    from PIL import Image, ImageFilter
+    from scipy import ndimage
+    im = Image.fromarray(photo_rgb).convert("L")
+    a = np.asarray(im).astype(np.float32)
+    bg = np.asarray(im.filter(ImageFilter.GaussianBlur(25))).astype(np.float32)
+    norm = np.clip(a / np.maximum(bg, 1) * 255, 0, 255)
+    alpha = np.clip((threshold[0] - norm) / threshold[1], 0, 1)
+    mask = alpha > 0.35
+    lab, n = ndimage.label(mask, np.ones((3, 3)))
+    if n:
+        sizes = ndimage.sum(mask, lab, range(1, n + 1))
+        alpha = alpha * np.isin(lab, [i + 1 for i, s_ in enumerate(sizes) if s_ >= min_speck])
+    W, H = size; h, w = alpha.shape
+    k = min(W * (1 - 2 * margin) / w, H * (1 - 2 * margin) / h)   # the paper fitted into the frame, as a camera stand would
+    al = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).resize((max(1, int(w * k)), max(1, int(h * k))), Image.LANCZOS))
+    out = np.zeros((H, W, 4), np.uint8); c = ink.lstrip("#")
+    out[..., :3] = [int(c[i:i + 2], 16) for i in (0, 2, 4)]
+    y0, x0 = (H - al.shape[0]) // 2, (W - al.shape[1]) // 2
+    out[y0:y0 + al.shape[0], x0:x0 + al.shape[1], 3] = al
+    return out
+
+
+def register(ref, mov, max_shift=None):
+    """the translation that lines a drawing up with the one before it (phase correlation of their ink), the digital
+    peg bar for pencil tests -> (dx, dy) to apply to mov"""
+    A = ref[..., 3].astype(np.float32) / 255; B = mov[..., 3].astype(np.float32) / 255
+    if A.sum() < 1 or B.sum() < 1:
+        return 0, 0
+    FA, FB = np.fft.fft2(A), np.fft.fft2(B)
+    R = FA * np.conj(FB); R /= np.abs(R) + 1e-9
+    c = np.fft.ifft2(R).real
+    dy, dx = np.unravel_index(np.argmax(c), c.shape)
+    H, W = A.shape
+    dy = dy - H if dy > H // 2 else dy; dx = dx - W if dx > W // 2 else dx
+    if max_shift and (abs(dx) > max_shift or abs(dy) > max_shift):
+        return 0, 0
+    return int(dx), int(dy)
+
+
+def shift(a, dx, dy):
+    out = np.zeros_like(a); H, W = a.shape[:2]
+    ys, yd = (slice(0, H - dy), slice(dy, H)) if dy >= 0 else (slice(-dy, H), slice(0, H + dy))
+    xs, xd = (slice(0, W - dx), slice(dx, W)) if dx >= 0 else (slice(-dx, W), slice(0, W + dx))
+    out[yd, xd] = a[ys, xs]
+    return out
+
+
+# ---------------------------------------------------------------- colour styles across every drawing
+def regions(line_rgba, gap=2):
+    """the closed areas of a line drawing: labels of non-ink areas (4-connected), the outside (touching the border)
+    excluded; small gaps in the line (up to `gap` px) are closed for the purpose of finding areas"""
+    from scipy import ndimage
+    ink = line_rgba[..., 3] > 96
+    closed = ndimage.binary_closing(ink, iterations=gap) | ink if gap else ink
+    lab, n = ndimage.label(~closed)
+    border = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+    for b in border:
+        lab[lab == b] = 0
+    return lab
+
+
+def paint_layer(line_rgba, seeds, styles, gap=2):
+    """fills for the seeded areas of a drawing, grown under the line so no paper shows between paint and ink"""
+    from scipy import ndimage
+    lab = regions(line_rgba, gap); H, W = lab.shape
+    out = np.zeros((H, W, 4), np.uint8)
+    ink = line_rgba[..., 3] > 32
+    for x, y, style in seeds:
+        x, y = int(round(x)), int(round(y))
+        if not (0 <= x < W and 0 <= y < H) or lab[y, x] == 0 or style not in styles:
+            continue
+        m = lab == lab[y, x]
+        m = m | (ndimage.binary_dilation(m, iterations=gap + 2) & ink)
+        c = styles[style].lstrip("#"); out[m] = [int(c[i:i + 2], 16) for i in (0, 2, 4)] + [255]
+    return out
+
+
+def carry_seeds(prev_line, prev_seeds, line, gap=2):
+    """the seeds of a painted drawing carried to the next drawing: each painted area goes to the area of the new
+    drawing it overlaps most (areas of a similar size; the nearest one when nothing overlaps)"""
+    A, B = regions(prev_line, gap), regions(line, gap)
+    out = []
+    ids_b = [i for i in np.unique(B) if i]
+    if not ids_b:
+        return out
+    cents = {i: np.argwhere(B == i).mean(0) for i in ids_b}; areas = {i: int((B == i).sum()) for i in ids_b}
+    used = set()
+    for x, y, style in prev_seeds:
+        x, y = int(round(x)), int(round(y))
+        if not (0 <= y < A.shape[0] and 0 <= x < A.shape[1]) or A[y, x] == 0:
+            continue
+        ma = A == A[y, x]; area = int(ma.sum())
+        ov = {i: int((ma & (B == i)).sum()) for i in ids_b}
+        cand = [i for i in ids_b if 0.4 <= areas[i] / max(1, area) <= 2.5 and i not in used]
+        best = max(cand, key=lambda i: ov[i], default=None) if cand else None
+        if best is None or ov[best] == 0:
+            ca = np.argwhere(ma).mean(0)
+            best = min(cand, key=lambda i: np.hypot(*(cents[i] - ca)), default=None)
+        if best is None:
+            continue
+        used.add(best); cy, cx = cents[best]
+        pts = np.argwhere(B == best); j = int(np.argmin(((pts - [cy, cx]) ** 2).sum(1)))   # a point inside, nearest the centre
+        out.append([int(pts[j][1]), int(pts[j][0]), style])
+    return out
+
+
+def recolour(p, sid="level"):
+    """rebuild every drawing's paint from the level's styles and seeds (lines untouched)"""
+    sw = p["swaps"][sid]; pt = sw.get("paint") or {}
+    styles, seeds = pt.get("styles", {}), pt.get("seeds", {})
+    for name, shape in sw["shapes"].items():
+        lines = [st for st in shape if st.get("role", "line") != "paint"]
+        if seeds.get(name):
+            line = drawing_rgba(p, name, sid, "line")
+            fill = raster_stroke(paint_layer(line, seeds[name], styles))
+            if fill:
+                fill["role"] = "paint"; lines = [fill] + lines
+        sw["shapes"][name] = lines
+    return p
+
+
 def onion(p, frame, before=2, after=1, sid="level"):
     """the drawings around a frame for onion skinning: [(drawing, offset in drawings, opacity)]"""
     cells = p["swaps"][sid]["xsheet"]["cells"]; rs = runs(cells)
@@ -250,7 +416,9 @@ def page_check(tmp, port=8794):
             out = json.loads(r.stdout.strip().splitlines()[-1])
         except Exception:
             return [f"draw page: {(r.stderr or r.stdout)[-400:]}"], got
-        got = {"cells": out["cells"], "drawings": len(out["drawings"]), "onion_px": out["onion"], "errors": out["errs"]}
+        got = {"cells": out["cells"], "drawings": len(out["drawings"]), "onion_px": out["onion"], "painted": out.get("painted"), "errors": out["errs"]}
+        if [k for k, v in (out.get("painted") or {}).items() if v] != ["d01", "d02", "d03"]:
+            fails.append(f"paint and carry on the page: {out.get('painted')}")
         if out["cells"] != ["d01", "d01", "d02", "d02", "d03", "d03"] or len(out["drawings"]) != 3:
             fails.append(f"sheet after drawing three on twos: {out['cells']}")
         xs = [out["drawings"][k][0][0] for k in ("d01", "d02") if out["drawings"].get(k)]
@@ -264,4 +432,72 @@ def page_check(tmp, port=8794):
             fails.append(f"page errors: {out['errs'][:3]}")
     finally:
         srv.terminate(); f.unlink(missing_ok=True); shutil.rmtree(tmp, ignore_errors=True)
+    return fails, got
+
+
+def part3_test(tmp):
+    """cleanup drops construction lines and specks and keeps the line; photos of drawings on unevenly lit paper come in
+    lined up with each other (registration) however the paper moved; a painted area follows its shape to the next
+    drawing, and changing the style repaints both"""
+    import shutil
+    from PIL import Image, ImageDraw
+    from . import commands as C
+    fails, got = [], {}
+    tmp = Path(tmp); shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    name = "zz-part3"; f = ROOT / "cast" / "levels" / f"{name}.puppet.json"; f.unlink(missing_ok=True)
+    try:
+        C.level_new(name, [400, 300], 12)
+        # 1. cleanup
+        im = Image.new("RGBA", (400, 300), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        d.ellipse([100, 80, 220, 200], outline=(36, 22, 14, 255), width=6)
+        for k in range(6):
+            d.line([(60 + k * 40, 40), (90 + k * 40, 260)], fill=(36, 22, 14, 60), width=2)   # construction lines
+        for k in range(10):
+            d.point([(30 + k * 33, 280)], fill=(36, 22, 14, 255))                             # specks
+        im.save(tmp / "rough.png")
+        C.level_draw(name, "d01", "data:image/png;base64," + base64.b64encode((tmp / "rough.png").read_bytes()).decode())
+        r = C.level_cleanup(name)
+        p = json.loads(f.read_text()); a = drawing_rgba(p, "d01", role="line")
+        ring = a[80:201, 100:221, 3] > 0
+        got["cleanup"] = {**r["cleaned"]["d01"], "ring_kept_px": int(ring.sum()), "outside_px": int((a[..., 3] > 0).sum() - ring.sum())}
+        if got["cleanup"]["outside_px"] > 0 or got["cleanup"]["ring_kept_px"] < 1500:
+            fails.append(f"cleanup: {got['cleanup']}")
+        # 2. capture with registration
+        for i, (ox, oy) in enumerate(((0, 0), (14, -9))):
+            ph = Image.new("RGB", (800, 600)); px = ph.load()
+            g = np.linspace(190, 240, 800).astype(np.uint8)
+            ph = Image.fromarray(np.repeat(np.tile(g, (600, 1))[..., None], 3, -1))
+            dr = ImageDraw.Draw(ph)
+            dr.ellipse([300 + ox, 200 + oy, 500 + ox, 400 + oy], outline=(70, 70, 75), width=9)   # the same drawing; the paper moved
+            dr.line([(320 + ox + i * 20, 300 + oy), (480 + ox, 300 + oy)], fill=(70, 70, 75), width=7)   # what changes between drawings
+            ph.save(tmp / f"photo{i}.png")
+        c1 = C.level_capture(name, "p1", str(tmp / "photo0.png"), place_after="d01", hold=2)
+        c2 = C.level_capture(name, "p2", str(tmp / "photo1.png"), place_after="p1", hold=2)
+        p = json.loads(f.read_text())
+        cen = []
+        for dn in ("p1", "p2"):
+            al = drawing_rgba(p, dn, role="line")[..., 3] > 60
+            ys, xs = np.nonzero(al); cen.append((float(xs.mean()), float(ys.mean())))
+        got["capture"] = {"shift_found": c2["registered_by"], "centres": [[round(x, 1), round(y, 1)] for x, y in cen]}
+        if abs(cen[0][1] - cen[1][1]) > 2.5 or abs(cen[0][0] - cen[1][0]) > 6:
+            fails.append(f"registration: {got['capture']}")
+        # 3. colour styles carried across drawings
+        for dn, x in (("r1", 60), ("r2", 110)):
+            im = Image.new("RGBA", (400, 300), (0, 0, 0, 0)); ImageDraw.Draw(im).ellipse([x, 90, x + 120, 210], outline=(36, 22, 14, 255), width=5)
+            im.save(tmp / f"{dn}.png")
+            C.level_draw(name, dn, "data:image/png;base64," + base64.b64encode((tmp / f"{dn}.png").read_bytes()).decode(), place_after="p2")
+        C.level_colour(name, styles={"skin": "#f2c9a0"}, seeds={"r1": [[120, 150, "skin"]]}, propagate_from="r1")
+        p = json.loads(f.read_text())
+        inside = drawing_rgba(p, "r2", role="paint")[150, 170]
+        C.level_colour(name, styles={"skin": "#6aa0d8"})
+        p = json.loads(f.read_text())
+        after = [drawing_rgba(p, dn, role="paint")[150, x + 60] for dn, x in (("r1", 60), ("r2", 110))]
+        got["colour"] = {"r2_inside": inside.tolist(), "after_style_change": [a_.tolist() for a_ in after]}
+        if list(inside[:3]) != [0xf2, 0xc9, 0xa0] or any(list(a_[:3]) != [0x6a, 0xa0, 0xd8] for a_ in after):
+            fails.append(f"colour styles: {got['colour']}")
+        outside = drawing_rgba(p, "r2", role="paint")[20, 20, 3]
+        if outside:
+            fails.append("paint leaked outside the shape")
+    finally:
+        f.unlink(missing_ok=True); shutil.rmtree(tmp, ignore_errors=True)
     return fails, got

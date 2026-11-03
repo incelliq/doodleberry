@@ -192,6 +192,11 @@ drawings and whose **`xsheet`** is the exposure sheet:
 - **Clip fades** (`fadeIn`, `fadeOut` on a clip): the default blend a timeline uses for that clip when the layer does
   not set its own (0.25 s otherwise). Level clips set 0: drawings cut, never cross-fade.
 - `ground` is where the drawings stand (by default the lowest ink across every drawing).
+- **Colour styles** (`swaps.level.paint`): `{"styles": {"skin": "#f2c9a0"}, "seeds": {"d01": [[x, y, "skin"], ...]}}`. Each seed
+  paints the closed area under it (gaps in the line up to 2 px are bridged; the outside is never painted); the paint is
+  a raster stroke with `"role": "paint"` placed under the line art (`"role": "line"`, the default) and rebuilt
+  whenever a style or a drawing changes, so recolouring a style repaints every drawing. `level.colour` carries a
+  painted drawing's areas to the others by matching areas between neighbouring drawings.
 - Commands: `level.make` (drawings plus timing), `level.xsheet` (retime, or write the cells), `level.from_pencil2d`
   (a Pencil2D animation, with its holds), `level.onion` (onion-skin drawings around a frame). Raster drawings render
   in the SVG renderer; vector drawings everywhere.

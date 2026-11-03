@@ -2352,6 +2352,7 @@ def test_golden(update=False, film=""):
         from . import levels as LVL
         bad, meas = LVL.self_test(ROOT / "out" / "leveltest")
         pb, pm = LVL.page_check(ROOT / "out" / "drawcheck"); bad += pb; meas["draw_page"] = pm
+        pb, pm = LVL.part3_test(ROOT / "out" / "levelpart3"); bad += pb; meas["cleanup_capture_colour"] = pm
         failed += 1 if bad else 0
         results.append({"levels": "timings, compiled clips, drawings over time in the loader, Pencil2D import", "status": "FAIL" if bad else "ok",
                         "measured": {k: v for k, v in meas.items() if k != "cells"}, **({"cases": bad} if bad else {})})
@@ -3058,7 +3059,10 @@ def level_get(name):
     strokes, positioned in the level's pixels)."""
     p = _json(_level_path(name)); sw = p["swaps"]["level"]
     return {"name": name, "size": p["artboard"], "ground": p.get("ground"), "fps": sw["xsheet"]["fps"], "cells": sw["xsheet"]["cells"],
-            "loop": sw["xsheet"].get("loop", True), "drawings": {k: [st for st in v if "image" in st] for k, v in sw["shapes"].items()}}
+            "loop": sw["xsheet"].get("loop", True),
+            "drawings": {k: [st for st in v if "image" in st and st.get("role", "line") != "paint"] for k, v in sw["shapes"].items()},
+            "paint": {k: [st for st in v if st.get("role") == "paint"] for k, v in sw["shapes"].items()},
+            "styles": (sw.get("paint") or {}).get("styles", {}), "seeds": (sw.get("paint") or {}).get("seeds", {})}
 
 
 @command("level.draw", name=("string", "level"), drawing=("string", "drawing name (a new name adds a drawing)"),
@@ -3093,8 +3097,89 @@ def level_draw(name, drawing, png="", place_after="", hold=2):
     lows = [s_["y"] + s_["h"] for sh in sw["shapes"].values() for s_ in sh if "h" in s_]
     p["ground"] = max(lows) if lows else H
     LV.set_xsheet(p, cells=cells)
+    if ((sw.get("paint") or {}).get("seeds") or {}).get(drawing):   # its colours follow the redrawn lines
+        LV.recolour(p)
     f.write_text(json.dumps(p, separators=(",", ":")))
     return {"drawing": drawing, "new": new, "drawings": len(sw["shapes"]), "frames": len(cells), "inked": bool(st)}
+
+
+@command("level.cleanup", name=("string", "level"), drawings=("array", "drawings to clean (default: all)", None),
+         keep=("number", "strokes fainter than this (0-1 alpha) are construction lines and go", 0.45),
+         min_speck=("integer", "ink islands smaller than this many pixels go", 12), ink=("string", "one ink colour for every line (empty: keep)", ""))
+def level_cleanup(name, drawings=None, keep=0.45, min_speck=12, ink=""):
+    """Clean rough drawings (WP-35): faint construction lines and specks go, the lines that stay are inked at full
+    strength with their soft edges; paint is redone from the level's colour styles."""
+    from . import levels as LV
+    f = _level_path(name); p = _json(f); sw = p["swaps"]["level"]; W, H = p["artboard"]; out = {}
+    for d in drawings or list(sw["shapes"]):
+        a = LV.drawing_rgba(p, d, role="line")
+        before = int((a[..., 3] > 0).sum())
+        c = LV.clean_rgba(a, keep, min_speck, ink or None)
+        st = LV.raster_stroke(c)
+        sw["shapes"][d] = [x for x in sw["shapes"][d] if x.get("role") == "paint"] + ([st] if st else [])
+        out[d] = {"ink_px_before": before, "ink_px_after": int((c[..., 3] > 0).sum())}
+    LV.recolour(p)
+    f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"cleaned": out}
+
+
+@command("level.capture", name=("string", "level"), drawing=("string", "drawing name (a new name adds a drawing)"),
+         photo=("string", "a photo or scan of the drawing on paper (path)"), place_after=("string", "", ""), hold=("integer", "", 2),
+         register=("boolean", "line it up with the drawing before it (a digital peg bar)", True), ink=("string", "", "#24160e"))
+def level_capture(name, drawing, photo, place_after="", hold=2, register=True, ink="#24160e"):
+    """A pencil test (WP-35): a photo of a drawing on paper becomes a drawing of the level: lighting and paper are
+    removed, the ink is fitted into the frame, and the drawing is lined up with the one before it in the sheet so a
+    sequence of photos plays without jitter."""
+    import base64
+    import io
+    import numpy as np
+    from PIL import Image
+    from . import levels as LV
+    f = _level_path(name); p = _json(f); sw = p["swaps"]["level"]; W, H = p["artboard"]
+    rgb = np.asarray(Image.open(ROOT / photo if not Path(photo).is_absolute() else Path(photo)).convert("RGB"))
+    a = LV.photo_to_ink(rgb, (W, H), ink)
+    prev = place_after or (sw["xsheet"]["cells"][-1] if sw["xsheet"]["cells"] else None)
+    moved = [0, 0]
+    if register and prev and prev in sw["shapes"] and prev != drawing:
+        ref = LV.drawing_rgba(p, prev, role="line")
+        if (ref[..., 3] > 0).any():
+            dx, dy = LV.register(ref, a, max_shift=max(W, H) // 6); a = LV.shift(a, dx, dy); moved = [dx, dy]
+    buf = io.BytesIO(); Image.fromarray(a, "RGBA").save(buf, "PNG")
+    r = level_draw(name, drawing, "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(), place_after or prev or "", hold)
+    return {**r, "registered_by": moved}
+
+
+@command("level.colour", name=("string", "level"), styles=("object", "colour styles {id: colour}; changing one repaints every drawing", None),
+         seeds=("object", "{drawing: [[x, y, style], ...]}: paint the closed area under each point", None),
+         propagate_from=("string", "carry this drawing's painted areas to every other drawing in sheet order", ""))
+def level_colour(name, styles=None, seeds=None, propagate_from=""):
+    """Colour a drawn level across every drawing (WP-35): named colour styles, areas painted by a point inside each
+    closed shape (small gaps in the line are bridged), carried from a painted key drawing to every other drawing by
+    matching areas, and repainted everywhere when a style changes. Paint sits under the line."""
+    from . import levels as LV
+    f = _level_path(name); p = _json(f); sw = p["swaps"]["level"]
+    pt = sw.setdefault("paint", {"styles": {}, "seeds": {}})
+    pt["styles"].update(styles or {})
+    for d, ss in (seeds or {}).items():
+        if d not in sw["shapes"]:
+            raise KeyError(f"no drawing {d}")
+        pt["seeds"][d] = ss
+    carried = {}
+    if propagate_from:
+        order = []
+        for c in sw["xsheet"]["cells"]:
+            if c not in order:
+                order.append(c)
+        order += [d for d in sw["shapes"] if d not in order]
+        i = order.index(propagate_from)
+        chain = order[i:] + order[:i]
+        for a_, b_ in zip(chain, chain[1:]):
+            prev_line = LV.drawing_rgba(p, a_, role="line"); line = LV.drawing_rgba(p, b_, role="line")
+            pt["seeds"][b_] = LV.carry_seeds(prev_line, pt["seeds"].get(a_, []), line)
+            carried[b_] = len(pt["seeds"][b_])
+    LV.recolour(p)
+    f.write_text(json.dumps(p, separators=(",", ":")))
+    return {"styles": pt["styles"], "seeds": {k: len(v) for k, v in pt["seeds"].items()}, "carried": carried}
 
 
 @command("level.delete_drawing", name=("string", "level"), drawing=("string", "drawing to remove (and its cells)"))

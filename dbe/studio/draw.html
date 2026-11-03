@@ -30,13 +30,16 @@
 <main>
   <section>
     <div class="tools">
-      <button data-tool="pen" class="on">Pen</button><button data-tool="brush" title="paint with a MyPaint brush (rendered by libmypaint)">Brush</button><button data-tool="erase">Eraser</button>
+      <button data-tool="pen" class="on">Pen</button><button data-tool="brush" title="paint with a MyPaint brush (rendered by libmypaint)">Brush</button><button data-tool="erase">Eraser</button><button data-tool="paint" title="click inside a closed shape to fill it with the colour style">Paint</button>
+      <select id="style" aria-label="colour style"></select><button id="newstyle" title="add or change a colour style (repaints every drawing)">Style…</button><button id="carry" title="carry this drawing's colours to every other drawing">Carry colours</button>
+      <label class="muted" title="a photo of a drawing on paper: cleaned and lined up with the drawing before it"><input id="cap" type="file" accept="image/*" capture="environment" hidden><span role="button" tabindex="0" style="border:1px solid var(--line);border-radius:8px;padding:4px 9px;cursor:pointer" onclick="document.getElementById('cap').click()">📷 Capture</span></label>
+      <button id="clean" title="remove faint construction lines and specks from this drawing">Clean up</button>
       <select id="brush" aria-label="MyPaint brush"></select>
       <input id="col" type="color" value="#24160e" aria-label="ink colour"><input id="size" type="range" min="2" max="40" value="8" aria-label="size">
       <button id="undo">Undo</button><button id="onion" class="on" title="the drawings before (red) and after (green)">Onion skin</button>
       <button id="play">▶ Play</button><button id="save" class="primary">Save drawing</button>
     </div>
-    <div class="stage" id="stage"><canvas id="skin"></canvas><canvas id="cv"></canvas></div>
+    <div class="stage" id="stage"><canvas id="skin"></canvas><canvas id="pt"></canvas><canvas id="cv"></canvas></div>
   </section>
   <aside class="sheet" aria-label="exposure sheet">
     <h2>Exposure sheet <span id="sum" class="muted"></span></h2>
@@ -50,21 +53,23 @@
 const $ = id => document.getElementById(id); const msg = m => { $('msg').textContent = m; };
 async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
 let L = null, cur = null, frame = 0, tool = 'pen', dirty = false, undo = [], playing = null;
-const imgs = {};   // drawing -> Image of its raster strokes (positioned)
-const cv = $('cv'), cx = cv.getContext('2d'), sk = $('skin'), sx = sk.getContext('2d');
+const imgs = {}, paints = {};   // drawing -> its line art and its paint, as canvases
+const cv = $('cv'), cx = cv.getContext('2d'), sk = $('skin'), sx = sk.getContext('2d'), pt = $('pt'), px = pt.getContext('2d');
 
 function fit() { const [W, H] = L.size, maxW = Math.min($('stage').parentElement.clientWidth, 900), h = Math.min(window.innerHeight * 0.72, maxW * H / W);
-  $('stage').style.width = (h * W / H) + 'px'; $('stage').style.height = h + 'px'; for (const c of [cv, sk]) if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } }
+  $('stage').style.width = (h * W / H) + 'px'; $('stage').style.height = h + 'px'; for (const c of [cv, sk, pt]) if (c.width !== W || c.height !== H) { c.width = W; c.height = H; } }
 const runs = () => { const out = []; for (const c of L.cells) { if (out.length && out[out.length - 1][0] === c) out[out.length - 1][1]++; else out.push([c, 1]); } return out; };
 async function loadLevel(name) {
   L = await api('level.get', { name }); for (const k in imgs) delete imgs[k];
-  await Promise.all(Object.entries(L.drawings).map(([k, sts]) => drawImg(k, sts)));
+  await Promise.all(Object.entries(L.drawings).map(([k, sts]) => drawImg(k, sts)).concat(Object.entries(L.paint || {}).map(([k, sts]) => drawImg(k, sts, paints))));
+  $('style').innerHTML = Object.entries(L.styles || {}).map(([k, c]) => `<option value="${k}" style="background:${c}">${k} ${c}</option>`).join('') || '<option value="">no styles yet: Style…</option>';
   fit(); frame = 0; select(L.cells[0], false); sheet(); msg(`${name}: ${Object.keys(L.drawings).length} drawings, ${L.cells.length} frames at ${L.fps} fps`);
 }
-function drawImg(k, sts) { return new Promise(res => { const c = document.createElement('canvas'); c.width = L.size[0]; c.height = L.size[1]; const g = c.getContext('2d');
-  if (!sts.length) { imgs[k] = c; return res(); } let n = sts.length;
-  for (const s of sts) { const im = new Image(); im.onload = () => { g.drawImage(im, s.x, s.y, s.w, s.h); if (!--n) { imgs[k] = c; res(); } }; im.src = s.image; } }); }
-function select(d, keepFrame = true) { cur = d; if (!keepFrame) frame = L.cells.indexOf(d); cx.clearRect(0, 0, cv.width, cv.height); if (imgs[d]) cx.drawImage(imgs[d], 0, 0); undo = []; dirty = false; onion(); sheet(); }
+function drawImg(k, sts, into = imgs) { return new Promise(res => { const c = document.createElement('canvas'); c.width = L.size[0]; c.height = L.size[1]; const g = c.getContext('2d');
+  if (!sts.length) { into[k] = c; return res(); } let n = sts.length;
+  for (const s of sts) { const im = new Image(); im.onload = () => { g.drawImage(im, s.x, s.y, s.w, s.h); if (!--n) { into[k] = c; res(); } }; im.src = s.image; } }); }
+function select(d, keepFrame = true) { cur = d; if (!keepFrame) frame = L.cells.indexOf(d); cx.clearRect(0, 0, cv.width, cv.height); if (imgs[d]) cx.drawImage(imgs[d], 0, 0);
+  px.clearRect(0, 0, pt.width, pt.height); if (paints[d]) px.drawImage(paints[d], 0, 0); undo = []; dirty = false; onion(); sheet(); }
 function onion() { sx.clearRect(0, 0, sk.width, sk.height); if (!$('onion').classList.contains('on') || playing) return;
   const rs = runs(), i = rs.findIndex(r => r[0] === cur);
   for (const [off, tint, a] of [[-2, '#d04040', 0.18], [-1, '#d04040', 0.35], [1, '#3a9a5a', 0.3]]) { const r = rs[i + off]; if (!r || !imgs[r[0]]) continue;
@@ -78,7 +83,11 @@ function sheet() { const rs = runs(); let f = 0; $('cells').innerHTML = L.cells.
 // ---- drawing ----
 let pts = null, pressureSeen = false;
 const at = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height, e.pressure || 0.5]; };
-cv.addEventListener('pointerdown', e => { if (playing) return; cv.setPointerCapture(e.pointerId); pts = [at(e)]; pressureSeen = e.pointerType === 'pen'; undo.push(cx.getImageData(0, 0, cv.width, cv.height)); });
+cv.addEventListener('pointerdown', async e => { if (playing) return;
+  if (tool === 'paint') { const [x, y] = at(e); const st = $('style').value; if (!st) return msg('add a colour style first (Style…)');
+    await saveIfDirty(); const seeds = { ...(L.seeds || {}) }; seeds[cur] = (seeds[cur] || []).concat([[Math.round(x), Math.round(y), st]]);
+    await api('level.colour', { name: $('lv').value, seeds: { [cur]: seeds[cur] } }); const keep = cur; await loadLevel($('lv').value); select(keep, false); msg(`painted ${keep} with ${st}`); return; }
+  cv.setPointerCapture(e.pointerId); pts = [at(e)]; pressureSeen = e.pointerType === 'pen'; undo.push(cx.getImageData(0, 0, cv.width, cv.height)); });
 cv.addEventListener('pointermove', e => { if (!pts) return; pts.push(at(e)); if (tool !== 'brush') { cx.putImageData(undo[undo.length - 1], 0, 0); ink(pts); } else { cx.putImageData(undo[undo.length - 1], 0, 0); preview(pts); } });
 cv.addEventListener('pointerup', async e => { if (!pts) return; const p = pts; pts = null; dirty = true;
   if (tool === 'brush') { cx.putImageData(undo[undo.length - 1], 0, 0); await brushStroke(p); } else { cx.putImageData(undo[undo.length - 1], 0, 0); ink(p); } });
@@ -98,6 +107,17 @@ $('onion').onclick = () => { $('onion').classList.toggle('on'); onion(); };
 async function save() { const r = await api('level.draw', { name: $('lv').value, drawing: cur, png: cv.toDataURL('image/png') });
   imgs[cur] = (() => { const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height; c.getContext('2d').drawImage(cv, 0, 0); return c; })(); dirty = false; msg(`saved ${cur} (${r.drawings} drawings, ${r.frames} frames)`); }
 async function saveIfDirty() { if (dirty) await save(); }
+$('newstyle').onclick = async () => { const id = prompt('Colour style name (e.g. skin, shirt)'); if (!id) return; const c = prompt('Colour (#rrggbb)', '#f2c9a0'); if (!c) return;
+  await api('level.colour', { name: $('lv').value, styles: { [id]: c } }); const keep = cur; await loadLevel($('lv').value); select(keep, false); $('style').value = id; msg(`style ${id} = ${c}: every drawing repainted`); };
+$('carry').onclick = async () => { await saveIfDirty(); const r = await api('level.colour', { name: $('lv').value, propagate_from: cur }); const keep = cur; await loadLevel($('lv').value); select(keep, false);
+  msg(`colours carried from ${keep} to ${Object.keys(r.carried).length} drawings`); };
+$('clean').onclick = async () => { await saveIfDirty(); const r = await api('level.cleanup', { name: $('lv').value, drawings: [cur] }); const keep = cur; await loadLevel($('lv').value); select(keep, false);
+  const c = r.cleaned[keep]; msg(`cleaned ${keep}: ${c.ink_px_before} → ${c.ink_px_after} ink pixels`); };
+$('cap').onchange = async () => { const fl = $('cap').files[0]; if (!fl) return; await saveIfDirty();
+  const up = await (await fetch('/upload?ext=' + ((fl.name.split('.').pop() || 'jpg').toLowerCase()), { method: 'POST', body: fl })).json();
+  const names = [...new Set([...Object.keys(L.drawings), ...Object.keys(imgs)])]; let n = names.length + 1, nm; do { nm = 'd' + String(n++).padStart(2, '0'); } while (names.includes(nm));
+  const r = await api('level.capture', { name: $('lv').value, drawing: nm, photo: up.path || up.file, place_after: cur });
+  await loadLevel($('lv').value); select(nm, false); msg(`captured ${nm}, lined up by ${r.registered_by.join(', ')} px`); $('cap').value = ''; };
 $('save').onclick = save;
 $('add').onclick = async () => { await saveIfDirty(); const names = [...new Set([...Object.keys(L.drawings), ...Object.keys(imgs)])]; let n = names.length + 1, nm; do { nm = 'd' + String(n++).padStart(2, '0'); } while (names.includes(nm));
   const r = await api('level.draw', { name: $('lv').value, drawing: nm, png: '', place_after: cur, hold: Math.max(1, runs().find(x => x[0] === cur)[1]) });
@@ -108,7 +128,7 @@ $('unhold').onclick = () => { const c = [...L.cells]; if (c.filter(x => x === cu
 document.querySelectorAll('[data-time]').forEach(b => b.onclick = () => { const n = +b.dataset.time; setCells(runs().flatMap(([d]) => Array(n).fill(d))); });
 $('play').onclick = async () => { if (playing) { clearInterval(playing); playing = null; $('play').textContent = '▶ Play'; select(cur); return; }
   await saveIfDirty(); let f = 0; $('play').textContent = '■ Stop'; onion();
-  playing = setInterval(() => { const d = L.cells[f % L.cells.length]; cx.clearRect(0, 0, cv.width, cv.height); if (imgs[d]) cx.drawImage(imgs[d], 0, 0); f++; }, 1000 / L.fps); };
+  playing = setInterval(() => { const d = L.cells[f % L.cells.length]; cx.clearRect(0, 0, cv.width, cv.height); if (imgs[d]) cx.drawImage(imgs[d], 0, 0); px.clearRect(0, 0, pt.width, pt.height); if (paints[d]) px.drawImage(paints[d], 0, 0); f++; }, 1000 / L.fps); };
 $('new').onclick = async () => { const name = prompt('Level name (lower-case, digits, -)'); if (!name) return; const sz = (prompt('Size in pixels, width x height', '720x720') || '720x720').split('x').map(Number);
   await api('level.new', { name, size: sz, fps: 24 }); await levels(name); };
 async function levels(pick) { const ls = await api('level.list'); $('lv').innerHTML = ls.map(l => `<option value="${l.name}">${l.name} (${l.drawings} drawings)</option>`).join('');

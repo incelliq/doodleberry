@@ -38,7 +38,7 @@ covered, now added to their packages' scopes.
 | Model sheet and turnaround board (front, 3/4, side, back) with height lines | PRO | 🟡 | P1 | `puppet.sheet` model sheets (1.4); turnaround board with height lines: WP-18 |
 | Expression sheet and mouth-chart boards with onion skin | PRO | 🟡 | P1 | swap slots exist; side-by-side boards with onion skin: WP-18 |
 | Costumes and outfits as swap sets; accessories | PRO | ⬜ | P1 | outfits as swap sets: WP-16 |
-| Colour models and palette variants (night, sick, cold) | PRO | 🟡 | P2 | runtime recolour exists; palette variants per scene: WP-16 |
+| Colour models and palette variants (night, sick, cold) | PRO | 🟡 | P2 | runtime recolour exists; drawn levels have named colour styles that repaint every drawing (`level.colour`, WP-35); palette variants per scene: WP-16 |
 | Rig linter: missing slots, raw colours, gaps at joints, pivot sanity | NEW | ✅ | – | `puppet.lint` and `puppet.coach` (joint gaps under bending, pivots, proportions) (1.10) |
 | Auto-rig: detect parts and pivots from a whole drawing | IDEA (Meta Animated Drawings) | 🟡 | P2 | doodles: `doodle.snap` finds head, body, eyes, mouth, arms, tail and pivots (3.6); other drawings: WP-18 |
 | Character DNA: shape language, proportions and line weight as parameters for generating relatives (siblings, crowds) | IDEA | 🟡 | P2 | `cast.generate` builds parametric originals (1.5); a family look as parameters: WP-16 |

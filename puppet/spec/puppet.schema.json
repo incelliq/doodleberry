@@ -347,6 +347,29 @@
        "type": "boolean"
       }
      }
+    },
+    "paint": {
+     "type": "object",
+     "description": "v0.8 drawn levels: colour styles and the points that paint each drawing's closed areas",
+     "properties": {
+      "styles": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "string"
+       }
+      },
+      "seeds": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "array",
+        "items": {
+         "type": "array",
+         "minItems": 3,
+         "maxItems": 3
+        }
+       }
+      }
+     }
     }
    }
   },
@@ -407,6 +430,13 @@
     },
     "opacity": {
      "type": "number"
+    },
+    "role": {
+     "enum": [
+      "line",
+      "paint"
+     ],
+     "description": "v0.8 drawn levels: line art, or paint rebuilt from the level's colour styles (sits under the line)"
     }
    }
   },
