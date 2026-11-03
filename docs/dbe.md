@@ -954,6 +954,30 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Render farm (WP-38, part 1)
+`farm.render {"name", "workers", "pin", "cache", "fresh", "assemble"}` (dbe/farm.py) splits a film into one task per
+shot that is neither already rendered nor in the shared cache. Tasks go into a queue on disk (out/farm/runs/<run>/),
+dearest first by `render.estimate`. `workers` processes (`farm.worker`) each claim a task by renaming its file into
+their own folder; the rename is atomic, so no shot is taken twice. Each worker renders the shot with one browser and
+puts it in the **shared cache** (out/farm/cache/) under its content hash: the same hash `film.render` uses to decide
+a shot is fresh (the resolved shot, puppets, clip libraries, lip-sync cues, renderer code). Then `film.render`
+assembles, finding every shot fresh. Here each worker is pinned to its own CPU core to stand for one machine; on
+several machines the workers share the repository and out/farm over a network filesystem. `farm.longform` voices,
+acts and renders a synthetic counting episode of a given length on the farm and reports its time, memory, cache size,
+assembly time and QA.
+
+**Measured** on a seven-shot synthetic dialogue (1,768 frames), with other work on the fourth core: one worker
+took 2,145 s and three workers 756 s, 0.353 of the time, each busy 746 to 754 s.
+
+**Open:**
+- In that run, 3 of the 7 shots differed frame by frame between the two renders. Repeated one-worker and
+  three-worker renders of a smaller film, and its assembly, came out identical. The test now records which frames
+  differ and whether their markup or only their pixels changed, for the next run on a quiet machine.
+- The 20-minute long-form run (`farm.longform`) is still to be measured.
+
+The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
+shots over three workers (from the one worker's own shot times), or under 0.4.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when
