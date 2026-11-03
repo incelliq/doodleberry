@@ -1,0 +1,89 @@
+{
+ "id": "ask-ravi",
+ "title": "Ask Ravi: Sky Questions",
+ "sources_note": "NASA Space Place pages, one per episode, read 2026-11-03; quotes are the pages' words",
+ "channel": "science",
+ "format": "dialogue",
+ "about": "Momo asks, Ravi answers, one sky question a week; every answer is from a NASA Space Place page, cited",
+ "cast": {
+  "learner": {
+   "id": "momo",
+   "puppet": "cast/generated/momo.puppet.json",
+   "voice": "kokoro:af_heart"
+  },
+  "expert": {
+   "id": "ravi",
+   "puppet": "cast/generated/ravi.puppet.json",
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "cadence": {
+  "day": "thu",
+  "every_weeks": 1,
+  "start": "2027-01-07"
+ },
+ "length_s": [
+  12,
+  60
+ ],
+ "props": [
+  {
+   "id": "notebook",
+   "owner": "learner",
+   "introduced_in": 2,
+   "part": "hand_L",
+   "r": 26,
+   "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>"
+  },
+  {
+   "id": "star-map",
+   "owner": "expert",
+   "introduced_in": 5,
+   "lost_in": 9,
+   "part": "hand_L",
+   "r": 30,
+   "svg": "<g><rect x='-30' y='-22' width='60' height='44' rx='6' fill='#24346b' stroke='#181e26' stroke-width='4'/><circle cx='-12' cy='-6' r='3' fill='#fff'/><circle cx='8' cy='4' r='3' fill='#fff'/><circle cx='16' cy='-10' r='2' fill='#fff'/><path d='M-12 -6 L8 4 L16 -10' stroke='#fff' stroke-width='1.5'/></g>"
+  }
+ ],
+ "gags": [
+  {
+   "id": "notebook",
+   "about": "Momo writes every answer down",
+   "every": 1,
+   "from": 2,
+   "line": {
+    "role": "learner",
+    "text": "Writing that in my notebook!"
+   }
+  },
+  {
+   "id": "big-word",
+   "about": "Ravi shrinks a big word",
+   "every": 3,
+   "from": 1,
+   "line": {
+    "role": "expert",
+    "text": "Big word, small idea."
+   }
+  }
+ ],
+ "learns": [
+  {
+   "fact": "what a light-year is",
+   "role": "learner",
+   "episode": 3,
+   "keywords": [
+    "light-year",
+    "light year"
+   ]
+  },
+  {
+   "fact": "what an orbit is",
+   "role": "learner",
+   "episode": 6,
+   "keywords": [
+    "orbit"
+   ]
+  }
+ ]
+}

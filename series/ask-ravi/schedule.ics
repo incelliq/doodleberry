@@ -1,0 +1,64 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Doodleberry//series//EN
+BEGIN:VEVENT
+UID:ask-ravi-e01@doodleberry
+DTSTAMP:20270107T000000Z
+DTSTART;VALUE=DATE:20270107
+SUMMARY:Ask Ravi: Sky Questions #1: Why is the sky blue?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e02@doodleberry
+DTSTAMP:20270114T000000Z
+DTSTART;VALUE=DATE:20270114
+SUMMARY:Ask Ravi: Sky Questions #2: Does the Moon really change shape?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e03@doodleberry
+DTSTAMP:20270121T000000Z
+DTSTART;VALUE=DATE:20270121
+SUMMARY:Ask Ravi: Sky Questions #3: What is a light-year?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e04@doodleberry
+DTSTAMP:20270128T000000Z
+DTSTART;VALUE=DATE:20270128
+SUMMARY:Ask Ravi: Sky Questions #4: How hot is the Sun?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e05@doodleberry
+DTSTAMP:20270204T000000Z
+DTSTART;VALUE=DATE:20270204
+SUMMARY:Ask Ravi: Sky Questions #5: What is a shooting star?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e06@doodleberry
+DTSTAMP:20270211T000000Z
+DTSTART;VALUE=DATE:20270211
+SUMMARY:Ask Ravi: Sky Questions #6: Why don't satellites fall down?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e07@doodleberry
+DTSTAMP:20270218T000000Z
+DTSTART;VALUE=DATE:20270218
+SUMMARY:Ask Ravi: Sky Questions #7: Why do we have seasons?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e08@doodleberry
+DTSTAMP:20270225T000000Z
+DTSTART;VALUE=DATE:20270225
+SUMMARY:Ask Ravi: Sky Questions #8: What is a galaxy?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e09@doodleberry
+DTSTAMP:20270304T000000Z
+DTSTART;VALUE=DATE:20270304
+SUMMARY:Ask Ravi: Sky Questions #9: What is an eclipse?
+END:VEVENT
+BEGIN:VEVENT
+UID:ask-ravi-e10@doodleberry
+DTSTAMP:20270311T000000Z
+DTSTART;VALUE=DATE:20270311
+SUMMARY:Ask Ravi: Sky Questions #10: How long is a day on other planets?
+END:VEVENT
+END:VCALENDAR

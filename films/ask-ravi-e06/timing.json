@@ -1,0 +1,368 @@
+{
+ "fps": 30,
+ "duration": 28.8,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about orbits?",
+   "start": 0.6,
+   "end": 3.961,
+   "slot": [
+    0.6,
+    3.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Can",
+     "start": 0.6,
+     "end": 0.911
+    },
+    {
+     "text": "I",
+     "start": 0.911,
+     "end": 1.015
+    },
+    {
+     "text": "ask",
+     "start": 1.015,
+     "end": 1.326
+    },
+    {
+     "text": "you",
+     "start": 1.326,
+     "end": 1.637
+    },
+    {
+     "text": "something",
+     "start": 1.637,
+     "end": 2.57
+    },
+    {
+     "text": "about",
+     "start": 2.57,
+     "end": 3.089
+    },
+    {
+     "text": "orbits?",
+     "start": 3.089,
+     "end": 3.711
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "What's an orbit?",
+   "start": 4.411,
+   "end": 5.994,
+   "slot": [
+    4.411,
+    1.583
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "What's",
+     "start": 4.411,
+     "end": 4.966
+    },
+    {
+     "text": "an",
+     "start": 4.966,
+     "end": 5.189
+    },
+    {
+     "text": "orbit?",
+     "start": 5.189,
+     "end": 5.744
+    }
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "A regular, repeating path one thing takes around another in space.",
+   "start": 6.444,
+   "end": 11.583,
+   "slot": [
+    6.444,
+    5.139
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "A",
+     "start": 6.444,
+     "end": 6.535
+    },
+    {
+     "text": "regular,",
+     "start": 6.535,
+     "end": 7.168
+    },
+    {
+     "text": "repeating",
+     "start": 7.168,
+     "end": 7.983
+    },
+    {
+     "text": "path",
+     "start": 7.983,
+     "end": 8.345
+    },
+    {
+     "text": "one",
+     "start": 8.345,
+     "end": 8.617
+    },
+    {
+     "text": "thing",
+     "start": 8.617,
+     "end": 9.07
+    },
+    {
+     "text": "takes",
+     "start": 9.07,
+     "end": 9.522
+    },
+    {
+     "text": "around",
+     "start": 9.522,
+     "end": 10.065
+    },
+    {
+     "text": "another",
+     "start": 10.065,
+     "end": 10.699
+    },
+    {
+     "text": "in",
+     "start": 10.699,
+     "end": 10.88
+    },
+    {
+     "text": "space.",
+     "start": 10.88,
+     "end": 11.333
+    }
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Why doesn't the Space Station fall?",
+   "start": 12.033,
+   "end": 14.95,
+   "slot": [
+    12.033,
+    2.917
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Why",
+     "start": 12.033,
+     "end": 12.319
+    },
+    {
+     "text": "doesn't",
+     "start": 12.319,
+     "end": 12.89
+    },
+    {
+     "text": "the",
+     "start": 12.89,
+     "end": 13.176
+    },
+    {
+     "text": "Space",
+     "start": 13.176,
+     "end": 13.652
+    },
+    {
+     "text": "Station",
+     "start": 13.652,
+     "end": 14.319
+    },
+    {
+     "text": "fall?",
+     "start": 14.319,
+     "end": 14.7
+    }
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "It is always falling! But it moves sideways so fast that it keeps missing Earth. It goes round in about ninety minutes.",
+   "start": 15.4,
+   "end": 25.428,
+   "slot": [
+    15.4,
+    10.028
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "It",
+     "start": 15.4,
+     "end": 15.606
+    },
+    {
+     "text": "is",
+     "start": 15.606,
+     "end": 15.812
+    },
+    {
+     "text": "always",
+     "start": 15.812,
+     "end": 16.429
+    },
+    {
+     "text": "falling!",
+     "start": 16.429,
+     "end": 17.15
+    },
+    {
+     "text": "But",
+     "start": 17.15,
+     "end": 17.459
+    },
+    {
+     "text": "it",
+     "start": 17.459,
+     "end": 17.664
+    },
+    {
+     "text": "moves",
+     "start": 17.664,
+     "end": 18.179
+    },
+    {
+     "text": "sideways",
+     "start": 18.179,
+     "end": 19.002
+    },
+    {
+     "text": "so",
+     "start": 19.002,
+     "end": 19.208
+    },
+    {
+     "text": "fast",
+     "start": 19.208,
+     "end": 19.62
+    },
+    {
+     "text": "that",
+     "start": 19.62,
+     "end": 20.032
+    },
+    {
+     "text": "it",
+     "start": 20.032,
+     "end": 20.238
+    },
+    {
+     "text": "keeps",
+     "start": 20.238,
+     "end": 20.752
+    },
+    {
+     "text": "missing",
+     "start": 20.752,
+     "end": 21.473
+    },
+    {
+     "text": "Earth.",
+     "start": 21.473,
+     "end": 21.987
+    },
+    {
+     "text": "It",
+     "start": 21.987,
+     "end": 22.193
+    },
+    {
+     "text": "goes",
+     "start": 22.193,
+     "end": 22.605
+    },
+    {
+     "text": "round",
+     "start": 22.605,
+     "end": 23.119
+    },
+    {
+     "text": "in",
+     "start": 23.119,
+     "end": 23.325
+    },
+    {
+     "text": "about",
+     "start": 23.325,
+     "end": 23.84
+    },
+    {
+     "text": "ninety",
+     "start": 23.84,
+     "end": 24.458
+    },
+    {
+     "text": "minutes.",
+     "start": 24.458,
+     "end": 25.178
+    }
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "start": 25.878,
+   "end": 28.35,
+   "slot": [
+    25.878,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Writing",
+     "start": 25.878,
+     "end": 26.554
+    },
+    {
+     "text": "that",
+     "start": 26.554,
+     "end": 26.941
+    },
+    {
+     "text": "in",
+     "start": 26.941,
+     "end": 27.134
+    },
+    {
+     "text": "my",
+     "start": 27.134,
+     "end": 27.327
+    },
+    {
+     "text": "notebook!",
+     "start": 27.327,
+     "end": 28.1
+    }
+   ]
+  }
+ ],
+ "visemes": {},
+ "draft": "slots (no voice yet)"
+}

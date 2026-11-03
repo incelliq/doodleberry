@@ -9,7 +9,8 @@ Known repairs (diagnose() maps failure -> repairs; apply() edits the raw shots.j
 - frozen stretch (no_still_over_0.5s): a shot animated on low steps goes back to 12 per second; a shot with no
   camera gets the slow float camera; cast without an idle clip gets one;
 - text outside the safe area: the element is moved inside by exactly the overshoot (plus a margin), and shrunk when
-  it is wider than the safe area;
+  it is wider than the safe area; the set's own words (a blackboard) lifted out by an auto camera: singles framed
+  less tight;
 - type too small: the element's size is raised to the platform minimum;
 - reading time: a timed text block stays up for words / 3 + 1 s (within its shot);
 - caption flow too fast (words per second): with revoice=True the script is re-voiced slower (length_scale);
@@ -76,8 +77,11 @@ def diagnose(rep, lint, shots_res, size, script=None):
     # text outside the safe area / too small (boxes are words or lines of an element)
     text = lay.get("text") or {}
     moves = {}
+    set_text = set()
     for b in text.get("outside_safe") or []:
         sh = _shot_at(shots, b["t"])
+        if b["text"] and not any(b["text"] in _texts(o) for _, _, o in _elements(sh)) and b["text"] in " ".join(map(str, (sh.get("set_opts") or {}).get("board") or [])):
+            set_text.add(sh["id"])   # the set's own words (a blackboard): an auto camera pushed in on a single lifts them out
         for kind, i, o in _elements(sh):
             if b["text"] and b["text"] in _texts(o):
                 dx = (x0 + 8 - b["x0"]) if b["x0"] < x0 else ((x1 - 8 - b["x1"]) if b["x1"] > x1 else 0)
@@ -86,6 +90,10 @@ def diagnose(rep, lint, shots_res, size, script=None):
                 m[0] = dx if abs(dx) > abs(m[0]) else m[0]; m[1] = dy if abs(dy) > abs(m[1]) else m[1]
                 m[2] = max(m[2], b["x1"] - b["x0"])
                 break
+    for sid in sorted(set_text):
+        if next(s_ for s_ in shots if s_["id"] == sid).get("camera_auto"):
+            out.append({"check": "text_in_safe_area", "shot": sid, "what": "auto camera frames singles less tight, so the set's words stay inside the safe area", "edit": ("camera_auto", "zoom_single", -0.2)})
+            out.append({"check": "text_in_safe_area", "shot": sid, "what": "auto camera frames the group less tight too", "edit": ("camera_auto", "zoom", -0.15)})
     for (sid, kind, i), (dx, dy, wdt) in moves.items():
         out.append({"check": "text_in_safe_area", "shot": sid, "what": f"{kind}[{i}] moved {round(dx)}, {round(dy)} px into the safe area", "edit": ("move", kind, i, dx, dy)})
     for b in text.get("too_small") or []:
@@ -172,7 +180,7 @@ def apply(raw, repairs, resolved, size):
                     c["place"]["s"] = round(min(1.6, c["place"].get("s", 1) * e[1]), 3)
         elif e[0] == "camera_auto":
             ca = sh["camera_auto"] if isinstance(sh["camera_auto"], dict) else {}
-            dflt = {"zoom_single": 1.9, "zoom_bubble": 1.5}[e[1]]
+            dflt = {"zoom_single": 1.9, "zoom_bubble": 1.5, "zoom": 1.45}[e[1]]
             ca[e[1]] = round(max(1.1, ca.get(e[1], dflt) + e[2]), 2); sh["camera_auto"] = ca
         elif e[0] == "shrink":
             c = sh["cast"][e[1]]

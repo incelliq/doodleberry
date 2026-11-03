@@ -11,3 +11,5 @@ otio-kdenlive-adapter==0.0.3    # MIT: Kdenlive projects (for Kdenlive before 25
 otio-mlt-adapter==0.3.0         # MIT: MLT XML for melt
 rlottie-python==1.3.8   # LGPL-2.1: lottie.qa, the second Lottie renderer (WP-23)
 brotli>=1.1   # WP-25: WOFF2 fonts (fontTools)
+fonttools==4.68.0   # MIT: handwriting fonts from sample sheets (font.from_samples, WP-29); potrace is vendored (vendor.build)
+typst==0.14.9       # Apache-2.0: comics and storybooks (film.comic, WP-30)

@@ -1,0 +1,84 @@
+{
+ "title": "Why don't satellites fall down?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about orbits?",
+   "slot": [
+    0.6,
+    3.361
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "What's an orbit?",
+   "slot": [
+    4.411,
+    1.583
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "A regular, repeating path one thing takes around another in space.",
+   "slot": [
+    6.444,
+    5.139
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Why doesn't the Space Station fall?",
+   "slot": [
+    12.033,
+    2.917
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "It is always falling! But it moves sideways so fast that it keeps missing Earth. It goes round in about ninety minutes.",
+   "slot": [
+    15.4,
+    10.028
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    25.878,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

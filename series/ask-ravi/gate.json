@@ -1,0 +1,450 @@
+{
+ "note": "WP-28: fact-gate reviews per episode (series.gate), tied to the facts reviewed",
+ "reviews": {
+  "1": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "Fetched with curl, HTTP 200, 21,784 bytes, saved as pages_r3/blue-sky.html (extracted text in pages_r3/blue-sky.html.txt). A script checked all three quoted passages (f1: one; f2: two, split on ' … ') against the page text with tags stripped and case and whitespace ignored. All three appear word for word. f1's quote is in the body paragraph after 'Sunlight reaches Earth's atmosphere...'. f2's two passages are consecutive sentences under the heading 'What makes a red sunset?', so the ellipsis skips nothing. The page's <title> is 'Why Is the Sky Blue? | NASA Space Place – NASA Science for Kids' and its H1 is 'Why Is the Sky Blue?'. The recorded title 'NASA Space Place: Why is the sky blue?' matches in substance but not in exact form. The article says it was last updated August 29, 2022; the site footer says July 31st, 2026."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) Ravi's line ends 'so blue reaches us from every direction'. The page doesn't say this. It says blue light 'is scattered in all directions' and 'This is why we see a blue sky most of the time.' The line's ending is a fair, true inference (light scattered in all directions reaches the viewer from all over the sky), but it is a paraphrase, not the page's words. It also differs from the claim, which ends 'so the sky looks blue'. And the quote leaves out the sentence that supports the claim's 'so the sky looks blue'.",
+     "fix": "Add 'This is why we see a blue sky most of the time.' to the f1 quote (it comes straight after the quoted sentences). Then either change the claim to match the line (e.g. '...scattered in all directions, so blue light reaches us from all over the sky') or change the line to stay closer to the page, e.g. 'Air scatters blue light in all directions, more than reds and yellows. That's why we see a blue sky.'"
+    },
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) Ravi says the light 'crosses much more air'. The page says 'passing through more of the atmosphere', so the intensifier 'much' isn't on the page. It is physically true (light from a Sun on the horizon crosses many times more air than light from overhead), but strictly it can't be traced to the source.",
+     "fix": "Use 'At sunset the light crosses more air.' (or 'passes through more air'), or add a source that supports the degree."
+    },
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) The f1 claim (and the page) say blue is scattered 'more than other colours'. Strictly, violet is scattered even more than blue. Ravi's line only says 'more than reds and yellows', which is true, so the spoken line is fine. The claim text is broader than it needs to be.",
+     "fix": "Optionally narrow the claim to 'more than reds and yellows' so it matches the line and avoids the violet objection. The quote can stay as it is."
+    },
+    {
+     "fact": "f1, f2",
+     "problem": "(Non-blocking) source.title 'NASA Space Place: Why is the sky blue?' is not the page's exact title. The page's <title> is 'Why Is the Sky Blue? | NASA Space Place – NASA Science for Kids' and its H1 is 'Why Is the Sky Blue?'.",
+     "fix": "Set source.title to 'Why Is the Sky Blue?' (the H1) with publisher 'NASA Space Place', or copy the full <title> string exactly."
+    },
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) Momo asks why sunsets are 'orange'. The page's heading is 'What makes a red sunset?' and its answer is that 'the reds and yellows' pass through. Orange is a reasonable word for a red-and-yellow mix, and it is Momo's question rather than a narrated fact, so it doesn't need a citation. Ravi's answer only says 'reds and yellows', which matches the page.",
+     "fix": "None required. Optionally use 'orange and red' in Momo's question to follow the page's framing."
+    }
+   ],
+   "counter_evidence": [
+    "Violet light: violet has shorter waves than blue and is scattered even more, so a careful reader may ask why the sky isn't violet. Common explanations: sunlight contains less violet than blue, some violet is absorbed high in the atmosphere, and human eyes are less sensitive to violet. (These are general background, not from the cited page.) Ravi's line only compares blue with 'reds and yellows' and never says blue is scattered most, so it stays true. The f1 claim and the page's wording ('more than other colors') are what the objection would hit.",
+    "'From every direction': the page notes that 'Closer to the horizon, the sky fades to a lighter blue or white' because of repeated scattering and reflection from the ground. Blue skylight still arrives from all over the sky, so the line stays true, but the sky is not equally blue everywhere. The line doesn't claim it is.",
+    "What does the scattering: the page's short answer credits 'all the gases and particles in the air', while the body text (and the f1 quote) credits 'the tiny molecules of air'. The blue of a clear sky comes mostly from scattering by gas molecules, so 'Air scatters blue light' is a fair simplification for children.",
+    "Sunset colours: the page adds that dust, pollution and other aerosols also scatter blue light and can make the sky glow red. Ravi gives only the path-length explanation. That explanation is true and is the page's main one, so leaving aerosols out is a simplification, not an error. Sunsets also aren't always orange; the line doesn't say they are.",
+    "'Scattered away': the page says 'Even more of the blue light is scattered'. 'Away' (out of the direct path to the viewer) is implied by the page's next clause, 'allowing the reds and yellows to pass straight through to your eyes', and is physically correct. Some of that scattered blue still lights other parts of the sky at sunset, which the line doesn't deny.",
+    "'Much more air' at sunset is physically correct. The path through the atmosphere near the horizon is many times longer than straight overhead. Only the size of that difference is missing from the page."
+   ],
+   "reviewer": "fresh fact_gate agent (round 3, episode 1 after the round-2 fix; page read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "7cd1ee6d048731f2"
+  },
+  "2": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/moon-phases/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/moon-phases.html. All four f1 passages and the f2 passage are found word for word, including the curly quote marks. The page title is 'What Are the Moon’s Phases?', which does not match the recorded source.title 'NASA Space Place: Moon phases'."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f1/f2",
+     "problem": "(Non-blocking) source.title 'NASA Space Place: Moon phases' is not the page's title.",
+     "fix": "Set source.title to 'NASA Space Place: What Are the Moon’s Phases?'."
+    },
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) 'The Moon only reflects sunlight' fairly sums up 'does not produce its own light' plus 'moonlight is ... sunlight reflecting'. A pedant could point to earthshine, where the Moon also reflects light from Earth.",
+     "fix": "None needed. 'The Moon makes no light of its own; it reflects sunlight' would be tighter."
+    }
+   ],
+   "counter_evidence": [
+    "29.5 days is the average time from new moon to new moon (the synodic month). Single months vary by several hours around it. 'About' covers this. The page also gives 27.3 days for one orbit, which careful viewers may confuse with it, but the line correctly uses the new-moon-to-new-moon figure."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "33aa106ec93b3703"
+  },
+  "3": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/light-year/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/light-year.html. The f1 quote and all three f2 passages are found word for word. Page title 'What Is a Light-Year?' matches."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) The quote gives only the number. The definition in the claim and in Ravi's line ('how far light travels in one year') is on the page but not in the quote.",
+     "fix": "Add this passage, which was checked on the page: 'A light-year is the distance light travels in one Earth year.'"
+    },
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) 'Light from some stars left them thousands of years ago' follows from the page's 'some even thousands of light-years away' together with the definition of a light-year. It is a sound inference, not a direct quote.",
+     "fix": "None needed."
+    }
+   ],
+   "counter_evidence": [
+    "The exact value is about 9.46 trillion km (5.88 trillion miles), so 'about nine trillion' rounds down. That is acceptable with 'about', and it matches the page."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "fc2c54c892a99d8e"
+  },
+  "4": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/sun-heat/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/sun-heat.html. The f1 fragment and both f2 passages are found word for word. Page title 'Where Does the Sun's Energy Come From?' matches."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) The quoted fragment 'as hot as 27 million degrees Fahrenheit' does not itself mention the core. The full sentence does.",
+     "fix": "Quote the full sentence, checked on the page: 'It gets as hot as 27 million degrees Fahrenheit in the sun’s core.'"
+    },
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) Ravi's 'gravity squeezes the hydrogen inside really hard' rests on page text that the quote leaves out.",
+     "fix": "Add this passage, checked on the page: 'That means it’s held together by a whole lot of gravity. And THAT means there is a whole lot of pressure inside of it.'"
+    }
+   ],
+   "counter_evidence": [
+    "27 million °F is about 15 million °C. For audiences outside the US, consider a Celsius caption or line ('about fifteen million degrees Celsius'), but it would need its own sourced fact.",
+    "Strictly, hydrogen nuclei (protons) fuse in the core, not whole atoms. The page says 'atoms', and Ravi's 'the hydrogen smashes together' is an acceptable simplification for children."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "fb60a95105e0c303"
+  },
+  "5": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/meteor-shower/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/meteor-shower.html. Both f1 passages and the f2 passage are found word for word. Page title 'What Is a Meteor Shower?' matches."
+    }
+   ],
+   "issues": [],
+   "counter_evidence": [
+    "The page puts the streak down to 'glowing hot air'. A fuller account is that the light comes from air and vaporised meteoroid material heated and ionised along the path. Ravi's line follows NASA's wording exactly, which is acceptable. Most shower meteoroids are dust or sand-grain sized rather than 'rocks', and the page notes they range 'from dust particle to boulder size'."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "787c66ed41d504c6"
+  },
+  "6": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/orbits/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/orbits.html. The f1 passage and all three f2 passages are found word for word. Page title 'What Is an Orbit?' matches."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) 'It goes round in about ninety minutes' joins two page sentences: the ISS is in LEO, and one LEO orbit takes about 90 minutes. This is a valid inference.",
+     "fix": "None needed."
+    }
+   ],
+   "counter_evidence": [
+    "The ISS's orbital period is about 92 to 93 minutes, so 'about ninety' is fine.",
+    "The page describes momentum and gravity as forces that are 'balanced'. A physicist would object, because momentum is not a force. Ravi's line avoids that wording and uses only the 'always falling but moving sideways fast enough to miss' picture, which is correct."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "075f53138979faa7"
+  },
+  "7": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/seasons/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "Both quotes are exact and support the lines."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) 'When our half leans towards the Sun, it's summer' and 'not its distance' are on the page but outside the quote.",
+     "fix": "Optionally add: \"So, when the North Pole tilts toward the Sun, it's summer in the Northern Hemisphere.\" + \"However, in the Northern Hemisphere, we are having winter when Earth is closest to the Sun and summer when it is farthest away!\""
+    }
+   ],
+   "counter_evidence": [
+    "In the Southern Hemisphere, January closest approach does fall in summer, so Momo's guess happens to line up there. Ravi's 'No' is about the cause, and 'winter in the north' is correctly specific."
+   ],
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "c333756b60ef3fbc"
+  },
+  "8": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/galaxy/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/galaxy.html. The f1 passage and both f2 passages are found word for word. Page title 'What Is a Galaxy?' matches."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) Out of context, the quoted fragment 'It’s a small part of the Milky Way Galaxy' does not say what 'It' is (our solar system).",
+     "fix": "Quote this, checked on the page: 'But where is our solar system? It’s a small part of the Milky Way Galaxy.'"
+    },
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) 'Billions of stars' fits large galaxies like ours, but dwarf galaxies have far fewer. NASA Space Place's own light-year page says 'A galaxy can have millions or billions of stars.' (checked in pages_r2/light-year.html).",
+     "fix": "Optionally say 'millions or billions of stars' and cite https://spaceplace.nasa.gov/light-year/en/. The current line matches its source, so it does not block."
+    }
+   ],
+   "counter_evidence": [
+    "The page's 'as many as one hundred billion galaxies' estimate is not used in the script, which is wise because published estimates vary widely. 'Nobody can count them all yet' is safe."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "d790e32c641e7560"
+  },
+  "9": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/eclipses/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/eclipses.html. All four passages are found once inline tags are removed (an inline trivia tooltip sits between 'A' and 'solar eclipse' in the HTML). Page title 'Lunar Eclipses and Solar Eclipses' matches."
+    }
+   ],
+   "issues": [],
+   "counter_evidence": [
+    "During a total lunar eclipse the Moon usually turns reddish rather than simply dark, and the same page says so. 'Gets darker' is accurate but incomplete, which is fine for this line.",
+    "A solar eclipse is seen only where the Moon's shadow falls, which the page notes. The line's 'the Moon's shadow falls on Earth' is accurate."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "1d3ca7008090c698"
+  },
+  "10": {
+   "verdict": "cleared",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/days/en/",
+     "loaded": true,
+     "quote_found": true,
+     "note": "HTTP 200, saved as pages_r2/days.html. The f1 and f2 passages are found word for word. Page title 'How Long Is One Day on Other Planets?' matches. Every figure matches the page's table: Mercury 1,408 h, Venus 5,832 h, Earth 24 h, Mars 25 h, Jupiter 10 h, Saturn 11 h, Uranus 17 h, Neptune 16 h."
+    }
+   ],
+   "issues": [
+    {
+     "fact": "f2",
+     "problem": "(Non-blocking) 'Which planet spins slowest? Venus!' depends on comparing all eight planets. The quote covers only Mercury and Venus (with f1 adding Earth, Mars and Jupiter). Saturn, Uranus and Neptune are on the page but not quoted.",
+     "fix": "Add this passage, checked on the page: 'Saturn takes 11 hours, Uranus takes 17 hours, and Neptune takes 16 hours.'"
+    },
+    {
+     "fact": "f1",
+     "problem": "(Non-blocking) The claim says 'Earth spins in 24 hours', but the same page says one full spin (sidereal day) is 'almost exactly 23 hours and 56 minutes', and that solar days vary by a few minutes. 24 hours is the solar day. Ravi's 'Only on Earth!' is an acceptable simplification and does not itself say 'spin'.",
+     "fix": "Reword the claim to 'A day on Earth lasts about 24 hours; Mars about 25; Jupiter spins in about 10.' Optionally change the line to 'Only on Earth, more or less!'"
+    }
+   ],
+   "counter_evidence": [
+    "For Venus and Mercury, 'spin once' and 'one day' are very different. NASA's Venus facts page (https://science.nasa.gov/venus/venus-facts/) gives Venus's rotation as 243 Earth days (= 5,832 h, consistent with Space Place). It says sunrise to sunset 'would take 117 Earth days', and that Venus spins backward. Ravi's line 2 rightly says 'to spin round just once', not 'a day lasts', so it is correct. Do not reword it to 'a day on Venus is 5,832 hours'."
+   ],
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "facts_hash": "47b2cfa995bb8ee6"
+  }
+ },
+ "history": [
+  {
+   "episode": 1,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f2: The quote 'more of the blue light is scattered, so the reds and yellows reach your eyes' does not appear on the page.",
+    "f1: Ravi's 'Sunlight is all the colours together' and 'blue reaches us from every direction' are not covered by f1's claim or quote."
+   ]
+  },
+  {
+   "episode": 2,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f1: The quote 'what we call moonlight is sunlight reflecting off its surface' is a paraphrase. It also doesn't back 'It doesn't [change shape]' or 'we see more or less of its lit side as it goes around us'."
+   ]
+  },
+  {
+   "episode": 3,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f2: 'Their light left them before we were born' is not on the page and is false for nearby stars. The page itself says the next closest star is about 4.3 light-years away, so its light left about 4.3 years ago, within a young viewer's lifetime."
+   ]
+  },
+  {
+   "episode": 4,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f2: The quote does not exist on the page. 'Gravity squeezes hydrogen into helium' also compresses the page's chain (big, so strong gravity and pressure, so atoms collide and fuse) into something close to wrong."
+   ]
+  },
+  {
+   "episode": 5,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f1: The quote isn't verbatim and doesn't support the main point of the claim and line (the glow is hot air, not the rock)."
+   ]
+  },
+  {
+   "episode": 6,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f2: The main answer to Momo ('always falling… keeps missing Earth') and the link between the ISS and 90 minutes are not in the cited quote. Both are on the page."
+   ]
+  },
+  {
+   "episode": 7,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 8,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f2: The page's 'as many as one hundred billion galaxies' is out of date. ESA/Hubble (2016) says the older 100–200 billion estimate is 'at least ten times too low'. A careful reader would object to a hundred billion presented as the figure. The Milky Way answer is also not in any quote."
+   ]
+  },
+  {
+   "episode": 9,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f1: The quote says nothing about the Moon blocking sunlight or its shadow falling on Earth."
+   ]
+  },
+  {
+   "episode": 10,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 1; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f1: Ravi says a number (Jupiter, 10 hours) that isn't in the cited quote.",
+    "f2: Strongly advised. 5,832 hours is how long Venus takes to spin once (243 Earth days). But the page's own definition of a day is one daytime-to-nighttime cycle, and on Venus that is much shorter. By that definition Mercury's day (176 Earth days) is the longest. 'A day there lasts 5,832 hours' is therefore a simplification that turns wrong under the page's own definition."
+   ]
+  },
+  {
+   "episode": 1,
+   "verdict": "blocked",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": [
+    "f2: Ravi says 'Most of the blue is scattered away'. The page and the claim only say 'Even more of the blue light is scattered'. 'Most' is a quantity the source does not give, so the line goes beyond its cited fact. It happens to be true for the direct sunbeam at sunset, but it is not traceable."
+   ]
+  },
+  {
+   "episode": 2,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 3,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 4,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 5,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 6,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 8,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 9,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 10,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  },
+  {
+   "episode": 1,
+   "verdict": "cleared",
+   "reviewer": "fresh fact_gate agent (round 3, episode 1 after the round-2 fix; page read verbatim with curl)",
+   "at": "2026-11-03",
+   "issues": []
+  }
+ ]
+}

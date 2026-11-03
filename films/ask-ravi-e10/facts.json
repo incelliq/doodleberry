@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "Earth spins in 24 hours, Mars in 25, Jupiter in 10.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/days/en/",
+    "title": "NASA Space Place: How long is one day on other planets?",
+    "quote": "Earth takes 24 hours to complete one spin, and Mars takes 25 hours. The gas giants rotate really fast. Jupiter takes just 10 hours to complete one rotation."
+   },
+   "source_sentence": "Earth takes 24 hours to complete one spin, and Mars takes 25 hours. The gas giants rotate really fast. Jupiter takes just 10 hours to complete one rotation.",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "Venus takes 5,832 hours to spin round once, the longest of the planets in NASA's table.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/days/en/",
+    "title": "NASA Space Place: How long is one day on other planets?",
+    "quote": "On Mercury a day lasts 1,408 hours, and on Venus it lasts 5,832 hours."
+   },
+   "source_sentence": "On Mercury a day lasts 1,408 hours, and on Venus it lasts 5,832 hours.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

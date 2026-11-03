@@ -1,0 +1,84 @@
+{
+ "title": "What is an eclipse?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about eclipses?",
+   "slot": [
+    0.6,
+    3.361
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "What happens in an eclipse?",
+   "slot": [
+    4.411,
+    2.472
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Something gets in the way of sunlight. In a solar eclipse, the Moon's shadow falls on Earth.",
+   "slot": [
+    7.333,
+    7.806
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "And a lunar eclipse?",
+   "slot": [
+    15.589,
+    2.028
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "Earth gets in the way of the light reaching the Moon, so the Moon gets darker.",
+   "slot": [
+    18.067,
+    7.361
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    25.878,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

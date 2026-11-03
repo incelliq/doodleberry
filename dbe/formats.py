@@ -140,7 +140,7 @@ def build(fmt, brief, prefix=""):
         ln = {"id": lid, "speaker": cast_ids[be["role"]], "fact": None, "text": be["text"]}
         if be.get("fact") and brief.get("facts", {}).get(be["fact"]):
             f = brief["facts"][be["fact"]]; fid = f"{prefix}{be['fact']}"
-            facts.append({"id": fid, "claim": f.get("claim", be["text"]), "source": f.get("source"), "status": f.get("status", "needs_check")})
+            facts.append({"id": fid, "claim": f.get("claim", be["text"]), "source": f.get("source"), **({"source_sentence": f["source"]["quote"]} if isinstance(f.get("source"), dict) and f["source"].get("quote") else {}), "status": f.get("status", "needs_check")})
             ln["fact"] = fid
         if be.get("predict"):
             ln["pause"] = be["predict"]   # the silent count after the question

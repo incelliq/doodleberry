@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "A shooting star is a space rock entering the atmosphere; the bright streak is the glowing hot air around it.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/meteor-shower/en/",
+    "title": "NASA Space Place: What is a meteor shower?",
+    "quote": "A meteor is a space rock—or meteoroid—that enters Earth's atmosphere. … That bright streak is not actually the rock, but rather the glowing hot air as the hot rock zips through the atmosphere."
+   },
+   "source_sentence": "A meteor is a space rock—or meteoroid—that enters Earth's atmosphere. … That bright streak is not actually the rock, but rather the glowing hot air as the hot rock zips through the atmosphere.",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "When Earth meets many meteoroids at once, it is a meteor shower.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/meteor-shower/en/",
+    "title": "NASA Space Place: What is a meteor shower?",
+    "quote": "When Earth encounters many meteoroids at once, we call it a meteor shower."
+   },
+   "source_sentence": "When Earth encounters many meteoroids at once, we call it a meteor shower.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

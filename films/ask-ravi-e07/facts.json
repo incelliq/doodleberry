@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "Earth's tilted axis causes the seasons, not its distance from the Sun.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/seasons/en/",
+    "title": "NASA Space Place: What causes the seasons?",
+    "quote": "Earth's tilted axis causes the seasons"
+   },
+   "source_sentence": "Earth's tilted axis causes the seasons",
+   "status": "checked"
+  },
+  {
+   "id": "f2",
+   "claim": "Earth is closest to the Sun in January, winter in the Northern Hemisphere.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/seasons/en/",
+    "title": "NASA Space Place: What causes the seasons?",
+    "quote": "perihelion (when we are closest) occurs in January"
+   },
+   "source_sentence": "perihelion (when we are closest) occurs in January",
+   "status": "checked"
+  }
+ ]
+}

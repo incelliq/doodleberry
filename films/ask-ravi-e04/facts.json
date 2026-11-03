@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "The Sun's core gets as hot as 27 million degrees Fahrenheit.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/sun-heat/en/",
+    "title": "NASA Space Place: Where Does the Sun's Energy Come From?",
+    "quote": "as hot as 27 million degrees Fahrenheit"
+   },
+   "source_sentence": "as hot as 27 million degrees Fahrenheit",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "The Sun is so big that its gravity and pressure make hydrogen atoms collide and fuse into helium, releasing energy.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/sun-heat/en/",
+    "title": "NASA Space Place: Where Does the Sun's Energy Come From?",
+    "quote": "The short answer is that it is big. … the hydrogen atoms collide with enough force that they literally meld into a new element—helium. This process—called nuclear fusion—releases energy"
+   },
+   "source_sentence": "The short answer is that it is big. … the hydrogen atoms collide with enough force that they literally meld into a new element—helium. This process—called nuclear fusion—releases energy",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

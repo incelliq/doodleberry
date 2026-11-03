@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "An orbit is a regular, repeating path one object in space takes around another.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/orbits/en/",
+    "title": "NASA Space Place: What is an orbit?",
+    "quote": "a regular, repeating path that one object in space takes around another one"
+   },
+   "source_sentence": "a regular, repeating path that one object in space takes around another one",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "A satellite is always falling toward the planet but moves sideways fast enough to miss; the ISS circles Earth in about 90 minutes.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/orbits/en/",
+    "title": "NASA Space Place: What is an orbit?",
+    "quote": "When these forces are balanced, the object is always falling toward the planet, but because it's moving sideways fast enough, it never hits the planet. … The International Space Station is in low Earth orbit, or LEO. … One complete orbit in LEO takes about 90 minutes."
+   },
+   "source_sentence": "When these forces are balanced, the object is always falling toward the planet, but because it's moving sideways fast enough, it never hits the planet. … The International Space Station is in low Earth orbit, or LEO. … One complete orbit in LEO takes about 90 minutes.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

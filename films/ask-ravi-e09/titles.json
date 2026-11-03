@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "What is an eclipse?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "What happens in a solar eclipse?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "AN ECLIPSE IS...",
+   "bottom": "LIGHT BLOCKED",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

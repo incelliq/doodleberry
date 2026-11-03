@@ -131,10 +131,25 @@ def safe_and_size(boxes, size, inside_min=0.75, zoom_max=1.25):
     return {"aspect": asp, "safe_area": [x0, y0, x1, y1], "min_px": mn, "outside_safe": dedupe(out_of)[:20], "too_small": dedupe(small)[:20]}
 
 
-def reading_time(shots_resolved, timing, captions=True):
+def reading_time(shots_resolved, timing, captions=True, warp=None, script=None):
     """static blocks (timed overlays, silent bubbles) need words / 3 + 1 s on screen; the caption pace counts only when
-    the film shows captions"""
+    the film shows captions. warp ([[cut, film], ...], a sound-off cut): every line shown as a bubble, a thought or a
+    narration box needs the same, on the cut's own clock (WP-17)"""
     short = []
+    if warp and len(warp) >= 2:
+        def to_cut(t):   # film time -> cut time, piecewise linear through the knots
+            if t <= warp[0][1]:
+                return warp[0][0] + (t - warp[0][1])
+            for a, b in zip(warp, warp[1:]):
+                if t <= b[1]:
+                    return a[0] + (b[0] - a[0]) * (t - a[1]) / ((b[1] - a[1]) or 1)
+            return warp[-1][0] + (t - warp[-1][1])
+        bubble_text = {l.get("id"): l.get("bubble") for l in (script or {}).get("lines", [])}
+        for l in timing.get("lines", []):
+            text = bubble_text.get(l.get("id")) or l.get("text", "")
+            n = len(re.findall(r"[\w']+", text)); need = n / 3 + 1; on = to_cut(l["end"] + 0.5) - to_cut(l["start"] - 0.12)
+            if n and on < need - 1e-6:
+                short.append({"line": l.get("id"), "text": text[:50], "on_screen_s": round(on, 2), "needs_s": round(need, 2)})
     for s in shots_resolved:
         blocks = [(o.get("text", ""), o.get("start"), o.get("end")) for o in s.get("overlays", []) if o.get("start") is not None and o.get("end") is not None]
         blocks += [(b.get("text", ""), b.get("start"), b.get("end")) for b in s.get("extra_bubbles", [])]
@@ -328,7 +343,7 @@ def run(film_dir, page=None):
     if shots_all.get("captions", True):
         boxes += caption_boxes(timing, size, shots_all.get("caption_style") or {})
     rep["text"] = safe_and_size(boxes, size)
-    rep["reading"] = reading_time(shots, timing, captions=shots_all.get("captions", True))
+    rep["reading"] = reading_time(shots, timing, captions=shots_all.get("captions", True), warp=shots_all.get("timewarp"), script=_json(d / "script.json", {}))
     rep["cold_open"] = cold_open(shots, timing, size)
     cues = _json(d / "build" / "cues.json", [])
     try:

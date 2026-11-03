@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "What is a galaxy?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Is the Milky Way a galaxy?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "WHAT'S A GALAXY?",
+   "bottom": "THE MILKY WAY",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

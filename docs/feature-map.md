@@ -92,7 +92,7 @@ covered, now added to their packages' scopes.
 | Gestures from speech prosody: beats on stressed syllables, tilts on questions, nods from listeners | NEW | ✅ | – | `acting.plan` (2.3) |
 | Natural-language acting direction ("Pip is nervous, glances at the door") → timeline | NEW | ✅ | – | `acting.direct` (2.4) |
 | Webcam face performance → puppet | PRO (Character Animator) | 🟡 | P1 | recorded takes become eye, brow, gaze and mouth keys (`actout.clip`, 3.5); live tracking: WP-12 |
-| "Act it out": phone video → body pose → clips and IK targets | NEW | ✅ | – | `actout.clip` and Studio /actout (plan 3.5), MediaPipe; rtmlib open |
+| "Act it out": phone video → body pose → clips and IK targets | NEW | ✅ | – | `actout.clip` and Studio /actout (plan 3.5), MediaPipe; WP-12: head turn into the `turn` control (clip control tracks, format v0.10), the camera's motion taken out from the background, several people as several clips; rtmlib and other detectors open |
 | 3D mocap retargeted to 2D | NEW | 🟡 | P2 | video to 2D clips with `actout.clip` (3.5); BVH and CMU mocap to 2D: WP-12 |
 | Animation principles as filters: anticipation, overshoot, follow-through, arcs | IDEA | ✅ | – | anticipation and overshoot filter (2.5), springs for follow-through; motion arcs on props (WP-09) |
 | Smears and motion lines on fast moves | PRO | ✅ | – | speed lines, dust, impact stars from the motion (2.20); smear frames, stretch, squash and motion arcs on props (WP-09) |
@@ -128,7 +128,7 @@ covered, now added to their packages' scopes.
 | Ink props and signs: handwritten labels, hanging signs and arrows drawn in the same ink and boil as the characters | NEW | ✅ | – | ink signs and overlays (1.9) |
 | **Speech and thought bubbles inside the art:** say, shout (spiky, shaking letters), whisper (dashed), thought clouds, narration boxes. The tail tracks the speaker; placement avoids collisions; bubbles wobble and pop in and out | NEW | 🟡 | P0 | say, shout, whisper with voice-synced reveal and placement (2.10); thought clouds, narration boxes: WP-17 |
 | Typewriter text: word by word in sync with the voice, or letter by letter with punctuation pauses when silent | NEW | 🟡 | P1 | word-by-word reveal synced to the voice (2.10); letter by letter: WP-17 |
-| Handwriting fonts per character, including the artist's own handwriting generated from samples | IDEA | ⬜ | P2 | handwriting fonts from samples: WP-29 |
+| Handwriting fonts per character, including the artist's own handwriting generated from samples | IDEA | ✅ | – | `font.sheet` prints a sheet with drop-out guides and corner marks; `font.from_samples` registers a photo or scan, traces each box with potrace and builds an OpenType font with fontTools (WP-29); tested on synthetic samples: mean glyph IoU 0.89 |
 | **Explainer scene library:** teaching cards for definitions, counters, typed consoles, data walls, heatmaps, maps, quote plates, a citation line and wordmark as overlays on soft plates | NEW | ✅ | – | card, counter, console, bars, quote, citation, wordmark, camera float (1.13, 1.15) |
 | **Data-bound visuals:** every plotted number comes from an analysis script's output (`data.js`), never typed by hand; the analysis and its cached inputs live with the film | NEW | ✅ | – | `analysis/` scripts write data.json; `film.data` (2.17) |
 | **Beat grid:** one BPM grid (e.g. 100 BPM at 30 fps = 18 frames per beat, 72 per bar); scene starts and key events snap to beats; picture and sound read the same `timing.json` | PRO/NEW | ✅ | – | `film.beats` (2.14) |
@@ -145,17 +145,17 @@ covered, now added to their packages' scopes.
 | Animatic with temp voice | PRO | ✅ | – | svg draft render |
 | Hook and title variants | NEW | ✅ | – | `variants.hooks` |
 | Beat sheet and retention-curve planning | NEW | 🟡 | P1 | `analytics.retention`: a post's retention curve laid over its shots and lines (WP-31); planning beats from it before a film is made is open |
-| Series bible and episode continuity (outfits, props, running gags) | NEW | ⬜ | P2 | continuity memory: WP-28 |
+| Series bible and episode continuity (outfits, props, running gags) | NEW | ✅ | – | `series.plan`/`series.make`/`series.continuity` (WP-28): the bible's cast, persisting props, gags on a cadence and what is learnt; continuity read from the films; eight planted breaks caught |
 | **Series format:** an episode is a data template (lines, moves, beats, blinks, stares). A new episode means editing data only | NEW | ✅ | – | series template and `edit.json` (2.14, 2.15) |
 | Rig-aware writing: the writer agent drafts jokes the characters' rigs can actually perform, and flags lines that need a new pose | IDEA | ✅ | – | `script.rigcheck` (2.12) |
-| Daily-series planner: batch episodes, recurring gags, a posting calendar | IDEA | 🟡 | P2 | series cadence in the content planner (3.8); series production: WP-28 |
+| Daily-series planner: batch episodes, recurring gags, a posting calendar | IDEA | ✅ | – | `series.plan`: episodes dated from the bible's cadence, gags due, props carried, schedule.ics; `series.make` batches them (WP-28) |
 | **Content planner:** research sweeps (dated hooks, recent developments, evergreen stories, tools, original analyses, a local angle) feed an idea bank and a dated calendar | NEW | ✅ | – | `plan.*` and Studio /plan (plan 3.8): six agent sweeps, a source-checked idea bank, a dated calendar; the bioinformatics.lk plan had 61 posts and 211 ideas from six sweeps |
 | Spread rules: topic diversity per week, a local-story quota, analysis cadence, series cadence, lead times ("start by"), and an empty field getting the next slot | NEW | ✅ | – | `plan.check` (plan 3.8): every rule checked independently of the scheduler |
 | **Brief template:** hook (draft), angle, why now, sources (starting points only), research leads, cautions. Research may overturn the premise; the session then escalates to the planner | NEW | ✅ | – | `plan.brief` (plan 3.8) writes it from an idea; escalation to the owner on the production board (3.7) |
 | **Format templates:** Myth vs Data (myth as people hold it → prediction → data → rule), Dialogue (a learner and an expert character), Anniversary, We re-ran it, Wonder story, multi-part series | NEW | ✅ | – | `film.from_template` (2.15) |
 | Prediction prompts: the viewer commits to an answer (an on-screen pause or poll) before the reveal | IDEA | ✅ | – | prediction prompts with a silent count (2.15) |
 | Original-analysis films: real public data, its terms and version, an access date, and a sanity check against a published figure | NEW | ✅ | – | analysis scripts with cached sources, terms and access dates (2.17) |
-| Companion artefacts from one film: a guide with runnable code that reproduces the numbers, a carousel, a LinkedIn post | NEW | ⬜ | P2 | companion guides: WP-27 |
+| Companion artefacts from one film: a guide with runnable code that reproduces the numbers, a carousel, a LinkedIn post | NEW | 🟡 | P2 | `film.companion`: a runnable guide that recomputes every number (WP-27); carousel and LinkedIn post open |
 | JSON Schema for `shots.json` and `script.json` | NEW | ✅ | – | dbe/schemas, checked on write and before renders (0.3) |
 
 ## 6. Audio
@@ -166,11 +166,11 @@ covered, now added to their packages' scopes.
 | More clean voices, including emotion and other languages | NEW | 🟡 | P0 | 54 Kokoro voices (0.5); 115 Piper voices of forty languages classified by licence, clean ones in 17 languages (WP-25); expressive voices WP-43 |
 | Prosody direction (whisper, shout, excited, sad) | NEW | ⬜ | P1 | whisper, shout, excited: WP-13 |
 | Human voice-over import with alignment | PRO | 🟡 | P0 | aligner and slots exist; recorded takes into slots: WP-13 |
-| Consented voice cloning with consent records | IDEA | ⬜ | P2 | own-voice cloning with consent: WP-43, WP-26 |
+| Consented voice cloning with consent records | IDEA | 🟡 | P2 | consent records and the gate that refuses a person's voice without one (`consent.add`, WP-26); own-voice cloning: WP-43 |
 | Procedural score, stingers, ducking | NEW | ✅ | – | |
 | SFX library with licence manifest | NEW | 🟡 | P1 | synth effects in the manifest; Kenney CC0 samples: WP-13 |
 | Loudness and intelligibility QA | NEW | ✅ | – | |
-| Footsteps, cloth and impact foley from the animation | EMG | ✅ | – | `foley` from contacts and fast moves (2.7) |
+| Footsteps, cloth and impact foley from the animation | EMG | ✅ | – | `foley` from contacts and fast moves (2.7); footsteps sound like their set's floor (grass, tile, wood, concrete, carpet) and each set has its own room reverb (sets/acoustics.json, WP-13) |
 | Spatial mix: pan by screen position | EMG | ✅ | – | panned by screen position (2.7) |
 | Sound editing in Studio: waveform lanes, cues moved, trimmed, replaced or deleted, music swapped by span, Audacity hand-off | PRO | ✅ | – | `sound.lanes/edit/remix/audacity`, Studio `/sound` with wavesurfer.js; edits in `sound.json`, line-relative, applied on every mix (WP-40) |
 | Cartoon SFX accents bound to moves: a boing per hop, pen-scratch ambience, a single "baa" sting | NEW | ✅ | – | boing per hop, pen scratch (2.13) |
@@ -186,7 +186,7 @@ covered, now added to their packages' scopes.
 | Video, Lottie, web player, Synfig and Grease Pencil project exports | PRO/NEW | 🟡 | – | video, Lottie, web player and Synfig projects (`export.*`); the Grease Pencil path renders frames and a JSON bake but saves no `.blend` project yet (found by the WP-41 parity sweep): WP-14 |
 | WebM and ProRes with alpha, GIF/APNG, stickers | PRO | ✅ | – | `shot.alpha` (WebM VP9 alpha, ProRes 4444), `film.formats` (GIF, APNG), `sticker.pack` (WP-23) |
 | OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | ✅ | – | `film.handoff`: OTIO, Kdenlive, MLT, FCP 7 XML (Resolve, Premiere), FCPXML and EDL with shots, stems, captions and camera tracks; melt renders the cut byte for byte (WP-22) |
-| Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | ⬜ | P2 | sprite sheets and game formats: WP-30 |
+| Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | 🟡 | P2 | `export.godot` (WP-30): a Godot 4 project, a scene per shot with every part drawing as a Sprite2D animated from the bake, main scene plays the shots with the sound; checked by an independent reader against the player (line F-score 1.0); not opened in Godot here. Sprite sheets and Unity open |
 | Aspect-ratio re-staging (9:16 ↔ 16:9 ↔ 1:1 by re-blocking, not cropping) | IDEA | ✅ | – | `film.render` with `aspect` re-stages from the data (1.12); `film.aspects` renders all three with per-aspect QA (WP-24) |
 | Parallel render workers, frame reuse, static-layer cache | NEW | ✅ | – | browser per worker, frame dedupe (0.1); static sets rendered once as a plate under transparent frames (WP-15) |
 | Incremental re-render (only changed shots) | NEW | ✅ | – | content hash per shot (0.4) |
@@ -216,7 +216,7 @@ covered, now added to their packages' scopes.
 | Reduced-motion variant | IDEA | ✅ | – | `film.reduced_motion`: camera steadied, boil and motion effects off, measured (WP-24) |
 | Sign-language inset presenter | IDEA | ⬜ | P2 | not planned: needs Deaf community partners |
 | Platform packs: safe zones, thumbnails, titles, descriptions | NEW | ✅ | – | `film.package` platform files (0.13) |
-| Interactive web films: branching, quizzes, click-to-explore | EMG | ⬜ | P2 | WP-30 |
+| Interactive web films: branching, quizzes, click-to-explore | EMG | 🟡 | P2 | `export.interactive` (WP-30): chapters, a word-synced transcript (tap a line to hear it), a pause after each question to guess, sources per line; driven in Chromium. Branching open |
 | **Posting package generator:** per-platform captions (takeaway in the first line, sources in a pinned comment, hashtags last), YouTube title, description and chapters, alt text, an engagement prompt, playlists, post dates | NEW | ✅ | – | `film.package` (0.13) |
 | **Title and thumbnail lab:** titles written for newcomers that are still literally true, "double barrel" thumbnail text in tension with the title, candidate generation, audience polls between true options, back-catalogue retitling | NEW | 🟡 | P1 | `title.check/propose/set`, `titles.status`: truth and newcomer checks, double-barrel thumbnails, back catalogue retitled (WP-07); audience polls between true options: `analytics.poll` (WP-31) |
 | Publishing connectors and scheduler: upload and schedule per platform, always with human approval per post | IDEA | 🟡 | P2 | `post.queue/approve/revoke/run/done/status` and the board's posting queue: one named approval per post, export with a calendar reminder, a connector interface (dry run only); platform API connectors need the owner's app credentials (WP-08) |
@@ -252,17 +252,17 @@ covered, now added to their packages' scopes.
 | Auto credits | NEW | ✅ | – | |
 | Asset licence manifest for sets, SFX, fonts, props | NEW | ✅ | – | assets/manifest.json and `asset.check` (0.7); licence classes: WP-33 |
 | Marketplace: puppets, clips, sets, with revenue share by usage | IDEA | ⬜ | P2 | WP-29 |
-| Content credentials (C2PA) and AI-disclosure labels | NEW | ⬜ | P1 | WP-26 |
-| Likeness and consent rules for characters and voices | NEW | ⬜ | P1 | WP-26 |
+| Content credentials (C2PA) and AI-disclosure labels | NEW | ✅ | – | every final signed (`film.sign`, verified by c2patool); per-platform disclosure from each platform's help page (`film.disclosure`, in film.package) (WP-26) |
+| Likeness and consent rules for characters and voices | NEW | ✅ | – | `consent.add/revoke/check`; voice.build refuses a voice or likeness without a live consent basis (WP-26) |
 | Versioning, branching, review in git | NEW | ✅ | – | films are text |
-| Roles and permissions (artist, director, reviewer) | PRO | ⬜ | P2 | WP-39 |
+| Roles and permissions (artist, director, reviewer) | PRO | ✅ | – | WP-39: `team/roles.json` (owner, director, artist, reviewer, editor) checked on every command through the CLI, HTTP (`X-DBE-As`) and MCP (`DBE_AS`); sign-off commands only for roles that list them; `team.assign`, `team.lock`; `team.audit` logs every change and refusal |
 | Rights model per asset: open licence, owner-proprietary, client work (with transfer terms), with usage permissions enforced at render | NEW | ✅ | – | `cast.add` rights (0.9) |
-| Creator monetisation outputs: sticker packs, merch stills, loop packs, rig and boil-preset templates for sale, client explainer packages | IDEA | ⬜ | P2 | WP-23, WP-29 |
-| Teaching mode: turn a character's pipeline (photo → cutout → rig → episode) into a step-by-step tutorial | IDEA | ⬜ | P2 | WP-28 |
+| Creator monetisation outputs: sticker packs, merch stills, loop packs, rig and boil-preset templates for sale, client explainer packages | IDEA | 🟡 | P2 | sticker packs and merch stills (WP-23); `pack.make`/`pack.install`: rig templates, loop packs and boil presets as signed-off packs (sha256 per file, author, licence, royalty) that install into another project (WP-29); client explainer packages open |
+| Teaching mode: turn a character's pipeline (photo → cutout → rig → episode) into a step-by-step tutorial | IDEA | ✅ | – | `teach.tutorial` (WP-28): brief, script, model sheets, voice, acting, a frame per shot and the command behind each step |
 | **Brand kit:** palette with measured contrast, colour-blind separation and distance from platform UI colours; type system; exclusion rules ("nothing like competitor X"); generated profile pictures, covers, flyers and print with safe-zone overlays; templates that films inherit | NEW | ✅ | – | `brand.check`, `brand.assets` (1.14); several kits by id, one per channel, inherited by its films (WP-32) |
-| **Public corrections log:** dated, on the original page; covers titles, thumbnails and social cards; credits critics; separates "what we got wrong" | NEW | ⬜ | P1 | WP-27 |
+| **Public corrections log:** dated, on the original page; covers titles, thumbnails and social cards; credits critics; separates "what we got wrong" | NEW | ✅ | – | `film.correct` (one command to every surface, read back), `film.page` (WP-27) |
 | Independence rules: no sponsor that makes what a film assesses; disclose access without payment; disclose ownership changes the day they happen | NEW | ⬜ | P2 | WP-27 |
-| Community intake: send-a-myth, challenges, early-preview reviewers, paired collaborations with other creators | IDEA | ⬜ | P2 | WP-27 |
+| Community intake: send-a-myth, challenges, early-preview reviewers, paired collaborations with other creators | IDEA | 🟡 | P2 | send-a-myth: `plan.intake` (WP-27); challenges, preview reviewers and collaborations open |
 | Business dashboard: revenue by platform and geography, RPM, catalogue value, pre-sale readiness | IDEA | 🟡 | P2 | `analytics.business` and the Studio page /business (WP-31); pre-sale readiness is open |
 
 ## 11. Agent and developer platform
@@ -272,8 +272,8 @@ covered, now added to their packages' scopes.
 | Async jobs | NEW | ✅ | – | |
 | Progress events and webhooks | NEW | ✅ | – | `film.render` progress events; `?async=1` jobs with events and `&webhook=` (WP-20) |
 | Cost and time estimate before rendering | NEW | ✅ | – | `render.estimate`: measured history and per-shot probes; within 16.5% on six benchmark films (WP-20) |
-| Specialist agents: director, animator, editor, critic, fact-checker | IDEA | ⬜ | P1 | WP-21 |
-| Natural-language editing ("make Pip turn when she says Blender") | NEW | 🟡 | P0 | `acting.direct`, `review.fix`, `timeline.edit`; chat: WP-21 |
+| Specialist agents: director, animator, editor, critic, fact-checker | IDEA | ✅ | – | WP-21: roles in team/roles.json (with artist, reviewer, owner, WP-39); an agent session is a person entry with its role and is refused outside its subset |
+| Natural-language editing ("make Pip turn when she says Blender") | NEW | ✅ | – | `desk.say` (WP-21) routes notes to line text, timing, camera, set, music and acting (`acting.direct`), and previews; `review.fix`, `timeline.edit` |
 | Python and JS SDKs, recipes, templates | NEW | ⬜ | P2 | not planned: the CLI, HTTP API and MCP expose every command |
 | Multi-tenant sandboxing and quotas | NEW | ⬜ | P2 | not planned: in-house, single owner |
 | **Production orchestrator:** a planning agent spawns one production session per film (own workspace and branch), receives checkpoint reports (research done, first render, final metrics), keeps a session registry, can stop, narrow or relaunch a film, and merges finished work | NEW | ✅ | – | `prod.*` and Studio /board (plan 3.7): worktree and branch per film, pipeline, Claude Code or manual sessions, measured checkpoints, escalation, scoped merge |
@@ -288,7 +288,7 @@ covered, now added to their packages' scopes.
 | Clip and pose authoring by recording a drag or a webcam take | IDEA | ✅ | – | Rig Canvas posing (3.3), Act it out (3.5) |
 | Studio: films, shots, renderer routing, render, log | NEW | ✅ | – | basic |
 | Timeline editor: shots, clips, dialogue lanes, scrub with live preview | PRO | ✅ | – | /timeline (3.1) |
-| Director's desk: chat beside a storyboard strip and animatic | IDEA | ⬜ | P1 | WP-21 |
+| Director's desk: chat beside a storyboard strip and animatic | IDEA | ✅ | – | Studio `/desk` (WP-21): notes beside the strip and animatic, a dry run, the log of what was understood and run |
 | Review room on mobile: approve, comment on a frame | NEW | ⬜ | P1 | WP-19 |
 | Tablet and pencil support | PRO | 🟡 | P1 | pointer pressure works; WP-18 |
 | **Phone-first creator flow:** snap a doodle, confirm the suggested cuts, and see it move and talk within a minute | IDEA | ✅ | – | Studio /doodle and `doodle.snap/cut/say/keep` (plan 3.6): photo to talking in about 11 s |
@@ -308,17 +308,17 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E3 | Foot pins + contact frames + clips | **Automatic foley.** Footsteps on every plant, cloth swishes on fast arm moves, thuds on landings. | ✅ (2.7) |
 | E4 | Character screen positions + the mix | **Spatial audio.** Voices and effects pan with the character. | ✅ (2.7) |
 | E5 | `shots.json` semantics (who, where, doing what) | **Audio description, alt text, chapter markers, transcripts and thumbnails, all auto-generated.** We know what is on screen without vision models. | ✅ alt text and chapters in `film.package` (0.13); audio description with every render, `film.describe` (WP-24) |
-| E6 | Puppets + views + IK + poses | **One character, every medium:** video, comic panels, storybook pages, stickers, thumbnails, print, merch. Pose a still, render a page. | ⬜ P1 · WP-30 |
+| E6 | Puppets + views + IK + poses | **One character, every medium:** video, comic panels, storybook pages, stickers, thumbnails, print, merch. Pose a still, render a page. | 🟡 `film.comic` comics and storybooks (WP-30, Typst), stickers and print and merch stills (WP-23), covers (WP-07), interactive web and Godot (WP-30); a single posed still to a page is open |
 | E7 | Baked acting + Lottie + clip library | **The cast in apps and games:** animated stickers, in-app mascots, game sprites, all from the same rig. | 🟡 · WP-30 |
 | E8 | Live web player + data | **Personalised films rendered in the viewer's browser:** their name, language and region, at zero server cost. | ⬜ P2 · WP-30 |
 | E9 | Real-time puppet + webcam tracking | **Live 2D avatars of the cast** for streams and classrooms, VTuber-style. | ⬜ P2 · WP-12 |
 | E10 | QA bar + agent + data edits | **Self-healing renders.** The agent reads a QA failure (a still stretch, loudness, a caption collision), edits the timeline and re-renders until it passes. This session did it by hand for the idle clip. | ✅ `film.heal` (2.9) |
 | E11 | Hook variants + analytics | **Self-optimising openings.** Retention data picks hooks and pacing for the next film. | ✅ `analytics.hooks` (Beta posteriors), `analytics.lessons` (WP-31); waits for posted films |
-| E12 | Facts ledger + script tags | **Living films.** When a source updates a number, the affected shots re-render; an auto "sources" end card cites them. | 🟡 `film.data` (2.17); living films: WP-27 |
-| E13 | Cast personality + gesture planner | **Characters that act in character** across films and agents: a shy character never points broadly. | ⬜ P1 · WP-10 |
-| E14 | Provenance hashes + determinism | **Verifiable content credentials.** Anyone can re-render and check a frame matches its signed recipe. | ⬜ P2 · WP-26 |
-| E15 | Usage recorded in `shots.json` | **Exact artist royalties.** Pay per second of screen time for each puppet, clip or set. | ⬜ P2 · WP-29 |
-| E16 | Series data across films | **Continuity memory.** The bible knows outfits, props and running gags, and the critic flags breaks. | ⬜ P2 · WP-28 |
+| E12 | Facts ledger + script tags | **Living films.** When a source updates a number, the affected shots re-render; an auto "sources" end card cites them. | ✅ `film.data` (2.17); `film.living` re-fetches, re-renders what changed and logs the update (WP-27) |
+| E13 | Cast personality + gesture planner | **Characters that act in character** across films and agents: a shy character never points broadly. | 🟡 WP-10 part 1: profiles in cast/profiles.json shape the planner (tempo, energy, gesture choice, eye contact, listening); a shy character never points; `acting.tag` validates an agent's gestures; stares push the camera in. A blind critic still prefers hand-keyed acting (26 to 17): emotion holds and listener reactions open |
+| E14 | Provenance hashes + determinism | **Verifiable content credentials.** Anyone can re-render and check a frame matches its signed recipe. | ✅ the signed recipe (data and engine hashes, frame keys); `film.verify` re-makes sample frames and compares (WP-26) |
+| E15 | Usage recorded in `shots.json` | **Exact artist royalties.** Pay per second of screen time for each puppet, clip or set. | ✅ `usage.report` (WP-29): seconds per puppet, clip, set, prop, icon, boil preset and voice across the whole catalogue, owners from the cast library and packs, payouts from royalty terms |
+| E16 | Series data across films | **Continuity memory.** The bible knows outfits, props and running gags, and the critic flags breaks. | ✅ `series.continuity` (WP-28): puppet and voice per role, props from introduction to loss, gags on cadence, knowledge order, length band |
 | E17 | Same acting → many renderers | **Style A/B tests.** Render one performance flat, Synfig-smooth or Grease Pencil-sketchy, then pick per audience or platform. | ✅ |
 | E18 | Data films + aspect ratios | **Re-blocked formats.** A 16:9 version re-stages characters and camera rather than cropping a 9:16 film. | ✅ (1.12) |
 | E19 | Ink-fidelity import + rigging + voice + shot data | **Doodle to series.** Any notebook doodle becomes a talking, acting series character in minutes, in the artist's own line. | ✅ `doodle.snap`, `doodle.keep` (3.6) |
@@ -328,11 +328,11 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 · WP-23 |
 | E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | 🟡 planner and orchestrator (3.7, 3.8); calendar to storyboard to session in one command (`plan.brief` launch, WP-06); posting with an approval per post (WP-08) |
 | E25 | Beat grid + edit lists + native aspect layouts | **One production, a week of posts:** a full film, an episode series, teasers and both aspect ratios, without re-animating. | ✅ (2.14) |
-| E26 | Facts ledger + posting generator + corrections log | **One source of truth for every word.** Captions, pinned sources, alt text and pages all derive from the same claims, so a correction reaches every surface. | ⬜ P1 · WP-27 |
+| E26 | Facts ledger + posting generator + corrections log | **One source of truth for every word.** Captions, pinned sources, alt text and pages all derive from the same claims, so a correction reaches every surface. | ✅ `film.correct` by string key to voice, captions, bubbles, title, covers, credits, page and package (WP-27) |
 | E27 | Narration slots + sound-off master + voices | **Ship silent, voice later, dub anywhere:** any voice or language drops into the same timed slots. | ✅ (2.16) |
 | E28 | Misconception and dialogue formats + the cast | **Characters as learner and expert:** the format with the strongest published learning gains, natural for cartoons. | ✅ (2.15) |
 | E29 | Measured layout rules + films as data | **Layout auto-repair:** the agent moves and resizes text and pictures until frame fill, safe zones, type sizes and reading time all pass (extends E10). | ✅ (2.18) |
-| E30 | Brand kit + templates + deterministic renders | **Rebrand the whole catalogue:** a new identity re-renders every film, cover and post. | 🟡 brand inheritance (1.14); kits per channel (WP-32); re-rendering a whole catalogue in a new identity: WP-27 |
+| E30 | Brand kit + templates + deterministic renders | **Rebrand the whole catalogue:** a new identity re-renders every film, cover and post. | ✅ `catalogue.rebrand`: the channel's kit changed and its films, covers and packages re-made (WP-27) |
 | E31 | Analytics + idea bank + calendar | **A plan that re-ranks itself** on what actually performs, per platform. | ✅ `plan.rerank`: effects by ridge regression, every row explained (WP-31); rehearsed on simulated numbers, the first real use is Q2 2027 |
 
 ## 14. What not to build

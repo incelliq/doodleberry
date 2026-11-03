@@ -1,0 +1,426 @@
+{
+ "title": "Why is the sky blue?",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Why is the sky",
+     "blue?"
+    ]
+   },
+   "start": 0,
+   "end": 5.1,
+   "start_line": "hook",
+   "end_line": "hook",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1540,
+      "s": 1.15
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.888,
+        "end": 1.788,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 1.968,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 1.988,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Why is the sky",
+     "blue?"
+    ]
+   },
+   "start": 5.1,
+   "end": 16.278,
+   "start_line": "q1",
+   "end_line": "a1",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.322
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 5.3,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 6.23,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 16.078,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        5.3,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        8.517,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       16.378
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.322
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 8.267,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 11.904,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 8.667,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 9.579,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 10.929,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        5.15,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        8.667,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       8.567
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Why is the sky",
+     "blue?"
+    ]
+   },
+   "start": 16.278,
+   "end": 36.072,
+   "start_line": "q2",
+   "end_line": "button",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.327
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 16.534,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 17.404,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 32.144,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_R",
+        "start": 32.544,
+        "end": 33.444,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        16.478,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        19.25,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        32.544,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       32.444
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.327
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 19.0,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 22.213,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.463,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 27.263,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 28.163,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 24.588,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 34.622,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        16.328,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        19.4,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        32.394,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       19.3,
+       34.922
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "series": {
+  "id": "ask-ravi",
+  "episode": 1
+ }
+}

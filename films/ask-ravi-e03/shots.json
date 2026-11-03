@@ -1,0 +1,452 @@
+{
+ "title": "What is a light-year?",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "What is a",
+     "light-year?"
+    ]
+   },
+   "start": 0,
+   "end": 5.1,
+   "start_line": "hook",
+   "end_line": "hook",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1540,
+      "s": 1.15
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.906,
+        "end": 1.806,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 2.481,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L",
+        "at": [
+         0,
+         0
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "What is a",
+     "light-year?"
+    ]
+   },
+   "start": 5.1,
+   "end": 16.722,
+   "start_line": "q1",
+   "end_line": "a1",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 6.225,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 6.795,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 16.522,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        5.3,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        9.85,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       16.822
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 9.6,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 11.217,
+        "end": 12.617,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 13.747,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        5.15,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        10.0,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       9.9
+      ]
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L",
+        "at": [
+         0,
+         0
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "What is a",
+     "light-year?"
+    ]
+   },
+   "start": 16.722,
+   "end": 34.294,
+   "start_line": "q2",
+   "end_line": "button",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 16.922,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 29.922,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 30.322,
+        "end": 31.722,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "look": [
+       [
+        16.922,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        19.25,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        30.322,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       30.222
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 19.0,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 21.379,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 25.354,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.4,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 20.454,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 32.844,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "look": [
+       [
+        16.772,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        19.4,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        30.172,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       19.3,
+       33.144
+      ]
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L",
+        "at": [
+         0,
+         0
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "series": {
+  "id": "ask-ravi",
+  "episode": 3
+ }
+}

@@ -563,6 +563,364 @@ exports made with known effects: space & physics x2, the tool sweep x0.57, local
 ideas entering, 35 moving and 8 leaving, every row explained and plan.check passing. Q2 2027's real calendar is planned
 with `plan.rerank {"quarter": "2027-Q2"}` once Q1's posts have their 48-hour numbers (from April 2027).
 
+## Provenance, disclosure and consent (WP-26)
+**Content credentials.** Every `film.render` signs its finals (`film.sign`; shots.json `"sign": false` to skip): a
+C2PA manifest (c2pa-python) embedded in final.mp4 and final_ad.mp4 with `c2pa.actions.v2` (created by Doodleberry;
+IPTC digital source type `compositeWithTrainedAlgorithmicMedia` when a synthetic voice or model shaped the film,
+else `digitalCreation`), `stds.schema-org.CreativeWork` (title, channel), `c2pa.training-mining` (generative training,
+training, inference and data mining: not allowed), `org.doodleberry.provenance` (each voice with its licence status
+and consent basis, models that touched the picture, the disclosure text) and `org.doodleberry.recipe` (E14: sha256 of
+shots, script, timing, data, facts, score and sound; of every engine file; the commit; the hash of all frame keys and
+twelve sampled frames' keys). The signer is the studio's own chain, made on first use in the production registry's
+`keys/` (never in git): a root CA and an ES256 signing certificate it issues, with digitalSignature and the
+document-signing and email-protection usages (C2PA refuses self-signed signers). `build/trust_anchors.pem` (the root)
+is written beside each signed film. Read back with **c2patool 0.27.22**, the reference tool (`bash tools/setup.sh
+provenance`): Trusted with the root as a trust anchor (`assertion.bmffHash.match`, `claimSignature.validated`,
+`signingCredential.trusted`); without it, Valid with `signingCredential.untrusted` (a certificate from a CA on the
+C2PA trust list can replace the studio's). A copy with 64 bytes changed reads Invalid (`assertion.bmffHash.mismatch`);
+the QA check `content_credentials` holds every render to Trusted.
+
+**Recipes** (`film.verify`): the credentials, then the recipe against the film as it is now: which data and engine
+files differ from what was signed, and the twelve signed frames re-made in the player (`tools/frame_keys.mjs`, the
+same markup hashing as the renderer, plate included) composed into film-frame keys as the render composes them. On
+nib-hello all twelve match; after the sign's text changes, shots.json is named and none match.
+
+**Disclosure** (`film.disclosure`, in `film.package`'s posts and package.json): each platform's setting, on or off,
+whether required, and the caption line saying what is synthetic, from `dbe/disclosure.json`, whose rules were read
+from each platform's help page on 3 November 2026: YouTube's "AI use" is required only for realistic content
+(animation exempt; C2PA content may be labelled automatically); Meta requires its AI label on "realistic-sounding
+audio", naming a reel narrated with a realistic AI voiceover, so Instagram and Facebook get it for our synthetic
+narration; LinkedIn shows a C2PA icon; TikTok's and X's pages could not be read here and are marked unverified
+(TikTok's label is turned on with any synthetic voice, cautiously).
+
+**Consent** (`consent.add`, `consent.revoke`, `consent.check`; `consent/records.json`): a record says who, a voice or
+a likeness, which uses (commercial or not, platforms), from when, until when, and the hash of the signed form kept off
+git. voice.build checks every voice before its licence: a stock synthetic voice stands on its licence; a voice made
+from a person (registry `kind` clone, person or recording) needs a live record named in its `consent`, and a puppet
+depicting a real person (`meta.likeness`) the same; nothing waives it (`allow_restricted_voices` concerns licences
+only). The `provenance` test: a cloned voice with no record is refused, allowed once recorded, refused once revoked; a
+record that starts tomorrow is not yet in force.
+
+## Corrections, companions and living films (WP-27)
+**One correction, everywhere** (`film.correct {"name", "key", "to", "why", "kind", "credit"}`): the text is changed by
+its key (the keys `film.strings` lists: `line:<id>`, `shot:<id>:overlay:<n>:<field>`, `titles:<n>`, `thumb:<n>:top`,
+and `fact:<id>` for a claim), logged in `films/<name>/corrections.json` with the date, what it said, what it says,
+why, its kind (error, update, clarification) and who reported it, and carried to every surface: a line is re-voiced
+and the film re-rendered (voice, burned-in and sidecar captions, its bubble: a line's own bubble text gives way to the
+corrected line), a title or thumbnail line updates titles.json and the covers, the credits gain a dated corrections
+section with thanks, the film's page (`film.page`, build/page/index.html: title, film, what it says, sources, credits,
+the log with "what we got wrong" apart from updates and clarifications) shows it, and the posting package is remade.
+Each surface is read back: the QA checks, the corrected words on screen by OCR (film.text_check), the title in
+titles.json, the reason in the credits and on the page. A correction may not change a `{{...}}` data binding: wrong
+numbers are corrected in the data (film.data).
+
+**Companion guides** (`film.companion`): build/companion/ holds the film's analysis (scripts, sources.json, cached
+source files), numbers.json (every number the film shows or says, with where: each binding in its lines and on
+screen, every value of its charts) and guide.py with guide.md (the same, readable): it re-runs the analysis in a
+scratch folder, checks each cached source against the sha256 recorded when the film was made, and prints every number
+beside the number it gets. data-demo's guide finds its 8 numbers and reproduces all of them; with a cached source
+changed it reports the sha256 mismatch and the numbers that differ.
+
+**Living films** (`film.living`): the film's sources fetched again and its analysis re-run (film.data refresh); when
+a number the film uses changes, the lines that say it are re-voiced, the shots that show it re-rendered, and a dated
+update naming the numbers is logged (page and credits). **Send-a-myth** (`plan.intake`): a viewer's myth enters the
+idea bank as an evergreen myth-vs-data idea with status `intake` (no sources yet, so the scheduler leaves it until
+research fills it in), credited to the sender if named; the same myth again is counted on the idea, not added.
+**Rebrand** (`catalogue.rebrand`, E30): the channel takes another brand kit and every film on the old kit (or the
+house kit) moves to it and is re-rendered with its covers and package. The `living` test covers all of it on scratch
+copies.
+
+## Series production (WP-28)
+A series is data in `series/<id>/`: **bible.json** (the format, a `film.from_template` one; the cast by role, each
+with its puppet and voice; the posting cadence; the **props** that persist, each with an owner, the episode it first
+appears in and the one it is lost in, its drawing and where it is held; the **running gags**, each a line for a role
+and/or an acting direction with a cadence, every n episodes from one; and what the characters **learn**, a fact with
+keywords and the episode a role learns it in) and **briefs.json** (each episode's title, topic, exchanges and facts
+with their sources and quotes).
+
+- `series.plan` gives each episode its number, its posting date from the cadence, the gags due, the props it carries
+  and what each role knows by then (series/<id>/episodes.json) and writes schedule.ics.
+- `series.make` makes each episode's film from the format and its brief, with the gag lines in place (an expert's
+  rides on the last answer, a learner's before the button) and the persisting props held by their owners in every
+  shot they are in. It writes the episode's research_log.md from its sources and the gate review, then voices, acts
+  (the gesture planner, then the gags' acting directions) and renders. Continuity is then checked across every
+  episode made.
+- `series.gate` records a fresh fact-gate reviewer's verdicts per episode in series/<id>/gate.json, each tied to a
+  hash of the facts it read. A verdict is carried to an episode's ledger only while those facts are unchanged; a
+  changed fact needs a new review. Renders refuse an episode without a clearance (the research gate), as for any film.
+- `series.continuity` (E16) reads the films themselves, so a hand edit is checked too:
+  - the same puppet and voice for a role in every episode;
+  - each persisting prop on screen with its owner from the episode it appears in until it is lost, and never before
+    or after;
+  - gags on their cadence;
+  - nobody speaking of a fact before the episode they learn it, and the learner not asking again;
+  - every episode within the length band.
+- `teach.tutorial` turns a film's pipeline into a step-by-step tutorial (build/tutorial/index.md): the brief, the
+  script, each character's model sheet, the voice, the acting, a frame of every shot, and the command behind each step.
+
+**Ask Ravi** (`series/ask-ravi`) is ten weekly episodes on sky questions, each sourced from a NASA Space Place page.
+It posts Thursdays from 7 January 2027. Momo carries a notebook from episode 2 and Ravi a star map in episodes 5 to 8.
+Momo's notebook line runs every episode from 2 and Ravi's "Big word, small idea" every third. Momo learns what a
+light-year is in 3 and what an orbit is in 6. The `series` test plans it, finds no break in the ten films as made, and
+catches each of eight planted breaks: a re-voiced Ravi, a re-drawn Momo, the star map before it appears and after it
+is lost, a missing notebook, a fact used before it is learnt, a gag off its cadence, and a question asked again.
+
+## Library economics and creator packages (WP-29)
+**Screen time per asset** (`usage.report`, E15) reads every film's shots.json and counts seconds for each:
+- **puppet**: the shots it is in;
+- **clip**: from its start to its end, its own length, or the shot's end for a loop;
+- **set**, **prop**, overlay **icon**, and **boil** preset (style.boil_preset);
+- **voice**: while its lines are spoken.
+
+Overlapping uses in one film count once. A hand-coded film (scene.js, no shots.json) is one **scene** asset for its
+length, and its voices are counted from its timing. A film still on narration slots counts its picture but no voice,
+and is listed as planned.
+
+Owners come from:
+- the cast library (rights owner, or author) for puppets;
+- the pack that installed a clip or preset (puppet/clips/packs.json);
+- the voice registry for voices;
+- the house, for everything else.
+
+The report covers the whole catalogue (44 films when it was written). It names unregistered puppets and pays them nothing. It
+writes out/usage/usage.json and usage.csv. With rates (per second by owner, else an asset's own royalty terms, else
+by kind) it gives each owner's payout.
+
+**Contributors** come in through `cast.add`, with their name as the rights owner, their licence, a `contact`, and
+`royalty` terms ({per_second, currency}), which the usage report pays.
+
+**Creator packs** (`pack.make`, `pack.install`; dbe/packs.py) are zips with pack.json: the kind, id, version,
+author, licence, royalty, what they need (template, puppet format) and a sha256 for every file.
+- A **rig** template (a rigged .puppet.json) installs into cast/packs/<id>/. It is linted there with the receiving
+  project's own loader and template, then registered in that project's cast library with the pack it came from.
+- A **loop pack** (clips for a template) installs into that template's clip library (puppet/clips/<template>.json and
+  .js, which the bake and every renderer read), each clip marked with its pack. A clip name already taken by
+  something else is refused.
+- A **boil preset** installs into presets/boil/ and is put on a film's shots with `boil.apply`, which records it so
+  its use is counted.
+
+A pack changed after it was made fails its hash and is refused.
+
+The `library` test checks the catalogue report, a contributor's payout, and three packs made here and installed into
+a second checkout (a git worktree in out/). There, its own `cast.list` lists the rig and its own bake.mjs plays the
+installed hop loop on the installed rig (the torso swings 0 to 9 degrees on the clip's beat). Both projects credit
+all three to their author with the pack's royalty, and a tampered pack and a clashing clip are both refused.
+
+**Handwriting fonts.** `font.sheet` prints an A4 sheet at 300 dpi: one box per character with its label, a
+baseline and an x-height line in a light blue that drops out of a scan, and corner squares for registration.
+`font.from_samples` takes the filled sheet, scanned or photographed:
+1. finds the corner squares and warps the page back to the sheet;
+2. keeps each box's ink (the guides fall below the threshold) and removes specks;
+3. traces each box with potrace (vendored 1.16, built by `vendor.build`);
+4. places each glyph on its box's baseline at the font's x-height, with bearings from its ink;
+5. builds an OpenType (CFF) font with fontTools, crediting the artist in the name table, and writes a preview.
+
+The `handfont` test uses synthetic samples. It fills a sheet with Patrick Hand glyphs (OFL), jittered and
+photographed at an angle with tint, noise and blur. Every character comes back, and each glyph matches its sample
+as written: mean shape IoU 0.89, worst 0.77. Letters sit on the baseline (median bottom 3.5 units) and x reaches
+476 of the 500-unit x-height.
+
+## Other mediums (WP-30)
+Each export works from the film's data alone.
+
+**Comics and storybooks** (`film.comic {"name", "kind": "comic" | "storybook"}`, dbe/comic.py, Typst 0.14 through
+typst-py):
+- Every voiced line becomes a panel: the player's frame at 60% of the line, drawn without its speech bubbles or
+  captions (`?bubbles=0`). It is cropped at 4:3 around the characters, with room above the highest head.
+- The line is set as a balloon whose tail points at the speaker's head (the player reports each head's screen
+  position in `window.HEADS`); a narrator's line is set as a caption box. A shot with no lines gets a silent panel.
+- A comic puts six panels on an A4 page in Patrick Hand. A storybook puts a title page and then one picture per square
+  page, with the words below in prose ("..." said Momo).
+- The PDF is read back: every line's words must be in it, with one picture per panel.
+
+**Interactive web films** (`export.interactive`, dbe/player/interactive.js): the player draws the film live beside a
+panel built from its data:
+- chapters, one per shot;
+- the transcript, highlighted word by word (tap a line to hear it);
+- a pause after every question, with "What do you think? Have a guess, then hear the answer";
+- each line's source from facts.json, and the list of sources.
+
+Scripts, the Fredoka font and the soundtrack are inlined or copied beside the page. `window.IFILM` exposes seek, play,
+pause and state, and the export is driven in Chromium to check it (tools/interactive_check.mjs). Building it also
+fixed `export.web`: since the world-script fonts arrived (WP-25) its page linked fonts by a path that does not
+resolve from build/web/, so the page never became ready. The fonts are now copied beside the page.
+
+**Godot** (`export.godot`, dbe/godot_export.py) writes a Godot 4.5 project:
+- a scene per shot: the set as a plate, every part and swap drawing as a Sprite2D whose texture is that drawing as an
+  SVG in the puppet's artboard, and an AnimationPlayer with a transform track per drawing from the bake (camera folded
+  in), plus visibility and z_index tracks where swaps, views or layer order change;
+- main.tscn with a script that plays the shots in order with the sound (Ogg Vorbis).
+
+The project was not opened in Godot here: running a downloaded engine binary was not permitted in this environment.
+Instead, an independent reader of the .tscn evaluates the tracks and composes three frames, which renderer parity's
+measures compare with the player's frames. pip-park s1 scores a line F-score of 1.0 and a filled-silhouette IoU of
+0.92 to 0.97 (a one or two pixel shift from the player's springs), with colour within 12.
+
+The `mediums` test covers dialogue-demo as a comic and an interactive film, and pip-park as a storybook and a Godot
+project.
+
+## Team roles and permissions (WP-39)
+Every command goes through one check (`dbe.call`, dbe/team.py) whichever door it comes in by.
+
+**Who is acting**: the CLI and the MCP server read `DBE_AS`; the HTTP API reads the `X-DBE-As` header. The value is
+`"<id>"`, or `"<id>:<role>"` to act in one of that person's roles. team/people.json lists the people and agent sessions
+(`team.add`); each agent session gets its own id and role. With no people file and nobody named, the local user is the
+owner, so one person working alone loses nothing.
+
+**Roles** (team/roles.json) are command patterns, plus the read commands everyone has:
+- owner: everything;
+- director: everything except consent records, environment builds and team membership;
+- artist: characters, levels, drawing, fonts, packs and stickers;
+- reviewer: notes, critic packs and gate verdicts;
+- editor: renders, cuts, sound, exports and delivery.
+
+Sign-off commands (post.approve and revoke, prod.approve and decide, film.sign, series.gate) run only for roles that
+list them. `post.approve` records the acting person's name.
+
+**Assignments and locks** (team/state.json, machine-local) apply to a film or a character:
+- `team.assign`: only the assignees, the owner and directors may then change it;
+- `team.lock`: only the holder may change it until `team.unlock`; the owner may break a lock.
+
+A command's target comes from its arguments: a film's `name`, a puppet `path`, or a cast `id`.
+
+**Audit** (team/audit.jsonl, machine-local; `team.audit` filters it): every change and every refusal is logged with
+time, who, role, door (cli, http or mcp), command, target, an argument digest and the result. Reads are not logged.
+Internal steps of an allowed command run as part of it.
+
+The `team` test checks, in a scratch team folder:
+- an artist saves a character, but post.approve ("signs something off") and film.render are refused;
+- a director's approval passes the check;
+- a lock stops another artist until the owner breaks it;
+- an assignment keeps the other editor off nib-hello;
+- an unknown name is refused;
+- over HTTP, the header names the artist;
+- the audit holds all 15 changes and refusals and no reads.
+
+## The director's desk (WP-21)
+`desk.say {"name", "text", "apply"}` reads notes in plain English, sentence by sentence (dbe/desk.py). It routes each
+one to the commands that make the change:
+
+| kind | say | what changes |
+|---|---|---|
+| line | "Change Ravi's first line to "..."" | script.json; the voice is rebuilt, the shots re-timed and the acting re-planned |
+| timing | "Hold shot 2 a second longer", "Make shot 1 half a second shorter" | a pause after the shot's last line, or the tail of the last shot |
+| camera | "Push in on shot 1", "Go wider on the last shot" | the shot's auto-camera framing (hand-set camera keys are left for the timeline) |
+| set | "Put shot 2 in the park" | the shot's set (one of the known sets) |
+| music | "Make the music calmer", "livelier" | the score's tempo, 14 bpm a step, kept between 70 and 140 |
+| acting | any sentence naming a character and an action | `acting.direct` |
+| preview | "Show me" | the storyboard and animatic |
+
+A sentence of no known kind comes back as not understood. Nothing is guessed.
+
+With `apply` false, the desk only says what it would do (a dry run). Every routed command runs as the person or agent
+at the desk (WP-39), and the first refusal stops the rest. Each exchange is kept in films/<name>/desk.json: what was
+said, understood, run, refused and not run. Studio `/desk` puts the notes beside the storyboard strip and the animatic,
+with an "Acting as" field (the `X-DBE-As` header).
+
+Roles for the specialist agents (team/roles.json):
+- animator: acting, timeline, act it out, physics, shot renders and previews;
+- critic: notes, critic packs, critic rounds, QA reads;
+- fact-checker: research, gate verdicts, `series.gate`, corrections and living data.
+
+The `desk` test uses a copy of dialogue-demo. The director's three notes change Ravi's line (re-voiced: timing.json
+has the new words), the shot's length, its camera, its set (the park), the music (96 to 82 bpm) and Priya's acting
+(a shrug), then make the storyboard and animatic. "Make everything purple" is not understood. The artist's note to
+change a line is refused at `film.write`, and nothing after it runs. Each of the seven roles is refused one command
+outside its subset.
+
+## Act it out 2 (WP-12)
+- **Head turn.** The nose's offset between the ears (or the eyes) gives the performer's yaw in the picture. About 45
+  degrees counts as a full turn, and looking toward the right of the picture is positive. For a character with a
+  `turn` control, the yaw becomes a **clip control track** (`"controls": {"turn": [[t, v], ...]}`, puppet format
+  v0.10). While the clip plays, the track is weighted like an additive layer and added to the timeline's own control
+  keys. Controls resolve into angles, shifts, swaps and layer order inside acting.js, so the bake and every renderer
+  follow. Puppets that gain a clip with controls are marked v0.10.
+- **A moving camera** (`stabilize`: auto, on or off). Corners outside every person's box are tracked frame to frame
+  and back (pyramidal Lucas-Kanade; tracks that do not return within half a pixel are dropped). The median motion of
+  the rest is the camera's, which `stabilize` subtracts from every point, so the root's travel is the performer's
+  own. A frame with less than a fifth of the picture outside the people, or fewer than 20 good tracks, is not
+  trusted. "auto" takes the motion out only when it is over 20 px and at least 80% of frames are trusted; otherwise
+  it says the camera was taken as still.
+- **Several people** (`people`: up to 4). `detect` keeps every pose and `split_people` follows each person's hips and
+  shoulders from frame to frame (the closest assignment over all orderings), numbering people left to right as first
+  seen. Each person becomes a clip (`<name>`, `<name>_2`, ...), on `puppets` if given.
+
+The `actout2` test uses synthetic takes:
+- A head turn comes back as a turn track (mean error 0.04), and Pip's bake turns its face 15 px at the peak.
+- A 240 px pan, drawn as video over a textured background, is recovered to within 0.75 px. Root travel is 265 px
+  raw and 2.7 px once stabilised.
+- Two people, listed in shuffled order, come back as their two clips (1.1 and 1.2 degrees).
+
+A real take of a performer filling the frame in front of a plain wall gives a turn range of -0.74 to 0.06. Its camera
+estimate is refused (0% of frames trusted) rather than guessed: the earlier phase-correlation version had read 433 px
+of motion that was not there.
+
+## Acting intelligence 2 (WP-10, part 1)
+**Personality profiles** (cast/profiles.json, E13) shape the gesture planner (`acting.plan`):
+- tempo (gesture speed) and energy (beat size and gain);
+- the least gap between gestures and beats per words;
+- what an exclamation, a question and a point become (a shy character only glances);
+- how strongly it nods while listening, and how far its eyes drift off the speaker;
+- clips it never plays, and its reaction in a stare.
+
+`neutral` keeps the planner's earlier gesture choices. The others are shy, excitable, calm, grumpy and thoughtful.
+Every profile now also holds the emotion each line's words carry on the face, and has listeners react to it. A character's
+profile comes from the film (`script.json` `speakers.<id>.profile`), its puppet (`"acting": {"profile": ...}`) or its cast entry
+(`cast.profile`).
+
+**Semantic gestures** (`acting.tag`): an agent tags words with gestures by meaning (big, think, no, yes, wow, oops,
+cheer, unsure, point, present, ...) or by clip name. Each tag is checked against what the character can play (its
+template's library and its own clips, through the semantic table for its template) and against its profile, and
+refused with the reason and the valid names. Accepted tags are kept on the script's lines, and the planner places
+them on their words before anything else.
+
+**Camera beats in gags**: a stare is a line marked `"beat": "stare"`, or, with `gag_beats` in the script, a pause of
+0.8 s or more after an exclamation, question or trailing off. During it the auto camera holds on whoever reacts and
+pushes in (`camera_auto.beats`), and the reactor plays its profile's reaction clip.
+
+**A blind critic** (`critic.blind_pair`): two versions of a scene as contact sheets at the same moments, ordered by a
+coin, with the key kept outside the packet.
+
+The `acting2` test uses copies of dialogue-demo:
+- With the profiles swapped, Ravi moves 4.7 against 1.6 and Priya 8.2 against 1.7 (mean angle change per frame,
+  excitable against shy), and a shy character never points, opens its palms or celebrates.
+- Of three tags, "big" is placed on its word, "point" on shy Priya is refused, and "moonwalk" is refused.
+- A marked stare pushes the camera in on Ravi from zoom 1.9 to 2.45.
+
+The blind pair was **lost** twice, each time judged by a different fresh critic. clips-demo (hand-keyed) was set
+against the planner, with an excitable Momo, a calm Ravi and three agent tags.
+- **Round 1 (26 to 17):** the planner put the jump on "I did it!" and the sad tilt on "Oh no", but left both
+  characters near neutral between gestures, held no emotion and gave the listener no reaction.
+- **Changes after round 1:** the planner now reads each line's emotion from its words and holds it on the face
+  through and after the line. Listeners mirror it and react (consoling a sad line, clapping a happy one).
+- **Round 2 (25 to 19):** better, but a body preset per emotion read as a stiff held pose, and a hand on the tail gave
+  the gag away. The presets were then removed; that version has not been judged.
+
+The verdicts are in out/critic/blind_keys/.
+
+## Sound depth (WP-13, part 1)
+**Footsteps by surface.** engine/audio.py synthesises a step for each floor:
+- grass: a soft-onset brush of noise and almost no thump;
+- tile: a hard heel click with a ringing tile body;
+- wood: a hollow knock around 250 Hz;
+- concrete: a dull thump and a gritty scuff;
+- carpet: only a muffled thump.
+
+Automatic foley tags each step cue with its shot's set's surface (sets/acoustics.json).
+
+**A room per set.** Each set names a room (outdoors, small room, classroom, clinic, hall: a reverb time and how wet
+effects and voices are). The mix feeds each room's reverb only its own stretch of the film, with 0.05 s crossfades,
+so a hall's tail rings on past a cut into the park. A film whose sets have no entry is mixed exactly as before.
+
+The `sound2` test:
+- Eight steps per surface, compared by log-mel spectrum: every pair is told apart by 25 to 152 times the steps' own
+  spread, and grass brushes in over 6 ms where tile clicks in 0.1 ms.
+- The outdoor room falls 30 dB in 0.16 s, the hall in 0.68 s.
+- In a foley-enabled copy of pip-park, all of Pip's steps land on grass and the park's outdoor room goes to the mix.
+
+Open: recorded voice-over into slots, checked against hand-marked timings; Kenney CC0 samples (the site refused
+automated downloads); prosody direction.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

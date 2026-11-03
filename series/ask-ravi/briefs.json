@@ -1,0 +1,495 @@
+{
+ "note": "ten episode briefs; facts from NASA Space Place pages; quotes are the pages' words (segments joined by ' … '), revised after the first fact-gate review (2026-11-03), which found four quotes not on their pages",
+ "episodes": [
+  {
+   "title": "Why is the sky blue?",
+   "topic": "the blue sky",
+   "exchanges": [
+    {
+     "q": "Why is the sky blue, Ravi?",
+     "a": "Air scatters blue light more than reds and yellows, so blue reaches us from every direction.",
+     "fact": "f1"
+    },
+    {
+     "q": "Then why are sunsets orange?",
+     "a": "At sunset the light crosses much more air. Even more of the blue is scattered away, and the reds and yellows come straight through.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "Air molecules scatter blue light in all directions, more than other colours, so the sky looks blue.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+      "title": "NASA Space Place: Why is the sky blue?",
+      "quote": "Blue light is scattered in all directions by the tiny molecules of air in Earth's atmosphere. Blue is scattered more than other colors because it travels as shorter, smaller waves."
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "At sunset light passes through more air; more blue is scattered, leaving reds and yellows.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+      "title": "NASA Space Place: Why is the sky blue?",
+      "quote": "As the Sun gets lower in the sky, its light is passing through more of the atmosphere to reach you. … Even more of the blue light is scattered, allowing the reds and yellows to pass straight through to your eyes."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "Why is the sky blue?",
+     "Why are sunsets orange when the sky is blue?"
+    ],
+    "thumbnails": [
+     {
+      "top": "WHY IS IT BLUE?",
+      "bottom": "AIR SCATTERS BLUE"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "Does the Moon really change shape?",
+   "topic": "the Moon's shape",
+   "exchanges": [
+    {
+     "q": "Why does the Moon change shape?",
+     "a": "It doesn't. The Moon only reflects sunlight, and we see more or less of its lit side as it goes around us.",
+     "fact": "f1"
+    },
+    {
+     "q": "How long until it looks the same again?",
+     "a": "About twenty-nine and a half days from one new moon to the next.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "The Moon's shape does not change; it makes no light, and our view of its sunlit part changes as it goes around Earth.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/moon-phases/en/",
+      "title": "NASA Space Place: Moon phases",
+      "quote": "The shape of the Moon isn’t changing throughout the month. … The Moon does not produce its own light. … What you may have heard referred to as “moonlight” is actually just sunlight reflecting off of the Moon’s surface. … On Earth, our view of the illuminated part of the Moon changes each night, depending on where the Moon is in its orbit, or path, around Earth."
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "From one new moon to the next takes about 29.5 days.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/moon-phases/en/",
+      "title": "NASA Space Place: Moon phases",
+      "quote": "it takes about 29.5 days to go from one new moon to the next new moon."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "Does the Moon really change shape?",
+     "Why does the Moon look different each night?"
+    ],
+    "thumbnails": [
+     {
+      "top": "MOON CHANGES?",
+      "bottom": "IT DOESN'T"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "What is a light-year?",
+   "topic": "distances in space",
+   "exchanges": [
+    {
+     "q": "What's a light-year? Is it a long time?",
+     "a": "It's a distance: how far light travels in one year. About nine trillion kilometres!",
+     "fact": "f1"
+    },
+    {
+     "q": "So far stars are...",
+     "a": "Seen as they were long ago. Light from some stars left them thousands of years ago. Looking far is looking back in time.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "A light-year is the distance light travels in a year, about 9 trillion km.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/light-year/en/",
+      "title": "NASA Space Place: What is a light-year?",
+      "quote": "about 6 trillion miles (9 trillion km)"
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "Distant objects are seen as they were in the past; some stars we see are thousands of light-years away.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/light-year/en/",
+      "title": "NASA Space Place: What is a light-year?",
+      "quote": "When we use powerful telescopes to look at distant objects in space, we are actually looking back in time. … The farther an object is, the farther in the past we see it. … All of the other stars we can see with our eyes are farther, some even thousands of light-years away."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "What is a light-year?",
+     "Is a light-year a time or a distance?"
+    ],
+    "thumbnails": [
+     {
+      "top": "A LIGHT-YEAR IS...",
+      "bottom": "A DISTANCE"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "How hot is the Sun?",
+   "topic": "the Sun",
+   "exchanges": [
+    {
+     "q": "How hot is the Sun inside?",
+     "a": "Its core gets as hot as twenty-seven million degrees Fahrenheit.",
+     "fact": "f1"
+    },
+    {
+     "q": "Why is it so hot?",
+     "a": "It's so big that its gravity squeezes the hydrogen inside really hard. The hydrogen smashes together and turns into helium, and that gives off energy.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "The Sun's core gets as hot as 27 million degrees Fahrenheit.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/sun-heat/en/",
+      "title": "NASA Space Place: Where Does the Sun's Energy Come From?",
+      "quote": "as hot as 27 million degrees Fahrenheit"
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "The Sun is so big that its gravity and pressure make hydrogen atoms collide and fuse into helium, releasing energy.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/sun-heat/en/",
+      "title": "NASA Space Place: Where Does the Sun's Energy Come From?",
+      "quote": "The short answer is that it is big. … the hydrogen atoms collide with enough force that they literally meld into a new element—helium. This process—called nuclear fusion—releases energy"
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "How hot is the Sun inside?",
+     "Why is the Sun so hot?"
+    ],
+    "thumbnails": [
+     {
+      "top": "THE SUN'S CORE",
+      "bottom": "27 MILLION °F"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "What is a shooting star?",
+   "topic": "shooting stars",
+   "exchanges": [
+    {
+     "q": "Is a shooting star a falling star?",
+     "a": "No. It's a space rock rushing into our air. The bright streak is the glowing hot air as the rock zips through.",
+     "fact": "f1"
+    },
+    {
+     "q": "And a meteor shower?",
+     "a": "That's when Earth meets lots of those rocks at once.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "A shooting star is a space rock entering the atmosphere; the bright streak is the glowing hot air around it.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/meteor-shower/en/",
+      "title": "NASA Space Place: What is a meteor shower?",
+      "quote": "A meteor is a space rock—or meteoroid—that enters Earth's atmosphere. … That bright streak is not actually the rock, but rather the glowing hot air as the hot rock zips through the atmosphere."
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "When Earth meets many meteoroids at once, it is a meteor shower.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/meteor-shower/en/",
+      "title": "NASA Space Place: What is a meteor shower?",
+      "quote": "When Earth encounters many meteoroids at once, we call it a meteor shower."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "What is a shooting star?",
+     "Is a shooting star really a star?"
+    ],
+    "thumbnails": [
+     {
+      "top": "SHOOTING STAR?",
+      "bottom": "A SPACE ROCK"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "Why don't satellites fall down?",
+   "topic": "orbits",
+   "exchanges": [
+    {
+     "q": "What's an orbit?",
+     "a": "A regular, repeating path one thing takes around another in space.",
+     "fact": "f1"
+    },
+    {
+     "q": "Why doesn't the Space Station fall?",
+     "a": "It is always falling! But it moves sideways so fast that it keeps missing Earth. It goes round in about ninety minutes.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "An orbit is a regular, repeating path one object in space takes around another.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/orbits/en/",
+      "title": "NASA Space Place: What is an orbit?",
+      "quote": "a regular, repeating path that one object in space takes around another one"
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "A satellite is always falling toward the planet but moves sideways fast enough to miss; the ISS circles Earth in about 90 minutes.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/orbits/en/",
+      "title": "NASA Space Place: What is an orbit?",
+      "quote": "When these forces are balanced, the object is always falling toward the planet, but because it's moving sideways fast enough, it never hits the planet. … The International Space Station is in low Earth orbit, or LEO. … One complete orbit in LEO takes about 90 minutes."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "Why don't satellites fall down?",
+     "Why doesn't the Space Station fall?"
+    ],
+    "thumbnails": [
+     {
+      "top": "WHY NO FALL?",
+      "bottom": "ALWAYS FALLING"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "Why do we have seasons?",
+   "topic": "seasons",
+   "exchanges": [
+    {
+     "q": "Is it summer when we're close to the Sun?",
+     "a": "No. Earth's tilt makes the seasons. When our half leans towards the Sun, it's summer.",
+     "fact": "f1"
+    },
+    {
+     "q": "So when are we closest?",
+     "a": "In January! That's winter in the north.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "Earth's tilted axis causes the seasons, not its distance from the Sun.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/seasons/en/",
+      "title": "NASA Space Place: What causes the seasons?",
+      "quote": "Earth's tilted axis causes the seasons"
+     },
+     "status": "checked"
+    },
+    "f2": {
+     "claim": "Earth is closest to the Sun in January, winter in the Northern Hemisphere.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/seasons/en/",
+      "title": "NASA Space Place: What causes the seasons?",
+      "quote": "perihelion (when we are closest) occurs in January"
+     },
+     "status": "checked"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "What causes the seasons?",
+     "Is summer when Earth is closest to the Sun?"
+    ],
+    "thumbnails": [
+     {
+      "top": "CLOSEST IN SUMMER?",
+      "bottom": "NO, IN JANUARY"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "What is a galaxy?",
+   "topic": "galaxies",
+   "exchanges": [
+    {
+     "q": "What's a galaxy?",
+     "a": "A huge collection of gas, dust and billions of stars, held together by gravity.",
+     "fact": "f1"
+    },
+    {
+     "q": "Do we live in one?",
+     "a": "Yes, the Milky Way. And there are so many galaxies, nobody can count them all yet!",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "A galaxy is a huge collection of gas, dust and billions of stars held together by gravity.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/galaxy/en/",
+      "title": "NASA Space Place: What is a galaxy?",
+      "quote": "A galaxy is a huge collection of gas, dust, and billions of stars and their solar systems, all held together by gravity."
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "We live in the Milky Way galaxy; there are so many galaxies that they cannot all be counted yet.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/galaxy/en/",
+      "title": "NASA Space Place: What is a galaxy?",
+      "quote": "It’s a small part of the Milky Way Galaxy. … There are so many, we can’t even count them all yet!"
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "What is a galaxy?",
+     "Is the Milky Way a galaxy?"
+    ],
+    "thumbnails": [
+     {
+      "top": "WHAT'S A GALAXY?",
+      "bottom": "THE MILKY WAY"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "What is an eclipse?",
+   "topic": "eclipses",
+   "exchanges": [
+    {
+     "q": "What happens in an eclipse?",
+     "a": "Something gets in the way of sunlight. In a solar eclipse, the Moon's shadow falls on Earth.",
+     "fact": "f1"
+    },
+    {
+     "q": "And a lunar eclipse?",
+     "a": "Earth gets in the way of the light reaching the Moon, so the Moon gets darker.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "In a solar eclipse the Moon blocks the Sun's light and casts its shadow on Earth.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/eclipses/en/",
+      "title": "NASA Space Place: Lunar Eclipses and Solar Eclipses",
+      "quote": "An eclipse happens when a planet or a moon gets in the way of the Sun’s light. … solar eclipse happens when the Moon gets in the way of the Sun’s light and casts its shadow on Earth."
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "In a lunar eclipse Earth blocks the sunlight reaching the Moon, and the Moon gets darker.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/eclipses/en/",
+      "title": "NASA Space Place: Lunar Eclipses and Solar Eclipses",
+      "quote": "During a lunar eclipse, Earth gets in the way of the Sun’s light hitting the Moon. … In a lunar eclipse, the Moon gets darker."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "What is an eclipse?",
+     "What happens in a solar eclipse?"
+    ],
+    "thumbnails": [
+     {
+      "top": "AN ECLIPSE IS...",
+      "bottom": "LIGHT BLOCKED"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  },
+  {
+   "title": "How long is a day on other planets?",
+   "topic": "days on other planets",
+   "exchanges": [
+    {
+     "q": "Is a day always twenty-four hours?",
+     "a": "Only on Earth! Mars takes twenty-five hours, and Jupiter spins round in just ten.",
+     "fact": "f1"
+    },
+    {
+     "q": "Which planet spins slowest?",
+     "a": "Venus! It takes five thousand eight hundred and thirty-two hours to spin round just once.",
+     "fact": "f2"
+    }
+   ],
+   "facts": {
+    "f1": {
+     "claim": "Earth spins in 24 hours, Mars in 25, Jupiter in 10.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/days/en/",
+      "title": "NASA Space Place: How long is one day on other planets?",
+      "quote": "Earth takes 24 hours to complete one spin, and Mars takes 25 hours. The gas giants rotate really fast. Jupiter takes just 10 hours to complete one rotation."
+     },
+     "status": "revised after gate review 1"
+    },
+    "f2": {
+     "claim": "Venus takes 5,832 hours to spin round once, the longest of the planets in NASA's table.",
+     "source": {
+      "url": "https://spaceplace.nasa.gov/days/en/",
+      "title": "NASA Space Place: How long is one day on other planets?",
+      "quote": "On Mercury a day lasts 1,408 hours, and on Venus it lasts 5,832 hours."
+     },
+     "status": "revised after gate review 1"
+    }
+   },
+   "packaging": {
+    "titles": [
+     "How long is a day on other planets?",
+     "Which planet spins the slowest?"
+    ],
+    "thumbnails": [
+     {
+      "top": "A DAY ON VENUS",
+      "bottom": "5,832 HOURS"
+     }
+    ],
+    "by": "series brief (written by Claude, checked by title.set)"
+   }
+  }
+ ]
+}

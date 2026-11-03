@@ -99,6 +99,11 @@ def check(deep=True):
     from . import physics as PHY   # WP-09: deterministic Rapier for physics.solve (an npm package in tools/physics)
     add("node package @dimforge/rapier2d-deterministic-compat", "tools", PHY.available(), False, str(PHY.PKG) if PHY.available() else "not installed",
         "bash tools/setup.sh physics   (deterministic Rapier 0.21: physics.solve, WP-09)")
+    from . import provenance as _PV   # WP-26: the C2PA reference tool reads back every signed final
+    add("c2patool (C2PA reference tool)", "tools", _PV.C2PATOOL.exists(), False, str(_PV.C2PATOOL) if _PV.C2PATOOL.exists() else "not installed", "bash tools/setup.sh provenance")
+    # WP-29: handwriting fonts trace with the vendored potrace (fontTools and typst are in requirements-tools.txt)
+    pot = ROOT / "out" / "vendor-build" / "potrace" / "bin" / "potrace"
+    add("potrace (vendored 1.16, built)", "tools", pot.exists(), False, str(pot) if pot.exists() else "not built", 'python -m dbe vendor.build \'{"name": "potrace"}\'   (font.from_samples)')
     import shutil as _sh   # WP-25: world languages: OCR read-back and voices beyond Kokoro's
     add("tesseract (OCR, film.text_check)", "tools", bool(_sh.which("tesseract")), False, _sh.which("tesseract") or "not installed", "bash tools/setup.sh locales")
     for vid, r in json.loads((ROOT / "voices" / "registry.json").read_text())["voices"].items():

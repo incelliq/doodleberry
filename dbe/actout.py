@@ -77,7 +77,7 @@ def frames(video, fps=30, start=0.0, duration=0.0, mirror=False, long_side=960):
     return arr, (W, H)
 
 
-def detect(video, fps=30, start=0.0, duration=0.0, mirror=False, face=True):
+def detect(video, fps=30, start=0.0, duration=0.0, mirror=False, face=True, people=1):
     """Keypoints for a take: {fps, size, frames: [{pose: [[x, y, visibility, depth] x 33] (pixels; depth from the hips,
     negative is nearer the camera) | None,
     face: {blendshape: score} | None}], timing}. Deterministic for a given file and options."""
@@ -91,7 +91,7 @@ def detect(video, fps=30, start=0.0, duration=0.0, mirror=False, face=True):
     t_dec = time.time() - t0
     VRM = vision.RunningMode.VIDEO
     pose_lm = vision.PoseLandmarker.create_from_options(vision.PoseLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=str(model_path("pose"))), running_mode=VRM, num_poses=1,
+        base_options=BaseOptions(model_asset_path=str(model_path("pose"))), running_mode=VRM, num_poses=max(1, int(people)),
         min_pose_detection_confidence=0.5, min_tracking_confidence=0.5))
     face_lm = vision.FaceLandmarker.create_from_options(vision.FaceLandmarkerOptions(
         base_options=BaseOptions(model_asset_path=str(model_path("face"))), running_mode=VRM, num_faces=1,
@@ -101,9 +101,12 @@ def detect(video, fps=30, start=0.0, duration=0.0, mirror=False, face=True):
         ts = int(round(i * 1000 / fps))
         r = pose_lm.detect_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(img)), ts)
         pose = None
-        if r.pose_landmarks:
-            pose = [[round(l.x * W, 2), round(l.y * H, 2), round(float(l.visibility if l.visibility is not None else 1.0), 3), round(l.z * W, 2)] for l in r.pose_landmarks[0]]
+        allp = [[[round(l.x * W, 2), round(l.y * H, 2), round(float(l.visibility if l.visibility is not None else 1.0), 3), round(l.z * W, 2)] for l in pl] for pl in (r.pose_landmarks or [])]
+        if allp:
+            pose = allp[0]
         fc = None
+        if people > 1:   # WP-12: every person found, in the detector's order (split_people keeps each one's identity)
+            out.append({"pose": pose, "people": allp, "face": None}); continue
         if face_lm is not None:
             crop = img
             if pose:   # the face is small in a full-body take: run the face model on a square crop around the head
@@ -122,6 +125,81 @@ def detect(video, fps=30, start=0.0, duration=0.0, mirror=False, face=True):
         face_lm.close()
     return {"fps": fps, "size": [W, H], "mirror": bool(mirror), "start": start, "frames": out,
             "timing": {"decode_s": round(t_dec, 2), "detect_s": round(time.time() - t0 - t_dec, 2)}}
+
+
+# ---------------------------------------------------------------- several people, a moving camera (WP-12)
+def split_people(kp, n=2):
+    """a take with several people (detect people=n: each frame lists the poses in the detector's own order) -> one take
+    per person, identity kept by following each person's hips and shoulders from frame to frame (the closest
+    assignment of all the orderings); people are numbered left to right as first seen."""
+    import itertools
+    fr = kp["frames"]; tracks = [[None] * len(fr) for _ in range(n)]; last = [None] * n
+    centre = lambda p: np.nanmean(np.array([p[j][:2] for j in (11, 12, 23, 24)], float), 0)
+    for i, f in enumerate(fr):
+        poses = (f.get("people") or ([f["pose"]] if f.get("pose") else []))[:n]
+        if not poses:
+            continue
+        cs = [centre(p) for p in poses]
+        if all(l is None for l in last):   # first sighting: left to right
+            order = sorted(range(len(poses)), key=lambda k: cs[k][0])
+            for slot, k in enumerate(order):
+                tracks[slot][i] = poses[k]; last[slot] = cs[k]
+            continue
+        best = None
+        for perm in itertools.permutations(range(n), len(poses)):   # pose k -> slot perm[k]
+            cost = sum(np.hypot(*(cs[k] - last[perm[k]])) if last[perm[k]] is not None else 1e4 for k in range(len(poses)))
+            if best is None or cost < best[0]:
+                best = (cost, perm)
+        for k, slot in enumerate(best[1]):
+            tracks[slot][i] = poses[k]; last[slot] = cs[k]
+    return [{**{k: v for k, v in kp.items() if k != "frames"}, "person": j + 1,
+             "frames": [{"pose": tracks[j][i], "face": None} for i in range(len(fr))]} for j in range(n)]
+
+
+def camera_path(arr, kp, min_tracks=20, min_area=0.2):
+    """the camera's motion in a take, from its background: corners found outside every person's box are tracked from
+    each frame to the next and back again (pyramidal Lucas-Kanade; a track that does not come back within half a
+    pixel is dropped), and the median motion of the rest is the camera's (a person, or anything else moving on its
+    own, is outvoted). A frame with less than `min_area` of the picture outside the people, or fewer than `min_tracks`
+    good tracks, is not trusted: the camera is taken as still there. -> (path [F, 2], the image displacement of
+    static background points in the take's pixels, [0, 0] at the first frame; report {trusted: share of frames})"""
+    import cv2
+    F = len(arr); H, W = arr[0].shape[:2]; path = np.zeros((F, 2)); trusted = 0
+    k = (kp.get("size") or [W, H])[0] / W   # keypoints are in the take's pixels; frames may be decoded smaller
+
+    def bg_mask(i):
+        m = np.full((H, W), 255, np.uint8); f = kp["frames"][i] if i < len(kp["frames"]) else {}
+        for p in (f.get("people") or ([f["pose"]] if f.get("pose") else [])):
+            a = np.array(p, float)[:, :2] / k; a = a[~np.isnan(a).any(1)]
+            if len(a):
+                pad = 0.15 * np.ptp(a, 0).max(); x0, y0 = np.maximum(a.min(0) - pad, 0).astype(int); x1, y1 = np.minimum(a.max(0) + pad, [W, H]).astype(int)
+                m[y0:y1, x0:x1] = 0
+        return m
+    gray = lambda i: cv2.cvtColor(arr[i], cv2.COLOR_RGB2GRAY)
+    prev = gray(0); lk = dict(winSize=(21, 21), maxLevel=3)
+    for i in range(1, F):
+        cur = gray(i); d = (0.0, 0.0); m = bg_mask(i - 1)
+        if (m > 0).mean() >= min_area:
+            pts = cv2.goodFeaturesToTrack(prev, maxCorners=400, qualityLevel=0.01, minDistance=8, mask=m)
+            if pts is not None and len(pts) >= min_tracks:
+                nxt, st, _ = cv2.calcOpticalFlowPyrLK(prev, cur, pts, None, **lk)
+                back, st2, _ = cv2.calcOpticalFlowPyrLK(cur, prev, nxt, None, **lk)
+                good = (st.ravel() == 1) & (st2.ravel() == 1) & (np.linalg.norm((back - pts).reshape(-1, 2), axis=1) < 0.5)
+                if good.sum() >= min_tracks:
+                    d = tuple(np.median((nxt[good] - pts[good]).reshape(-1, 2), 0)); trusted += 1
+        path[i] = path[i - 1] + (d[0] * k, d[1] * k); prev = cur
+    return path, {"trusted": round(trusted / max(1, F - 1), 2)}
+
+
+def stabilize(kp, path):
+    """keypoints with the camera's motion taken out: positions as if the camera had not moved"""
+    out = json.loads(json.dumps(kp))
+    for i, f in enumerate(out["frames"]):
+        for p in ([f["pose"]] if f.get("pose") else []) + (f.get("people") or []):
+            for l in p:
+                l[0] = round(l[0] - path[i][0], 2); l[1] = round(l[1] - path[i][1], 2)
+    out["stabilized"] = {"camera_moved_px": [round(float(np.ptp(path[:, 0])), 1), round(float(np.ptp(path[:, 1])), 1)]}
+    return out
 
 
 # ---------------------------------------------------------------- signal helpers
@@ -429,6 +507,24 @@ def retarget(kp, puppet, tol=1.5, smooth=0.03, face="upper", root="move", arms="
             swaps["z"] = [[t, json.loads(v)] for t, v in _runs(lab, fps, 0.15)]
     if swaps:
         clip["swaps"] = swaps
+    # head turn (WP-12, puppet format v0.10): the nose against the ears (or the eyes) gives the yaw in the picture; it
+    # drives the character's `turn` control as a clip control track (+ = looking toward the right of the picture)
+    turn = None
+    if "turn" in (puppet.get("controls") or {}) and face != "none":
+        nose, nok = P[:, LM["nose"], :2], P[:, LM["nose"], 2] > 0.5
+        for a_, b_, k_ in ((LM["ear"]["L"], LM["ear"]["R"], 0.7), (LM["eye"]["L"], LM["eye"]["R"], 0.9)):
+            pa, pb = P[:, a_, :2], P[:, b_, :2]; ok_ = nok & (P[:, a_, 2] > 0.5) & (P[:, b_, 2] > 0.5)
+            half = np.abs(pa[:, 0] - pb[:, 0]) / 2
+            ok_ &= half > 0.25 * np.nanmedian(half[ok_]) if ok_.any() else ok_
+            if ok_.mean() >= min_seen:
+                yaw = np.full(F, np.nan); yaw[ok_] = (nose[ok_, 0] - (pa[ok_, 0] + pb[ok_, 0]) / 2) / half[ok_]
+                yaw = _gauss(_interp_gaps(yaw, ok_), sig)
+                turn = np.clip(yaw / k_, -1, 1)   # absolute: facing the lens is 0; about 45 degrees is a full turn
+                break
+        if turn is not None and np.ptp(turn) > 0.15:
+            keys, err = reduce_keys(ts, turn[:, None], 0.04)
+            clip["controls"] = {"turn": [[round(float(ts[i]), 3), round(float(turn[i]), 3)] for i in keys]}
+            errs["turn"] = round(err, 3)
     warnings = []
     if scale:   # the body's size on screen: a zoom or a walk toward the lens reads as travel
         size = np.hypot(*(pt("sh", "R")[0] - pt("sh", "L")[0]).T)
@@ -443,7 +539,8 @@ def retarget(kp, puppet, tol=1.5, smooth=0.03, face="upper", root="move", arms="
     report = {"frames": F, "seconds": round(F / fps, 2), "person_found": round(float(have.mean()), 2),
               "facing": "camera" if shx > 0 else "away", "tracks": sorted(tracks), "dropped": dropped, "coverage": coverage,
               "keys": nkeys, "max_error_deg": errs, "face_found": face_cov, "swaps": {k: len(v) for k, v in swaps.items()},
-              "root": "move" if "offset" in clip else "in_place", "arms": {sd: "reach" for sd in reached}, "legs": legs_seen, "spine": "hips to shoulders" if spine_seen else "shoulder line", "warnings": warnings}
+              "root": "move" if "offset" in clip else "in_place", "arms": {sd: "reach" for sd in reached}, "legs": legs_seen, "spine": "hips to shoulders" if spine_seen else "shoulder line", "warnings": warnings,
+              **({"turn_range": [round(float(turn.min()), 2), round(float(turn.max()), 2)]} if "controls" in clip else {})}
     return clip, report
 
 
@@ -560,7 +657,7 @@ def _face(kp, puppet, mode, fps):
 
 
 # ---------------------------------------------------------------- synthetic takes (tests)
-def synthetic_take(puppet, clip, fps=30, seconds=None, noise=1.5, seed=7, size=(720, 1280), scale=1.0, facing="camera", hide=()):
+def synthetic_take(puppet, clip, fps=30, seconds=None, noise=1.5, seed=7, size=(720, 1280), scale=1.0, facing="camera", hide=(), yaw=None, cx=0.5, camera=None):
     """Pose landmarks for a person acting `clip`, made by forward kinematics through `puppet` (pixels, with seeded
     noise): retargeting this back onto the same puppet must recover the clip's angles. Pure."""
     from .geom import apply, part_matrices
@@ -569,7 +666,7 @@ def synthetic_take(puppet, clip, fps=30, seconds=None, noise=1.5, seed=7, size=(
     ang = _sample_tracks(clip["tracks"], np.minimum(ts, clip["duration"]))
     offs = _sample_tracks({"x": [[k[0], k[1][0]] for k in clip["offset"]], "y": [[k[0], k[1][1]] for k in clip["offset"]]}, np.minimum(ts, clip["duration"])) if clip.get("offset") else None
     piv = lambda p: parts[p]["pivot"]
-    W, H = size; ox, oy = W / 2 - piv("hip")[0] * scale, H * 0.92 - puppet.get("ground", 1000) * scale
+    W, H = size; ox, oy = W * cx - piv("hip")[0] * scale, H * 0.92 - puppet.get("ground", 1000) * scale   # cx: where in the picture (WP-12)
     an = {"L": "R", "R": "L"} if facing == "camera" else {"L": "L", "R": "R"}   # image side -> anatomical side
     frames = []
     for i in range(len(ts)):
@@ -582,7 +679,8 @@ def synthetic_take(puppet, clip, fps=30, seconds=None, noise=1.5, seed=7, size=(
             x, y = q(part, p)
             if offs:
                 x, y = x + offs["x"][i], y + offs["y"][i]
-            lm[j] = [x * scale + ox + rng.normal(0, noise), y * scale + oy + rng.normal(0, noise), 0.0 if name in hide else 0.99]
+            cam = camera(ts[i]) if camera else (0.0, 0.0)   # a moving camera shifts everything in the picture (WP-12)
+            lm[j] = [x * scale + ox + cam[0] + rng.normal(0, noise), y * scale + oy + cam[1] + rng.normal(0, noise), 0.0 if name in hide else 0.99]
         for s in "LR":
             put("sh", s, f"upperarm_{s}", piv(f"upperarm_{s}")); put("el", s, f"forearm_{s}", piv(f"forearm_{s}"))
             put("wr", s, f"hand_{s}", piv(f"hand_{s}"))
@@ -591,7 +689,8 @@ def synthetic_take(puppet, clip, fps=30, seconds=None, noise=1.5, seed=7, size=(
             put("hp", s, f"thigh_{s}", piv(f"thigh_{s}")); put("kn", s, f"shin_{s}", piv(f"shin_{s}")); put("an", s, f"foot_{s}", piv(f"foot_{s}"))
             hx = piv("head")
             put("ear", s, "head", (hx[0] + (-40 if s == "L" else 40), hx[1] - 30)); put("eye", s, "head", (hx[0] + (-22 if s == "L" else 22), hx[1] - 40))
-        put("nose", None, "head", (piv("head")[0], piv("head")[1] - 20))
+        yw = float(yaw(ts[i])) if callable(yaw) else 0.0   # a head turn: the nose moves toward one ear (0.7 of the half-width at a full turn)
+        put("nose", None, "head", (piv("head")[0] + 28 * yw * (1 if facing == "camera" else -1), piv("head")[1] - 20))
         frames.append({"pose": [[round(a, 2), round(b, 2), c] for a, b, c in lm], "face": None})
     return {"fps": fps, "size": list(size), "mirror": False, "start": 0, "frames": frames}
 
@@ -678,3 +777,80 @@ def self_test(puppet, lib):
     if "mouth" in retarget(kp, puppet, face="upper")[0].get("swaps", {}):
         fails.append("face=upper must leave the mouth to lip-sync")
     return fails, got
+
+
+def self_test_2(pip, ravi, lib, tmp):
+    """WP-12, on synthetic takes (marked so: made by forward kinematics through a puppet, then drawn as a video).
+    Head turn: a take whose head turns from facing the lens to a full turn right and back comes back as a `turn` control
+    track that follows it; the bake of Pip playing that clip turns its head (its turn control's drives). Camera pan: the
+    take is drawn over a textured background and the camera pans 240 px across it; the background gives the pan back
+    and the stabilised clip's root stays put, where the raw one drifts. Two people: a take of one person waving and one
+    shrugging, listed in a shuffled order each frame, splits into two takes that come back as the two clips."""
+    import cv2
+    import subprocess as sp
+    fails, got = [], {}
+    tmp = Path(tmp); tmp.mkdir(parents=True, exist_ok=True)
+    # 1. head turn
+    T = 3.0; yawf = lambda t: max(0.0, math.sin(math.pi * t / T)) * 0.9
+    c = lib["wave_R"]; kp = synthetic_take(pip, c, seconds=T, yaw=yawf)
+    clip, rep = retarget(kp, pip, face="upper")
+    tk = clip.get("controls", {}).get("turn")
+    if not tk:
+        fails.append("no turn track from a head turn"); return fails, got
+    tt = np.arange(int(T * 30)) / 30; want = np.array([min(1.0, yawf(t)) for t in tt])
+    have = _sample_tracks({"turn": tk}, tt)["turn"]; err = float(np.abs(have - want).mean())
+    got["turn"] = {"keys": len(tk), "mean_error": round(err, 3), "peak": round(float(have.max()), 2), "range": rep.get("turn_range")}
+    if err > 0.08 or have.max() < 0.8:
+        fails.append(f"turn track: {got['turn']}")
+    spec = {"fps": 30, "frames": 90, "start": 0, "size": [1080, 1920], "cast": [{"puppet": str(Path(__file__).resolve().parent.parent / "puppet" / "examples" / "pip.puppet.json"),
+            "place": {"x": 540, "y": 1700, "s": 1}, "timeline": {"clips": [{"clip": {**clip, "tracks": {}, "offset": None}, "start": 0, "fadeIn": 0, "fadeOut": 0}]}}]}
+    spec["cast"][0]["timeline"]["clips"][0]["clip"].pop("offset")
+    (tmp / "turn.spec.json").write_text(json.dumps(spec))
+    sp.run(["node", "tools/bake.mjs", str(tmp / "turn.spec.json"), str(tmp / "turn.baked.json")], cwd=Path(__file__).resolve().parent.parent, check=True, capture_output=True)
+    frs = json.loads((tmp / "turn.baked.json").read_text())["cast"][0]["frames"]
+    head = [fr["angles"].get("head", 0) for fr in frs]; eyes = [((fr.get("shifts") or {}).get("@eyes") or [0, 0])[0] for fr in frs]
+    got["bake"] = {"head_deg_at_peak": round(head[45], 2), "eyes_shift_at_peak": round(eyes[45], 1), "at_start": [round(head[0], 2), round(eyes[0], 1)]}
+    drv = {d["target"]: d["keys"] for d in pip["controls"]["turn"]["drives"]}
+    if abs(eyes[45]) < 0.6 * abs(drv.get("shift.@eyes", [[1, [16, 0]]])[-1][1][0]) or abs(eyes[0]) > 1.5:
+        fails.append(f"the bake does not turn Pip's head: {got['bake']}")
+    # 2. camera pan, from the background of a drawn video
+    W, H = 720, 1280; rng = np.random.default_rng(3)
+    tex = cv2.GaussianBlur((rng.random((H + 40, W + 400)) * 255).astype(np.float32), (0, 0), 3)
+    tex = cv2.normalize(tex, None, 30, 225, cv2.NORM_MINMAX).astype(np.uint8)
+    pan = lambda t: (-240.0 * t / T, 0.0)   # the camera pans right: the world moves left in the picture
+    c2 = lib["shrug"]; kp2 = synthetic_take(ravi, c2, seconds=T, camera=pan, scale=0.9)
+    vid = tmp / "pan.mp4"; ff = sp.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", "30", "-i", "-",
+                                         "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", str(vid)], stdin=sp.PIPE)
+    bones = [(11, 13), (13, 15), (12, 14), (14, 16), (11, 12), (11, 23), (12, 24), (23, 24), (23, 25), (25, 27), (24, 26), (26, 28), (0, 7), (0, 8)]
+    for i, f in enumerate(kp2["frames"]):
+        dx = int(round(-pan(i / 30)[0])); img = cv2.cvtColor(tex[20:20 + H, dx:dx + W], cv2.COLOR_GRAY2RGB).copy()
+        pts = np.array(f["pose"])[:, :2]
+        for a, b in bones:
+            cv2.line(img, tuple(int(v) for v in pts[a]), tuple(int(v) for v in pts[b]), (200, 40, 40), 14)
+        cv2.circle(img, tuple(int(v) for v in pts[0]), 40, (220, 180, 140), -1)
+        ff.stdin.write(img.tobytes())
+    ff.stdin.close(); ff.wait()
+    arr, _ = frames(vid, 30)
+    path, prep = camera_path(arr, kp2)
+    truth = np.array([pan(i / 30) for i in range(len(path))])
+    perr = float(np.abs(path[:, 0] - truth[:, 0]).max())
+    raw, _ = retarget(kp2, ravi, face="none"); fixed, _ = retarget(stabilize(kp2, path), ravi, face="none")
+    rx = lambda cl: float(np.ptp([k[1][0] for k in cl.get("offset") or [[0, [0, 0]]]]))
+    got["pan"] = {"camera_px": round(float(np.ptp(path[:, 0])), 1), "max_error_px": round(perr, 2), "trusted": prep["trusted"], "root_travel_raw": round(rx(raw), 1), "root_travel_stabilised": round(rx(fixed), 1)}
+    if perr > 4 or rx(fixed) > 12 or rx(raw) < 100:
+        fails.append(f"camera pan: {got['pan']}")
+    # 3. two people in one take
+    ka = synthetic_take(ravi, lib["wave_R"], seconds=2.0, cx=0.3, scale=0.5, seed=11); kb = synthetic_take(ravi, lib["shrug"], seconds=2.0, cx=0.72, scale=0.5, seed=12)
+    order = np.random.default_rng(5)
+    both = {**ka, "frames": [{"pose": None, "face": None, "people": ([a["pose"], b["pose"]] if order.random() < 0.5 else [b["pose"], a["pose"]])} for a, b in zip(ka["frames"], kb["frames"])]}
+    for f in both["frames"]:
+        f["pose"] = f["people"][0]
+    pa, pb = split_people(both, 2)
+    ca, _ = retarget(pa, ravi, face="none"); cb, _ = retarget(pb, ravi, face="none")
+    ts2 = np.arange(60) / 30
+    ea = float(np.mean([v[0] for v in angle_error(lib["wave_R"], ca, ts2).values()])); eb = float(np.mean([v[0] for v in angle_error(lib["shrug"], cb, ts2).values()]))
+    got["two_people"] = {"person_1_wave_err_deg": round(ea, 2), "person_2_shrug_err_deg": round(eb, 2)}
+    if ea > 2.5 or eb > 2.5:
+        fails.append(f"two people: {got['two_people']}")
+    return fails, got
+

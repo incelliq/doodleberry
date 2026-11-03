@@ -1,0 +1,413 @@
+{
+ "fps": 30,
+ "duration": 33.245,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about the Sun?",
+   "start": 0.6,
+   "end": 4.406,
+   "slot": [
+    0.6,
+    3.806
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Can",
+     "start": 0.6,
+     "end": 0.956
+    },
+    {
+     "text": "I",
+     "start": 0.956,
+     "end": 1.074
+    },
+    {
+     "text": "ask",
+     "start": 1.074,
+     "end": 1.43
+    },
+    {
+     "text": "you",
+     "start": 1.43,
+     "end": 1.785
+    },
+    {
+     "text": "something",
+     "start": 1.785,
+     "end": 2.852
+    },
+    {
+     "text": "about",
+     "start": 2.852,
+     "end": 3.445
+    },
+    {
+     "text": "the",
+     "start": 3.445,
+     "end": 3.8
+    },
+    {
+     "text": "Sun?",
+     "start": 3.8,
+     "end": 4.156
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "How hot is the Sun inside?",
+   "start": 4.856,
+   "end": 7.773,
+   "slot": [
+    4.856,
+    2.917
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "How",
+     "start": 4.856,
+     "end": 5.256
+    },
+    {
+     "text": "hot",
+     "start": 5.256,
+     "end": 5.656
+    },
+    {
+     "text": "is",
+     "start": 5.656,
+     "end": 5.923
+    },
+    {
+     "text": "the",
+     "start": 5.923,
+     "end": 6.323
+    },
+    {
+     "text": "Sun",
+     "start": 6.323,
+     "end": 6.723
+    },
+    {
+     "text": "inside?",
+     "start": 6.723,
+     "end": 7.523
+    }
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Its core gets as hot as twenty-seven million degrees Fahrenheit.",
+   "start": 8.223,
+   "end": 13.362,
+   "slot": [
+    8.223,
+    5.139
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Its",
+     "start": 8.223,
+     "end": 8.5
+    },
+    {
+     "text": "core",
+     "start": 8.5,
+     "end": 8.869
+    },
+    {
+     "text": "gets",
+     "start": 8.869,
+     "end": 9.238
+    },
+    {
+     "text": "as",
+     "start": 9.238,
+     "end": 9.422
+    },
+    {
+     "text": "hot",
+     "start": 9.422,
+     "end": 9.699
+    },
+    {
+     "text": "as",
+     "start": 9.699,
+     "end": 9.883
+    },
+    {
+     "text": "twenty-seven",
+     "start": 9.883,
+     "end": 10.898
+    },
+    {
+     "text": "million",
+     "start": 10.898,
+     "end": 11.544
+    },
+    {
+     "text": "degrees",
+     "start": 11.544,
+     "end": 12.19
+    },
+    {
+     "text": "Fahrenheit.",
+     "start": 12.19,
+     "end": 13.112
+    }
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Why is it so hot?",
+   "start": 13.812,
+   "end": 16.284,
+   "slot": [
+    13.812,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Why",
+     "start": 13.812,
+     "end": 14.367
+    },
+    {
+     "text": "is",
+     "start": 14.367,
+     "end": 14.738
+    },
+    {
+     "text": "it",
+     "start": 14.738,
+     "end": 15.108
+    },
+    {
+     "text": "so",
+     "start": 15.108,
+     "end": 15.479
+    },
+    {
+     "text": "hot?",
+     "start": 15.479,
+     "end": 16.034
+    }
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "It's so big that its gravity squeezes the hydrogen inside really hard. The hydrogen smashes together and turns into helium, and that gives off energy. Big word, small idea.",
+   "start": 16.734,
+   "end": 29.873,
+   "slot": [
+    16.734,
+    13.139
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "It's",
+     "start": 16.734,
+     "end": 17.014
+    },
+    {
+     "text": "so",
+     "start": 17.014,
+     "end": 17.201
+    },
+    {
+     "text": "big",
+     "start": 17.201,
+     "end": 17.481
+    },
+    {
+     "text": "that",
+     "start": 17.481,
+     "end": 17.855
+    },
+    {
+     "text": "its",
+     "start": 17.855,
+     "end": 18.135
+    },
+    {
+     "text": "gravity",
+     "start": 18.135,
+     "end": 18.789
+    },
+    {
+     "text": "squeezes",
+     "start": 18.789,
+     "end": 19.536
+    },
+    {
+     "text": "the",
+     "start": 19.536,
+     "end": 19.816
+    },
+    {
+     "text": "hydrogen",
+     "start": 19.816,
+     "end": 20.563
+    },
+    {
+     "text": "inside",
+     "start": 20.563,
+     "end": 21.124
+    },
+    {
+     "text": "really",
+     "start": 21.124,
+     "end": 21.684
+    },
+    {
+     "text": "hard.",
+     "start": 21.684,
+     "end": 22.058
+    },
+    {
+     "text": "The",
+     "start": 22.058,
+     "end": 22.338
+    },
+    {
+     "text": "hydrogen",
+     "start": 22.338,
+     "end": 23.085
+    },
+    {
+     "text": "smashes",
+     "start": 23.085,
+     "end": 23.739
+    },
+    {
+     "text": "together",
+     "start": 23.739,
+     "end": 24.486
+    },
+    {
+     "text": "and",
+     "start": 24.486,
+     "end": 24.766
+    },
+    {
+     "text": "turns",
+     "start": 24.766,
+     "end": 25.233
+    },
+    {
+     "text": "into",
+     "start": 25.233,
+     "end": 25.607
+    },
+    {
+     "text": "helium,",
+     "start": 25.607,
+     "end": 26.167
+    },
+    {
+     "text": "and",
+     "start": 26.167,
+     "end": 26.447
+    },
+    {
+     "text": "that",
+     "start": 26.447,
+     "end": 26.821
+    },
+    {
+     "text": "gives",
+     "start": 26.821,
+     "end": 27.288
+    },
+    {
+     "text": "off",
+     "start": 27.288,
+     "end": 27.568
+    },
+    {
+     "text": "energy.",
+     "start": 27.568,
+     "end": 28.129
+    },
+    {
+     "text": "Big",
+     "start": 28.129,
+     "end": 28.409
+    },
+    {
+     "text": "word,",
+     "start": 28.409,
+     "end": 28.782
+    },
+    {
+     "text": "small",
+     "start": 28.782,
+     "end": 29.249
+    },
+    {
+     "text": "idea.",
+     "start": 29.249,
+     "end": 29.623
+    }
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "start": 30.323,
+   "end": 32.795,
+   "slot": [
+    30.323,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Writing",
+     "start": 30.323,
+     "end": 30.999
+    },
+    {
+     "text": "that",
+     "start": 30.999,
+     "end": 31.386
+    },
+    {
+     "text": "in",
+     "start": 31.386,
+     "end": 31.579
+    },
+    {
+     "text": "my",
+     "start": 31.579,
+     "end": 31.772
+    },
+    {
+     "text": "notebook!",
+     "start": 31.772,
+     "end": 32.545
+    }
+   ]
+  }
+ ],
+ "visemes": {},
+ "draft": "slots (no voice yet)"
+}

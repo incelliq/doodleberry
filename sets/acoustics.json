@@ -1,0 +1,17 @@
+{
+ "note": "WP-13: what each set sounds like. surface: the floor footsteps land on (engine/audio.py synthesises each); room: the reverb its effects and voices sit in. A set without an entry keeps the studio's default room (rt60 1.1 s, effects 16% wet, voice 3.5%) and a soft-shoe step.",
+ "rooms": {
+  "outdoors": {"rt60": 0.35, "fx_wet": 0.05, "voice_wet": 0.008, "about": "open air: almost no reflections"},
+  "small_room": {"rt60": 0.45, "fx_wet": 0.10, "voice_wet": 0.02, "about": "a bedroom, office or kitchen: short, close"},
+  "classroom": {"rt60": 0.8, "fx_wet": 0.14, "voice_wet": 0.03, "about": "hard walls, a bit of slap"},
+  "clinic": {"rt60": 0.7, "fx_wet": 0.15, "voice_wet": 0.03, "about": "tiled, bright"},
+  "hall": {"rt60": 1.7, "fx_wet": 0.2, "voice_wet": 0.05, "about": "a stage or lab hall: long and wide"}
+ },
+ "sets": {
+  "park": {"surface": "grass", "room": "outdoors"}, "forest": {"surface": "grass", "room": "outdoors"}, "farm": {"surface": "grass", "room": "outdoors"},
+  "street": {"surface": "concrete", "room": "outdoors"}, "night": {"surface": "grass", "room": "outdoors"}, "reservoir": {"surface": "concrete", "room": "outdoors"},
+  "kitchen": {"surface": "tile", "room": "small_room"}, "clinic": {"surface": "tile", "room": "clinic"}, "lab": {"surface": "tile", "room": "hall"},
+  "office": {"surface": "carpet", "room": "small_room"}, "bedroom": {"surface": "carpet", "room": "small_room"},
+  "classroom": {"surface": "wood", "room": "classroom"}, "stage": {"surface": "wood", "room": "hall"}
+ }
+}

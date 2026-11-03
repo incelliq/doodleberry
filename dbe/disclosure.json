@@ -1,0 +1,25 @@
+{
+ "note": "WP-26: each platform's AI-disclosure setting, when it is required, and what we do. required_when: realistic (content that could pass as real people, places or events: our drawn characters do not), realistic_audio (also realistic-sounding generated audio, such as a synthetic narrating voice), or never. we_disclose_anyway: turn the setting on whenever a synthetic voice or model-made picture is in the film, even where not required (the studio's choice). checked: the date the source page was read and what it said; 'unverified' where the page could not be read. Policies change: re-read the sources when a platform changes its rules.",
+ "caption": "Made by Doodleberry: drawn characters; {what}.",
+ "caption_none": "Made by Doodleberry: drawn characters, animated from data.",
+ "platforms": {
+  "youtube": {"setting": "AI use (Attributes, upload flow)", "required_when": "realistic", "we_disclose_anyway": false,
+              "note": "'We require creators to disclose AI-generated or altered content that seems realistic'; non-realistic content such as a fully animated video is exempt; content with C2PA metadata may be labelled automatically (a label that cannot be adjusted); the page does not address synthetic narrating voices",
+              "source": "https://support.google.com/youtube/answer/14328491", "checked": "2026-11-03: read"},
+  "tiktok": {"setting": "AI-generated content label", "required_when": "realistic_audio", "we_disclose_anyway": true,
+             "note": "unverified: the help page could not be read from here (it redirects to a page that renders no text); treated cautiously: the label is turned on whenever a synthetic voice is used",
+             "source": "https://support.tiktok.com/en/using-tiktok/creating-videos/ai-generated-content", "checked": "2026-11-03: unverified"},
+  "instagram": {"setting": "Add AI label (shown as 'AI content')", "required_when": "realistic_audio", "we_disclose_anyway": true,
+                "note": "'Meta requires you to label content you share that has photorealistic video or realistic-sounding audio that has been digitally generated or altered'; its examples include 'a reel narrated with a realistic AI-generated voiceover'; cartoon-style video is not required; 'industry-standard signals' in a file are read to label it",
+                "source": "https://www.facebook.com/help/instagram/761121959519495", "checked": "2026-11-03: read (app view)"},
+  "facebook": {"setting": "Add AI label (shown as 'AI content')", "required_when": "realistic_audio", "we_disclose_anyway": true,
+               "note": "Meta's policy, as Instagram's (the business help page that described it for Facebook no longer exists)",
+               "source": "https://www.facebook.com/help/instagram/761121959519495", "checked": "2026-11-03: read (Instagram's page)"},
+  "x": {"setting": "none known (caption line)", "required_when": "never", "we_disclose_anyway": false,
+        "note": "unverified: the synthetic and manipulated media policy page refused the request; the caption line says what is synthetic",
+        "source": "https://help.x.com/en/rules-and-policies/manipulated-media", "checked": "2026-11-03: unverified"},
+  "linkedin": {"setting": "none (shows a C2PA icon on content with Content Credentials)", "required_when": "never", "we_disclose_anyway": false,
+               "note": "'Image and video content that is cryptographically signed using C2PA Content Credentials will be noted with the C2PA icon', visible to every viewer; rolling out gradually",
+               "source": "https://www.linkedin.com/help/linkedin/answer/a6282984", "checked": "2026-11-03: read"}
+ }
+}

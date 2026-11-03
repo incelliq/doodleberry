@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "Air molecules scatter blue light in all directions, more than other colours, so the sky looks blue.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+    "title": "NASA Space Place: Why is the sky blue?",
+    "quote": "Blue light is scattered in all directions by the tiny molecules of air in Earth's atmosphere. Blue is scattered more than other colors because it travels as shorter, smaller waves."
+   },
+   "source_sentence": "Blue light is scattered in all directions by the tiny molecules of air in Earth's atmosphere. Blue is scattered more than other colors because it travels as shorter, smaller waves.",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "At sunset light passes through more air; more blue is scattered, leaving reds and yellows.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+    "title": "NASA Space Place: Why is the sky blue?",
+    "quote": "As the Sun gets lower in the sky, its light is passing through more of the atmosphere to reach you. … Even more of the blue light is scattered, allowing the reds and yellows to pass straight through to your eyes."
+   },
+   "source_sentence": "As the Sun gets lower in the sky, its light is passing through more of the atmosphere to reach you. … Even more of the blue light is scattered, allowing the reds and yellows to pass straight through to your eyes.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

@@ -1,0 +1,84 @@
+{
+ "title": "Why is the sky blue?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about the blue sky?",
+   "slot": [
+    0.6,
+    4.25
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Why is the sky blue, Ravi?",
+   "slot": [
+    5.3,
+    2.917
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Air scatters blue light more than reds and yellows, so blue reaches us from every direction.",
+   "slot": [
+    8.667,
+    7.361
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Then why are sunsets orange?",
+   "slot": [
+    16.478,
+    2.472
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "At sunset the light crosses much more air. Even more of the blue is scattered away, and the reds and yellows come straight through. Big word, small idea.",
+   "slot": [
+    19.4,
+    12.694
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "That makes sense now.",
+   "slot": [
+    32.544,
+    2.028
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

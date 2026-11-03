@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "A light-year is the distance light travels in a year, about 9 trillion km.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/light-year/en/",
+    "title": "NASA Space Place: What is a light-year?",
+    "quote": "about 6 trillion miles (9 trillion km)"
+   },
+   "source_sentence": "about 6 trillion miles (9 trillion km)",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "Distant objects are seen as they were in the past; some stars we see are thousands of light-years away.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/light-year/en/",
+    "title": "NASA Space Place: What is a light-year?",
+    "quote": "When we use powerful telescopes to look at distant objects in space, we are actually looking back in time. … The farther an object is, the farther in the past we see it. … All of the other stars we can see with our eyes are farther, some even thousands of light-years away."
+   },
+   "source_sentence": "When we use powerful telescopes to look at distant objects in space, we are actually looking back in time. … The farther an object is, the farther in the past we see it. … All of the other stars we can see with our eyes are farther, some even thousands of light-years away.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

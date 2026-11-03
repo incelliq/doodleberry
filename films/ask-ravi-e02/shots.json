@@ -1,0 +1,495 @@
+{
+ "title": "Does the Moon really change shape?",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Does the Moon",
+     "really change",
+     "shape?"
+    ]
+   },
+   "start": 0,
+   "end": 5.1,
+   "start_line": "hook",
+   "end_line": "hook",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1540,
+      "s": 1.363
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.863,
+        "end": 1.763,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 2.013,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        0.4,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L"
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Does the Moon",
+     "really change",
+     "shape?"
+    ]
+   },
+   "start": 5.1,
+   "end": 18.945,
+   "start_line": "q1",
+   "end_line": "a1",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.347
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 5.3,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 6.262,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 18.745,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        5.1,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        5.3,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        8.517,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       19.045
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.347
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 8.267,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 9.558,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 8.667,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 12.283,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 13.608,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        8.467,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        5.15,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        8.667,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       8.567
+      ]
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L"
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Does the Moon",
+     "really change",
+     "shape?"
+    ]
+   },
+   "start": 18.945,
+   "end": 34.295,
+   "start_line": "q2",
+   "end_line": "button",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3,
+    "zoom_single": 1.7,
+    "zoom": 1.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.353
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.273,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 20.323,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 20.593,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 29.923,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 30.323,
+        "end": 31.723,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        18.945,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        19.145,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        23.251,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        30.323,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       30.223
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.353
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 23.001,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 23.401,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 25.371,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 26.396,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 32.845,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        23.201,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        18.995,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        23.401,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        30.173,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       23.301,
+       33.145
+      ]
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L"
+       }
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "series": {
+  "id": "ask-ravi",
+  "episode": 2
+ }
+}

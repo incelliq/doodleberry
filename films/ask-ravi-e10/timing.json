@@ -1,0 +1,388 @@
+{
+ "fps": 30,
+ "duration": 31.911,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about days on other planets?",
+   "start": 0.6,
+   "end": 5.294,
+   "slot": [
+    0.6,
+    4.694
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Can",
+     "start": 0.6,
+     "end": 0.917
+    },
+    {
+     "text": "I",
+     "start": 0.917,
+     "end": 1.023
+    },
+    {
+     "text": "ask",
+     "start": 1.023,
+     "end": 1.341
+    },
+    {
+     "text": "you",
+     "start": 1.341,
+     "end": 1.658
+    },
+    {
+     "text": "something",
+     "start": 1.658,
+     "end": 2.61
+    },
+    {
+     "text": "about",
+     "start": 2.61,
+     "end": 3.139
+    },
+    {
+     "text": "days",
+     "start": 3.139,
+     "end": 3.563
+    },
+    {
+     "text": "on",
+     "start": 3.563,
+     "end": 3.774
+    },
+    {
+     "text": "other",
+     "start": 3.774,
+     "end": 4.303
+    },
+    {
+     "text": "planets?",
+     "start": 4.303,
+     "end": 5.044
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Is a day always twenty-four hours?",
+   "start": 5.744,
+   "end": 9.105,
+   "slot": [
+    5.744,
+    3.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Is",
+     "start": 5.744,
+     "end": 5.974
+    },
+    {
+     "text": "a",
+     "start": 5.974,
+     "end": 6.09
+    },
+    {
+     "text": "day",
+     "start": 6.09,
+     "end": 6.435
+    },
+    {
+     "text": "always",
+     "start": 6.435,
+     "end": 7.127
+    },
+    {
+     "text": "twenty-four",
+     "start": 7.127,
+     "end": 8.279
+    },
+    {
+     "text": "hours?",
+     "start": 8.279,
+     "end": 8.855
+    }
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Only on Earth! Mars takes twenty-five hours, and Jupiter spins round in just ten.",
+   "start": 9.555,
+   "end": 16.472,
+   "slot": [
+    9.555,
+    6.917
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Only",
+     "start": 9.555,
+     "end": 9.972
+    },
+    {
+     "text": "on",
+     "start": 9.972,
+     "end": 10.18
+    },
+    {
+     "text": "Earth!",
+     "start": 10.18,
+     "end": 10.701
+    },
+    {
+     "text": "Mars",
+     "start": 10.701,
+     "end": 11.118
+    },
+    {
+     "text": "takes",
+     "start": 11.118,
+     "end": 11.638
+    },
+    {
+     "text": "twenty-five",
+     "start": 11.638,
+     "end": 12.68
+    },
+    {
+     "text": "hours,",
+     "start": 12.68,
+     "end": 13.201
+    },
+    {
+     "text": "and",
+     "start": 13.201,
+     "end": 13.514
+    },
+    {
+     "text": "Jupiter",
+     "start": 13.514,
+     "end": 14.243
+    },
+    {
+     "text": "spins",
+     "start": 14.243,
+     "end": 14.764
+    },
+    {
+     "text": "round",
+     "start": 14.764,
+     "end": 15.284
+    },
+    {
+     "text": "in",
+     "start": 15.284,
+     "end": 15.493
+    },
+    {
+     "text": "just",
+     "start": 15.493,
+     "end": 15.909
+    },
+    {
+     "text": "ten.",
+     "start": 15.909,
+     "end": 16.222
+    }
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Which planet spins slowest?",
+   "start": 16.922,
+   "end": 18.95,
+   "slot": [
+    16.922,
+    2.028
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Which",
+     "start": 16.922,
+     "end": 17.309
+    },
+    {
+     "text": "planet",
+     "start": 17.309,
+     "end": 17.772
+    },
+    {
+     "text": "spins",
+     "start": 17.772,
+     "end": 18.159
+    },
+    {
+     "text": "slowest?",
+     "start": 18.159,
+     "end": 18.7
+    }
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "Venus! It takes five thousand eight hundred and thirty-two hours to spin round just once. Big word, small idea.",
+   "start": 19.4,
+   "end": 28.539,
+   "slot": [
+    19.4,
+    9.139
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Venus!",
+     "start": 19.4,
+     "end": 19.905
+    },
+    {
+     "text": "It",
+     "start": 19.905,
+     "end": 20.107
+    },
+    {
+     "text": "takes",
+     "start": 20.107,
+     "end": 20.612
+    },
+    {
+     "text": "five",
+     "start": 20.612,
+     "end": 21.016
+    },
+    {
+     "text": "thousand",
+     "start": 21.016,
+     "end": 21.824
+    },
+    {
+     "text": "eight",
+     "start": 21.824,
+     "end": 22.329
+    },
+    {
+     "text": "hundred",
+     "start": 22.329,
+     "end": 23.036
+    },
+    {
+     "text": "and",
+     "start": 23.036,
+     "end": 23.339
+    },
+    {
+     "text": "thirty-two",
+     "start": 23.339,
+     "end": 24.249
+    },
+    {
+     "text": "hours",
+     "start": 24.249,
+     "end": 24.754
+    },
+    {
+     "text": "to",
+     "start": 24.754,
+     "end": 24.956
+    },
+    {
+     "text": "spin",
+     "start": 24.956,
+     "end": 25.36
+    },
+    {
+     "text": "round",
+     "start": 25.36,
+     "end": 25.865
+    },
+    {
+     "text": "just",
+     "start": 25.865,
+     "end": 26.269
+    },
+    {
+     "text": "once.",
+     "start": 26.269,
+     "end": 26.673
+    },
+    {
+     "text": "Big",
+     "start": 26.673,
+     "end": 26.976
+    },
+    {
+     "text": "word,",
+     "start": 26.976,
+     "end": 27.38
+    },
+    {
+     "text": "small",
+     "start": 27.38,
+     "end": 27.885
+    },
+    {
+     "text": "idea.",
+     "start": 27.885,
+     "end": 28.289
+    }
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "start": 28.989,
+   "end": 31.461,
+   "slot": [
+    28.989,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Writing",
+     "start": 28.989,
+     "end": 29.665
+    },
+    {
+     "text": "that",
+     "start": 29.665,
+     "end": 30.052
+    },
+    {
+     "text": "in",
+     "start": 30.052,
+     "end": 30.245
+    },
+    {
+     "text": "my",
+     "start": 30.245,
+     "end": 30.438
+    },
+    {
+     "text": "notebook!",
+     "start": 30.438,
+     "end": 31.211
+    }
+   ]
+  }
+ ],
+ "visemes": {},
+ "draft": "slots (no voice yet)"
+}

@@ -1,0 +1,378 @@
+{
+ "fps": 30,
+ "duration": 29.689,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about shooting stars?",
+   "start": 0.6,
+   "end": 4.406,
+   "slot": [
+    0.6,
+    3.806
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Can",
+     "start": 0.6,
+     "end": 0.888
+    },
+    {
+     "text": "I",
+     "start": 0.888,
+     "end": 0.984
+    },
+    {
+     "text": "ask",
+     "start": 0.984,
+     "end": 1.273
+    },
+    {
+     "text": "you",
+     "start": 1.273,
+     "end": 1.561
+    },
+    {
+     "text": "something",
+     "start": 1.561,
+     "end": 2.426
+    },
+    {
+     "text": "about",
+     "start": 2.426,
+     "end": 2.907
+    },
+    {
+     "text": "shooting",
+     "start": 2.907,
+     "end": 3.675
+    },
+    {
+     "text": "stars?",
+     "start": 3.675,
+     "end": 4.156
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Is a shooting star a falling star?",
+   "start": 4.856,
+   "end": 8.217,
+   "slot": [
+    4.856,
+    3.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Is",
+     "start": 4.856,
+     "end": 5.086
+    },
+    {
+     "text": "a",
+     "start": 5.086,
+     "end": 5.202
+    },
+    {
+     "text": "shooting",
+     "start": 5.202,
+     "end": 6.123
+    },
+    {
+     "text": "star",
+     "start": 6.123,
+     "end": 6.584
+    },
+    {
+     "text": "a",
+     "start": 6.584,
+     "end": 6.7
+    },
+    {
+     "text": "falling",
+     "start": 6.7,
+     "end": 7.506
+    },
+    {
+     "text": "star?",
+     "start": 7.506,
+     "end": 7.967
+    }
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "No. It's a space rock rushing into our air. The bright streak is the glowing hot air as the rock zips through.",
+   "start": 8.667,
+   "end": 18.695,
+   "slot": [
+    8.667,
+    10.028
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "No.",
+     "start": 8.667,
+     "end": 8.897
+    },
+    {
+     "text": "It's",
+     "start": 8.897,
+     "end": 9.242
+    },
+    {
+     "text": "a",
+     "start": 9.242,
+     "end": 9.357
+    },
+    {
+     "text": "space",
+     "start": 9.357,
+     "end": 9.932
+    },
+    {
+     "text": "rock",
+     "start": 9.932,
+     "end": 10.393
+    },
+    {
+     "text": "rushing",
+     "start": 10.393,
+     "end": 11.198
+    },
+    {
+     "text": "into",
+     "start": 11.198,
+     "end": 11.658
+    },
+    {
+     "text": "our",
+     "start": 11.658,
+     "end": 12.003
+    },
+    {
+     "text": "air.",
+     "start": 12.003,
+     "end": 12.348
+    },
+    {
+     "text": "The",
+     "start": 12.348,
+     "end": 12.693
+    },
+    {
+     "text": "bright",
+     "start": 12.693,
+     "end": 13.383
+    },
+    {
+     "text": "streak",
+     "start": 13.383,
+     "end": 14.074
+    },
+    {
+     "text": "is",
+     "start": 14.074,
+     "end": 14.304
+    },
+    {
+     "text": "the",
+     "start": 14.304,
+     "end": 14.649
+    },
+    {
+     "text": "glowing",
+     "start": 14.649,
+     "end": 15.454
+    },
+    {
+     "text": "hot",
+     "start": 15.454,
+     "end": 15.799
+    },
+    {
+     "text": "air",
+     "start": 15.799,
+     "end": 16.144
+    },
+    {
+     "text": "as",
+     "start": 16.144,
+     "end": 16.374
+    },
+    {
+     "text": "the",
+     "start": 16.374,
+     "end": 16.719
+    },
+    {
+     "text": "rock",
+     "start": 16.719,
+     "end": 17.18
+    },
+    {
+     "text": "zips",
+     "start": 17.18,
+     "end": 17.64
+    },
+    {
+     "text": "through.",
+     "start": 17.64,
+     "end": 18.445
+    }
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "And a meteor shower?",
+   "start": 19.145,
+   "end": 21.173,
+   "slot": [
+    19.145,
+    2.028
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "And",
+     "start": 19.145,
+     "end": 19.478
+    },
+    {
+     "text": "a",
+     "start": 19.478,
+     "end": 19.59
+    },
+    {
+     "text": "meteor",
+     "start": 19.59,
+     "end": 20.256
+    },
+    {
+     "text": "shower?",
+     "start": 20.256,
+     "end": 20.923
+    }
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "That's when Earth meets lots of those rocks at once.",
+   "start": 21.623,
+   "end": 26.317,
+   "slot": [
+    21.623,
+    4.694
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "That's",
+     "start": 21.623,
+     "end": 22.165
+    },
+    {
+     "text": "when",
+     "start": 22.165,
+     "end": 22.599
+    },
+    {
+     "text": "Earth",
+     "start": 22.599,
+     "end": 23.14
+    },
+    {
+     "text": "meets",
+     "start": 23.14,
+     "end": 23.682
+    },
+    {
+     "text": "lots",
+     "start": 23.682,
+     "end": 24.116
+    },
+    {
+     "text": "of",
+     "start": 24.116,
+     "end": 24.333
+    },
+    {
+     "text": "those",
+     "start": 24.333,
+     "end": 24.875
+    },
+    {
+     "text": "rocks",
+     "start": 24.875,
+     "end": 25.417
+    },
+    {
+     "text": "at",
+     "start": 25.417,
+     "end": 25.633
+    },
+    {
+     "text": "once.",
+     "start": 25.633,
+     "end": 26.067
+    }
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "start": 26.767,
+   "end": 29.239,
+   "slot": [
+    26.767,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Writing",
+     "start": 26.767,
+     "end": 27.443
+    },
+    {
+     "text": "that",
+     "start": 27.443,
+     "end": 27.83
+    },
+    {
+     "text": "in",
+     "start": 27.83,
+     "end": 28.023
+    },
+    {
+     "text": "my",
+     "start": 28.023,
+     "end": 28.216
+    },
+    {
+     "text": "notebook!",
+     "start": 28.216,
+     "end": 28.989
+    }
+   ]
+  }
+ ],
+ "visemes": {},
+ "draft": "slots (no voice yet)"
+}

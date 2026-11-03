@@ -1,0 +1,84 @@
+{
+ "title": "What is a light-year?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about distances in space?",
+   "slot": [
+    0.6,
+    4.25
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "What's a light-year? Is it a long time?",
+   "slot": [
+    5.3,
+    4.25
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "It's a distance: how far light travels in one year. About nine trillion kilometres!",
+   "slot": [
+    10.0,
+    6.472
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "So far stars are...",
+   "slot": [
+    16.922,
+    2.028
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "Seen as they were long ago. Light from some stars left them thousands of years ago. Looking far is looking back in time.",
+   "slot": [
+    19.4,
+    10.472
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    30.322,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

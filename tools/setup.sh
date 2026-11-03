@@ -14,6 +14,7 @@
 #   bash tools/setup.sh voices [de,uk,...]  Piper voices from voices/registry.json: those films use ("fetched"), or every voice
 #                                  of the languages named (checked by sha256 or the catalogue's md5) (WP-25)
 #   bash tools/setup.sh locales    world languages (WP-25): Noto fonts for captions, Noto CJK, eSpeak NG, Tesseract and its language data
+#   bash tools/setup.sh provenance c2patool 0.27.22, the C2PA reference tool (sha256 checked), into /opt/c2patool (WP-26)
 # Then: python -m dbe engine.doctor
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -113,6 +114,16 @@ locales_deps() {
   else echo "locales: no apt-get; install Noto fonts, eSpeak NG and Tesseract with its language data"; fi
 }
 
+provenance_dl() {
+  # c2patool (MIT / Apache-2.0), the Content Authenticity Initiative's reference tool: reads and verifies C2PA content credentials (WP-26)
+  local ver="0.27.22" sha="6f138ad53da1a62f1cd6ee71c60727efa27d13b811f4c0ea8c2a8528968b358b"
+  if [ -x /opt/c2patool/c2patool ] && /opt/c2patool/c2patool --version 2>/dev/null | grep -q "$ver"; then echo "c2patool: $ver installed"; return; fi
+  local tmp; tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/c.tgz" "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v${ver}/c2patool-v${ver}-x86_64-unknown-linux-gnu.tar.gz"
+  echo "$sha  $tmp/c.tgz" | sha256sum -c - || { echo "c2patool: checksum mismatch"; rm -rf "$tmp"; return 1; }
+  tar xzf "$tmp/c.tgz" -C "$tmp" && mkdir -p /opt/c2patool && cp "$tmp/c2patool/c2patool" /opt/c2patool/ && rm -rf "$tmp"
+}
+
 dotlottie_deps() {
   # @lottiefiles/dotlottie-web (MIT; ThorVG in WebAssembly) draws .lottie files and their themes in lottie.dotlottie's checks (WP-23)
   if [ -d "tools/dotlottie/node_modules/@lottiefiles/dotlottie-web" ]; then echo "dotlottie: player ok"; return; fi
@@ -140,7 +151,8 @@ case "$what" in
   dotlottie) dotlottie_deps ;;
   voices) voices_dl "$@" ;;
   locales) locales_deps ;;
-  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; voices_dl ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|voices|locales]"; exit 2 ;;
+  provenance) provenance_dl ;;
+  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; voices_dl; provenance_dl ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|voices|locales|provenance]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

@@ -188,8 +188,34 @@ def script_slots(name, wpm=135, draft=True):
     return {"wpm": wpm, "slots": rows, "length_s": round(t, 3), "draft_timing": bool(draft and not (d / "build" / "voice.wav").exists())}
 
 
+def _consent_store():
+    from . import provenance as PV
+    return PV.consent_store(Path(os.environ.get("DBE_CONSENT_ROOT") or ROOT))
+
+
+def consent_gate(name, use=None):
+    """WP-26: every voice a film uses needs a consent basis (a stock voice's licence, or a live consent record for a
+    voice made from a person), and every puppet depicting a real person a live likeness consent -> [(what, ok, why)]"""
+    from . import provenance as PV
+    script = _json(FILMS / name / "script.json", {}); reg = _voice_registry(); store = _consent_store(); out = []
+    voices = {v.get("voice") for v in (script.get("speakers") or {}).values()} | ({script["voice"]} if script.get("voice") else set())
+    for v in sorted(x for x in voices if x):
+        ok, why = PV.voice_basis(v, reg, store, use); out.append((f"voice {v}", ok, why))
+    sj = _json(FILMS / name / "shots.json", {"shots": []})
+    for p in sorted({c["puppet"] for sh in sj.get("shots", []) for c in sh.get("cast", [])}):
+        lk = ((_json(ROOT / p, {}) or {}).get("meta") or {}).get("likeness")
+        if lk:
+            rec = next((x for x in store["records"] if x["id"] == lk.get("consent")), None)
+            ok, why = PV.live(rec, {**(use or {}), "kind": "likeness"}) if rec else (False, f"depicts {lk.get('person', 'a real person')} with no consent record")
+            out.append((f"likeness {p}", ok, why))
+    return out
+
+
 def voice_check(name):
     script = _json(FILMS / name / "script.json", {})
+    refused = [f"{w}: {why}" for w, ok, why in consent_gate(name) if not ok]   # WP-26: consent before licence, and nothing waives it
+    if refused:
+        raise PermissionError("consent gate: " + "; ".join(refused) + ". Record consent with consent.add (and the voice's \"consent\" in voices/registry.json).")
     reg = _voice_registry()
     bad = {spk: (v.get("voice"), reg.get(v.get("voice"), {"status": "unknown", "license": "not in voices/registry.json"}))
            for spk, v in (script.get("speakers") or {}).items() if reg.get(v.get("voice"), {}).get("status") != "clean"}
@@ -201,7 +227,7 @@ def voice_check(name):
 
 def _voice_registry():
     """registry voices plus every installed Kokoro voice (Apache-2.0 weights; listed as clean)"""
-    reg = dict(_json(ROOT / "voices" / "registry.json", {}).get("voices", {}))
+    reg = dict(_json(Path(os.environ.get("DBE_VOICE_REGISTRY") or ROOT / "voices" / "registry.json"), {}).get("voices", {}))   # (a scratch registry for tests)
     kdir = Path(VOICES) / "kokoro"
     if (kdir / "voices-v1.0.bin").exists():
         import numpy as np
@@ -243,8 +269,10 @@ RIGHTS = ("open", "owner", "client")
          voice=("object", "optional voice profile {voice, fx}", None), personality=("string", "acting notes", ""),
          rights=("string", "open (openly licensed) | owner (the studio's or a creator's own IP) | client (made for a client)", "open"),
          owner=("string", "rights holder, required for owner and client rights", ""),
-         terms=("string", "client work: usage and transfer terms (e.g. 'exclusive to ACME films, rights transfer on payment')", ""))
-def cast_add(path, id, author, license, provenance, voice=None, personality="", rights="open", owner="", terms=""):
+         terms=("string", "client work: usage and transfer terms (e.g. 'exclusive to ACME films, rights transfer on payment')", ""),
+         contact=("string", "a contributor: how to reach them (for credits and payment)", ""),
+         royalty=("object", "a contributor's terms {per_second, currency}: usage.report pays them for the puppet's screen time", None))
+def cast_add(path, id, author, license, provenance, voice=None, personality="", rights="open", owner="", terms="", contact="", royalty=None):
     """Register a puppet in the cast library: lints it, records author, licence, provenance and a content hash, and
     appends an entry to cast/provenance.jsonl so every change to the library is traceable."""
     import hashlib, datetime
@@ -271,7 +299,10 @@ def cast_add(path, id, author, license, provenance, voice=None, personality="", 
     entry = {"id": id, "name": pup.get("name", id), "path": str(pp.relative_to(ROOT)), "template": pup.get("template"),
              "author": author, "license": license, "provenance": provenance,
              "rights": {"type": rights, **({"owner": owner} if owner else {}), **({"terms": terms} if terms else {})}, "views": sorted((pup.get("views") or {}).keys()),
-             "sha256": hashlib.sha256(pp.read_bytes()).hexdigest()[:16], **({"voice": voice} if voice else {}), **({"personality": personality} if personality else {})}
+             "sha256": hashlib.sha256(pp.read_bytes()).hexdigest()[:16], **({"voice": voice} if voice else {}), **({"personality": personality} if personality else {}),
+             **({"contact": contact} if contact else {}), **({"royalty": royalty} if royalty else {})}
+    if royalty and not isinstance(royalty.get("per_second"), (int, float)):
+        raise ValueError("royalty is {per_second: number, currency}")
     idx["puppets"] = [e for e in idx["puppets"] if e["id"] != id] + [entry]
     (ROOT / "cast" / "index.json").write_text(json.dumps(idx, indent=1))
     with open(ROOT / "cast" / "provenance.jsonl", "a") as f:
@@ -350,6 +381,8 @@ def film_credits(name):
     assets = [f["attribution"] for f in man["files"] if set(f.get("used_by", [])) & uses]
     lines += ["", "Rendered with " + ", ".join(names.get(r, r) for r in rend) + f"; speech by {', '.join(sorted(engines)) or 'Piper'}; alignment by faster-whisper (MIT); audio by ffmpeg.",
               *(["Assets: " + "; ".join(dict.fromkeys(assets))] if assets else []), "Made with Doodleberry."]
+    from . import living as LV   # WP-27: the corrections, dated, and thanks to who reported them
+    lines += LV.credits_section(LV.load_log(d))
     out = d / "build" / "credits.txt"; out.parent.mkdir(exist_ok=True); out.write_text("\n".join(lines) + "\n")
     return {"path": str(out.relative_to(ROOT)), "credits": lines}
 
@@ -545,8 +578,10 @@ def _player_page(name):
 {clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/props.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
 <script>window.SCRIPT_FONTS={fonts_js};window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
-    (d / "build" / "player.html").write_text(page)
-    return d / "build" / "player.html"
+    pp = d / "build" / "player.html"
+    if not pp.exists() or pp.read_text() != page:   # written whole (a temporary file, then renamed): render workers read it at once (WP-38)
+        tmp = pp.with_name(f".player.{os.getpid()}.html"); tmp.write_text(page); os.replace(tmp, pp)
+    return pp
 
 
 def _script_fonts():
@@ -568,7 +603,7 @@ def _render_page(page, query, out, log=None):
     and reused, seconds) is appended to out/render_log.jsonl for render.estimate"""
     import time
     url = "file://" + str(page) + "?" + query; t0 = time.time()
-    lines = _run(["node", "tools/three/run3d.mjs", url, str(out), "4"])
+    lines = _run(["node", "tools/three/run3d.mjs", url, str(out), os.environ.get("DBE_RENDER_WORKERS", "4")])   # browsers per render (a farm worker uses 1, WP-38)
     secs = time.time() - t0
     m = next((re.search(r"(\d+) frames \((\d+) reused\)", l) for l in lines if re.search(r"frames \(\d+ reused\)", l)), None)
     rec = {"frames": int(m.group(1)), "reused": int(m.group(2)), "seconds": round(secs, 2), "plate": "static plate" in " ".join(lines)} if m else {"seconds": round(secs, 2)}
@@ -1308,6 +1343,13 @@ def _derive_cues(name, s):
         r = subprocess.run(["node", "tools/foley.mjs", str(page)], cwd=ROOT, capture_output=True, text=True, timeout=1800)
         if r.returncode == 0 and r.stdout.strip():
             cues += json.loads(r.stdout.strip().splitlines()[-1])
+    ac = _json(ROOT / "sets" / "acoustics.json", {"sets": {}})["sets"]   # WP-13: a footstep sounds like its set's floor
+    for c in cues:
+        if c["type"] == "step" and not c.get("surface"):
+            sh = next((x for x in s["shots"] if x["start"] <= c["t"] < x["end"]), None)
+            surf = (ac.get((sh or {}).get("set")) or {}).get("surface")
+            if surf:
+                c["surface"] = surf
     if s.get("timewarp"):  # the sound-off cut runs on its own clock
         cues = [{**c, "t": round(_warp(s["timewarp"], c["t"], inverse=True), 3),
                  **({"dur": round(_warp(s["timewarp"], c["t"] + c["dur"], inverse=True) - _warp(s["timewarp"], c["t"], inverse=True), 3)} if c.get("dur") else {})} for c in cues]
@@ -1322,6 +1364,12 @@ def _mix_inputs(name, s):
     ed = SD.resolve(_json(d / "sound.json", {}) or {}, _json(d / "timing.json", {}))   # line-relative times, this voicing
     cues, rep = SD.apply_edits(_derive_cues(name, s), ed.get("edits"))
     (d / "build" / "cues.json").write_text(json.dumps([{k: v for k, v in c.items() if k != "origin"} for c in cues]))
+    A = _json(ROOT / "sets" / "acoustics.json", {"sets": {}, "rooms": {}}); dflt = {"rt60": 1.1, "fx_wet": 0.16, "voice_wet": 0.035}
+    rooms = [{"t0": sh["start"], "t1": sh["end"], "set": sh.get("set"), **{k: v for k, v in (A["rooms"].get((A["sets"].get(sh.get("set")) or {}).get("room")) or dflt).items() if k != "about"}}
+             for sh in s["shots"]]
+    if s.get("timewarp"):
+        rooms = [{**r, "t0": round(_warp(s["timewarp"], r["t0"], inverse=True), 3), "t1": round(_warp(s["timewarp"], r["t1"], inverse=True), 3)} for r in rooms]
+    (d / "build" / "rooms.json").write_text(json.dumps(rooms if any(r["rt60"] != 1.1 for r in rooms) else []))   # every shot in the default room: as before
     (d / "build" / "sound_report.json").write_text(json.dumps({"edits": rep, "cues": cues}))
     total = _warp(s.get("timewarp"), s["shots"][-1]["end"], inverse=True)
     score = _json(d / "score.json", {}); score["length_s"] = total; (d / "score.json").write_text(json.dumps(score, indent=1))
@@ -1576,6 +1624,16 @@ def film_render(name, only=None, aspect=""):
         (d / "build" / "frame_keys.json").write_text(json.dumps({"fps": fps, "keys": fk}))
     else:
         (d / "build" / "frame_keys.json").unlink(missing_ok=True)
+    if s.get("sign", True) is not False:   # WP-26: content credentials on every final, read back by the reference tool
+        try:
+            sg = film_sign(name); qa.setdefault("checks", {})["content_credentials"] = sg["ok"]
+            qa["content_credentials"] = [{k: x[k] for k in ("file", "sha256")} | {"state": x["verify"].get("state")} for x in sg["signed"]]
+        except Exception as e:
+            qa.setdefault("checks", {})["content_credentials"] = False; qa["content_credentials"] = {"error": str(e)[-300:]}
+        if (d / "build" / "qa.json").exists():
+            qj = _json(d / "build" / "qa.json"); qj.setdefault("checks", {})["content_credentials"] = qa["checks"]["content_credentials"]
+            (d / "build" / "qa.json").write_text(json.dumps(qj, indent=1))
+        GR.record(d, "qa", GR.qa_inputs(d))   # signing adds the manifest to final.mp4 (picture and sound unchanged): QA stands for the signed file
     return {"rendered": done, "unchanged": skipped, **({"transitions": transitions} if transitions else {}), "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
             "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures"), "lint": qa.get("lint"),
             **({"soundoff": qa["soundoff"]} if qa.get("soundoff") else {})}
@@ -1636,6 +1694,65 @@ def _clip_lib(template, puppet=None):
     if puppet and puppet.get("clips"):   # v0.7: the character's own clips count as its abilities too
         lib = {**lib, "clips": {**lib.get("clips", {}), **puppet["clips"]}}
     return lib
+
+
+@command("acting.tag", name=("string", "film"), tags=("array", "an agent's gesture tags: [{line: id, word: index or the word itself, gesture: a semantic name (big, think, no, yes, wow, oops, cheer, unsure, point, ...) or a clip name}]"),
+         replace=("boolean", "replace the lines' earlier tags", True))
+def acting_tag(name, tags, replace=True):
+    """Semantic gestures from an agent's tags (WP-10): each tag is checked against what the speaking character can
+    play (its template's clip library and its own clips, through cast/profiles.json's semantic names) and against its
+    personality profile (a shy character never points or celebrates); accepted tags are written on the script's lines
+    and acting.plan places them on their words. Returns what was accepted and what was refused, with why and what
+    would be valid."""
+    d = _film(name); sc = _json(d / "script.json"); prof = _json(ROOT / "cast" / "profiles.json", {"profiles": {}, "semantic": {}})
+    lines = {l["id"]: l for l in sc.get("lines", [])}; sh = _shots(name, resolve=False)
+    pup_of = {c.get("speaker"): c["puppet"] for s_ in sh["shots"] for c in s_.get("cast", []) if c.get("speaker")}
+    cast_ix = {e["path"]: e for e in _json(ROOT / "cast" / "index.json", {"puppets": []})["puppets"]}
+    acc, ref = [], []
+    if replace:
+        for l in sc["lines"]:
+            if any(t.get("line") == l["id"] for t in tags):
+                l.pop("gestures", None)
+    for t in tags:
+        ln = lines.get(t.get("line"))
+        if not ln:
+            ref.append({"tag": t, "why": f"no line {t.get('line')!r}"}); continue
+        words = re.findall(r"\S+", ln["text"]); w = t.get("word", 0)
+        if isinstance(w, str):
+            k = next((i for i, x in enumerate(words) if re.sub(r"\W", "", x).lower() == re.sub(r"\W", "", w).lower()), None)
+        else:
+            k = int(w) if 0 <= int(w) < len(words) else None
+        if k is None:
+            ref.append({"tag": t, "why": f"no word {w!r} in {ln['id']}: {ln['text']!r}"}); continue
+        pz = _json(ROOT / pup_of[ln.get("speaker")]) if ln.get("speaker") in pup_of else {}
+        tpl = pz.get("template", "humanoid"); libf = ROOT / "puppet" / "clips" / f"{tpl}.json"
+        lib = set(_json(libf, {"clips": {}})["clips"]) | set(pz.get("clips") or {})
+        sem = (prof.get("semantic") or {}).get(tpl, {}); g = str(t.get("gesture", ""))
+        clip = sem.get(g, g if g in lib else None)
+        pname = ((sc.get("speakers") or {}).get(ln.get("speaker")) or {}).get("profile") or (pz.get("acting") or {}).get("profile") or (cast_ix.get(pup_of.get(ln.get("speaker"), "")) or {}).get("profile")
+        never = set((prof["profiles"].get(pname) or {}).get("never") or [])
+        concrete = {"point": {"point_R", "point_L"}, "present": {"present_R", "present_L"}}.get(clip, {clip})
+        if clip is None or not (concrete & lib or clip in ("point", "present") and concrete & lib):
+            ref.append({"tag": t, "why": f"{g!r} is not a gesture {ln.get('speaker')} ({tpl}) can play", "valid": sorted(set(sem) | lib)}); continue
+        if concrete & never:
+            ref.append({"tag": t, "why": f"{ln.get('speaker')} is {pname}: never {clip}", "valid": sorted(n for n, c in sem.items() if not ({c} | ({'point_R', 'point_L'} if c == 'point' else set())) & never)}); continue
+        lines[ln["id"]].setdefault("gestures", []).append({"word": k, "clip": clip, "from": g}); acc.append({"line": ln["id"], "word": words[k], "clip": clip})
+    (d / "script.json").write_text(json.dumps(sc, indent=1, ensure_ascii=False))
+    return {"accepted": acc, "refused": ref, "next": "acting.plan places the accepted gestures on their words"}
+
+
+@command("cast.profile", id=("string", "cast id"), profile=("string", "a personality profile in cast/profiles.json (shy, excitable, calm, grumpy, thoughtful, neutral)"))
+def cast_profile(id, profile):
+    """Give a cast member a personality profile (WP-10, E13): the gesture planner then shapes its tempo, energy and
+    gesture choice in every film (a film can override it in script.json speakers.<id>.profile)."""
+    prof = _json(ROOT / "cast" / "profiles.json", {"profiles": {}})["profiles"]
+    if profile not in prof:
+        raise ValueError(f"no profile {profile!r} (have {', '.join(prof)})")
+    idx = _json(ROOT / "cast" / "index.json"); e = next((x for x in idx["puppets"] if x["id"] == id), None)
+    if not e:
+        raise KeyError(f"no cast member {id}")
+    e["profile"] = profile; (ROOT / "cast" / "index.json").write_text(json.dumps(idx, indent=1))
+    return {"id": id, "profile": profile, "about": prof[profile].get("about")}
 
 
 @command("acting.direct", name=("string", "film"), text=("string", "directions in plain English (default: the script lines' and shots' \"direction\" fields)", ""),
@@ -2210,8 +2327,11 @@ def review_fix(name, id=""):
          root=("string", "move (the take's travel, planted feet kept on the ground) | in_place", "move"),
          arms=("string", "angles (joint angles copied: natural silhouettes, the default) | reach (hands placed where the take's hands are, scaled to this body: keeps claps and hands-on-body contacts)", "angles"),
          tolerance=("number", "largest angle error the reduced keys may have, in degrees", 1.5),
-         save=("boolean", "write the clip into the character file (otherwise a copy under out/actout/)", True))
-def actout_clip(video, puppet, name, start=0, duration=0, mirror=False, face="upper", root="move", arms="angles", tolerance=1.5, save=True):
+         save=("boolean", "write the clip into the character file (otherwise a copy under out/actout/)", True),
+         people=("integer", "people in the take: each becomes a clip (<name>, <name>_2, ...; left to right as first seen)", 1),
+         puppets=("array", "characters for the second and later people (default: the same character)", None),
+         stabilize=("string", "auto (take out the camera's motion when the background moves more than 20 px) | on | off", "auto"))
+def actout_clip(video, puppet, name, start=0, duration=0, mirror=False, face="upper", root="move", arms="angles", tolerance=1.5, save=True, people=1, puppets=None, stabilize="auto"):
     """Act it out (plan 3.5): a short take of a person becomes an action clip on a character. MediaPipe Pose and
     Face Landmarker read body points and face blendshapes per frame; they are retargeted onto the character's own
     rest pose (joint angles, the root's travel with planted feet held on the ground, foot contacts, mouth, eye and
@@ -2220,6 +2340,7 @@ def actout_clip(video, puppet, name, start=0, duration=0, mirror=False, face="up
     the character (puppet format v0.7 clips), so shots, the bake and every exporter play it by name. Also writes
     out/actout/<name>_sheet.png: frames of the take above the character at the same moments."""
     import time
+    import numpy as np
     from . import actout as AO
     t0 = time.time()
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,40}", name):
@@ -2235,26 +2356,48 @@ def actout_clip(video, puppet, name, start=0, duration=0, mirror=False, face="up
     pz = _json(pfile)
     dur = min(float(duration) or 20.0, 20.0)
     cache = ROOT / "out" / "actout"; cache.mkdir(parents=True, exist_ok=True)
-    key = AO.cache_key(vid, start=float(start), duration=dur, mirror=bool(mirror), face=face != "none", fps=30)
+    if stabilize not in ("auto", "on", "off") or not 1 <= int(people) <= 4:
+        raise ValueError("stabilize is auto, on or off; people is 1 to 4")
+    key = AO.cache_key(vid, start=float(start), duration=dur, mirror=bool(mirror), face=face != "none" and int(people) == 1, fps=30, **({"people": int(people)} if int(people) > 1 else {}))
     kpf = cache / f"{key}.keypoints.json"
     cached = kpf.exists()
-    kp = _json(kpf) if cached else AO.detect(vid, fps=30, start=float(start), duration=dur, mirror=bool(mirror), face=face != "none")
+    kp = _json(kpf) if cached else AO.detect(vid, fps=30, start=float(start), duration=dur, mirror=bool(mirror), face=face != "none" and int(people) == 1, people=int(people))
     if not cached:
         kpf.write_text(json.dumps(kp))
-    clip, rep = AO.retarget(kp, pz, tol=float(tolerance), face=face, root=root, arms=arms)
-    clip["source"] = {"take": vid.name, "start": float(start), "seconds": rep["seconds"], "mirror": bool(mirror),
-                      "by": "actout.clip (MediaPipe Pose + Face Landmarker, retargeted to this character)"}
-    pz.setdefault("clips", {})[name] = clip
-    if str(pz.get("version", "0")) < "0.7":
-        pz["version"] = "0.7"      # character clips arrived in v0.7
-    if save:
-        out_path = puppet_save(str(pfile.relative_to(ROOT)), pz)["path"]
-    else:
-        out_path = str((cache / f"{name}.puppet.json").relative_to(ROOT)); (ROOT / out_path).write_text(json.dumps(pz))
+    cam = None
+    if stabilize != "off":   # WP-12: the camera's motion, from the background, taken out of every point
+        arr, _ = AO.frames(vid, 30, float(start), dur, bool(mirror))
+        path, prep = AO.camera_path(arr, kp); moved = float(max(np.ptp(path[:, 0]), np.ptp(path[:, 1])))
+        cam = {"moved_px": round(moved, 1), "trusted": prep["trusted"], "taken_out": stabilize == "on" or (moved > 20 and prep["trusted"] >= 0.8)}
+        if prep["trusted"] < 0.8:
+            cam["note"] = "too little background to see the camera's motion (the performer fills the picture): taken as still"
+        if cam["taken_out"]:
+            kp = AO.stabilize(kp, path)
+    takes = AO.split_people(kp, int(people)) if int(people) > 1 else [kp]
+    outs = []
+    for j, kpj in enumerate(takes):
+        pf = pfile if j == 0 or not puppets or len(puppets) < j else (ROOT / puppets[j - 1]).resolve()
+        pz = _json(pf); cname = name if j == 0 else f"{name}_{j + 1}"
+        clip, rep = AO.retarget(kpj, pz, tol=float(tolerance), face=face if int(people) == 1 else "none", root=root, arms=arms)
+        clip["source"] = {"take": vid.name, "start": float(start), "seconds": rep["seconds"], "mirror": bool(mirror), **({"person": j + 1} if int(people) > 1 else {}),
+                          **({"camera_taken_out_px": cam["moved_px"]} if cam and cam["taken_out"] else {}),
+                          "by": "actout.clip (MediaPipe Pose + Face Landmarker, retargeted to this character)"}
+        pz.setdefault("clips", {})[cname] = clip
+        ver = tuple(int(x) for x in str(pz.get("version", "0")).split(".") if x.isdigit())
+        want = (0, 10) if clip.get("controls") else (0, 7)   # character clips arrived in v0.7, clip control tracks in v0.10
+        if ver < want:
+            pz["version"] = ".".join(map(str, want))
+        if save:
+            op = puppet_save(str(pf.relative_to(ROOT)), pz)["path"]
+        else:
+            op = str((cache / f"{cname}.puppet.json").relative_to(ROOT)); (ROOT / op).write_text(json.dumps(pz))
+        outs.append((cname, op, clip, rep, kpj))
+    name, out_path, clip, rep, kp = outs[0]
     sheet = _actout_sheet(vid, float(start), bool(mirror), out_path, name, clip["duration"], cache / f"{name}_sheet.png", kp)
     return {"clip": name, "puppet": out_path, "saved": bool(save), "report": rep, "keypoints": str(kpf.relative_to(ROOT)),
             "reused_keypoints": cached, "timing": {**(kp.get("timing") or {}), "total_s": round(time.time() - t0, 1)},
-            "sheet": str(sheet.relative_to(ROOT)) if sheet else None}
+            "sheet": str(sheet.relative_to(ROOT)) if sheet else None, **({"camera": cam} if cam else {}),
+            **({"people": [{"clip": c, "puppet": o, "report": {k: r[k] for k in ("tracks", "root", "person_found")}} for c, o, _, r, _ in outs]} if len(outs) > 1 else {})}
 
 
 def _actout_sheet(vid, start, mirror, puppet_rel, clip, dur, out, kp=None, n=6):
@@ -3039,6 +3182,1010 @@ def plan_posted(quarter, date, url, channel=""):
     return row
 
 
+# ---------------- series production (WP-28) ----------------
+SERIES = ROOT / "series"
+
+
+def _series(sid):
+    d = SERIES / sid
+    if not (d / "bible.json").exists():
+        raise FileNotFoundError(f"no series/{sid}/bible.json")
+    return d
+
+
+@command("series.plan", series=("string", "series id (series/<id>/bible.json, briefs.json)"))
+def series_plan(series):
+    """Plan a series' episodes (WP-28): each brief in series/<id>/briefs.json becomes an episode with its posting date
+    from the bible's cadence, the running gags due that episode, the props it carries and what each role knows by
+    then. Writes series/<id>/episodes.json and schedule.ics (one event per episode)."""
+    from . import series as SR
+    d = _series(series); b = SR.load(d); briefs = _json(d / "briefs.json")["episodes"]
+    eps = SR.plan_episodes(b, briefs); old = {e["n"]: e for e in _json(d / "episodes.json", {"episodes": []})["episodes"]}
+    for e in eps:   # keep what was made of an episode already
+        for k in ("status", "qa", "length_s"):
+            if k in old.get(e["n"], {}):
+                e[k] = old[e["n"]][k]
+    (d / "episodes.json").write_text(json.dumps({"series": series, "episodes": eps}, indent=1, ensure_ascii=False) + "\n")
+    ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Doodleberry//series//EN"]
+    for e in eps:
+        day = e["date"].replace("-", "")
+        ics += ["BEGIN:VEVENT", f"UID:{e['name']}@doodleberry", f"DTSTAMP:{day}T000000Z", f"DTSTART;VALUE=DATE:{day}", f"SUMMARY:{b['title']} #{e['n']}: {e['title']}", "END:VEVENT"]
+    (d / "schedule.ics").write_text("\r\n".join(ics + ["END:VCALENDAR"]) + "\r\n")
+    return {"series": series, "episodes": [{k: e[k] for k in ("n", "name", "date", "title", "gags", "props", "learns")} for e in eps]}
+
+
+@command("series.make", series=("string", "series id"), episodes=("array", "episode numbers (default all)", None), render=("boolean", "voice, act and render", True))
+def series_make(series, episodes=None, render=True):
+    """Make a series' episodes from data (WP-28): each episode's film from the bible's format and its brief (gag lines
+    in place), the persisting props held by their owners in every shot they are in, voiced, acted (the gesture planner,
+    then the gags' acting directions) and rendered; then continuity is checked across every episode made."""
+    from . import series as SR
+    d = _series(series); b = SR.load(d); ep_all = _json(d / "episodes.json")["episodes"]
+    want = set(episodes or [e["n"] for e in ep_all]); out = []
+    for ep in ep_all:
+        if ep["n"] not in want:
+            continue
+        name = ep["name"]
+        if (FILMS / name).exists():
+            shutil.rmtree(FILMS / name)
+        film_from_template(name, b["format"], SR.brief_for(b, ep))
+        sj = _json(FILMS / name / "shots.json")
+        for sh_, props in zip(sj["shots"], SR.prop_entries(b, ep, sj["shots"])):
+            if props:
+                sh_["props"] = props
+        sj["series"] = {"id": series, "episode": ep["n"]}
+        (FILMS / name / "shots.json").write_text(json.dumps(sj, indent=1, ensure_ascii=False))
+        row = {"n": ep["n"], "film": name, **_series_research(d, b, ep)}
+        pk = ep["brief"].get("packaging")
+        if pk:   # titles and thumbnails written with the brief, each checked as any film's are (WP-07)
+            ts = title_set(name, titles=pk.get("titles"), thumbnails=pk.get("thumbnails"), by=pk.get("by", "series brief"))
+            row["titles_passing"] = ts.get("titles_passing", ts.get("passing"))
+        if render:
+            voice_build(name); retime(name); acting_plan(name)
+            dr = SR.directions(b, ep)
+            if dr:
+                ad = acting_direct(name, text=dr); row["directed"] = dr
+            r = film_heal(name, rounds=3)   # render, and repair what the QA bar and layout checks find
+            if ep["brief"].get("packaging"):
+                try:
+                    cover_make(name); row["covers"] = True
+                except Exception as e:
+                    row["covers"] = f"not made: {str(e)[:100]}"
+            row["healed"] = [x["what"] for e in r.get("rounds") or [] for x in e.get("repairs", [])][:8]
+            r = {"qa": _json(FILMS / name / "build" / "qa.json", {}).get("checks", {})}
+            row["qa_failures"] = sorted(k for k, v in (r.get("qa") or {}).items() if v is False)
+            row["length_s"] = round(float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(FILMS / name / "build" / "final.mp4")])[-1]), 2)
+            ep["status"] = "rendered" if not row["qa_failures"] else "qa failing"; ep["qa"] = row["qa_failures"]; ep["length_s"] = row["length_s"]
+        out.append(row)
+    (d / "episodes.json").write_text(json.dumps({"series": series, "episodes": ep_all}, indent=1, ensure_ascii=False) + "\n")
+    return {"series": series, "made": out, "continuity": series_continuity(series)}
+
+
+def _series_research(d, b, ep):
+    """write an episode's research_log.md from its brief and the series' gate reviews, and carry the gate verdict to
+    its ledger only when the review is of exactly these facts (series/<id>/gate.json, keyed by episode, with the
+    hash of the facts reviewed); a changed fact needs a new review"""
+    from . import series as SR
+    from . import research
+    g = _json(d / "gate.json", {"reviews": {}})["reviews"].get(str(ep["n"]))
+    fd = FILMS / ep["name"]; h = SR.facts_hash(ep["brief"])
+    current = bool(g and g.get("facts_hash") == h)
+    (fd / "research_log.md").write_text(SR.research_log(b, ep, g if current else None))
+    hist = [x for x in _json(d / "gate.json", {}).get("history", []) if x["episode"] == ep["n"]]
+    if research.ledger(fd) == []:   # the episode's review rounds, oldest first, so its ledger shows how it was cleared
+        for x in hist[:-1] if current else hist:
+            research.add(fd, "fact_gate", x["verdict"], f"series gate review {x['at']} by {x['reviewer']} (of an earlier text)" + (": " + "; ".join(x["issues"]) if x["issues"] else ""))
+    if current:
+        research.add(fd, "fact_gate", g["verdict"], f"series gate review {g.get('at')} by {g.get('reviewer')}: " + ("; ".join(f"{i.get('fact')}: {i.get('problem')}" for i in g.get("issues", [])) or "no issues")[:600])
+    return {"gate": g["verdict"] if current else ("stale: facts changed since the review" if g else "not reviewed")}
+
+
+@command("series.gate", series=("string", "series id"), review=("string", "path to the fresh fact-gate reviewer's report: a JSON list [{episode, verdict, sources, issues, counter_evidence}]"),
+         reviewer=("string", "who reviewed (e.g. 'fresh fact_gate agent')"), at=("string", "date of the review (YYYY-MM-DD)"))
+def series_gate(series, review, reviewer, at):
+    """Record a fresh fact-gate reviewer's verdicts on a series' episodes (WP-28) in series/<id>/gate.json, each tied
+    to the hash of the facts reviewed, and carry them to the episodes already made (research_log.md and ledger).
+    The reviewer is not the builder: give it the episodes' facts and sources, not the builder's conclusions."""
+    from . import series as SR
+    d = _series(series); b = SR.load(d); rp = (ROOT / review).resolve() if not Path(review).is_absolute() else Path(review)
+    rows = json.loads(rp.read_text()); eps = {e["n"]: e for e in _json(d / "episodes.json")["episodes"]}
+    gate = _json(d / "gate.json", {"note": "WP-28: fact-gate reviews per episode (series.gate), tied to the facts reviewed", "reviews": {}})
+    out = []
+    for r in rows:
+        ep = eps.get(int(r["episode"]))
+        if not ep or r.get("verdict") not in ("cleared", "blocked"):
+            raise ValueError(f"bad review row: {str(r)[:120]}")
+        gate["reviews"][str(ep["n"])] = {**{k: r.get(k) for k in ("verdict", "sources", "issues", "counter_evidence")}, "reviewer": reviewer, "at": at,
+                                         "facts_hash": SR.facts_hash(ep["brief"])}
+        gate.setdefault("history", []).append({"episode": ep["n"], "verdict": r["verdict"], "reviewer": reviewer, "at": at,
+                                               "issues": [f"{i.get('fact')}: {i.get('problem')}" for i in r.get("issues", []) if not str(i.get("problem", "")).startswith("(Non-blocking)")]})
+        out.append({"episode": ep["n"], "verdict": r["verdict"], "carried_to_film": (FILMS / ep["name"] / "shots.json").exists()})
+    (d / "gate.json").write_text(json.dumps(gate, indent=1, ensure_ascii=False) + "\n")
+    for o in out:   # after gate.json is written: _series_research reads it
+        if o["carried_to_film"]:
+            _series_research(d, b, eps[o["episode"]])
+    return {"series": series, "reviews": out}
+
+
+@command("series.continuity", series=("string", "series id"))
+def series_continuity(series):
+    """Continuity across a series (WP-28, E16), read from the episodes' films: each role's puppet and voice, the
+    persisting props (on screen with their owner from the episode they appear in until they are lost, never before),
+    the running gags on their cadence, nobody speaking of a fact before the episode they learn it and the learner not
+    asking again about what they learnt, and every episode's length within the band."""
+    from . import series as SR
+    d = _series(series); b = SR.load(d); films = []
+    for e in _json(d / "episodes.json")["episodes"]:
+        f = FILMS / e["name"]
+        if (f / "script.json").exists():
+            films.append((e["n"], _json(f / "script.json"), _json(f / "shots.json"), e.get("length_s")))
+    probs = SR.check(b, films)
+    return {"series": series, "episodes_checked": len(films), "ok": not probs, "problems": probs}
+
+
+@command("teach.tutorial", name=("string", "film"))
+def teach_tutorial(name):
+    """Teaching mode (WP-28): a film's pipeline as a step-by-step tutorial (build/tutorial/index.md and images): the
+    brief, the script, each character's model sheet, the voice, the acting, a frame of every shot, and the exact
+    commands that made each step, so a learner can repeat it on their own character."""
+    d = _film(name); s = _shots(name); sc = _json(d / "script.json", {}); tm = _json(d / "timing.json", {})
+    td = d / "build" / "tutorial"; shutil.rmtree(td, ignore_errors=True); td.mkdir(parents=True)
+    md = [f"# Making “{s.get('title', name)}”, step by step", "", "Every step below is one command; run them in order on your own film.", ""]
+    md += ["## 1. The brief", "", (d / "brief.md").read_text().strip() if (d / "brief.md").exists() else "(no brief)", ""]
+    fmt = sc.get("format")
+    md += ["## 2. The storyboard", "", f"`python -m dbe film.from_template '{{\"name\": \"{name}\", \"format\": \"{fmt}\", \"brief\": {{...}}}}'`" if fmt else "Write script.json and shots.json.", "",
+           *[f"- **{l.get('speaker', '')}:** {l['text']}" for l in sc.get("lines", [])], ""]
+    md += ["## 3. The cast", ""]
+    for p in sorted({c["puppet"] for sh in s["shots"] for c in sh.get("cast", [])}):
+        img = td / (Path(p).name.split(".")[0] + ".sheet.png")
+        try:
+            puppet_sheet(p, str(img.relative_to(ROOT))); md += [f"![{Path(p).name}]({img.name})", ""]
+        except Exception as e:
+            md += [f"(model sheet of {p} not made: {str(e)[:60]})", ""]
+        md += [f"`python -m dbe puppet.sheet '{{\"path\": \"{p}\"}}'`", ""]
+    md += ["## 4. The voice", "", "`python -m dbe voice.build '{\"name\": \"" + name + "\"}'`", "",
+           *[f"- {l['id']}: {l['start']:.2f} to {l['end']:.2f} s, {len(l.get('words') or [])} words" for l in tm.get("lines", [])], ""]
+    md += ["## 5. The acting", "", "`python -m dbe acting.plan '{\"name\": \"" + name + "\"}'` (gestures from the voice), then optional directions in plain words with `acting.direct`.", ""]
+    md += ["## 6. The render", "", "`python -m dbe film.render '{\"name\": \"" + name + "\"}'`", ""]
+    final = d / "build" / "final.mp4"
+    for sh in s["shots"]:
+        t = (sh["start"] + sh["end"]) / 2; img = td / f"{sh['id']}.png"
+        if final.exists():
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{t:.2f}", "-i", str(final), "-frames:v", "1", "-vf", "scale=360:-2", str(img)])
+            md += [f"![shot {sh['id']}]({img.name})", f"Shot {sh['id']}: {sh.get('set')} set, {len(sh.get('cast', []))} character(s), {sh['start']:.1f} to {sh['end']:.1f} s.", ""]
+    md += ["## 7. Check and post", "", "`qa.run`, `film.package`, `cover.make`, `post.queue`; afterwards `analytics.checklist`.", ""]
+    (td / "index.md").write_text("\n".join(md) + "\n")
+    return {"tutorial": str((td / "index.md").relative_to(ROOT)), "images": sorted(p.name for p in td.glob("*.png"))}
+
+
+# ---------------- library economics and creator packages (WP-29) ----------------
+def _catalogue(include_cuts=False):
+    """every film in films/ (scratch copies left out; derived cuts left out unless asked)"""
+    return sorted(p.name for p in FILMS.iterdir() if ((p / "shots.json").exists() or (p / "scene.js").exists() and (p / "script.json").exists())
+                  and not p.name.startswith("zz-") and (include_cuts or "--" not in p.name))
+
+
+@command("usage.report", films=("array", "films (default: the whole catalogue)", None), rates=("object", "optional royalty rates per second: {\"owner\": {name: rate}, \"kind\": {puppet|clip|set|prop|icon|voice: rate}, \"currency\": \"USD\"}", None),
+         include_cuts=("boolean", "count derived cuts (films/<name>--16x9 ...) as films of their own", False))
+def usage_report(films=None, rates=None, include_cuts=False):
+    """Screen time per asset (WP-29, E15), from each film's shots.json: every puppet, clip, set, prop, overlay icon
+    and voice in seconds, with the films it is in, its owner and licence (puppets from the cast library, clip packs
+    from their author, voices from the registry), totals by owner, and with rates what each owner is owed. Writes
+    out/usage/usage.json and usage.csv. Films whose times cannot be resolved are listed with the reason."""
+    from . import usage as U
+    lib = U.Library(ROOT); names = films or _catalogue(include_cuts); ok, skipped = [], []
+    for n in names:
+        try:
+            ok.append((n, _shots(n) if (FILMS / n / "shots.json").exists() else None, _json(FILMS / n / "script.json", {}), _json(FILMS / n / "timing.json", {})))
+        except Exception as e:
+            skipped.append({"film": n, "why": str(e)[:160]})
+    r = U.report(lib, ok, rates)
+    od = ROOT / "out" / "usage"; od.mkdir(parents=True, exist_ok=True)
+    r = {"films": len(names), "covered": [n for n, *_ in ok], "planned": [n for n, _, _, tm in ok if tm.get("draft")], "skipped": skipped, **r}
+    (od / "usage.json").write_text(json.dumps(r, indent=1, ensure_ascii=False)); (od / "usage.csv").write_text(U.csv(r["assets"]))
+    unreg = [a["id"] for a in r["assets"] if a["kind"] == "puppet" and not a.get("registered")]
+    return {"films": r["films"], "covered": len(ok), "planned": r["planned"], "skipped": skipped, "assets": len(r["assets"]),
+            "by_kind": {k: sum(1 for a in r["assets"] if a["kind"] == k) for k in ("puppet", "clip", "set", "prop", "icon", "voice", "boil", "scene")},
+            "owners": [{k: o[k] for k in ("owner", "seconds", "assets")} for o in r["owners"]], "unregistered_puppets": unreg,
+            "payouts": (r["payouts"] or {}).get("by_owner"), "report": "out/usage/usage.json", "csv": "out/usage/usage.csv"}
+
+
+@command("pack.make", kind=("string", "rig | loops | boil"), id=("string", "pack id (lower-case, hyphens)"), name=("string", "pack name"),
+         version=("string", "pack version, e.g. 1.0.0"), author=("string", "who made it (credited and paid by the usage report)"),
+         license=("string", "an SPDX id (CC-BY-4.0, CC0-1.0...) or LicenseRef-owner for a creator's own terms"),
+         source=("string", "rig: a cast id or .puppet.json path; loops: a cast id or .puppet.json whose own clips (or a template, e.g. humanoid) the clips come from; boil: a film whose first boiled shot gives the settings", ""),
+         clips=("array", "loops: the clip names to pack", None), boil=("object", "boil: the settings {fps, frames, amount, freq} (instead of source)", None),
+         description=("string", "what it is", ""), contact=("string", "how to reach the creator", ""),
+         royalty=("object", "optional terms {per_second, currency}: the usage report pays them for screen time", None))
+def pack_make(kind, id, name, version, author, license, source="", clips=None, boil=None, description="", contact="", royalty=None):
+    """Package a creator's rig template, loop pack or boil preset (WP-29) as out/packs/<id>-<version>.dbpack: the
+    payload with its sha256s, the author, licence, royalty terms and what it needs (template, puppet format), ready to
+    install into another project with pack.install."""
+    from . import packs as PK
+    if license not in OPEN_LICENSES and not license.startswith("LicenseRef-"):
+        raise ValueError(f"licence: an open SPDX id ({', '.join(sorted(OPEN_LICENSES))}) or LicenseRef-<terms>")
+    cast = {e["id"]: e for e in _json(ROOT / "cast" / "index.json", {"puppets": []})["puppets"]}
+    path_of = lambda s_: cast[s_]["path"] if s_ in cast else s_
+    meta = {"id": id, "name": name, "version": version, "author": author, "license": license, **({"description": description} if description else {}),
+            **({"contact": contact} if contact else {}), **({"royalty": royalty} if royalty else {})}
+    if kind == "rig":
+        pp = path_of(source); pup = _json(ROOT / pp)
+        if not pup:
+            raise FileNotFoundError(f"no puppet {source}")
+        missing = [i for i in puppet_lint(pp)["issues"] if i["level"] == "missing"]
+        if missing:
+            raise ValueError(f"the rig is incomplete: {missing[:3]}")
+        meta["requires"] = {"template": pup["template"], "puppet_format": pup.get("version")}
+        payload = {f"{id}.puppet.json": pup}
+    elif kind == "loops":
+        if not clips:
+            raise ValueError("name the clips to pack")
+        if (ROOT / "puppet" / "clips" / f"{source}.json").exists():
+            tpl, have = source, _json(ROOT / "puppet" / "clips" / f"{source}.json")["clips"]
+        else:
+            pup = _json(ROOT / path_of(source)); tpl, have = pup["template"], pup.get("clips") or {}
+        miss = [c for c in clips if c not in have]
+        if miss:
+            raise ValueError(f"no clips {miss} in {source}")
+        meta["requires"] = {"template": tpl}
+        payload = {"clips.json": {"template": tpl, "clips": {c: {k: v for k, v in have[c].items() if k != "pack"} for c in clips}}}
+    elif kind == "boil":
+        b = boil or next(((sh.get("style") or {}).get("boil") for sh in _shots(source, resolve=False)["shots"] if (sh.get("style") or {}).get("boil")), None)
+        if not b:
+            raise ValueError("give boil settings, or a film with a boiled shot")
+        payload = {"boil.json": {k: b[k] for k in PK.BOIL_KEYS if k in b}}
+    else:
+        raise ValueError(f"kind is one of {PK.KINDS}")
+    out, pk = PK.make(ROOT / "out" / "packs", kind, meta, payload)
+    return {"pack": str(out.relative_to(ROOT)), "kind": kind, "files": [f["path"] for f in pk["files"]], "requires": pk.get("requires")}
+
+
+@command("pack.install", pack=("string", "path to a .dbpack"), project=("string", "the Doodleberry project to install into (default: this one)", ""))
+def pack_install(pack, project=""):
+    """Install a creator pack (WP-29) into a project: a rig into cast/packs/ and the cast library (linted with that
+    project's own loader against its template), a loop pack into the template's clip library (every renderer and the
+    bake read it), a boil preset into presets/boil/. Hashes are checked; clip names already taken are refused."""
+    from . import packs as PK
+    pp = Path(pack) if Path(pack).is_absolute() else ROOT / pack
+    return PK.install(Path(project).resolve() if project else ROOT, pp)
+
+
+@command("boil.apply", name=("string", "film"), preset=("string", "an installed boil preset id (presets/boil/<id>.json)"), shots=("array", "shot ids (default: every shot)", None))
+def boil_apply(name, preset, shots=None):
+    """Put a boil preset on a film's shots (WP-29): style.boil gets the preset's settings and style.boil_preset its id,
+    so the usage report counts the preset's screen time for its author."""
+    pr = _json(ROOT / "presets" / "boil" / f"{preset}.json")
+    if not pr:
+        raise FileNotFoundError(f"no boil preset {preset} (pack.install one)")
+    d = _film(name); sj = _json(d / "shots.json"); done = []
+    for sh in sj["shots"]:
+        if shots is None or sh["id"] in shots:
+            st = sh.setdefault("style", {}); st["boil"] = {k: pr[k] for k in ("fps", "frames", "amount", "freq") if k in pr}; st["boil_preset"] = preset; done.append(sh["id"])
+    (d / "shots.json").write_text(json.dumps(sj, indent=1, ensure_ascii=False))
+    return {"film": name, "preset": preset, "shots": done}
+
+
+@command("font.sheet", id=("string", "font id (out/fonts/<id>/)"), chars=("string", "the characters to collect (default: A-Z, a-z, 0-9 and punctuation)", ""),
+         cols=("integer", "boxes per row", 10), title=("string", "heading printed on the sheet", "Handwriting sheet"))
+def font_sheet(id, chars="", cols=10, title="Handwriting sheet"):
+    """A printable handwriting sheet (WP-29): one box per character with its label, a baseline and an x-height line in
+    a light blue that drops out of the scan, and corner marks for registration (A4, 300 dpi: sheet.png, sheet.pdf and
+    sheet.json, the layout font.from_samples reads)."""
+    from . import handfont as HF
+    od = ROOT / "out" / "fonts" / id; od.mkdir(parents=True, exist_ok=True)
+    L = HF.sheet(chars or HF.DEFAULT_CHARS, od / "sheet.png", title, cols)
+    return {"sheet": str((od / "sheet.png").relative_to(ROOT)), "pdf": str((od / "sheet.pdf").relative_to(ROOT)), "boxes": len(L["cells"])}
+
+
+@command("font.from_samples", id=("string", "font id (its sheet is out/fonts/<id>/sheet.json)"), scan=("string", "the filled sheet, scanned or photographed (PNG or JPEG)"),
+         family=("string", "font family name"), designer=("string", "whose handwriting it is (credited in the font's name table)"),
+         license=("string", "the licence the artist gives the font (e.g. OFL-1.1 or LicenseRef-owner)", "LicenseRef-owner"))
+def font_from_samples(id, scan, family, designer, license="LicenseRef-owner"):
+    """A handwriting font from an artist's filled sheet (WP-29): the page is registered by its corner marks, each box's
+    ink is kept (the guides drop out) and traced with potrace into outlines, placed on the box's baseline at the
+    font's x-height, and built into an OpenType font with fontTools (out/fonts/<id>/<family>.otf) with a preview."""
+    from . import handfont as HF
+    od = ROOT / "out" / "fonts" / id; L = _json(od / "sheet.json")
+    if not L:
+        raise FileNotFoundError(f"no sheet for {id}: run font.sheet first")
+    pot = ROOT / "out" / "vendor-build" / "potrace" / "bin" / "potrace"
+    if not pot.exists():
+        vendor_build("potrace")
+    sp = Path(scan) if Path(scan).is_absolute() else ROOT / scan
+    page = HF.read_scan(sp, L); Image_ = __import__("PIL.Image", fromlist=["Image"]); Image_.fromarray(page).save(od / "registered.png")
+    rows = []
+    for c in L["cells"]:
+        ink, org = HF.cell_ink(page, c); rows.append((c["char"], ink, org, c["baseline"], c["xheight"]))
+    out = od / f"{family.replace(' ', '')}.otf"
+    rep = HF.build(rows, out, family, designer, pot)
+    from PIL import Image, ImageDraw, ImageFont
+    f = ImageFont.truetype(str(out), 96); pv = Image.new("RGB", (2000, 420), "white"); dr = ImageDraw.Draw(pv)
+    dr.text((40, 30), "The quick brown fox jumps", font=f, fill="black"); dr.text((40, 200), "over the lazy dog? 0123456789", font=f, fill="black")
+    pv.save(od / "preview.png")
+    (od / "font.json").write_text(json.dumps({"family": family, "designer": designer, "license": license, "file": out.name, "glyphs": rep}, indent=1, ensure_ascii=False))
+    empty = [g["char"] for g in rep if g.get("empty")]
+    return {"font": str(out.relative_to(ROOT)), "glyphs": len(rep) - len(empty), "empty_boxes": empty, "preview": str((od / "preview.png").relative_to(ROOT)), "license": license}
+
+
+# ---------------- other mediums (WP-30) ----------------
+@command("film.comic", name=("string", "film"), kind=("string", "comic (six panels to an A4 page) | storybook (a picture and its words on each square page)", "comic"),
+         dsf=("number", "frame scale for the panels (1 = the film's pixels)", 1.0))
+def film_comic(name, kind="comic", dsf=1.0):
+    """A printable comic or storybook from a film's data alone (WP-30): a panel for every voiced line (the player's
+    frame at that moment, without its bubbles or captions, cropped around the characters) with the line set by Typst
+    as a speech balloon pointing at the speaker's head or a caption for the narrator, and a silent panel for a shot
+    with no lines. Writes build/<kind>/<kind>.typ, .pdf and a PNG per page, then reads the PDF back: every line's words
+    must be in it, one picture per panel."""
+    from . import comic as CM
+    from PIL import Image
+    import typst, pypdf
+    if kind not in ("comic", "storybook"):
+        raise ValueError("kind is comic or storybook")
+    d = _film(name); s = _shots(name); tm = _json(d / "timing.json", {}); sc = _json(d / "script.json", {})
+    if not tm.get("lines") or tm.get("draft"):
+        raise ValueError("voice the film first (the panels follow the spoken lines)")
+    od = d / "build" / kind; shutil.rmtree(od, ignore_errors=True); (od / "frames").mkdir(parents=True)
+    items = CM.panels(s, tm, sc); (od / "times.json").write_text(json.dumps([it["t"] for it in items]))
+    url = "file://" + str(_player_page(name)) + "?rastercache=0&captions=0&bubbles=0"
+    r = json.loads(_run(["node", "tools/comic_frames.mjs", url, str(od / "times.json"), str(od / "frames"), str(dsf)], timeout=1800)[-1])
+    W, H = r["width"], r["height"]; frames = []
+    aspect = CM.PANEL_ASPECT
+    for i, (it, fr) in enumerate(zip(items, r["frames"])):
+        box = CM.crop_box(W, H, fr["heads"], aspect); im = Image.open(fr["png"]).convert("RGB")
+        k = im.width / W; im.crop([round(v * k) for v in box]).save(od / f"panel{i:03d}.png"); Path(fr["png"]).unlink()
+        frames.append({"png": f"panel{i:03d}.png", "heads": fr["heads"], "crop": box})
+    fdir = od / "fonts"; fdir.mkdir(); from fontTools.ttLib import TTFont
+    f = TTFont(ROOT / "engine" / "fonts" / "PatrickHand-latin.woff2"); f.flavor = None; f.save(fdir / "PatrickHand.ttf")
+    title = s.get("title") or name
+    (od / f"{kind}.typ").write_text(CM.typst_source(kind, title, frames, items, "Patrick Hand", W, H))
+    pdf = od / f"{kind}.pdf"
+    typst.compile(str(od / f"{kind}.typ"), output=str(pdf), font_paths=[str(fdir)], root=str(od))
+    typst.compile(str(od / f"{kind}.typ"), output=str(od / "page{p}.png"), font_paths=[str(fdir)], root=str(od), format="png", ppi=110)
+    rd = pypdf.PdfReader(str(pdf)); text = " ".join((pg.extract_text() or "") for pg in rd.pages)
+    norm = lambda x: re.sub(r"[^\w]+", " ", x.lower().replace("’", "'")).split()
+    have = " ".join(norm(text)); missing = [it["line"] for it in items if it.get("text") and " ".join(norm(it["text"])) not in have]
+    pics = sum(len(pg.images) for pg in rd.pages)
+    shutil.rmtree(fdir, ignore_errors=True)
+    return {"kind": kind, "pdf": str(pdf.relative_to(ROOT)), "pages": len(rd.pages), "panels": len(items), "pictures": pics,
+            "lines": sum(1 for it in items if it.get("text")), "lines_missing_from_pdf": missing,
+            "page_images": sorted(str(p.relative_to(ROOT)) for p in od.glob("page*.png")), "ok": not missing and pics == len(items)}
+
+
+@command("export.godot", name=("string", "film"), shots=("array", "shot ids (default: every shot)", None), check=("boolean", "compose three frames from the exported scene and compare them with the player's", True))
+def export_godot(name, shots=None, check=True):
+    """A film as a Godot 4 project (WP-30): build/godot/ with project.godot, main.tscn (plays the shots in order with
+    the sound) and a scene per shot: the set as a plate, every part and swap drawing as a Sprite2D (its drawing as an
+    SVG) animated by an AnimationPlayer from the bake (transform, visibility and layer order per frame). Open the
+    folder in Godot 4.5. With check, the exported tracks are read back by an independent reader of the .tscn and three
+    frames are composed from them and compared with the player's own frame (the characters' coverage, IoU)."""
+    from . import godot_export as GX, rparity as RP
+    d = _film(name); s = _shots(name); W, H = s.get("size", [1080, 1920])
+    od = d / "build" / "godot"; shutil.rmtree(od, ignore_errors=True); (od / "plates").mkdir(parents=True)
+    ids = shots or [sh["id"] for sh in s["shots"]]; rows = []
+    for sid in ids:
+        _, sh, bdir, baked = _bake(name, sid)
+        _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + f"?bg=1&rastercache=0&captions=0", str(sh["start"]), "1", str(od / "plates" / f"{sid}.png")], timeout=600)
+        path, nd, nt = GX.shot_scene(baked, (W, H), f"{sid}.png", od, sid)
+        rows.append({"shot": sid, "scene": str(path.relative_to(ROOT)), "drawings": nd, "tracks": nt, "frames": baked["frames"]})
+    mix = d / "build" / "mix.wav"
+    if mix.exists():
+        _run(["ffmpeg", "-v", "error", "-y", "-i", str(mix), "-c:a", "libvorbis", "-q:a", "5", str(od / "sound.ogg")])
+    GX.project(od, s.get("title") or name, (W, H), ids, mix.exists())
+    out = {"project": str(od.relative_to(ROOT)), "shots": rows, "sound": mix.exists(), "opens_in": "Godot 4.5 (not run here: open the folder in the editor)"}
+    if check:
+        sid = ids[0]; sc_ = GX.read_scene(od / "shots" / f"{sid}.tscn"); sh = next(x for x in s["shots"] if x["id"] == sid); n = rows[0]["frames"]
+        ious = []
+        for f in (0, n // 2, n - 1):
+            st = GX.state_at(sc_, f)
+            body = "".join(f'<g transform="matrix({" ".join(str(v) for v in nd_["transform"])})">' + re.sub(r"^<svg[^>]*>|</svg>$", "", (od / nd_["texture"]).read_text()) + "</g>"
+                           for _, nd_ in sorted(st.items(), key=lambda kv: kv[1]["z"]) if nd_["visible"] and nd_["texture"].endswith(".svg"))   # the drawings (not the set plate)
+            comp = od / "check" / f"godot_{f}.html"; comp.parent.mkdir(exist_ok=True)
+            comp.write_text(f'<html><body style="margin:0;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">{body}</svg></body></html>')
+            _run(["node", "-e", "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:%d,height:%d}});await p.goto(process.argv[1]);await p.screenshot({path:process.argv[2],omitBackground:true});await b.close();})()" % (W, H),
+                  "file://" + str(comp), str(comp.with_suffix(".png"))], timeout=300)
+            t = sh["start"] + f / s.get("fps", 30)
+            _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + "?rastercache=0&captions=0&bubbles=0&castonly=1", str(t), "1", str(od / "check" / f"player_{f}.png"), "transparent"], timeout=600)
+            ga, pl = comp.with_suffix(".png"), od / "check" / f"player_{f}.png"   # judged as renderer parity judges Synfig and Lottie (WP-14)
+            ious.append({"silhouette_iou": round(RP.iou(RP.silhouette(pl), RP.silhouette(ga)), 3), "line_f1": round(RP.line_f1(pl, ga), 3), "colour_diff": round(RP.colour_diff(RP.rgba(pl), RP.rgba(ga)), 1)})
+        sc_min = min(max(x["silhouette_iou"], x["line_f1"]) for x in ious)
+        out["check"] = {"shot": sid, "frames": [0, n // 2, n - 1], "measures": ious, "score": sc_min,
+                        "ok": sc_min >= 0.93 and max(x["colour_diff"] for x in ious) <= 24}   # stricter than renderer parity's 0.85
+    return out
+
+
+# ---------------- team roles and permissions (WP-39) ----------------
+@command("team.roles")
+def team_roles():
+    """The roles (team/roles.json): what each may run beyond the read commands, and which commands sign things off."""
+    from . import team as TM
+    r = TM.roles(); return {"roles": {k: {"about": v.get("about"), "commands": v.get("commands"), "never": v.get("never", []), "approve": v.get("approve", [])} for k, v in r["roles"].items()},
+                            "approve": r.get("approve", []), "everyone_reads": TM.READ}
+
+
+@command("team.people")
+def team_people():
+    """The people and agent sessions (team/people.json) with their roles, and what is assigned to and locked by each."""
+    from . import team as TM
+    st = TM.state()
+    return {"people": {pid: {**p, "assigned": [t for t, who in st["assignments"].items() if pid in who], "locks": [t for t, l in st["locks"].items() if l["by"] == pid]}
+                       for pid, p in TM.people().items()}, "single_user": not TM.people()}
+
+
+@command("team.whoami")
+def team_whoami():
+    """Who this session acts as (DBE_AS, or the X-DBE-As header over HTTP) and its role."""
+    from . import ACTOR, team as TM
+    return ACTOR.get() or TM.actor()
+
+
+@command("team.add", id=("string", "person or agent-session id"), name=("string", "display name"), roles=("array", "their roles (the first is the default)"),
+         kind=("string", "person | agent", "person"))
+def team_add(id, name, roles, kind="person"):
+    """Add or update a person or an agent session (team/people.json). Each agent session gets its own id and role."""
+    from . import team as TM
+    known = TM.roles()["roles"]; bad = [r for r in roles if r not in known]
+    if bad or not roles:
+        raise ValueError(f"unknown roles {bad} (have {', '.join(known)})")
+    f = TM.team_dir() / "people.json"; d = _json(f, {"note": "WP-39: people and agent sessions with their roles", "people": {}})
+    d["people"][id] = {"name": name, "roles": roles, "kind": kind}; TM.team_dir().mkdir(parents=True, exist_ok=True); f.write_text(json.dumps(d, indent=1) + "\n")
+    return {"added": id, **d["people"][id]}
+
+
+def _team_target(kind, id):
+    if kind not in ("film", "character"):
+        raise ValueError("kind is film or character")
+    if kind == "film":
+        _film(id)
+    else:
+        cast = {e["id"]: e["path"] for e in _json(ROOT / "cast" / "index.json", {"puppets": []})["puppets"]}
+        id = cast.get(id, id)
+        if not (ROOT / id).exists():
+            raise FileNotFoundError(f"no character {id} (a cast id or a .puppet.json path)")
+    return f"{kind}:{id}"
+
+
+@command("team.assign", kind=("string", "film | character"), id=("string", "film name, or a cast id or puppet path"), people=("array", "who it is assigned to"))
+def team_assign(kind, id, people):
+    """Assign a film or a character to people: only they (and the owner and directors) may then change it."""
+    from . import team as TM
+    t = _team_target(kind, id); missing = [p for p in people if p not in TM.people()]
+    if missing:
+        raise ValueError(f"not in team/people.json: {missing}")
+    st = TM.state(); st["assignments"][t] = people; TM.save_state(st)
+    return {"target": t, "assigned": people}
+
+
+@command("team.unassign", kind=("string", "film | character"), id=("string", "film name, or a cast id or puppet path"))
+def team_unassign(kind, id):
+    """Clear a film's or character's assignment."""
+    from . import team as TM
+    t = _team_target(kind, id); st = TM.state(); st["assignments"].pop(t, None); TM.save_state(st)
+    return {"target": t, "assigned": []}
+
+
+@command("team.lock", kind=("string", "film | character"), id=("string", "film name, or a cast id or puppet path"), why=("string", "what you are doing", ""))
+def team_lock(kind, id, why=""):
+    """Lock a film or character while you work on it: nobody else may change it until you unlock it."""
+    from . import ACTOR, team as TM
+    who = ACTOR.get() or TM.actor(); t = _team_target(kind, id); st = TM.state(); lk = st["locks"].get(t)
+    if lk and lk["by"] != who["id"]:
+        raise PermissionError(f"{t} is already locked by {lk['by']}")
+    st["locks"][t] = {"by": who["id"], "at": _now_iso(), "why": why}; TM.save_state(st)
+    return {"target": t, "locked_by": who["id"]}
+
+
+@command("team.unlock", kind=("string", "film | character"), id=("string", "film name, or a cast id or puppet path"))
+def team_unlock(kind, id):
+    """Unlock a film or character (your own lock; the owner may break anyone's)."""
+    from . import ACTOR, team as TM
+    who = ACTOR.get() or TM.actor(); t = _team_target(kind, id); st = TM.state(); lk = st["locks"].get(t)
+    if lk and lk["by"] != who["id"] and who["role"] != "owner":
+        raise PermissionError(f"{t} is locked by {lk['by']}; only they or the owner can unlock it")
+    st["locks"].pop(t, None); TM.save_state(st)
+    return {"target": t, "unlocked": True, **({"broke_lock_of": lk["by"]} if lk and lk["by"] != who["id"] else {})}
+
+
+@command("team.audit", who=("string", "only this person or session", ""), target=("string", "only this target (film:<name>, character:<path>)", ""),
+         result=("string", "ok | failed | refused", ""), last=("integer", "the most recent n entries", 50))
+def team_audit(who="", target="", result="", last=50):
+    """The audit log: every change, by whom, in which role, through which door (cli, http, mcp), with its target, and
+    every refusal with its reason."""
+    from . import team as TM
+    f = TM.team_dir() / "audit.jsonl"; rows = [json.loads(l) for l in f.read_text().splitlines() if l.strip()] if f.exists() else []
+    rows = [r for r in rows if (not who or r["who"] == who) and (not target or r.get("target") == target) and (not result or r["result"] == result)]
+    return {"entries": rows[-last:], "total": len(rows)}
+
+
+def _now_iso():
+    import datetime as dt
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+
+
+# ---------------- the director's desk (WP-21) ----------------
+@command("desk.say", name=("string", "film"), text=("string", "notes in plain English: line text, timing, camera, set, music, acting, 'show me'"),
+         apply=("boolean", "make the changes (false: only say what would be done)", True))
+def desk_say(name, text, apply=True):
+    """The director's desk (WP-21): plain-English notes on a film, each sentence routed to the command that makes the
+    change (dbe/desk.py: a line's words, a shot held or shortened, the camera closer or wider, a shot's set, the
+    music's tempo, acting directions, a storyboard and animatic to look at). Every routed command runs as the person
+    or agent at the desk, so their role decides what goes through; the first refusal stops the rest. Each exchange
+    is kept in films/<name>/desk.json."""
+    from . import desk as DK, ACTOR, call as CALL
+    d = _film(name)
+    film = {"name": name, "script": _json(d / "script.json", {}), "shots": _shots(name, resolve=False), "score": _json(d / "score.json", {})}
+    plan = DK.route(text, film); who = ACTOR.get(); as_ = f"{who['id']}:{who['role']}" if who and who["id"] != "local" else None
+    ran = []
+    if apply:
+        for cmd, args in plan["calls"]:
+            try:
+                res = CALL(cmd, args, as_=as_, via=(who or {}).get("via", "cli"))
+                ran.append({"command": cmd, "result": "ok", **({"summary": {k: res[k] for k in list(res)[:3]}} if isinstance(res, dict) else {})})
+            except PermissionError as e:
+                ran.append({"command": cmd, "result": "refused", "why": str(e)}); break
+            except Exception as e:
+                ran.append({"command": cmd, "result": "failed", "why": str(e)[:300]}); break
+        left = [c for c, _ in plan["calls"][len(ran):]]
+    else:
+        left = [c for c, _ in plan["calls"]]
+    entry = {"at": _now_iso(), "who": (who or {}).get("id", "local"), "role": (who or {}).get("role", "owner"), "said": text,
+             "understood": [{k: e[k] for k in ("kind", "what")} for e in plan["edits"]], "not_understood": plan["not_understood"], "ran": ran, "not_run": left, **({"dry_run": True} if not apply else {})}
+    log = _json(d / "desk.json", {"note": "WP-21: the director's desk: what was said, understood and run", "exchanges": []}); log["exchanges"].append(entry)
+    (d / "desk.json").write_text(json.dumps(log, indent=1, ensure_ascii=False) + "\n")
+    out = {**entry, "applied": apply and not left}
+    if (d / "build" / "storyboard" / "strip.png").exists():
+        out["storyboard"] = str((d / "build" / "storyboard" / "strip.png").relative_to(ROOT))
+    if (d / "build" / "animatic.mp4").exists():
+        out["animatic"] = str((d / "build" / "animatic.mp4").relative_to(ROOT))
+    return out
+
+
+# ---------------- render farm (WP-38) ----------------
+@command("farm.render", name=("string", "film"), workers=("integer", "worker processes (each stands for one machine)", 3),
+         pin=("boolean", "pin each worker to its own CPU core, as one machine each (taskset)", True),
+         cache=("boolean", "use and fill the shared cache by content hash (out/farm/cache)", True),
+         fresh=("boolean", "render every shot again (ignore earlier renders in the film's build)", False),
+         assemble=("boolean", "then run film.render to join, mix and check (every shot is fresh by then)", True))
+def farm_render(name, workers=3, pin=True, cache=True, fresh=False, assemble=True):
+    """Render a film on a farm (WP-38): every shot not already rendered or in the shared cache becomes a task, the
+    dearest by render.estimate first; `workers` processes claim tasks from the queue (an atomic rename, so no shot is
+    taken twice), render them with one browser each and put them in the cache by content hash; then film.render
+    assembles. Returns where each shot came from, each worker's busy time, and the wall time of the shots and of the
+    whole run."""
+    from . import farm as FM
+    import time as _t
+    _require_valid(name)
+    d = _film(name); s = _shots(name); t0 = _t.time(); rows, tasks = [], []
+    est = {x["shot"]: x["seconds"] for x in (render_estimate(name).get("shots") or [])} if workers > 0 else {}
+    for sh in s["shots"]:
+        mp4 = d / "build" / "shots" / f"{sh['id']}.mp4"; hf = d / "build" / "shots" / f"{sh['id']}.hash"; mp4.parent.mkdir(parents=True, exist_ok=True)
+        key = _shot_hash(name, sh, s)
+        if fresh:
+            mp4.unlink(missing_ok=True); hf.unlink(missing_ok=True)
+        if mp4.exists() and hf.exists() and hf.read_text().strip() == key:
+            rows.append({"shot": sh["id"], "from": "already rendered"}); continue
+        if cache and FM.cache_get(key, mp4):
+            hf.write_text(key); rows.append({"shot": sh["id"], "from": "cache"}); continue
+        tasks.append({"film": name, "shot": sh["id"], "key": key, "cost": est.get(sh["id"], sh["end"] - sh["start"]), "frames": round((sh["end"] - sh["start"]) * s.get("fps", 30))})
+    run = f"{name}-{int(t0)}"; q = FM.make_queue(run, tasks)
+    _player_page(name)   # written once before the workers start
+    ncpu = os.cpu_count() or 1; procs = []
+    env = {**os.environ, "DBE_RENDER_WORKERS": "1", "DBE_FARM_CACHE": "1" if cache else "0"}
+    for i in range(max(1, workers) if tasks else 0):
+        cmd = [PY, "-m", "dbe", "farm.worker", json.dumps({"run": run, "worker": f"w{i + 1}"})]
+        procs.append(subprocess.Popen((["taskset", "-c", str(i % ncpu)] if pin else []) + cmd, cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=open(q / f"w{i + 1}.log", "w")))
+    FM.wait(procs, q)
+    import resource
+    peak = round(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024, 1)   # the largest single process under the farm (MB)
+    done, failed = FM.results(q); t_shots = round(_t.time() - t0, 1)
+    if failed:
+        raise RuntimeError(f"{len(failed)} shots failed on the farm: " + "; ".join(f"{x['shot']}: {x.get('error', '')[:120]}" for x in failed))
+    for x in done:
+        rows.append({"shot": x["shot"], "from": f"rendered by {x['worker']}", "seconds": x["seconds"], "frames": x["frames"]})
+    busy = {}
+    for x in done:
+        busy[x["worker"]] = round(busy.get(x["worker"], 0) + x["seconds"], 1)
+    out = {"film": name, "workers": workers, "pinned": pin, "shots": sorted(rows, key=lambda r: r["shot"]), "worker_busy_s": busy, "shots_wall_s": t_shots,
+           "rendered": len(done), "from_cache": sum(1 for r in rows if r["from"] == "cache"), "queue": str(q.relative_to(ROOT)), "peak_rss_mb": peak,
+           "one_core_s": round(sum(x["seconds"] for x in done), 1)}   # the same shots one after another on one core
+    if assemble:
+        r = film_render(name); out["render"] = {"skipped": len(r.get("skipped") or []), "qa_failures": sorted(k for k, v in (r.get("qa") or {}).items() if v is False)}
+    out["total_wall_s"] = round(_t.time() - t0, 1)
+    return out
+
+
+@command("farm.longform", minutes=("number", "length of the synthetic episode", 20), workers=("integer", "farm workers", 3))
+def farm_longform(minutes=20, workers=3):
+    """The long-form test (WP-38): a synthetic counting dialogue of about `minutes` (zz-longform, never posted) is
+    voiced, acted and rendered on the farm, then assembled and checked: its length, shots, frames, the farm's wall
+    time against the same shots one after another on one core, the largest process's memory, the cache's size, the
+    assembly's time and the QA bar. Hours of CPU: run it in the background."""
+    import time as _t
+    name = "zz-longform"; shutil.rmtree(FILMS / name, ignore_errors=True); t0 = _t.time()
+    n = max(2, round(minutes * 60 / 8.9))   # about 8.9 s per exchange (measured on zz-farm)
+    film_from_template(name, "dialogue", _farm_brief(n)); voice_build(name); retime(name); acting_plan(name); t_prep = round(_t.time() - t0, 1)
+    r = farm_render(name, workers=workers, fresh=True, cache=True, assemble=False); t_a = _t.time()
+    fr = film_render(name); t_asm = round(_t.time() - t_a, 1)
+    final = FILMS / name / "build" / "final.mp4"
+    dur = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(final)])[-1])
+    cache_mb = round(sum(f.stat().st_size for f in (ROOT / "out" / "farm" / "cache").glob("*")) / 1e6, 1)
+    out = {"exchanges": n, "length_s": round(dur, 1), "shots": len(r["shots"]), "frames": sum(x.get("frames", 0) for x in r["shots"]), "prepare_s": t_prep,
+           "farm_wall_s": r["shots_wall_s"], "one_core_s": r["one_core_s"], "ratio": round(r["shots_wall_s"] / max(1e-6, r["one_core_s"]), 3),
+           "worker_busy_s": r["worker_busy_s"], "peak_rss_mb": r["peak_rss_mb"], "assembly_s": t_asm, "cache_mb": cache_mb,
+           "qa_failures": sorted(k for k, v in (fr.get("qa") or {}).items() if v is False), "total_s": round(_t.time() - t0, 1)}
+    (ROOT / "out" / "farm" / "longform.json").write_text(json.dumps(out, indent=1))
+    return out
+
+
+@command("farm.worker", run=("string", "farm run (out/farm/runs/<run>)"), worker=("string", "this worker's name"))
+def farm_worker(run, worker):
+    """A farm worker (WP-38): claims shots from the run's queue until it is empty, renders each (shot.render), puts it
+    in the shared cache by its content hash and marks it fresh in its film's build."""
+    from . import farm as FM
+    import time as _t
+    q = FM.FARM / "runs" / run; n = 0
+    while True:
+        tf = FM.claim(q, worker)
+        if tf is None:
+            return {"worker": worker, "rendered": n}
+        t = json.loads(tf.read_text()); t0 = _t.time()
+        try:
+            shot_render(t["film"], t["shot"])
+            mp4 = FILMS / t["film"] / "build" / "shots" / f"{t['shot']}.mp4"
+            (mp4.parent / f"{t['shot']}.hash").write_text(t["key"])
+            if os.environ.get("DBE_FARM_CACHE", "1") == "1":
+                FM.cache_put(t["key"], mp4)
+            FM.finish(q, tf, True, {"worker": worker, "seconds": round(_t.time() - t0, 2)}); n += 1
+        except Exception as e:
+            FM.finish(q, tf, False, {"worker": worker, "error": str(e)[:400]})
+
+
+# ---------------- corrections, companions and living films (WP-27) ----------------
+@command("film.page", name=("string", "film"))
+def film_page(name):
+    """The film's page (WP-27): title, the film, what it says, its sources, its credits and its dated corrections log
+    ("what we got wrong" apart from updates), as one self-contained HTML file: build/page/index.html."""
+    from . import living as LV
+    from . import packaging as PK
+    d = _film(name); s = _shots(name, resolve=False); t = PK.load(d) if (d / "titles.json").exists() else {"titles": []}
+    ch = (t.get("chosen") or {}).get("title"); title = t["titles"][ch]["text"] if ch is not None and t.get("titles") else (s.get("title") or name)
+    tm = _json(d / "timing.json", {}); cr = film_credits(name)
+    pg = d / "build" / "page"; pg.mkdir(parents=True, exist_ok=True)
+    (pg / "index.html").write_text(LV.page(title, "../final.mp4", [l["text"] for l in tm.get("lines", [])], _json(d / "facts.json", {"facts": []}).get("facts", []),
+                                           "\n".join(cr["credits"]), LV.load_log(d), s.get("lang", "en")))
+    return {"page": str((pg / "index.html").relative_to(ROOT)), "title": title, "corrections": len(LV.load_log(d)["corrections"])}
+
+
+@command("film.correct", name=("string", "film"), key=("string", "what to change, as film.strings lists it: line:<id>, shot:<id>:overlay:<n>:<field>, titles:<n>, thumb:<n>:top, fact:<id>"),
+         to=("string", "the corrected text"), why=("string", "what was wrong (or what changed), in a sentence"), kind=("string", "error | update | clarification", "error"),
+         credit=("string", "who reported it, if they agree to be named", ""), render=("boolean", "re-voice and re-render now (else only the data and the log)", True))
+def film_correct(name, key, to, why, kind="error", credit="", render=True):
+    """One correction, everywhere (WP-27): the text is changed by its key, logged with the date, what it said, why and
+    who reported it, and carried to every surface: a line is re-voiced and the film re-rendered (voice, burned-in and
+    sidecar captions, the bubbles), a title or thumbnail line updates titles.json and the covers, the credits gain a
+    dated corrections section with thanks, the film's page its log, and the posting package is remade. Each surface is
+    then read back for the new words."""
+    from . import i18n as I
+    from . import living as LV
+    if kind not in LV.KINDS:
+        raise ValueError(f"kind is one of {LV.KINDS}")
+    d = _film(name); sh, sc, ti, da = _shots(name, resolve=False), _json(d / "script.json"), _json(d / "titles.json", {}), _json(d / "data.json", {})
+    if key.startswith("fact:"):
+        facts = _json(d / "facts.json", {"facts": []}); fid = key.split(":")[1]; fld = key.split(":")[2] if key.count(":") > 1 else "claim"
+        f = next((x for x in facts["facts"] if x.get("id") == fid), None)
+        if not f:
+            raise ValueError(f"no fact {fid}")
+        was = f.get(fld); f[fld] = to; (d / "facts.json").write_text(json.dumps(facts, indent=1, ensure_ascii=False))
+    else:
+        src = {x["key"]: x["text"] for x in I.extract(sh, sc, ti, da)}
+        if key not in src:
+            raise ValueError(f"no {key} in {name} (film.strings lists the keys)")
+        was = src[key]
+        bad = I.check_bindings(was, to)
+        if bad:
+            raise ValueError(f"the correction changes data bindings {bad}: correct the data (film.data) instead")
+        sh2, sc2, ti2, da2, *_ = I.apply(sh, sc, ti, da, {key: to}, sc.get("lang") or "en", keep_rest=True)
+        for f_, o in (("shots.json", sh2), ("script.json", sc2), ("titles.json", ti2), ("data.json", da2)):
+            if (d / f_).exists() and o != _json(d / f_):
+                (d / f_).write_text(json.dumps(o, indent=1, ensure_ascii=False))
+    entry = LV.add(d, {"date": _today().isoformat(), "kind": kind, "key": key, "from": was, "to": to, "why": why, **({"credit": credit} if credit else {})})
+    surfaces = {}
+    if render:
+        if key.startswith("line:"):
+            voice_build(name); retime(name); surfaces["voice"] = True
+        r = film_render(name); surfaces["render"] = {k: v for k, v in (r.get("qa") or {}).items() if v is False} or "all checks pass"
+        cap = (d / "build" / "captions.srt").read_text() if (d / "build" / "captions.srt").exists() else ""
+        if key.startswith("line:") and _json(_film(name) / "shots.json").get("captions", True) is not False:
+            surfaces["captions"] = all(w.lower() in cap.lower() for w in re.findall(r"[\w']+", to)[:6])
+        if key.startswith(("titles:", "thumb:")):
+            try:
+                cover_make(name); surfaces["covers"] = True
+            except Exception as e:
+                surfaces["covers"] = f"not remade: {str(e)[:80]}"
+        try:
+            film_package(name); surfaces["package"] = True
+        except Exception as e:
+            surfaces["package"] = f"not remade: {str(e)[:80]}"
+        if key.startswith(("line:", "shot:")):   # the words on screen, read back (bubbles, overlays, captions)
+            tc = film_text_check(name); hit = [x for x in tc["items"] if any(w.lower() in x["text"].lower() for w in re.findall(r"[\w']{4,}", to)[:3])]
+            surfaces["on_screen"] = bool(hit) and all(x["ok"] for x in hit) if hit else "not shown on screen"
+    cr = film_credits(name); surfaces["credits"] = any(why in l for l in cr["credits"])
+    pg = film_page(name); html_ = (ROOT / pg["page"]).read_text(); surfaces["page"] = __import__("html").escape(why) in html_
+    if key.startswith("titles:"):
+        surfaces["title"] = any(t["text"] == to for t in _json(d / "titles.json", {}).get("titles", []))
+    entry["surfaces"] = surfaces
+    lg = LV.load_log(d); lg["corrections"][-1]["surfaces"] = surfaces; LV.log_path(d).write_text(json.dumps(lg, indent=1, ensure_ascii=False) + "\n")
+    return entry
+
+
+@command("film.companion", name=("string", "film"), run=("boolean", "run the guide and check every number", True))
+def film_companion(name, run=True):
+    """A runnable companion guide (WP-27): build/companion/ holds the film's analysis (scripts, sources, cached source
+    files), numbers.json (every number the film shows or says: each data binding in its lines and on screen and every
+    value of its charts, with where it appears) and guide.py (and guide.md), which re-runs the analysis in a scratch
+    folder, checks each cached source against its recorded sha256, and prints every number beside the number it gets.
+    With run, the guide is run and every number must come back the same."""
+    from . import living as LV
+    d = _film(name)
+    if not (d / "analysis").exists():
+        raise FileNotFoundError(f"{name} has no analysis/ (only data films have companion guides)")
+    nums = LV.numbers_in(_json(d / "data.json", {}), _json(d / "script.json", {}), _shots(name, resolve=False))
+    cd = LV.write_companion(d, _shots(name, resolve=False).get("title") or name, nums)
+    out = {"dir": str(cd.relative_to(ROOT)), "numbers": len(nums)}
+    if run:
+        r = subprocess.run([PY, "guide.py"], cwd=cd, capture_output=True, text=True, timeout=1800)
+        j = json.loads(r.stdout) if r.returncode == 0 else {"error": r.stderr[-500:]}
+        out.update({"all_reproduced": j.get("all_reproduced"), "sources": j.get("sources"), "different": [x for x in j.get("numbers", []) if not x["same"]], **({"error": j["error"]} if "error" in j else {})})
+    return out
+
+
+@command("film.living", name=("string", "film"), render=("boolean", "re-voice and re-render what changed", True))
+def film_living(name, render=True):
+    """A living film (WP-27, E12): its sources fetched again and its analysis re-run (film.data refresh); when a number
+    the film uses has changed, the lines that say it are re-voiced, the shots that show it re-rendered, and the change
+    logged as a dated update in the corrections log (on the page and in the credits)."""
+    from . import living as LV
+    d = _film(name); before = _json(d / "data.json", {})
+    nums0 = {(n["where"], n["path"]): n["value"] for n in LV.numbers_in(before, _json(d / "script.json", {}), _shots(name, resolve=False))}
+    r = film_data(name, refresh=True, revoice=render, render=render)
+    after = _json(d / "data.json", {})
+    nums1 = {(n["where"], n["path"]): n["value"] for n in LV.numbers_in(after, _json(d / "script.json", {}), _shots(name, resolve=False))}
+    changed = [{"where": w, "path": p_, "was": v, "now": nums1.get((w, p_))} for (w, p_), v in nums0.items() if nums1.get((w, p_)) != v]
+    if changed:
+        LV.add(d, {"date": _today().isoformat(), "kind": "update", "key": "data", "from": {c["path"]: c["was"] for c in changed}, "to": {c["path"]: c["now"] for c in changed},
+                   "why": "the source data changed: " + ", ".join(sorted({c["path"] for c in changed}))})
+        film_page(name)
+    return {"numbers_changed": changed, "shots": r.get("shots_to_rerender"), "lines": r.get("lines_to_revoice"), "rendered": r.get("rendered")}
+
+
+@command("plan.intake", text=("string", "the myth or question, in the sender's words"), by=("string", "who sent it (a name to credit, or empty for anonymous)", ""),
+         where=("string", "how it came (a comment link, a form)", ""), field=("string", "the channel field it belongs to (default: left for research)", ""), channel=CH_ARG)
+def plan_intake(text, by="", where="", field="", channel=""):
+    """Send-a-myth (WP-27): a viewer's myth or question goes into the idea bank as an evergreen myth-vs-data idea
+    waiting for research (status intake: it has no sources yet, so plan.schedule leaves it until research fills it
+    in), credited to the sender if they gave a name; one the bank already holds is not added twice."""
+    from . import planner as PL
+    t = " ".join(text.split())
+    if not 8 <= len(t) <= 400:
+        raise ValueError("a myth is a sentence (8 to 400 characters)")
+    ch = PL.channel(channel); bank = _plan_bank(channel)
+    probe = {"title": t[:90], "hook": t, "angle": ""}
+    # a viewer's sentence is short, so it is matched against each idea's title only (against hooks and angles a few
+    # common words, "store" and "water", made a camel's hump the same idea as a chain of lakes)
+    dup = next((i for i in bank["ideas"] if PL.same_topic(probe, {"title": i["title"]}, threshold=0.6)), None)
+    if dup:
+        dup.setdefault("asked_by", []).append({"by": by or "anonymous", "on": _today().isoformat(), **({"where": where} if where else {})}); _plan_save("ideas.json", bank, channel)
+        return {"added": False, "same_as": dup["id"], "title": dup["title"], "asked_by": len(dup["asked_by"])}
+    n = max([int(re.sub(r"\D", "", i["id"]) or 0) for i in bank["ideas"]] + [0]) + 1
+    idea = {"id": f"I{n:03d}", "title": t[:90], "sweep": "evergreen", "field": field if field in ch["fields"] else None, "hook": t, "angle": "", "why_now": "a viewer asked",
+            "sources": [], "research_leads": ["check the claim against primary sources before anything is written"], "cautions": ["the sender's words are a lead, not a fact"],
+            "format": "myth_vs_data", "status": "intake", "asked_by": [{"by": by or "anonymous", "on": _today().isoformat(), **({"where": where} if where else {})}]}
+    bank["ideas"].append(idea); _plan_save("ideas.json", bank, channel)
+    return {"added": True, "idea": idea["id"], "status": "intake"}
+
+
+@command("catalogue.rebrand", brand=("string", "brand kit id (brand/<id>.json) to move to"), films=("array", "films to re-make (default: every film of the channel's brand)", None),
+         render=("boolean", "re-render and re-make covers and packages", True), channel=CH_ARG)
+def catalogue_rebrand(brand, films=None, render=True, channel=""):
+    """Rebrand the catalogue (WP-27, E30): the channel takes the new brand kit and every film that inherits it is
+    re-rendered (the graph re-makes only what the brand touches), with its covers and posting package remade; returns
+    each film's QA and what was re-made."""
+    from . import planner as PL
+    ch = PL.channel(channel); bf = ROOT / "brand" / f"{brand}.json"
+    if not bf.exists():
+        raise FileNotFoundError(f"no brand kit brand/{brand}.json")
+    old = ch.get("brand"); ch["brand"] = brand; chf = PL.chan_dir(channel) / "channel.json"
+    cur = _json(chf, {}); cur["brand"] = brand; chf.write_text(json.dumps(cur, indent=1, ensure_ascii=False) + "\n")
+    films = films or [f.name for f in sorted(FILMS.iterdir()) if (f / "shots.json").exists() and "--" not in f.name and not f.name.startswith("zz-")
+                      and _json(f / "shots.json", {}).get("brand") in (True, old, brand)]
+    out = []
+    for f in films:
+        sj = _json(FILMS / f / "shots.json")
+        if sj.get("brand") != brand:   # from the house kit (true) or the channel's old kit to the new one
+            sj["brand"] = brand; (FILMS / f / "shots.json").write_text(json.dumps(sj, indent=1, ensure_ascii=False))
+        row = {"film": f}
+        if render:
+            r = film_render(f); row["rendered"] = [x["shot"] for x in r.get("rendered", [])]; row["qa_failures"] = [k for k, v in (r.get("qa") or {}).items() if v is False]
+            for step in (cover_make, film_package):
+                try:
+                    step(f); row[step.__name__] = True
+                except Exception as e:
+                    row[step.__name__] = str(e)[:80]
+        out.append(row)
+    return {"from": old, "to": brand, "films": out}
+
+
+# ---------------- provenance, disclosure and consent (WP-26) ----------------
+def _keys():
+    from . import production as PR
+    from . import provenance as PV
+    return PV.ensure_keys(PR.reg_dir() / "keys")
+
+
+def _recipe(name, sample=12):
+    """what a film was made from (E14): its data files' hashes, the engine files' hashes, the commit, and its frame
+    keys (all of them hashed, and a sample by frame) so a re-make can be checked against what was signed"""
+    import hashlib
+    from . import provenance as PV
+    d = _film(name); s = _shots(name); fps = s.get("fps", 30)
+    files = {f: PV.sha256(d / f) for f in ("shots.json", "script.json", "timing.json", "data.json", "facts.json", "score.json", "sound.json") if (d / f).exists()}
+    eng = {f: PV.sha256(ROOT / f) for f in ENGINE_FILES if (ROOT / f).exists()}
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    fk = (_json(d / "build" / "frame_keys.json", {}) or {}).get("keys") or []
+    trans = _json(d / "build" / "transitions.json", [])
+    shots = s["shots"]; starts = []; acc = 0
+    for x in shots:
+        starts.append(acc); acc += int(round((x["end"] - x["start"]) * fps))
+    blocked = set()
+    for tr in trans:   # frames inside a transition hold two shots: not sampled
+        i = next(j for j, x in enumerate(shots) if x["id"] == tr["shot"]); c = starts[i]
+        blocked |= set(range(c - tr["before"], c + tr["after"]))
+    cand = [i for i in range(len(fk)) if i not in blocked]
+    pick = sorted({cand[int(round(k * (len(cand) - 1) / max(1, sample - 1)))] for k in range(sample)}) if cand else []
+    return {"version": 1, "fps": fps, "files": files, "engine": eng, "commit": head or None,
+            "frames": len(fk), "frame_keys_sha256": hashlib.sha256("\n".join(fk).encode()).hexdigest() if fk else None, "frame_sample": {str(i): fk[i] for i in pick}}
+
+
+def _film_made_with(name):
+    reg = _voice_registry(); store = _consent_store(); prov = film_provenance(name)
+    from . import provenance as PV
+    script = _json(FILMS / name / "script.json", {})
+    voices = sorted({v.get("voice") for v in (script.get("speakers") or {}).values()} | ({script["voice"]} if script.get("voice") else set()) - {None})
+    vs = []
+    for v in voices:
+        r = reg.get(v, {}); ok, why = PV.voice_basis(v, reg, store)
+        vs.append({"voice": v, "synthetic": r.get("kind") not in ("recording",), "status": r.get("status"), "license": r.get("license"), "consent": why})
+    models = [{"name": m.get("model") or m.get("name"), "touches": "picture", "output": m.get("output")} for m in prov.get("models", [])] if isinstance(prov, dict) else []
+    return {"voices": vs, "models": models, "posting_flags": (prov or {}).get("flags", []) if isinstance(prov, dict) else []}
+
+
+@command("film.disclosure", name=("string", "film"), realistic=("boolean", "the film shows realistic people, places or events (not drawn characters)", False))
+def film_disclosure(name, realistic=False):
+    """Each platform's AI-disclosure setting for a film (WP-26): on or off, whether the platform requires it and why,
+    and the caption line saying what is synthetic (dbe/disclosure.json, read from each platform's help page)."""
+    from . import provenance as PV
+    mw = _film_made_with(name)
+    return PV.disclosure(_json(ROOT / "dbe" / "disclosure.json"), mw["voices"], mw["models"], realistic)
+
+
+@command("film.sign", name=("string", "film"), files=("array", "build files to sign (default: final.mp4 and, if made, final_ad.mp4)", None),
+         timestamp=("string", "a timestamp authority URL (RFC 3161), optional", ""))
+def film_sign(name, files=None, timestamp=""):
+    """Content credentials for a film's finals (WP-26): a C2PA manifest (created by Doodleberry, digital source type,
+    title and channel, the voices and models with their licence and consent basis, the AI-disclosure text, a
+    do-not-train request, and the film's recipe: data and engine hashes and frame keys) signed with the studio's
+    certificate into each file, then read back with c2patool, the reference tool, trusting the studio's root.
+    Writes build/provenance.json and build/trust_anchors.pem (the root, for anyone verifying)."""
+    import shutil as _sh
+    from . import provenance as PV
+    d = _film(name); s = _shots(name, resolve=False); keys = _keys()
+    files = files or [f for f in ("final.mp4", "final_ad.mp4") if (d / "build" / f).exists()]
+    if not files:
+        raise FileNotFoundError(f"{name} has no finals to sign: render it first")
+    mw = _film_made_with(name); disc = PV.disclosure(_json(ROOT / "dbe" / "disclosure.json"), mw["voices"], mw["models"])
+    recipe = _recipe(name); ai = bool(disc["reasons"])
+    chan = (_json(d / "script.json", {}).get("channel") or "Doodleberry")
+    man = PV.manifest(s.get("title") or name, chan, {k: mw[k] for k in ("voices", "models")}, {"reasons": disc["reasons"], "caption": next(iter(disc["platforms"].values()))["caption"]}, recipe, ai)
+    _sh.copy(keys["root"], d / "build" / "trust_anchors.pem")
+    out = {"film": name, "signed": [], "ai_shaped": ai}
+    for f in files:
+        src = d / "build" / f; tmp = src.with_suffix(".signing.mp4")
+        before = PV.sha256(src); PV.sign(src, tmp, man, keys, timestamp or None); tmp.replace(src)
+        v = PV.verify(src, d / "build" / "trust_anchors.pem") if PV.C2PATOOL.exists() else {"state": "c2patool not installed", "failures": []}
+        out["signed"].append({"file": f, "sha256_unsigned": before, "sha256": PV.sha256(src), "verify": v})
+    (d / "build" / "provenance.json").write_text(json.dumps({**out, "manifest": man}, indent=1, ensure_ascii=False))
+    out["ok"] = all(x["verify"].get("state") in ("Trusted", "Valid") and not x["verify"].get("failures") for x in out["signed"])
+    return out
+
+
+@command("film.verify", name=("string", "film"), path=("string", "a signed file (default: the film's build/final.mp4)", ""), frames=("boolean", "re-make the signed sample frames and compare their keys", True))
+def film_verify(name, path="", frames=True):
+    """Check a signed film (WP-26, E14): its content credentials with c2patool (trusting the studio's root), and its
+    recipe against the film as it is now: which data and engine files differ from what was signed, and, re-making the
+    signed sample frames in the player, whether each frame's key still matches."""
+    from . import provenance as PV
+    d = _film(name); f = Path(path) if path else d / "build" / "final.mp4"
+    trust = d / "build" / "trust_anchors.pem"
+    c = PV.verify(f, trust if trust.exists() else None)
+    st, _ = PV.read(f)
+    act = st.get("manifests", {}).get(st.get("active_manifest"), {})
+    rec = next((a["data"] for a in act.get("assertions", []) if a.get("label") == "org.doodleberry.recipe"), None)
+    if not rec:
+        return {"c2pa": c, "recipe": "none signed"}
+    now = _recipe(name, sample=0)
+    changed = sorted([k for k, v in rec["files"].items() if now["files"].get(k) != v]) + sorted([f"engine {k}" for k, v in rec["engine"].items() if now["engine"].get(k) != v])
+    out = {"c2pa": c, "recipe": {"commit": rec.get("commit"), "changed_since": changed, "frame_keys_same": now["frame_keys_sha256"] == rec.get("frame_keys_sha256")}}
+    if frames and rec.get("frame_sample"):
+        out["frames"] = _remake_keys(name, {int(k): v for k, v in rec["frame_sample"].items()})
+    out["ok"] = c.get("state") in ("Trusted", "Valid") and not c.get("failures") and not changed and (not frames or out["frames"]["matching"] == out["frames"]["checked"])
+    return out
+
+
+def _remake_keys(name, sample):
+    """the signed sample frames re-made in the player: each film frame's key, as _frame_keys composes it"""
+    import hashlib
+    d = _film(name); s = _shots(name); fps = s.get("fps", 30); page = _player_page(name); acc = 0; where = {}
+    for x in s["shots"]:
+        n = int(round((x["end"] - x["start"]) * fps))
+        for fr in sample:
+            if acc <= fr < acc + n:
+                where.setdefault(x["id"], []).append((fr, fr - acc))
+        acc += n
+    ev = []
+    ass = d / "build" / "captions.ass"
+    if ass.exists():
+        hms = lambda v: (lambda h, m, s_: int(h) * 3600 + int(m) * 60 + float(s_))(*v.split(":"))
+        ev = [(hms(l.split(",", 9)[1]), hms(l.split(",", 9)[2]), l) for l in ass.read_text().splitlines() if l.startswith("Dialogue:")]
+    post = json.dumps(s.get("post"), sort_keys=True); rows = []
+    for sid, frs in where.items():
+        r = json.loads(_run(["node", "tools/frame_keys.mjs", "file://" + str(page) + f"?shot={sid}", ",".join(str(j) for _, j in frs)], timeout=600)[-1])
+        for fr, j in frs:
+            k = f"{sid}:{r['plate']}:{r['keys'][str(j)]}"; t = fr / fps; cap = "\n".join(e[2] for e in ev if e[0] <= t < e[1])
+            got = hashlib.sha1(f"{k}#{cap}#{post}".encode()).hexdigest()[:16]
+            rows.append({"frame": fr, "shot": sid, "match": got == sample[fr]})
+    return {"checked": len(rows), "matching": sum(r["match"] for r in rows), "frames": rows}
+
+
+@command("consent.add", kind=("string", "voice | likeness"), subject=("string", "the person"), scope=("object", "what it covers: {commercial: bool, platforms: [...], uses: text}", None),
+         granted_on=("string", "YYYY-MM-DD"), expires=("string", "YYYY-MM-DD, or empty for no end", ""), evidence=("string", "the signed form (a file kept off git): its sha256 is recorded", ""),
+         recorded_by=("string", "who recorded it"), id=("string", "record id (default: made from the subject and date)", ""))
+def consent_add(kind, subject, granted_on, recorded_by, scope=None, expires="", evidence="", id=""):
+    """Record a person's consent (WP-26): to their voice being cloned or used, or their likeness being drawn, for the
+    uses in scope, from a date, until a date or revoked. The signed form stays off git; its hash is the record's
+    evidence. A voice made from a person points at its record ("consent" in voices/registry.json); a puppet that
+    depicts a person, in meta.likeness."""
+    from . import provenance as PV
+    if kind not in ("voice", "likeness"):
+        raise ValueError("kind is voice or likeness")
+    root = Path(os.environ.get("DBE_CONSENT_ROOT") or ROOT); st = _consent_store()
+    rid = id or re.sub(r"[^a-z0-9]+", "-", f"{kind}-{subject}-{granted_on}".lower()).strip("-")
+    if any(r["id"] == rid for r in st["records"]):
+        raise ValueError(f"{rid} exists")
+    rec = {"id": rid, "kind": kind, "subject": subject, "scope": scope or {"commercial": False}, "granted_on": granted_on, "expires": expires or None,
+           "revoked": None, "evidence_sha256": PV.sha256(_inside(evidence, True)) if evidence else None, "recorded_by": recorded_by, "recorded_on": _today().isoformat()}
+    st["records"].append(rec); (root / "consent").mkdir(exist_ok=True)
+    (root / "consent" / "records.json").write_text(json.dumps(st, indent=1, ensure_ascii=False) + "\n")
+    return rec
+
+
+@command("consent.revoke", id=("string", "record id"), on=("string", "YYYY-MM-DD (default today)", ""), reason=("string", "why", ""))
+def consent_revoke(id, on="", reason=""):
+    """Revoke a consent record (WP-26): from that day the voice or likeness is refused for new renders."""
+    root = Path(os.environ.get("DBE_CONSENT_ROOT") or ROOT); st = _consent_store()
+    rec = next((r for r in st["records"] if r["id"] == id), None)
+    if not rec:
+        raise ValueError(f"no consent record {id}")
+    rec["revoked"] = on or _today().isoformat(); rec["revoked_reason"] = reason
+    (root / "consent" / "records.json").write_text(json.dumps(st, indent=1, ensure_ascii=False) + "\n")
+    return rec
+
+
+@command("consent.check", name=("string", "film"))
+def consent_check(name):
+    """The consent basis of every voice and likeness a film uses (WP-26)."""
+    rows = [{"what": w, "ok": ok, "why": why} for w, ok, why in consent_gate(name)]
+    return {"film": name, "ok": all(r["ok"] for r in rows), "rows": rows}
+
+
 # ---------------- analytics (WP-31) ----------------
 def _an(channel=""):
     from . import analytics as AN
@@ -3559,28 +4706,84 @@ def film_lint(name, step=3):
 
 
 # ---------------- reach ----------------
-@command("export.web", name=("string", "film"))
-def export_web(name):
-    """Export a self-contained interactive web player (play, scrub, frame step) that renders the film live in the
-    browser: build/web/index.html with scripts and font inlined, plus audio.ogg (Opus). Host the folder anywhere."""
+def _web_page(name, ui, extra=""):
+    """the player page made self-contained (scripts and the font inlined) with a UI script, plus audio.ogg"""
     import base64
-    d = _film(name); page = _player_page(name)
-    html = page.read_text()
-    out_dir = d / "build" / "web"; out_dir.mkdir(parents=True, exist_ok=True)
+    d = _film(name); html = _player_page(name).read_text()
+    out_dir = d / "build" / ("web" if ui == "web_ui.js" else "interactive"); out_dir.mkdir(parents=True, exist_ok=True)
     html = html.replace('<script src="../../../dbe/player/player.js"></script>',
-                        '<script src="../../../dbe/player/player.js"></script><script src="../../../dbe/player/web_ui.js"></script>')
+                        f'<script src="../../../dbe/player/player.js"></script>{extra}<script src="../../../dbe/player/{ui}"></script>')
     for src in re.findall(r'<script src="\.\./\.\./\.\./([^"]+)"></script>', html):
         code = (ROOT / src).read_text().replace("</script", "<\\/script")
         html = html.replace(f'<script src="../../../{src}"></script>', f"<script>/* {src} */\n{code}\n</script>")
     font = base64.b64encode((ROOT / "engine" / "fonts" / "Fredoka.ttf").read_bytes()).decode()
     html = html.replace("url('../../../engine/fonts/Fredoka.ttf')", f"url(data:font/ttf;base64,{font})")
+    # the other fonts (handwriting, mono, the world's scripts) are copied beside the page, so the folder can be
+    # hosted anywhere (the page's relative links point into the repository and do not resolve from build/<kind>/)
+    (out_dir / "fonts").mkdir(exist_ok=True)
+    for ref in sorted(set(re.findall(r"url\('\.\./\.\./\.\./(engine/fonts/[^']+)'\)", html))):
+        f = (ROOT / ref).resolve()
+        if f.exists():
+            shutil.copy(f, out_dir / "fonts" / f.name); html = html.replace(f"url('../../../{ref}')", f"url('fonts/{f.name}')")
     mix = d / "build" / "mix.wav"
     if mix.exists():
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(mix), "-c:a", "libopus", "-b:a", "96k", str(out_dir / "audio.ogg")])
     html = html.replace("</body>", f'<audio id="aud" src="{"audio.ogg" if mix.exists() else ""}" preload="auto"></audio></body>')
     (out_dir / "index.html").write_text(html)
-    return {"path": str((out_dir / "index.html").relative_to(ROOT)), "bytes": len(html), "audio": mix.exists(),
+    return out_dir, html, mix.exists()
+
+
+@command("export.web", name=("string", "film"))
+def export_web(name):
+    """Export a self-contained interactive web player (play, scrub, frame step) that renders the film live in the
+    browser: build/web/index.html with scripts and font inlined, plus audio.ogg (Opus). Host the folder anywhere."""
+    out_dir, html, aud = _web_page(name, "web_ui.js")
+    return {"path": str((out_dir / "index.html").relative_to(ROOT)), "bytes": len(html), "audio": aud,
             "note": "fonts and scripts are inlined; Fredoka is under the SIL OFL (engine/fonts/OFL.txt)"}
+
+
+def _interactive_data(name):
+    """chapters, the timed transcript with each line's source, question pauses and sources, from the film's data"""
+    d = _film(name); s = _shots(name); tm = _json(d / "timing.json", {}); sc = _json(d / "script.json", {}); fd = _json(d / "facts.json", {"facts": []})
+    srcs = fd.get("sources") or {}
+    def src_of(f):
+        x = f.get("source") or srcs.get(f.get("src")) or {}
+        return {"url": x.get("url"), "title": x.get("title")} if isinstance(x, dict) and x.get("url") else None
+    facts = {f.get("id"): src_of(f) for f in fd.get("facts", [])}
+    names = {k: (v or {}).get("name") or k.capitalize() for k, v in (sc.get("speakers") or {}).items()}
+    cite = {l["id"]: ([l["fact"]] if isinstance(l.get("fact"), str) else (l.get("fact") or [])) for l in sc.get("lines", [])}
+    lines = []
+    for l in tm.get("lines", []):
+        src = next((facts[f] for f in cite.get(l["id"], []) if facts.get(f)), None)
+        lines.append({"id": l["id"], "name": names.get(l.get("speaker"), (l.get("speaker") or "Narrator").capitalize()), "speaker": l.get("speaker"),
+                      "start": l["start"], "end": l["end"], "words": [{"text": w["text"], "start": w["start"]} for w in l.get("words") or []] or [{"text": l["text"], "start": l["start"]}],
+                      **({"source": src} if src else {})})
+    pauses = [{"t": round(a["end"] + 0.15, 3), "question": " ".join(w["text"] for w in a["words"]), "line": a["id"]}
+              for a, b in zip(lines, lines[1:]) if a["words"][-1]["text"].rstrip().endswith("?") and b["speaker"] != a["speaker"]]
+    chapters = []
+    for i, sh in enumerate(s["shots"]):
+        first = next((l for l in lines if sh["start"] <= l["start"] < sh["end"]), None)
+        chapters.append({"start": sh["start"], "end": sh["end"], "title": (" ".join(w["text"] for w in first["words"])[:48] if first else f"Shot {i + 1}")})
+    seen, sources = set(), []
+    for f in facts.values():
+        if f and f["url"] not in seen:
+            seen.add(f["url"]); sources.append(f)
+    return {"title": s.get("title") or name, "chapters": chapters, "lines": lines, "pauses": pauses, "sources": sources}
+
+
+@command("export.interactive", name=("string", "film"))
+def export_interactive(name):
+    """An interactive web film from the film's data alone (WP-30): the player draws it live, beside chapters (one per
+    shot), the transcript synced word by word (tap a line to hear it), a pause after every question so the viewer
+    can guess before the answer, and the source of each line that states a fact. build/interactive/index.html with
+    everything inlined, plus audio.ogg; then it is opened in Chromium and driven (a tap on a line, a question's
+    pause, the sources) to check it works."""
+    D = _interactive_data(name)
+    out_dir, html, aud = _web_page(name, "interactive.js", f"<script>window.INTERACTIVE={json.dumps(D, ensure_ascii=False).replace('</', '<\\/')};</script>")
+    r = subprocess.run(["node", "tools/interactive_check.mjs", "file://" + str(out_dir / "index.html")], cwd=ROOT, capture_output=True, text=True, timeout=300)
+    chk = json.loads(r.stdout.strip().splitlines()[-1]) if r.returncode == 0 and r.stdout.strip() else {"error": r.stderr[-400:]}
+    return {"path": str((out_dir / "index.html").relative_to(ROOT)), "bytes": len(html), "audio": aud, "chapters": len(D["chapters"]), "lines": len(D["lines"]),
+            "questions": len(D["pauses"]), "sources": len(D["sources"]), "check": chk}
 
 
 def ensure_voice(vid):
@@ -4140,6 +5343,60 @@ def test_golden(update=False, film=""):
         bad, meas = _stickers_test()
         failed += 1 if bad else 0
         results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy, iMessage and as Telegram, Discord and Slack emoji within each platform's limits; TGS alike in lottie-web and rlottie; the pack as a dotLottie whose themes draw alike in the dotLottie player and lottie-web", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "series":   # WP-28: a series bible, planned episodes, continuity across the films
+        bad, meas = _series_test()
+        failed += 1 if bad else 0
+        results.append({"series": "Ask Ravi planned from its bible (dates, gags, props, knowledge); its ten episode films pass continuity; eight planted breaks (voice, puppet, early and lost and missing props, a fact used early, a gag off cadence, a re-asked question) each caught; a gate review carried only to the facts it read; a seven-step tutorial made from nib-hello", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "library":   # WP-29: screen time per asset across the catalogue; creator packs into another project
+        bad, meas = _library_test()
+        failed += 1 if bad else 0
+        results.append({"library": "a screen-time report over the whole catalogue (every film covered, unregistered puppets named and unpaid); a contributor's royalty paid from it; a rig, a loop pack and a boil preset packed here and installed into another checkout, linted and baked there with its own tools, credited to their author; a tampered pack and a clashing clip name refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "handfont":   # WP-29: a handwriting font from a filled, photographed sample sheet
+        bad, meas = _handfont_test()
+        failed += 1 if bad else 0
+        results.append({"handfont": "a sheet filled with synthetic handwriting (Patrick Hand glyphs, jittered, photographed at an angle) becomes an OpenType font whose every glyph matches its sample and sits on the baseline at the sheet's x-height", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "mediums":   # WP-30: a film as a comic, a storybook, an interactive web film and a Godot project
+        bad, meas = _mediums_test()
+        failed += 1 if bad else 0
+        results.append({"mediums": "dialogue-demo as a printable comic and an interactive web film, pip-park as a storybook and a Godot project, each from the film's data alone and read back", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "team":   # WP-39: roles, locks, assignments and the audit log
+        bad, meas = _team_test()
+        failed += 1 if bad else 0
+        results.append({"team": "an artist session edits a character but cannot approve a post or render a film; a director can approve; a lock and an assignment keep others out and the owner breaks a lock; every change and refusal is in the audit log, through the CLI and the HTTP API", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "desk":   # WP-21: a director edits a film by chat alone; each role refused outside its subset
+        bad, meas = _desk_test()
+        failed += 1 if bad else 0
+        results.append({"desk": "a director changes a copy of dialogue-demo by notes alone: a line's words (re-voiced), its length, the camera, the set, the music and the acting, then sees the storyboard and animatic; an artist's note to change a line is refused; each of the seven roles is refused a command outside its subset", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "farm":   # WP-38: a film rendered by three workers in about a third of one's time, frames identical
+        bad, meas = _farm_test()
+        failed += 1 if bad else 0
+        results.append({"farm": "a ten-shot film rendered by one worker and by three (each pinned to its own core, standing for a machine): the same frames, in about a third of the time; then every shot from the shared cache", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "actout2":   # WP-12: head turn into the turn control, camera pan taken out, two people as two clips
+        from . import actout as AO
+        bad, meas = AO.self_test_2(_json(ROOT / "puppet" / "examples" / "pip.puppet.json"), _json(ROOT / "cast" / "generated" / "ravi.puppet.json"),
+                                   _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"], ROOT / "out" / "actout2_test")
+        failed += 1 if bad else 0
+        results.append({"actout2": "a synthetic take with a head turn becomes a turn control track that the bake plays; a camera pan over a drawn background is found and taken out so the root does not drift; two people in one take become two clips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
+        bad, meas = _acting2_test()
+        failed += 1 if bad else 0
+        results.append({"acting2": "the same scene acted by an excitable Ravi and a shy Priya, then with the profiles swapped: each moves well over twice as much when excitable, the shy one never points or celebrates; an agent's tags checked against the clip library and the profile, the accepted one placed on its word; a stare pushes the camera in on who reacts", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "sound2":   # WP-13: footsteps per surface, a room per set
+        bad, meas = _sound2_test()
+        failed += 1 if bad else 0
+        results.append({"sound2": "footsteps on grass, tile, wood, concrete and carpet each sound like themselves (told apart by their spectra far beyond their own variation); the outdoor room dies away in a fraction of the hall's time; a film's step cues carry their set's surface and its mix its rooms", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "text2":   # WP-17: thought clouds, narration boxes, a typewriter that pauses on punctuation
+        bad, meas = _text2_test()
+        failed += 1 if bad else 0
+        results.append({"text2": "the sound-off cut of a dialogue film with a narrator and a thought shows a narration box, a thought cloud and speech bubbles, types with pauses on punctuation, and passes the reading-time rule", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "living":   # WP-27: corrections everywhere, companion guides, living films, intake, rebrand
+        bad, meas = _living_test()
+        failed += 1 if bad else 0
+        results.append({"living": "one correction reaches the voice, bubbles, title, credits, page and package; a companion guide reproduces every number and catches a changed source; a living film logs its update; send-a-myth intake; a rebrand re-makes a film", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "provenance":   # WP-26: content credentials, recipes, disclosure, consent
+        bad, meas = _provenance_test()
+        failed += 1 if bad else 0
+        results.append({"provenance": "finals signed with C2PA and verified by c2patool; tampering caught; signed frames re-made to the same keys and a changed film caught; disclosure per platform; a voice or likeness without consent refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "analytics":   # WP-31: exports in, checklist, retention onto films, experiments, polls, a re-ranked plan, the business view
         bad, meas = _analytics_test()
         failed += 1 if bad else 0
@@ -4407,7 +5664,11 @@ def film_package(name, cover_t=None):
     md += ["## Pinned comment", "", "> " + (pinned or "(no sources: add facts.json sources)"), "", "## Alt text", "", alt, ""]
     if b.get("prompt"):
         md += ["## Engagement prompt (reply to your own comment)", "", "> " + b["prompt"], ""]
-    md += ["## Credits", "", *credits, "", "## 48-hour checklist", "",
+    disc = film_disclosure(name)   # WP-26: each platform's AI-disclosure setting and the caption line
+    pkg["disclosure"] = disc
+    md += ["## AI disclosure", "", *[f"- **{k}**: {v['setting']}: {'ON' if v['on'] else 'off'}{' (required)' if v['required'] else ''}" for k, v in disc["platforms"].items()],
+           "", "Caption line: " + next(iter(disc["platforms"].values()))["caption"], ""]
+    md += ["## Credits", "", *credits, "", "## 48-hour checklist (analytics.checklist reads it)", "",
            "- Views, average view duration and retention at 3 s / 50% / end, per platform",
            "- Shares and saves per 1,000 views; comments that show a misunderstanding (note them for a follow-up)",
            "- Which hook and cover were used; whether the title needs a (true) alternative",
@@ -4415,7 +5676,7 @@ def film_package(name, cover_t=None):
     (pk / "posts.md").write_text("\n".join(md) + "\n"); (pk / "package.json").write_text(json.dumps(pkg, indent=1))
     prov = film_provenance(name)   # WP-33: inputs whose terms restrict a public film are flagged for the owner
     return {"package": str((pk / "posts.md").relative_to(ROOT)), "checks": checks, "chapters": len(chapters),
-            "posting_flags": prov["flags"], "clear_to_post": prov["clear_to_post"]}
+            "posting_flags": prov["flags"], "clear_to_post": prov["clear_to_post"], "disclosure": {k: v["on"] for k, v in disc["platforms"].items()}}
 
 
 # ---------------- title, thumbnail and cover lab (plan 3.9, WP-07) ----------------
@@ -4651,7 +5912,9 @@ def post_queue(film, quarter="", date="", channel="", platforms=None, require_me
 def post_approve(id="", film="", date="", by="", accept_flags=False, note=""):
     """A person approves a post (WP-08): recorded with their name and the time. A blocked post cannot be approved; a
     post with posting flags only when the approver accepts them by name."""
-    from . import posting as PO
+    from . import posting as PO, ACTOR
+    if not by.strip() and ACTOR.get() and ACTOR.get()["id"] != "local":   # WP-39: the acting person approves in their own name
+        by = ACTOR.get()["name"]
     if not by.strip():
         raise ValueError("an approval needs the approver's name")
     out = []
@@ -5168,6 +6431,49 @@ def critic_pack(name, step=3.0):
         sh.copy(ROOT / "dbe" / "critic" / f"{r}.md", out / f"prompt_{r}.md"); roles[r] = str((out / f"prompt_{r}.md").relative_to(ROOT))
     return {"packet": str(out.relative_to(ROOT)), "stills": len(list((out / "stills").glob("*.png"))), "prompts": roles,
             "next": "give each prompt to a fresh agent with the packet; record each verdict with ledger.add"}
+
+
+@command("critic.blind_pair", a=("string", "a film"), b=("string", "another version of the same scene (same lines and timing)"), shot=("string", "shot id", "s1"),
+         step=("number", "seconds between frames", 0.33), seed=("integer", "the coin that orders the pair", 0))
+def critic_blind_pair(a, b, shot="s1", step=0.33, seed=0):
+    """A blind pair for a fresh critic (WP-10): the same moments of two versions of a scene as two contact sheets
+    (frames every `step` seconds with their times), labelled Version 1 and Version 2 in an order set by a coin, the
+    transcript with times, and a prompt asking for ratings of acting and timing and a preference. Which film is which
+    is kept outside the packet (out/critic/blind_keys/), to be read only after the verdict."""
+    import random
+    from PIL import Image, ImageDraw
+    sa, sb = _shots(a), _shots(b); sh = next(x for x in sa["shots"] if x["id"] == shot)
+    ts = [round(sh["start"] + k * step, 3) for k in range(int((sh["end"] - sh["start"]) / step) + 1)]
+    pid = f"{a}__{b}__{shot}"; od = ROOT / "out" / "critic" / "blind" / pid; shutil.rmtree(od, ignore_errors=True); od.mkdir(parents=True)
+    order = [a, b]; random.Random(seed or int(__import__("hashlib").sha256(pid.encode()).hexdigest()[:8], 16)).shuffle(order)
+    for k, film in enumerate(order, 1):
+        pref = od / f"v{k}"
+        _run(["node", "tools/stills.mjs", str(_player_page(film)), f"shot={shot}&captions=0", str(pref), *[str(t - sh["start"]) for t in ts]], timeout=900)
+        ims = [Image.open(f"{pref}_{t - sh['start']}.png").convert("RGB").resize((216, 384)) for t in ts]
+        cols = 8; rows = -(-len(ims) // cols); sheet = Image.new("RGB", (cols * 216, rows * 404), "white"); dr = ImageDraw.Draw(sheet)
+        for i, (im, t) in enumerate(zip(ims, ts)):
+            x, y = (i % cols) * 216, (i // cols) * 404; sheet.paste(im, (x, y + 20)); dr.text((x + 4, y + 3), f"{t:.2f} s", fill="black")
+        sheet.save(od / f"version_{k}.png")
+        for f in od.glob(f"v{k}_*.png"):
+            f.unlink()
+    tm = _json(FILMS / a / "timing.json", {})
+    (od / "transcript.md").write_text("# Transcript (the same in both versions)\n\n| time | who | line |\n|---|---|---|\n" +
+                                      "".join(f"| {l['start']:.2f} to {l['end']:.2f} s | {l.get('speaker')} | {l['text']} |\n" for l in tm.get("lines", [])))
+    (od / "prompt.md").write_text(f"""# Blind pair: acting and timing
+
+You are a fresh critic. Two versions of the same short animated scene are in version_1.png and version_2.png: frames
+every {step} s with their times, the same moments in each. The words and their timing are the same (transcript.md);
+only the characters' acting and the camera differ. You do not know how either was made; do not guess.
+
+Rate each version from 1 to 10 on: (a) acting that reads (would a viewer understand each character's attitude with
+the sound off), (b) timing to the words (gestures land on the right words and beats, not early or late), (c) character
+(each character feels like a person with their own manner), (d) gag and beat timing (reactions, holds and pauses land).
+Then say which version you prefer overall, or that they are equal, and why in a few sentences. Reply as JSON:
+{{"version_1": {{"acting": n, "timing": n, "character": n, "gag_timing": n}}, "version_2": {{...}}, "prefer": 1 | 2 | "equal", "why": "..."}}
+""")
+    kd = ROOT / "out" / "critic" / "blind_keys"; kd.mkdir(parents=True, exist_ok=True)
+    (kd / f"{pid}.json").write_text(json.dumps({"version_1": order[0], "version_2": order[1]}))
+    return {"packet": str(od.relative_to(ROOT)), "frames": len(ts), "key": str((kd / f"{pid}.json").relative_to(ROOT)), "next": "give prompt.md and the packet to a fresh critic; read the key after"}
 
 
 @command("puppet.from_ink", spec=("string", "path to an ink spec JSON (photo, crop, parts polygons and pivots, swaps); see dbe/ink.py"),
@@ -6872,6 +8178,147 @@ def _stickers_test():
     shutil.rmtree(STICKERS / "ztest-pip", ignore_errors=True)
     return bad, meas
 
+def _living_test():
+    """WP-27, on scratch copies. Companion: data-demo's guide finds every number it shows or says and reproduces each;
+    with a cached source changed, the guide reports the sha256 mismatch and the numbers that differ. Correction (a copy
+    of nib-hello): a line and a title corrected with film.correct reach the voice (re-voiced, re-rendered with every QA
+    check), the bubble on screen (read back by OCR), the title, the credits (a dated section with thanks), the page (the
+    log, "what we got wrong") and the package. Living film (a copy of data-demo): its source changes, film.living logs
+    a dated update naming the numbers. Intake (a scratch plan): a myth enters the bank as intake, the same myth again
+    is counted, not added, and the scheduler leaves it alone. Rebrand: a copy of nib-hello moved to another brand kit is
+    re-rendered with its covers and package."""
+    import os
+    import datetime as dt
+    bad, meas = [], {}
+    made = []
+    def copy(src, dst, build=False):
+        shutil.rmtree(FILMS / dst, ignore_errors=True); shutil.copytree(FILMS / src, FILMS / dst, ignore=None if build else shutil.ignore_patterns("build")); made.append(dst)
+    old_env = os.environ.get("DBE_PLAN"); tmp = ROOT / "out" / "living_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    try:
+        c = film_companion("data-demo")
+        copy("data-demo", "zz-comp"); lf = FILMS / "zz-comp" / "analysis" / "cache" / "log.csv"
+        lf.write_text(lf.read_text().replace(",9", ",11", 1))
+        c2 = film_companion("zz-comp")
+        meas["companion"] = {"numbers": c["numbers"], "all_reproduced": c["all_reproduced"], "changed_source": [c2["all_reproduced"], [s_["sha256_ok"] for s_ in c2["sources"]], [d_["path"] for d_ in c2["different"]]]}
+        if not (c["all_reproduced"] and c["numbers"] >= 8 and c2["all_reproduced"] is False and c2["different"] and not all(s_["sha256_ok"] for s_ in c2["sources"])):
+            bad.append(f"companion: {meas['companion']}")
+        if (FILMS / "nib-hello" / "build" / "voice.wav").exists():
+            copy("nib-hello", "zz-corr", build=True)
+            e1 = film_correct("zz-corr", "line:hi", "Hi! I'm Nib. Someone drew me in pen.", "Nib was drawn in pen; the line said only paper", kind="error", credit="a viewer, Sam")
+            e2 = film_correct("zz-corr", "titles:0", "Meet Nib, drawn in pen", "the title now says how Nib was drawn", kind="clarification", render=False)
+            page_ = (FILMS / "zz-corr" / "build" / "page" / "index.html").read_text(); cr = (FILMS / "zz-corr" / "build" / "credits.txt").read_text()
+            meas["correction"] = {"line": e1["surfaces"], "title": e2["surfaces"], "page_sections": ["What we got wrong" in page_, "Updates and clarifications" in page_], "credits_thanks": "Thanks to a viewer, Sam." in cr}
+            s1 = e1["surfaces"]
+            if not (s1.get("voice") and s1.get("render") == "all checks pass" and s1.get("on_screen") is True and s1.get("credits") and s1.get("page") and s1.get("package") is True
+                    and e2["surfaces"].get("title") and e2["surfaces"].get("page") and all(meas["correction"]["page_sections"]) and meas["correction"]["credits_thanks"]):
+                bad.append(f"correction: {meas['correction']}")
+        else:
+            meas["correction"] = "skipped: nib-hello not voiced here"
+        copy("data-demo", "zz-live"); lf = FILMS / "zz-live" / "analysis" / "cache" / "log.csv"; lf.write_text(lf.read_text().replace(",9", ",12", 1))
+        lv = film_living("zz-live", render=False); lg = _json(FILMS / "zz-live" / "corrections.json", {"corrections": []})["corrections"]
+        meas["living"] = {"numbers_changed": [c_["path"] for c_ in lv["numbers_changed"]], "logged": [x["kind"] for x in lg]}
+        if not (lv["numbers_changed"] and lg and lg[-1]["kind"] == "update" and "total" in lg[-1]["why"]):
+            bad.append(f"living: {meas['living']}")
+        from . import planner as PL
+        shutil.copytree(PL.PLAN, tmp / "plan"); os.environ["DBE_PLAN"] = str(tmp / "plan")
+        i1 = plan_intake("Do camels really store water in their humps?", by="Ama")
+        i2 = plan_intake("Do camels really keep water in their humps", by="Kofi")
+        bank = _plan_bank(""); idea = next(i for i in bank["ideas"] if i["id"] == i1.get("idea"))
+        meas["intake"] = {"first": i1, "second": {k: i2.get(k) for k in ("added", "same_as", "asked_by")}, "eligible": PL.eligible(idea, dt.date(2027, 4, 5), PL.channel("")["rules"], dt.date(2027, 3, 1))}
+        if not (i1["added"] and not i2["added"] and i2["same_as"] == i1["idea"] and i2["asked_by"] == 2 and not meas["intake"]["eligible"]):
+            bad.append(f"intake: {meas['intake']}")
+        if (FILMS / "nib-hello" / "build" / "voice.wav").exists():
+            kit = json.loads((ROOT / "brand" / "sample-kids.json").read_text()); (ROOT / "brand" / "zz-test.json").write_text(json.dumps(kit))
+            copy("nib-hello", "zz-brand", build=True)
+            try:
+                rb = catalogue_rebrand("zz-test", films=["zz-brand"])
+            finally:
+                (ROOT / "brand" / "zz-test.json").unlink(missing_ok=True)
+            row = rb["films"][0]
+            meas["rebrand"] = {**row, "brand_now": _json(FILMS / "zz-brand" / "shots.json")["brand"]}
+            if row.get("qa_failures") or meas["rebrand"]["brand_now"] != "zz-test" or row.get("film_package") is not True:
+                bad.append(f"rebrand: {meas['rebrand']}")
+    finally:
+        os.environ.pop("DBE_PLAN", None) if old_env is None else os.environ.__setitem__("DBE_PLAN", old_env)
+        for f in made:
+            shutil.rmtree(FILMS / f, ignore_errors=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _provenance_test():
+    """WP-26, on a scratch copy of nib-hello. Its finals are signed and c2patool, the reference tool, reads them as
+    Trusted with the studio root and Valid but untrusted without it; a copy with bytes changed in the middle fails
+    its hash check. The signed sample frames re-made in the player match their keys; after the sign's text changes,
+    film.verify names shots.json and the frames no longer match. Disclosure: Meta's label is required for the
+    synthetic voice, YouTube's only for realistic content. Consent (a scratch registry and consent store): a cloned
+    voice with no record is refused by voice.build, passes once its record is added, and is refused again once it is
+    revoked; a puppet depicting a real person without a record is refused."""
+    import os
+    from . import provenance as PV
+    bad, meas = [], {}
+    if not PV.C2PATOOL.exists():
+        return [], {"skipped": "c2patool not installed (bash tools/setup.sh provenance)"}
+    if not (FILMS / "nib-hello" / "build" / "final.mp4").exists():
+        return [], {"skipped": "nib-hello not rendered here"}
+    zz = FILMS / "zz-prov"; shutil.rmtree(zz, ignore_errors=True); shutil.copytree(FILMS / "nib-hello", zz)
+    tmp = ROOT / "out" / "provenance_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    old_env = {k: os.environ.get(k) for k in ("DBE_VOICE_REGISTRY", "DBE_CONSENT_ROOT")}
+    try:
+        sg = film_sign("zz-prov"); v = sg["signed"][0]["verify"]
+        plain = json.loads(subprocess.run([str(PV.C2PATOOL), str(zz / "build" / "final.mp4")], capture_output=True, text=True).stdout)
+        fails_plain = [x["code"] for x in (plain.get("validation_results") or {}).get("activeManifest", {}).get("failure", [])]
+        bad_copy = tmp / "tampered.mp4"; b = bytearray((zz / "build" / "final.mp4").read_bytes()); mid = len(b) // 2
+        b[mid:mid + 64] = bytes(x ^ 0x5A for x in b[mid:mid + 64]); bad_copy.write_bytes(bytes(b))
+        tv = PV.verify(bad_copy, zz / "build" / "trust_anchors.pem")
+        meas["c2pa"] = {"signed": [x["file"] for x in sg["signed"]], "state": v["state"], "assertions": v["assertions"], "without_root": [plain.get("validation_state"), fails_plain],
+                        "tampered": [tv["state"], tv["failures"]]}
+        if not (sg["ok"] and v["state"] == "Trusted" and "org.doodleberry.recipe" in v["assertions"] and plain.get("validation_state") == "Valid"
+                and fails_plain == ["signingCredential.untrusted"] and tv["state"] != "Trusted" and tv["failures"]):
+            bad.append(f"c2pa: {meas['c2pa']}")
+        vr = film_verify("zz-prov")
+        sj = json.loads((zz / "shots.json").read_text()); sj["shots"][0]["overlays"][0]["text"] = "HI THERE"; (zz / "shots.json").write_text(json.dumps(sj, indent=1))
+        vc = film_verify("zz-prov")
+        meas["recipe"] = {"as_signed": [vr["recipe"]["changed_since"], vr["frames"]["matching"], vr["frames"]["checked"]], "after_edit": [vc["recipe"]["changed_since"], vc["frames"]["matching"], vc["frames"]["checked"]]}
+        if not (vr["ok"] and vr["frames"]["checked"] >= 8 and not vc["ok"] and "shots.json" in vc["recipe"]["changed_since"] and vc["frames"]["matching"] < vc["frames"]["checked"]):
+            bad.append(f"recipe: {meas['recipe']}")
+        dz = film_disclosure("nib-hello"); dr = film_disclosure("nib-hello", realistic=True)
+        meas["disclosure"] = {k: [v_["on"], v_["required"]] for k, v_ in dz["platforms"].items()} | {"youtube_if_realistic": dr["platforms"]["youtube"]["required"]}
+        if not (dz["platforms"]["instagram"]["required"] and not dz["platforms"]["youtube"]["required"] and dr["platforms"]["youtube"]["required"]):
+            bad.append(f"disclosure: {meas['disclosure']}")
+        # consent, with a scratch registry and store
+        reg = json.loads((ROOT / "voices" / "registry.json").read_text())
+        reg["voices"]["clone:test-person"] = {"status": "clean", "kind": "clone", "license": "the person's own voice", "consent": "voice-test-person-2026-10-01"}
+        (tmp / "registry.json").write_text(json.dumps(reg)); (tmp / "consent").mkdir()
+        os.environ["DBE_VOICE_REGISTRY"] = str(tmp / "registry.json"); os.environ["DBE_CONSENT_ROOT"] = str(tmp)
+        sc = json.loads((zz / "script.json").read_text()); sc["speakers"] = {k: {**v_, "voice": "clone:test-person"} for k, v_ in sc["speakers"].items()}
+        (zz / "script.json").write_text(json.dumps(sc, indent=1))
+        steps = {}
+        def gate():
+            try:
+                voice_check("zz-prov"); return "allowed"
+            except PermissionError as e:
+                return "refused: " + str(e)[:90]
+        steps["no record"] = gate()
+        consent_add("voice", "Test Person", "2026-10-01", "self-test", scope={"commercial": True}, id="voice-test-person-2026-10-01")
+        steps["recorded"] = gate()
+        consent_revoke("voice-test-person-2026-10-01", reason="self-test")
+        steps["revoked"] = gate()
+        pz = ROOT / "out" / "provenance_test" / "likeness.puppet.json"; pj = json.loads((ROOT / "puppet" / "examples" / "pip.puppet.json").read_text())
+        pj.setdefault("meta", {})["likeness"] = {"person": "A Real Person"}; pz.write_text(json.dumps(pj))
+        sc["speakers"] = {k: {**v_, "voice": "kokoro:am_puck"} for k, v_ in sc["speakers"].items()}; (zz / "script.json").write_text(json.dumps(sc, indent=1))
+        sj["shots"][0]["cast"][0]["puppet"] = str(pz.relative_to(ROOT)); (zz / "shots.json").write_text(json.dumps(sj, indent=1))
+        steps["likeness without record"] = gate()
+        meas["consent"] = steps
+        if not (steps["no record"].startswith("refused") and steps["recorded"] == "allowed" and steps["revoked"].startswith("refused") and steps["likeness without record"].startswith("refused")):
+            bad.append(f"consent: {steps}")
+    finally:
+        for k, v_ in old_env.items():
+            os.environ.pop(k, None) if v_ is None else os.environ.__setitem__(k, v_)
+        shutil.rmtree(zz, ignore_errors=True); shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
 def _analytics_test():
     """WP-31, a rehearsal on simulated numbers in a scratch plan (DBE_PLAN), so the real plan is never touched.
     Exports: YouTube-, TikTok- and Instagram-style CSVs read (durations, percentages, thousands separators, a totals
@@ -7341,4 +8788,666 @@ def _sound_test():
     finally:
         srv.terminate()
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _series_test():
+    """WP-28, on data (the episodes' films are made with series.make render=false; rendering is checked by hand).
+    Planning: ten Thursdays a week apart from the bible's start, the notebook gag every episode from 2, the big-word gag
+    every third from 1, the star map carried in 5 to 8. Continuity on the ten films as made: none. Then eight breaks,
+    each planted in a copy of one episode's data and each caught: Ravi re-voiced, Momo drawn from another puppet, the
+    star map in episode 3 (before it appears) and in 9 (after it is lost), the notebook missing in 6, Momo saying
+    light-year in 2 (before learning it in 3), the big-word gag in 2 (off its cadence), Momo asking about light-years
+    again in 7. The gate: a review is carried to an episode only while its facts hash the same; a changed fact makes it
+    stale, and research_log.md has the five sections the research gate wants."""
+    import copy
+    from . import series as SR
+    from . import research
+    bad, meas = [], {}
+    d = _series("ask-ravi"); b = SR.load(d); briefs = _json(d / "briefs.json")["episodes"]
+    eps = SR.plan_episodes(b, briefs)
+    ds = [e["date"] for e in eps]
+    import datetime as dt
+    if ds[0] != "2027-01-07" or any((dt.date.fromisoformat(y) - dt.date.fromisoformat(x)).days != 7 for x, y in zip(ds, ds[1:])):
+        bad.append(f"dates: {ds}")
+    nb = [e["n"] for e in eps if "notebook" in e["gags"]]; bw = [e["n"] for e in eps if "big-word" in e["gags"]]
+    sm = [e["n"] for e in eps if "star-map" in e["props"]]
+    meas["plan"] = {"notebook_gag": nb, "big_word_gag": bw, "star_map": sm}
+    if nb != list(range(2, 11)) or bw != [1, 4, 7, 10] or sm != [5, 6, 7, 8]:
+        bad.append(f"plan: {meas['plan']}")
+    films = []
+    for e in eps:
+        f = FILMS / e["name"]
+        if not (f / "script.json").exists():
+            series_make("ask-ravi", episodes=[e["n"]], render=False)
+        films.append((e["n"], _json(f / "script.json"), _json(f / "shots.json"), None))
+    base = SR.check(b, films); meas["as_made"] = base
+    if base:
+        bad.append(f"continuity on the films as made: {base[:5]}")
+    F = {n: (sc, sh) for n, sc, sh, _ in films}
+    ravi, momo = b["cast"]["expert"]["id"], b["cast"]["learner"]["id"]
+
+    def broken(n, fn):
+        sc, sh = copy.deepcopy(F[n][0]), copy.deepcopy(F[n][1]); fn(sc, sh)
+        return SR.check(b, [(k, *( (sc, sh) if k == n else F[k]), None) for k in sorted(F)])
+
+    def voice(sc, sh):
+        sc.setdefault("speakers", {}).setdefault(ravi, {})["voice"] = "en_US-other-voice"
+
+    def puppet(sc, sh):
+        for s_ in sh["shots"]:
+            for c in s_.get("cast", []):
+                if c.get("speaker") == momo:
+                    c["puppet"] = "puppets/someone-else.puppet.json"
+
+    sm_p = next(p for p in b["props"] if p["id"] == "star-map")
+
+    def add_map(sc, sh):
+        for s_ in sh["shots"]:
+            if any(c.get("speaker") == ravi for c in s_.get("cast", [])):
+                s_.setdefault("props", []).append({"id": "star-map", "r": 30, "svg": sm_p["svg"], "attach": []})
+
+    def drop_nb(sc, sh):
+        for s_ in sh["shots"]:
+            s_["props"] = [p for p in s_.get("props") or [] if p["id"] != "notebook"]
+
+    def say(text):
+        def f(sc, sh):
+            ln = next(l for l in sc["lines"] if l.get("speaker") == momo); ln["text"] = text
+        return f
+
+    def ravi_gag(sc, sh):
+        ln = [l for l in sc["lines"] if l.get("speaker") == ravi][-1]; ln["text"] += " Big word, small idea."
+
+    cases = {"voice": (4, voice, f"{ravi} speaks with"), "puppet": (2, puppet, f"{momo} is drawn from"),
+             "prop early": (3, add_map, "star-map on screen before e5"), "prop after loss": (9, add_map, "star-map on screen after it was lost"),
+             "prop missing": (6, drop_nb, "notebook missing"), "fact early": (2, say("Is a light-year far?"), "before learning it in e3"),
+             "gag off cadence": (2, ravi_gag, "gag big-word off its cadence"), "asked again": (7, say("What is a light-year again?"), "asks about what a light-year is again")}
+    meas["breaks"] = {}
+    for k, (n, fn, want) in cases.items():
+        got = broken(n, fn); hit = [p for p in got if want in p]
+        meas["breaks"][k] = hit[:1] or got[:2]
+        if not hit:
+            bad.append(f"break {k!r} in e{n} not caught (got {got[:3]})")
+    ep = eps[0]; h = SR.facts_hash(ep["brief"])
+    ch = copy.deepcopy(ep["brief"]); k0 = next(iter(ch["facts"])); ch["facts"][k0]["claim"] += " (changed)"
+    cl = copy.deepcopy(ep["brief"]); cl["exchanges"][0]["a"] += " Really."
+    if SR.facts_hash(ch) == h or SR.facts_hash(cl) == h:
+        bad.append("a changed fact or line hashes the same")
+    log = SR.research_log(b, ep, {"verdict": "cleared", "at": "2026-11-03", "sources": [{"url": ep["brief"]["facts"][k0]["source"]["url"], "loaded": True, "quote_found": True}]})
+    miss = [x for x in research.LOG_SECTIONS if f"## {x}" not in log]
+    if miss:
+        bad.append(f"research log lacks {miss}")
+    g = _json(d / "gate.json", {"reviews": {}})["reviews"]
+    meas["gate"] = {n: (r["verdict"], r["facts_hash"] == SR.facts_hash(next(e for e in eps if str(e["n"]) == n)["brief"])) for n, r in g.items()}
+    if (FILMS / "nib-hello" / "build" / "final.mp4").exists():   # teaching mode on a rendered film
+        t = teach_tutorial("nib-hello"); md = (ROOT / t["tutorial"]).read_text()
+        steps = len(re.findall(r"^## \d\.", md, re.M)); meas["tutorial"] = {"steps": steps, "images": t["images"]}
+        if steps != 7 or "nib.sheet.png" not in t["images"] or "s1.png" not in t["images"] or "voice.build" not in md:
+            bad.append(f"tutorial: {meas['tutorial']}")
+    return bad, meas
+
+
+def _library_test():
+    """WP-29. Usage: usage.report over the whole catalogue covers every film (data films from shots.json, hand-coded
+    scene.js films as one scene asset each), finds the house clips, sets, Kokoro voices and the Pepper&Carrot rig,
+    names the unregistered puppets and pays them nothing; with a royalty on a contributor's cast entry (a scratch
+    registry) the payout is seconds x rate. Packs: in a second checkout of this repository (a git worktree of HEAD
+    in out/, another project with its own loader and bake), a rig (Pip, as a creator's template), a loop pack (an
+    original hop loop recorded as a puppet's own clip) and a boil preset (from nib-hello) are packed here and
+    installed there; the rig is registered in that project's cast library and linted there; its own bake.mjs plays the
+    installed loop on the installed rig (the torso moves on the clip's beat); the usage library of that project
+    credits the clip and the rig to their creator with the pack's royalty; a pack changed after it was made, and a
+    second pack whose clip is named like one already there, are refused."""
+    import zipfile
+    from . import usage as U, packs as PK
+    bad, meas = [], {}
+    r = usage_report(); meas["catalogue"] = {k: r[k] for k in ("films", "covered", "assets", "by_kind", "unregistered_puppets")}
+    if r["covered"] != r["films"] or r["skipped"] or r["by_kind"]["scene"] < 1 or r["by_kind"]["clip"] < 10 or r["by_kind"]["voice"] < 5:
+        bad.append(f"catalogue: {meas['catalogue']} skipped {r['skipped'][:3]}")
+    full = _json(ROOT / "out" / "usage" / "usage.json")
+    pep = [a for a in full["assets"] if a["kind"] == "puppet" and "Revoy" in (a["owner"] or "")]
+    if not pep or not all(a["seconds"] > 0 for a in pep):
+        bad.append("the Pepper&Carrot rig's screen time is missing")
+    r2 = usage_report(rates={"kind": {"puppet": 0.01}})
+    if "unregistered" in (r2["payouts"] or {}):
+        bad.append("an unregistered puppet was paid")
+    lib = U.Library(ROOT); ent = next(e for e in lib.cast.values() if e["id"] == "momo")
+    lib.cast[ent["path"]] = {**ent, "rights": {"type": "owner", "owner": "A. Contributor (synthetic test)"}, "royalty": {"per_second": 0.003, "currency": "USD"}}
+    names = ["clips-demo", "dialogue-demo"]
+    rep = U.report(lib, [(n, _shots(n), _json(FILMS / n / "script.json", {}), _json(FILMS / n / "timing.json", {})) for n in names])
+    sec = next(a["seconds"] for a in rep["assets"] if a["kind"] == "puppet" and a["id"] == ent["path"])
+    got = (rep["payouts"] or {}).get("by_owner", {}).get("A. Contributor (synthetic test)")
+    meas["contributor"] = {"seconds": sec, "paid": got}
+    if got != round(sec * 0.003, 2):
+        bad.append(f"contributor royalty: {meas['contributor']}")
+    # ---- packs into another project
+    tgt = ROOT / "out" / "pack_target"; tmp = ROOT / "out" / "packs_test"
+    subprocess.run(["git", "worktree", "remove", "--force", str(tgt)], cwd=ROOT, capture_output=True); shutil.rmtree(tgt, ignore_errors=True)
+    shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    w = subprocess.run(["git", "worktree", "add", "--detach", str(tgt), "HEAD"], cwd=ROOT, capture_output=True, text=True)
+    if w.returncode:
+        return bad + [f"worktree: {w.stderr[-200:]}"], meas
+    try:
+        pip = _json(ROOT / "puppet" / "examples" / "pip.puppet.json")
+        rec = {**pip, "clips": {"hop_loop": {"duration": 0.8, "loop": True, "tracks": {"torso": [[0, 0], [0.4, 9], [0.8, 0]], "thigh_L": [[0, -6], [0.4, 10], [0.8, -6]], "thigh_R": [[0, 10], [0.4, -6], [0.8, 10]]}}}}
+        (tmp / "rec.puppet.json").write_text(json.dumps(rec))
+        common = {"author": "A. Creator (synthetic test)", "license": "CC-BY-4.0", "royalty": {"per_second": 0.004, "currency": "USD"}}
+        rig = pack_make("rig", "pip-template", "Pip rig template", "1.0.0", source="pip", **common)
+        loops = pack_make("loops", "hop-loops", "Hop loops", "1.0.0", source=str((tmp / "rec.puppet.json").relative_to(ROOT)), clips=["hop_loop"], **common)
+        boil = pack_make("boil", "ink-boil", "Ink boil", "1.0.0", source="nib-hello", **{k: v for k, v in common.items() if k != "royalty"})
+        ins = [pack_install(x["pack"], str(tgt)) for x in (rig, loops, boil)]
+        meas["installed"] = ins
+        cl = subprocess.run([PY, "-m", "dbe", "cast.list"], cwd=tgt, capture_output=True, text=True)
+        reg = next((e for e in json.loads(cl.stdout or "{}").get("puppets", []) if e["id"] == "pip-template"), None)
+        if not reg or reg.get("pack") != "pip-template@1.0.0" or reg.get("author") != common["author"]:
+            bad.append(f"the rig is not in the other project's cast library: {cl.stderr[-200:] or reg}")
+        spec = {"fps": 30, "frames": 24, "start": 0, "size": [1080, 1920], "cast": [{"puppet": str(tgt / ins[0]["puppet"]), "place": {"x": 540, "y": 1500, "s": 1},
+                "timeline": {"clips": [{"clip": "idle", "start": 0}, {"clip": "hop_loop", "start": 0, "weight": 2}]}}]}
+        (tmp / "spec.json").write_text(json.dumps(spec))
+        b = subprocess.run(["node", "tools/bake.mjs", str(tmp / "spec.json"), str(tmp / "baked.json")], cwd=tgt, capture_output=True, text=True)
+        torso = [fr["angles"].get("torso", 0) for fr in _json(tmp / "baked.json", {"cast": [{"frames": []}]})["cast"][0]["frames"]]
+        meas["baked_torso"] = [round(x, 2) for x in torso[::4]]
+        if b.returncode or len(torso) != 24 or max(torso) - min(torso) < 4 or abs(torso[0] - torso[-1] + 0) > 9:
+            bad.append(f"the installed loop does not play in the other project's bake: {b.stderr[-200:]} {meas['baked_torso']}")
+        tl = U.Library(tgt); ow_clip = tl.owner("clip", "humanoid/hop_loop"); ow_rig = tl.owner("puppet", ins[0]["puppet"]); ow_boil = tl.owner("boil", "ink-boil")
+        meas["owners_there"] = {"clip": ow_clip.get("owner"), "rig": ow_rig.get("owner"), "boil": ow_boil.get("owner"), "royalty": ow_clip.get("royalty")}
+        if not (ow_clip.get("owner") == ow_rig.get("owner") == ow_boil.get("owner") == common["author"] and (ow_clip.get("royalty") or {}).get("per_second") == 0.004):
+            bad.append(f"owners in the other project: {meas['owners_there']}")
+        if not (tgt / "presets" / "boil" / "ink-boil.json").exists() or "hop_loop" not in (tgt / "puppet" / "clips" / "humanoid.js").read_text():
+            bad.append("the boil preset or the clip library script is missing there")
+        t2 = tmp / "tampered.dbpack"
+        with zipfile.ZipFile(ROOT / loops["pack"]) as zi, zipfile.ZipFile(t2, "w") as zo:
+            for n in zi.namelist():
+                d_ = zi.read(n); zo.writestr(n, d_.replace(b"0.8", b"0.9") if n.startswith("payload/") else d_)
+        refused = {}
+        for k_, fn in (("tampered", lambda: pack_install(str(t2), str(tgt))),
+                       ("clash", lambda: pack_install(pack_make("loops", "other-idle", "Another idle", "1.0.0", source="humanoid", clips=["idle"], author="someone (synthetic test)", license="CC0-1.0")["pack"], str(tgt)))):
+            try:
+                fn(); refused[k_] = False
+            except ValueError as e:
+                refused[k_] = str(e)[:90]
+        meas["refused"] = refused
+        if not all(refused.values()):
+            bad.append(f"not refused: {refused}")
+    finally:
+        subprocess.run(["git", "worktree", "remove", "--force", str(tgt)], cwd=ROOT, capture_output=True); shutil.rmtree(tgt, ignore_errors=True)
+        subprocess.run(["git", "worktree", "prune"], cwd=ROOT, capture_output=True)
+    return bad, meas
+
+
+def _handfont_test():
+    """WP-29, on synthetic samples (marked so: no artist's handwriting is used). font.sheet makes the sheet; every box
+    is filled with Patrick Hand (OFL, already bundled) at the sheet's x-height, each glyph jittered (offset, a 2.5
+    degree rotation spread), then the page is warped as a phone photo would be, tinted, noised, blurred and scaled to
+    two thirds. font.from_samples registers it by its corner marks, traces each box and builds the font. Checked:
+    every character is in the font; each glyph rendered alone matches its sample as written (the Patrick Hand glyph
+    turned by the same jitter; shape IoU of the two, each in a square around its ink: mean at least 0.85, none below
+    0.7); letters without descenders sit on
+    the baseline (their bottoms within 40 units of 0, median) and the x reaches the x-height (500 +- 60 units)."""
+    import numpy as np
+    from fontTools.ttLib import TTFont
+    from PIL import Image, ImageDraw, ImageFont
+    from . import handfont as HF
+    import cv2
+    bad, meas = [], {}
+    od = ROOT / "out" / "fonts" / "zz-handtest"; shutil.rmtree(od, ignore_errors=True)
+    font_sheet("zz-handtest", title="Handwriting sheet (synthetic test)")
+    ph = od / "patrickhand.ttf"; f = TTFont(ROOT / "engine" / "fonts" / "PatrickHand-latin.woff2"); f.flavor = None; f.save(ph)
+    L = _json(od / "sheet.json"); im = Image.open(od / "sheet.png").convert("RGB"); rng = np.random.default_rng(7); ang = {}
+    for c in L["cells"]:
+        x0, y0, x1, y1 = c["box"]; xh = c["baseline"] - c["xheight"]
+        fnt = ImageFont.truetype(str(ph), round(xh / 0.47))
+        g = Image.new("L", (x1 - x0, y1 - y0), 0); d = ImageDraw.Draw(g)
+        w = d.textlength(c["char"], font=fnt); asc, _ = fnt.getmetrics()
+        d.text(((x1 - x0 - w) / 2 + rng.normal(0, 3), c["baseline"] - y0 - asc + rng.normal(0, 2)), c["char"], font=fnt, fill=255)
+        ang[c["char"]] = rng.normal(0, 2.5); g = g.rotate(ang[c["char"]], resample=Image.BICUBIC, center=((x1 - x0) / 2, c["baseline"] - y0))
+        im.paste(Image.new("RGB", g.size, (25, 30, 60)), (x0, y0), g)
+    a = np.asarray(im).astype(np.float32); H, W = a.shape[:2]
+    M = cv2.getPerspectiveTransform(np.float32([[0, 0], [W, 0], [0, H], [W, H]]), np.float32([[40, 25], [W - 15, 60], [10, H - 30], [W - 55, H - 10]]))
+    a = cv2.warpPerspective(a, M, (W, H), borderValue=(235, 232, 225)) * np.array([0.97, 0.95, 0.9]) + rng.normal(0, 6, (H, W, 3))
+    scan = od / "scan_synthetic.jpg"
+    Image.fromarray(np.clip(cv2.GaussianBlur(a, (3, 3), 0.8), 0, 255).astype(np.uint8)).resize((W * 2 // 3, H * 2 // 3), Image.LANCZOS).save(scan, quality=90)
+    r = font_from_samples("zz-handtest", str(scan), "Test Hand", "synthetic test (Patrick Hand glyphs)")
+    otf = ROOT / r["font"]; cmap = TTFont(otf).getBestCmap(); chars = L["chars"]
+    missing = [ch for ch in chars if ord(ch) not in cmap]
+    if missing or r["empty_boxes"]:
+        bad.append(f"missing glyphs {missing} empty {r['empty_boxes']}")
+
+    def shape(fp, ch, rot=0.0):   # the sample as written: the reference glyph turned as it was on the sheet
+        fo = ImageFont.truetype(str(fp), 200); g = Image.new("L", (400, 400), 0); dr = ImageDraw.Draw(g); dr.text((100, 50), ch, font=fo, fill=255)
+        if rot:
+            g = g.rotate(rot, resample=Image.BICUBIC, center=(100 + dr.textlength(ch, font=fo) / 2, 50 + fo.getmetrics()[0]))
+        bb = g.getbbox()
+        if not bb:
+            return np.zeros((64, 64), bool)
+        cx, cy, h = (bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2, max(bb[2] - bb[0], bb[3] - bb[1]) / 2 + 2   # a square around the ink: its proportions kept
+        return np.asarray(g.crop((cx - h, cy - h, cx + h, cy + h)).resize((64, 64), Image.BILINEAR)) > 100
+    iou = {}
+    for ch in chars:
+        A_, B_ = shape(otf, ch), shape(ph, ch, ang[ch]); iou[ch] = round(float((A_ & B_).sum() / max(1, (A_ | B_).sum())), 3)
+    vals = list(iou.values()); worst = sorted(iou.items(), key=lambda kv: kv[1])[:5]
+    meas["iou"] = {"mean": round(float(np.mean(vals)), 3), "worst": worst}
+    if np.mean(vals) < 0.85 or min(vals) < 0.7:
+        bad.append(f"glyph shapes: {meas['iou']}")
+    g = {x["char"]: x for x in _json(od / "font.json")["glyphs"]}
+    flat = [g[ch]["bottom"] for ch in "ABCDEHKLMNRTUVWXZacemnorsuvwxz" if ch in g]
+    meas["baseline"] = {"median_bottom": float(np.median(flat)), "x_top": g["x"]["top"], "p_bottom": g["p"]["bottom"]}
+    if abs(np.median(flat)) > 40 or abs(g["x"]["top"] - HF.XH) > 60 or g["p"]["bottom"] > -100:
+        bad.append(f"metrics: {meas['baseline']}")
+    shutil.rmtree(od, ignore_errors=True)
+    return bad, meas
+
+
+
+
+def _mediums_test():
+    """WP-30. Comic (dialogue-demo): one panel per line, every line's words in the PDF, a picture per panel. Storybook
+    (pip-park): a title page and a page per line. Interactive web film (dialogue-demo): opened in Chromium, a tap on a
+    line seeks to it, play stops after a question and asks, the answer button resumes, no page errors. Godot
+    (pip-park, first shot): the exported scene read back by an independent reader matches the player's frames (renderer
+    parity's score at least 0.93, colour within 24), and the project has its main scene and script."""
+    bad, meas = [], {}
+    c = film_comic("dialogue-demo"); meas["comic"] = {k: c[k] for k in ("pages", "panels", "pictures", "lines_missing_from_pdf")}
+    if not c["ok"] or c["panels"] != c["lines"]:
+        bad.append(f"comic: {meas['comic']}")
+    sb = film_comic("pip-park", kind="storybook"); meas["storybook"] = {k: sb[k] for k in ("pages", "panels", "lines_missing_from_pdf")}
+    if not sb["ok"] or sb["pages"] != sb["panels"] + 1:
+        bad.append(f"storybook: {meas['storybook']}")
+    it = export_interactive("dialogue-demo"); ck = it["check"]; meas["interactive"] = ck
+    if ck.get("errors") or not all((ck.get(k) or {}).get("ok") for k in ("tap", "pause", "resume")) or ck.get("lines") != it["lines"]:
+        bad.append(f"interactive: {ck}")
+    g = export_godot("pip-park", shots=["s1"]); meas["godot"] = {"drawings": g["shots"][0]["drawings"], "tracks": g["shots"][0]["tracks"], **g["check"]}
+    od = ROOT / g["project"]
+    if not g["check"]["ok"] or not all((od / f).exists() for f in ("project.godot", "main.tscn", "main.gd", "shots/s1.tscn")):
+        bad.append(f"godot: {meas['godot']}")
+    return bad, meas
+
+
+def _team_test():
+    """WP-39, in a scratch team folder (DBE_TEAM), through dbe.call as the CLI, HTTP API and MCP do. People: an owner,
+    a director, two artists, two editors and a reviewer agent session. The artist edits a character (puppet.save on a
+    scratch copy of Pip) but is refused post.approve (it signs off) and film.render (not an artist's); the director's
+    post.approve passes the permission check (and then fails only because there is no such post). The artist locks
+    the character: the second artist is refused, the owner breaks the lock. nib-hello is assigned to one editor: the
+    other editor is refused film.credits on it, the assigned one runs it. An unknown person is refused. Over HTTP, the
+    X-DBE-As header names the artist and the audit says so. Every change and every refusal is in the audit log with
+    who, role, door, command, target and result; reads are not logged."""
+    import os, tempfile, threading, urllib.request
+    from http.server import ThreadingHTTPServer
+    from . import call as CALL
+    bad, meas = [], {}
+    td = Path(tempfile.mkdtemp(prefix="team_")); old = os.environ.get("DBE_TEAM"); os.environ["DBE_TEAM"] = str(td)
+    idx, prov = (ROOT / "cast" / "index.json").read_text(), (ROOT / "cast" / "provenance.jsonl").read_text()
+    pup = "cast/zz-team/pip-copy.puppet.json"; srv = None
+    try:
+        shutil.copy(ROOT / "team" / "roles.json", td / "roles.json")
+        for pid, nm, rl, kd in (("ana", "Ana", ["owner"], "person"), ("dev", "Dev", ["director"], "person"), ("ines", "Ines", ["artist"], "person"), ("rui", "Rui", ["artist"], "person"),
+                                ("ed1", "Edda", ["editor"], "person"), ("ed2", "Ed", ["editor"], "person"), ("critic-1", "critic agent session", ["reviewer"], "agent")):
+            team_add(pid, nm, rl, kd)
+        P = _json(ROOT / "puppet" / "examples" / "pip.puppet.json")
+        def attempt(who, cmd, args):
+            try:
+                CALL(cmd, args, as_=who); return "ok"
+            except PermissionError as e:
+                return "refused: " + str(e)[:90]
+            except Exception as e:
+                return "failed: " + str(e)[:90]
+        r = {}
+        r["artist edits character"] = attempt("ines", "puppet.save", {"path": pup, "puppet": P})
+        r["artist approves post"] = attempt("ines", "post.approve", {"id": "2027-01-07-nib-hello-youtube"})
+        r["artist renders film"] = attempt("ines", "film.render", {"name": "nib-hello"})
+        r["director approves post"] = attempt("dev", "post.approve", {"id": "2027-01-07-nib-hello-youtube"})
+        r["artist locks"] = attempt("ines", "team.lock", {"kind": "character", "id": pup, "why": "repainting the face"})
+        r["other artist while locked"] = attempt("rui", "puppet.save", {"path": pup, "puppet": P})
+        r["owner breaks lock"] = attempt("ana", "team.unlock", {"kind": "character", "id": pup})
+        r["other artist after unlock"] = attempt("rui", "puppet.save", {"path": pup, "puppet": P})
+        r["director assigns"] = attempt("dev", "team.assign", {"kind": "film", "id": "nib-hello", "people": ["ed1"]})
+        r["unassigned editor"] = attempt("ed2", "film.credits", {"name": "nib-hello"})
+        r["assigned editor"] = attempt("ed1", "film.credits", {"name": "nib-hello"})
+        r["artist assigns"] = attempt("ines", "team.assign", {"kind": "film", "id": "nib-hello", "people": ["ines"]})
+        r["reviewer agent notes"] = attempt("critic-1", "review.list", {"name": "nib-hello"})
+        r["stranger"] = attempt("mallory", "puppet.save", {"path": pup, "puppet": P})
+        meas["attempts"] = r
+        want = {"artist edits character": "ok", "artist approves post": "refused", "artist renders film": "refused", "director approves post": "failed",
+                "artist locks": "ok", "other artist while locked": "refused", "owner breaks lock": "ok", "other artist after unlock": "ok", "director assigns": "ok",
+                "unassigned editor": "refused", "assigned editor": "ok", "artist assigns": "refused", "reviewer agent notes": "ok", "stranger": "refused"}
+        wrong = {k: r[k] for k, w in want.items() if not r[k].startswith(w)}
+        if wrong:
+            bad.append(f"permissions: {wrong}")
+        if "signs something off" not in r["artist approves post"]:
+            bad.append("the approval refusal does not say why")
+        # HTTP: the header names who acts
+        from .server import Handler
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler); threading.Thread(target=srv.serve_forever, daemon=True).start()
+        req = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/api/puppet.save", data=json.dumps({"path": pup, "puppet": P}).encode(),
+                                     headers={"Content-Type": "application/json", "X-DBE-As": "ines"})
+        meas["http"] = json.loads(urllib.request.urlopen(req, timeout=60).read()).get("result", {}).get("path")
+        req2 = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}/api/post.approve", data=b'{"id": "x"}', headers={"Content-Type": "application/json", "X-DBE-As": "ines"})
+        try:
+            urllib.request.urlopen(req2, timeout=60); meas["http_refused"] = False
+        except urllib.error.HTTPError as e:
+            meas["http_refused"] = "signs something off" in e.read().decode()
+        log = team_audit(last=100)["entries"]
+        meas["audit"] = [{k: e.get(k) for k in ("who", "role", "via", "command", "target", "result")} for e in log]
+        writes = [k for k in want if k != "reviewer agent notes"] + ["http save", "http approve"]
+        if len(log) != len(writes):
+            bad.append(f"audit has {len(log)} entries for {len(writes)} changes and refusals")
+        if not any(e["via"] == "http" and e["who"] == "ines" and e["command"] == "puppet.save" and e["result"] == "ok" for e in log) or not meas["http_refused"]:
+            bad.append("the HTTP calls are not attributed or not refused")
+        if any(e["command"] == "review.list" for e in log):
+            bad.append("a read was logged")
+        if not all(e.get("target") == f"character:{pup}" for e in log if e["command"] == "puppet.save"):
+            bad.append("puppet.save's target is not the character")
+    finally:
+        if srv:
+            srv.shutdown()
+        (ROOT / "cast" / "index.json").write_text(idx); (ROOT / "cast" / "provenance.jsonl").write_text(prov)
+        shutil.rmtree(ROOT / "cast" / "zz-team", ignore_errors=True); shutil.rmtree(td, ignore_errors=True)
+        if old is None:
+            os.environ.pop("DBE_TEAM", None)
+        else:
+            os.environ["DBE_TEAM"] = old
+    return bad, meas
+
+
+def _desk_test():
+    """WP-21, on a copy of dialogue-demo (zz-desk) in a scratch team folder. The director (dev) sends three notes by
+    desk.say: (1) Ravi's first line in new words and the shot held a second longer: script.json and the shot's tail
+    change, the voice is rebuilt (timing.json says the new words), the shots re-timed and the acting re-planned;
+    (2) the camera closer, the set to the park, the music calmer: shots.json and score.json change; (3) Priya
+    shrugs after her first line (acting.direct adds the clip), and "show me" makes the storyboard and animatic. An
+    unknown note comes back not understood. The artist's note to change a line is refused at film.write and nothing
+    after it runs. Each role is refused one command outside its subset (director consent.add, artist film.render,
+    animator film.write, editor acting.direct, critic film.write, fact_checker film.render, reviewer film.write)."""
+    import os, tempfile
+    from . import call as CALL
+    bad, meas = [], {}
+    td = Path(tempfile.mkdtemp(prefix="desk_")); old = os.environ.get("DBE_TEAM"); os.environ["DBE_TEAM"] = str(td)
+    name = "zz-desk"; shutil.rmtree(FILMS / name, ignore_errors=True); shutil.copytree(FILMS / "dialogue-demo", FILMS / name, ignore=shutil.ignore_patterns("build"))
+    try:
+        shutil.copy(ROOT / "team" / "roles.json", td / "roles.json")
+        for pid, rl in (("dev", "director"), ("ines", "artist"), ("ani", "animator"), ("ed", "editor"), ("cr", "critic"), ("fc", "fact_checker"), ("rv", "reviewer")):
+            team_add(pid, pid, [rl], "agent" if rl in ("critic", "fact_checker") else "person")
+        d = FILMS / name
+        sc0, sh0, so0 = _json(d / "script.json"), _json(d / "shots.json"), _json(d / "score.json")
+        clips0 = sum(len(c["timeline"].get("clips", [])) for s_ in sh0["shots"] for c in s_.get("cast", []) if c.get("speaker") == "priya")
+        new_line = "Did you know the library lends out telescopes?"
+        a = CALL("desk.say", {"name": name, "text": f'Change Ravi\'s first line to "{new_line}" Hold shot 1 a second longer.'}, as_="dev")
+        b = CALL("desk.say", {"name": name, "text": "Push in on shot 1. Put shot 1 in the park. Make the music calmer. Make everything purple."}, as_="dev")
+        c = CALL("desk.say", {"name": name, "text": "Priya shrugs after her first line. Show me."}, as_="dev")
+        meas["said"] = [{"understood": [u["kind"] for u in x["understood"]], "ran": [(r["command"], r["result"]) for r in x["ran"]], "not_understood": [u["sentence"] for u in x["not_understood"]]} for x in (a, b, c)]
+        sc1, sh1, so1, tm1 = _json(d / "script.json"), _json(d / "shots.json"), _json(d / "score.json"), _json(d / "timing.json")
+        s1 = sh1["shots"][0]
+        clips1 = sum(len(c_["timeline"].get("clips", [])) for s_ in sh1["shots"] for c_ in s_.get("cast", []) if c_.get("speaker") == "priya")
+        kinds = {"line": sc1["lines"][0]["text"] == new_line and any(l["id"] == "l1" and l["text"] == new_line for l in tm1["lines"]),
+                 "timing": s1.get("tail") == round(sh0["shots"][0].get("tail", 1.5) + 1, 2),
+                 "camera": (s1.get("camera_auto") or {}).get("zoom_single", 1.9) > ((sh0["shots"][0].get("camera_auto") or {}) if isinstance(sh0["shots"][0].get("camera_auto"), dict) else {}).get("zoom_single", 1.9),
+                 "set": s1.get("set") == "park", "music": so1["bpm"] == so0["bpm"] - 14,
+                 "acting": any(c_.get("clip") == "shrug" for s_ in sh1["shots"] for k in s_.get("cast", []) if k.get("speaker") == "priya" for c_ in k["timeline"].get("clips", [])),
+                 "preview": (d / "build" / "storyboard" / "strip.png").exists() and (d / "build" / "animatic.mp4").exists()}
+        meas["changes"] = kinds; meas["priya_clips"] = [clips0, clips1]
+        if not all(kinds.values()):
+            bad.append(f"changes not made: {[k for k, v in kinds.items() if not v]}")
+        if not all(r["result"] == "ok" for x in (a, b, c) for r in x["ran"]) or b["not_understood"] == [] or a["not_run"] or b["not_run"] or c["not_run"]:
+            bad.append(f"the director's notes: {meas['said']}")
+        art = CALL("desk.say", {"name": name, "text": 'Change Ravi\'s first line to "Telescopes for everyone!"'}, as_="ines")
+        meas["artist_note"] = {"ran": art["ran"], "not_run": art["not_run"]}
+        if not (art["ran"] and art["ran"][0]["result"] == "refused" and art["ran"][0]["command"] == "film.write" and art["not_run"]) or _json(d / "script.json")["lines"][0]["text"] != new_line:
+            bad.append(f"the artist's line change was not refused: {meas['artist_note']}")
+        outside = {"dev": ("consent.add", {}), "ines": ("film.render", {"name": name}), "ani": ("film.write", {"name": name, "file": "brief.md", "content": "x"}),
+                   "ed": ("acting.direct", {"name": name, "text": "Ravi nods."}), "cr": ("film.write", {"name": name, "file": "brief.md", "content": "x"}),
+                   "fc": ("film.render", {"name": name}), "rv": ("film.write", {"name": name, "file": "brief.md", "content": "x"})}
+        ref = {}
+        for who, (cmd, args) in outside.items():
+            try:
+                CALL(cmd, args, as_=who); ref[who] = "ran"
+            except PermissionError as e:
+                ref[who] = "refused: " + str(e)[:70]
+            except Exception as e:
+                ref[who] = "failed: " + str(e)[:70]
+        meas["outside_subset"] = ref
+        if not all(v.startswith("refused") for v in ref.values()):
+            bad.append(f"not refused: {ref}")
+    finally:
+        shutil.rmtree(FILMS / name, ignore_errors=True); shutil.rmtree(td, ignore_errors=True)
+        if old is None:
+            os.environ.pop("DBE_TEAM", None)
+        else:
+            os.environ["DBE_TEAM"] = old
+    return bad, meas
+
+
+def _farm_brief(n):
+    """a synthetic load-test dialogue (counting, n exchanges): for farm and long-form tests, never posted"""
+    ones = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
+    tens = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+    w = lambda k: ones[k] if k < 20 else (tens[k // 10] + ("" if k % 10 == 0 else "-" + ones[k % 10])) if k < 100 else ("one hundred" + ("" if k == 100 else " and " + w(k - 100)))
+    ex = [{"q": f"Ravi, what comes after {w(i)}?", "a": f"After {w(i)} comes {w(i + 1)}. Counting is just adding one each time."} for i in range(n)]
+    return {"title": "Counting (farm load test, synthetic)", "topic": "counting", "exchanges": ex, "cast": {"learner": "momo", "expert": "ravi"},
+            "voices": {"momo": "kokoro:af_heart", "ravi": "kokoro:am_michael"}}
+
+
+def _framemd5(mp4):
+    r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(mp4), "-map", "0:v", "-f", "framemd5", "-"], capture_output=True, text=True)
+    return [l.rsplit(",", 1)[-1].strip() for l in r.stdout.splitlines() if l and not l.startswith("#")]
+
+
+def _farm_test():
+    """WP-38 on zz-farm, a synthetic counting dialogue of nine exchanges (ten shots, about 80 s), voiced and acted.
+    One worker pinned to one core (one machine) renders every shot; then three workers, each pinned to its own core,
+    render them again from the queue, dearest first, and film.render assembles. The shots' decoded frames must be
+    identical (frame by frame MD5) and the three workers' shot time at most 0.4 of the one's (a third, plus the
+    queue's tail). Then the shots are dropped from the film and a farm run takes all ten from the shared cache."""
+    from . import farm as FM
+    bad, meas = [], {}
+    name = "zz-farm"; shutil.rmtree(FILMS / name, ignore_errors=True)
+    try:
+        film_from_template(name, "dialogue", _farm_brief(9)); voice_build(name); retime(name); acting_plan(name)
+        one = farm_render(name, workers=1, fresh=True, cache=False, assemble=False)
+        shots = sorted((FILMS / name / "build" / "shots").glob("s*.mp4")); shots = [p for p in shots if p.name.count(".") == 1]
+        md1 = {p.name: _framemd5(p) for p in shots}
+        three = farm_render(name, workers=3, fresh=True, cache=True, assemble=True)
+        md3 = {p.name: _framemd5(p) for p in shots}
+        diff = [k for k in md1 if md1[k] != md3.get(k)]
+        ratio = round(three["shots_wall_s"] / max(1e-6, one["shots_wall_s"]), 3)
+        meas.update({"one_worker_s": one["shots_wall_s"], "three_workers_s": three["shots_wall_s"], "ratio": ratio, "busy": three["worker_busy_s"],
+                     "frames": sum(len(v) for v in md1.values()), "shots_differing": diff, "assembled": three.get("render")})
+        if diff:
+            bad.append(f"frames differ in {diff}")
+        if ratio > 0.4:
+            bad.append(f"three workers took {ratio} of one worker's time")
+        if (three.get("render") or {}).get("skipped") != len(shots):
+            bad.append(f"assembly re-rendered shots: {three.get('render')}")
+        for p in shots:
+            p.unlink()
+        again = farm_render(name, workers=3, cache=True, assemble=False)
+        meas["second_run"] = {"from_cache": again["from_cache"], "rendered": again["rendered"], "wall_s": again["shots_wall_s"]}
+        if again["from_cache"] != len(shots) or again["rendered"]:
+            bad.append(f"the cache did not serve every shot: {meas['second_run']}")
+        if [_framemd5(p) for p in shots] != [md1[p.name] for p in shots]:
+            bad.append("cached shots differ from the rendered ones")
+    finally:
+        shutil.rmtree(FILMS / name, ignore_errors=True)
+    return bad, meas
+
+
+def _motion(baked):
+    """mean absolute change of every part's angle per frame, per cast member (how much a character moves)"""
+    out = []
+    for c in baked["cast"]:
+        fr = c["frames"]; ks = sorted({k for f in fr for k in f["angles"]})
+        out.append(round(sum(abs(fr[i]["angles"].get(k, 0) - fr[i - 1]["angles"].get(k, 0)) for i in range(1, len(fr)) for k in ks) / max(1, len(fr) - 1), 3))
+    return out
+
+
+def _acting2_test():
+    """WP-10 on copies of dialogue-demo (voiced: Ravi and Priya, four lines, one shot). Profiles: zz-act-a has Ravi
+    excitable and Priya shy (script speakers.<id>.profile), zz-act-b the reverse; acting.plan, then the bake. Each
+    character moves at least twice as much (mean angle change per frame) when excitable as when shy; a shy character's
+    plan has no point, open palms or celebration. Tags (on zz-act-a): "big" on Ravi's "telescopes" is accepted and
+    planned on that word; "point" on shy Priya's "telescope" is refused (her profile); "moonwalk" is refused (no such
+    gesture). Camera beat: Priya's question is marked as a stare and held 1.5 s; after a re-voice and acting.plan, the
+    auto camera holds on Ravi (who reacts) and pushes in: its zoom at the end of the stare is above its zoom at the start."""
+    bad, meas = [], {}
+    names = ("zz-act-a", "zz-act-b")
+    try:
+        for n, (pr, pp) in zip(names, (("excitable", "shy"), ("shy", "excitable"))):
+            shutil.rmtree(FILMS / n, ignore_errors=True); shutil.copytree(FILMS / "dialogue-demo", FILMS / n)
+            sc = _json(FILMS / n / "script.json"); sp = sc.setdefault("speakers", {})
+            sp.setdefault("ravi", {})["profile"] = pr; sp.setdefault("priya", {})["profile"] = pp
+            (FILMS / n / "script.json").write_text(json.dumps(sc, indent=1))
+        tg = acting_tag("zz-act-a", [{"line": "l1", "word": "telescopes", "gesture": "big"}, {"line": "l2", "word": "telescope", "gesture": "point"}, {"line": "l3", "word": 0, "gesture": "moonwalk"}])
+        meas["tags"] = {"accepted": tg["accepted"], "refused": [r["why"] for r in tg["refused"]]}
+        if len(tg["accepted"]) != 1 or len(tg["refused"]) != 2 or "never" not in tg["refused"][0]["why"]:
+            bad.append(f"tags: {meas['tags']}")
+        mv, plans = {}, {}
+        for n in names:
+            pl = acting_plan(n)["plan"]; plans[n] = pl
+            _, sh, _, baked = _bake(n, "s1"); m = _motion(baked)
+            mv[n] = dict(zip([c.get("speaker") for c in sh["cast"]], m))
+        meas["motion"] = mv; meas["plans"] = {n: {k: v["gestures"] for k, v in p.items() if ":" in k} for n, p in plans.items()}
+        for who in ("ravi", "priya"):
+            ex, shy = (mv["zz-act-a"][who], mv["zz-act-b"][who]) if who == "ravi" else (mv["zz-act-b"][who], mv["zz-act-a"][who])
+            if ex < 2 * shy:
+                bad.append(f"{who} moves {ex} excitable and {shy} shy: not twice")
+        shy_g = plans["zz-act-a"].get("s1:priya", {}).get("gestures", []) + plans["zz-act-b"].get("s1:ravi", {}).get("gestures", [])
+        if any(g.split("@")[0] in ("point_R", "point_L", "talk_open_palms", "celebrate") for g in shy_g):
+            bad.append(f"a shy character gestured broadly: {shy_g}")
+        t1 = next(l for l in _json(FILMS / "zz-act-a" / "timing.json")["lines"] if l["id"] == "l1")
+        w = next(x for x in t1["words"] if x["text"].lower().startswith("telescopes"))
+        if not any(g.startswith("talk_open_palms@") and abs(float(g.split("@")[1]) - max(t1["start"], w["start"] - 0.2)) < 0.02 for g in plans["zz-act-a"]["s1:ravi"]["gestures"]):
+            bad.append(f"the tagged gesture is not on its word: {plans['zz-act-a']['s1:ravi']['gestures']}")
+        sc = _json(FILMS / "zz-act-a" / "script.json")
+        for l in sc["lines"]:
+            if l["id"] == "l2":
+                l["beat"] = "stare"; l["pause"] = 1.5
+        (FILMS / "zz-act-a" / "script.json").write_text(json.dumps(sc, indent=1))
+        voice_build("zz-act-a"); retime("zz-act-a"); pl = acting_plan("zz-act-a")["plan"]
+        bt = (pl.get("beats") or [None])[0]; meas["beat"] = bt
+        if not bt or bt["who"] != "ravi":
+            bad.append(f"no stare beat on Ravi: {pl.get('beats')}")
+        else:
+            fps = 30; n0 = int(bt["t0"] * fps); n1 = int(bt["t1"] * fps)
+            vk = subprocess.run(["node", "tools/view_keys.mjs", str(_player_page("zz-act-a")), "s1", str(n0 / fps), str(fps), str(n1 - n0 + 1)], cwd=ROOT, capture_output=True, text=True, timeout=600)
+            keys = json.loads(vk.stdout.strip().splitlines()[-1]); z0, z1 = keys[0][1][2], keys[-1][1][2]
+            meas["beat"]["zoom"] = [z0, z1]
+            if not z1 > z0 * 1.15:
+                bad.append(f"the camera does not push in on the stare: zoom {z0} -> {z1}")
+    finally:
+        for n in names:
+            shutil.rmtree(FILMS / n, ignore_errors=True)
+    return bad, meas
+
+
+
+
+def _sound2_test():
+    """WP-13. Surfaces: eight steps on each of grass, tile, wood, concrete and carpet (engine/audio.py); each step's
+    log-mel spectrum, and between every two surfaces the distance of their mean spectra over the steps' own spread
+    (at least 3: told apart at once); grass and tile also by onset (grass brushes in, tile clicks) and tonality.
+    Rooms: one step through the outdoor room and through the hall; the time for its reverb to fall 30 dB, outdoors
+    under half the hall's. Cues: a copy of pip-park with automatic foley (Pip walks into the park): every step cue
+    on grass, and the park's outdoor room written for the mix."""
+    import importlib.util, numpy as np
+    from scipy.signal import stft
+    spec = importlib.util.spec_from_file_location("dbe_audio", ROOT / "engine" / "audio.py"); A = importlib.util.module_from_spec(spec); spec.loader.exec_module(A)
+    bad, meas = [], {}
+    SR = A.SR; surf = ["grass", "tile", "wood", "concrete", "carpet"]
+    mel = np.exp(np.linspace(np.log(60), np.log(16000), 25))
+
+    def feat(x):
+        f, _, Z = stft(x, SR, nperseg=1024); P = (np.abs(Z) ** 2).mean(1)
+        return np.log10([P[(f >= lo) & (f < hi)].sum() + 1e-12 for lo, hi in zip(mel[:-1], mel[1:])])
+    F = {k: np.array([feat(np.pad(A.step(k), (0, 4096))) for _ in range(8)]) for k in surf}
+    sep = {}
+    for i, a in enumerate(surf):
+        for b in surf[i + 1:]:
+            spread = np.sqrt((F[a].std(0) ** 2 + F[b].std(0) ** 2).mean() / 2) + 1e-6
+            sep[f"{a}-{b}"] = round(float(np.linalg.norm(F[a].mean(0) - F[b].mean(0)) / spread), 1)
+    meas["separation"] = sep
+    if min(sep.values()) < 3:
+        bad.append(f"surfaces too alike: {min(sep, key=sep.get)} {min(sep.values())}")
+    def onset(x):
+        e = np.abs(x); return float(np.argmax(e > 0.5 * e.max()) / SR * 1000)
+    meas["onset_ms"] = {k: round(np.mean([onset(A.step(k)) for _ in range(8)]), 1) for k in ("grass", "tile")}
+    if not meas["onset_ms"]["grass"] > 3 * max(0.5, meas["onset_ms"]["tile"]):
+        bad.append(f"grass does not brush in slower than tile clicks: {meas['onset_ms']}")
+    imp = np.zeros(int(2.5 * SR)); x = A.step("wood"); imp[:len(x)] = x
+    def t30(room):
+        y = A.room_reverb(imp, [{"t0": 0, "t1": 2.5, **room}], "fx_wet", 0.16, A.reverb_ir())
+        e = 10 * np.log10(np.convolve(y.mean(1) ** 2, np.ones(480) / 480, "same") + 1e-15); pk = int(np.argmax(e))
+        below = np.where(e[pk:] < e[pk] - 30)[0]
+        return round(float(below[0] / SR) if len(below) else 2.5, 3)
+    ac = _json(ROOT / "sets" / "acoustics.json")["rooms"]
+    meas["fall_30dB_s"] = {"outdoors": t30(ac["outdoors"]), "hall": t30(ac["hall"])}
+    if not meas["fall_30dB_s"]["outdoors"] < 0.5 * meas["fall_30dB_s"]["hall"]:
+        bad.append(f"rooms: {meas['fall_30dB_s']}")
+    name = "zz-steps"; shutil.rmtree(FILMS / name, ignore_errors=True); shutil.copytree(FILMS / "pip-park", FILMS / name, ignore=shutil.ignore_patterns("build"))
+    try:   # Pip walks into the park: automatic foley on, each step on grass, and the park's room in the mix
+        sj = _json(FILMS / name / "shots.json"); sj["foley"] = True; (FILMS / name / "shots.json").write_text(json.dumps(sj, indent=1))
+        (FILMS / name / "build").mkdir(exist_ok=True)
+        s = _shots(name); _mix_inputs(name, s); cues = _json(FILMS / name / "build" / "cues.json"); rooms = _json(FILMS / name / "build" / "rooms.json")
+        steps = [c for c in cues if c["type"] == "step"]
+        meas["pip_park_walk"] = {"steps": len(steps), "surfaces": sorted({str(c.get("surface")) for c in steps}), "rooms": sorted({(r["set"], r["rt60"]) for r in rooms})}
+        if len(steps) < 2 or any(c.get("surface") != "grass" for c in steps) or not rooms or any(r["rt60"] != ac["outdoors"]["rt60"] for r in rooms):
+            bad.append(f"the park walk's cues and rooms: {meas['pip_park_walk']}")
+    finally:
+        shutil.rmtree(FILMS / name, ignore_errors=True)
+    return bad, meas
+
+
+
+def _text2_test():
+    """WP-17 on zz-text, a copy of dialogue-demo with a narrator line first (nobody on screen speaks it) and a thought of
+    Priya's after Ravi's second line (script style "think"), voiced. Its sound-off cut (film.soundoff) is rendered:
+    QA's reading-time rule (every bubble, thought and narration box on screen for words / 3 + 1 s on the cut's
+    clock) and the rest of the bar must pass. The cut's player is asked what it draws in the middle of each line: a
+    narration box for the narrator, a thought for Priya's thought, speech bubbles for the rest. The typewriter: in
+    the narration box, the letters shown just after the comma stay put for a moment (the pause) while the same span of
+    time elsewhere in the line shows more letters."""
+    bad, meas = [], {}
+    name = "zz-text"
+    for n_ in (name, f"{name}--soundoff"):
+        shutil.rmtree(FILMS / n_, ignore_errors=True)
+    shutil.copytree(FILMS / "dialogue-demo", FILMS / name, ignore=shutil.ignore_patterns("build"))
+    try:
+        sc = _json(FILMS / name / "script.json")
+        sc["speakers"]["narrator"] = {"voice": "kokoro:bm_george", "narrator": True}
+        sc["lines"].insert(0, {"id": "n1", "speaker": "narrator", "fact": None, "text": "One afternoon, at the library, Ravi had news."})
+        i3 = next(k for k, l in enumerate(sc["lines"]) if l["id"] == "l3")
+        sc["lines"].insert(i3 + 1, {"id": "th1", "speaker": "priya", "fact": None, "text": "Maybe I can finally see the rings of Saturn.", "style": "think"})
+        (FILMS / name / "script.json").write_text(json.dumps(sc, indent=1))
+        sj = _json(FILMS / name / "shots.json"); sj["shots"][0]["start_line"] = "n1"; (FILMS / name / "shots.json").write_text(json.dumps(sj, indent=1))
+        voice_build(name); retime(name); acting_plan(name)
+        r = film_soundoff(name)
+        cut = f"{name}--soundoff"; qa = r.get("qa") or {}
+        meas["qa_failures"] = sorted(k for k, v in qa.items() if v is False)
+        if qa.get("layout:reading_time") is False or meas["qa_failures"]:
+            bad.append(f"the sound-off cut fails QA: {meas['qa_failures']}")
+        cs = _shots(cut, resolve=False); kn = cs.get("timewarp") or []
+        tm = _json(FILMS / cut / "timing.json")
+        to_cut = lambda t: _warp(kn, t, inverse=True)
+        probe = {l["id"]: round(to_cut((l["start"] + l["end"]) / 2), 3) for l in tm["lines"]}
+        js = ("const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({args:['--allow-file-access-from-files']});const p=await b.newPage({viewport:{width:1080,height:1920}});"
+              "await p.goto(process.argv[1]);await p.waitForFunction(()=>window.ready===true);const ts=JSON.parse(process.argv[2]);const out={};"
+              "for(const [k,t] of Object.entries(ts)){await p.evaluate(t=>window.frameAtTime(t),t);out[k]=await p.evaluate(()=>[...(window.BUBBLE_KINDS||[])]);}"
+              "const n1=JSON.parse(process.argv[3]);out.typed=[];for(const t of n1){await p.evaluate(t=>window.frameAtTime(t),t);out.typed.push(await p.evaluate(()=>[...document.querySelectorAll('#stage text')].map(e=>e.textContent).join('|')));}"
+              "console.log(JSON.stringify(out));await b.close();})()")
+        n1 = next(l for l in tm["lines"] if l["id"] == "n1"); a, b_ = to_cut(n1["start"]), to_cut(n1["end"])
+        ticks = [round(a + (b_ - a) * k / 40, 3) for k in range(41)]
+        pr = subprocess.run(["node", "-e", js, "file://" + str(_player_page(cut)) + "?captions=0", json.dumps(probe), json.dumps(ticks)], cwd=ROOT, capture_output=True, text=True, timeout=600)
+        got = json.loads(pr.stdout.strip().splitlines()[-1]) if pr.returncode == 0 and pr.stdout.strip() else {}
+        meas["kinds"] = {k: got.get(k) for k in probe}
+        if "narrate" not in (got.get("n1") or []) or "think" not in (got.get("th1") or []) or "say" not in (got.get("l2") or []):
+            bad.append(f"what the cut draws: {meas['kinds']} {pr.stderr[-200:]}")
+        box = [max((len(x) for x in t.split("|") if x and x in "One afternoon, at the library, Ravi had news."), default=0) for t in got.get("typed", [])]
+        steps = [y - x for x, y in zip(box, box[1:])]
+        comma = next((k for k, v in enumerate(box) if v >= len("One afternoon,")), None)
+        meas["typed"] = box
+        if comma is None or not any(st == 0 for st in steps[comma:comma + 3]) or max(steps) < 2:
+            bad.append(f"no pause after the comma in the typed narration: {box}")
+    finally:
+        for n_ in (name, f"{name}--soundoff"):
+            shutil.rmtree(FILMS / n_, ignore_errors=True)
     return bad, meas

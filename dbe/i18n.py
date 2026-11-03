@@ -150,8 +150,9 @@ def check_bindings(source, translated):
     return [x for x in a if x not in b] + [x for x in b if x not in a]
 
 
-def apply(shots, script, titles, data, tr, tag):
-    """write translations (key -> text) into copies; -> (shots, script, titles, data, missing, binding_errors, auto)"""
+def apply(shots, script, titles, data, tr, tag, keep_rest=False):
+    """write translations (key -> text) into copies; -> (shots, script, titles, data, missing, binding_errors, auto).
+    keep_rest: a correction, not a translation: titles and thumbnails not in tr are kept as they are"""
     shots, script, titles, data = (copy.deepcopy(x) for x in (shots, script, titles or {}, data or {}))
     src = {s["key"]: s["text"] for s in extract(shots, script, titles, data)}
     months = _months(tag); auto = {}
@@ -198,7 +199,7 @@ def apply(shots, script, titles, data, tr, tag):
             titles["titles"][int(p[1])]["text"] = v
         elif p[0] == "thumb":
             titles["thumbnails"][int(p[1])][p[2]] = v
-    if titles:   # posting titles and thumbnails left untranslated are dropped, not posted in the source language
+    if titles and not keep_rest:   # posting titles and thumbnails left untranslated are dropped, not posted in the source language
         for key, kind in (("titles", "titles"), ("thumb", "thumbnails")):
             keep = [x for i, x in enumerate(titles.get(kind, [])) if any(k.startswith(f"{key}:{i}") for k in tr if k in src)]
             if len(keep) != len(titles.get(kind, [])):

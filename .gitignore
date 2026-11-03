@@ -19,3 +19,7 @@ productions/
 
 # scratch copies of films made (and removed) by python -m dbe test
 films/zz-*/
+
+# team state and audit log (WP-39; machine-local: who holds which lock, and who changed what)
+team/state.json
+team/audit.jsonl

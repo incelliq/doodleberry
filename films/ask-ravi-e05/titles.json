@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "What is a shooting star?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Is a shooting star really a star?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "SHOOTING STAR?",
+   "bottom": "A SPACE ROCK",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

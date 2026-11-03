@@ -1,0 +1,84 @@
+{
+ "title": "Why do we have seasons?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about seasons?",
+   "slot": [
+    0.6,
+    3.361
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Is it summer when we're close to the Sun?",
+   "slot": [
+    4.411,
+    4.25
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "No. Earth's tilt makes the seasons. When our half leans towards the Sun, it's summer.",
+   "slot": [
+    9.111,
+    6.917
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "So when are we closest?",
+   "slot": [
+    16.478,
+    2.472
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "In January! That's winter in the north. Big word, small idea.",
+   "slot": [
+    19.4,
+    5.139
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    24.989,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

@@ -216,17 +216,36 @@ def bell(hz, dur, amp=1.0):
     return amp * lp(x * np.minimum(1, t / 0.003) * np.exp(-t * 6), 9000)
 
 
-def sfx(kind, dur=None):
+def step(surface=None):
+    """a footstep on a surface (WP-13): grass swishes, tile clicks and rings, wood knocks hollow, concrete scuffs,
+    carpet is a muffled thump; no surface is the original soft shoe"""
+    n = int(0.16 * SR); t = np.arange(n) / SR; r = RNG.random()
+    if surface == 'grass':   # blades brushing: soft-onset band of noise, almost no thump
+        x = bp(RNG.normal(0, 1, n), 1800, 7000) * np.minimum(1, t / 0.012) * np.exp(-t * 26) * 0.9
+        return x + 0.12 * np.sin(2 * np.pi * (80 + 15 * r) * t) * np.exp(-t * 45)
+    if surface == 'tile':    # hard heel click with a ringing tile body
+        click = hp(RNG.normal(0, 1, n), 2500) * np.exp(-t * 260)
+        ring = np.sin(2 * np.pi * (2300 + 200 * r) * t) * np.exp(-t * 60) * 0.35 + np.sin(2 * np.pi * (3400 + 300 * r) * t) * np.exp(-t * 80) * 0.2
+        return click + ring + 0.35 * np.sin(2 * np.pi * 110 * t) * np.exp(-t * 50)
+    if surface == 'wood':    # hollow knock: a resonant board around 250 Hz and a click
+        return np.sin(2 * np.pi * (240 + 30 * r) * t) * np.exp(-t * 30) * 0.8 + 0.3 * hp(RNG.normal(0, 1, n), 1500) * np.exp(-t * 180)
+    if surface == 'concrete':   # dull thump and a gritty scuff
+        return np.sin(2 * np.pi * (90 + 20 * r) * t) * np.exp(-t * 40) + 0.3 * bp(RNG.normal(0, 1, n), 800, 4000) * np.exp(-t * 35)
+    if surface == 'carpet':  # muffled: only the low thump
+        return lp(np.sin(2 * np.pi * (85 + 15 * r) * t) * np.exp(-t * 32) + 0.1 * RNG.normal(0, 1, n) * np.exp(-t * 60), 600)
+    n = int(0.12 * SR); t = np.arange(n) / SR   # soft shoe on a floor: low thump plus a little scuff (as before)
+    return np.sin(2 * np.pi * (95 + 25 * RNG.random()) * t) * np.exp(-t * 38) + 0.18 * lp(RNG.normal(0, 1, n), 2500) * np.exp(-t * 55)
+
+
+def sfx(kind, dur=None, surface=None):
     if kind == 'scratch':  # pen on paper while a drawing draws itself: short strokes of bright, gritty noise
         d = max(0.15, min(8.0, dur or 1.0)); n = int(d * SR); t = np.arange(n) / SR
         strokes = 0.55 + 0.45 * np.sin(2 * np.pi * (6.5 + 1.5 * np.sin(2 * np.pi * 0.7 * t)) * t) ** 2
         grit = bp(RNG.normal(0, 1, n), 2200, 7500) * (1 + 0.6 * (RNG.random(n) > 0.97))
         edge = np.minimum(1, np.minimum(t / 0.04, (d - t) / 0.08))
         return grit * strokes * edge * 0.6
-    if kind == 'step':  # soft shoe on a floor: low thump plus a little scuff
-        n = int(0.12 * SR); t = np.arange(n) / SR
-        x = np.sin(2 * np.pi * (95 + 25 * RNG.random()) * t) * np.exp(-t * 38) + 0.18 * lp(RNG.normal(0, 1, n), 2500) * np.exp(-t * 55)
-        return x
+    if kind == 'step':
+        return step(surface)
     if kind == 'thud':  # landing: deeper body thump
         n = int(0.22 * SR); t = np.arange(n) / SR
         return np.sin(2 * np.pi * 62 * t * (1 - 0.3 * t)) * np.exp(-t * 18) + 0.25 * lp(RNG.normal(0, 1, n), 900) * np.exp(-t * 30)
@@ -467,6 +486,26 @@ def reverb(x, ir, wet):
     return out * wet
 
 
+def room_reverb(x, rooms, key, default_wet, default_ir):
+    """reverb per stretch of the film (rooms: [{t0, t1, rt60, fx_wet, voice_wet}] from the shots' sets): each room's
+    reverb is fed only the sound inside its stretch (0.05 s crossfades), so its tail rings on past a cut; no rooms is
+    the single default room, as before"""
+    if not rooms:
+        return reverb(x, default_ir, default_wet)
+    n = len(x); out = None; groups = {}
+    for r in rooms:
+        groups.setdefault((r['rt60'], r[key]), []).append((r['t0'], r['t1']))
+    tt = np.arange(n) / SR
+    for (rt60, wet), spans in groups.items():
+        m = np.zeros(n)
+        for a, b_ in spans:
+            m = np.maximum(m, np.clip(np.minimum((tt - a) / 0.05 + 0.5, (b_ - tt) / 0.05 + 0.5), 0, 1))
+        ir = default_ir if rt60 == 1.1 else reverb_ir(rt60, length=max(0.4, min(2.4, rt60 * 1.4)))
+        y = reverb(x * (m[:, None] if x.ndim == 2 else m), ir, wet)
+        out = y if out is None else out + y
+    return out
+
+
 def to_st(x, pan=0.0):
     l, r = pan_gains(pan)
     return np.stack([x * l, x * r], axis=1)
@@ -528,7 +567,7 @@ def main():
     # ---- effects: each levelled to its type's target, dipped a little under speech
     fx = np.zeros((n + SR * 2, 2))
     for c in cues:
-        x = declick(hp(sfx(c['type'], c.get('dur')), 250))
+        x = declick(hp(sfx(c['type'], c.get('dur'), c.get('surface')), 250))
         L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
                  for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
         g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)
@@ -540,11 +579,12 @@ def main():
         else:
             add_st(fx, x, c['t'], g, c['pan'] if 'pan' in c else 0.12 * np.sin(c['t'] * 2.3))   # foley cues carry their screen position
     fx = fx[:n]
-    fx = fx + reverb(fx, ir, 0.16)
+    rooms = json.loads((b / 'rooms.json').read_text()) if (b / 'rooms.json').exists() else []   # WP-13: each set's own room
+    fx = fx + room_reverb(fx, rooms, 'fx_wet', 0.16, ir)
     # keep the effects' punch and sparkle, clear their speech band under words
     fx = multiband_duck(fx, pres, low_db=-2, mid_db=-8, high_db=-3)
 
-    vo = to_st(voice) + reverb(voice, ir, 0.035)
+    vo = to_st(voice) + room_reverb(voice, rooms, 'voice_wet', 0.035, ir)
     mix = vo + mus_d + fx
     fade = int(score.get('fade_out_s', 0.6) * SR)
     mix[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]

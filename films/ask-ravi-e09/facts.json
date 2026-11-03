@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "In a solar eclipse the Moon blocks the Sun's light and casts its shadow on Earth.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/eclipses/en/",
+    "title": "NASA Space Place: Lunar Eclipses and Solar Eclipses",
+    "quote": "An eclipse happens when a planet or a moon gets in the way of the Sun’s light. … solar eclipse happens when the Moon gets in the way of the Sun’s light and casts its shadow on Earth."
+   },
+   "source_sentence": "An eclipse happens when a planet or a moon gets in the way of the Sun’s light. … solar eclipse happens when the Moon gets in the way of the Sun’s light and casts its shadow on Earth.",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "In a lunar eclipse Earth blocks the sunlight reaching the Moon, and the Moon gets darker.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/eclipses/en/",
+    "title": "NASA Space Place: Lunar Eclipses and Solar Eclipses",
+    "quote": "During a lunar eclipse, Earth gets in the way of the Sun’s light hitting the Moon. … In a lunar eclipse, the Moon gets darker."
+   },
+   "source_sentence": "During a lunar eclipse, Earth gets in the way of the Sun’s light hitting the Moon. … In a lunar eclipse, the Moon gets darker.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

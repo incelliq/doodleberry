@@ -1,0 +1,235 @@
+{
+ "title": "What is an eclipse?",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "What is an",
+     "eclipse?"
+    ]
+   },
+   "start": 0,
+   "end": "q1.start-0.3",
+   "start_line": "hook",
+   "end_line": "hook",
+   "bubbles": false,
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 540,
+      "y": 1540,
+      "s": 1.15
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo"
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L",
+        "at": [
+         0,
+         0
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "What is an",
+     "eclipse?"
+    ]
+   },
+   "start": "q1.start-0.3",
+   "end": "q2.start-0.3",
+   "start_line": "q1",
+   "end_line": "a1",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo"
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi"
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L",
+        "at": [
+         0,
+         0
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "What is an",
+     "eclipse?"
+    ]
+   },
+   "start": "q2.start-0.3",
+   "end": "button.end+1.2",
+   "start_line": "q2",
+   "end_line": "button",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 300,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo"
+     }
+    },
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 780,
+      "y": 1540,
+      "s": 1.05
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi"
+     }
+    }
+   ],
+   "props": [
+    {
+     "id": "notebook",
+     "r": 26,
+     "svg": "<g><rect x='-22' y='-28' width='44' height='56' rx='4' fill='#f6d365' stroke='#181e26' stroke-width='4'/><path d='M-12 -14 H14 M-12 -2 H14 M-12 10 H8' stroke='#181e26' stroke-width='3'/></g>",
+     "attach": [
+      [
+       0,
+       {
+        "cast": 0,
+        "part": "hand_L",
+        "at": [
+         0,
+         0
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "series": {
+  "id": "ask-ravi",
+  "episode": 9
+ }
+}

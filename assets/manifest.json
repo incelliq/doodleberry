@@ -663,6 +663,36 @@
    "license": "per voice: see voices/registry.json",
    "class": "per-voice",
    "use": "voices for language versions (WP-25); fetched on use into the voices folder, not committed; each voice's licence status is in voices/registry.json and non-clean ones are flagged at posting"
+  },
+  {
+   "name": "c2pa-python 0.38 (Content Authenticity Initiative)",
+   "license": "MIT OR Apache-2.0",
+   "class": "permissive",
+   "use": "signs finals with C2PA content credentials and reads them (WP-26); pip-installed"
+  },
+  {
+   "name": "c2patool 0.27.22 (contentauth/c2pa-rs, the C2PA reference tool)",
+   "license": "MIT OR Apache-2.0",
+   "class": "permissive",
+   "use": "verifies every signed final (WP-26); release binary installed by tools/setup.sh provenance (sha256 checked), not committed"
+  },
+  {
+   "name": "fontTools 4.68 (FontBuilder, svgLib path parser, T2 charstring pen)",
+   "license": "MIT",
+   "class": "permissive",
+   "use": "builds handwriting fonts from an artist's sample sheet (font.from_samples, WP-29); pip-installed"
+  },
+  {
+   "name": "typst 0.14 (typst-py 0.14.9 on PyPI, the Typst compiler)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "use": "typesets comics and storybooks from a film's data (film.comic, WP-30); pip-installed"
+  },
+  {
+   "name": "Godot 4.5 (export target only)",
+   "license": "MIT",
+   "class": "permissive",
+   "use": "export.godot writes a Godot 4.5 project (WP-30); the engine is not bundled or run here"
   }
  ],
  "external": [

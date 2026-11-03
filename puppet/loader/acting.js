@@ -55,6 +55,7 @@
     if (clip.offset) pose.offset = sampleKeys(clip.offset, lt, loop);
     for (const [sw, keys] of Object.entries(clip.swaps || {})) pose[sw] = sampleKeys(keys, lt, loop);
     if (clip.contacts) pose.contacts = Object.fromEntries(Object.entries(clip.contacts).map(([f, keys]) => [f, sampleKeys(keys, lt, loop)]));
+    if (clip.controls) pose.controls = Object.fromEntries(Object.entries(clip.controls).map(([c, keys]) => [c, sampleKeys(keys, lt, loop)]));   // v0.10: a clip may move a control (a head turn from Act it out)
     return pose;
   }
   // layers: [{clip, start, speed=1, weight=1, fadeIn=0.25, fadeOut=0.25, end, additive, base, phase=0 (clip seconds to start into the clip)}]
@@ -62,7 +63,7 @@
   // any layer with base: true) in proportion to their weight, so a gesture at weight 1 plays at full size over idle and
   // idle still fills every track the gesture does not touch. Additive layers add on top.
   function evalStack(layers, t, CLIPS) {
-    const base = { angles: {} }, add = { angles: {} }, fg = {}, bg = {};
+    const base = { angles: {} }, add = { angles: {} }, fg = {}, bg = {}, ctl = {};
     const offs = [];
     for (const L of layers || []) {
       const clip = typeof L.clip === 'string' ? CLIPS[L.clip] : L.clip; if (!clip) continue;
@@ -73,6 +74,7 @@
       let w = (L.weight ?? 1) * (fi ? smooth(clamp((t - (L.start || 0)) / fi)) : 1) * (isFinite(end) && fo ? 1 - smooth(clamp((t - end) / fo)) : 1);
       if (w <= 0) continue;
       const s = sampleClip(clip, lt), g = L.gain ?? 1;   // gain scales the clip's motion (calmer or bigger acting)
+      if (s.controls) { for (const [c, v] of Object.entries(s.controls)) if (v != null) ctl[c] = (ctl[c] || 0) + v * w * g; delete s.controls; }   // v0.10: weighted like an additive layer
       if (L.additive) for (const [k, v] of Object.entries(s.angles)) add.angles[k] = (add.angles[k] || 0) + v * w * g;
       else { const acc = (L.base || L.clip === 'idle') ? bg : fg; for (const [k, v] of Object.entries(s.angles)) { const a = acc[k] || (acc[k] = [0, 0]); a[0] += v * w * g; a[1] += w; } }
       if (!L.additive) { if (s.offset) offs.push([g === 1 ? s.offset : s.offset.map(v => v * g), w]); for (const [k, v] of Object.entries(s)) if (k !== 'angles' && k !== 'offset' && w >= 0.5) base[k] = v; }
@@ -87,6 +89,7 @@
     const out = { ...base, ...add, angles: { ...base.angles } };
     if (add.offset) out.offset = [(base.offset || [0, 0])[0] + add.offset[0], (base.offset || [0, 0])[1] + add.offset[1]];
     for (const [k, v] of Object.entries(add.angles)) out.angles[k] = (out.angles[k] || 0) + v;
+    if (Object.keys(ctl).length) out.controls = ctl;
     return out;
   }
 
@@ -377,10 +380,12 @@
     // scripted blinks (timed for comedy): half, closed, closed, half over a third of a second
     for (const b of tl.blinks || []) { const d = t - b; if (d >= 0 && d < 0.34) pose.blink = Math.max(pose.blink || 0, d < 0.085 || d >= 0.25 ? 0.45 : 0.95); }
     for (const [k, v] of Object.entries(tl.set || {})) pose[k] = v;
-    // v0.4 controls (smart bones / driven keys): one value drives angles, shifts, swaps and layer order through key curves
-    for (const [name, keys] of Object.entries(tl.controls || {})) {
+    // v0.4 controls (smart bones / driven keys): one value drives angles, shifts, swaps and layer order through key curves;
+    // v0.10: the clips' control tracks add to the timeline's own keys
+    const cvals = { ...(pose.controls || {}) }; delete pose.controls;
+    for (const [name, keys] of Object.entries(tl.controls || {})) { const v = sampleKeys(keys, t); if (v != null) cvals[name] = (cvals[name] || 0) + v; }
+    for (const [name, v] of Object.entries(cvals)) {
       const ctl = (puppet.controls || {})[name]; if (!ctl) continue;
-      const v = sampleKeys(keys, t); if (v == null) continue;
       for (const dr of ctl.drives || []) {
         const val = driveAt(dr.keys, v); if (val == null) continue;
         const [kind, id] = dr.target.split('.');

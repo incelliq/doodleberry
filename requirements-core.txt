@@ -6,3 +6,4 @@ Pillow>=10.1
 jsonschema>=4.20
 scipy>=1.11
 babel>=2.14   # WP-25: CLDR locale data (directions, month names, number formats)
+c2pa-python>=0.38   # WP-26: C2PA content credentials (signing and reading)

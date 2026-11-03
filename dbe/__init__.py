@@ -40,10 +40,17 @@ def progress(**ev):
         print(json.dumps(ev), file=sys.stderr, flush=True)
 
 
-def call(name, args=None):
+ACTOR = contextvars.ContextVar("dbe_actor", default=None)   # who is running the current command (WP-39)
+
+
+def call(name, args=None, as_=None, via="cli"):
+    """run a command as the acting person or agent session (DBE_AS, or as_): their role must include it, the film or
+    character it changes must not be locked by someone else or assigned to others, and every change is audited
+    (dbe/team.py)"""
     if name not in COMMANDS:
         raise KeyError(f"unknown command {name}; try engine.commands")
-    return COMMANDS[name]["fn"](**(args or {}))
+    from . import team
+    return team.guarded(name, args or {}, lambda: COMMANDS[name]["fn"](**(args or {})), named=as_, via=via)
 
 
 def describe():

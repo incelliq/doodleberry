@@ -1007,6 +1007,10 @@
   "locale": {
    "type": "string",
    "description": "WP-25: locale for numbers and dates on screen (BCP 47, e.g. ar or ar-u-nu-arab for Arabic-Indic digits)"
+  },
+  "sign": {
+   "type": "boolean",
+   "description": "WP-26: sign the finals with C2PA content credentials (default true)"
   }
  }
 }

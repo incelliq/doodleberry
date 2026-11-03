@@ -1,0 +1,84 @@
+{
+ "title": "What is a shooting star?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about shooting stars?",
+   "slot": [
+    0.6,
+    3.806
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Is a shooting star a falling star?",
+   "slot": [
+    4.856,
+    3.361
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "No. It's a space rock rushing into our air. The bright streak is the glowing hot air as the rock zips through.",
+   "slot": [
+    8.667,
+    10.028
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "And a meteor shower?",
+   "slot": [
+    19.145,
+    2.028
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "That's when Earth meets lots of those rocks at once.",
+   "slot": [
+    21.623,
+    4.694
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    26.767,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

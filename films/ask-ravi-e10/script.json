@@ -1,0 +1,84 @@
+{
+ "title": "How long is a day on other planets?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about days on other planets?",
+   "slot": [
+    0.6,
+    4.694
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Is a day always twenty-four hours?",
+   "slot": [
+    5.744,
+    3.361
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Only on Earth! Mars takes twenty-five hours, and Jupiter spins round in just ten.",
+   "slot": [
+    9.555,
+    6.917
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Which planet spins slowest?",
+   "slot": [
+    16.922,
+    2.028
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "Venus! It takes five thousand eight hundred and thirty-two hours to spin round just once. Big word, small idea.",
+   "slot": [
+    19.4,
+    9.139
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    28.989,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

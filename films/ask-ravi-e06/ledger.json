@@ -1,0 +1,18 @@
+[
+ {
+  "at": "2026-11-03T18:46:54+00:00",
+  "round": 1,
+  "role": "fact_gate",
+  "verdict": "blocked",
+  "notes": "series gate review 2026-11-03 by fresh fact_gate agent (round 1; pages read verbatim with curl) (of an earlier text): f2: The main answer to Momo ('always falling\u2026 keeps missing Earth') and the link between the ISS and 90 minutes are not in the cited quote. Both are on the page.",
+  "metrics": {}
+ },
+ {
+  "at": "2026-11-03T18:46:54+00:00",
+  "round": 1,
+  "role": "fact_gate",
+  "verdict": "cleared",
+  "notes": "series gate review 2026-11-03 by fresh fact_gate agent (round 2, after the round-1 fixes; pages read verbatim with curl): f2: (Non-blocking) 'It goes round in about ninety minutes' joins two page sentences: the ISS is in LEO, and one LEO orbit takes about 90 minutes. This is a valid inference.",
+  "metrics": {}
+ }
+]

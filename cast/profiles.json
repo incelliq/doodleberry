@@ -1,0 +1,22 @@
+{
+ "note": "WP-10 (E13): personality profiles for the gesture planner (dbe/gestures.py). A character's profile comes from the film (script.json speakers.<id>.profile), else its puppet (acting.profile), else its cast entry (profile), else 'neutral' (the planner's earlier gesture choices). tempo: speed of its gestures; energy: size (weight and gain) of beats; beat_gap: least seconds between gestures; beat_words: at most one beat per this many words; point: point | glance (look toward, no arm) | none; exclaim: the clip on an exclamation's strongest word (none: a beat); question: the clip at a question's end; listen_nod: weight of the nod after another's line (0: none); look_away: how far down and off the speaker its eyes drift while listening (0 to 1); never: clips this character never plays, even when tagged; react: the clip it plays during a gag's stare.",
+ "profiles": {
+  "neutral": {"tempo": 1.0, "energy": 1.0, "beat_gap": 0.9, "beat_words": 4, "point": "point", "exclaim": "talk_open_palms", "question": "shrug", "listen_nod": 0.8, "look_away": 0, "never": [], "react": "surprised"},
+  "shy": {"about": "small, rare gestures; looks down while listening; never points or celebrates", "tempo": 0.85, "energy": 0.5, "beat_gap": 1.8, "beat_words": 9, "point": "glance",
+          "exclaim": "none", "question": "think", "listen_nod": 0.5, "look_away": 0.6, "never": ["point_R", "point_L", "celebrate", "stomp", "talk_open_palms", "jump"], "react": "sad"},
+  "excitable": {"about": "big, frequent gestures, quick; celebrates exclamations; nods hard", "tempo": 1.2, "energy": 1.5, "beat_gap": 0.6, "beat_words": 3, "point": "point",
+                "exclaim": "celebrate", "question": "shrug", "listen_nod": 1.2, "look_away": 0, "never": [], "react": "surprised"},
+  "calm": {"about": "few, slow, open gestures; steady eye contact", "tempo": 0.8, "energy": 0.75, "beat_gap": 1.4, "beat_words": 6, "point": "point", "exclaim": "talk_open_palms",
+           "question": "talk_open_palms", "listen_nod": 0.7, "look_away": 0, "never": ["stomp", "jump"], "react": "think"},
+  "grumpy": {"about": "crossed arms on questions, stomps on exclamations, barely nods", "tempo": 0.9, "energy": 1.1, "beat_gap": 1.2, "beat_words": 5, "point": "point", "exclaim": "stomp",
+             "question": "cross_arms", "listen_nod": 0.2, "look_away": 0.3, "never": ["celebrate", "jump"], "react": "facepalm"},
+  "thoughtful": {"about": "thinks before answering, scratches the head on questions, moderate gestures", "tempo": 0.9, "energy": 0.9, "beat_gap": 1.2, "beat_words": 5, "point": "point",
+                 "exclaim": "talk_open_palms", "question": "scratch_head", "listen_nod": 0.9, "look_away": 0.2, "never": ["stomp"], "react": "think"}
+ },
+ "semantic": {
+  "note": "gesture names an agent may tag on a word, and the clip each means per template",
+  "humanoid": {"big": "talk_open_palms", "point": "point", "think": "think", "unsure": "shrug", "no": "head_shake", "yes": "nod", "wow": "surprised", "oops": "facepalm",
+               "cheer": "celebrate", "angry": "stomp", "closed": "cross_arms", "present": "present", "sad": "sad", "hello": "wave_R", "clap": "clap", "puzzled": "scratch_head", "jump": "jump"},
+  "doodle": {"big": "lean_in", "no": "shake", "yes": "tilt", "hello": "wave_R", "cheer": "hop", "wow": "hop", "unsure": "tilt_R", "point": "lean_in"}
+ }
+}

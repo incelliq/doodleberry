@@ -1,0 +1,156 @@
+{
+ "note": "WP-39: what each role may run (command name patterns), beyond the read commands everyone has (dbe/team.py READ). 'approve' lists the commands that sign something off; a role runs one only if it lists it (or has '*'). 'never' takes commands away from a role that otherwise has them.",
+ "approve": [
+  "post.approve",
+  "post.revoke",
+  "prod.approve",
+  "prod.decide",
+  "film.sign",
+  "series.gate"
+ ],
+ "roles": {
+  "owner": {
+   "about": "the studio's owner: everything, including breaking locks and consent records",
+   "commands": [
+    "*"
+   ]
+  },
+  "director": {
+   "about": "makes films: everything but legal records, environment builds and team membership; signs off films and posts",
+   "commands": [
+    "*"
+   ],
+   "never": [
+    "consent.*",
+    "vendor.build",
+    "team.add"
+   ],
+   "approve": [
+    "post.approve",
+    "post.revoke",
+    "prod.approve",
+    "prod.decide",
+    "film.sign",
+    "series.gate"
+   ],
+   "note_desk": "the director's desk (desk.say) routes plain-English notes to the commands below"
+  },
+  "artist": {
+   "about": "draws and rigs characters, props, levels, fonts and packs; cannot sign off films or posts",
+   "commands": [
+    "puppet.*",
+    "cast.*",
+    "doodle.*",
+    "level.*",
+    "drawing.*",
+    "brush.*",
+    "pencil2d.*",
+    "vector.*",
+    "actout.*",
+    "depth.*",
+    "assist.*",
+    "font.*",
+    "pack.make",
+    "sticker.*",
+    "boil.apply",
+    "review.add",
+    "team.lock",
+    "team.unlock",
+    "desk.say"
+   ]
+  },
+  "reviewer": {
+   "about": "reviews films: notes, critic rounds and gate verdicts; changes no film data",
+   "commands": [
+    "review.add",
+    "review.fix",
+    "ledger.add",
+    "critic.pack",
+    "qa.run",
+    "title.check",
+    "film.lint",
+    "film.preview",
+    "team.lock",
+    "team.unlock",
+    "desk.say"
+   ]
+  },
+  "editor": {
+   "about": "cuts, sound and delivery of films others made",
+   "commands": [
+    "film.render",
+    "film.retime",
+    "film.handoff",
+    "film.cuts",
+    "film.aspects",
+    "film.formats",
+    "film.package",
+    "film.credits",
+    "film.master",
+    "film.soundoff",
+    "film.describe",
+    "film.reduced_motion",
+    "shot.*",
+    "sound.*",
+    "timeline.*",
+    "export.*",
+    "cover.make",
+    "graph.cook",
+    "team.lock",
+    "team.unlock",
+    "desk.say"
+   ]
+  },
+  "animator": {
+   "about": "performs the characters: acting, timing of clips, camera on the timeline, previews and shot renders",
+   "commands": [
+    "acting.*",
+    "timeline.*",
+    "actout.*",
+    "interact.*",
+    "physics.*",
+    "juggle.*",
+    "shot.render",
+    "film.preview",
+    "film.storyboard",
+    "film.animatic",
+    "film.retime",
+    "review.add",
+    "desk.say",
+    "team.lock",
+    "team.unlock"
+   ]
+  },
+  "critic": {
+   "about": "a fresh critic session: reads the film and its packet, records notes and critic rounds; changes nothing else",
+   "commands": [
+    "review.add",
+    "critic.pack",
+    "ledger.add",
+    "qa.run",
+    "film.lint",
+    "film.preview",
+    "film.storyboard",
+    "film.animatic",
+    "desk.say"
+   ]
+  },
+  "fact_checker": {
+   "about": "checks facts against sources: research gates and verdicts, corrections of facts; changes no picture or sound",
+   "commands": [
+    "research.*",
+    "ledger.add",
+    "series.gate",
+    "film.correct",
+    "film.data",
+    "film.living",
+    "film.companion",
+    "review.add",
+    "desk.say"
+   ],
+   "approve": [
+    "series.gate"
+   ]
+  }
+ }
+}

@@ -1,0 +1,348 @@
+{
+ "fps": 30,
+ "duration": 27.021,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about galaxies?",
+   "start": 0.6,
+   "end": 3.961,
+   "slot": [
+    0.6,
+    3.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Can",
+     "start": 0.6,
+     "end": 0.892
+    },
+    {
+     "text": "I",
+     "start": 0.892,
+     "end": 0.989
+    },
+    {
+     "text": "ask",
+     "start": 0.989,
+     "end": 1.281
+    },
+    {
+     "text": "you",
+     "start": 1.281,
+     "end": 1.572
+    },
+    {
+     "text": "something",
+     "start": 1.572,
+     "end": 2.447
+    },
+    {
+     "text": "about",
+     "start": 2.447,
+     "end": 2.933
+    },
+    {
+     "text": "galaxies?",
+     "start": 2.933,
+     "end": 3.711
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "What's a galaxy?",
+   "start": 4.411,
+   "end": 5.994,
+   "slot": [
+    4.411,
+    1.583
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "What's",
+     "start": 4.411,
+     "end": 4.966
+    },
+    {
+     "text": "a",
+     "start": 4.966,
+     "end": 5.077
+    },
+    {
+     "text": "galaxy?",
+     "start": 5.077,
+     "end": 5.744
+    }
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "A huge collection of gas, dust and billions of stars, held together by gravity.",
+   "start": 6.444,
+   "end": 12.916,
+   "slot": [
+    6.444,
+    6.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "A",
+     "start": 6.444,
+     "end": 6.543
+    },
+    {
+     "text": "huge",
+     "start": 6.543,
+     "end": 6.938
+    },
+    {
+     "text": "collection",
+     "start": 6.938,
+     "end": 7.925
+    },
+    {
+     "text": "of",
+     "start": 7.925,
+     "end": 8.123
+    },
+    {
+     "text": "gas,",
+     "start": 8.123,
+     "end": 8.419
+    },
+    {
+     "text": "dust",
+     "start": 8.419,
+     "end": 8.814
+    },
+    {
+     "text": "and",
+     "start": 8.814,
+     "end": 9.111
+    },
+    {
+     "text": "billions",
+     "start": 9.111,
+     "end": 9.901
+    },
+    {
+     "text": "of",
+     "start": 9.901,
+     "end": 10.098
+    },
+    {
+     "text": "stars,",
+     "start": 10.098,
+     "end": 10.592
+    },
+    {
+     "text": "held",
+     "start": 10.592,
+     "end": 10.987
+    },
+    {
+     "text": "together",
+     "start": 10.987,
+     "end": 11.777
+    },
+    {
+     "text": "by",
+     "start": 11.777,
+     "end": 11.975
+    },
+    {
+     "text": "gravity.",
+     "start": 11.975,
+     "end": 12.666
+    }
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Do we live in one?",
+   "start": 13.366,
+   "end": 15.838,
+   "slot": [
+    13.366,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Do",
+     "start": 13.366,
+     "end": 13.708
+    },
+    {
+     "text": "we",
+     "start": 13.708,
+     "end": 14.05
+    },
+    {
+     "text": "live",
+     "start": 14.05,
+     "end": 14.733
+    },
+    {
+     "text": "in",
+     "start": 14.733,
+     "end": 15.075
+    },
+    {
+     "text": "one?",
+     "start": 15.075,
+     "end": 15.588
+    }
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "Yes, the Milky Way. And there are so many galaxies, nobody can count them all yet!",
+   "start": 16.288,
+   "end": 23.649,
+   "slot": [
+    16.288,
+    7.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Yes,",
+     "start": 16.288,
+     "end": 16.627
+    },
+    {
+     "text": "the",
+     "start": 16.627,
+     "end": 16.965
+    },
+    {
+     "text": "Milky",
+     "start": 16.965,
+     "end": 17.53
+    },
+    {
+     "text": "Way.",
+     "start": 17.53,
+     "end": 17.868
+    },
+    {
+     "text": "And",
+     "start": 17.868,
+     "end": 18.207
+    },
+    {
+     "text": "there",
+     "start": 18.207,
+     "end": 18.771
+    },
+    {
+     "text": "are",
+     "start": 18.771,
+     "end": 19.11
+    },
+    {
+     "text": "so",
+     "start": 19.11,
+     "end": 19.336
+    },
+    {
+     "text": "many",
+     "start": 19.336,
+     "end": 19.787
+    },
+    {
+     "text": "galaxies,",
+     "start": 19.787,
+     "end": 20.69
+    },
+    {
+     "text": "nobody",
+     "start": 20.69,
+     "end": 21.367
+    },
+    {
+     "text": "can",
+     "start": 21.367,
+     "end": 21.706
+    },
+    {
+     "text": "count",
+     "start": 21.706,
+     "end": 22.27
+    },
+    {
+     "text": "them",
+     "start": 22.27,
+     "end": 22.722
+    },
+    {
+     "text": "all",
+     "start": 22.722,
+     "end": 23.06
+    },
+    {
+     "text": "yet!",
+     "start": 23.06,
+     "end": 23.399
+    }
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "start": 24.099,
+   "end": 26.571,
+   "slot": [
+    24.099,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Writing",
+     "start": 24.099,
+     "end": 24.775
+    },
+    {
+     "text": "that",
+     "start": 24.775,
+     "end": 25.162
+    },
+    {
+     "text": "in",
+     "start": 25.162,
+     "end": 25.355
+    },
+    {
+     "text": "my",
+     "start": 25.355,
+     "end": 25.548
+    },
+    {
+     "text": "notebook!",
+     "start": 25.548,
+     "end": 26.321
+    }
+   ]
+  }
+ ],
+ "visemes": {},
+ "draft": "slots (no voice yet)"
+}

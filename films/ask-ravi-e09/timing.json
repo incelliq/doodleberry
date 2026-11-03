@@ -1,0 +1,368 @@
+{
+ "fps": 30,
+ "duration": 28.8,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about eclipses?",
+   "start": 0.6,
+   "end": 3.961,
+   "slot": [
+    0.6,
+    3.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Can",
+     "start": 0.6,
+     "end": 0.892
+    },
+    {
+     "text": "I",
+     "start": 0.892,
+     "end": 0.989
+    },
+    {
+     "text": "ask",
+     "start": 0.989,
+     "end": 1.281
+    },
+    {
+     "text": "you",
+     "start": 1.281,
+     "end": 1.572
+    },
+    {
+     "text": "something",
+     "start": 1.572,
+     "end": 2.447
+    },
+    {
+     "text": "about",
+     "start": 2.447,
+     "end": 2.933
+    },
+    {
+     "text": "eclipses?",
+     "start": 2.933,
+     "end": 3.711
+    }
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "What happens in an eclipse?",
+   "start": 4.411,
+   "end": 6.883,
+   "slot": [
+    4.411,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "What",
+     "start": 4.411,
+     "end": 4.815
+    },
+    {
+     "text": "happens",
+     "start": 4.815,
+     "end": 5.522
+    },
+    {
+     "text": "in",
+     "start": 5.522,
+     "end": 5.724
+    },
+    {
+     "text": "an",
+     "start": 5.724,
+     "end": 5.926
+    },
+    {
+     "text": "eclipse?",
+     "start": 5.926,
+     "end": 6.633
+    }
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Something gets in the way of sunlight. In a solar eclipse, the Moon's shadow falls on Earth.",
+   "start": 7.333,
+   "end": 15.139,
+   "slot": [
+    7.333,
+    7.806
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Something",
+     "start": 7.333,
+     "end": 8.277
+    },
+    {
+     "text": "gets",
+     "start": 8.277,
+     "end": 8.697
+    },
+    {
+     "text": "in",
+     "start": 8.697,
+     "end": 8.907
+    },
+    {
+     "text": "the",
+     "start": 8.907,
+     "end": 9.222
+    },
+    {
+     "text": "way",
+     "start": 9.222,
+     "end": 9.537
+    },
+    {
+     "text": "of",
+     "start": 9.537,
+     "end": 9.747
+    },
+    {
+     "text": "sunlight.",
+     "start": 9.747,
+     "end": 10.586
+    },
+    {
+     "text": "In",
+     "start": 10.586,
+     "end": 10.796
+    },
+    {
+     "text": "a",
+     "start": 10.796,
+     "end": 10.901
+    },
+    {
+     "text": "solar",
+     "start": 10.901,
+     "end": 11.426
+    },
+    {
+     "text": "eclipse,",
+     "start": 11.426,
+     "end": 12.16
+    },
+    {
+     "text": "the",
+     "start": 12.16,
+     "end": 12.475
+    },
+    {
+     "text": "Moon's",
+     "start": 12.475,
+     "end": 13.0
+    },
+    {
+     "text": "shadow",
+     "start": 13.0,
+     "end": 13.63
+    },
+    {
+     "text": "falls",
+     "start": 13.63,
+     "end": 14.154
+    },
+    {
+     "text": "on",
+     "start": 14.154,
+     "end": 14.364
+    },
+    {
+     "text": "Earth.",
+     "start": 14.364,
+     "end": 14.889
+    }
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "And a lunar eclipse?",
+   "start": 15.589,
+   "end": 17.617,
+   "slot": [
+    15.589,
+    2.028
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "And",
+     "start": 15.589,
+     "end": 15.922
+    },
+    {
+     "text": "a",
+     "start": 15.922,
+     "end": 16.034
+    },
+    {
+     "text": "lunar",
+     "start": 16.034,
+     "end": 16.589
+    },
+    {
+     "text": "eclipse?",
+     "start": 16.589,
+     "end": 17.367
+    }
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "Earth gets in the way of the light reaching the Moon, so the Moon gets darker.",
+   "start": 18.067,
+   "end": 25.428,
+   "slot": [
+    18.067,
+    7.361
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Earth",
+     "start": 18.067,
+     "end": 18.65
+    },
+    {
+     "text": "gets",
+     "start": 18.65,
+     "end": 19.116
+    },
+    {
+     "text": "in",
+     "start": 19.116,
+     "end": 19.349
+    },
+    {
+     "text": "the",
+     "start": 19.349,
+     "end": 19.699
+    },
+    {
+     "text": "way",
+     "start": 19.699,
+     "end": 20.049
+    },
+    {
+     "text": "of",
+     "start": 20.049,
+     "end": 20.282
+    },
+    {
+     "text": "the",
+     "start": 20.282,
+     "end": 20.632
+    },
+    {
+     "text": "light",
+     "start": 20.632,
+     "end": 21.214
+    },
+    {
+     "text": "reaching",
+     "start": 21.214,
+     "end": 22.147
+    },
+    {
+     "text": "the",
+     "start": 22.147,
+     "end": 22.497
+    },
+    {
+     "text": "Moon,",
+     "start": 22.497,
+     "end": 22.963
+    },
+    {
+     "text": "so",
+     "start": 22.963,
+     "end": 23.196
+    },
+    {
+     "text": "the",
+     "start": 23.196,
+     "end": 23.546
+    },
+    {
+     "text": "Moon",
+     "start": 23.546,
+     "end": 24.012
+    },
+    {
+     "text": "gets",
+     "start": 24.012,
+     "end": 24.479
+    },
+    {
+     "text": "darker.",
+     "start": 24.479,
+     "end": 25.178
+    }
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "start": 25.878,
+   "end": 28.35,
+   "slot": [
+    25.878,
+    2.472
+   ],
+   "align": "slot",
+   "words": [
+    {
+     "text": "Writing",
+     "start": 25.878,
+     "end": 26.554
+    },
+    {
+     "text": "that",
+     "start": 26.554,
+     "end": 26.941
+    },
+    {
+     "text": "in",
+     "start": 26.941,
+     "end": 27.134
+    },
+    {
+     "text": "my",
+     "start": 27.134,
+     "end": 27.327
+    },
+    {
+     "text": "notebook!",
+     "start": 27.327,
+     "end": 28.1
+    }
+   ]
+  }
+ ],
+ "visemes": {},
+ "draft": "slots (no voice yet)"
+}

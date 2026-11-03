@@ -211,6 +211,13 @@
      "contacts": {
       "type": "object"
      },
+     "controls": {
+      "type": "object",
+      "description": "v0.10: control tracks {control: [[t, value], ...]} in clip time, added to the timeline's own keys while the clip plays",
+      "additionalProperties": {
+       "type": "array"
+      }
+     },
      "fadeIn": {
       "type": "number",
       "minimum": 0,

@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "A galaxy is a huge collection of gas, dust and billions of stars held together by gravity.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/galaxy/en/",
+    "title": "NASA Space Place: What is a galaxy?",
+    "quote": "A galaxy is a huge collection of gas, dust, and billions of stars and their solar systems, all held together by gravity."
+   },
+   "source_sentence": "A galaxy is a huge collection of gas, dust, and billions of stars and their solar systems, all held together by gravity.",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "We live in the Milky Way galaxy; there are so many galaxies that they cannot all be counted yet.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/galaxy/en/",
+    "title": "NASA Space Place: What is a galaxy?",
+    "quote": "It’s a small part of the Milky Way Galaxy. … There are so many, we can’t even count them all yet!"
+   },
+   "source_sentence": "It’s a small part of the Milky Way Galaxy. … There are so many, we can’t even count them all yet!",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

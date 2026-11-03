@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "How long is a day on other planets?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Which planet spins the slowest?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "A DAY ON VENUS",
+   "bottom": "5,832 HOURS",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

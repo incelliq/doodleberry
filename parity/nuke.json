@@ -370,10 +370,11 @@
       "ref": [
        "film.provenance",
        "film.credits",
-       "film.get",
-       "WP-26"
+       "film.sign",
+       "film.verify",
+       "WP-37"
       ],
-      "note": "Doodleberry records what shaped a film (provenance.json, licence classes, credits) at film level, not per-frame image metadata; C2PA content credentials on finals are WP-26."
+      "note": "Doodleberry records what shaped a film (provenance.json, licence classes, credits) and signs every final with C2PA content credentials holding it and the film's recipe (film.sign, film.verify, WP-26); per-frame image metadata such as timecode and lens data is not edited (WP-37)."
      }
     },
     {

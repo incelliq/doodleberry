@@ -1,0 +1,84 @@
+{
+ "title": "How hot is the Sun?",
+ "format": "dialogue",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Can I ask you something about the Sun?",
+   "slot": [
+    0.6,
+    3.806
+   ]
+  },
+  {
+   "id": "q1",
+   "speaker": "momo",
+   "fact": null,
+   "text": "How hot is the Sun inside?",
+   "slot": [
+    4.856,
+    2.917
+   ]
+  },
+  {
+   "id": "a1",
+   "speaker": "ravi",
+   "fact": "f1",
+   "text": "Its core gets as hot as twenty-seven million degrees Fahrenheit.",
+   "slot": [
+    8.223,
+    5.139
+   ]
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Why is it so hot?",
+   "slot": [
+    13.812,
+    2.472
+   ]
+  },
+  {
+   "id": "a2",
+   "speaker": "ravi",
+   "fact": "f2",
+   "text": "It's so big that its gravity squeezes the hydrogen inside really hard. The hydrogen smashes together and turns into helium, and that gives off energy. Big word, small idea.",
+   "slot": [
+    16.734,
+    13.139
+   ]
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Writing that in my notebook!",
+   "slot": [
+    30.323,
+    2.472
+   ]
+  }
+ ],
+ "slots": {
+  "wpm": 135
+ }
+}

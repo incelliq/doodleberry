@@ -46,6 +46,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "business.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/diff":       # WP-19: two versions of a film, the frames that changed marked, before and after side by side
             return self._send(200, (STUDIO.parent / "diff.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/desk":       # WP-21: the director's desk: notes in plain English beside the storyboard and animatic
+            return self._send(200, (STUDIO.parent / "desk.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
             return self._send(200, (STUDIO.parent / "actout.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/api":
@@ -77,6 +79,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, {"error": "not found"})
         name = self.path[5:].split("?")[0]
         args = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0) or 0)) or b"{}")
+        who = self.headers.get("X-DBE-As") or None   # the person or agent session acting (WP-39); else DBE_AS, else the local owner
         if "async=1" in self.path:  # long renders: run in a thread, poll /api/jobs/<id> (progress events, WP-20)
             jid = f"job{len(JOBS) + 1}"
             from urllib.parse import parse_qs, urlparse
@@ -101,14 +104,14 @@ class Handler(BaseHTTPRequestHandler):
                 from . import PROGRESS, progress
                 PROGRESS.set(sink); progress(stage="start")
                 try:
-                    res = call(name, args)
+                    res = call(name, args, as_=who, via="http")
                     JOBS[jid].update(status="done", result=res); progress(stage="done", percent=100)
                 except Exception as e:
                     JOBS[jid].update(status="error", error=str(e)); progress(stage="error", error=str(e)[:300])
             threading.Thread(target=run, daemon=True).start()
             return self._send(202, {"job": jid})
         try:
-            self._send(200, {"result": call(name, args)})
+            self._send(200, {"result": call(name, args, as_=who, via="http")})
         except Exception as e:
             self._send(400, {"error": str(e), "trace": traceback.format_exc()[-1500:]})
 
@@ -144,7 +147,7 @@ def mcp_stdio():
         elif m == "tools/call":
             name = params.get("name", "").replace("_", ".", 1)
             try:
-                res = call(name, params.get("arguments") or {})
+                res = call(name, params.get("arguments") or {}, via="mcp")
                 reply(i, {"content": [{"type": "text", "text": json.dumps(res, indent=1, default=str)}]})
             except Exception as e:
                 reply(i, {"content": [{"type": "text", "text": f"error: {e}"}], "isError": True})

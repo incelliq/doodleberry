@@ -1,0 +1,4 @@
+{
+ "note": "WP-26: consent records (consent.add / consent.revoke). A voice made from a person (voices/registry.json \"kind\": \"clone\", \"person\" or \"recording\") names its record in \"consent\"; a puppet depicting a real person names it in meta.likeness.consent. Signed forms stay off git: each record keeps the form's sha256.",
+ "records": []
+}

@@ -1,0 +1,59 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Director's desk</title>
+<style>
+:root{--bg:#f4f1ea;--panel:#fffdf8;--ink:#24160e;--muted:#7a6a5c;--line:#e2dccf;--accent:#e8743a;--ok:#2f7d4f;--bad:#b3412c}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1916;--panel:#26221e;--ink:#f2ebe2;--muted:#a8998a;--line:#3a342e}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0 12px 0 0}
+select,input,button,textarea{font:inherit;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,1fr);gap:16px;padding:16px}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.card h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+#strip{width:100%;border-radius:8px}video{width:100%;max-height:60vh;border-radius:8px;background:#000}
+#log{max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.me{align-self:flex-end;background:var(--accent);color:#fff;border-radius:12px 12px 2px 12px;padding:8px 12px;max-width:85%}
+.desk{background:var(--bg);border-radius:12px 12px 12px 2px;padding:8px 12px;max-width:92%}
+.desk li{margin:2px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}.muted{color:var(--muted);font-size:13px}
+#say{display:flex;gap:8px;margin-top:10px}#say textarea{flex:1;min-height:56px;resize:vertical}
+</style></head><body>
+<header><h1>Director's desk</h1>
+<label>Film <select id="film"></select></label>
+<label>Acting as <input id="as" placeholder="id or id:role (empty: local owner)" size="26"></label>
+<span class="muted">Try: “Hold shot 1 a second longer. Push in on shot 2. Make the music calmer. Show me.”</span></header>
+<main>
+<section class="card"><h2>Storyboard</h2><img id="strip" alt="Storyboard strip: one still per shot" onerror="this.hidden=true" onload="this.hidden=false"><p class="muted" id="nosb">Say “show me” to make the storyboard and animatic.</p><h2 style="margin-top:14px">Animatic</h2><video id="anim" controls></video></section>
+<section class="card"><h2>Notes</h2><div id="log" aria-live="polite"></div>
+<form id="say"><textarea id="text" placeholder="Notes on the film, in plain English" aria-label="Notes"></textarea><div style="display:flex;flex-direction:column;gap:6px"><button class="primary">Send</button><button type="button" id="dry">Dry run</button></div></form></section>
+</main>
+<script>
+const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(cmd, args) {
+  const h = {'Content-Type': 'application/json'}; if ($('as').value.trim()) h['X-DBE-As'] = $('as').value.trim();
+  const r = await fetch('/api/' + cmd, {method: 'POST', headers: h, body: JSON.stringify(args || {})}); const j = await r.json();
+  if (!r.ok) throw new Error(j.error || r.status); return j.result;
+}
+function media(f) { const v = Date.now(); $('strip').src = `/films/${f}/build/storyboard/strip.png?v=${v}`; $('anim').src = `/films/${f}/build/animatic.mp4?v=${v}`; }
+function show(e) {
+  $('log').insertAdjacentHTML('beforeend', `<div class="me">${esc(e.said)}</div><div class="desk">` +
+    (e.understood.length ? '<ul>' + e.understood.map(u => `<li><b>${esc(u.kind)}</b>: ${esc(u.what)}</li>`).join('') + '</ul>' : '') +
+    (e.not_understood.length ? '<p class="bad">Not understood: ' + e.not_understood.map(u => `“${esc(u.sentence)}” (${esc(u.why)})`).join('; ') + '</p>' : '') +
+    (e.ran || []).map(r => `<div class="${r.result === 'ok' ? 'ok' : 'bad'}">${esc(r.command)}: ${esc(r.result)}${r.why ? ' — ' + esc(r.why) : ''}</div>`).join('') +
+    ((e.not_run || []).length ? `<div class="muted">Not run: ${e.not_run.map(esc).join(', ')}</div>` : '') + `<div class="muted">${esc(e.who)} (${esc(e.role)})${e.dry_run ? ' · dry run' : ''}</div></div>`);
+  $('log').scrollTop = 1e9;
+}
+async function load() {
+  const f = $('film').value; $('log').innerHTML = ''; media(f);
+  try { const r = await fetch(`/films/${f}/desk.json`); if (r.ok) (await r.json()).exchanges.forEach(show); } catch (e) {}
+}
+async function send(apply) {
+  const t = $('text').value.trim(); if (!t) return;
+  try { const e = await api('desk.say', {name: $('film').value, text: t, apply}); show(e); if (apply) { $('text').value = ''; media($('film').value); } }
+  catch (err) { $('log').insertAdjacentHTML('beforeend', `<div class="desk bad">${esc(err.message)}</div>`); }
+}
+$('say').onsubmit = ev => { ev.preventDefault(); send(true); }; $('dry').onclick = () => send(false);
+$('film').onchange = load;
+(async () => { const info = await api('engine.info'); (info.films || []).filter(f => !f.includes('--') && !f.startsWith('zz-')).forEach(f => $('film').insertAdjacentHTML('beforeend', `<option>${esc(f)}</option>`)); load(); })();
+</script></body></html>

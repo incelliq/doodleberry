@@ -1,0 +1,26 @@
+{
+ "facts": [
+  {
+   "id": "f1",
+   "claim": "The Moon's shape does not change; it makes no light, and our view of its sunlit part changes as it goes around Earth.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/moon-phases/en/",
+    "title": "NASA Space Place: Moon phases",
+    "quote": "The shape of the Moon isn’t changing throughout the month. … The Moon does not produce its own light. … What you may have heard referred to as “moonlight” is actually just sunlight reflecting off of the Moon’s surface. … On Earth, our view of the illuminated part of the Moon changes each night, depending on where the Moon is in its orbit, or path, around Earth."
+   },
+   "source_sentence": "The shape of the Moon isn’t changing throughout the month. … The Moon does not produce its own light. … What you may have heard referred to as “moonlight” is actually just sunlight reflecting off of the Moon’s surface. … On Earth, our view of the illuminated part of the Moon changes each night, depending on where the Moon is in its orbit, or path, around Earth.",
+   "status": "revised after gate review 1"
+  },
+  {
+   "id": "f2",
+   "claim": "From one new moon to the next takes about 29.5 days.",
+   "source": {
+    "url": "https://spaceplace.nasa.gov/moon-phases/en/",
+    "title": "NASA Space Place: Moon phases",
+    "quote": "it takes about 29.5 days to go from one new moon to the next new moon."
+   },
+   "source_sentence": "it takes about 29.5 days to go from one new moon to the next new moon.",
+   "status": "revised after gate review 1"
+  }
+ ]
+}

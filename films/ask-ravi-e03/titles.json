@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "What is a light-year?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Is a light-year a time or a distance?",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "A LIGHT-YEAR IS...",
+   "bottom": "A DISTANCE",
+   "by": "series brief (written by Claude, checked by title.set)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

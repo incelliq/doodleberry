@@ -1,5 +1,5 @@
 // Shot player: renders any frame of a shots.json film in the browser (the SVG renderer, background plates for the
-// other renderers, and the interactive web export). Query: ?shot=<id> (render that shot) | ?bg=1 (set only) | none (whole film).
+// other renderers, and the interactive web export). Query: ?shot=<id> (render that shot) | ?bg=1 (set only) | none (whole film); bubbles=0 leaves speech bubbles out (comics draw their own).
 (function () {
   const S = window.SHOTS, T = window.TIMING || {}, PUP = window.PUPPETS || {}, LIB = (window.CLIPLIB || {}).humanoid || { clips: {}, presets: {} };
   const q = new URLSearchParams(location.search);
@@ -291,10 +291,16 @@
     const wide = frameFor(casts);
     const lines = (T.lines || []).filter(l => byName[l.speaker] && l.end > sh.start - 0.5 && l.start < sh.end + 0.5);
     // target per instant: the speaker while a line plays (and 0.3 s before), else the two-shot
-    const target = tt => { const l = lines.find(l => tt >= l.start - 0.3 && tt <= l.end + 0.2); return l && casts.length > 1 ? frameFor([byName[l.speaker]], true) : wide; };
+    // camera beats (WP-10): during a gag's stare the camera holds on who reacts and pushes in slowly ({t0, t1, who, zoom})
+    const beats = (o.beats || []).filter(b => byName[b.who]);
+    const target = tt => { const b = beats.find(b => tt >= b.t0 && tt <= b.t1);
+      if (b) { const f = frameFor([byName[b.who]], true), u = Math.min(1, Math.max(0, (tt - b.t0) / Math.max(0.01, b.t1 - b.t0))); return [f[0], f[1], f[2] * (1 + ((b.zoom ?? 1.3) - 1) * u * u * (3 - 2 * u))]; }
+      const l = lines.find(l => tt >= l.start - 0.3 && tt <= l.end + 0.2); return l && casts.length > 1 ? frameFor([byName[l.speaker]], true) : wide; };
     // ease: blend from the previous target over `ease` seconds after each change (pure: derived from the schedule)
     let cur = target(t); const changes = [];
     for (const l of lines) changes.push(l.start - 0.3, l.end + 0.2);
+    for (const b of beats) changes.push(b.t0, b.t1);
+    changes.sort((a, b) => a - b);
     const last = changes.filter(c => c <= t).pop();
     if (last != null && t - last < ease) { const prev = target(last - 0.01), u = (t - last) / ease, e = u * u * (3 - 2 * u); cur = cur.map((v, i) => prev[i] + (v - prev[i]) * e); }
     let [cx, cy, z] = cur;
@@ -367,7 +373,8 @@
       VIEW = view;
       svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS),
         drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
-    if (!bgOnly && !castOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub; }
+    { const [vx, vy, vz] = VIEW || [W / 2, H / 2, 1]; window.HEADS = Object.fromEntries(Object.entries(heads).map(([k, a]) => [k, [W / 2 + (a[0] - vx) * vz, H / 2 + (a[1] - vy) * vz]])); }   // where each speaker's head is on screen (comics, WP-30)
+    if (!bgOnly && !castOnly && q.get('bubbles') !== '0') { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !castOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;

@@ -1,0 +1,10 @@
+[
+ {
+  "at": "2026-11-03T18:46:54+00:00",
+  "round": 1,
+  "role": "fact_gate",
+  "verdict": "cleared",
+  "notes": "series gate review 2026-11-03 by fresh fact_gate agent (round 1; pages read verbatim with curl): f1: (Non-blocking) 'When our half leans towards the Sun, it's summer' and 'not its distance' are on the page but outside the quote.",
+  "metrics": {}
+ }
+]

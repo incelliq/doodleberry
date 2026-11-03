@@ -1,4 +1,4 @@
-# Puppet format v0.8 (`.puppet.json`)
+# Puppet format v0.10 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -226,3 +226,13 @@ Synfig, Lottie and Grease Pencil exporters all follow them.
 - **Whole-face lip-sync**: `"lipsync": {"O": {"angles": {"head": -2}, "shifts": {"@brows": [0, -4]}, "scales": {"head": [1, 1.03]}}, "wide": {...}}`:
   with visemes, the current mouth shape's pose is added to the face (cross-faded over 0.06 s from the previous one), so
   the jaw, cheeks and brows move with the words.
+
+## v0.10 additions: clip control tracks (WP-12)
+All optional; v0.9 files stay valid. A clip (a character's own clip or a library clip) may carry **control tracks**,
+`"controls": {"turn": [[t, value], ...]}`, keyed in clip time like its angle tracks. While the clip plays, each value is
+weighted like an additive layer (the layer's weight, fades and gain) and added to the timeline's own keys for that
+control, and the sum drives the control's targets as usual. A clip can therefore turn a head: Act it out writes the
+performer's head turn (yaw) into the `turn` control of a character that has one. Controls resolve into angles,
+shifts, swaps, layer order and scales inside the loader (`acting.js`), so the bake and every renderer and exporter
+follow without change.
+
