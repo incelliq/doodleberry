@@ -219,6 +219,216 @@
     "studio"
    ],
    "use": "the Studio graph page (WP-20)"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooBhaijaan2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Bhaijaan 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloobhaijaan2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloobhaijaan2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Bhaijaan 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "arabic"
+  },
+  {
+   "path": "engine/fonts/scripts/VarelaRound-Regular.woff2",
+   "kind": "font",
+   "name": "Varela Round",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-varelaround.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/varelaround (converted to WOFF2 with fontTools)",
+   "attribution": "Varela Round (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "hebrew"
+  },
+  {
+   "path": "engine/fonts/scripts/Baloo2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloo2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloo2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "devanagari"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooDa2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Da 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-balooda2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/balooda2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Da 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "bengali"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooPaaji2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Paaji 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloopaaji2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloopaaji2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Paaji 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "gurmukhi"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooBhai2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Bhai 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloobhai2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloobhai2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Bhai 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "gujarati"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooBhaina2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Bhaina 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloobhaina2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloobhaina2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Bhaina 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "odia"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooThambi2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Thambi 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloothambi2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloothambi2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Thambi 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "tamil"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooTammudu2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Tammudu 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-balootammudu2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/balootammudu2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Tammudu 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "telugu"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooTamma2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Tamma 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-balootamma2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/balootamma2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Tamma 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "kannada"
+  },
+  {
+   "path": "engine/fonts/scripts/BalooChettan2-wght.woff2",
+   "kind": "font",
+   "name": "Baloo Chettan 2",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-baloochettan2.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/baloochettan2 (converted to WOFF2 with fontTools)",
+   "attribution": "Baloo Chettan 2 (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "malayalam"
+  },
+  {
+   "path": "engine/fonts/scripts/Mitr-Regular.woff2",
+   "kind": "font",
+   "name": "Mitr",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-mitr.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/mitr (converted to WOFF2 with fontTools)",
+   "attribution": "Mitr (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "thai"
+  },
+  {
+   "path": "engine/fonts/scripts/Mitr-SemiBold.woff2",
+   "kind": "font",
+   "name": "Mitr",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-mitr.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/mitr (converted to WOFF2 with fontTools)",
+   "attribution": "Mitr (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "thai"
+  },
+  {
+   "path": "engine/fonts/scripts/Comfortaa-wght.woff2",
+   "kind": "font",
+   "name": "Comfortaa",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-comfortaa.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/comfortaa (converted to WOFF2 with fontTools)",
+   "attribution": "Comfortaa (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "greek-cyrillic"
+  },
+  {
+   "path": "engine/fonts/scripts/Jua-Regular.woff2",
+   "kind": "font",
+   "name": "Jua",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "license_file": "engine/fonts/scripts/OFL-jua.txt",
+   "source": "https://github.com/google/fonts/tree/main/ofl/jua (converted to WOFF2 with fontTools)",
+   "attribution": "Jua (SIL Open Font License 1.1)",
+   "used_by": [
+    "player"
+   ],
+   "script": "hangul"
   }
  ],
  "generated": [
@@ -429,6 +639,30 @@
    "license": "GPL-3.0-or-later",
    "class": "copyleft",
    "use": "the editor the hand-off targets (WP-22); not driven by any command"
+  },
+  {
+   "name": "Tesseract OCR 5.3 and its language data (apt tesseract-ocr, tesseract-ocr-*)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "use": "reads rendered text back in film.text_check (WP-25); apt-installed, not committed"
+  },
+  {
+   "name": "Babel 2.18 (CLDR locale data)",
+   "license": "BSD-3-Clause (CLDR: Unicode licence)",
+   "class": "permissive",
+   "use": "language direction, month and weekday names, number formats (WP-25); pip-installed"
+  },
+  {
+   "name": "Noto fonts (apt fonts-noto-core, fonts-noto-cjk)",
+   "license": "OFL-1.1",
+   "class": "permissive",
+   "use": "caption fonts for libass in every script, and Myanmar, Ethiopic, Georgian, Armenian, Khmer, Lao and CJK in the player (WP-25); apt-installed, not committed"
+  },
+  {
+   "name": "Piper voices of forty languages (huggingface.co/rhasspy/piper-voices) and si_LK-sinhala-medium (chan4lk/piper-tts-sinhala)",
+   "license": "per voice: see voices/registry.json",
+   "class": "per-voice",
+   "use": "voices for language versions (WP-25); fetched on use into the voices folder, not committed; each voice's licence status is in voices/registry.json and non-clean ones are flagged at posting"
   }
  ],
  "external": [

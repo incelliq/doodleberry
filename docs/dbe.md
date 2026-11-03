@@ -445,6 +445,78 @@ each with its own QA (17 checks on nib-hello, among them layout, the flash check
 per aspect: its file, failed checks, ok. The described cuts of the other aspects are copied next to the master
 (`final_ad_16x9.mp4`). The `access` test covers all of it.
 
+## World languages (WP-25)
+A language version is one command: `film.localize {"name": ..., "lang": "ar"}` makes `films/<name>-<lang>`. What it
+needs is in `films/<name>/i18n/<lang>.json`, a translator's file that `film.strings {"name", "lang"}` writes: every
+string a viewer reads or hears, by key (`line:<id>`, `shot:<id>:overlay:<n>:<field>`, `shot:<id>:set:board:<i>`,
+`data:<path>` for chart labels, a line's own bubble text `line:<id>:bubble` (optional: without it the bubble shows
+the translated line, never the source's), the title, brief and posting titles), with optional `"voices"` per speaker,
+`"swaps"` (props by id, sets by name, clips), `"rules_off"` and `"digits": "native"`. A translation must keep every
+`{{...}}` data binding (numbers come from data.json in every language; a dropped binding is refused); month and
+weekday names in charts and data come from CLDR (Babel) when not translated. Numbers on screen and in words use the
+locale's separators with Latin digits, or the language's own digits throughout with `"digits": "native"`
+(Babel keeps Latin digits, so `dbe/databind.py` writes the numbering system's own; Chrome's Intl draws the same).
+
+**Writing systems** (`engine/fonts/scripts.json`): a rounded font per script matching Fredoka's look, all OFL and
+bundled as WOFF2 (about 2 MB): Baloo Bhaijaan 2 (Arabic), Baloo 2, Da 2, Paaji 2, Bhai 2, Bhaina 2, Thambi 2,
+Tammudu 2, Tamma 2 and Chettan 2 (the Indic scripts), Varela Round (Hebrew), Mitr (Thai), Comfortaa (Greek and
+Cyrillic), Jua (Hangul) and Noto Sans Sinhala; Han and kana, Myanmar, Ethiopic, Georgian, Armenian, Khmer and Lao use
+installed Noto fonts. The player lists them after Fredoka and Patrick Hand (Latin keeps its own fonts) and loads the
+ones a film's text uses before its first frame. Text other than Latin is measured in the fonts it is drawn in (canvas
+measureText; counting letters made Sinhala signs overflow their boards and bubbles land on them, as vowel signs are
+letters of their own); Latin keeps its one-per-letter estimate, so English layouts do not move. Lines are wrapped at
+the words Intl.Segmenter finds in scripts written without spaces (Thai, Lao, Khmer, Myanmar, CJK);
+typewriter reveals step by grapheme, so a vowel sign never hangs alone; shouted bubbles in joined or stacked scripts
+are drawn whole, never a letter at a time.
+
+**Right to left.** Every frame, text holding right-to-left letters gets `direction="rtl"` with its anchor flipped to
+the same side (under rtl, `start` is the right end: measured in Chrome), so it reads correctly and stays in place;
+films in a right-to-left language (`"dir": "rtl"` in shots.json, set by film.localize from CLDR) also lay
+left-aligned text out from the right: cards, quotes, chart titles, source lines (mirrored across the frame) and the
+classroom board; titles pop their words in from the right. Captions: libass shapes and orders Arabic only with its
+own bidi (`Encoding -1`); in its default, VSFilter-compatible mode the letters came out unjoined and reversed, so
+films whose lines hold non-Latin text use -1 and every caption is set in the script's Noto font (Latin-only films are
+unchanged).
+
+**Voices.** `voices/registry.json` now lists every Piper voice of forty world languages (115, read from their model
+cards in November 2026 and classified the way the registry always has: trained from scratch on CC0, public-domain, CC
+BY or Apache data is clean; fine-tuned from lessac (research licence) or with no licence stated is unclear;
+non-commercial, share-alike, or fine-tuned from ryan (CC BY-NC-SA) is restricted), with Kokoro for English, Spanish,
+French, Hindi, Italian, Japanese, Portuguese and Chinese, and a Sinhala Piper voice (MIT model, trained on OpenSLR 30,
+CC BY-SA 4.0: restricted). Voices are fetched (checksummed) when a film uses them, or with `bash tools/setup.sh voices
+de,uk`. film.localize picks the best voice for the language (clean first); one that is not clean is allowed in-house
+and flagged at posting (film.provenance). Non-English Piper voices are loaded with their phoneme alignments, so lip-sync
+follows the model's own timings: the Arabic version's lip-sync check failed (Ravi's mouth correlated 0.11 with his
+voice, visemes spread over Whisper's word times) and passes with them (0.42). `locales.list` shows, per language, script, direction, fonts, OCR and the best voice
+with its status: clean voices exist here for English, Hindi, Spanish, French, Portuguese, Italian, Japanese, Chinese,
+German, Dutch, Czech, Greek, Ukrainian, Swedish, Norwegian, Telugu and Kazakh; every one of the forty can ship with
+translated text and captions.
+
+**Cultural rules** (`dbe/cultures.json`): gestures some audiences read as rude are swapped when a film is localised
+(left-hand waves, points and presentations become right-hand ones for Arabic, Persian, Urdu and South Asian
+languages; a pointed finger becomes an open palm for Malay, Indonesian, Thai and Filipino), and words a locale's
+reviewers should look at (alcohol and pork, beef, dogs indoors, the number four, a thumbs-up) are flagged, never
+changed: whether to change them is a person's decision. Each rule says why; they are defaults for review.
+
+**Read back** (`film.text_check`, run by film.localize): every on-screen string (overlays, the set's words, bubbles)
+and the first chunk of every caption is found in a frame where it is fully shown and read by Tesseract in its
+script, in several views (grey, inverted, coloured lettering alone, the bright fill of outlined letters, two page
+layouts; captions and titles cropped to their own band); its words of three letters or more must be found (75% alike
+each, any order: OCR may put a number on either side of right-to-left words), and words that read better backwards
+are reported as reversed. It caught three real faults on the way: the reversed, unjoined Arabic captions, Sinhala
+bubbles still in English (a line's `bubble` text was not translated), and Sinhala signs overflowing their boards.
+
+**The done-when.** `data-demo` in Arabic (`films/data-demo-ar`): Arabic voice (Piper kareem, unclear licence,
+flagged), the board, chart title, month labels, source line and titles in Arabic, right to left, Arabic captions;
+every QA check passes (lip-sync included) and all 9 on-screen strings and caption chunks read back. `nib-hello` in
+Sinhala (`films/nib-hello-si`): Sinhala voice (restricted, flagged), sign and bubbles in Sinhala (the shout keeps the
+original's short line), Sinhala subtitles (.srt, .vtt); every QA check passes and its 3 strings read back. The
+`l10n` test makes both from scratch copies. **Open:** audio description stays English-only (its sentences are
+written in English), so language versions are made without it; long bubbles in wide scripts wrap into tall, narrow
+bubbles (the row limit was tuned for English); bar charts keep a left-to-right axis in right-to-left films; titles
+and posting text are translated but covers are not re-made per language; there is no machine translation (every
+string comes from a translator's file).
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

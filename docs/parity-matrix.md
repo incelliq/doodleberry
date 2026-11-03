@@ -24,7 +24,7 @@ Overall: 1396 capabilities; covered 38%, covered or partial 70% (of those that a
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 39, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-23 8, WP-30 8, WP-29 4, WP-17 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 107, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 39, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-23 8, WP-30 8, WP-29 4, WP-17 3, WP-33 2, WP-26 1, WP-27 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -2071,7 +2071,7 @@ Sources: [Synfig User Manual: contents](https://synfig.readthedocs.io/en/latest/
 | Switch group: shows exactly one child, chosen by name or (1.4) by depth index, animatable. | Mouth charts, hand poses, eye sets and outfit changes. | **data**: `puppet.json swaps`, `puppet.json views`, `puppet.json controls (swap targets)` (Swap sets and views, driven by visemes, clips and controls; exported to Synfig as hold-keyed visibility.) |
 | Duplicate layer: repeats its group with an index value, so copies can vary by index. | Radial patterns, rows of objects, simple crowds. | **partial**: `proc.cook`, WP-42 (Seeded scatter and instancing of cast members and 3D blocks with per-copy variation; duplicating a group by index is WP-42.) |
 | Import image layer: a bitmap placed by its corners, openable in an external editor and reloaded (1.4). | Painted backgrounds and raster character parts. | **command**: `puppet.from_ink`, `puppet.import`, `puppet.export_layers` (Raster-part puppets from scans or PSD/ORA, and a layered file out to an artist and back (raster parts render in SVG only, WP-14).) |
-| Text layer: font family list, size, orientation, spacing, animatable text; rewritten in 1.5.1 with right-to-left support and a direction parameter. | Titles, captions and signage in several languages. | **partial**: `shot.render`, `film.localize`, WP-25 (Text overlays, bubbles and captions with Sinhala fallback; right-to-left and complex scripts are WP-25.) |
+| Text layer: font family list, size, orientation, spacing, animatable text; rewritten in 1.5.1 with right-to-left support and a direction parameter. | Titles, captions and signage in several languages. | **partial**: `shot.render`, `film.localize`, `film.localize`, WP-35 (Text overlays, bubbles and captions in 22 writing systems with right-to-left layout and shaping (WP-25); no free text layer with animatable orientation and spacing.) |
 | Plant layer: procedural branching growth along a spline. | Growing vines, roots and hair-like flourishes. | **partial**: `shot.render`, WP-42 (The kit's roots element grows a root system timed to lines; general procedural growth is WP-42.) |
 | Super sample layer: renders a group at higher resolution for cleaner antialiasing. | Fixing jaggies on fine detail. | **n/a** (Vector parts are rasterised by Chromium at output resolution with antialiasing; nothing to supersample.) |
 | Procedural generator layers: checkerboard, XOR pattern, metaballs, Mandelbrot and Julia fractals. | Backgrounds, test patterns and abstract motion design. | **gap**: WP-42 (Procedural 2D layer scope.) |

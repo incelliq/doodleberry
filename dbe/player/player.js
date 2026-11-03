@@ -23,7 +23,27 @@
   const libFor = p => (window.CLIPLIB || {})[p.template] || LIB;
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const INK = '#181e26', HAND = "'Patrick Hand','Fredoka','Noto Sans Sinhala',sans-serif";
+  // ---------- writing systems (WP-25): a rounded font per script after the Latin ones; direction; widths ----------
+  const SFONTS = window.SCRIPT_FONTS || [], XF = SFONTS.map(f => `'${f.family}'`).join(',') || "'Noto Sans Sinhala'";
+  const LANG = S.lang || 'en', RTLF = S.dir === 'rtl', LOCALE = S.locale || null;   // RTLF: the film reads right to left
+  const reOf = fs => fs.length ? new RegExp('[' + fs.map(f => f.ranges).join('') + ']') : /(?!)/;
+  const RTL_RE = reOf(SFONTS.filter(f => f.rtl)), NOSPACE_RE = reOf(SFONTS.filter(f => f.nospace)), WIDE_RE = /[\u1100-\u11ff\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/;
+  // scripts whose letters change shape with their neighbours or stack marks: never drawn a letter at a time
+  const COMPLEX_RE = reOf(SFONTS.filter(f => !/greek|hangul|han/.test(f.script)));
+  // width in Latin letters (the unit the layout code was written in, half the font size each): Latin text keeps its old
+  // estimate (one per letter); other scripts are measured in the fonts they are drawn in, once their fonts have loaded
+  const MEASURE = document.createElement('canvas').getContext('2d'), EMCACHE = new Map();
+  const em = str => {
+    str = String(str);
+    if (!COMPLEX_RE.test(str) && !WIDE_RE.test(str) && !RTL_RE.test(str)) return [...str].length;
+    if (!EMCACHE.has(str)) { MEASURE.font = `100px ${HAND}`; EMCACHE.set(str, MEASURE.measureText(str).width / 50); }
+    return EMCACHE.get(str);
+  };
+  const SEG_G = Intl.Segmenter ? new Intl.Segmenter(LANG, { granularity: 'grapheme' }) : null, SEG_W = Intl.Segmenter ? new Intl.Segmenter(LANG, { granularity: 'word' }) : null;
+  const graphemes = str => SEG_G ? [...SEG_G.segment(String(str))].map(x => x.segment) : [...String(str)];
+  const nospace = str => NOSPACE_RE.test(str);
+  const tokens = str => nospace(str) && SEG_W ? [...SEG_W.segment(String(str))].map(x => x.segment).filter(x => x.trim()) : String(str).split(/\s+/);
+  const INK = '#181e26', HAND = `'Patrick Hand','Fredoka',${XF},sans-serif`;
   // ---------- static-layer cache (WP-15) ----------
   // A set whose markup does not change (a paper page with its grain filter, say) is rasterized once and every frame
   // shows that image: filters such as full-frame grain cost the browser ~0.5 s a frame in software, the image almost
@@ -79,7 +99,7 @@
       `<feDisplacementMap in="SourceGraphic" scale="${b.amount ?? 5}" xChannelSelector="R" yChannelSelector="G"/></filter></defs>`;
   }
   function overlay(o, t) {
-    if (o.type === 'sign') { const fs = o.size || 56, w = o.text.length * fs * 0.52 + 50, h = fs * 1.5, x = o.x, y = o.y;
+    if (o.type === 'sign') { const fs = o.size || 56, w = em(o.text) * fs * 0.52 + 50, h = fs * 1.5, x = o.x, y = o.y;
       return `<g stroke="${INK}" stroke-width="4" stroke-linecap="round" fill="none"><path d="M${x - w * 0.32} ${y - h * 1.1} L${x - w * 0.28} ${y}"/><path d="M${x + w * 0.32} ${y - h * 1.1} L${x + w * 0.28} ${y}"/>` +
         `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" rx="6" fill="#f6f5ef"/></g><text x="${x}" y="${y + h * 0.7}" font-family="${HAND}" font-size="${fs}" text-anchor="middle" fill="${INK}">${esc(o.text)}</text>`; }
     if (o.type === 'text') return `<text x="${o.x}" y="${o.y}" font-family="${HAND}" font-size="${o.size || 58}" text-anchor="middle" fill="${o.color || '#707a84'}">${esc(o.text)}</text>`;
@@ -87,24 +107,29 @@
   }
 
   // ---------- explainer scene library (plan 1.13): every element is a pure function of t ----------
-  const BODY = "'Fredoka','Noto Sans Sinhala',sans-serif", MONO = "'Atkinson Mono',monospace";
+  const BODY = `'Fredoka',${XF},sans-serif`, MONO = `'Atkinson Mono',${XF},monospace`;
+  // a left-aligned line in a box [x0, x1]: from the right in a right-to-left film
+  const lead = (x0, x1, pad) => RTLF ? `x="${x1 - pad}" text-anchor="end"` : `x="${x0 + pad}"`, trail = (x0, x1, pad) => RTLF ? `x="${x0 + pad}"` : `x="${x1 - pad}" text-anchor="end"`;
   // brand defaults (films that set "brand": true get window.BRAND); explicit overlay values always win
   const BR = window.BRAND || null, BP = (BR && BR.palette) || {};
   const brandColor = (v, d) => v || (BR ? d : undefined);
   const ease = u => (u = Math.min(1, Math.max(0, u)), u * u * (3 - 2 * u));
   const since = (o, t) => t - (o.start ?? 0);
-  const fmt = (v, d = 0) => Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const fmt = (v, d = 0) => Number(v).toLocaleString(LOCALE || 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });   // digits and separators of the film's locale (WP-25)
   const dataOf = o => o.data || (o.data_from ? String(o.data_from).split('.').reduce((a, k) => (a || {})[k], window.DATA || {}) : []) || [];
   const plate = (x, y, w, h, fill = '#fbfaf5') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${fill}" stroke="${INK}" stroke-width="3"/>`;
-  function wrapText(text, maxChars) { const out = []; let cur = ''; for (const w of String(text).split(/\s+/)) { if ((cur + ' ' + w).trim().length > maxChars && cur) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); } if (cur) out.push(cur); return out; }
+  function wrapText(text, maxChars) {   // by width (wide CJK letters count double); scripts without spaces break at words found by the segmenter
+    const out = [], sep = nospace(text) ? '' : ' '; let cur = '';
+    for (const w of tokens(text)) { const nx = cur ? cur + sep + w : w; if (em(nx) > maxChars && cur) { out.push(cur); cur = w; } else cur = nx; }
+    if (cur) out.push(cur); return out; }
   function explainer(o, t) {
     const u = ease(since(o, t) / 0.35), slide = (1 - u) * 40, op = u.toFixed(3);
     const fsT = o.title_size || (H > W ? 64 : 56), fsB = o.size || (H > W ? 42 : 36);
     if (o.type === 'card') { // a definition card: term in bold, plain-language meaning below
       const w = o.w || (H > W ? 860 : 900), lines = wrapText(o.body || '', Math.floor(w / (fsB * 0.52)));
       const h = fsT * 1.6 + lines.length * fsB * 1.25 + 40, x = o.x ?? (W - w) / 2, y = (o.y ?? H * 0.2) + slide;
-      return `<g opacity="${op}">${plate(x, y, w, h)}<text x="${x + 36}" y="${y + fsT * 1.15}" font-family="${BODY}" font-weight="700" font-size="${fsT}" fill="${o.color || BP.primary || '#1a62c2'}">${esc(o.title || '')}</text>` +
-        lines.map((l, i) => `<text x="${x + 36}" y="${y + fsT * 1.6 + 20 + (i + 0.8) * fsB * 1.25}" font-family="${BODY}" font-size="${fsB}" fill="${INK}">${esc(l)}</text>`).join('') + `</g>`;
+      return `<g opacity="${op}">${plate(x, y, w, h)}<text ${lead(x, x + w, 36)} y="${y + fsT * 1.15}" font-family="${BODY}" font-weight="700" font-size="${fsT}" fill="${o.color || BP.primary || '#1a62c2'}">${esc(o.title || '')}</text>` +
+        lines.map((l, i) => `<text ${lead(x, x + w, 36)} y="${y + fsT * 1.6 + 20 + (i + 0.8) * fsB * 1.25}" font-family="${BODY}" font-size="${fsB}" fill="${INK}">${esc(l)}</text>`).join('') + `</g>`;
     }
     if (o.type === 'counter') { // a number that counts up to its value, with its label
       const v = (o.from ?? 0) + ((o.to ?? 0) - (o.from ?? 0)) * ease(since(o, t) / (o.duration ?? 1.2)), fs = o.size || (H > W ? 150 : 120);
@@ -128,16 +153,16 @@
         svg += `<rect x="${bx}" y="${y + h - bh}" width="${bw}" height="${bh}" fill="${(o.colors || [])[i] || o.color || '#1a62c2'}" stroke="${INK}" stroke-width="2"/>` +
           `<text x="${bx + bw / 2}" y="${y + h + fsB * 1.1}" text-anchor="middle" font-family="${BODY}" font-size="${fsB * 0.8}" fill="${INK}">${esc(lab)}</text>` +
           (g > 0.98 ? `<text x="${bx + bw / 2}" y="${y + h - bh - 14}" text-anchor="middle" font-family="${BODY}" font-weight="700" font-size="${fsB * 0.8}" fill="${INK}">${esc((o.prefix || '') + fmt(v, o.decimals || 0) + (o.unit || ''))}</text>` : ''); });
-      return svg + (o.title ? `<text x="${x + 12}" y="${y - 20}" font-family="${BODY}" font-weight="700" font-size="${fsB}" fill="${INK}">${esc(o.title)}</text>` : '') + `</g>`;
+      return svg + (o.title ? `<text ${lead(x, x + w, 12)} y="${y - 20}" font-family="${BODY}" font-weight="700" font-size="${fsB}" fill="${INK}">${esc(o.title)}</text>` : '') + `</g>`;
     }
     if (o.type === 'quote') {
       const w = o.w || (H > W ? 880 : 1200), lines = wrapText(o.text || '', Math.floor(w / (fsB * 0.5))), x = o.x ?? (W - w) / 2, y = (o.y ?? H * 0.25) + slide, h = lines.length * fsB * 1.3 + (o.by ? fsB * 1.6 : 0) + 60;
-      return `<g opacity="${op}">${plate(x, y, w, h, '#fffdf4')}` + lines.map((l, i) => `<text x="${x + 40}" y="${y + 50 + (i + 0.6) * fsB * 1.3}" font-family="${BODY}" font-size="${fsB}" font-style="italic" fill="${INK}">${esc((i ? '' : '“') + l + (i === lines.length - 1 ? '”' : ''))}</text>`).join('') +
-        (o.by ? `<text x="${x + w - 40}" y="${y + h - 30}" text-anchor="end" font-family="${MONO}" font-size="${Math.max(H > W ? 30 : 24, fsB * 0.7)}" fill="#4a4e57">${esc('— ' + o.by)}</text>` : '') + `</g>`;
+      return `<g opacity="${op}">${plate(x, y, w, h, '#fffdf4')}` + lines.map((l, i) => `<text ${lead(x, x + w, 40)} y="${y + 50 + (i + 0.6) * fsB * 1.3}" font-family="${BODY}" font-size="${fsB}" font-style="italic" fill="${INK}">${esc((i ? '' : '“') + l + (i === lines.length - 1 ? '”' : ''))}</text>`).join('') +
+        (o.by ? `<text ${trail(x, x + w, 40)} y="${y + h - 30}" font-family="${MONO}" font-size="${Math.max(H > W ? 30 : 24, fsB * 0.7)}" fill="#4a4e57">${esc('— ' + o.by)}</text>` : '') + `</g>`;
     }
     if (o.type === 'citation') { // small mono source line on a soft plate (inside the safe area by default)
-      const fs = o.size || (H > W ? 30 : 24), w = String(o.text).length * fs * 0.6 + 40, x = o.x ?? (H > W ? 64 : W * 0.05), y = o.y ?? (H > W ? 1490 : H * 0.88);
-      return `<g opacity="${op}"><rect x="${x}" y="${y}" width="${w}" height="${fs * 1.7}" rx="8" fill="#f4f3ee" fill-opacity="0.92"/><text x="${x + 20}" y="${y + fs * 1.15}" font-family="${MONO}" font-size="${fs}" fill="#4a4e57">${esc(o.text)}</text></g>`;
+      const fs = o.size || (H > W ? 30 : 24), w = em(o.text) * fs * 0.6 + 40, x0 = o.x ?? (H > W ? 64 : W * 0.05), x = RTLF ? W - x0 - w : x0, y = o.y ?? (H > W ? 1490 : H * 0.88);
+      return `<g opacity="${op}"><rect x="${x}" y="${y}" width="${w}" height="${fs * 1.7}" rx="8" fill="#f4f3ee" fill-opacity="0.92"/><text ${lead(x, x + w, 20)} y="${y + fs * 1.15}" font-family="${MONO}" font-size="${fs}" fill="#4a4e57">${esc(o.text)}</text></g>`;
     }
     if (o.type === 'wordmark') {
       const fs = o.size || (H > W ? 40 : 34), x = o.x ?? (H > W ? 80 : W * 0.05 + 12), y = o.y ?? (H > W ? 262 : H * 0.1);  // inset: glyph bearings stay inside the safe area
@@ -148,10 +173,9 @@
     return '';
   }
   // rows for a bubble: explicit \n wins, else greedy wrap
-  function rows(text, max) { if (text.includes('\n')) return text.split('\n'); const out = []; let cur = '';
-    for (const w of text.split(/\s+/)) { if ((cur + ' ' + w).trim().length > max && cur) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); } if (cur) out.push(cur); return out; }
+  function rows(text, max) { if (text.includes('\n')) return text.split('\n'); return wrapText(text, max); }
   // boxes other elements occupy (signs, text overlays), so bubbles can avoid them
-  const overlayBox = o => o.type === 'sign' ? (() => { const fs = o.size || 56, w = o.text.length * fs * 0.52 + 50; return [o.x - w / 2, o.y - fs * 1.6, o.x + w / 2, o.y + fs * 1.6]; })()
+  const overlayBox = o => o.type === 'sign' ? (() => { const fs = o.size || 56, w = em(o.text) * fs * 0.52 + 50; return [o.x - w / 2, o.y - fs * 1.6, o.x + w / 2, o.y + fs * 1.6]; })()
     : o.type === 'text' ? [o.x - o.text.length * (o.size || 58) * 0.27, o.y - (o.size || 58), o.x + o.text.length * (o.size || 58) * 0.27, o.y + 10] : null;
   let AVOID = [];
   const hits = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
@@ -161,7 +185,7 @@
     const i = f - f0, j = f1 - f, pop = i === 0 ? 0.55 : i === 1 ? 1.12 : j === 0 ? 0.5 : j === 1 ? 0.85 : 1;
     const style = b.style || 'say', base = ({ say: 72, shout: 118, whisper: 50 }[style] || 72) * Math.min(1, H / 1920 * 1.4);  // landscape: smaller type, still >= the 16:9 minimum
     const R = rows(b.text, { say: 13, shout: 9, whisper: 18 }[style] || 13), lh = base * 1.08;
-    const bw = Math.max(...R.map(r => r.length)) * base * 0.5, bh = lh * R.length;
+    const bw = Math.max(...R.map(r => em(r))) * base * 0.5, bh = lh * R.length;
     let rx = (bw / 2 + 60) * pop, ry = (bh / 2 + 46) * pop; if (style === 'shout') { rx *= 1.2; ry *= 1.3; }
     // placement: above the speaker toward the frame centre, then the other side, then higher or lower, avoiding
     // signs, overlays and earlier bubbles; inside the platform-safe area where possible
@@ -185,15 +209,16 @@
     let svg = `<path d="${dstr}" fill="#f6f5ef" stroke="${INK}" stroke-width="${style === 'whisper' ? 4 : 5}" stroke-linejoin="round"${style === 'whisper' ? ' stroke-dasharray="12 12"' : ''}/>`;
     // typewriter: voiced lines reveal word by word as spoken; silent ones letter by letter
     // voiced: word by word as spoken; custom bubble text: letters spread over the spoken line; silent: typed out
-    const total = R.join('').length;
+    const total = graphemes(R.join('')).length;
     const shown = b.words ? b.words.filter(w => w.start <= t).length
       : b.speak ? Math.ceil(total * Math.min(1, Math.max(0, (t - b.speak[0]) / Math.max(0.2, b.speak[1] - b.speak[0]))))
       : Math.floor(Math.max(0, t - b.t0 - 0.2) / (b.slow ? 0.42 : 0.05)) + (pop < 1 && i > 1 ? 99 : 0);
     let left = shown, tspans = '';
     R.forEach((row, ri) => { let txt = row;
-      if (b.words) { const ws = row.split(/\s+/); txt = ws.slice(0, Math.max(0, left)).join(' '); left -= ws.length; } else { txt = row.slice(0, Math.max(0, left)); left -= row.length; }
+      if (b.words) { const ws = tokens(row), sep = nospace(row) ? '' : ' '; txt = ws.slice(0, Math.max(0, left)).join(sep); left -= ws.length; }
+      else { const gs = graphemes(row); txt = gs.slice(0, Math.max(0, left)).join(''); left -= gs.length; }   // whole letters (a vowel sign never hangs alone)
       const y = cy - bh / 2 + lh * (ri + 0.78) * pop;
-      if (style === 'shout') [...txt].forEach((ch, ci) => { const jx = (hash(k * 31 + ci, idx) - 0.5) * 8, jy = (hash(k * 17 + ci, idx + 3) - 0.5) * 10;
+      if (style === 'shout' && !COMPLEX_RE.test(txt)) [...txt].forEach((ch, ci) => { const jx = (hash(k * 31 + ci, idx) - 0.5) * 8, jy = (hash(k * 17 + ci, idx + 3) - 0.5) * 10;
         tspans += `<text x="${(cx - txt.length * base * 0.27 + ci * base * 0.54 + jx).toFixed(1)}" y="${(y + jy).toFixed(1)}" font-size="${base * pop}">${esc(ch)}</text>`; });
       else tspans += `<text x="${cx}" y="${y.toFixed(1)}" font-size="${base * pop}" text-anchor="middle"${style === 'whisper' ? ' fill="#59636d"' : ''}>${esc(txt)}</text>`; });
     return svg + `<g font-family="${HAND}" fill="${INK}">${tspans}</g>`;
@@ -357,13 +382,25 @@
   // a frame with images (WP-42 plates) is ready only when they have loaded and decoded, so a render never captures a
   // half-loaded frame: the returned promise resolves then (renderers await it)
   window.frameAtTime = t => {
-    stage.innerHTML = frameAt(t, bgOnly);
+    stage.innerHTML = frameAt(t, bgOnly); bidi();
     if (PENDING.length) {   // a static layer was rasterized for the first time: draw the frame again with its image
       const ps = PENDING.splice(0);
-      return Promise.all(ps).then(() => { stage.innerHTML = frameAt(t, bgOnly); PENDING.length = 0; return settle(); });
+      return Promise.all(ps).then(() => { stage.innerHTML = frameAt(t, bgOnly); bidi(); PENDING.length = 0; return settle(); });
     }
     return settle();
   };
+  // right-to-left text keeps its place and reads correctly (WP-25): direction rtl, with its anchor flipped to the same
+  // side (under rtl, "start" is the right end); only films that hold such text pay for the pass
+  const ALLTXT = JSON.stringify(S) + JSON.stringify(window.SCRIPT || {}) + JSON.stringify(window.DATA || {}) + JSON.stringify(T.lines || []);
+  const HAS_RTL = RTL_RE.test(ALLTXT);
+  function bidi() {
+    if (!HAS_RTL) return;
+    for (const el of stage.querySelectorAll('text')) {
+      if (!RTL_RE.test(el.textContent)) continue;
+      const a = getComputedStyle(el).textAnchor || 'start'; el.setAttribute('direction', 'rtl');
+      el.setAttribute('text-anchor', a === 'start' ? 'end' : a === 'end' ? 'start' : a);
+    }
+  }
   function settle() {
     // every image, data: URIs too (raster puppet parts): one not yet decoded would be captured missing (WP-15 found
     // reused and re-captured frames differing by this); decoding an image the page already holds is quick
@@ -496,5 +533,7 @@
       out.push([+t.toFixed(3), +(W / 2 + (q[0] - VIEW[0]) * VIEW[2]).toFixed(1), +(H / 2 + (q[1] - VIEW[1]) * VIEW[2]).toFixed(1)]); }
     return out; };
   window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
-  (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2")]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
+  (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"),
+    // the fonts of every other writing system the film's text uses (WP-25)
+    ...SFONTS.filter(f => f.ranges && reOf([f]).test(ALLTXT)).flatMap(f => [document.fonts.load(`40px '${f.family}'`, f.sample), document.fonts.load(`700 40px '${f.family}'`, f.sample)])]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });
 })();

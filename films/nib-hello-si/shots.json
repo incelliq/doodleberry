@@ -1,0 +1,154 @@
+{
+ "title": "\u0db1\u0dd2\u0db6\u0dca \u0d86\u0dba\u0dd4\u0db6\u0ddd\u0dc0\u0db1\u0dca \u0d9a\u0dd2\u0dba\u0dba\u0dd2",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "brief": {
+  "title": "A pen doodle that talks",
+  "takeaway": "A phone photo of a pen doodle, turned into a talking, boiling cartoon.",
+  "hashtags": [
+   "doodle",
+   "animation",
+   "cartoon"
+  ],
+  "cover_text": "Drawn on paper"
+ },
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "paper",
+   "start": 0,
+   "end": 8.894,
+   "start_line": "hi",
+   "end_line": "wobble",
+   "tail": 1.4,
+   "style": {
+    "boil": {
+     "fps": 12,
+     "amount": 5,
+     "freq": 0.022
+    },
+    "step": 12,
+    "shadow": false
+   },
+   "bubbles": true,
+   "overlays": [
+    {
+     "type": "sign",
+     "text": "\u0d86\u0dba\u0dd4\u0db6\u0ddd\u0dc0\u0db1\u0dca",
+     "x": 300,
+     "y": 230,
+     "size": 56
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "puppet/examples/nib.puppet.json",
+     "speaker": "nib",
+     "place": [
+      [
+       0,
+       {
+        "x": 1100,
+        "y": 1430,
+        "s": 1.5
+       }
+      ],
+      [
+       0.9,
+       {
+        "x": 560,
+        "y": 1430,
+        "s": 1.5
+       }
+      ]
+     ],
+     "timeline": {
+      "blink": false,
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "hop",
+        "start": 0.05,
+        "additive": true,
+        "weight": 2,
+        "fadeIn": 0,
+        "fadeOut": 0
+       },
+       {
+        "clip": "hop",
+        "start": 0.55,
+        "additive": true,
+        "weight": 2,
+        "fadeIn": 0,
+        "fadeOut": 0
+       },
+       {
+        "clip": "wave_R",
+        "start": "hi.start",
+        "end": "hi.start+1.0",
+        "additive": true
+       },
+       {
+        "clip": "talk",
+        "start": "hi.start",
+        "end": "hi.end",
+        "additive": true
+       },
+       {
+        "clip": "tilt",
+        "start": "hi.end",
+        "additive": true
+       },
+       {
+        "clip": "talk",
+        "start": "wobble.start",
+        "end": "wobble.end",
+        "additive": true
+       },
+       {
+        "clip": "hop",
+        "start": "wobble.end-0.4",
+        "additive": true,
+        "weight": 3,
+        "fadeIn": 0,
+        "fadeOut": 0
+       }
+      ],
+      "poses": [
+       [
+        0,
+        "neutral"
+       ],
+       [
+        "wobble.end-0.4",
+        "arms_up"
+       ],
+       [
+        "wobble.end+0.6",
+        "neutral"
+       ]
+      ],
+      "blinks": [
+       0.3,
+       "hi.end+0.25",
+       "wobble.start+0.5"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "lang": "si",
+ "dir": "ltr",
+ "locale": "si-u-nu-latn",
+ "audio_description": false
+}

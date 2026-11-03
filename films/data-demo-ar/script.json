@@ -1,0 +1,41 @@
+{
+ "speakers": {
+  "momo": {
+   "voice": "ar_JO-kareem-low",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "ar_JO-kareem-low"
+  }
+ },
+ "lead_in_s": 0.6,
+ "gap_s": 0.45,
+ "lines": [
+  {
+   "id": "l1",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "هذا عدد المرات التي استخدم فيها النادي التلسكوب."
+  },
+  {
+   "id": "l2",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "{{total}} ليلة في {{months|word}} أشهر.",
+   "pause": 0.4
+  },
+  {
+   "id": "l3",
+   "speaker": "momo",
+   "fact": null,
+   "text": "وكان شهر {{best.month}} الأفضل، بـ {{best.nights}} ليالٍ!"
+  }
+ ],
+ "allow_restricted_voices": true,
+ "lang": "ar",
+ "locale": "ar-u-nu-latn"
+}

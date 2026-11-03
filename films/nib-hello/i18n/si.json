@@ -1,0 +1,19 @@
+{
+ "lang": "si",
+ "note": "Sinhala version of nib-hello (WP-25).",
+ "strings": {
+  "line:hi": "ආයුබෝවන්! මම නිබ්. කවුරුහරි මාව කඩදාසියක ඇන්දා.",
+  "line:wobble": "ඒ නිසයි මම සෙලවෙන්නේ. ඒක හිතාමතාම!",
+  "film:title": "නිබ් ආයුබෝවන් කියයි",
+  "shot:s1:overlay:0:text": "ආයුබෝවන්",
+  "titles:0": "කඩදාසියේ ඇඳපු නිබ් හමුවෙන්න",
+  "line:wobble:bubble": "ඒක\nහිතාමතාම!",
+  "titles:1": "නිබ් සෙලවෙන්නේ ඇයි (ඒක හිතාමතාම)",
+  "thumb:0:top": "ආයුබෝවන්! මම නිබ්",
+  "thumb:0:bottom": "කඩදාසියේ ඇඳපු",
+  "thumb:1:top": "ඇයි මේ",
+  "thumb:1:bottom": "සෙලවීම?"
+ },
+ "voices": {},
+ "swaps": {}
+}

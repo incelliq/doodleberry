@@ -1,0 +1,27 @@
+{
+ "note": "WP-25: a rounded font for each writing system, matching Fredoka's cartoon look (all SIL OFL 1.1, from github.com/google/fonts; OFL-<family>.txt beside them). The player loads the ones a film's text needs and lists them after Fredoka and Patrick Hand, so Latin keeps its own fonts. 'ranges' decide which script a text is in; 'rtl' its direction; 'caption' is the installed Noto family libass uses for burned-in captions (fonts-noto-core); 'ocr' the Tesseract language that reads it back (film.text_check); 'nospace' scripts are written without spaces between words. Scripts with no file listed (Han and kana, Myanmar, Ethiopic, Georgian, Armenian, Khmer, Lao) use the installed Noto fonts (bash tools/setup.sh locales).",
+ "scripts": [
+  {"script": "arabic", "family": "Baloo Bhaijaan 2", "files": [{"file": "BalooBhaijaan2-wght.woff2", "weight": "400 800"}], "ranges": "؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿", "rtl": true, "caption": "Noto Sans Arabic", "ocr": "ara", "sample": "مرحبا"},
+  {"script": "hebrew", "family": "Varela Round", "files": [{"file": "VarelaRound-Regular.woff2", "weight": "400 800"}], "ranges": "֐-׿יִ-ﭏ", "rtl": true, "caption": "Noto Sans Hebrew", "ocr": "heb", "sample": "שלום"},
+  {"script": "devanagari", "family": "Baloo 2", "files": [{"file": "Baloo2-wght.woff2", "weight": "400 800"}], "ranges": "ऀ-ॿ꣠-ꣿ", "caption": "Noto Sans Devanagari", "ocr": "hin", "sample": "नमस्ते"},
+  {"script": "bengali", "family": "Baloo Da 2", "files": [{"file": "BalooDa2-wght.woff2", "weight": "400 800"}], "ranges": "ঀ-৿", "caption": "Noto Sans Bengali", "ocr": "ben", "sample": "নমস্কার"},
+  {"script": "gurmukhi", "family": "Baloo Paaji 2", "files": [{"file": "BalooPaaji2-wght.woff2", "weight": "400 800"}], "ranges": "਀-੿", "caption": "Noto Sans Gurmukhi", "ocr": "pan", "sample": "ਸਤਿ"},
+  {"script": "gujarati", "family": "Baloo Bhai 2", "files": [{"file": "BalooBhai2-wght.woff2", "weight": "400 800"}], "ranges": "઀-૿", "caption": "Noto Sans Gujarati", "ocr": "guj", "sample": "નમસ્તે"},
+  {"script": "odia", "family": "Baloo Bhaina 2", "files": [{"file": "BalooBhaina2-wght.woff2", "weight": "400 800"}], "ranges": "଀-୿", "caption": "Noto Sans Oriya", "ocr": "ori", "sample": "ନମସ୍କାର"},
+  {"script": "tamil", "family": "Baloo Thambi 2", "files": [{"file": "BalooThambi2-wght.woff2", "weight": "400 800"}], "ranges": "஀-௿", "caption": "Noto Sans Tamil", "ocr": "tam", "sample": "வணக்கம்"},
+  {"script": "telugu", "family": "Baloo Tammudu 2", "files": [{"file": "BalooTammudu2-wght.woff2", "weight": "400 800"}], "ranges": "ఀ-౿", "caption": "Noto Sans Telugu", "ocr": "tel", "sample": "నమస్కారం"},
+  {"script": "kannada", "family": "Baloo Tamma 2", "files": [{"file": "BalooTamma2-wght.woff2", "weight": "400 800"}], "ranges": "ಀ-೿", "caption": "Noto Sans Kannada", "ocr": "kan", "sample": "ನಮಸ್ಕಾರ"},
+  {"script": "malayalam", "family": "Baloo Chettan 2", "files": [{"file": "BalooChettan2-wght.woff2", "weight": "400 800"}], "ranges": "ഀ-ൿ", "caption": "Noto Sans Malayalam", "ocr": "mal", "sample": "നമസ്കാരം"},
+  {"script": "sinhala", "family": "Noto Sans Sinhala", "files": [{"file": "../NotoSansSinhala-400.woff2", "weight": "400"}, {"file": "../NotoSansSinhala-700.woff2", "weight": "700"}], "ranges": "඀-෿", "caption": "Noto Sans Sinhala", "ocr": "sin", "sample": "බි"},
+  {"script": "thai", "family": "Mitr", "files": [{"file": "Mitr-Regular.woff2", "weight": "400"}, {"file": "Mitr-SemiBold.woff2", "weight": "600 800"}], "ranges": "฀-๿", "caption": "Noto Sans Thai", "ocr": "tha", "nospace": true, "sample": "สวัสดี"},
+  {"script": "greek-cyrillic", "family": "Comfortaa", "files": [{"file": "Comfortaa-wght.woff2", "weight": "300 700"}], "ranges": "Ͱ-ϿЀ-ӿ", "caption": "DejaVu Sans", "ocr": "rus", "sample": "Привет"},
+  {"script": "hangul", "family": "Jua", "files": [{"file": "Jua-Regular.woff2", "weight": "400 800"}], "ranges": "가-힯ᄀ-ᇿ㄰-㆏", "caption": "Noto Sans CJK KR", "ocr": "kor", "sample": "안녕"},
+  {"script": "myanmar", "family": "Noto Sans Myanmar", "files": [], "ranges": "က-႟ꩠ-ꩿ", "caption": "Noto Sans Myanmar", "ocr": "mya", "nospace": true, "sample": "မင်္ဂလာ"},
+  {"script": "ethiopic", "family": "Noto Sans Ethiopic", "files": [], "ranges": "ሀ-᎟ⶀ-⷟", "caption": "Noto Sans Ethiopic", "ocr": "amh", "sample": "ሰላም"},
+  {"script": "georgian", "family": "Noto Sans Georgian", "files": [], "ranges": "Ⴀ-ჿᲐ-Ჿ", "caption": "Noto Sans Georgian", "ocr": "kat", "sample": "გამარჯობა"},
+  {"script": "armenian", "family": "Noto Sans Armenian", "files": [], "ranges": "԰-֏", "caption": "Noto Sans Armenian", "ocr": "hye", "sample": "Բարեվ"},
+  {"script": "khmer", "family": "Noto Sans Khmer", "files": [], "ranges": "ក-៿᧠-᧿", "caption": "Noto Sans Khmer", "ocr": "khm", "nospace": true, "sample": "សួស្តី"},
+  {"script": "lao", "family": "Noto Sans Lao", "files": [], "ranges": "຀-໿", "caption": "Noto Sans Lao", "ocr": "lao", "nospace": true, "sample": "ສະບາຍດີ"},
+  {"script": "han-kana", "family": "Noto Sans CJK JP", "files": [], "ranges": "぀-ヿ㐀-䶿一-鿿＀-￯", "caption": "Noto Sans CJK JP", "ocr": "chi_sim+jpn", "nospace": true, "sample": "こんにちは"}
+ ]
+}

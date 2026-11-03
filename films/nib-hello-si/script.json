@@ -1,0 +1,28 @@
+{
+ "speakers": {
+  "nib": {
+   "voice": "si_LK-sinhala-medium"
+  }
+ },
+ "lead_in_s": 1.0,
+ "gap_s": 0.4,
+ "lines": [
+  {
+   "id": "hi",
+   "speaker": "nib",
+   "fact": null,
+   "text": "ආයුබෝවන්! මම නිබ්. කවුරුහරි මාව කඩදාසියක ඇන්දා."
+  },
+  {
+   "id": "wobble",
+   "speaker": "nib",
+   "fact": null,
+   "text": "ඒ නිසයි මම සෙලවෙන්නේ. ඒක හිතාමතාම!",
+   "style": "shout",
+   "bubble": "ඒක\nහිතාමතාම!"
+  }
+ ],
+ "allow_restricted_voices": true,
+ "lang": "si",
+ "locale": "si-u-nu-latn"
+}

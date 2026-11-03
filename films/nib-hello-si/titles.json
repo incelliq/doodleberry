@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "කඩදාසියේ ඇඳපු නිබ් හමුවෙන්න",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "නිබ් සෙලවෙන්නේ ඇයි (ඒක හිතාමතාම)",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "ආයුබෝවන්! මම නිබ්",
+   "bottom": "කඩදාසියේ ඇඳපු",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "ඇයි මේ",
+   "bottom": "සෙලවීම?",
+   "by": "Claude (back-catalogue retitling, WP-07)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

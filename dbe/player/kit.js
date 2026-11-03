@@ -11,13 +11,16 @@
 // Text in any element may be Sinhala (or mixed): the font stack falls back to Noto Sans Sinhala per glyph.
 (function () {
   const INK = '#181e26';
-  const BODY = "'Fredoka','Noto Sans Sinhala',sans-serif", HAND = "'Patrick Hand','Fredoka','Noto Sans Sinhala',sans-serif";
+  const XF = (window.SCRIPT_FONTS || []).map(f => `'${f.family}'`).join(',') || "'Noto Sans Sinhala'";   // WP-25: every script's font
+  const BODY = `'Fredoka',${XF},sans-serif`, HAND = `'Patrick Hand','Fredoka',${XF},sans-serif`;
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const clamp = u => Math.min(1, Math.max(0, u)), ease = u => (u = clamp(u), u * u * (3 - 2 * u));
   const f1 = n => (+n).toFixed(1), f3 = n => (+n).toFixed(3);
   const since = (o, t) => t - (o.start ?? 0);
   const durOf = (o, d) => typeof o.until === 'number' ? Math.max(0.05, o.until - (o.start ?? 0)) : (typeof o.duration === 'number' ? o.duration : d);  // "until" may be line-relative
   const sinhala = s => /[඀-෿]/.test(s || '');
+  const RTLX = (() => { const r = (window.SCRIPT_FONTS || []).filter(f => f.rtl).map(f => f.ranges).join(''); return r ? new RegExp('[' + r + ']') : /(?!)/; })();
+  const rtl = s => RTLX.test(s || '');   // WP-25: right-to-left text lays its words out from the right
   const fontFor = (s, base) => sinhala(s) ? "'Noto Sans Sinhala'," + base : base;
   function rng(seed) { let a = (seed | 0) * 2654435761 >>> 0 || 1; return () => { a ^= a << 13; a >>>= 0; a ^= a >> 17; a ^= a << 5; a >>>= 0; return a / 4294967296; }; }
   // back-out pop: 0 -> overshoot -> 1
@@ -47,7 +50,8 @@
     let x = (o.x ?? W / 2) - total / 2, out = '';
     words.forEach((w, i) => {
       const u = (s - i * per) / 0.32; if (u <= 0) { x += lens[i] + gap; return; }
-      const k = pop(u) * (1 + (o.breathe ?? 0.025) * Math.sin(t * 3 + i * 0.9) * clamp(u - 1)), cx = x + lens[i] / 2, y = o.y ?? ctx.H * 0.62;
+      const k = pop(u) * (1 + (o.breathe ?? 0.025) * Math.sin(t * 3 + i * 0.9) * clamp(u - 1)), y = o.y ?? ctx.H * 0.62;
+      const cx = rtl(o.text) ? 2 * (o.x ?? W / 2) - (x + lens[i] / 2) : x + lens[i] / 2;   // the first word at the right in right-to-left text
       out += `<g transform="translate(${f1(cx)} ${f1(y)}) scale(${f3(k)}) rotate(${f1((o.tilt ?? -3) * (1 - clamp(u)))})">` +
         `<text x="0" y="0" text-anchor="middle" font-family="${font}" font-weight="700" font-size="${fs}" fill="${o.color || '#9bd23c'}" stroke="${o.outline || '#1d3a10'}"` +
         ` stroke-width="${fs * 0.12}" paint-order="stroke" stroke-linejoin="round">${esc(w)}</text></g>`;

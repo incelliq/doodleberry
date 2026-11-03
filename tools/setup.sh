@@ -11,6 +11,9 @@
 #                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
 #   bash tools/setup.sh physics    deterministic Rapier 2D (npm, pinned in tools/physics/package.json) for physics.solve (WP-09)
 #   bash tools/setup.sh dotlottie  the dotLottie player (npm, pinned in tools/dotlottie/package.json) for lottie.dotlottie's checks (WP-23)
+#   bash tools/setup.sh voices [de,uk,...]  Piper voices from voices/registry.json: those films use ("fetched"), or every voice
+#                                  of the languages named (checked by sha256 or the catalogue's md5) (WP-25)
+#   bash tools/setup.sh locales    world languages (WP-25): Noto fonts for captions, Noto CJK, eSpeak NG, Tesseract and its language data
 # Then: python -m dbe engine.doctor
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -88,6 +91,28 @@ physics_deps() {
   (cd tools/physics && npm install --no-audit --no-fund)
 }
 
+voices_dl() {
+  # Piper voices listed with a download URL in voices/registry.json (WP-25: Arabic, Sinhala), checked by sha256
+  mkdir -p "$VOICES"
+  "$PY" - "$VOICES" "${2:-}" <<'PYEOF'
+import sys
+sys.path.insert(0, ".")
+from dbe.commands import ensure_voice, _json, ROOT
+langs = [x for x in sys.argv[2].split(",") if x]
+for vid, r in _json(ROOT / "voices" / "registry.json")["voices"].items():
+    if r.get("url") and (r.get("fetched") or vid.split("_")[0] in langs):
+        print(f"voice {vid}: {ensure_voice(vid)} ({r['status']})")
+PYEOF
+}
+
+locales_deps() {
+  # fonts libass uses for captions in every script, CJK, phonemes for lip-sync, and OCR for film.text_check (WP-25)
+  if command -v apt-get >/dev/null; then
+    pk="fonts-noto-core fonts-noto-cjk espeak-ng tesseract-ocr tesseract-ocr-ara tesseract-ocr-sin tesseract-ocr-hin tesseract-ocr-heb tesseract-ocr-tha tesseract-ocr-ben tesseract-ocr-tam tesseract-ocr-jpn tesseract-ocr-chi-sim tesseract-ocr-kor tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-fra tesseract-ocr-urd tesseract-ocr-fas"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $pk || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $pk)
+  else echo "locales: no apt-get; install Noto fonts, eSpeak NG and Tesseract with its language data"; fi
+}
+
 dotlottie_deps() {
   # @lottiefiles/dotlottie-web (MIT; ThorVG in WebAssembly) draws .lottie files and their themes in lottie.dotlottie's checks (WP-23)
   if [ -d "tools/dotlottie/node_modules/@lottiefiles/dotlottie-web" ]; then echo "dotlottie: player ok"; return; fi
@@ -113,7 +138,9 @@ case "$what" in
   blender) blender_dl ;;
   physics) physics_deps ;;
   dotlottie) dotlottie_deps ;;
-  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie]"; exit 2 ;;
+  voices) voices_dl "$@" ;;
+  locales) locales_deps ;;
+  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; voices_dl ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|voices|locales]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

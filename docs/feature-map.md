@@ -163,7 +163,7 @@ covered, now added to their packages' scopes.
 |---|---|---|---|---|
 | Multi-speaker TTS with voice effects | NEW | ✅ | – | Piper plus WORLD |
 | Voice licence gate | NEW | ✅ | – | |
-| More clean voices, including emotion and other languages | NEW | 🟡 | P0 | 54 Kokoro voices (0.5); more languages WP-25, expressive voices WP-43 |
+| More clean voices, including emotion and other languages | NEW | 🟡 | P0 | 54 Kokoro voices (0.5); 115 Piper voices of forty languages classified by licence, clean ones in 17 languages (WP-25); expressive voices WP-43 |
 | Prosody direction (whisper, shout, excited, sad) | NEW | ⬜ | P1 | whisper, shout, excited: WP-13 |
 | Human voice-over import with alignment | PRO | 🟡 | P0 | aligner and slots exist; recorded takes into slots: WP-13 |
 | Consented voice cloning with consent records | IDEA | ⬜ | P2 | own-voice cloning with consent: WP-43, WP-26 |
@@ -206,9 +206,9 @@ covered, now added to their packages' scopes.
 | Feature | Source | Status | Priority | Notes |
 |---|---|---|---|---|
 | Re-voice and re-time per language | NEW | ✅ | – | `film.localize` |
-| Translated captions and on-screen text | NEW | 🟡 | P1 | `film.localize` captions and voice; set text: WP-25 |
-| Right-to-left and complex scripts in captions | NEW | ⬜ | P1 | WP-25 |
-| Cultural adaptation: swap sets, props, names per market | IDEA | ⬜ | P2 | WP-25 |
+| Translated captions and on-screen text | NEW | ✅ | – | `film.strings` and `film.localize`: every string by key (overlays, set words, chart labels, titles), bindings kept, CLDR months and number formats; read back by OCR (WP-25) |
+| Right-to-left and complex scripts in captions | NEW | ✅ | – | fonts for 22 scripts, rtl layout and bidi in the player, libass shaping for captions, OCR read-back (WP-25) |
+| Cultural adaptation: swap sets, props, names per market | IDEA | ✅ | – | i18n swaps (sets, props, clips), gesture rules and reviewer flags per locale (`dbe/cultures.json`, WP-25) |
 | Sidecar SRT/VTT plus burned-in captions | PRO | ✅ | – | `film.render` writes .srt and .vtt (0.8) |
 | Audio-description track generated from the shot list | EMG | ⬜ | P1 | WP-24 |
 | Flash and photosensitivity check (WCAG 2.3) | NEW | ✅ | – | `qa.run` flash check: WCAG 2.3.1 general and red flash, by area, failing the film (WP-24) |

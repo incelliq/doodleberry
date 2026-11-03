@@ -992,6 +992,21 @@
      "additionalProperties": false
     }
    ]
+  },
+  "lang": {
+   "type": "string",
+   "description": "WP-25: the film's language (BCP 47 tag)"
+  },
+  "dir": {
+   "enum": [
+    "ltr",
+    "rtl"
+   ],
+   "description": "WP-25: reading direction; rtl mirrors left-aligned text and boards"
+  },
+  "locale": {
+   "type": "string",
+   "description": "WP-25: locale for numbers and dates on screen (BCP 47, e.g. ar or ar-u-nu-arab for Arabic-Indic digits)"
   }
  }
 }

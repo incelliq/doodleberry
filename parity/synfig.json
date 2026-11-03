@@ -1260,9 +1260,10 @@
       "ref": [
        "shot.render",
        "film.localize",
-       "WP-25"
+       "film.localize",
+       "WP-35"
       ],
-      "note": "Text overlays, bubbles and captions with Sinhala fallback; right-to-left and complex scripts are WP-25."
+      "note": "Text overlays, bubbles and captions in 22 writing systems with right-to-left layout and shaping (WP-25); no free text layer with animatable orientation and spacing."
      }
     },
     {

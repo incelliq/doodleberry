@@ -1,0 +1,26 @@
+{
+ "note": "WP-25: cultural rules applied when a film is localised (gesture swaps, which a film's i18n file can turn off with \"rules_off\") and words a locale's reviewers look at before posting (flags only, never changed automatically). Rules name languages (ISO 639-1) and regions (ISO 3166-1); they are defaults for review, not statements about people, and each says why. Sources: common localisation and cross-cultural communication guidance on gestures (e.g. Axtell, Gestures: The Do's and Taboos of Body Language Around the World, 1998) and on religious dietary norms; extend or correct them as reviewers advise.",
+ "rules": [
+  {"id": "right-hand", "why": "Giving, pointing or waving with the left hand reads as impolite in much of the Middle East, North Africa and South Asia; the same gesture with the right hand does not.",
+   "languages": ["ar", "fa", "ur", "ps", "hi", "bn", "si", "ta", "ne", "ha"], "regions": ["SA", "AE", "EG", "MA", "PK", "IN", "BD", "LK", "NG"],
+   "clips": {"wave_L": "wave_R", "point_L": "point_R", "present_L": "present_R"}},
+  {"id": "open-palm", "why": "Pointing at someone with the index finger reads as rude in parts of South-East Asia (an open hand or the thumb is used instead).",
+   "languages": ["ms", "id", "th", "fil", "jv"], "regions": ["MY", "ID", "TH", "PH"],
+   "clips": {"point_L": "present_L", "point_R": "present_R"}},
+  {"id": "alcohol-pork", "why": "Alcohol and pork are not consumed by many viewers for religious reasons; showing them casually can put an audience off.",
+   "languages": ["ar", "fa", "ur", "ps", "ms", "id"], "regions": ["SA", "AE", "PK", "MY", "ID", "IR"],
+   "words": ["beer", "wine", "whisky", "cocktail", "alcohol", "pork", "pig", "bacon", "ham", "sausage"]},
+  {"id": "beef", "why": "Beef is not eaten by many viewers (Hindu tradition); a casual beef dish may be better swapped.",
+   "languages": ["hi", "ne", "mr", "gu"], "regions": ["IN", "NP"],
+   "words": ["beef", "steak", "burger", "cow meat"]},
+  {"id": "dogs-indoors", "why": "Dogs kept indoors as close companions are seen differently by some Muslim audiences; worth a look in family scenes.",
+   "languages": ["ar", "fa", "ur", "ms"], "regions": ["SA", "AE", "PK", "MY"],
+   "words": ["dog", "puppy"]},
+  {"id": "number-four", "why": "Four sounds like 'death' in Mandarin, Japanese and Korean; reviewers may prefer it not to be a lucky or featured number.",
+   "languages": ["zh", "ja", "ko"], "regions": ["CN", "TW", "HK", "JP", "KR"],
+   "words": ["four", "4th", "fourth"]},
+  {"id": "thumbs-up", "why": "A thumbs-up is rude in parts of West Africa, the Middle East and South America; check gestures drawn into props or overlays.",
+   "languages": ["ar", "fa", "el"], "regions": ["IR", "IQ", "GR", "NG"],
+   "words": ["thumbs up", "thumbs-up"]}
+ ]
+}

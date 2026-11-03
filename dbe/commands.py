@@ -484,7 +484,7 @@ def _shots(name, resolve=True):
     r = resolve_times(s, tm)
     if (FILMS / name / "data.json").exists():   # data-bound text and charts (plan 2.17)
         from .databind import bind
-        r = bind(r, _json(FILMS / name / "data.json", {}))
+        r = bind(r, _json(FILMS / name / "data.json", {}), lang=r.get("locale") or r.get("lang"))
     if r.get("beat_cuts") and (FILMS / name / "score.json").exists() and tm.get("lines"):
         # cuts on the music (plan 2.14): each shot change moves to the bar line (else beat) in the pause it falls in
         from . import edit as E
@@ -538,14 +538,26 @@ def _player_page(name):
     (d / "build").mkdir(exist_ok=True)
     tags = "".join(f'<script>window.PUPPETS=window.PUPPETS||{{}};window.PUPPETS[{json.dumps(p)}]={(ROOT / p).read_text()};</script>' for p in puppets)
     clip_tags = "".join(f'<script src="../../../puppet/clips/{c.name}"></script>' for c in sorted((ROOT / "puppet" / "clips").glob("*.js")))
-    page = f"""<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}@font-face{{font-family:'Atkinson Mono';src:url('../../../engine/fonts/AtkinsonMono-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:400;src:url('../../../engine/fonts/NotoSansSinhala-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:700;src:url('../../../engine/fonts/NotoSansSinhala-700.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
+    fonts_css, fonts_js = _script_fonts()
+    page = f"""<!doctype html><html><head><meta charset="utf-8"><style>{fonts_css}@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}@font-face{{font-family:'Atkinson Mono';src:url('../../../engine/fonts/AtkinsonMono-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:400;src:url('../../../engine/fonts/NotoSansSinhala-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:700;src:url('../../../engine/fonts/NotoSansSinhala-700.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
 {clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/props.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
-<script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};</script>
+<script>window.SCRIPT_FONTS={fonts_js};window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     (d / "build" / "player.html").write_text(page)
     return d / "build" / "player.html"
+
+
+def _script_fonts():
+    """WP-25: @font-face rules for every writing system's bundled font, and the registry the player reads"""
+    reg = _json(ROOT / "engine" / "fonts" / "scripts.json", {"scripts": []})["scripts"]; css = []
+    for sc in reg:
+        for f in sc.get("files", []):
+            if (ROOT / "engine" / "fonts" / "scripts" / f["file"]).exists():
+                css.append(f"@font-face{{font-family:'{sc['family']}';font-weight:{f['weight']};src:url('../../../engine/fonts/scripts/{f['file']}') format('woff2')}}")
+    js = [{k: sc.get(k) for k in ("script", "family", "ranges", "rtl", "nospace", "sample")} for sc in reg]
+    return "".join(css), json.dumps(js, ensure_ascii=False)
 
 
 RENDER_LOG = ROOT / "out" / "render_log.jsonl"   # every page render: frames, captured, seconds (WP-20 estimates)
@@ -1790,7 +1802,7 @@ def film_data(name, refresh=False, revoice=False, render=False):
     old_hash = hashes()
     from .databind import bind_text
     sc = _json(d / "script.json", {})
-    old_lines = {ln["id"]: bind_text(ln["text"], old_data) for ln in sc.get("lines", []) if "{{" in ln.get("text", "")} if old_data else {}
+    old_lines = {ln["id"]: bind_text(ln["text"], old_data, sc.get("lang")) for ln in sc.get("lines", []) if "{{" in ln.get("text", "")} if old_data else {}
     ran = []
     for py in sorted(an.glob("*.py")):
         subprocess.run([PY, py.name], cwd=an, check=True, capture_output=True, text=True, timeout=1800)
@@ -1801,8 +1813,8 @@ def film_data(name, refresh=False, revoice=False, render=False):
     (d / "data.json").write_text(json.dumps(data, indent=1, ensure_ascii=False))
     new_hash = hashes()
     shots_changed = [k for k in new_hash if old_hash.get(k) != new_hash[k]]
-    lines_changed = [{"line": ln["id"], "was": old_lines.get(ln["id"]), "now": bind_text(ln["text"], data)}
-                     for ln in sc.get("lines", []) if "{{" in ln.get("text", "") and old_lines.get(ln["id"]) != bind_text(ln["text"], data)]
+    lines_changed = [{"line": ln["id"], "was": old_lines.get(ln["id"]), "now": bind_text(ln["text"], data, sc.get("lang"))}
+                     for ln in sc.get("lines", []) if "{{" in ln.get("text", "") and old_lines.get(ln["id"]) != bind_text(ln["text"], data, sc.get("lang"))]
     changed_keys = sorted(k for k in set(data) | set(old_data) if not k.startswith("_") and data.get(k) != old_data.get(k))
     out = {"ran": ran, "data_keys_changed": changed_keys, "shots_to_rerender": shots_changed, "lines_to_revoice": lines_changed}
     if revoice and lines_changed:
@@ -3324,34 +3336,277 @@ def export_web(name):
             "note": "fonts and scripts are inlined; Fredoka is under the SIL OFL (engine/fonts/OFL.txt)"}
 
 
-@command("film.localize", name=("string", "film"), lang=("string", "language tag, e.g. es"), voice=("string", "Piper voice id for the language"), lines=("object", "line id -> translated text"),
-         renderer=("string", "optional: render every shot with this renderer (e.g. svg for a fast draft)", ""))
-def film_localize(name, lang, voice, lines, renderer=""):
-    """Make a language version: copy the film, swap every speaker's voice, replace line texts, re-voice and re-render.
-    All timing (shots, acting, visemes) re-derives from the new word timings."""
-    src = _film(name); dst = FILMS / f"{name}-{lang}"
+def ensure_voice(vid):
+    """a Piper voice's model in the voices folder, fetched from its registry URL if missing and checked (sha256 when
+    recorded, else the catalogue's md5) (WP-25)"""
+    import hashlib, urllib.request
+    if str(vid).startswith("kokoro:"):
+        return "kokoro"
+    r = _voice_registry().get(vid) or {}; f = Path(VOICES) / f"{vid}.onnx"
+    if f.exists():
+        return "present"
+    if not r.get("url"):
+        raise FileNotFoundError(f"voice {vid} is not in {VOICES} and has no download URL in voices/registry.json")
+    f.parent.mkdir(parents=True, exist_ok=True)
+    for suffix in ("", ".json"):
+        urllib.request.urlretrieve(r["url"] + suffix, str(f) + suffix)
+    b = f.read_bytes()
+    if (r.get("sha256") and hashlib.sha256(b).hexdigest() != r["sha256"]) or (not r.get("sha256") and r.get("md5") and hashlib.md5(b).hexdigest() != r["md5"]):
+        f.unlink(); raise RuntimeError(f"voice {vid}: checksum mismatch, removed")
+    return "fetched"
+
+
+WORLD_LANGS = ["en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur", "id", "de", "ja", "sw", "mr", "te", "tr", "ta", "vi", "ko", "fa", "it", "th",
+               "gu", "pl", "uk", "kn", "ml", "pa", "my", "si", "he", "nl", "el", "ms", "fil", "ha", "yo", "am", "ne"]   # by speakers, broadly; plus Sinhala
+
+
+@command("locales.list", langs=("array", "language tags (default: forty widely spoken languages)", None))
+def locales_list(langs=None):
+    """What each language has here (WP-25): its writing system and direction (CLDR), whether its font is bundled for
+    the picture and installed for captions, whether OCR can read it back, and the best voice that speaks it with
+    its licence status (clean voices ship; others are flagged at posting). A language with no voice can still ship
+    with translated text and captions."""
+    from . import i18n as I
+    reg = _voice_registry(); tess = set(subprocess.run(["tesseract", "--list-langs"], capture_output=True, text=True).stdout.split()) if shutil.which("tesseract") else set()
+    fams = set(subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True).stdout.replace(",", "\n").split("\n"))
+    scripts = {x["script"]: x for x in _json(ROOT / "engine" / "fonts" / "scripts.json")["scripts"]}; rows = []
+    for t in langs or WORLD_LANGS:
+        try:
+            L = I.language(t)
+        except Exception as e:
+            rows.append({"lang": t, "error": str(e)[:80]}); continue
+        sc = scripts.get(L["script"]); v = (I.voices_for(t, reg) or [None])[0]
+        rows.append({"lang": t, "name": L["name"], "native": L["native"], "dir": L["dir"], "script": L["script"],
+                     "font": "Fredoka" if not sc else (sc["family"] + ("" if sc.get("files") else " (installed)")),
+                     "caption_font": L["caption_font"] in fams or L["caption_font"] == "Fredoka", "ocr": all(x in tess for x in L["ocr"].split("+")),
+                     "voice": v["voice"] if v else None, "voice_status": v["status"] if v else None})
+    ready = [r["lang"] for r in rows if r.get("voice_status") == "clean" and r.get("caption_font")]
+    return {"languages": rows, "voiced_and_clean": ready, "text_only": [r["lang"] for r in rows if not r.get("voice")]}
+
+
+@command("film.strings", name=("string", "film"), lang=("string", "a language tag: also write films/<name>/i18n/<lang>.json, a translator's template (kept if it exists)", ""))
+def film_strings(name, lang=""):
+    """Every string a viewer reads or hears in a film, by key (WP-25): spoken lines, every overlay's text fields, the
+    set's words (the classroom board), extra bubbles, chart labels drawn from data.json, the title, brief and posting
+    titles. With a language, a template films/<name>/i18n/<lang>.json holds the source texts and an empty
+    translation for each, ready for a translator (keep every {{...}} binding)."""
+    from . import i18n as I
+    d = _film(name); rows = I.extract(_shots(name, resolve=False), _json(d / "script.json"), _json(d / "titles.json", {}), _json(d / "data.json", {}))
+    out = {"film": name, "strings": rows, "count": len(rows)}
+    if lang:
+        f = d / "i18n" / f"{lang}.json"
+        if not f.exists():
+            f.parent.mkdir(exist_ok=True)
+            f.write_text(json.dumps({"lang": lang, "source": {r["key"]: r["text"] for r in rows}, "strings": {r["key"]: "" for r in rows}, "voices": {}, "swaps": {}}, indent=1, ensure_ascii=False))
+        out["template"] = str(f.relative_to(ROOT))
+    return out
+
+
+@command("film.localize", name=("string", "film"), lang=("string", "language tag, e.g. ar, si, es, ja, pt-BR"),
+         voice=("string", "one voice for every speaker (default: films/<name>/i18n/<lang>.json \"voices\", else the best voice for the language)", ""),
+         lines=("object", "line id -> translated text (older form; strings takes every key)", None), strings=("object", "key -> translation, as film.strings lists them", None),
+         renderer=("string", "optional: render every shot with this renderer (e.g. svg for a fast draft)", ""), render=("boolean", "voice and render it (else only write the version's files)", True))
+def film_localize(name, lang, voice="", lines=None, strings=None, renderer="", render=True):
+    """A language version of a film (WP-25): every string translated (films/<name>/i18n/<lang>.json, merged with
+    `strings` and `lines`; a translation must keep every {{...}} data binding; month and weekday names in charts come
+    from the locale), speakers re-voiced (a voice that is not clean is allowed here and flagged at posting), numbers in
+    the locale's format, right-to-left layout for right-to-left languages, the locale's gesture rules applied (the
+    i18n file can turn a rule off with "rules_off") and its review flags listed, the i18n file's "swaps" applied
+    (props by id, sets by name, clips), then voiced, re-timed (shots follow the new words) and rendered, and the
+    on-screen text read back by OCR (film.text_check). The version is films/<name>-<lang>."""
+    from . import i18n as I
+    src = _film(name); dst = FILMS / f"{name}-{lang}"; lang_info = I.language(lang)
+    spec = _json(src / "i18n" / f"{lang}.json", {}) if (src / "i18n" / f"{lang}.json").exists() else {}
+    tr = {k: v for k, v in (spec.get("strings") or {}).items() if v}
+    tr.update({f"line:{k}": v for k, v in (lines or {}).items()}); tr.update(strings or {})
+    sh0, sc0 = _shots(name, resolve=False), _json(src / "script.json")
+    shots, script, titles, data, missing, bad, auto = I.apply(sh0, sc0, _json(src / "titles.json", {}), _json(src / "data.json", {}), tr, lang)
+    if bad:
+        raise ValueError(f"translations change data bindings: {bad}")
+    if missing:
+        raise ValueError(f"{len(missing)} string(s) not translated: {missing[:12]} (film.strings lists them; write them to i18n/{lang}.json)")
+    if data:   # other data values that are month or weekday names (a "best month") follow the locale too
+        mo = I._months(lang)
+        def walk(o):
+            if isinstance(o, dict):
+                return {k: (walk(v) if not k.startswith("_") else v) for k, v in o.items()}
+            if isinstance(o, list):
+                return [walk(v) for v in o]
+            return mo.get(o, o) if isinstance(o, str) else o
+        data = walk(data)
+    # voices
+    reg = _voice_registry(); by_spk = spec.get("voices") or {}
+    best = (I.voices_for(lang, reg) or [{}])[0].get("voice")
+    if not (voice or by_spk or best):
+        raise ValueError(f"no voice speaks {lang_info['name']} here (voices.list; bash tools/setup.sh voices)")
+    for spk, cfg in (script.get("speakers") or {}).items():
+        cfg["voice"] = by_spk.get(spk) or voice or best
+    if not script.get("speakers"):
+        script["voice"] = voice or best
+    used = {c["voice"] for c in (script.get("speakers") or {}).values()} or {script.get("voice")}
+    flags = [{"voice": v, "status": reg.get(v, {}).get("status", "unknown"), "license": reg.get(v, {}).get("license")} for v in used if reg.get(v, {}).get("status") != "clean"]
+    if flags:
+        script["allow_restricted_voices"] = True   # allowed in-house; the posting gate flags it for the owner
+    for v in used:
+        ensure_voice(v)
+    # digits: Latin unless the i18n file asks for the language's own ("digits": "native"), the same on screen and in words
+    locale = spec.get("locale") or (lang if spec.get("digits") == "native" else f"{lang}-u-nu-latn")
+    script["lang"] = lang; script["locale"] = locale
+    shots.update({"lang": lang, "dir": lang_info["dir"], "locale": locale})
+    if lang.split("-")[0] != "en":   # the describer's sentences are written in English (WP-24)
+        shots["audio_description"] = False
+    # swaps and the locale's rules
+    sw = spec.get("swaps") or {}; swapped = []
+    for sh in shots["shots"]:
+        if sh.get("set") in (sw.get("sets") or {}):
+            swapped.append({"shot": sh["id"], "set": [sh["set"], sw["sets"][sh["set"]]]}); sh["set"] = sw["sets"][sh["set"]]
+        for pr in sh.get("props") or []:
+            if pr.get("id") in (sw.get("props") or {}):
+                pr.update(sw["props"][pr["id"]]); swapped.append({"shot": sh["id"], "prop": pr["id"]})
+        for c in sh.get("cast", []):
+            for cl in (c.get("timeline") or {}).get("clips", []):
+                if cl.get("clip") in (sw.get("clips") or {}):
+                    swapped.append({"shot": sh["id"], "clip": [cl["clip"], sw["clips"][cl["clip"]]]}); cl["clip"] = sw["clips"][cl["clip"]]
+    shots, rule_changes = I.apply_rules(shots, lang, off=spec.get("rules_off") or ())
+    review = I.review_flags(shots, script, lang)
+    if renderer:
+        for sh in shots["shots"]:
+            sh["renderer"] = renderer
     if dst.exists():
         shutil.rmtree(dst)
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns("build", "timing.json"))
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns("build", "timing.json", "i18n"))
     (dst / "build").mkdir(exist_ok=True)
-    sc = _json(dst / "script.json")
-    for spk in sc.get("speakers", {}).values():
-        spk["voice"] = voice
-    for ln in sc["lines"]:
-        if ln["id"] in lines:
-            ln["text"] = lines[ln["id"]]
-    sc["lang"] = lang
-    (dst / "script.json").write_text(json.dumps(sc, indent=1))
-    if renderer:
-        sj = _json(dst / "shots.json")
-        for sh in sj["shots"]:
-            sh["renderer"] = renderer
-        (dst / "shots.json").write_text(json.dumps(sj, indent=1))
-    v = voice_build(f"{name}-{lang}")
-    # shot times are written against line ids, so re-derive them from the new timing
-    retime(f"{name}-{lang}")
-    r = film_render(f"{name}-{lang}")
-    return {"film": f"{name}-{lang}", "voice": v, "render": r}
+    for f, obj in (("script.json", script), ("shots.json", shots), ("titles.json", titles), ("data.json", data)):
+        if obj or (src / f).exists():
+            (dst / f).write_text(json.dumps(obj, indent=1, ensure_ascii=False))
+    out = {"film": dst.name, "language": lang_info, "voices": sorted(used), "voice_flags": flags, "auto_translated": auto, "swaps": swapped,
+           "rules_applied": rule_changes, "review_flags": review}
+    if not render:
+        return out
+    v = voice_build(dst.name)
+    retime(dst.name)   # shot times are written against line ids, so they follow the new words
+    r = film_render(dst.name)
+    tc = film_text_check(dst.name)
+    return {**out, "duration": v.get("duration"), "qa": r.get("qa"), "final": r.get("final"), "text_check": {k: tc[k] for k in ("ok", "checked", "passed", "worst")}}
+
+
+def _norm_text(t):
+    import unicodedata
+    t = unicodedata.normalize("NFC", t or "").lower()
+    t = re.sub("[\u064b-\u065f\u0670\u0640]", "", t)   # Arabic short vowels and tatweel: OCR drops them
+    t = t.translate(str.maketrans("\u0623\u0625\u0622\u0671\u0649\u0629", "\u0627\u0627\u0627\u0627\u064a\u0647"))   # Arabic letter variants OCR confuses (hamza seats, alif maqsura, ta marbuta)
+    return re.sub(r"[\s\W_]+", "", t)
+
+
+def _partial(expected, got):
+    """how well the expected text appears somewhere in what was read: the best window's similarity"""
+    import difflib
+    e, g = expected, got
+    if not e:
+        return 1.0
+    if len(g) <= len(e):
+        return difflib.SequenceMatcher(None, e, g).ratio()
+    best = 0.0
+    for i in range(0, len(g) - len(e) + 1):
+        r = difflib.SequenceMatcher(None, e, g[i:i + len(e)]).ratio()
+        if r > best:
+            best = r
+            if r == 1.0:
+                break
+    return best
+
+
+def _word_score(expected, got, reverse=False):
+    """the share of the expected words found among the words read (each at least 75% alike), in any order: OCR may put
+    a number on either side of right-to-left words; reverse=True looks for each word written backwards"""
+    import difflib
+    ew = [w for w in (_norm_text(x) for x in (expected or "").split()) if w]; gw = [w for w in (_norm_text(x) for x in (got or "").split()) if w]
+    if any(len(w) >= 3 for w in ew):   # one- and two-letter words ("في", "a") are too small for OCR to be evidence either way
+        ew = [w for w in ew if len(w) >= 3]
+    if not ew:
+        return 1.0
+    hit = 0.0
+    for w in ew:
+        w = w[::-1] if reverse and len(w) > 1 else w
+        best = max((difflib.SequenceMatcher(None, w, g).ratio() for g in gw), default=0.0)
+        hit += 1.0 if best >= 0.75 else 0.0
+    return hit / len(ew)
+
+
+@command("film.text_check", name=("string", "film"), min_score=("number", "least similarity of what OCR reads to what should be there (0-1)", 0.7))
+def film_text_check(name, min_score=0.7):
+    """On-screen text read back from the rendered film (WP-25): for every string drawn on screen (overlays, the set's
+    words, bubbles when the film shows them), a frame where it is fully shown is read by Tesseract in that string's
+    writing system, and its words must be found there (at least min_score of them, each read at least 75% alike, in any
+    order, after removing punctuation and Arabic short vowels). Words drawn backwards (a right-to-left string reversed
+    letter by letter, unshaped) read closer to their reverse and are reported as reversed; missing glyphs (boxes) read
+    as nothing."""
+    from . import i18n as I
+    from .captions import script_of
+    d = _film(name); s = _shots(name); final = d / "build" / "final.mp4"; tm = _json(d / "timing.json", {})
+    if not final.exists():
+        raise FileNotFoundError(f"{name} has no build/final.mp4")
+    items = []
+    for sh in s["shots"]:
+        t0, t1 = sh["start"], sh["end"]
+        for kind in ("overlays", "underlays"):
+            for o in sh.get(kind) or []:
+                if o.get("type") in ("console", "draw", "face", "water", "roots", "section", "paper") and not o.get("text"):
+                    continue
+                st = o.get("start"); st = t0 if st is None or (isinstance(st, (int, float)) and st < 0) else max(t0, st)
+                en = o.get("end", t1) if not isinstance(o.get("end"), str) else t1; en = min(t1, en if en is not None else t1)
+                at = min(en - 0.1, st + 0.9)
+                for f in ("text", "title", "body", "label"):
+                    v = o.get(f); v = " ".join(v) if isinstance(v, list) else v
+                    if isinstance(v, str) and v.strip() and o.get("type") != "bars" or (f == "title" and o.get("type") == "bars" and v):
+                        items.append({"shot": sh["id"], "what": f"{o.get('type')} {f}", "text": v, "t": round(at, 3),
+                                      **({"band": [o["y"] - 1.6 * o["size"], o["y"] + 0.9 * o["size"]]} if o.get("type") == "title" and isinstance(o.get("y"), (int, float)) and o.get("size") else {})})
+        for b in (sh.get("set_opts") or {}).get("board") or []:
+            items.append({"shot": sh["id"], "what": "board", "text": b, "t": round((t0 + t1) / 2, 3)})
+        if sh.get("bubbles"):
+            bub = {ln["id"]: ln.get("bubble") for ln in _json(d / "script.json", {}).get("lines", [])}
+            for l in tm.get("lines", []):
+                if t0 <= l["end"] - 0.05 <= t1:
+                    items.append({"shot": sh["id"], "what": f"bubble {l['id']}", "text": (bub.get(l["id"]) or l["text"]).replace("\n", " "), "t": round(l["end"] - 0.08, 3)})
+    if s.get("captions", True):   # burned-in captions: the first chunk of each line, while its second word is spoken
+        for l in tm.get("lines", []):
+            ws = l.get("words") or []
+            if len(ws) >= 2:
+                items.append({"shot": None, "what": f"caption {l['id']}", "text": " ".join(w["text"] for w in ws[:3]), "t": round(ws[1]["start"] + 0.05, 3), "band": "captions"})
+    import numpy as np
+    from PIL import Image, ImageFilter
+    tmp = d / "build" / "text_check"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    rows = []
+    for k, it in enumerate(items):
+        sc = script_of(it["text"]); lang = (sc["ocr"] if sc else "eng") + ("+eng" if sc else "")
+        col = tmp / f"t{k:03d}c.png"
+        _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{it['t']:.3f}", "-i", str(final), "-frames:v", "1", "-vf", "scale=iw*2:-1:flags=lanczos", str(col)])
+        im = np.asarray(Image.open(col).convert("RGB")).astype(float)
+        if it.get("band") == "captions":   # captions sit in a band above the bottom: read that band alone
+            Hh = im.shape[0]; im = im[int(Hh * 0.62):int(Hh * 0.93)]
+        elif isinstance(it.get("band"), list):   # a title: the band around its own line (frame px; the frame is read at twice the size)
+            y0, y1 = max(0, int(it["band"][0] * 2)), int(it["band"][1] * 2); im = im[y0:y1] if y1 - y0 > 40 else im
+        mx, mn = im.max(2), im.min(2)
+        views = {"gray": Image.fromarray(im.mean(2).astype(np.uint8)), "neg": Image.fromarray((255 - im.mean(2)).astype(np.uint8)),
+                 "colour": Image.fromarray(np.where(((mx - mn) / (mx + 1e-6) > 0.45) & (mx > 110), 0, 255).astype(np.uint8)).filter(ImageFilter.MedianFilter(3)),   # coloured lettering alone
+                 "bright": Image.fromarray(np.where((im[..., 0] > 200) & (im[..., 1] > 170), 0, 255).astype(np.uint8)).filter(ImageFilter.MedianFilter(3))}   # white or yellow fills of outlined letters
+        for vk, vim in views.items():
+            vim.save(tmp / f"t{k:03d}{vk}.png")
+        best = (-1.0, 0.0, "")
+        for vk, psm, lg in (("gray", "11", lang), ("gray", "6", lang), ("neg", "11", lang), ("colour", "11", lang), ("colour", "11", lang.replace("+eng", "")),
+                            ("bright", "6", lang.replace("+eng", "")), ("bright", "11", lang)):
+            r = subprocess.run(["tesseract", str(tmp / f"t{k:03d}{vk}.png"), "stdout", "-l", lg, "--psm", psm], capture_output=True, text=True)
+            f_ = _word_score(it["text"], r.stdout)
+            if f_ > best[0]:
+                best = (f_, _word_score(it["text"], r.stdout, reverse=True), r.stdout)
+        fwd, rev = best[0], best[1]
+        rows.append({**it, "ocr_lang": lang, "score": round(fwd, 3), "reversed_score": round(rev, 3), "ok": fwd >= min_score and fwd >= rev,
+                     **({"problem": "reads reversed"} if rev > fwd and rev >= min_score else {})})
+    shutil.rmtree(tmp, ignore_errors=True)
+    ok = all(r["ok"] for r in rows)
+    rep = {"film": name, "checked": len(rows), "passed": sum(r["ok"] for r in rows), "worst": min((r["score"] for r in rows), default=None), "ok": ok, "items": rows}
+    (d / "build" / "text_check.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+    return rep
 
 
 @command("film.retime", name=("string", "film"))
@@ -3638,6 +3893,10 @@ def test_golden(update=False, film=""):
         bad, meas = _stickers_test()
         failed += 1 if bad else 0
         results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy, iMessage and as Telegram, Discord and Slack emoji within each platform's limits; TGS alike in lottie-web and rlottie; the pack as a dotLottie whose themes draw alike in the dotLottie player and lottie-web", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "l10n":   # WP-25: world languages end to end
+        bad, meas = _l10n_test()
+        failed += 1 if bad else 0
+        results.append({"l10n": "strings, locale formats, right-to-left and complex scripts, libass shaping, cultural rules, forty languages' fonts; Arabic and Sinhala versions rendered, QA'd and read back by OCR", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "access":   # WP-24: flash check, colour vision, audio description, reduced motion, three aspects
         bad, meas = _access_test()
         failed += 1 if bad else 0
@@ -6361,6 +6620,78 @@ def _stickers_test():
         pass
     shutil.rmtree(STICKERS / "ztest-pip", ignore_errors=True)
     return bad, meas
+
+def _l10n_test():
+    """WP-25. Strings: every string of data-demo has a key, the Arabic file translates them all, a translation that
+    drops a {{binding}} is caught, chart months come from CLDR. Formats: German separators, Arabic-Indic digits.
+    Captions: Arabic gets libass's own shaping (Encoding -1) and OCR reads it forwards; Latin captions are unchanged.
+    Cultural rules: left-hand gestures become right-hand ones for Arabic, pointing becomes an open palm for Malay,
+    "beer" is flagged for Arabic reviewers and nothing for English. Forty languages: each has a font for its script
+    and an installed caption font. End to end (scratch copies): data-demo in Arabic and nib-hello in Sinhala are
+    localised, voiced, rendered and QA'd with every check passing, their on-screen text and captions read back by OCR,
+    the Arabic film right to left, Sinhala subtitles written, and the voices that are not clean flagged."""
+    from . import i18n as I
+    from . import captions as C
+    from .databind import bind_text
+    bad, meas = [], {}
+    d = FILMS / "data-demo"; ar = _json(d / "i18n" / "ar.json")
+    sh, sc, ti, da = _shots("data-demo", resolve=False), _json(d / "script.json"), _json(d / "titles.json", {}), _json(d / "data.json", {})
+    keys = I.extract(sh, sc, ti, da); r = I.apply(sh, sc, ti, da, ar["strings"], "ar")
+    meas["strings"] = {"keys": len(keys), "missing": r[4], "auto": len(r[6])}
+    if r[4] or r[5] or len(r[6]) < 4:
+        bad.append(f"strings: {meas['strings']}")
+    if not I.check_bindings("{{total}} NIGHTS", "ليلة"):
+        bad.append("a dropped binding was not caught")
+    fm = {"de": bind_text("{{v}}", {"v": 12400}, "de"), "ar-arab": bind_text("{{v}}", {"v": 1234}, "ar-u-nu-arab"), "en": bind_text("{{v}}", {"v": 12400})}
+    meas["formats"] = fm
+    if fm != {"de": "12.400", "ar-arab": "\u0661\u066c\u0662\u0663\u0664", "en": "12,400"}:
+        bad.append(f"formats: {fm}")
+    # captions
+    tmp = ROOT / "out" / "l10n_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    words = "\u0647\u0630\u0627 \u0639\u062f\u062f \u0627\u0644\u0645\u0631\u0627\u062a".split()
+    ass = C.make_ass({"lines": [{"text": " ".join(words), "words": [{"text": w, "start": i * 0.3, "end": i * 0.3 + 0.3} for i, w in enumerate(words)]}]}, (1080, 1920))
+    (tmp / "a.ass").write_text(ass)
+    _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=gray:s=1080x1920:d=1", "-vf", f"subtitles={tmp / 'a.ass'}", "-ss", "0.75", "-frames:v", "1", str(tmp / "a.png")])
+    ocr = subprocess.run(["tesseract", str(tmp / "a.png"), "stdout", "-l", "ara", "--psm", "11"], capture_output=True, text=True).stdout
+    cap = {"encoding_arabic": ass.split("Style: Cap,")[1].split("\n")[0].split(",")[-1], "forward": round(_word_score(" ".join(words), ocr), 2), "reversed": round(_word_score(" ".join(words), ocr, reverse=True), 2),
+           "encoding_latin": C.make_ass({"lines": [{"text": "hi there", "words": [{"text": "hi", "start": 0, "end": 0.3}]}]}, (1080, 1920)).split("Style: Cap,")[1].split("\n")[0].split(",")[-1]}
+    meas["captions"] = cap
+    if cap["encoding_arabic"] != "-1" or cap["encoding_latin"] != "1" or cap["forward"] < 0.66 or cap["reversed"] >= cap["forward"]:
+        bad.append(f"captions: {cap}")
+    # cultural rules
+    demo = {"shots": [{"id": "s1", "cast": [{"timeline": {"clips": [{"clip": "wave_L"}, {"clip": "point_R"}]}}], "props": [{"id": "beer"}]}]}
+    _, ch_ar = I.apply_rules(demo, "ar"); _, ch_ms = I.apply_rules(demo, "ms")
+    fl_ar, fl_en = I.review_flags(demo, {"lines": []}, "ar"), I.review_flags(demo, {"lines": []}, "en")
+    meas["rules"] = {"ar": [(c["from"], c["to"]) for c in ch_ar], "ms": [(c["from"], c["to"]) for c in ch_ms], "flags_ar": [f["word"] for f in fl_ar], "flags_en": len(fl_en)}
+    if ("wave_L", "wave_R") not in meas["rules"]["ar"] or ("point_R", "present_R") not in meas["rules"]["ms"] or "beer" not in meas["rules"]["flags_ar"] or fl_en:
+        bad.append(f"rules: {meas['rules']}")
+    # forty languages
+    ll = locales_list()
+    gaps = [r["lang"] for r in ll["languages"] if r.get("error") or not r.get("caption_font")]
+    meas["languages"] = {"count": len(ll["languages"]), "without_caption_font": gaps, "voiced_and_clean": ll["voiced_and_clean"]}
+    if gaps:
+        bad.append(f"languages without a caption font: {gaps}")
+    # end to end, on scratch copies
+    for src, lang in (("data-demo", "ar"), ("nib-hello", "si")):
+        if not (FILMS / src / "build" / "voice.wav").exists():
+            meas[f"{src}-{lang}"] = "skipped: not voiced here"; continue
+        zz = f"zz-l10n-{src}"; shutil.rmtree(FILMS / zz, ignore_errors=True); shutil.rmtree(FILMS / f"{zz}-{lang}", ignore_errors=True)
+        shutil.copytree(FILMS / src, FILMS / zz, ignore=shutil.ignore_patterns("build"))
+        try:
+            r = film_localize(zz, lang); out = FILMS / f"{zz}-{lang}"
+            fails = sorted(k for k, v in (r.get("qa") or {}).items() if v is False)
+            tc = _json(out / "build" / "text_check.json", {}); srt = (out / "build" / "captions.srt").read_text() if (out / "build" / "captions.srt").exists() else ""
+            row = {"qa_failures": fails, "text_check": f"{tc.get('passed')}/{tc.get('checked')}", "worst": tc.get("worst"),
+                   "not_read": [{k: x[k] for k in ("what", "text", "t", "score", "reversed_score")} for x in tc.get("items", []) if not x["ok"]], "dir": _shots(f"{zz}-{lang}", resolve=False).get("dir"),
+                   "voice_flags": [f["status"] for f in r["voice_flags"]], "subtitles_in_script": bool(C.script_of(srt))}
+            meas[f"{src}-{lang}"] = row
+            if fails or not tc.get("ok") or not row["voice_flags"] or not row["subtitles_in_script"] or (lang == "ar" and row["dir"] != "rtl"):
+                bad.append(f"{src} in {lang}: {row}")
+        finally:
+            shutil.rmtree(FILMS / zz, ignore_errors=True); shutil.rmtree(FILMS / f"{zz}-{lang}", ignore_errors=True)
+    shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
 
 def _access_test():
     """WP-24. Flash check on made clips: full-screen flashing at 5 Hz fails and at 2 Hz passes, a third of the frame

@@ -1,5 +1,5 @@
 {
- "note": "Licence gate for Piper voices. voice.build refuses any voice whose status is not 'clean' unless the film's script.json sets \"allow_restricted_voices\": true (for internal tests only). Sources: each voice's MODEL_CARD on huggingface.co/rhasspy/piper-voices, checked November 2026 (see docs/oss-research.md section 0).",
+ "note": "Licence gate for Piper voices. voice.build refuses any voice whose status is not 'clean' unless the film's script.json sets \"allow_restricted_voices\": true (for internal tests only). Sources: each voice's MODEL_CARD on huggingface.co/rhasspy/piper-voices, checked November 2026 (see docs/oss-research.md section 0). WP-25 added every Piper voice of forty world languages from huggingface.co/rhasspy/piper-voices (model cards read November 2026, classified from their stated licence and what each was fine-tuned from: lessac lineage unclear, ryan lineage restricted, non-commercial and share-alike restricted, CC0, public domain, CC BY and Apache clean); voices are fetched when a film uses them (sha256 recorded then).",
  "voices": {
   "en_US-kristin-medium": {
    "status": "clean",
@@ -72,6 +72,1052 @@
   "es_AR-daniela-high": {
    "status": "restricted",
    "license": "CC BY-SA 4.0 data; fine-tuned from lessac"
+  },
+  "ar_JO-kareem-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S English lessac voice (medium quality). (licence not stated in the card); dataset github.com/AliMokhammad/arabicttstrain no longer resolves",
+   "language": "Arabic",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ar/ar_JO/kareem/medium/ar_JO-kareem-medium.onnx",
+   "md5": "c0697df8a7fb180079cc5ac523f91a8e",
+   "size": 63201294,
+   "added": "WP-25",
+   "sha256": "9e95cab07b679da603bba17c4dec7ab3111320571964ee95c0379603c086491e",
+   "fetched": true
+  },
+  "si_LK-sinhala-medium": {
+   "status": "restricted",
+   "license": "model MIT (chan4lk/piper-tts-sinhala); trained on OpenSLR 30 (Google's Sinhala TTS corpus), CC BY-SA 4.0: share-alike, so flagged at posting",
+   "language": "Sinhala",
+   "url": "https://huggingface.co/chan4lk/piper-tts-sinhala/resolve/main/si_LK-sinhala-medium.onnx",
+   "sha256": "64265b84e6ea227070b0eed61838dd03463a17cf0c34a2cc64297cdbbee9b5d3",
+   "added": "WP-25",
+   "fetched": true
+  },
+  "ar_JO-kareem-low": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S English lessac voice (low quality). (licence not stated in the card)",
+   "language": "Arabic",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ar/ar_JO/kareem/low/ar_JO-kareem-low.onnx",
+   "md5": "d335cd06fe4045a7ee9d8fb0712afaa9",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "bg_BG-dimitar-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality) (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Bulgarian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/bg/bg_BG/dimitar/medium/bg_BG-dimitar-medium.onnx",
+   "md5": "fc1ce62a4f04f089e22b8c3a13bde28a",
+   "size": 63221984,
+   "added": "WP-25"
+  },
+  "bn_BD-google-medium": {
+   "status": "restricted",
+   "license": "card: Attribution-ShareAlike 4.0 International; fine-tuned from LibriTTS-R voice (medium quality) (share-alike)",
+   "language": "Bengali",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/bn/bn_BD/google/medium/bn_BD-google-medium.onnx",
+   "md5": "2a365b2d91bb9cb7ed62c57d9ee0ec48",
+   "size": 76782515,
+   "added": "WP-25"
+  },
+  "ca_ES-upc_ona-medium": {
+   "status": "restricted",
+   "license": "card: CC BY-SA 3.0 ES; fine-tuned from U.S English lessac voice (medium quality). (share-alike)",
+   "language": "Catalan",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ca/ca_ES/upc_ona/medium/ca_ES-upc_ona-medium.onnx",
+   "md5": "58ff3b049b6b721a4c353a551ec5ef3a",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "ca_ES-upc_ona-x_low": {
+   "status": "restricted",
+   "license": "card: CC BY-SA 3.0 ES (share-alike)",
+   "language": "Catalan",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ca/ca_ES/upc_ona/x_low/ca_ES-upc_ona-x_low.onnx",
+   "md5": "ca22734cd8c5b01dd1fefbb42067ab06",
+   "size": 20628813,
+   "added": "WP-25"
+  },
+  "ca_ES-upc_pau-x_low": {
+   "status": "restricted",
+   "license": "card: CC BY-SA 3.0 ES (share-alike)",
+   "language": "Catalan",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ca/ca_ES/upc_pau/x_low/ca_ES-upc_pau-x_low.onnx",
+   "md5": "504e8a643d5284fbfc95e9e392288b86",
+   "size": 28130791,
+   "added": "WP-25"
+  },
+  "cs_CZ-jirka-low": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (low quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Czech",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/cs/cs_CZ/jirka/low/cs_CZ-jirka-low.onnx",
+   "md5": "82b99b7adeaccf9fec011458623405b2",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "cs_CZ-jirka-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Czech",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/cs/cs_CZ/jirka/medium/cs_CZ-jirka-medium.onnx",
+   "md5": "da2deb0a3f93226a3f9b6e40d43c46ca",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "cs_CZ-kasandra-medium": {
+   "status": "clean",
+   "license": "card: Creative Commons Attribution 4.0 International (CC BY 4.0) (CC BY 4.0: credit the voice)",
+   "language": "Czech",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/cs/cs_CZ/kasandra/medium/cs_CZ-kasandra-medium.onnx",
+   "md5": "4b74926a8e7a25e86e1bdb01a25bae66",
+   "size": 63511038,
+   "added": "WP-25"
+  },
+  "da_DK-talesyntese-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Danish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/da/da_DK/talesyntese/medium/da_DK-talesyntese-medium.onnx",
+   "md5": "9c05494a3e0c1136337581e01222395d",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "de_DE-eva_k-x_low": {
+   "status": "unclear",
+   "license": "card: See URL (licence not stated in the card)",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/eva_k/x_low/de_DE-eva_k-x_low.onnx",
+   "md5": "51bfc52a58282c2e4fc01ae66567a708",
+   "size": 20628813,
+   "added": "WP-25"
+  },
+  "de_DE-karlsson-low": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S. English Ryan voice (low quality). (licence not stated in the card)",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/karlsson/low/de_DE-karlsson-low.onnx",
+   "md5": "c94b5b8e8c7147b4b2c4a19ca5a3c41b",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "de_DE-kerstin-low": {
+   "status": "restricted",
+   "license": "card: CC0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/kerstin/low/de_DE-kerstin-low.onnx",
+   "md5": "1d5e5788cfddb04cbb34418f2841931e",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "de_DE-mls-medium": {
+   "status": "clean",
+   "license": "card: CC-BY 4.0 (CC BY 4.0: credit the voice)",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/mls/medium/de_DE-mls-medium.onnx",
+   "md5": "bb543a8e82b95993cdd2199a0049623b",
+   "size": 76961079,
+   "added": "WP-25"
+  },
+  "de_DE-pavoque-low": {
+   "status": "restricted",
+   "license": "card: http://creativecommons.org/licenses/by-nc-sa/4.0/; fine-tuned from U.S. English Ryan voice (low quality). (non-commercial)",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/pavoque/low/de_DE-pavoque-low.onnx",
+   "md5": "bc37dccbad87fd65c8501c412c0c31ca",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "de_DE-ramona-low": {
+   "status": "unclear",
+   "license": "card: See URL (licence not stated in the card)",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/ramona/low/de_DE-ramona-low.onnx",
+   "md5": "b4aaf3673170a0d96519cdc992c23fda",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "de_DE-thorsten-high": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (high quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/high/de_DE-thorsten-high.onnx",
+   "md5": "256505fe58fb8b9d6ed78b83f6b8a9d2",
+   "size": 113895201,
+   "added": "WP-25"
+  },
+  "de_DE-thorsten-low": {
+   "status": "restricted",
+   "license": "card: CC0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/low/de_DE-thorsten-low.onnx",
+   "md5": "c06eb96aceb61895fcb09ffc30eef60b",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "de_DE-thorsten-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx",
+   "md5": "a129b00fb3078df43c96bab6c94535c0",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "de_DE-thorsten_emotional-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from German thorsten voice (medium quality). (CC0; fine-tuned from de_DE-thorsten-high (unclear))",
+   "language": "German",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/de/de_DE/thorsten_emotional/medium/de_DE-thorsten_emotional-medium.onnx",
+   "md5": "7cc67d24d9d0b34d7a4f6224d16236b9",
+   "size": 76745905,
+   "added": "WP-25"
+  },
+  "el_GR-joy-medium": {
+   "status": "restricted",
+   "license": "card: CC BY-NC 4.0 (non-commercial)",
+   "language": "Greek",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/el/el_GR/joy/medium/el_GR-joy-medium.onnx",
+   "md5": "080895960699531c30e70415a75a604d",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "el_GR-rapunzelina-low": {
+   "status": "restricted",
+   "license": "card: CC0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "Greek",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/el/el_GR/rapunzelina/low/el_GR-rapunzelina-low.onnx",
+   "md5": "04e0151b653bb64540b1cde027054140",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "el_GR-rapunzelina-medium": {
+   "status": "clean",
+   "license": "card: CC0 (CC0)",
+   "language": "Greek",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/el/el_GR/rapunzelina/medium/el_GR-rapunzelina-medium.onnx",
+   "md5": "265f2f9be00aa5ce81abc1f022145e42",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "fa_IR-amir-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Persian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fa/fa_IR/amir/medium/fa_IR-amir-medium.onnx",
+   "md5": "7c0598c9726427869e1e86447b333539",
+   "size": 63531379,
+   "added": "WP-25"
+  },
+  "fa_IR-ganji-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from fa_IR Amir voice (medium quality). (CC0; fine-tuned from fa_IR-amir-medium (unclear))",
+   "language": "Persian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fa/fa_IR/ganji/medium/fa_IR-ganji-medium.onnx",
+   "md5": "b50577af60b986135b37edaeaabb01b9",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "fa_IR-ganji_adabi-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from fa_IR Ganji voice (medium quality). (CC0; fine-tuned from fa_IR-ganji-medium (unclear))",
+   "language": "Persian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fa/fa_IR/ganji_adabi/medium/fa_IR-ganji_adabi-medium.onnx",
+   "md5": "596844694672ac3d007c544301874553",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "fa_IR-gyro-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from Persian TTS Male vits dataset (medium quality). (licence not stated in the card)",
+   "language": "Persian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fa/fa_IR/gyro/medium/fa_IR-gyro-medium.onnx",
+   "md5": "e8ce094894c8ec2a77bfd0397b45d112",
+   "size": 63122309,
+   "added": "WP-25"
+  },
+  "fa_IR-reza_ibrahim-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Persian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fa/fa_IR/reza_ibrahim/medium/fa_IR-reza_ibrahim-medium.onnx",
+   "md5": "b9d4059c794df8336060fb7f36264a43",
+   "size": 63511038,
+   "added": "WP-25"
+  },
+  "fi_FI-harri-low": {
+   "status": "restricted",
+   "license": "card: CC0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "Finnish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fi/fi_FI/harri/low/fi_FI-harri-low.onnx",
+   "md5": "f44b67203de7fd488eabc4692d30b598",
+   "size": 69795191,
+   "added": "WP-25"
+  },
+  "fi_FI-harri-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Finnish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fi/fi_FI/harri/medium/fi_FI-harri-medium.onnx",
+   "md5": "8e96b9e765f8db3e910943520aa0f475",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "fr_FR-gilles-low": {
+   "status": "restricted",
+   "license": "card: CC0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/gilles/low/fr_FR-gilles-low.onnx",
+   "md5": "f984386d1f0927597f09a3ec10b11b5d",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "fr_FR-mls-medium": {
+   "status": "clean",
+   "license": "card: CC-BY 4.0 (CC BY 4.0: credit the voice)",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/mls/medium/fr_FR-mls-medium.onnx",
+   "md5": "87831389d3ae92347d91e38b0c57add9",
+   "size": 76733750,
+   "added": "WP-25"
+  },
+  "fr_FR-mls_1840-low": {
+   "status": "restricted",
+   "license": "card: CC BY 4.0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/mls_1840/low/fr_FR-mls_1840-low.onnx",
+   "md5": "1873b5d95cb0aad9909d32d1747ae72b",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "fr_FR-siwis-low": {
+   "status": "restricted",
+   "license": "card: CC-BY 4.0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/low/fr_FR-siwis-low.onnx",
+   "md5": "fcb614122005d70f27e4e61e58b4bb56",
+   "size": 28130791,
+   "added": "WP-25"
+  },
+  "fr_FR-siwis-medium": {
+   "status": "unclear",
+   "license": "card: CC-BY 4.0; fine-tuned from U.S. English lessac voice (medium quality) (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx",
+   "md5": "20e876e8c839e9b11a26085858f2300c",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "fr_FR-tom-medium": {
+   "status": "unclear",
+   "license": "card: AGPLv3 (GPL licence on a voice model)",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/tom/medium/fr_FR-tom-medium.onnx",
+   "md5": "5b460c2394a871e675f5c798af149412",
+   "size": 63511038,
+   "added": "WP-25"
+  },
+  "fr_FR-upmc-medium": {
+   "status": "restricted",
+   "license": "card: http://creativecommons.org/licenses/by-sa/4.0/; fine-tuned from U.S. English lessac voice (medium quality) (share-alike)",
+   "language": "French",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/fr/fr_FR/upmc/medium/fr_FR-upmc-medium.onnx",
+   "md5": "6837ede9408c7e1b39fa4a126af9e865",
+   "size": 76733615,
+   "added": "WP-25"
+  },
+  "he_IL-saspeech-medium": {
+   "status": "unclear",
+   "license": "card: See dataset URL; fine-tuned from LibriTTS-R base model. (licence not stated in the card)",
+   "language": "Hebrew",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/he/he_IL/saspeech/medium/he_IL-saspeech-medium.onnx",
+   "md5": "ffa7fbbbbeab5fa8fb7eb00bf9a0e2a5",
+   "size": 63221984,
+   "added": "WP-25"
+  },
+  "hi_IN-pratham-medium": {
+   "status": "restricted",
+   "license": "card: http://creativecommons.org/licenses/by-nc-sa/4.0/ (non-commercial)",
+   "language": "Hindi",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hi/hi_IN/pratham/medium/hi_IN-pratham-medium.onnx",
+   "md5": "f1e5a629a9e533a7155910530109eb86",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "hi_IN-priyamvada-medium": {
+   "status": "restricted",
+   "license": "card: http://creativecommons.org/licenses/by-nc-sa/4.0/ (non-commercial)",
+   "language": "Hindi",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hi/hi_IN/priyamvada/medium/hi_IN-priyamvada-medium.onnx",
+   "md5": "7d5e20c2d1e72de8ed772f222e679626",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "hi_IN-rohan-medium": {
+   "status": "unclear",
+   "license": "card: https://www.iitm.ac.in/donlab/indictts/downloads/license.pdf; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Hindi",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hi/hi_IN/rohan/medium/hi_IN-rohan-medium.onnx",
+   "md5": "d63d31559a4ccce62be938ab252a4804",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "hu_HU-anna-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Hungarian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/anna/medium/hu_HU-anna-medium.onnx",
+   "md5": "3796f9fa28bd8d390d17828e2e2e952d",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "hu_HU-berta-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Hungarian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/berta/medium/hu_HU-berta-medium.onnx",
+   "md5": "a94cc2562ba892f462cb502f9d3c3ca3",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "hu_HU-imre-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Hungarian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hu/hu_HU/imre/medium/hu_HU-imre-medium.onnx",
+   "md5": "aa0b1d1fdd539881c64ed249097e75ff",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "hy_AM-gor-medium": {
+   "status": "unclear",
+   "license": "card: GPL 2.0; fine-tuned from en_US-bryce-medium model. (GPL licence on a voice model)",
+   "language": "Armenian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/hy/hy_AM/gor/medium/hy_AM-gor-medium.onnx",
+   "md5": "fd726714c656f1cad828bcf102059aa1",
+   "size": 63511038,
+   "added": "WP-25"
+  },
+  "id_ID-news_tts-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Indonesian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/id/id_ID/news_tts/medium/id_ID-news_tts-medium.onnx",
+   "md5": "17de01db7ac654655436b6e509893c72",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "it_IT-paola-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Italian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/it/it_IT/paola/medium/it_IT-paola-medium.onnx",
+   "md5": "3a44e73b12ca5d0c21a72e388b5847c8",
+   "size": 63511038,
+   "added": "WP-25"
+  },
+  "it_IT-riccardo-x_low": {
+   "status": "unclear",
+   "license": "card: See URL (licence not stated in the card)",
+   "language": "Italian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/it/it_IT/riccardo/x_low/it_IT-riccardo-x_low.onnx",
+   "md5": "2c564b67f6bfaf3ad02d28ab528929b8",
+   "size": 28130791,
+   "added": "WP-25"
+  },
+  "it_IT-serena-high": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Italian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/it/it_IT/serena/high/it_IT-serena-high.onnx",
+   "md5": "0b4d9553883e439fd7bda5475e820bfe",
+   "size": 114204024,
+   "added": "WP-25"
+  },
+  "it_IT-serena-medium": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Italian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/it/it_IT/serena/medium/it_IT-serena-medium.onnx",
+   "md5": "f8c82f1139dfa382686bd7564a633400",
+   "size": 63516051,
+   "added": "WP-25"
+  },
+  "ja_JP-hi_fi_captain-medium": {
+   "status": "restricted",
+   "license": "card: https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en; fine-tuned from LibriTTS-R base model. (non-commercial)",
+   "language": "Japanese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ja/ja_JP/hi_fi_captain/medium/ja_JP-hi_fi_captain-medium.onnx",
+   "md5": "f9daab8970d06d7e9fc895a879854542",
+   "size": 76753841,
+   "added": "WP-25"
+  },
+  "ka_GE-natia-medium": {
+   "status": "unclear",
+   "license": "card: See LICENSE file; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Georgian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ka/ka_GE/natia/medium/ka_GE-natia-medium.onnx",
+   "md5": "83bd40f8d176a83d3d8d605fada2a5e7",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "kk_KZ-iseke-x_low": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Kazakh",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/kk/kk_KZ/iseke/x_low/kk_KZ-iseke-x_low.onnx",
+   "md5": "1674f3f4ce48981d77e500741afa4ff9",
+   "size": 28130791,
+   "added": "WP-25"
+  },
+  "kk_KZ-issai-high": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Kazakh",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/kk/kk_KZ/issai/high/kk_KZ-issai-high.onnx",
+   "md5": "d5a97c25feb0949c187ae5f8e72753e3",
+   "size": 127864258,
+   "added": "WP-25"
+  },
+  "kk_KZ-raya-x_low": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Kazakh",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/kk/kk_KZ/raya/x_low/kk_KZ-raya-x_low.onnx",
+   "md5": "476ecc32e07cad26572a50f26d0ebe28",
+   "size": 28130791,
+   "added": "WP-25"
+  },
+  "ko_KR-kss-medium": {
+   "status": "restricted",
+   "license": "card: https://creativecommons.org/licenses/by-nc-sa/4.0/; fine-tuned from LibriTTS-R base model. (non-commercial)",
+   "language": "Korean",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ko/ko_KR/kss/medium/ko_KR-kss-medium.onnx",
+   "md5": "bebbd298dffe5ee7b88f2ce41bb4e3a9",
+   "size": 63221984,
+   "added": "WP-25"
+  },
+  "ml_IN-arjun-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Malayalam",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ml/ml_IN/arjun/medium/ml_IN-arjun-medium.onnx",
+   "md5": "4f20109c108aa80f46df85ab9cda5daa",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "ml_IN-meera-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Malayalam",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ml/ml_IN/meera/medium/ml_IN-meera-medium.onnx",
+   "md5": "3eb7b05d25c1551f7a7cec1e1c153b1f",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "mr_IN-google-medium": {
+   "status": "restricted",
+   "license": "card: Attribution-ShareAlike 4.0 International; fine-tuned from LibriTTS-R base model. (share-alike)",
+   "language": "Marathi",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/mr/mr_IN/google/medium/mr_IN-google-medium.onnx",
+   "md5": "331957abd31bff58aaa10934cd3ac58f",
+   "size": 76768179,
+   "added": "WP-25"
+  },
+  "ne_NP-chitwan-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality) (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Nepali",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ne/ne_NP/chitwan/medium/ne_NP-chitwan-medium.onnx",
+   "md5": "74cdb5b32816c366af74b55ed7494e25",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "ne_NP-google-medium": {
+   "status": "restricted",
+   "license": "card: CC-BY-SA-4.0 International; fine-tuned from U.S. English lessac voice (medium quality). (share-alike)",
+   "language": "Nepali",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ne/ne_NP/google/medium/ne_NP-google-medium.onnx",
+   "md5": "2c24ccfe18eca2f14bccd0a188516109",
+   "size": 76766385,
+   "added": "WP-25"
+  },
+  "ne_NP-google-x_low": {
+   "status": "restricted",
+   "license": "card: CC-BY-SA-4.0 International (share-alike)",
+   "language": "Nepali",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ne/ne_NP/google/x_low/ne_NP-google-x_low.onnx",
+   "md5": "b11030daccc781a7db64c9413197ca8a",
+   "size": 27693157,
+   "added": "WP-25"
+  },
+  "nl_BE-nathalie-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality) (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_BE/nathalie/medium/nl_BE-nathalie-medium.onnx",
+   "md5": "ab0c38b5f66764b59ad9e3e98b1c2172",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "nl_BE-nathalie-x_low": {
+   "status": "clean",
+   "license": "card: CC0 (CC0)",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_BE/nathalie/x_low/nl_BE-nathalie-x_low.onnx",
+   "md5": "4a00803b60caecad30ea612bcd9f9344",
+   "size": 20628813,
+   "added": "WP-25"
+  },
+  "nl_BE-rdh-medium": {
+   "status": "clean",
+   "license": "card: CC0 1.0 Universal (CC0)",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_BE/rdh/medium/nl_BE-rdh-medium.onnx",
+   "md5": "33d3469d745677ec4d7e96eb4145b09e",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "nl_BE-rdh-x_low": {
+   "status": "clean",
+   "license": "card: CC0 1.0 Universal (CC0)",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_BE/rdh/x_low/nl_BE-rdh-x_low.onnx",
+   "md5": "7d60d0de9ad9ec11a1d293665743afda",
+   "size": 20628813,
+   "added": "WP-25"
+  },
+  "nl_NL-alex-medium": {
+   "status": "clean",
+   "license": "card: CC0; fine-tuned from Dutch rdh voice (medium quality) (CC0; fine-tuned from nl_BE-rdh-medium (clean))",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/alex/medium/nl_NL-alex-medium.onnx",
+   "md5": "34c3e80cedc491e5d943091cd1b45192",
+   "size": 63531476,
+   "added": "WP-25"
+  },
+  "nl_NL-mls-medium": {
+   "status": "clean",
+   "license": "card: CC-BY 4.0 (CC BY 4.0: credit the voice)",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls/medium/nl_NL-mls-medium.onnx",
+   "md5": "f1d4b1452ccfdac24be72085b2b6b55c",
+   "size": 76584246,
+   "added": "WP-25"
+  },
+  "nl_NL-mls_5809-low": {
+   "status": "restricted",
+   "license": "card: CC BY 4.0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls_5809/low/nl_NL-mls_5809-low.onnx",
+   "md5": "e69130a776b04c9962a1fefb4878d7d9",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "nl_NL-mls_7432-low": {
+   "status": "restricted",
+   "license": "card: CC BY 4.0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/mls_7432/low/nl_NL-mls_7432-low.onnx",
+   "md5": "044b69d583e191203997761434607273",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "nl_NL-pim-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality) (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/pim/medium/nl_NL-pim-medium.onnx",
+   "md5": "190b3e6463a931d3c583d2fa7cd0e4a0",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "nl_NL-ronnie-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality) (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Dutch",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/nl/nl_NL/ronnie/medium/nl_NL-ronnie-medium.onnx",
+   "md5": "f74c8e7779cb05f935367d661de5b380",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "no_NO-nvcc-medium": {
+   "status": "clean",
+   "license": "card: CC0 (CC0)",
+   "language": "Norwegian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/no/no_NO/nvcc/medium/no_NO-nvcc-medium.onnx",
+   "md5": "67e04e52b2f195e6db3ae103b58d1710",
+   "size": 76770227,
+   "added": "WP-25"
+  },
+  "no_NO-talesyntese-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Norwegian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/no/no_NO/talesyntese/medium/no_NO-talesyntese-medium.onnx",
+   "md5": "9fc876e7edc6593086b4f2f34889f44b",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "pl_PL-bass-high": {
+   "status": "unclear",
+   "license": "card: none; fine-tuned from en_US-lessac-high on ~10,000 segments of Polish speech. (licence not stated in the card)",
+   "language": "Polish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pl/pl_PL/bass/high/pl_PL-bass-high.onnx",
+   "md5": "427c7c0975ee21cea29db0f58f827883",
+   "size": 114204024,
+   "added": "WP-25"
+  },
+  "pl_PL-darkman-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Polish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pl/pl_PL/darkman/medium/pl_PL-darkman-medium.onnx",
+   "md5": "27bf2d71e934b112657544fd0b100a7a",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "pl_PL-gosia-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Polish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pl/pl_PL/gosia/medium/pl_PL-gosia-medium.onnx",
+   "md5": "ecf817530e575025166e454adde1f382",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "pl_PL-mc_speech-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Polish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pl/pl_PL/mc_speech/medium/pl_PL-mc_speech-medium.onnx",
+   "md5": "a927e2f2c882bb40cbc2e5f3356ce19b",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "pl_PL-mls_6892-low": {
+   "status": "restricted",
+   "license": "card: CC BY 4.0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "Polish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pl/pl_PL/mls_6892/low/pl_PL-mls_6892-low.onnx",
+   "md5": "8590d8e979292ca35d20e6e123bfa612",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "pt_BR-cadu-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Portuguese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/cadu/medium/pt_BR-cadu-medium.onnx",
+   "md5": "6f3a6e23694c9088e3696a15191af2cc",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "pt_BR-edresson-low": {
+   "status": "restricted",
+   "license": "card: CC BY 4.0; fine-tuned from U.S. English Ryan voice (low quality). (fine-tuned from ryan (CC BY-NC-SA))",
+   "language": "Portuguese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/edresson/low/pt_BR-edresson-low.onnx",
+   "md5": "53e365c040dd07890fe1855b64c7cc58",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "pt_BR-faber-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Portuguese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx",
+   "md5": "e0724a2f07965f6523d2a1e96b488a4c",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "pt_BR-jeff-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Portuguese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/jeff/medium/pt_BR-jeff-medium.onnx",
+   "md5": "dfb93e9da48638f9efa6b63fdb0b7030",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "pt_PT-tugão-medium": {
+   "status": "unclear",
+   "license": "card: none (licence not stated in the card)",
+   "language": "Portuguese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_PT/tugão/medium/pt_PT-tugão-medium.onnx",
+   "md5": "0642048511ffe36c3b519520614b53f4",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "ro_RO-mihai-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Romanian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ro/ro_RO/mihai/medium/ro_RO-mihai-medium.onnx",
+   "md5": "45f4253916c93d3d05ad3fe1b07ea4f3",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "ru_RU-denis-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Russian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/denis/medium/ru_RU-denis-medium.onnx",
+   "md5": "76c2f14e521fef3ed574f97ad492728e",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "ru_RU-dmitri-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Russian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/dmitri/medium/ru_RU-dmitri-medium.onnx",
+   "md5": "589ccc91745a1e2353508ff62c5941b7",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "ru_RU-irina-medium": {
+   "status": "unclear",
+   "license": "card: Unknown; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Russian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.onnx",
+   "md5": "21fbe77fdc68bdc35d7adb6bf4f52199",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "ru_RU-ruslan-medium": {
+   "status": "restricted",
+   "license": "card: https://creativecommons.org/licenses/by-nc-sa/4.0/; fine-tuned from U.S. English lessac voice (medium quality). (non-commercial)",
+   "language": "Russian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/ruslan/medium/ru_RU-ruslan-medium.onnx",
+   "md5": "731eb188e63b4c57320e38047ba2d850",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "sk_SK-lili-medium": {
+   "status": "unclear",
+   "license": "card: CC0; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Slovak",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sk/sk_SK/lili/medium/sk_SK-lili-medium.onnx",
+   "md5": "836e078518042448bda8416a8ea52984",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "sr_RS-serbski_institut-medium": {
+   "status": "restricted",
+   "license": "card: https://creativecommons.org/licenses/by-nc-sa/4.0/; fine-tuned from U.S. English lessac voice (medium quality). (non-commercial)",
+   "language": "Serbian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sr/sr_RS/serbski_institut/medium/sr_RS-serbski_institut-medium.onnx",
+   "md5": "02c6e27ac7b4dfa84272df89edca9feb",
+   "size": 76733615,
+   "added": "WP-25"
+  },
+  "sv_SE-alma-medium": {
+   "status": "unclear",
+   "license": "card: none (licence not stated in the card)",
+   "language": "Swedish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sv/sv_SE/alma/medium/sv_SE-alma-medium.onnx",
+   "md5": "93c03e7c0e2f21e78d123a3ee82d54c1",
+   "size": 63434611,
+   "added": "WP-25"
+  },
+  "sv_SE-lisa-medium": {
+   "status": "unclear",
+   "license": "card: none; fine-tuned from Norweigan talesyntese voice (medium quality). (licence not stated in the card)",
+   "language": "Swedish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sv/sv_SE/lisa/medium/sv_SE-lisa-medium.onnx",
+   "md5": "46398d70bbb12d033e15e601a92cd711",
+   "size": 63511038,
+   "added": "WP-25"
+  },
+  "sv_SE-nst-medium": {
+   "status": "clean",
+   "license": "card: CC0 (CC0)",
+   "language": "Swedish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sv/sv_SE/nst/medium/sv_SE-nst-medium.onnx",
+   "md5": "20266cf58e93ca2140444b77398aea04",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "sw_CD-lanfrica-medium": {
+   "status": "unclear",
+   "license": "card: See URL; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Swahili",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/sw/sw_CD/lanfrica/medium/sw_CD-lanfrica-medium.onnx",
+   "md5": "7b28078f0e76cb201dc8b512ea4bf4d6",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "te_IN-maya-medium": {
+   "status": "unclear",
+   "license": "card: www.iitm.ac.in/donlab/indictts/downloads/license.pdf; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Telugu",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/te/te_IN/maya/medium/te_IN-maya-medium.onnx",
+   "md5": "604fa4083118495c0fff55826ffccefe",
+   "size": 62950044,
+   "added": "WP-25"
+  },
+  "te_IN-padmavathi-medium": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Telugu",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/te/te_IN/padmavathi/medium/te_IN-padmavathi-medium.onnx",
+   "md5": "1a7fb140ecc8b5e8b3e80e460b719319",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "te_IN-venkatesh-medium": {
+   "status": "clean",
+   "license": "card: CC-BY-4.0 (CC BY 4.0: credit the voice)",
+   "language": "Telugu",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/te/te_IN/venkatesh/medium/te_IN-venkatesh-medium.onnx",
+   "md5": "145092d2d110c4df0fa385dc606fe103",
+   "size": 63516050,
+   "added": "WP-25"
+  },
+  "th_TH-tsync2-medium": {
+   "status": "restricted",
+   "license": "card: CC BY-NC-SA 3.0 (**non-commercial**); fine-tuned from the LibriTTS-R base model (MRD and SDP). (non-commercial)",
+   "language": "Thai",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/th/th_TH/tsync2/medium/th_TH-tsync2-medium.onnx",
+   "md5": "f3f58fc2cfc4f6c591629cb25b47923d",
+   "size": 63221984,
+   "added": "WP-25"
+  },
+  "tr_TR-dfki-medium": {
+   "status": "restricted",
+   "license": "card: https://creativecommons.org/licenses/by-nc-sa/4.0/; fine-tuned from U.S. English lessac voice (medium quality). (non-commercial)",
+   "language": "Turkish",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/tr/tr_TR/dfki/medium/tr_TR-dfki-medium.onnx",
+   "md5": "f51287b350a042dd8d67b2b215145e5a",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "uk_UA-lada-x_low": {
+   "status": "clean",
+   "license": "card: Apache 2.0 (Apache 2.0)",
+   "language": "Ukrainian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/uk/uk_UA/lada/x_low/uk_UA-lada-x_low.onnx",
+   "md5": "b84110e3923d64cdd4e0056a22090557",
+   "size": 20628813,
+   "added": "WP-25"
+  },
+  "uk_UA-mykyta-high": {
+   "status": "clean",
+   "license": "card: Apache 2.0 (Apache 2.0)",
+   "language": "Ukrainian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/uk/uk_UA/mykyta/high/uk_UA-mykyta-high.onnx",
+   "md5": "a044d3c12c99ed7c4b687900b0545a6a",
+   "size": 114204024,
+   "added": "WP-25"
+  },
+  "uk_UA-oleksa-high": {
+   "status": "clean",
+   "license": "card: Apache 2.0 (Apache 2.0)",
+   "language": "Ukrainian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/uk/uk_UA/oleksa/high/uk_UA-oleksa-high.onnx",
+   "md5": "ceb6d2a5db9834a9da85abb613fa0904",
+   "size": 114204024,
+   "added": "WP-25"
+  },
+  "uk_UA-tetiana-high": {
+   "status": "clean",
+   "license": "card: Apache 2.0 (Apache 2.0)",
+   "language": "Ukrainian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/uk/uk_UA/tetiana/high/uk_UA-tetiana-high.onnx",
+   "md5": "ca4750154e2d635590a41e781d482f2f",
+   "size": 114204024,
+   "added": "WP-25"
+  },
+  "uk_UA-ukrainian_tts-medium": {
+   "status": "clean",
+   "license": "card: CC0 (CC0)",
+   "language": "Ukrainian",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/uk/uk_UA/ukrainian_tts/medium/uk_UA-ukrainian_tts-medium.onnx",
+   "md5": "3366c3d4f31cb77966fb14d042956b4f",
+   "size": 76735663,
+   "added": "WP-25"
+  },
+  "ur_PK-aegis_female-medium": {
+   "status": "unclear",
+   "license": "card: none (licence not stated in the card)",
+   "language": "Urdu",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ur/ur_PK/aegis_female/medium/ur_PK-aegis_female-medium.onnx",
+   "md5": "81f9f9772025785f548e1aa0de3361b7",
+   "size": 63515589,
+   "added": "WP-25"
+  },
+  "ur_PK-fasih-medium": {
+   "status": "unclear",
+   "license": "card: none (licence not stated in the card)",
+   "language": "Urdu",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/ur/ur_PK/fasih/medium/ur_PK-fasih-medium.onnx",
+   "md5": "f32ec2c6ebcc6bd1752cab0b932859c7",
+   "size": 64832023,
+   "added": "WP-25"
+  },
+  "vi_VN-25hours_single-low": {
+   "status": "unclear",
+   "license": "card: Unknown; fine-tuned from U.S. English Ryan voice (low quality). (licence not stated in the card)",
+   "language": "Vietnamese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/25hours_single/low/vi_VN-25hours_single-low.onnx",
+   "md5": "54ff8fb35b0084336377ddd10717e1fa",
+   "size": 63104526,
+   "added": "WP-25"
+  },
+  "vi_VN-vais1000-medium": {
+   "status": "unclear",
+   "license": "card: https://creativecommons.org/licenses/by/4.0/; fine-tuned from U.S. English lessac voice (medium quality). (fine-tuned from lessac (Blizzard 2013 research licence))",
+   "language": "Vietnamese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/vais1000/medium/vi_VN-vais1000-medium.onnx",
+   "md5": "5e42428c4f6131f75557cf156c9c1526",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "vi_VN-vivos-x_low": {
+   "status": "restricted",
+   "license": "card: CC BY-NC-SA 4.0 (non-commercial)",
+   "language": "Vietnamese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/vivos/x_low/vi_VN-vivos-x_low.onnx",
+   "md5": "d5880d32e340f57489dcb9d4f1f7aa04",
+   "size": 27789413,
+   "added": "WP-25"
+  },
+  "zh_CN-chaowen-medium": {
+   "status": "restricted",
+   "license": "card: CC0; fine-tuned from zh_CN-xiao_ya-medium (non-commercial data, data-baker.com): restricted",
+   "language": "Chinese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/chaowen/medium/zh_CN-chaowen-medium.onnx",
+   "md5": "4965c46e983653811bef0253026ff45a",
+   "size": 63221984,
+   "added": "WP-25"
+  },
+  "zh_CN-huayan-medium": {
+   "status": "unclear",
+   "license": "card: Unknown; fine-tuned from U.S. English lessac voice (medium quality). (licence not stated in the card)",
+   "language": "Chinese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/medium/zh_CN-huayan-medium.onnx",
+   "md5": "40cdb7930ff91b81574d5f0489e076ea",
+   "size": 63201294,
+   "added": "WP-25"
+  },
+  "zh_CN-huayan-x_low": {
+   "status": "unclear",
+   "license": "card: Unknown (licence not stated in the card)",
+   "language": "Chinese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/huayan/x_low/zh_CN-huayan-x_low.onnx",
+   "md5": "2b96570db6becd09814a608c8d14a64f",
+   "size": 20628813,
+   "added": "WP-25"
+  },
+  "zh_CN-xiao_ya-medium": {
+   "status": "unclear",
+   "license": "card: Non-commercial use (see https://www.data-baker.com/data/index/TNtts/) (licence not stated in the card)",
+   "language": "Chinese",
+   "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/zh/zh_CN/xiao_ya/medium/zh_CN-xiao_ya-medium.onnx",
+   "md5": "b1cece47c5d601a8f6b63b8da82b484a",
+   "size": 63221984,
+   "added": "WP-25"
   }
  }
 }

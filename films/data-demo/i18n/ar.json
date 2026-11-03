@@ -1,0 +1,24 @@
+{
+ "lang": "ar",
+ "note": "Arabic version of data-demo (WP-25). Numbers come from data.json in the locale's format; month names from CLDR.",
+ "strings": {
+  "line:l1": "هذا عدد المرات التي استخدم فيها النادي التلسكوب.",
+  "line:l2": "{{total}} ليلة في {{months|word}} أشهر.",
+  "line:l3": "وكان شهر {{best.month}} الأفضل، بـ {{best.nights}} ليالٍ!",
+  "film:title": "عرض البيانات",
+  "shot:s1:set:board:0": "نادي العلوم",
+  "shot:s1:set:board:1": "سجل التلسكوب",
+  "shot:s2:overlay:0:title": "ليالي التلسكوب في كل شهر",
+  "shot:s2:overlay:1:text": "{{total}} ليلة",
+  "shot:s2:overlay:2:text": "سجل توضيحي للنادي (بيانات تجريبية)",
+  "shot:s3:overlay:0:text": "الأفضل: {{best.month|upper}}",
+  "titles:0": "كم مرة استخدم النادي التلسكوب؟",
+  "titles:1": "أفضل شهر لنادي التلسكوب",
+  "thumb:0:top": "ليالي التلسكوب",
+  "thumb:0:bottom": "أفضل شهر",
+  "thumb:1:top": "كم مرة؟",
+  "thumb:1:bottom": "ليالي النادي"
+ },
+ "voices": {},
+ "swaps": {}
+}

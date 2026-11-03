@@ -28,9 +28,21 @@ def synth_line(voice, text, length_scale, noise_scale=0.5, noise_w=0.6):
         return resample(audio, sr, SR_OUT)
     cfg = SynthesisConfig(length_scale=length_scale, noise_scale=noise_scale,
                           noise_w_scale=noise_w, normalize_audio=True)
-    chunks = list(voice.synthesize(text, syn_config=cfg))
+    align = getattr(voice, "dbe_align", False)
+    chunks = list(voice.synthesize(text, syn_config=cfg, include_alignments=align))
     audio = np.concatenate([c.audio_float_array for c in chunks])
     sr = chunks[0].sample_rate
+    # WP-25: the model's own phoneme timings (a voice loaded with alignments), as Kokoro gives them, for lip-sync
+    phones, t = [], 0
+    for c in chunks:
+        for a in (c.phoneme_alignments or []) if align else []:
+            n = int(a.num_samples)
+            if a.phoneme not in ("^", "$", "_", " ", "ˈ", "ˌ") and n:
+                phones.append((a.phoneme, max(0.0, t / sr - 0.08), max(0.0, (t + n) / sr - 0.08)))   # mouths lead the sound, as Kokoro's (PHONE_LEAD)
+            t += n
+        if align and not c.phoneme_alignments:
+            t += len(c.audio_float_array)
+    voice.last_phones = phones or None
     return resample(audio, sr, SR_OUT)
 
 
@@ -129,7 +141,7 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
         for ln in script["lines"]:
             for k in ("text", "alt"):
                 if "{{" in ln.get(k, ""):
-                    ln[k] = bind_text(ln[k], _data)
+                    ln[k] = bind_text(ln[k], _data, script.get("locale") or script.get("lang"))
     speakers = script.get("speakers") or {"narrator": {"voice": voice_name or script["voice"]}}
     default = next(iter(speakers))
     voices = {}
@@ -156,7 +168,11 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                 _km = _ku.module_from_spec(_ks); _ks.loader.exec_module(_km)
                 voices[cfg["voice"]] = _km.KokoroVoice(cfg["voice"], voices_dir)
             else:
-                voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"))
+                # non-English Piper voices (WP-25): loaded with phoneme alignments, so lip-sync follows the model's own timings
+                # rather than phonemes spread over Whisper's word times (English films keep their visemes as they were)
+                al = lang != "en"
+                voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"), include_alignments=al)
+                voices[cfg["voice"]].dbe_align = al
         def make(text, ls):
             """synthesize, trim, phone timings on the trimmed clock (plan 2.1), voice fx"""
             a_, cut0 = trim(synth_line(voices[cfg["voice"]], text, ls), offset=True)

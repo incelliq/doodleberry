@@ -5,3 +5,4 @@ numpy>=2.0
 Pillow>=10.1
 jsonschema>=4.20
 scipy>=1.11
+babel>=2.14   # WP-25: CLDR locale data (directions, month names, number formats)
