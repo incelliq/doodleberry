@@ -183,7 +183,7 @@ def apply(raw, repairs, resolved, size):
         elif e[0] == "camera_auto":
             ca = sh["camera_auto"] if isinstance(sh["camera_auto"], dict) else {}
             dflt = {"zoom_single": 1.9, "zoom_bubble": 1.5, "zoom": 1.45}[e[1]]
-            ca[e[1]] = round(max(1.1, ca.get(e[1], dflt) + e[2]), 2); sh["camera_auto"] = ca
+            ca[e[1]] = round(max(1.0, ca.get(e[1], dflt) + e[2]), 2); sh["camera_auto"] = ca   # 1.0: the whole frame
         elif e[0] == "shrink":
             c = sh["cast"][e[1]]
             if isinstance(c.get("place"), dict) and "path" not in c["place"]:

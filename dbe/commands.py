@@ -7019,7 +7019,7 @@ def film_soundoff(name, wpm=170, max_stretch=2.5, render=True):
            "stretched_lines": plan["stretched"], "bubbled": plan["bubbled"], "captioned": plan["captioned"]}
     if not render:
         return out
-    h = film_heal(dst.name, rounds=2)   # render, and repair what the cut's own layout needs (bubbles move the camera's job)
+    h = film_heal(dst.name, rounds=3)   # render, and repair what the cut's own layout needs (bubbles move the camera's job)
     q = _json(dst / "build" / "qa.json", {})
     (src / "build").mkdir(exist_ok=True); shutil.copy(dst / "build" / "final.mp4", src / "build" / "final_soundoff.mp4")
     return {**out, "final": f"films/{name}/build/final_soundoff.mp4", "qa": q.get("checks"), "lint": (q.get("lint") or {}).get("summary") if isinstance(q.get("lint"), dict) else q.get("lint"),
