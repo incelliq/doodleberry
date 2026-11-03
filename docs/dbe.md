@@ -69,6 +69,17 @@ environment variables below).
   `reminder.ics` for the person who posts it. Unapproved posts that are due are held, never sent. `post.done` records
   the published link; when all of a row's posts are out, the row is marked posted in the plan with every link.
   `post.status` and the board's Posting section show the queue, with Approve, Revoke and Posted buttons.
+- **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
+  far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
+  overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,
+  depth 1). A plane at depth d follows the camera by 1/d and zooms by 1 + (zoom - 1)/d, so far planes move less (true
+  parallax); `drift` moves a plane on its own; depth of field blurs each plane by `dof` × |1/d − 1/focus|. Nodes per
+  plane: `grade` (brightness, contrast, saturation, tint), `blur`, `glow` (coloured, with strength), `mask` (ellipse,
+  rect or path, feathered, inverted, in plane or screen space) and `blend` (any CSS blend mode, opacity). Everything
+  is SVG filters and masks: a frame rendered twice is byte-identical. Set `"set": "none"` (transparent) when the
+  planes paint the world. Ids start with `comp-`, which the AI-look lint treats as deliberate. `films/night-planes`
+  (golden frames): a sky with a glowing moon, hills, a masked and screen-blended mist band, the stage and foreground
+  grass under a slow camera push.
 - **Drawn levels** (WP-35, puppet format v0.8): hand-drawn animation as a sequence of drawings with an exposure
   sheet. `level.make` builds one from drawings (PNG, transparent) and a timing (on ones, twos, threes, or holds per
   drawing) into `cast/levels/<name>.puppet.json`; `level.xsheet` retimes it or writes the cells; `level.from_pencil2d`

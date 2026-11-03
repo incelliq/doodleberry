@@ -110,7 +110,7 @@ covered, now added to their packages' scopes.
 | Feature | Source | Status | Priority | Notes |
 |---|---|---|---|---|
 | Set templates | NEW | ✅ | – | 16 sets (1.6); map board and anatomy plates: WP-16 |
-| Layered sets with parallax and multiplane depth | PRO (Harmony) | ⬜ | P1 | multiplane depth: WP-36 |
+| Layered sets with parallax and multiplane depth | PRO (Harmony) | ✅ | P1 | shots.json `comp` depth planes: parallax by 1/depth, depth of field, cast on planes (`films/night-planes`, WP-36) |
 | Camera pan and zoom | PRO | ✅ | – | folded into the bake for every renderer |
 | Camera grammar: shake, follow a character, auto-framing with caption headroom, punch-in on emphasis | NEW | ✅ | – | `camera_auto` (2.6) |
 | Shot-size templates (wide, medium, close-up, over-the-shoulder) | PRO (Storyboard Pro) | 🟡 | P1 | `camera_auto` medium and wide shots (2.6); named sizes and over-the-shoulder: WP-19 |
@@ -118,7 +118,7 @@ covered, now added to their packages' scopes.
 | Continuity checks: 180° rule, screen direction, eyeline | IDEA | ⬜ | P2 | 180-degree rule, screen direction, eyeline in lint: WP-19 |
 | Toon lighting: rim, cast shadows, colour script, time-of-day grade | PRO | 🟡 | P1 | `style.toon` cel shadows and rims in SVG (1.7); other renderers WP-14; colour script and grades WP-37 |
 | FX: particles (rain, dust, sparks), impact frames, speed lines | PRO | 🟡 | P1 | motion effects (2.20) and cartoon physics (2.19); rain, sparks, particles: WP-42 |
-| Node compositor: masks, mattes, blend modes, blur, glow | PRO (Harmony, AE) | 🟡 | P2 | ffmpeg overlays only; node compositor: WP-36 |
+| Node compositor: masks, mattes, blend modes, blur, glow | PRO (Harmony, AE) | 🟡 | P2 | per-plane nodes in `comp` (grade, blur, glow, mask, blend; WP-36); light wrap, tracker and the graph editor: WP-36 part 2, WP-20 |
 | Transitions: whoosh cut, match cut, wipes | PRO | 🟡 | P1 | whoosh on cuts; match cuts, wipes, dissolves: WP-15 |
 | Infographics layer: charts, maps, labels, callouts, cutaways bound to facts | NEW | ✅ | – | explainer kits (1.13, 1.15) and data-bound charts (2.17); maps: WP-16 |
 | Kinetic typography | PRO (AE) | 🟡 | P1 | word-highlight captions and pop-in titles (1.15); more: WP-15 |
@@ -134,7 +134,7 @@ covered, now added to their packages' scopes.
 | **Beat grid:** one BPM grid (e.g. 100 BPM at 30 fps = 18 frames per beat, 72 per bar); scene starts and key events snap to beats; picture and sound read the same `timing.json` | PRO/NEW | ✅ | – | `film.beats` (2.14) |
 | Camera float: a slow constant drift on the scene layer, so no frame is ever dead | NEW | ✅ | – | camera float (1.13) |
 | Cold-open rule: frame one shows the subject and the hook is readable by 1.5 s | NEW | ✅ | – | `qa.run` cold-open check (0.11) |
-| 2.5D: 2D layers placed in 3D space with a real camera | PRO | 🟡 | P2 | three.js renderer; 2D multiplane: WP-36 |
+| 2.5D: 2D layers placed in 3D space with a real camera | PRO | 🟡 | P2 | three.js renderer; 2D multiplane with a parallax camera (`comp`, WP-36); layers in true 3D space: WP-42 |
 
 ## 5. Story and pre-production
 | Feature | Source | Status | Priority | Notes |

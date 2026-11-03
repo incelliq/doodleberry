@@ -1,0 +1,60 @@
+{
+ "titles": [
+  {
+   "text": "Look how far away those hills are",
+   "by": "Claude (WP-36 demo)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "How far away are those hills?",
+   "by": "Claude (WP-36 demo)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "HOW FAR",
+   "bottom": "ARE THE HILLS?",
+   "by": "Claude (WP-36 demo)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  },
+  {
+   "top": "THOSE HILLS",
+   "bottom": "ARE FAR AWAY",
+   "by": "Claude (WP-36 demo)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

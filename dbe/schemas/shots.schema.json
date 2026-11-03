@@ -185,6 +185,10 @@
     },
     "timeline": {
      "$ref": "#/$defs/timeline"
+    },
+    "plane": {
+     "type": "string",
+     "description": "WP-36: the depth plane this cast member is drawn on (default: stage)"
     }
    }
   },
@@ -298,6 +302,76 @@
     "bubbles": {},
     "extra_bubbles": {
      "type": "array"
+    },
+    "comp": {
+     "type": "object",
+     "description": "WP-36 compositor: depth planes (parallax 1/depth, depth of field from focus and dof) and per-plane nodes (grade, blur, glow, mask, blend); see dbe/player/comp.js",
+     "properties": {
+      "focus": {
+       "type": "number"
+      },
+      "dof": {
+       "type": "number",
+       "minimum": 0
+      },
+      "planes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "id"
+        ],
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+         },
+         "set": {
+          "type": "string"
+         },
+         "set_opts": {
+          "type": "object"
+         },
+         "items": {
+          "type": "array"
+         },
+         "drift": {
+          "type": "array"
+         },
+         "opacity": {
+          "type": "number"
+         }
+        }
+       }
+      },
+      "nodes": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "type",
+         "plane"
+        ],
+        "properties": {
+         "type": {
+          "enum": [
+           "grade",
+           "blur",
+           "glow",
+           "mask",
+           "blend"
+          ]
+         },
+         "plane": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
     }
    }
   }

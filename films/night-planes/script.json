@@ -1,0 +1,17 @@
+{
+ "speakers": {
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.8,
+ "gap_s": 0.5,
+ "lines": [
+  {
+   "id": "far",
+   "speaker": "ravi",
+   "fact": null,
+   "text": "Look how far away those hills are."
+  }
+ ]
+}

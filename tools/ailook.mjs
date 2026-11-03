@@ -24,11 +24,11 @@ const out = await p.evaluate(async ([st, allow]) => {
       const cs = getComputedStyle(el);
       if ((cs.boxShadow && cs.boxShadow !== 'none') || /drop-shadow/.test(cs.filter || '')) res.shadow.push({ t: tt, el: el.tagName });
       const f = ref(el.getAttribute('filter')) || ref(cs.filter);
-      if (f && !ok.has(f)) { const fe = byId(f);
+      if (f && !ok.has(f) && !f.startsWith('comp-')) { const fe = byId(f);   // comp-: deliberate compositing (WP-36)
         if (fe && fe.querySelector('feDropShadow')) res.shadow.push({ t: tt, id: f });
         else if (fe && fe.querySelector('feGaussianBlur')) res.glow.push({ t: tt, id: f }); }
       for (const a of ['fill', 'stroke']) { const g = ref(el.getAttribute(a)) || ref(cs[a]);
-        if (g && !ok.has(g)) { const ge = byId(g);
+        if (g && !ok.has(g) && !g.startsWith('comp-')) { const ge = byId(g);
           if (ge && /Gradient$/.test(ge.tagName)) { const r = el.getBoundingClientRect(); if (r.width * r.height > 0.03 * W * H) res.gradient.push({ t: tt, id: g, area: +(r.width * r.height / (W * H)).toFixed(3) }); } } }
     }
     const texts = [...root.querySelectorAll('text')].filter(e => e.textContent.trim());

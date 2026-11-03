@@ -277,6 +277,7 @@
     let world = set.draw(tq, sh.set_opts || {}, W, H), ink = '';
     if (sh.underlays && !bgOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
     const heads = {}, casts = []; CASTS = casts;
+    const planeInk = {}, onPlane = c => sh.comp && c.plane && c.plane !== 'stage' && !bgOnly;   // WP-36: cast members on depth planes
     for (const c of sh.cast || []) {
       const p = PUP[c.puppet]; if (!p) continue;
       if (bgOnly) { // the set plate for other renderers keeps each character's ground shadow
@@ -289,8 +290,10 @@
       if (tl.lookat) tl.lookat = [].concat(tl.lookat).map(la => ({ ...la, target_local: toLocal(p, worldOf(la.target, tq, casts), x, y, s, flip) }));
       const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
       casts.push({ p, x, y, s, flip, pose, c, tl, L });
-      if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`;
-      ink += Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}) });
+      const shadow = st.shadow !== false ? `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>` : '';
+      const drawn = Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}) });
+      if (onPlane(c)) planeInk[c.plane] = (planeInk[c.plane] || '') + shadow + drawn;
+      else { world += shadow; ink += drawn; }
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
     if (!bgOnly) ink += (sh.props || []).map(pr => propSVG(pr, tq, casts)).join('');
@@ -313,6 +316,11 @@
     if (sh.camera_auto && !sh.camera && !bgOnly) { const [cx, cy, z] = autoCam(sh, tq, casts); VIEW = [cx, cy, z];   // camera grammar (plan 2.6)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z.toFixed(4)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})">${world}</g>`; }
     if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; VIEW = [cx, cy, z]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
+    if (sh.comp && window.COMP && !bgOnly) {   // WP-36: depth planes with parallax and depth of field, per-plane nodes
+      const view = sh.camera ? (Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]) : sh.camera_auto ? autoCam(sh, tq, casts) : [W / 2, H / 2, 1];
+      VIEW = view;
+      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS),
+        drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
     if (!bgOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#boil)">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);

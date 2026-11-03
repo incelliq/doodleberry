@@ -1,0 +1,209 @@
+{
+ "title": "Night planes",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "none",
+   "start": 0,
+   "end": "far.end+2.0",
+   "start_line": "far",
+   "end_line": "far",
+   "bubbles": true,
+   "camera": [
+    [
+     0,
+     [
+      540,
+      960,
+      1.0
+     ]
+    ],
+    [
+     "far.end+2.0",
+     [
+      600,
+      1010,
+      1.18
+     ]
+    ]
+   ],
+   "comp": {
+    "focus": 1,
+    "dof": 3.5,
+    "planes": [
+     {
+      "id": "sky",
+      "depth": 8,
+      "items": [
+       {
+        "type": "gradient",
+        "kind": "linear",
+        "rect": [
+         -500,
+         -300,
+         2080,
+         2400
+        ],
+        "from": [
+         540,
+         -300
+        ],
+        "to": [
+         540,
+         1500
+        ],
+        "stops": [
+         [
+          0,
+          "#0b1230",
+          1
+         ],
+         [
+          1,
+          "#2b3d6e",
+          1
+         ]
+        ]
+       },
+       {
+        "type": "stars",
+        "rect": [
+         -300,
+         -200,
+         1680,
+         1300
+        ],
+        "count": 220,
+        "seed": 11,
+        "size": 3.2
+       },
+       {
+        "type": "shape",
+        "svg": "<circle cx='790' cy='360' r='70' fill='#f6efc8'/>"
+       }
+      ]
+     },
+     {
+      "id": "hills",
+      "depth": 3,
+      "items": [
+       {
+        "type": "shape",
+        "svg": "<path d='M-400 1250 C -150 1080 120 1120 330 1180 C 560 1240 700 1060 960 1110 C 1180 1150 1320 1220 1500 1200 L 1500 1700 L -400 1700 Z' fill='#34497c'/>"
+       },
+       {
+        "type": "shape",
+        "svg": "<path d='M-400 1360 C -100 1270 200 1300 420 1340 C 640 1380 820 1290 1060 1310 C 1260 1330 1380 1380 1500 1370 L 1500 1800 L -400 1800 Z' fill='#24345e'/>"
+       }
+      ]
+     },
+     {
+      "id": "mist",
+      "depth": 2,
+      "items": [
+       {
+        "type": "shape",
+        "svg": "<rect x='-400' y='1250' width='1900' height='170' fill='#9fb2d6'/>"
+       }
+      ]
+     },
+     {
+      "id": "ground",
+      "depth": 1,
+      "items": [
+       {
+        "type": "shape",
+        "svg": "<rect x='-400' y='1480' width='1900' height='700' fill='#13261c'/>"
+       }
+      ]
+     },
+     {
+      "id": "stage",
+      "depth": 1
+     },
+     {
+      "id": "front",
+      "depth": 0.6,
+      "items": [
+       {
+        "type": "shape",
+        "svg": "<path d='M-300 2080 Q -282 1640 -262 2080 Z' fill='#050b07'/><path d='M-260 2080 Q -242 1600 -222 2080 Z' fill='#050b07'/><path d='M-220 2080 Q -202 1560 -182 2080 Z' fill='#050b07'/><path d='M-180 2080 Q -162 1700 -142 2080 Z' fill='#050b07'/><path d='M-140 2080 Q -122 1660 -102 2080 Z' fill='#050b07'/><path d='M-100 2080 Q -82 1620 -62 2080 Z' fill='#050b07'/><path d='M-60 2080 Q -42 1580 -22 2080 Z' fill='#050b07'/><path d='M-20 2080 Q -2 1540 18 2080 Z' fill='#050b07'/><path d='M20 2080 Q 38 1680 58 2080 Z' fill='#050b07'/><path d='M60 2080 Q 78 1640 98 2080 Z' fill='#050b07'/><path d='M100 2080 Q 118 1600 138 2080 Z' fill='#050b07'/><path d='M140 2080 Q 158 1560 178 2080 Z' fill='#050b07'/><path d='M180 2080 Q 198 1700 218 2080 Z' fill='#050b07'/><path d='M220 2080 Q 238 1660 258 2080 Z' fill='#050b07'/><path d='M260 2080 Q 278 1620 298 2080 Z' fill='#050b07'/><path d='M300 2080 Q 318 1580 338 2080 Z' fill='#050b07'/><path d='M340 2080 Q 358 1540 378 2080 Z' fill='#050b07'/><path d='M380 2080 Q 398 1680 418 2080 Z' fill='#050b07'/><path d='M420 2080 Q 438 1640 458 2080 Z' fill='#050b07'/><path d='M460 2080 Q 478 1600 498 2080 Z' fill='#050b07'/><path d='M500 2080 Q 518 1560 538 2080 Z' fill='#050b07'/><path d='M540 2080 Q 558 1700 578 2080 Z' fill='#050b07'/><path d='M580 2080 Q 598 1660 618 2080 Z' fill='#050b07'/><path d='M620 2080 Q 638 1620 658 2080 Z' fill='#050b07'/><path d='M660 2080 Q 678 1580 698 2080 Z' fill='#050b07'/><path d='M700 2080 Q 718 1540 738 2080 Z' fill='#050b07'/><path d='M740 2080 Q 758 1680 778 2080 Z' fill='#050b07'/><path d='M780 2080 Q 798 1640 818 2080 Z' fill='#050b07'/><path d='M820 2080 Q 838 1600 858 2080 Z' fill='#050b07'/><path d='M860 2080 Q 878 1560 898 2080 Z' fill='#050b07'/><path d='M900 2080 Q 918 1700 938 2080 Z' fill='#050b07'/><path d='M940 2080 Q 958 1660 978 2080 Z' fill='#050b07'/><path d='M980 2080 Q 998 1620 1018 2080 Z' fill='#050b07'/><path d='M1020 2080 Q 1038 1580 1058 2080 Z' fill='#050b07'/><path d='M1060 2080 Q 1078 1540 1098 2080 Z' fill='#050b07'/><path d='M1100 2080 Q 1118 1680 1138 2080 Z' fill='#050b07'/><path d='M1140 2080 Q 1158 1640 1178 2080 Z' fill='#050b07'/><path d='M1180 2080 Q 1198 1600 1218 2080 Z' fill='#050b07'/><path d='M1220 2080 Q 1238 1560 1258 2080 Z' fill='#050b07'/><path d='M1260 2080 Q 1278 1700 1298 2080 Z' fill='#050b07'/><path d='M1300 2080 Q 1318 1660 1338 2080 Z' fill='#050b07'/><path d='M1340 2080 Q 1358 1620 1378 2080 Z' fill='#050b07'/><path d='M1380 2080 Q 1398 1580 1418 2080 Z' fill='#050b07'/>"
+       }
+      ]
+     }
+    ],
+    "nodes": [
+     {
+      "type": "glow",
+      "plane": "sky",
+      "radius": 22,
+      "strength": 0.9,
+      "colour": "#fff1b8"
+     },
+     {
+      "type": "grade",
+      "plane": "hills",
+      "brightness": 0.95,
+      "saturation": 0.8,
+      "tint": "#28407a",
+      "tint_amount": 0.2
+     },
+     {
+      "type": "mask",
+      "plane": "mist",
+      "shape": {
+       "ellipse": [
+        540,
+        1335,
+        760,
+        80
+       ]
+      },
+      "feather": 90
+     },
+     {
+      "type": "blend",
+      "plane": "mist",
+      "mode": "screen",
+      "opacity": 0.4
+     }
+    ]
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 430,
+      "y": 1600,
+      "s": 0.95
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": "far.start+0.2",
+        "end": "far.end",
+        "weight": 3
+       }
+      ],
+      "visemes_from": "ravi",
+      "springs": true
+     }
+    }
+   ]
+  }
+ ]
+}

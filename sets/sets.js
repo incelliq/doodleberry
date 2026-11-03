@@ -6,6 +6,7 @@
   const f2 = n => (+n).toFixed(1);
   const SETS = {
     plain: { floor: 1500, draw: (t, o = {}) => `<rect width="1080" height="1920" fill="${o.color || '#e6eef3'}"/><rect y="1500" width="1080" height="420" fill="${o.floor || '#d5dde2'}"/>` },
+    none: { floor: 1500, draw: () => '' },   // transparent: the shot's depth planes (WP-36 comp) paint the world
 
     park: { floor: 1500, draw: (t) => {
       let s = `<rect width="1080" height="1920" fill="#dff0f7"/>`;
@@ -43,6 +44,7 @@
   // ---------- landscape layouts (16:9 and wider): composed for the frame, not cropped from portrait ----------
   const LAND = {
     plain: (t, o, W, H) => `<rect width="${W}" height="${H}" fill="${o.color || '#e6eef3'}"/><rect y="${H * 0.8}" width="${W}" height="${H * 0.2}" fill="${o.floor || '#d5dde2'}"/>`,
+    none: () => '',
     park: (t, o, W, H) => {
       const fl = H * 0.8; let s = `<rect width="${W}" height="${H}" fill="#dff0f7"/>`;
       for (const [x, y, r] of [[200, 150, 60], [760, 110, 74], [1340, 170, 56], [1720, 120, 64]]) { const xx = ((x + t * 12) % (W + 240)) - 120; s += `<g fill="#fff" opacity="0.9"><circle cx="${f2(xx)}" cy="${y}" r="${r}"/><circle cx="${f2(xx + r)}" cy="${y + 10}" r="${r * 0.8}"/><circle cx="${f2(xx - r)}" cy="${y + 12}" r="${r * 0.7}"/></g>`; }
@@ -72,7 +74,7 @@
       for (let i = 0; i < 50; i++) s += `<circle cx="${(i * 197) % W}" cy="${fl + 70 + (i * 131) % (H - fl - 80)}" r="${6 + (i % 4) * 3}" fill="#74492e"/>`;
       return s + `<path d="M0 ${fl} L${W} ${fl}" stroke="${INK}" stroke-width="5"/>`; },
   };
-  const FLOOR_FRAC = { plain: 0.8, park: 0.8, clinic: 0.8, paper: 0.8, cutaway: 0.55 };
+  const FLOOR_FRAC = { plain: 0.8, none: 0.8, park: 0.8, clinic: 0.8, paper: 0.8, cutaway: 0.55 };
   for (const [k, set] of Object.entries(SETS)) {
     const portrait = set.draw;
     set.draw = (t, o = {}, W = 1080, H = 1920) => (H >= W ? portrait(t, o) : LAND[k](t, o, W, H));
