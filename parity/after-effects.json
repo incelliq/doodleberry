@@ -1429,10 +1429,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shot.render",
+       "shots.json comp particles",
        "WP-42"
       ],
-      "note": "Motion-derived dust puffs, impact stars and prop physics exist (fx, drop/flight); particle systems (rain, sparks, snow) are WP-42."
+      "note": "Seeded particles (confetti, snow, rain) on compositor planes, motion-derived dust and impact stars, and prop physics exist; shatter, card dance and foam are WP-42."
      }
     },
     {
@@ -2026,12 +2026,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "puppet.from_blend",
-       "shot.render",
-       "export.synfig",
+       "proc.cook",
        "WP-42"
       ],
-      "note": "Doodleberry pairs with Blender (cut-out rigs in, Grease Pencil renderer out) and Synfig (.sif export); Blender 3D sets in films are WP-42."
+      "note": "Blender renders Geometry Nodes 3D sets into shots (proc.cook), besides cut-out rigs in and Grease Pencil out; a live 3D scene link is WP-42."
      }
     },
     {

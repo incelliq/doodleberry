@@ -389,6 +389,19 @@ effects and the Node solvers.
   `points` (how far a part is from a frame point at a time). `films/stretch-demo` is the demo. `render.parity` compares
   the characters even in shots with props or effects, and lists those as `not_compared` (planes still refuse).
 
+## Procedural and 3D layer (WP-42, part 1)
+A shot's `"proc": {"floor": 1500, "nodes": {...}}` is a graph cooked into the shot by `proc.cook {name, shot, force}`
+(`dbe/proc.py`). Nodes: `scatter` (seeded points with a minimum spacing in a region), `crowd` (cast members on the
+points: puppets picked by seed, facing the centre, idles out of phase, reactions such as `clap` at seeded times; with
+`"depth": [near, far]` each stands on its own compositor depth plane, where the ground of that depth meets the frame),
+`particles` (confetti, snow or rain: seeded, a pure function of time, on a compositor plane) and `gn_set` (a Blender
+Geometry Nodes set, `dbe/blender_gn.py`: blocks scattered on a lot, random sizes and shades, cel-shaded with ink lines,
+rendered by EEVEE through a camera derived from the shot's 2D camera keys, into a screen-locked compositor plate). Each
+node is cached by a hash of its operation, parameters, inputs and the context it reads (camera, span, script), so a
+change re-cooks that node and what reads it: a crowd edit does not render the city again. With a 3D set the compositor
+zooms its planes in true perspective (`"zoom": "dolly"`), so the 2D planes and the 3D render share one camera exactly.
+Frames with images wait until they have decoded. `films/city-parade` is the demo.
+
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
 and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their

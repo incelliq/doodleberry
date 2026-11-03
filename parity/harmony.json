@@ -1826,12 +1826,12 @@
      "capability": "Particle systems (rain, snow, sparks)",
      "pro_use": "Environmental and impact effects",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
-       "shots.json fx",
-       "WP-42"
+       "shots.json comp particles",
+       "proc.cook"
       ],
-      "note": "Speed lines, dust and impact stars from motion; particles are WP-42"
+      "note": "Seeded particle presets (rain, snow, confetti) drawn as a pure function of time on any depth plane; speed lines, dust and impact stars from motion."
      }
     },
     {
@@ -2037,11 +2037,11 @@
      "capability": "Rendering 3D models with a toon shader",
      "pro_use": "Match 3D elements to the 2D style",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-42"
+       "proc.cook"
       ],
-      "note": "EEVEE passes composited with 2D are WP-42"
+      "note": "Geometry Nodes 3D sets render cel-shaded (two-tone ramp) with ink lines in EEVEE and composite behind the 2D cast."
      }
     },
     {

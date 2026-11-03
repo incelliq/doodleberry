@@ -2021,11 +2021,11 @@
      "capability": "Birth rate, start frame and a random seed for repeatable variety.",
      "pro_use": "Same settings give a new but reproducible arrangement.",
      "match": {
-      "kind": "gap",
+      "kind": "data",
       "ref": [
-       "WP-42"
+       "shots.json comp particles"
       ],
-      "note": "Any implementation must be seeded so frames stay pure functions of the frame number."
+      "note": "Particles take a count, a start time and a seed, so the variety repeats exactly (a pure function of the frame)."
      }
     },
     {
@@ -2057,11 +2057,12 @@
      "capability": "Presets for rain, snow, sparkles and smoke.",
      "pro_use": "Fast starting points for common atmosphere.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "shots.json comp particles",
        "WP-42"
       ],
-      "note": "Dust puffs and speed lines (shots.json fx) and ambient set life (steam, clouds) exist."
+      "note": "Presets for rain, snow and confetti exist; sparkles and smoke are WP-42."
      }
     }
    ]

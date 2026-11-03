@@ -85,7 +85,7 @@ Measured on 2 November 2026 in this container (Ubuntu 24.04 packages).
 
 | Part | Licence (class) | Decision | Status |
 |---|---|---|---|
-| Blender `bpy` | GPL-2.0-or-later (copyleft) | link in a separate Python process | planned (WP-42) |
+| **Blender 5.2 Geometry Nodes and EEVEE** (`bpy` in headless Blender) | GPL-2.0-or-later (copyleft) | drive: a generated script builds the node tree and renders | **working**: `proc.cook` gn_set (procedural 3D sets, cel-shaded with Freestyle ink lines, framed by the shot camera); renders are byte-identical twice. OpenUSD and Bullet stay planned (WP-42) |
 | **Rapier 0.21** (2D physics, cross-platform deterministic build) | Apache-2.0 (permissive) | link: the npm WASM package in Node (`tools/physics/`), baked into prop tracks so no renderer needs it | **working**: `physics.solve` (multi-body scenes, contacts retimed onto the beat); reruns byte-equal |
 | Bullet (PyBullet) | zlib (permissive) | link for cloth and soft bodies if needed | not needed for WP-09 (Rapier covers rigid bodies); planned with WP-42 if cloth is wanted |
 | Manifold | Apache-2.0 (permissive) | link (`manifold3d`) for solid booleans | planned (WP-42) |

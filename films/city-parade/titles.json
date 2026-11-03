@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "Welcome to the city parade",
+   "by": "Claude (engine demo, WP-42)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Can Pip get the crowd to cheer?",
+   "by": "Claude (engine demo, WP-42)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "CITY PARADE",
+   "bottom": "EVERYBODY CHEER!",
+   "by": "Claude (engine demo, WP-42)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

@@ -2381,6 +2381,10 @@ def test_golden(update=False, film=""):
         bad, meas = _interact_test()
         failed += 1 if bad else 0
         results.append({"interact": "path walks without foot sliding, IK/FK blends, hands that meet", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "proc":   # procedural and 3D layer (WP-42): node cache, determinism, the GN set renders the same twice
+        bad, meas = _proc_test()
+        failed += 1 if bad else 0
+        results.append({"proc": "graph re-cooks only changed nodes; cooks and Blender renders are deterministic", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -4064,4 +4068,64 @@ def _interact_test():
         meas["stretch_demo"] = m2["points"]
         if not m2["ok"]:
             bad.append({"stretch_demo": m2["points"]})
+    return bad, meas
+
+
+# ---------------- procedural and 3D layer (WP-42) ----------------
+def _proc_into(name, raw, shot, force=(), dry=False):
+    """cook the shot's proc graph into the raw shots.json shot (in memory); returns the cook report"""
+    from . import proc as PR
+    rs = _raw_shot(raw, shot)
+    blk = rs.get("proc") or {}
+    if not blk.get("nodes"):
+        raise ValueError(f"shot {shot} has no proc block")
+    tm = _json(FILMS / name / "timing.json", {})
+    res = resolve_times(rs, tm)
+    W, H = raw.get("size", [1080, 1920])
+    fps = raw.get("fps", 30)
+    start, end = float(res["start"]), float(res["end"])
+    nodes = resolve_times(blk["nodes"], tm)
+    ctx = {"size": [W, H], "fps": fps, "start": start, "frames": round((end - start) * fps),
+           "camera": res.get("camera") or [[start, [W / 2, H / 2, 1]]], "floor": blk.get("floor", 1500)}
+    outs, report = PR.cook(nodes, ctx, FILMS / name / "build" / "proc", force=set(force or ()), dry=dry)
+    if not dry:
+        PR.apply(rs, outs)
+    return report
+
+
+@command("proc.cook", name=("string", "film"), shot=("string", "shot id"),
+         force=("array", "node ids to cook again even if cached", None),
+         block=("object", "a proc block to store first ({nodes: {...}, floor}); empty: the shot's own", None))
+def proc_cook(name, shot, force=None, block=None):
+    """Cook a shot's procedural graph (WP-42): scatter, crowd (cast members with seeded variation), particles and
+    gn_set (a Geometry Nodes 3D set rendered by Blender, framed by the shot camera, behind the 2D puppets). Every node
+    is cached by a hash of its operation, parameters, inputs and context, so only changed nodes and the nodes
+    downstream of them cook again. Writes the crowd and the compositor items into shots.json; returns which nodes were
+    cooked and which came from the cache."""
+    d = _film(name)
+    raw = _json(d / "shots.json")
+    if block:
+        _raw_shot(raw, shot)["proc"] = block
+    rep = _proc_into(name, raw, shot, force)
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    _player_page(name)
+    return rep
+
+
+def _proc_test():
+    """WP-42 checks: the node cache (a change re-cooks that node and what reads it), pure cooks, the Geometry Nodes set
+    renders identical bytes twice, and on city-parade a crowd change would re-cook the crowd but not the city"""
+    from . import proc as PR
+    bad, meas = PR.self_test(ROOT / "out" / "proctest")
+    b2, m2 = PR.gn_determinism(ROOT / "out" / "gntest")
+    bad += b2; meas = {"cache": meas, "gn_render": m2}
+    if (FILMS / "city-parade").exists():
+        raw = _json(FILMS / "city-parade" / "shots.json")
+        base = _proc_into("city-parade", json.loads(json.dumps(raw)), "s1", dry=True)
+        raw2 = json.loads(json.dumps(raw)); _raw_shot(raw2, "s1")["proc"]["nodes"]["crowd"]["seed"] += 1
+        alt = _proc_into("city-parade", raw2, "s1", dry=True)
+        changed = sorted(n for n in base["keys"] if base["keys"][n] != alt["keys"][n])
+        meas["city_parade"] = {"cached_now": base["cached"], "crowd_seed_changes_keys_of": changed}
+        if changed != ["crowd"]:
+            bad.append({"city_parade_keys": changed})
     return bad, meas

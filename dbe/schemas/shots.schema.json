@@ -361,6 +361,13 @@
          },
          "opacity": {
           "type": "number"
+         },
+         "screen": {
+          "type": "boolean",
+          "description": "WP-42: screen-locked (a 3D render already framed by the camera)"
+         },
+         "proc_plane": {
+          "type": "boolean"
          }
         }
        }
@@ -388,6 +395,13 @@
          }
         }
        }
+      },
+      "zoom": {
+       "enum": [
+        "scale",
+        "dolly"
+       ],
+       "description": "WP-42: dolly = true perspective (matches 3D renders framed by the shot camera)"
       }
      }
     },
@@ -686,6 +700,43 @@
       },
       "solved": {
        "type": "object"
+      }
+     }
+    },
+    "proc": {
+     "type": "object",
+     "description": "WP-42 procedural graph (proc.cook): nodes scatter, crowd, particles, gn_set; cached by content hash",
+     "required": [
+      "nodes"
+     ],
+     "properties": {
+      "floor": {
+       "type": "number"
+      },
+      "nodes": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "object",
+        "required": [
+         "op"
+        ],
+        "properties": {
+         "op": {
+          "enum": [
+           "scatter",
+           "crowd",
+           "particles",
+           "gn_set"
+          ]
+         },
+         "in": {
+          "type": [
+           "string",
+           "array"
+          ]
+         }
+        }
+       }
       }
      }
     }

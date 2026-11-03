@@ -9,9 +9,13 @@
 //                                             {"type": "gradient", "kind": "radial", "rect": [0, 0, 1080, 1920], "center": [540, 900], "r": 700,
 //                                              "stops": [[0, "#ffd27a", 0.5], [1, "#ffd27a", 0]]}]},
 //       {"id": "stage", "depth": 1},
-//       {"id": "front", "depth": 0.6, "items": [...]}     // cast entries with "plane": "front" are drawn here
+//       {"id": "front", "depth": 0.6, "items": [...]},    // cast entries with "plane": "front" are drawn here
+//       {"id": "set3d", "depth": 40, "screen": true, "items": [{"type": "plate", "src": "proc/<key>/f_%04d.png", "start": 0, "fps": 30, "count": 120}]},
+//       // WP-42: screen-locked (the 3D render is framed by the shot camera already); items also "particles":
+//       // {"type": "particles", "kind": "confetti" | "snow" | "rain", "count": 90, "seed": 3, "rect": [x, y, w, h], "start": t}
 //     ],
 //     "focus": 1, "dof": 3,                // blur px per unit of |1/depth - 1/focus| (0: everything sharp)
+//     "zoom": "scale" | "dolly",           // how planes zoom with the camera (dolly: true perspective, matches 3D renders)
 //     "nodes": [
 //       {"type": "grade", "plane": "sky", "brightness": 0.9, "contrast": 1.1, "saturation": 0.8, "tint": "#3050a0", "tint_amount": 0.15},
 //       {"type": "blur", "plane": "hills", "radius": 2},
@@ -46,11 +50,40 @@
         s += `<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(r)}" fill="${it.colour || '#fff8e0'}" opacity="${f2(tw)}"/>`; }
       return s;
     }
+    if (it.type === 'plate') {   // WP-42: a rendered image sequence (a Geometry Nodes 3D set), one image per frame
+      const fps = it.fps || 30, n = it.count || 1, every = it.every || 1;
+      let f = Math.round((t - (it.start || 0)) * fps); f = Math.max(0, Math.min(n - 1, f)); f -= f % every;
+      const src = String(it.src || '').replace('%04d', String(f).padStart(4, '0'));
+      return `<image href="${src}" x="0" y="0" width="${ctx.W}" height="${ctx.H}" preserveAspectRatio="none"/>`;
+    }
+    if (it.type === 'particles') return particles(it, t, ctx);
     return ctx.overlay ? ctx.overlay(it, t) : '';
   }
 
-  function camFor(d, view, W, H, drift, t) {
-    const [cx, cy, z] = view, zp = 1 + (z - 1) / d;
+  // WP-42: seeded particles, a pure function of time (each particle's path is fixed by the seed; nothing is simulated)
+  function particles(it, t, ctx) {
+    const st = it.start || 0; if (t < st || (it.end != null && t > it.end)) return '';
+    let seed = it.seed || 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const [x0, y0, w, h] = it.rect || [0, -40, ctx.W, ctx.H + 80], kind = it.kind || 'confetti', u = t - st;
+    const cols = it.colours || (kind === 'confetti' ? ['#e8603c', '#f6c945', '#3c8ee8', '#5fb85a', '#b05fd0'] : ['#ffffff']);
+    let s = '';
+    for (let i = 0; i < (it.count || 80); i++) {
+      const px = rnd(), py = rnd(), sp = rnd(), sw = rnd(), ph = rnd() * 6.283, c = cols[Math.floor(rnd() * cols.length) % cols.length], sz = rnd();
+      if (kind === 'rain') { const v = 900 + 500 * sp, y = y0 + ((py * h + v * u) % h), x = x0 + ((px * w + 0.25 * v * u) % w);
+        s += `<path d="M${f2(x)} ${f2(y)} l${f2(-10)} ${f2(-40)}" stroke="${it.colour || '#7fa6c9'}" stroke-width="3" stroke-linecap="round" opacity="0.7"/>`; continue; }
+      const v = kind === 'snow' ? 60 + 60 * sp : 140 + 160 * sp, y = y0 + ((py * h + v * u) % h), x = x0 + px * w + (kind === 'snow' ? 20 : 34) * Math.sin(u * (1 + sw * 2) + ph);
+      if (kind === 'snow') { s += `<circle cx="${f2(x)}" cy="${f2(y)}" r="${f2(3 + 4 * sz)}" fill="${c}" opacity="0.9"/>`; continue; }
+      const a = (u * (180 + 360 * sw) + ph * 57.3) % 360, k = Math.cos((u * (3 + 4 * sw) + ph));   // tumbling: the piece flips edge-on
+      s += `<rect x="-8" y="-5" width="16" height="10" rx="2" fill="${c}" stroke="#181e26" stroke-width="1.5" transform="translate(${f2(x)} ${f2(y)}) rotate(${f2(a)}) scale(1 ${f2(Math.max(0.15, Math.abs(k)))})"/>`;
+    }
+    return s;
+  }
+
+  // zoom "scale" (default): a plane zooms by 1 + (z - 1) / d. zoom "dolly" (WP-42): true perspective, the camera moves in
+  // by 1 - 1/z of its distance to the stage, so a plane zooms by d / (d - 1 + 1/z), exactly as a 3D render framed by
+  // the same camera does (the stage, d = 1, zooms by z either way)
+  function camFor(d, view, W, H, drift, t, model) {
+    const [cx, cy, z] = view, zp = model === 'dolly' ? d / Math.max(1e-3, d - 1 + 1 / z) : 1 + (z - 1) / d;
     const px = W / 2 + (cx - W / 2) / d - (drift ? drift[0] * t : 0), py = H / 2 + (cy - H / 2) / d - (drift ? drift[1] * t : 0);
     return `translate(${f2(W / 2)} ${f2(H / 2)}) scale(${zp.toFixed(4)}) translate(${f2(-px)} ${f2(-py)})`;
   }
@@ -113,7 +146,8 @@
       const mk = nodes.find(n => n.type === 'mask'); const bl = nodes.find(n => n.type === 'blend');
       if (mk) defs += maskFor(`${pid}-mask`, mk, W, H);
       const inner = mk && !mk.screen ? `<g mask="url(#${pid}-mask)">${content}</g>` : content;   // a plane mask moves with its plane
-      let g = `<g transform="${camFor(d, ctx.view, W, H, p.drift, t)}"${fl ? ` filter="url(#${pid}-fx)"` : ''}>${inner}</g>`;
+      // a screen-locked plane (WP-42: a 3D render already framed by the shot camera) does not move with the 2D camera
+      let g = `<g${p.screen ? '' : ` transform="${camFor(d, ctx.view, W, H, p.drift, t, c.zoom)}"`}${fl ? ` filter="url(#${pid}-fx)"` : ''}>${inner}</g>`;
       if (mk && mk.screen) g = `<g mask="url(#${pid}-mask)">${g}</g>`;                            // a screen mask stays put (a vignette)
       if (bl || p.opacity != null) g = `<g style="${bl ? `mix-blend-mode:${bl.mode || 'normal'}` : ''}" opacity="${bl ? (bl.opacity ?? 1) : p.opacity}">${g}</g>`;
       body += g;

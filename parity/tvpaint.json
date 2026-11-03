@@ -2119,10 +2119,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json: fx (dust, speed_lines, impacts)",
+       "shots.json comp particles",
        "WP-42"
       ],
-      "note": "Motion-derived dust puffs, speed lines and impact stars exist, and props have gravity. General particles are in WP-42."
+      "note": "Seeded particle presets (rain, snow, confetti) exist alongside motion effects and prop gravity; emitters with shape, rate and life are WP-42."
      }
     }
    ]

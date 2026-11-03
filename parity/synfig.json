@@ -1228,11 +1228,12 @@
      "capability": "Duplicate layer: repeats its group with an index value, so copies can vary by index.",
      "pro_use": "Radial patterns, rows of objects, simple crowds.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "proc.cook",
        "WP-42"
       ],
-      "note": "Scatter and instancing as data are in the procedural 2D scope."
+      "note": "Seeded scatter and instancing of cast members and 3D blocks with per-copy variation; duplicating a group by index is WP-42."
      }
     },
     {

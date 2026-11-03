@@ -1,0 +1,767 @@
+{
+ "title": "City parade",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": false,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "none",
+   "start": 0,
+   "end": "go.end+1.6",
+   "start_line": "hello",
+   "end_line": "go",
+   "style": {
+    "shadow": true
+   },
+   "bubbles": true,
+   "camera": [
+    [
+     0,
+     [
+      540,
+      960,
+      1
+     ]
+    ],
+    [
+     "go.end+1.6",
+     [
+      590,
+      935,
+      1.1
+     ]
+    ]
+   ],
+   "cast": [
+    {
+     "puppet": "puppet/examples/pip.puppet.json",
+     "speaker": "pip",
+     "place": {
+      "x": 540,
+      "y": 1500,
+      "s": 0.9
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "present_R",
+        "start": "hello.start+0.2"
+       },
+       {
+        "clip": "talk_beat",
+        "start": "hello.start",
+        "additive": true
+       },
+       {
+        "clip": "celebrate",
+        "start": "go.start+0.1"
+       }
+      ],
+      "visemes_from": "pip",
+      "springs": true
+     }
+    },
+    {
+     "puppet": "cast/generated/olu.puppet.json",
+     "place": {
+      "x": 208.7,
+      "y": 1176.0,
+      "s": 0.36,
+      "flip": 1
+     },
+     "plane": "crowd@2.5",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 2.315,
+        "speed": 1.091
+       },
+       {
+        "clip": "wave_R",
+        "start": 3.998,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 1,
+      "look": [
+       [
+        0,
+        [
+         -0.13,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/mei.puppet.json",
+     "place": {
+      "x": 712.4,
+      "y": 1183.0,
+      "s": 0.3717,
+      "flip": -1
+     },
+     "plane": "crowd@2.421",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 0.232,
+        "speed": 1.071
+       },
+       {
+        "clip": "celebrate",
+        "start": 3.13,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 2,
+      "look": [
+       [
+        0,
+        [
+         -0.24,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "place": {
+      "x": 91.4,
+      "y": 1187.7,
+      "s": 0.3794,
+      "flip": 1
+     },
+     "plane": "crowd@2.372",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 2.424,
+        "speed": 1.029
+       },
+       {
+        "clip": "clap",
+        "start": 2.875,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 3,
+      "look": [
+       [
+        0,
+        [
+         0.25,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "place": {
+      "x": 986.4,
+      "y": 1188.7,
+      "s": 0.3812,
+      "flip": -1
+     },
+     "plane": "crowd@2.361",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 3.982,
+        "speed": 0.86
+       },
+       {
+        "clip": "clap",
+        "start": 3.284,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 4,
+      "look": [
+       [
+        0,
+        [
+         -0.14,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/sana.puppet.json",
+     "place": {
+      "x": 348.5,
+      "y": 1189.7,
+      "s": 0.3828,
+      "flip": 1
+     },
+     "plane": "crowd@2.351",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 1.394,
+        "speed": 1.089
+       }
+      ],
+      "seed": 5,
+      "look": [
+       [
+        0,
+        [
+         0.14,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/olu.puppet.json",
+     "place": {
+      "x": 432.1,
+      "y": 1227.9,
+      "s": 0.4464,
+      "flip": 1
+     },
+     "plane": "crowd@2.016",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 3.578,
+        "speed": 0.933
+       }
+      ],
+      "seed": 6,
+      "look": [
+       [
+        0,
+        [
+         -0.18,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/lena.puppet.json",
+     "place": {
+      "x": 820.5,
+      "y": 1246.2,
+      "s": 0.4769,
+      "flip": -1
+     },
+     "plane": "crowd@1.887",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 3.673,
+        "speed": 0.965
+       },
+       {
+        "clip": "celebrate",
+        "start": 2.88,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 7,
+      "look": [
+       [
+        0,
+        [
+         0.15,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/kofi.puppet.json",
+     "place": {
+      "x": 86.1,
+      "y": 1260.8,
+      "s": 0.5014,
+      "flip": 1
+     },
+     "plane": "crowd@1.795",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 0.083,
+        "speed": 0.872
+       },
+       {
+        "clip": "wave_R",
+        "start": 4.03,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 8,
+      "look": [
+       [
+        0,
+        [
+         0.06,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/tomas.puppet.json",
+     "place": {
+      "x": 303.9,
+      "y": 1264.2,
+      "s": 0.507,
+      "flip": 1
+     },
+     "plane": "crowd@1.775",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 1.082,
+        "speed": 0.992
+       },
+       {
+        "clip": "celebrate",
+        "start": 3.08,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 9,
+      "look": [
+       [
+        0,
+        [
+         0.24,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/olu.puppet.json",
+     "place": {
+      "x": 919.9,
+      "y": 1284.3,
+      "s": 0.5405,
+      "flip": -1
+     },
+     "plane": "crowd@1.665",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 3.751,
+        "speed": 1.133
+       }
+      ],
+      "seed": 10,
+      "look": [
+       [
+        0,
+        [
+         -0.13,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/nimal.puppet.json",
+     "place": {
+      "x": 737.9,
+      "y": 1287.7,
+      "s": 0.5461,
+      "flip": -1
+     },
+     "plane": "crowd@1.648",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 0.816,
+        "speed": 1.126
+       },
+       {
+        "clip": "celebrate",
+        "start": 3.229,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 11,
+      "look": [
+       [
+        0,
+        [
+         0.19,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/sana.puppet.json",
+     "place": {
+      "x": 376.1,
+      "y": 1342.2,
+      "s": 0.6369,
+      "flip": 1
+     },
+     "plane": "crowd@1.413",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 0.912,
+        "speed": 1.134
+       },
+       {
+        "clip": "wave_R",
+        "start": 3.018,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 12,
+      "look": [
+       [
+        0,
+        [
+         -0.09,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/nimal.puppet.json",
+     "place": {
+      "x": 536.4,
+      "y": 1346.3,
+      "s": 0.6438,
+      "flip": 1
+     },
+     "plane": "crowd@1.398",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 1.283,
+        "speed": 1.076
+       },
+       {
+        "clip": "clap",
+        "start": 3.355,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 13,
+      "look": [
+       [
+        0,
+        [
+         0.13,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    },
+    {
+     "puppet": "cast/generated/priya.puppet.json",
+     "place": {
+      "x": 224.7,
+      "y": 1375.4,
+      "s": 0.6923,
+      "flip": 1
+     },
+     "plane": "crowd@1.3",
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0,
+        "phase": 0.455,
+        "speed": 1.129
+       },
+       {
+        "clip": "clap",
+        "start": 3.405,
+        "fadeIn": 0.2
+       }
+      ],
+      "seed": 14,
+      "look": [
+       [
+        0,
+        [
+         0.14,
+         0
+        ]
+       ]
+      ]
+     },
+     "solved": "proc",
+     "proc": "crowd"
+    }
+   ],
+   "comp": {
+    "planes": [
+     {
+      "id": "stage",
+      "depth": 1
+     },
+     {
+      "id": "set3d",
+      "depth": 40,
+      "screen": true,
+      "items": [
+       {
+        "type": "plate",
+        "src": "proc/gn_set-8afc619e551a99c9feb6/f_%04d.png",
+        "start": 0.0,
+        "fps": 30,
+        "count": 161,
+        "every": 1,
+        "proc": "city"
+       }
+      ]
+     },
+     {
+      "id": "front",
+      "depth": 0.8,
+      "items": [
+       {
+        "kind": "confetti",
+        "count": 90,
+        "seed": 3,
+        "start": 2.973,
+        "type": "particles",
+        "proc": "confetti"
+       }
+      ]
+     },
+     {
+      "id": "crowd@1.3",
+      "depth": 1.3,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.398",
+      "depth": 1.398,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.413",
+      "depth": 1.413,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.648",
+      "depth": 1.648,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.665",
+      "depth": 1.665,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.775",
+      "depth": 1.775,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.795",
+      "depth": 1.795,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@1.887",
+      "depth": 1.887,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@2.016",
+      "depth": 2.016,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@2.351",
+      "depth": 2.351,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@2.361",
+      "depth": 2.361,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@2.372",
+      "depth": 2.372,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@2.421",
+      "depth": 2.421,
+      "proc_plane": true
+     },
+     {
+      "id": "crowd@2.5",
+      "depth": 2.5,
+      "proc_plane": true
+     }
+    ],
+    "zoom": "dolly"
+   },
+   "proc": {
+    "floor": 1500,
+    "nodes": {
+     "spots": {
+      "op": "scatter",
+      "region": [
+       70,
+       1300,
+       1010,
+       1460
+      ],
+      "count": 14,
+      "min_dist": 95,
+      "seed": 4
+     },
+     "crowd": {
+      "op": "crowd",
+      "in": "spots",
+      "puppets": [
+       "cast/generated/*.puppet.json"
+      ],
+      "depth": [
+       1.3,
+       2.5
+      ],
+      "s": 0.9,
+      "face": "center",
+      "seed": 7,
+      "cheer": {
+       "clips": [
+        "clap",
+        "celebrate",
+        "wave_R"
+       ],
+       "start": "go.start",
+       "end": "go.end+0.4",
+       "share": 0.8
+      }
+     },
+     "confetti": {
+      "op": "particles",
+      "kind": "confetti",
+      "count": 90,
+      "seed": 3,
+      "start": "go.start+0.3",
+      "plane": "front"
+     },
+     "city": {
+      "op": "gn_set",
+      "kind": "city",
+      "seed": 11,
+      "blocks": {
+       "depth": [
+        26,
+        150
+       ],
+       "height": [
+        6,
+        34
+       ]
+      }
+     }
+    }
+   }
+  }
+ ]
+}

@@ -641,11 +641,12 @@
      "capability": "Custom modifiers built as Geometry Nodes groups.",
      "pro_use": "Technical artists write studio-specific stroke effects.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "proc.cook",
        "WP-42"
       ],
-      "note": "Procedural layer and Blender in-process are WP-42."
+      "note": "A Geometry Nodes set is built and rendered by Blender (proc.cook gn_set); user-written node groups are WP-42."
      }
     }
    ]
@@ -659,11 +660,12 @@
      "capability": "Array: repeat strokes with offsets, object-driven spacing and random variation.",
      "pro_use": "Fences, crowds of simple shapes, repeated motion-graphic elements.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "proc.cook",
        "WP-42"
       ],
-      "note": "Scatter, instancing and crowds as data are WP-42."
+      "note": "Seeded scatter and instancing (crowds, Geometry Nodes blocks) exist; arrays of strokes with offsets are WP-42."
      }
     },
     {
@@ -843,10 +845,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "timeline.edit",
+       "proc.cook",
        "WP-42"
       ],
-      "note": "Pose shifts and placement move parts; seeded random variation across copies is WP-42 (crowds with variation)."
+      "note": "Crowds vary each copy (puppet, facing, idle phase and speed, gaze, reaction timing) from a seed; per-stroke random offsets are WP-42."
      }
     },
     {
@@ -996,11 +998,12 @@
      "capability": "Generate ink strokes from 3D meshes as seen by the camera, with occlusion.",
      "pro_use": "Toon outlines on 3D sets and props so they match 2D characters.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "proc.cook",
        "WP-42"
       ],
-      "note": "3D sets through Blender in-process are WP-42; the three.js renderer has no line art."
+      "note": "3D sets get ink lines from their meshes as the camera sees them, with occlusion (Freestyle in the gn_set render); writing them as editable strokes is WP-42."
      }
     },
     {

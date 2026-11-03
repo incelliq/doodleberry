@@ -28,8 +28,8 @@ await Promise.all(Array.from({ length: nw }, async (_, w) => {
   const cdp = await p.context().newCDPSession(p);
   for (let f = a; f < z; f++) {
     // render, then hash the SVG stage (null for canvas/WebGL pages, which are never deduped)
-    const key = await p.evaluate(f => {
-      window.renderFrame(f);
+    const key = await p.evaluate(async f => {
+      await window.renderFrame(f);   // a frame with images (WP-42 plates) resolves once they have decoded
       const st = document.getElementById('stage'); if (!st || st.tagName.toLowerCase() !== 'svg' || document.querySelector('canvas')) return null;
       const s = st.innerHTML; let h1 = 0x811c9dc5 | 0, h2 = 0;
       for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (h2 * 31 + c) | 0; }

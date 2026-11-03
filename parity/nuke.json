@@ -1468,11 +1468,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shot.render",
-       "shots.json fx",
+       "shots.json comp particles",
        "WP-42"
       ],
-      "note": "Motion-driven dust puffs, impacts and speed lines plus prop physics exist; rain, sparks and particle systems are WP-42."
+      "note": "Seeded particle presets and prop physics exist; emitters with forces are WP-42."
      }
     },
     {
@@ -1555,10 +1554,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.render",
+       "proc.cook",
        "WP-42"
       ],
-      "note": "scene.js films can use a three.js camera (e.g. films/screwworm-3d); shot films have a 2D camera. A Blender/USD 3D layer with one camera is WP-42."
+      "note": "One camera drives the 2D planes and a Blender 3D set: the 2D camera keys map onto a perspective camera that frames the stage plane exactly (dolly zoom); camera import from trackers is WP-42."
      }
     },
     {
@@ -1629,10 +1628,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.render",
+       "proc.cook",
        "WP-42"
       ],
-      "note": "three.js scene films render through the scene.js pipeline; EEVEE passes composited with 2D are WP-42."
+      "note": "A Blender EEVEE render of the 3D set composites under the 2D planes (one beauty pass); separate passes are WP-42."
      }
     },
     {

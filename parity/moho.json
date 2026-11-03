@@ -397,11 +397,11 @@
      "capability": "Scatter brush: stamp many varied copies of a shape (leaves, grass, crowds of dots).",
      "pro_use": "Used to dress backgrounds quickly.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-42"
+       "proc.cook"
       ],
-      "note": "Procedural scatter and instancing are in WP-42."
+      "note": "proc.cook scatters points (seeded, minimum spacing) and instances cast members or 3D blocks on them."
      }
     },
     {
@@ -897,11 +897,12 @@
      "capability": "Particle layers: emit copies of child layers with speed, spread, lifetime and gravity.",
      "pro_use": "Used for rain, snow, sparks, smoke and simple crowds.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "proc.cook",
        "WP-42"
       ],
-      "note": "Motion effects (speed lines, dust, impact stars) exist. Particles and crowds are WP-42."
+      "note": "Particles (confetti, snow, rain) and procedural crowds of cast members exist; emitting copies of arbitrary child layers is WP-42."
      }
     },
     {
@@ -1313,11 +1314,12 @@
      "capability": "Particles tab: count, speed, spread, lifetime, emission along curves, per-particle offsets and emission order (14.4).",
      "pro_use": "Used to tune effects and procedural hair or tails.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "shots.json comp particles",
        "WP-42"
       ],
-      "note": "Particles are in WP-42."
+      "note": "Count, speed spread, start and seed per particle preset; emission along curves and per-particle lifetimes are WP-42."
      }
     },
     {

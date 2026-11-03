@@ -305,7 +305,15 @@
   if (castOnly) { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
   const t0 = only ? only.start : 0, t1 = only ? only.end : S.shots[S.shots.length - 1].end;
   window.FILMTIME = { start: t0, end: t1, fps: FPS };
-  window.frameAtTime = t => { stage.innerHTML = frameAt(t, bgOnly); };
+  // a frame with images (WP-42 plates) is ready only when they have loaded and decoded, so a render never captures a
+  // half-loaded frame: the returned promise resolves then (renderers await it)
+  window.frameAtTime = t => {
+    stage.innerHTML = frameAt(t, bgOnly);
+    const imgs = [...stage.querySelectorAll('image')].map(im => im.getAttribute('href')).filter(h => h && !h.startsWith('data:'));
+    if (!imgs.length) return;
+    return Promise.all(imgs.map(src => { const im = new Image(); im.src = src; return im.decode().catch(() => null); }))
+      .then(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+  };
   // the camera this player frames each moment with (auto camera, float drift): other renderers bake it as camera keys (WP-14)
   window.viewsAt = ts => ts.map(t => { frameAt(t, false); return VIEW.slice(); });
   // time warp (plan 2.13, the sound-off cut): shots.json "timewarp": [[cut time, film time], ...] knots, increasing;

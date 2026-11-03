@@ -9,22 +9,22 @@ Match: **command** (an existing command does it), **data** (a field of the film 
 measure), **partial** (partly there; the WP that finishes it), **gap** (missing; the WP that closes it), **n/a**
 (not relevant to an agent-run studio).
 
-Overall: 1396 capabilities; covered 36%, covered or partial 67% (of those that apply).
+Overall: 1396 capabilities; covered 36%, covered or partial 68% (of those that apply).
 
 | Tool | Chapters | Capabilities | Command | Data | Metric | Partial | Gap | n/a | Covered | Covered or partial |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Adobe After Effects | 19 | 161 | 29 | 33 | 1 | 40 | 45 | 13 | 43% | 70% |
-| Blender Grease Pencil | 26 | 150 | 8 | 23 | 1 | 50 | 59 | 9 | 23% | 58% |
-| Toon Boom Harmony | 25 | 182 | 24 | 46 | 0 | 51 | 53 | 8 | 40% | 70% |
-| Moho Pro | 34 | 186 | 23 | 42 | 1 | 60 | 42 | 18 | 39% | 75% |
+| Blender Grease Pencil | 26 | 150 | 8 | 23 | 1 | 53 | 56 | 9 | 23% | 60% |
+| Toon Boom Harmony | 25 | 182 | 25 | 47 | 0 | 50 | 52 | 8 | 41% | 70% |
+| Moho Pro | 34 | 186 | 24 | 42 | 1 | 62 | 39 | 18 | 40% | 77% |
 | Foundry Nuke | 32 | 189 | 22 | 25 | 2 | 37 | 63 | 40 | 33% | 58% |
-| OpenToonz | 26 | 191 | 29 | 32 | 1 | 47 | 72 | 10 | 34% | 60% |
-| Synfig Studio | 26 | 169 | 34 | 38 | 2 | 41 | 41 | 13 | 47% | 74% |
+| OpenToonz | 26 | 191 | 29 | 33 | 1 | 48 | 70 | 10 | 35% | 61% |
+| Synfig Studio | 26 | 169 | 34 | 38 | 2 | 42 | 40 | 13 | 47% | 74% |
 | TVPaint Animation | 26 | 168 | 28 | 13 | 1 | 70 | 48 | 8 | 26% | 70% |
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 70, WP-19 61, WP-15 60, WP-37 45, WP-23 23, WP-16 23, WP-43 21, WP-20 20, WP-34 19, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 45, WP-23 23, WP-16 23, WP-43 21, WP-20 20, WP-34 19, WP-40 17, WP-22 13, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -190,7 +190,7 @@ Sources: [Adobe After Effects User Guide (official, helpx.adobe.com)](https://he
 | Generate effects: gradients, fractal noise, grids, fills, audio waveforms, strokes along paths. | Backgrounds, textures and design elements made without imported art. | **data**: `sets (sets/sets.js, sets/more.js)`, `shots.json set_opts`, kit elements (Sets and kit elements are drawn in code as functions of time (paper, water, sections, roots and others); there is no general generator library.) |
 | Stylize effects: glow, cartoon, posterize, find edges, roughen edges. | Stylised and graphic looks from plain art. | **partial**: `shot.render`, WP-36 (style.toon gives cel shadows and rims; glow and stylize nodes are WP-36, and medium simulation for lines (pencil, marker, crayon) is WP-15.) |
 | Noise and grain effects: add, match and remove grain. | Film texture and matching grain between elements. | **data**: `shots.json post.grain (seeded)` (Seeded grain over the joined picture; matching and removal are not needed for synthetic frames.) |
-| Simulation effects: particle systems, shatter, card dance, foam, rain and snow. | Sparks, dust, weather and explosions in motion graphics. | **partial**: `shot.render`, WP-42 (Motion-derived dust puffs, impact stars and prop physics exist (fx, drop/flight); particle systems (rain, sparks, snow) are WP-42.) |
+| Simulation effects: particle systems, shatter, card dance, foam, rain and snow. | Sparks, dust, weather and explosions in motion graphics. | **partial**: `shots.json comp particles`, WP-42 (Seeded particles (confetti, snow, rain) on compositor planes, motion-derived dust and impact stars, and prop physics exist; shatter, card dance and foam are WP-42.) |
 | Time effects: echo, posterize time, time displacement, timewarp. | Trails, stepped motion and time-based distortions. | **partial**: `shot.render`, `shots.json fx.arcs`, WP-36 (Stepped timing (style.step), speed lines, motion arcs and prop smears with multiples exist; echo, time displacement and timewarp are WP-36.) |
 | Transition effects: dissolves, linear, radial, gradient and block wipes, card wipes. | Moving between scenes and revealing graphics. | **gap**: WP-15 (Cuts carry a whoosh and QA checks seam smoothness, but picture transitions (dissolves, match cuts, wipes) are WP-15.) |
 | Perspective effects: drop shadow, bevel alpha, 3D glasses, sphere wrap. | Depth on flat graphics and quick dimensional looks. | **partial**: `shot.render`, WP-36 (Characters get ground shadows (style.shadow); drop shadows on graphics are deliberately discouraged by the AI-look lint, other perspective effects would be WP-36 nodes.) |
@@ -260,7 +260,7 @@ Sources: [Adobe After Effects User Guide (official, helpx.adobe.com)](https://he
 |---|---|---|
 | Dynamic Link: compositions used live in Premiere Pro or Media Encoder without rendering first. | Editors see graphics updates in the edit immediately. | **gap**: WP-22 (No live link; hand-off is by rendered cuts and OTIO. Round trips with editors are WP-22.) |
 | Round-trip editing of Photoshop and Illustrator sources, updating in the comp. | Artists repaint a layer and the animation updates. | **command**: `puppet.export_layers`, `puppet.import` (puppet.export_layers hands a puppet to an artist as a layered file; puppet.import brings the repaint back onto the rig.) |
-| Cinema 4D integration through Cineware and the bundled C4D renderer. | 3D elements built in a companion app rendered inside the comp. | **partial**: `puppet.from_blend`, `shot.render`, `export.synfig`, WP-42 (Doodleberry pairs with Blender (cut-out rigs in, Grease Pencil renderer out) and Synfig (.sif export); Blender 3D sets in films are WP-42.) |
+| Cinema 4D integration through Cineware and the bundled C4D renderer. | 3D elements built in a companion app rendered inside the comp. | **partial**: `proc.cook`, WP-42 (Blender renders Geometry Nodes 3D sets into shots (proc.cook), besides cut-out rigs in and Grease Pencil out; a live 3D scene link is WP-42.) |
 | Lottie export through the Bodymovin or LottieFiles plug-ins (third-party), for web and app animation. | UI and web animations made in After Effects play natively in apps. | **command**: `export.lottie` (export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON. dotLottie, Telegram stickers and Lottie QA in two renderers are WP-23.) |
 | Creative Cloud Libraries: shared colours, character styles and graphics across projects and team members. | Brand assets stay consistent across a team. | **data**: `brand/<id>.json brand kits`, `cast library (cast.list)`, sets library (Brand kits, the cast library and the set library are shared, versioned data that every film can inherit.) |
 | A large third-party plug-in ecosystem (effects, rigging and particle tools). | Studios extend the app with specialised tools for particles, rigging and 3D. | **partial**: `vendor.check`, `vendor.build`, WP-34 (Doodleberry vendors open-source code with recorded licences (vendor.check, vendor.build); a plan for driving or linking open tools (Natron, OpenFX, Krita brushes) is WP-34.) |
@@ -351,13 +351,13 @@ Sources: [Blender Manual: Grease Pencil (table of contents)](https://docs.blende
 | Non-destructive stack of procedural operations on strokes, evaluated in order and editable at any time. | Artists keep drawings clean and add wobble, thickness and colour changes as reversible steps. | **partial**: `shot.render`, WP-36 (Shot style options (boil, toon, step, shadow) and post presets act non-destructively, but in a fixed order; a general ordered effects graph is WP-36 (with the graph view of WP-20).) |
 | Apply a modifier to the current keyframe or to all keyframes, turning the result into real strokes. | Freeze procedural results so they can be hand-tweaked. | **partial**: `shot.render`, WP-35 (The bake (tools/bake.mjs) and the grease-pencil exporter write deformed per-frame strokes, but not back into editable drawings; editable drawn frames are WP-35.) |
 | Influence filters: limit a modifier by layer or group, layer pass, material, material pass, vertex group, or a falloff curve along the stroke. | Wobble only the hair, thin only the outline, taper only stroke ends. | **gap**: WP-15 (Looks apply per shot (boil has per-layer seeds); per-part or per-palette-slot targeting of line styles fits WP-15.) |
-| Custom modifiers built as Geometry Nodes groups. | Technical artists write studio-specific stroke effects. | **gap**: WP-42 (Procedural layer and Blender in-process are WP-42.) |
+| Custom modifiers built as Geometry Nodes groups. | Technical artists write studio-specific stroke effects. | **partial**: `proc.cook`, WP-42 (A Geometry Nodes set is built and rendered by Blender (proc.cook gn_set); user-written node groups are WP-42.) |
 
 ### Generate modifiers
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Array: repeat strokes with offsets, object-driven spacing and random variation. | Fences, crowds of simple shapes, repeated motion-graphic elements. | **gap**: WP-42 (Scatter, instancing and crowds as data are WP-42.) |
+| Array: repeat strokes with offsets, object-driven spacing and random variation. | Fences, crowds of simple shapes, repeated motion-graphic elements. | **partial**: `proc.cook`, WP-42 (Seeded scatter and instancing (crowds, Geometry Nodes blocks) exist; arrays of strokes with offsets are WP-42.) |
 | Build: strokes appear or vanish over time as if drawn or erased, one by one or together, optionally at the recorded drawing speed, with fades. | Write-on titles, drawings that draw themselves, explainer reveals. | **partial**: `shot.render`, WP-15 (Kit 'draw' elements draw themselves with a pen-scratch sound; puppet strokes cannot be written on. Extending draw-on to character and prop lines fits WP-15 (kinetic and stroke effects).) |
 | Dot Dash: break strokes into dash-and-gap patterns, each segment with its own material and thickness. | Dashed guide lines, stitches, motion trails, map routes. | **partial**: `film.render`, WP-15 (Whisper bubbles are dashed and some generated cast details use fixed dashes; no dash field on puppet strokes (WP-15).) |
 | Envelope: generate extra strokes around existing ones for a sketchy or hairy look. | Rough pencil looks and stylised fur from simple lines. | **gap**: WP-15 (Medium simulation for vector lines is WP-15.) |
@@ -376,7 +376,7 @@ Sources: [Blender Manual: Grease Pencil (table of contents)](https://docs.blende
 | Hook: points follow a controller object with falloff. | Pull a cheek or tail tip with a handle. | **partial**: `timeline.edit`, WP-11 (Pose shifts and driven controls move whole parts and swaps; point-level hooks and further constraints are WP-11.) |
 | Lattice: deform strokes through a cage. | Squash, stretch and warp whole drawings smoothly. | **partial**: `shots.json timeline scales`, WP-18 (Whole-body squash, bendy limbs and per-part squash and stretch exist; free-form cage warps are WP-18 (Rig Canvas tools).) |
 | Noise: seeded jitter of position, thickness, opacity and texture, changing every N frames or on keyframes. | Hand-made line boil on clean digital lines. | **data**: `style.boil` (style.boil {fps, amount, freq} gives deterministic, stepped displacement on characters, bubbles and signs; thickness and opacity noise are not included.) |
-| Offset: shift, rotate and scale strokes per layer, material or stroke, with randomisation. | Break the uniformity of repeated drawings; animate parts offset from each other. | **partial**: `timeline.edit`, WP-42 (Pose shifts and placement move parts; seeded random variation across copies is WP-42 (crowds with variation).) |
+| Offset: shift, rotate and scale strokes per layer, material or stroke, with randomisation. | Break the uniformity of repeated drawings; animate parts offset from each other. | **partial**: `proc.cook`, WP-42 (Crowds vary each copy (puppet, facing, idle phase and speed, gaze, reaction timing) from a seed; per-stroke random offsets are WP-42.) |
 | Shrinkwrap: project strokes onto 3D surfaces. | Draw markings that stick to a 3D model. | **n/a** (Doodleberry characters are 2D; 3D sets with Grease Pencil 3 are in WP-42 if this becomes useful.) |
 | Smooth: smooth position, thickness, opacity or texture along strokes. | Remove jitter from tablet input or from deformations. | **partial**: `puppet.save`, WP-18 (Rig Canvas ink is smoothed while drawing; no smoothing of existing strokes.) |
 | Thickness: set or scale line width, normalise it, or shape it along the stroke with a curve. | Consistent line weight across a production; tapered ends. | **partial**: `shot.render`, WP-15 (Each stroke has a width and ink import keeps line weight under squash; no global or along-stroke width control.) |
@@ -402,7 +402,7 @@ Sources: [Blender Manual: Grease Pencil (table of contents)](https://docs.blende
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Generate ink strokes from 3D meshes as seen by the camera, with occlusion. | Toon outlines on 3D sets and props so they match 2D characters. | **gap**: WP-42 (3D sets through Blender in-process are WP-42; the three.js renderer has no line art.) |
+| Generate ink strokes from 3D meshes as seen by the camera, with occlusion. | Toon outlines on 3D sets and props so they match 2D characters. | **partial**: `proc.cook`, WP-42 (3D sets get ink lines from their meshes as the camera sees them, with occlusion (Freestyle in the gn_set render); writing them as editable strokes is WP-42.) |
 | Choose edge types: contour and silhouette, creases by angle, intersections, material borders, marked edges, light contours and cast-shadow edges. | Control which lines read as drawn ink. | **gap**: WP-42 (Part of 3D line art in WP-42.) |
 | Illumination filtering (lit or shaded regions) and filled shapes from enclosed regions. | Shadow shapes and two-tone fills generated from 3D lighting. | **gap**: WP-42 (Part of 3D line art in WP-42.) |
 | Occlusion levels, line chaining and smoothing, and a shared cache across several line-art modifiers. | Hidden-line views and performance on dense scenes. | **gap**: WP-42 (Part of 3D line art in WP-42.) |
@@ -797,7 +797,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 | Masking and cutting with mattes | Reveal, hide or clip elements | **gap**: WP-36 (Masks and mattes are WP-36) |
 | Colour override, fade, curves and levels | Grade or recolour parts of a scene | **partial**: `shots.json post (grade, lut)`, WP-36 (Whole-frame grade and LUT; per-layer correction WP-36) |
 | Light and surface shading from drawn shapes | Volume lighting on flat art | **partial**: `shots.json style.toon`, WP-36 (Fixed-light cel shading on vector fills) |
-| Particle systems (rain, snow, sparks) | Environmental and impact effects | **partial**: `shots.json fx`, WP-42 (Speed lines, dust and impact stars from motion; particles are WP-42) |
+| Particle systems (rain, snow, sparks) | Environmental and impact effects | **data**: `shots.json comp particles`, `proc.cook` (Seeded particle presets (rain, snow, confetti) drawn as a pure function of time on any depth plane; speed lines, dust and impact stars from motion.) |
 | Animated matte generator from drawing strokes | Quick mattes that follow animation | **gap**: WP-36 (Comes with the compositor) |
 | OpenFX plugin support | Third-party effects inside the comp | **gap**: WP-36 (Natron and OpenFX are WP-34/WP-36 candidates) |
 | Animating effect parameters over time | Effects that build and fade | **gap**: WP-36 (post is static per shot) |
@@ -823,7 +823,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 | Importing 3D models (FBX, OBJ, Alembic, USDZ) | Props, vehicles and sets that rotate convincingly | **gap**: WP-42 (tools/three test pages load GLB, but no command or film field yet) |
 | Animated 3D models and filling timing from their animation (new in 25) | Use animation authored in a 3D package | **gap**: WP-42 (Blender in-process is WP-42) |
 | Manipulating subnodes of a 3D model | Animate a door or wheel inside a model | **gap**: WP-42 (Comes with the 3D layer) |
-| Rendering 3D models with a toon shader | Match 3D elements to the 2D style | **gap**: WP-42 (EEVEE passes composited with 2D are WP-42) |
+| Rendering 3D models with a toon shader | Match 3D elements to the 2D style | **command**: `proc.cook` (Geometry Nodes 3D sets render cel-shaded (two-tone ramp) with ink lines in EEVEE and composite behind the 2D cast.) |
 | Exchanging 3D animation and camera data via ATOM and USD (new in 25, camera data in 25.2) | Round trip with Maya or Blender | **gap**: WP-42 (OpenUSD as the scene interchange) |
 | Bringing rigs from Blender or Maya into the 2D scene | Reuse assets from 3D departments | **partial**: `puppet.from_blend`, WP-42 (Blender cut-out rigs become puppets; 3D models are WP-42) |
 
@@ -917,7 +917,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Shape primitives (rectangle, oval, star, arrow) and the blob brush for filled organic shapes. | Gives fast blocking of props, backgrounds and filled masses. | **partial**: `puppet.save`, WP-18 (Ink strokes are already filled outline shapes (blob-like). There are no primitives in the Rig Canvas. Sets and props are drawn in code (sets/*.js).) |
 | An eraser that removes both fills and strokes, optionally limited to the selected shapes. | Used to fix drawings in place. | **gap**: WP-18 (The eraser is in the feature map's brush-engine row, owned by WP-18.) |
 | Point reduction: simplify a curve to fewer points. | Keeps rigged art light so it deforms cleanly and renders fast. | **partial**: `puppet.import`, WP-18 (Strokes are RDP-simplified on capture. Cleaning up imported parts (picosvg, svgo, vpype) is in WP-18.) |
-| Scatter brush: stamp many varied copies of a shape (leaves, grass, crowds of dots). | Used to dress backgrounds quickly. | **gap**: WP-42 (Procedural scatter and instancing are in WP-42.) |
+| Scatter brush: stamp many varied copies of a shape (leaves, grass, crowds of dots). | Used to dress backgrounds quickly. | **command**: `proc.cook` (proc.cook scatters points (seeded, minimum spacing) and instances cast members or 3D blocks on them.) |
 | Point deformers: perspective, shear and bend applied to selected points. | Used to fake a turn or a foreshortening on a drawing without redrawing it. | **gap**: WP-34 (WP-34 covers vector editing and deformers through Synfig core and Inkscape.) |
 | Noise tool and vector noise: random wobble on points, optionally animated, or only while the shape moves. | Gives a hand-made, jittery line look. | **data**: `shots.json style.boil` (Deterministic line boil (cycled displacement fields at a chosen fps, amount and frequency) gives the animated-wobble look. A permanent jitter of points is not offered.) |
 | Magnet tool: drag points with a soft falloff, and Shift-drag back toward their frame-0 shape (14.5). | Used to sculpt squash, cheeks and cloth on a frame. | **gap**: WP-18 (There is no point-level sculpting in the Rig Canvas.) |
@@ -979,7 +979,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | Switch layers: a set of alternative drawings, one shown at a time and keyed on the timeline (mouths, hands, eyes). | Used for lip-sync charts, hand poses and expression swaps. | **data**: puppet swaps, acting timeline poses (Mouths, eyes, brows, pupils and hand poses are swap sets, chosen by lip-sync, blink or name.) |
-| Particle layers: emit copies of child layers with speed, spread, lifetime and gravity. | Used for rain, snow, sparks, smoke and simple crowds. | **gap**: WP-42 (Motion effects (speed lines, dust, impact stars) exist. Particles and crowds are WP-42.) |
+| Particle layers: emit copies of child layers with speed, spread, lifetime and gravity. | Used for rain, snow, sparks, smoke and simple crowds. | **partial**: `proc.cook`, WP-42 (Particles (confetti, snow, rain) and procedural crowds of cast members exist; emitting copies of arbitrary child layers is WP-42.) |
 | Image masking and cropping: cut away part of a bitmap with a vector mask. | Used to split painted or scanned art into riggable pieces. | **partial**: `puppet.from_ink`, `doodle.cut`, WP-36 (Raster parts are cut by polygons with hidden overlap seams. General per-layer masks are WP-36.) |
 | Video tracking (much improved in 14.5): track a feature through footage or image sequences, with a second point for angle and scale, and apply it to a layer as keys. | Used to pin animation onto live-action plates or to follow a moving camera. | **gap**: WP-12 (actout.clip tracks people only. Tracking points and backgrounds (camera-motion compensation) is in WP-12.) |
 | Face tracking from video (14.5): analyse recorded footage into facial bones, facial Smart Bones and a face mesh. | Gives quick facial performance capture for dialogue. | **partial**: `actout.clip`, WP-12 (A recorded take gives eye, brow, gaze and mouth keys on an existing rig. Head yaw into the turn control is WP-12. Building a rig from the face is not planned.) |
@@ -1030,7 +1030,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Animatable layer opacity, blur and pixelation (14.1, 14.2). | Used for fades, focus pulls and stylised effects. | **partial**: `puppet parts[].strokes[].opacity`, WP-36 (Stroke opacity is static, and finishing presets (grade, vignette, grain) apply per shot. Animated layer opacity and blur are WP-36.) |
 | Depth sort and depth shift: order layers by their distance from the camera. | Gives correct layering when characters walk in depth. | **partial**: `puppet parts[].z`, `puppet controls z.<part>`, WP-36 (Z order is per part and switchable by controls and clips (SVG and Grease Pencil only). Depth planes are WP-36.) |
 | Line boil and smart line boil: redraw jitter at set intervals, optionally only while the shape moves (14.0, 14.2). | Gives a hand-drawn shimmer on rigged art. | **partial**: `shots.json style.boil`, WP-15 (Deterministic boil (fps, amount, frequency) exists on characters, bubbles and signs. Boil only during motion is new and should join WP-15.) |
-| Particles tab: count, speed, spread, lifetime, emission along curves, per-particle offsets and emission order (14.4). | Used to tune effects and procedural hair or tails. | **gap**: WP-42 (Particles are in WP-42.) |
+| Particles tab: count, speed, spread, lifetime, emission along curves, per-particle offsets and emission order (14.4). | Used to tune effects and procedural hair or tails. | **partial**: `shots.json comp particles`, WP-42 (Count, speed spread, start and seed per particle preset; emission along curves and per-particle lifetimes are WP-42.) |
 | 3D options: extrude or lathe a vector shape into a 3D object. | Used for quick 3D props from 2D drawings. | **gap**: WP-42 (3D props through Blender are in WP-42.) |
 | Physics tab: rigid bodies with mass, friction, bounciness and collisions between layers. | Used for falling objects, stacks and collisions without hand keys. | **command**: `physics.solve`, `shots.json physics` (Bodies with density, friction and restitution collide with each other and with static colliders (deterministic Rapier), baked into prop tracks; contacts can be retimed onto the beat.) |
 
@@ -1424,7 +1424,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 | Text elements with fonts, layout and animation. | Titles, credits and labels. | **partial**: `film.render`, `film.credits`, WP-15, WP-17 (Word-timed captions are burned in by film.render; kit elements (cards, quotes, citations, wordmark) are overlays; credits.txt comes from film.credits. Kinetic typography is WP-15, letter-by-letter typewriter WP-17.) |
 | Grain synthesis with film-stock presets. | Matching or adding film texture. | **data**: `shots.json post.grain` (Seeded grain 0-20 in post finishing; paper sets add page grain.) |
 | Procedural noise and turbulence patterns. | Textures, mattes and animated distortion. | **data**: `shots.json cast[].timeline.seed`, line boil (style presets) (Seeded noise drives idle motion, handheld camera and line boil; no general noise image generator.) |
-| Particle systems with emitters and forces. | Dust, sparks, rain, snow and debris. | **partial**: `shot.render`, `shots.json fx`, WP-42 (Motion-driven dust puffs, impacts and speed lines plus prop physics exist; rain, sparks and particle systems are WP-42.) |
+| Particle systems with emitters and forces. | Dust, sparks, rain, snow and debris. | **partial**: `shots.json comp particles`, WP-42 (Seeded particle presets and prop physics exist; emitters with forces are WP-42.) |
 | Relighting renders using normal and position passes. | Adjusting light direction in comp without re-rendering. | **partial**: `shot.render`, `shots.json shots[].style.toon`, WP-14 (Toon shading adds cel shadows and rim light from a light direction (SVG renderer); other renderers are WP-14, grades per time of day WP-37.) |
 
 ### Analyzing and matching clips (CurveTool)
@@ -1440,13 +1440,13 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Virtual cameras with animation and lens settings, imported from trackers or other 3D tools. | Matching CG and plates; camera moves through 2.5D scenes. | **partial**: `film.render`, WP-42 (scene.js films can use a three.js camera (e.g. films/screwworm-3d); shot films have a 2D camera. A Blender/USD 3D layer with one camera is WP-42.) |
+| Virtual cameras with animation and lens settings, imported from trackers or other 3D tools. | Matching CG and plates; camera moves through 2.5D scenes. | **partial**: `proc.cook`, WP-42 (One camera drives the 2D planes and a Blender 3D set: the 2D camera keys map onto a perspective camera that frames the stage plane exactly (dolly zoom); camera import from trackers is WP-42.) |
 | Cards and planes in 3D space for 2.5D multiplane scenes. | Parallax moves on matte paintings and layered sets. | **gap**: WP-36 (True 2D multiplane depth and parallax are WP-36; the forest set has fixed parallax depths.) |
 | Projecting paintings or frames through a camera onto geometry. | Camera projection for set extensions and moves on stills. | **gap**: WP-42 (Falls within the named work package's scope.) |
 | Importing geometry (OBJ, FBX, Alembic, USD) and creating primitives. | Bringing set pieces and proxies into the comp. | **partial**: `puppet.from_blend`, WP-42 (GLB models load in three.js scene pages and Blender rigs become puppets; OpenUSD interchange is WP-42.) |
 | A USD scene graph: stage, prims, layers, with paths and masks to select parts of a scene. | Working with large CG scenes from layout and lighting. | **gap**: WP-42 (OpenUSD as the scene interchange is in WP-42.) |
 | Lights, materials and shaders (including MaterialX in Nuke 17). | Lighting 3D elements to match a plate. | **gap**: WP-42 (2D toon lighting exists (style.toon); 3D materials and lights come with WP-42.) |
-| Rendering the 3D scene to 2D with passes (ScanlineRender, ray-traced ScanlineRender2). | Rendering 2.5D and CG elements inside the comp. | **partial**: `film.render`, WP-42 (three.js scene films render through the scene.js pipeline; EEVEE passes composited with 2D are WP-42.) |
+| Rendering the 3D scene to 2D with passes (ScanlineRender, ray-traced ScanlineRender2). | Rendering 2.5D and CG elements inside the comp. | **partial**: `proc.cook`, WP-42 (A Blender EEVEE render of the 3D set composites under the 2D planes (one beauty pass); separate passes are WP-42.) |
 | Exporting the 3D scene as USD. | Handing comp-built layouts back to 3D departments. | **gap**: WP-42 (Falls within the named work package's scope.) |
 
 ### 3D reconstruction and particles (NukeX: DepthGenerator, PointCloudGenerator, PoissonMesh, ModelBuilder, Particles, PrmanRender)
@@ -1825,10 +1825,10 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 |---|---|---|
 | Particle emitter using any animated column as the particle image. | Leaves, sparkles or debris that move like the source drawing. | **gap**: WP-42 (Particles (rain, sparks, snow) are WP-42.) |
 | Control images that drive spawn area, size, speed, orientation, lifetime and colour by brightness. | Particles shaped by a logo or emitted from a region. | **gap**: WP-42 |
-| Birth rate, start frame and a random seed for repeatable variety. | Same settings give a new but reproducible arrangement. | **gap**: WP-42 (Any implementation must be seeded so frames stay pure functions of the frame number.) |
+| Birth rate, start frame and a random seed for repeatable variety. | Same settings give a new but reproducible arrangement. | **data**: `shots.json comp particles` (Particles take a count, a start time and a seed, so the variety repeats exactly (a pure function of the frame).) |
 | Forces: gravity, friction, wind and scattering. | Natural falling and drifting motion. | **gap**: WP-42 (Props fall, bounce and roll under gravity, and multi-body scenes are baked with Rapier (physics.solve), but there is no particle system.) |
 | Change over life: spin, fade in and out, growth, trails and colour shifts. | Sparks that cool and smoke that disperses. | **gap**: WP-42 |
-| Presets for rain, snow, sparkles and smoke. | Fast starting points for common atmosphere. | **gap**: WP-42 (Dust puffs and speed lines (shots.json fx) and ambient set life (steam, clouds) exist.) |
+| Presets for rain, snow, sparkles and smoke. | Fast starting points for common atmosphere. | **partial**: `shots.json comp particles`, WP-42 (Presets for rain, snow and confetti exist; sparkles and smoke are WP-42.) |
 
 ### Previewing and rendering
 
@@ -2069,7 +2069,7 @@ Sources: [Synfig User Manual: contents](https://synfig.readthedocs.io/en/latest/
 |---|---|---|
 | Group layer: nests layers into a sub-canvas with its own transform, time offset, z range and outline grow. | Building a character as nested parts and reusing groups. | **data**: `puppet.json parts (parent tree)` (Parts form the hierarchy; export.synfig writes one group per part.) |
 | Switch group: shows exactly one child, chosen by name or (1.4) by depth index, animatable. | Mouth charts, hand poses, eye sets and outfit changes. | **data**: `puppet.json swaps`, `puppet.json views`, `puppet.json controls (swap targets)` (Swap sets and views, driven by visemes, clips and controls; exported to Synfig as hold-keyed visibility.) |
-| Duplicate layer: repeats its group with an index value, so copies can vary by index. | Radial patterns, rows of objects, simple crowds. | **gap**: WP-42 (Scatter and instancing as data are in the procedural 2D scope.) |
+| Duplicate layer: repeats its group with an index value, so copies can vary by index. | Radial patterns, rows of objects, simple crowds. | **partial**: `proc.cook`, WP-42 (Seeded scatter and instancing of cast members and 3D blocks with per-copy variation; duplicating a group by index is WP-42.) |
 | Import image layer: a bitmap placed by its corners, openable in an external editor and reloaded (1.4). | Painted backgrounds and raster character parts. | **command**: `puppet.from_ink`, `puppet.import`, `puppet.export_layers` (Raster-part puppets from scans or PSD/ORA, and a layered file out to an artist and back (raster parts render in SVG only, WP-14).) |
 | Text layer: font family list, size, orientation, spacing, animatable text; rewritten in 1.5.1 with right-to-left support and a direction parameter. | Titles, captions and signage in several languages. | **partial**: `shot.render`, `film.localize`, WP-25 (Text overlays, bubbles and captions with Sinhala fallback; right-to-left and complex scripts are WP-25.) |
 | Plant layer: procedural branching growth along a spline. | Growing vines, roots and hair-like flourishes. | **partial**: `shot.render`, WP-42 (The kit's roots element grows a root system timed to lines; general procedural growth is WP-42.) |
@@ -2484,7 +2484,7 @@ Sources: [TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and s
 | Depth-of-field blur set by a focus distance on the multiplane camera. | Focus pulls between foreground and background. | **gap**: WP-36 (Depth of field is in WP-36's multiplane scope.) |
 | Stage views (perspective, side, front, top) for arranging planes in space. | Layout artists place planes with confidence. | **partial**: `shot.render`, WP-36 (A three.js renderer places 3D sets; 2D multiplane layout and its views are in WP-36.) |
 | A multiplane wizard that builds planes from layers automatically. | Sets up depth fast from an existing layered background. | **gap**: WP-36 (Automatic depth estimates for parallax (Depth Anything) are in WP-43.) |
-| A particle generator: emitters (shape, rate, life, size, colour), a world (gravity, wind) and particles drawn with any brush, for rain, snow, smoke, fireworks or fountains. | Natural effects that would take days to draw by hand. | **partial**: `shots.json: fx (dust, speed_lines, impacts)`, WP-42 (Motion-derived dust puffs, speed lines and impact stars exist, and props have gravity. General particles are in WP-42.) |
+| A particle generator: emitters (shape, rate, life, size, colour), a world (gravity, wind) and particles drawn with any brush, for rain, snow, smoke, fireworks or fountains. | Natural effects that would take days to draw by hand. | **partial**: `shots.json comp particles`, WP-42 (Seeded particle presets (rain, snow, confetti) exist alongside motion effects and prop gravity; emitters with shape, rate and life are WP-42.) |
 
 ### Preferences
 
