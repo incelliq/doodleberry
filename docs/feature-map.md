@@ -231,7 +231,7 @@ covered, now added to their packages' scopes.
 | Visual lint: tangents, limbs off-screen, caption collisions, IK overextension, intersecting props, character overlap | NEW | ✅ | – | `film.lint` (2.8) |
 | Golden-frame regression tests | NEW | ✅ | – | `test` (0.3) |
 | Frame comments that become data edits | IDEA | ✅ | – | `review.add`, `review.fix` (3.4) |
-| Visual diff between film versions | NEW | ⬜ | P1 | WP-19 |
+| Visual diff between film versions | NEW | ✅ | – | `film.diff` and Studio `/diff`: changed frames exactly, from per-frame keys; before/after side by side (WP-19) |
 | Health and claims risk review | NEW | ✅ | – | expert review in `research.check` (omits per fact) and the approval gate on the board (WP-05) |
 | Retention analytics fed back into hooks and pacing | EMG | ⬜ | P2 | WP-31 |
 | **Frame-fill metric:** share of bare background below 40% per scene, measured every 3 s on the final encode; tallest bare band; a 360 px look test | NEW | ✅ | – | `qa.run` (0.11) |

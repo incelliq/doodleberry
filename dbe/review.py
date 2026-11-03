@@ -156,3 +156,60 @@ def verify(intent, amount, before, after):
         ok = (a["held_s"] > b["held_s"] + 0.15) if v == "longer" else (a["held_s"] < b["held_s"] - 0.1)
         return ok, f"held {a['held_s']:.2f} s (was {b['held_s']:.2f} s)", b, a
     return False, "no check for this kind of note", b, a
+
+
+# ---------- gaze notes (WP-19): "Ravi should look at Momo when she answers" ----------
+GAZE = re.compile(r"\b(look(s|ing)?|glance(s)?|face(s)?|turn(s)? to|watch(es)?|eye contact)\b", re.I)
+WHEN = [  # how a note says when: the target's next line, a line by id, or "while X talks"
+    (re.compile(r"\bwhen (s?he|they|\w+) (answers|replies|responds|speaks|talks|says|asks)\b", re.I), "next_line_of_target"),
+    (re.compile(r"\b(while|as) (s?he|they|\w+) (talks|speaks|answers|is talking)\b", re.I), "next_line_of_target"),
+    (re.compile(r"\b(during|on|in) (line )?(l\d+)\b", re.I), "line_id"),
+]
+
+
+def gaze_intent(text, cast_names):
+    """-> {who, target, when, line} or None. The first name is who looks, the second whom at ("at Momo")"""
+    t = text.lower()
+    if not GAZE.search(t):
+        return None
+    m = re.search(r"\b(?:at|to|towards?)\s+(\w+)", t)
+    target = next((n for n in cast_names if m and m.group(1) == n.lower()), None)
+    who = next((n for n in cast_names if re.search(rf"\b{re.escape(n.lower())}\b", t) and n != target), None)
+    if not who or not target:
+        return None
+    when, line = "at_note", None
+    for pat, kind in WHEN:
+        mm = pat.search(t)
+        if mm:
+            when = kind; line = mm.group(3) if kind == "line_id" else None
+            break
+    away = bool(re.search(r"\b(away from|not look|stop looking|look away)\b", t))
+    return {"kind": "gaze", "who": who, "target": target, "when": when, "line": line, "away": away}
+
+
+def gaze_window(intent, lines, t, speaker_of):
+    """the line the note is about: by id, or the target's line at or next after the note's frame -> (line, why)"""
+    if intent["when"] == "line_id":
+        ln = next((l for l in lines if l["id"] == intent["line"]), None)
+        return (ln, f"during {intent['line']}") if ln else (None, f"no line {intent['line']}")
+    tgt = [l for l in lines if (speaker_of(l) or "").lower() == intent["target"].lower()]
+    ln = next((l for l in tgt if l["start"] <= t <= l["end"]), None) or next((l for l in tgt if l["start"] >= t - 0.25), None)
+    if ln:
+        return ln, f"while {intent['target']} says {ln['id']} ({ln['start']:.2f}-{ln['end']:.2f} s)"
+    return None, f"{intent['target']} has no line at or after {t:.2f} s"
+
+
+def gaze_edit(look_keys, line_id, direction, value_after, lead=0.2, tail=0.3):
+    """look keys with the line's span set to look `direction` ([x, y], screen terms): keys inside the span are
+    replaced; keys are line-relative so they follow re-voicing. value_after: the look the curve had just after."""
+    span0, span1 = (f"{line_id}.start-{lead}" if lead else f"{line_id}.start"), f"{line_id}.end+{tail}"
+    return span0, span1, [[span0, direction], [f"{line_id}.end", direction], [span1, value_after]]
+
+
+def gaze_share(track, direction, t0, t1):
+    """share of frames in [t0, t1] whose look points the asked way (x within 45 degrees of it)"""
+    rows = [r for r in track if t0 <= r[0] <= t1 and r[1] is not None]
+    if not rows:
+        return 0.0
+    ok = sum(1 for _, x, y, *_ in rows if (x * direction[0] > 0.5 if direction[0] else abs(x) < 0.3))
+    return round(ok / len(rows), 3)

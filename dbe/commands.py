@@ -422,6 +422,16 @@ def puppet_lint(path):
 _LINE_T = re.compile(r"^\s*([\w-]+)\.(start|end)\s*([+-]\s*[\d.]+)?\s*$")
 
 
+def _resolve_time(v, timing):
+    """one time: seconds, or line-relative ("l2.end+0.3") against a timing.json"""
+    if not isinstance(v, str):
+        return v
+    m = _LINE_T.match(v); L = {l["id"]: l for l in (timing or {}).get("lines", [])}
+    if not m or m.group(1) not in L:
+        raise ValueError(f"unknown time reference {v!r}")
+    return round(L[m.group(1)][m.group(2)] + float((m.group(3) or "0").replace(" ", "")), 3)
+
+
 def resolve_times(obj, timing):
     """Turn line-relative times into seconds, so acting stays on the words after any voice or language change.
     "mid.start+0.9" = 0.9 s after line "mid" begins; "end.end-0.2". Applies to start/end/t fields and to the time of
@@ -580,6 +590,9 @@ def shot_render(name, shot, renderer=""):
         hd = bdir / f"{shot}.hd.mp4"
         _render_page(_player_page(name), f"shot={shot}&pre={pre / fps}&post={post / fps}", hd)
         _cut_frames(hd, pre, baked["frames"], out)
+        hk = _json(Path(str(hd) + ".keys.json"))
+        if hk:   # the exact shot's frame keys, cut from the handles' like its frames
+            Path(str(out) + ".keys.json").write_text(json.dumps({**hk, "frames": hk["frames"][pre:pre + baked["frames"]]}))
     elif renderer == "svg":
         _render_page(_player_page(name), f"shot={shot}", out)
     elif renderer == "synfig":
@@ -894,6 +907,11 @@ def film_render(name, only=None, aspect=""):
     if s.get("soundoff") and not s.get("timewarp"):  # every film ships a voiced cut and a bubble-only cut (plan 2.13)
         so = film_soundoff(name, **(s["soundoff"] if isinstance(s["soundoff"], dict) else {}))
         qa = {**qa, "soundoff": {k: so.get(k) for k in ("final", "qa", "stretched_lines", "length_s")}}
+    fk = _frame_keys(d, s, fps)
+    if fk:
+        (d / "build" / "frame_keys.json").write_text(json.dumps({"fps": fps, "keys": fk}))
+    else:
+        (d / "build" / "frame_keys.json").unlink(missing_ok=True)
     return {"rendered": done, "unchanged": skipped, **({"transitions": transitions} if transitions else {}), "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
             "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures"), "lint": qa.get("lint"),
             **({"soundoff": qa["soundoff"]} if qa.get("soundoff") else {})}
@@ -1280,6 +1298,176 @@ def review_list(name):
     return _review(name)
 
 
+def _keep_version(name):
+    """the current render kept as the previous version (build/versions/prev.mp4 and its frame keys), for film.diff"""
+    d = _film(name); f = d / "build" / "final.mp4"
+    if f.exists():
+        (d / "build" / "versions").mkdir(parents=True, exist_ok=True); shutil.copy(f, d / "build" / "versions" / "prev.mp4")
+        k = d / "build" / "frame_keys.json"
+        (shutil.copy(k, d / "build" / "versions" / "prev.keys.json") if k.exists() else (d / "build" / "versions" / "prev.keys.json").unlink(missing_ok=True))
+
+
+def _frame_keys(d, s, fps):
+    """a key per frame of the final picture (WP-19): the shot frame's markup key (the SVG renderer writes them), both
+    shots' keys inside a transition, the caption showing and the finishing settings. Two renders whose keys match at
+    a frame show the same picture there. None where a shot has no keys (other renderers): film.diff then compares
+    pixels."""
+    import hashlib
+    bd = d / "build" / "shots"; shots = s["shots"]; per = []
+    for x in shots:
+        k = _json(Path(str(bd / (x["id"] + ".mp4")) + ".keys.json"))
+        n = int(round((x["end"] - x["start"]) * fps))
+        if not k or len(k.get("frames") or []) != n or any(v is None for v in k["frames"]):
+            return None
+        per.append([f"{x['id']}:{k.get('plate')}:{v}" for v in k["frames"]])
+    keys = [v for p_ in per for v in p_]
+    for tr in _json(d / "build" / "transitions.json", []):   # a blend shows two shots: both keys (from the handles)
+        i = next(j for j, x in enumerate(shots) if x["id"] == tr["shot"]); a_, b_ = shots[i - 1], shots[i]
+        ka, kb = (_json(Path(str(bd / (x["id"] + ".hd.mp4")) + ".keys.json")) for x in (a_, b_))
+        if not ka or not kb:
+            return None
+        cut = sum(len(p_) for p_ in per[:i]); pa = _handles(s, a_["id"], fps)[0]; na = len(per[i - 1])
+        for j in range(-tr["before"], tr["after"]):
+            fa_ = ka["frames"][pa + na + j] if 0 <= pa + na + j < len(ka["frames"]) else None
+            fb_ = kb["frames"][_handles(s, b_["id"], fps)[0] + j] if 0 <= _handles(s, b_["id"], fps)[0] + j < len(kb["frames"]) else None
+            if 0 <= cut + j < len(keys):
+                keys[cut + j] = f"{tr['kind']}:{tr['frames']}:{a_['id']}:{fa_}|{b_['id']}:{fb_}:{j}"
+    ass = d / "build" / "captions.ass"; ev = []
+    if ass.exists():   # the caption events showing at each frame
+        hms = lambda v: (lambda h, m, s_: int(h) * 3600 + int(m) * 60 + float(s_))(*v.split(":"))
+        for line in ass.read_text().splitlines():
+            if line.startswith("Dialogue:"):
+                f_ = line.split(",", 9); ev.append((hms(f_[1]), hms(f_[2]), line))
+    post = json.dumps(s.get("post"), sort_keys=True)
+    out = []
+    for i, k in enumerate(keys):
+        t = i / fps; cap = "\n".join(e[2] for e in ev if e[0] <= t < e[1])
+        out.append(hashlib.sha1(f"{k}#{cap}#{post}".encode()).hexdigest()[:16])
+    return out
+
+
+def _review_gaze(name, n, gz, shot):
+    """a gaze note (WP-19): set the character's look toward the other over the line the note means (line-relative
+    keys), re-render, and the critic checks the share of frames looking the asked way before and after, then QA"""
+    from . import review as RV
+    d = _film(name); fps = _shots(name).get("fps", 30); n["intent"] = gz
+    raw_before = (d / "shots.json").read_text(); s_raw = json.loads(raw_before)
+    tm = _json(d / "timing.json", {}); script = _json(d / "script.json", {"lines": []})
+    spk = {l["id"]: l.get("speaker") for l in script.get("lines", [])}
+    ln, why = RV.gaze_window(gz, tm.get("lines", []), n["t"], lambda l: spk.get(l["id"]))
+    if not ln:
+        n.update(status="needs_human", reason=why); return n
+    ci = next(c["i"] for c in shot["cast"] if c["who"].lower() == gz["who"].lower())
+    ti = next(c["i"] for c in shot["cast"] if c["who"].lower() == gz["target"].lower())
+    rs = next(x for x in _shots(name)["shots"] if x["id"] == shot["id"])   # resolved: where each stands
+    dx = rs["cast"][ti]["place"]["x"] - rs["cast"][ci]["place"]["x"]
+    direction = [0.0, 0.0] if gz["away"] else [1.0 if dx > 0 else -1.0, 0.05]
+    page = _player_page(name); w0, w1 = ln["start"] - 0.1, ln["end"] + 0.2
+    probe = lambda: json.loads(_run(["node", "tools/probe.mjs", str(page), str(ci), "@look", f"{w0 - 1:.3f}", f"{w1 + 1:.3f}"], timeout=600)[-1])
+    before = probe(); share_b = RV.gaze_share(before, direction, w0, w1)
+    after_row = next((r for r in before if r[0] >= ln["end"] + 0.35), before[-1])
+    sraw = next(x for x in s_raw["shots"] if x["id"] == shot["id"]); tl = sraw["cast"][ci].setdefault("timeline", {})
+    look = tl.get("look") or []
+    resolve = lambda v: _resolve_time(v, tm) if isinstance(v, str) else v
+    # keys before the line stay (removing one would reshape the curve before it); the look turns just after the last
+    # of them, at most 0.2 s ahead of the line, and comes back 0.3 s after it ends
+    # a key in the half second before the line that looks another way would flick the eyes away just before the turn
+    same = lambda v: (v[0] * flip0 * direction[0] > 0.5) if direction[0] else abs(v[0]) < 0.3
+    flip0 = (rs["cast"][ci]["place"].get("flip") or 1)
+    keep = [k for k in look if (resolve(k[0]) < ln["start"] - 0.5 or (resolve(k[0]) < ln["start"] - 1e-6 and same(k[1]))) or resolve(k[0]) > ln["end"] + 0.3 + 1e-6]
+    last = max([resolve(k[0]) for k in keep if resolve(k[0]) < ln["start"]] or [-1.0])
+    lead = round(min(0.2, max(0.0, ln["start"] - (last + 0.05))), 3)
+    flip = (rs["cast"][ci]["place"].get("flip") or 1)
+    s0, s1, new = RV.gaze_edit(look, ln["id"], [direction[0] * flip, direction[1]], [round(after_row[1] * flip, 3), round(after_row[2], 3)], lead=lead)
+    tl["look"] = sorted(keep + new, key=lambda k: resolve(k[0])); tl["look_manual"] = True
+    qa_before = (_json(d / "build" / "qa.json", {}).get("checks") or {})
+    film_write(name, "shots.json", json.dumps(s_raw, indent=1, ensure_ascii=False))
+    page = _player_page(name); after = probe(); share_a = RV.gaze_share(after, direction, w0, w1)
+    n.update(target=f"{gz['who']}'s look at {gz['target']} {why}", watch="@look", edit={"look": new},
+             measured={"before": {"share_looking": share_b}, "after": {"share_looking": share_a}},
+             check=f"{gz['who']} looks {'away' if gz['away'] else 'at ' + gz['target']} in {share_a:.0%} of the line's frames (was {share_b:.0%})")
+    if share_a < 0.9 or share_a <= share_b:
+        (d / "shots.json").write_text(raw_before); _player_page(name)
+        n.update(status="needs_human", reason="the look did not change as asked: " + n["check"] + " (reverted)"); return n
+    _keep_version(name)
+    r = film_render(name); qa_after = r.get("qa") or {}
+    worse = [k_ for k_, v in qa_after.items() if v is False and qa_before.get(k_) is not False]
+    if worse:
+        (d / "shots.json").write_text(raw_before); film_render(name)
+        n.update(status="needs_human", reason=f"the edit broke QA ({', '.join(worse)}); reverted"); return n
+    n.update(status="verified", reviewer="critic: measured gaze + QA")
+    try:
+        n["diff"] = film_diff(name)
+    except Exception as e:
+        n["diff"] = {"error": str(e)[:200]}
+    return n
+
+
+@command("film.diff", name=("string", "film"), a=("string", "the earlier version (default: build/versions/prev.mp4, kept by review.fix)", ""),
+         b=("string", "the later version (default: build/final.mp4)", ""), level=("integer", "a pixel counts as changed when it moves by more than this (0-255)", 40),
+         pixels=("integer", "a frame counts as changed when more than this many pixels did", 40))
+def film_diff(name, a="", b="", level=40, pixels=40):
+    """Visual diff between two versions of a film (WP-19): the frames that changed, as ranges (frames and seconds),
+    how much each changed and where (a box), and a strip of the most changed frames (before, after, the change in
+    red) in build/diff/. Each render keeps a key per frame (build/frame_keys.json: what the frame draws, its caption
+    and finishing), so when both versions have them a frame is changed exactly when its key differs, however the video
+    encoder moved its pixels. Without keys (other renderers) frames are compared by pixels: a pixel counts past
+    `level`, a frame past `pixels` such pixels. review.fix keeps the version before a fix (build/versions/prev.*)."""
+    import numpy as np
+    from PIL import Image
+    d = _film(name); fa = Path(a) if a else d / "build" / "versions" / "prev.mp4"; fb = Path(b) if b else d / "build" / "final.mp4"
+    fa, fb = (f if f.is_absolute() else ROOT / f for f in (fa, fb))
+    for f in (fa, fb):
+        if not f.exists():
+            raise FileNotFoundError(f"no video at {f.relative_to(ROOT) if str(f).startswith(str(ROOT)) else f}")
+    fps = _shots(name).get("fps", 30)
+    W, H = [int(v) for v in subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v", "-show_entries", "stream=width,height", "-of", "csv=p=0", str(fb)],
+                                            capture_output=True, text=True).stdout.strip().split(",")]
+    pa = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(fa), "-f", "rawvideo", "-pix_fmt", "gray", "-"], stdout=subprocess.PIPE)
+    pb = subprocess.Popen(["ffmpeg", "-v", "error", "-i", str(fb), "-f", "rawvideo", "-pix_fmt", "gray", "-"], stdout=subprocess.PIPE)
+    # frame keys (the frames' markup, kept with each render) say exactly which frames changed; pixels say where
+    ka_ = _json(Path(str(fa).replace(".mp4", ".keys.json")) if fa.name != "final.mp4" else d / "build" / "frame_keys.json")
+    kb_ = _json(Path(str(fb).replace(".mp4", ".keys.json")) if fb.name != "final.mp4" else d / "build" / "frame_keys.json")
+    by_keys = bool(ka_ and kb_ and len(ka_["keys"]) == len(kb_["keys"]))
+    changed_keys = {i for i, (x, y) in enumerate(zip(ka_["keys"], kb_["keys"])) if x != y} if by_keys else None
+    n = W * H; per = []; k = 0
+    while True:
+        xa, xb = pa.stdout.read(n), pb.stdout.read(n)
+        if len(xa) < n or len(xb) < n:
+            extra = len(xa) // n + len(xb) // n
+            break
+        if by_keys and k not in changed_keys:
+            k += 1; continue
+        A = np.frombuffer(xa, np.uint8).astype(np.int16); B = np.frombuffer(xb, np.uint8).astype(np.int16)
+        m = np.abs(A - B) > level; c = int(m.sum())
+        if by_keys or c > pixels:
+            ys, xs = np.nonzero(m.reshape(H, W)) if c else ([0], [0])
+            per.append({"frame": k, "pixels": c, "box": [int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys))] if c else None})
+        k += 1
+    pa.kill(); pb.kill()
+    ranges = []
+    for r in per:
+        if ranges and r["frame"] == ranges[-1][1] + 1:
+            ranges[-1][1] = r["frame"]
+        else:
+            ranges.append([r["frame"], r["frame"]])
+    out = {"frames_compared": k, "changed_frames": len(per), "ranges": [{"frames": [x, y], "seconds": [round(x / fps, 3), round((y + 1) / fps, 3)]} for x, y in ranges],
+           "length_differs": bool(extra), "by": "frame keys" if by_keys else "pixels", "a": str(fa.relative_to(ROOT)), "b": str(fb.relative_to(ROOT))}
+    if per:   # a strip of the most changed frames: before | after | change
+        dd = d / "build" / "diff"; dd.mkdir(parents=True, exist_ok=True); tiles = []
+        for r in sorted(per, key=lambda r: -r["pixels"])[:3]:
+            grab = lambda f: Image.open(__import__("io").BytesIO(subprocess.run(["ffmpeg", "-v", "error", "-i", str(f), "-vf", f"select=eq(n\\,{r['frame']})", "-frames:v", "1", "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True).stdout)).convert("RGB")
+            ia, ib = grab(fa), grab(fb); ch = np.abs(np.asarray(ia).astype(int) - np.asarray(ib).astype(int)).max(-1) > level
+            red = np.asarray(ib).copy() // 3 + 120; red[ch] = (230, 40, 40)
+            tiles.append([ia, ib, Image.fromarray(red.astype(np.uint8))])
+        sw, sh_ = W // 3, H // 3; strip = Image.new("RGB", (sw * 3, sh_ * len(tiles)), "white")
+        for i, row in enumerate(tiles):
+            for j, im in enumerate(row):
+                strip.paste(im.resize((sw, sh_)), (j * sw, i * sh_))
+        strip.save(dd / "strip.png"); out["strip"] = str((dd / "strip.png").relative_to(ROOT)); out["most_changed"] = sorted(per, key=lambda r: -r["pixels"])[:3]
+    return out
+
+
 @command("review.fix", name=("string", "film"), id=("string", "note id (default: every open note)", ""))
 def review_fix(name, id=""):
     """Turn review notes into data edits and check them (plan 3.4): read the note (verb, amount, part, character),
@@ -1293,6 +1481,9 @@ def review_fix(name, id=""):
     for n in todo:
         tlg = timeline_get(name); t = n["t"]
         shot = next((s_ for s_ in tlg["shots"] if s_["start"] <= t < s_["end"]), tlg["shots"][-1])
+        gz = RV.gaze_intent(n["text"], [c["who"] for c in shot["cast"]])
+        if gz:   # WP-19: where a character looks
+            out.append(_review_gaze(name, n, gz, shot)); continue
         intent = RV.interpret(n["text"], [c["who"] for c in shot["cast"]])
         n["intent"] = intent
         if not intent["verb"]:
@@ -2768,6 +2959,10 @@ def test_golden(update=False, film=""):
         bad, meas = _transitions_test()
         failed += 1 if bad else 0
         results.append({"transitions": "dissolve and auto-length dip over handles: same length, blend centred on the cut, seams pass where a hard cut fails", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "gaze":   # WP-19: "Ravi should look at Momo when she answers", fixed and checked; the diff marks the frames
+        bad, meas = _gaze_test()
+        failed += 1 if bad else 0
+        results.append({"gaze": "a gaze note is fixed and verified by the critic, and the diff marks exactly the frames that changed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
         bad, meas = _kra_test()
         failed += 1 if bad else 0
@@ -5128,6 +5323,58 @@ def _transitions_test():
     meas["seams"] = {"hard_cuts": [x["change"] for x in hard], "transitions": [x["change"] for x in with_tr], "limit": seam_max}
     if any(x["change"] <= seam_max for x in hard) or any(x["change"] > seam_max for x in with_tr):
         bad.append(f"seams: {meas['seams']}")
+    return bad, meas
+
+
+def _gaze_test():
+    """WP-19 on a copy of review-demo (when it has been voiced here): Ravi's look during Momo's answer (l2) is put back
+    to the camera, the film rendered, and the note "Ravi should look at Momo when she answers" fixed: the critic must
+    measure him looking at her in at least 90% of the line's frames (from under 10%), QA must hold, and the diff must
+    mark only frames from just before the line to just after it, most of the line's frames among them; the Studio
+    diff page must show the same spans"""
+    import socket, time
+    bad, meas = [], {}
+    src = FILMS / "review-demo"
+    if not (src / "build" / "voice.wav").exists():
+        return [], {"skipped": "review-demo is not voiced here (voice.build)"}
+    tmp = FILMS / "zz-gazecheck"; shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(src, tmp, ignore=shutil.ignore_patterns("package", "master", "qa", "handoff", "versions", "diff", "review"))
+    try:
+        sj = json.loads((tmp / "shots.json").read_text()); tl = sj["shots"][0]["cast"][0]["timeline"]
+        tl["look"] = [k for k in tl["look"] if not (isinstance(k[0], str) and k[0].startswith("l2."))] + [["l1.start+2.5", [0.0, 0.0]]]
+        tl["look"].sort(key=lambda k: _resolve_time(k[0], _json(tmp / "timing.json")))
+        (tmp / "shots.json").write_text(json.dumps(sj, indent=1)); (tmp / "review.json").write_text(json.dumps({"notes": []}))
+        film_render("zz-gazecheck")
+        review_add("zz-gazecheck", 102, "Ravi should look at Momo when she answers")
+        r = review_fix("zz-gazecheck"); n = r["notes"][0]; d = n.get("diff") or {}
+        l2 = next(l for l in _json(tmp / "timing.json")["lines"] if l["id"] == "l2"); fps = 30
+        changed = [f for x in d.get("ranges", []) for f in range(x["frames"][0], x["frames"][1] + 1)]
+        inside = [f for f in changed if l2["start"] - 0.6 <= f / fps <= l2["end"] + 0.6]
+        line_frames = range(int(l2["start"] * fps), int(l2["end"] * fps))
+        meas.update(status=n["status"], check=n.get("check"), measured=n.get("measured"), diff_by=d.get("by"), changed=len(changed),
+                    outside_window=len(changed) - len(inside), line_frames_changed=round(sum(1 for f in line_frames if f in set(changed)) / len(line_frames), 3))
+        if n["status"] != "verified" or (n.get("measured") or {}).get("after", {}).get("share_looking", 0) < 0.9 or (n.get("measured") or {}).get("before", {}).get("share_looking", 1) > 0.1:
+            bad.append(f"note: {n.get('status')} {n.get('check') or n.get('reason')}")
+        if d.get("by") != "frame keys" or meas["outside_window"] or meas["line_frames_changed"] < 0.8:
+            bad.append(f"diff: {meas}")
+        port = 8795
+        srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            for _ in range(50):
+                with socket.socket() as s_:
+                    if s_.connect_ex(("127.0.0.1", port)) == 0:
+                        break
+                time.sleep(0.2)
+            pr = subprocess.run(["node", "tools/diff_check.mjs", str(port), "zz-gazecheck"], cwd=ROOT, capture_output=True, text=True, timeout=900)
+            page = json.loads(pr.stdout.strip().splitlines()[-1]) if pr.stdout.strip() else {"error": pr.stderr[-300:]}
+        finally:
+            srv.terminate()
+        meas["page"] = {k: page.get(k) for k in ("spans", "ranges", "first", "atStart", "errors", "error")}
+        if page.get("errors") or page.get("error") or page.get("spans") != len(d.get("ranges", [])) or not (page.get("first") or {}).get("changed") \
+                or (page.get("atStart") or {}).get("changed") or not all(x.get("changed") for x in page.get("steps", [])):
+            bad.append(f"diff page: {page}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
 
 def _kra_test():

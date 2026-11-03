@@ -834,6 +834,29 @@ the arm earlier" on frame 120 moved Momo's shrug 0.33 s earlier (measured 0.33 s
 frame 180 (379 px, was 300), "hold the scratch head longer" (held 1.65 s, was 1.16 s); "this bit feels off somehow"
 went to a person.
 
+**Gaze notes (WP-19).** A note about where someone looks ("Ravi should look at Momo when she answers", "Momo should
+look at Ravi during l3", "make Ravi glance at Momo while she talks", "look away from ...") is read for who looks, at
+whom, and when: the target's line at or next after the note's frame, a line by id, or while they talk. The look keys
+over that line are set toward the other character (by where each stands, in screen terms), line-relative so they
+follow re-voicing: the turn starts just after the last earlier key that looks the same way (at most 0.2 s ahead of
+the line; a key in the half second before that looks elsewhere is dropped, so the eyes do not flick away first) and
+eases back 0.3 s after the line to the look the curve had there. The critic probes the gaze over the line
+(`window.PROBE(ci, '@look', ...)`) and needs the asked direction in at least 90% of its frames and more than before;
+then the film is re-rendered, QA must hold, and the note records the diff. On `review-demo` Ravi now looks at Momo
+in 97% of her answer's frames (was 0%: he looked to camera from 3.3 s).
+
+**What changed (WP-19).** `film.diff` compares two versions of a film; `review.fix` keeps the version before each fix
+(`build/versions/prev.mp4` and its keys). Each render keeps a key per frame (`build/frame_keys.json`, from the
+markup keys the SVG renderer writes per shot: what the frame draws, both shots inside a transition, the caption
+showing and the finishing), so a frame is changed exactly when its key differs; re-encoding moves pixels in every
+frame, and comparing pixels instead marked 319 of `review-demo`'s 433 frames for that gaze fix. By keys: 64 frames,
+3.27-4.20 s and 4.33-5.53 s (the gap is a blink, when the pupils are hidden and the gaze cannot show). The result
+has a box per changed frame and a strip of the most changed (before, after, the change in red: Ravi's eyes). The
+Studio page http://127.0.0.1:8770/diff?film=FILM ("What changed" in the review room) marks the changed spans on a
+bar, steps from change to change and shows both versions side by side at that frame. The `gaze` test does all of
+this on a copy of `review-demo` (Ravi's look put back to camera first): verified at 97% from 0%, no changed frame
+outside the line's window, and the page shows the same spans.
+
 ## Act it out (plan 3.5)
 http://127.0.0.1:8770/actout (linked from Studio): **Use camera** and **Record 5 s** (a 3-2-1 count, then five seconds
 from the webcam or phone camera), or pick a video file; choose a character and a clip name, then **Make clip**. The

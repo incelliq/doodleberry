@@ -1852,7 +1852,7 @@
        "shot.render",
        "WP-19"
       ],
-      "note": "shot.render with a renderer override writes a second file for side-by-side comparison; a visual diff between two versions of a film is WP-19."
+      "note": "shot.render with a renderer override writes a second file for side-by-side comparison, and film.diff marks exactly the frames that changed between two versions, shown side by side in Studio (WP-19)."
      }
     }
    ]

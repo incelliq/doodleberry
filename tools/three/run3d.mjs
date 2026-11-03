@@ -22,7 +22,7 @@ const plate = process.env.DBE_PLATE === '0' ? null : await probe.evaluate(() => 
 const platePng = plate ? path.join(dir, 'plate.png') : null;
 if (plate) fs.writeFileSync(platePng, Buffer.from(plate.png.split(',')[1], 'base64'));
 await probe.close();
-const seen = new Map(); let reused = 0;
+const seen = new Map(); let reused = 0; const KEYS = new Array(info.total).fill(null);   // per frame: its markup key (WP-19 film.diff)
 const name = f => path.join(dir, `f${String(f).padStart(5, '0')}.png`);
 const chunk = Math.ceil(info.total / nw);
 await Promise.all(Array.from({ length: nw }, async (_, w) => {
@@ -42,10 +42,12 @@ await Promise.all(Array.from({ length: nw }, async (_, w) => {
     const key = await p.evaluate(async f => {
       await window.renderFrame(f);   // a frame with images (WP-42 plates) resolves once they have decoded
       const st = document.getElementById('stage'); if (!st || st.tagName.toLowerCase() !== 'svg' || document.querySelector('canvas')) return null;
-      const s = st.innerHTML; let h1 = 0x811c9dc5 | 0, h2 = 0;
+      const s = st.innerHTML.replace(/blob:[^"]+/g, 'blob');   // cached layers name their content (data-k); blob URLs differ by run
+      let h1 = 0x811c9dc5 | 0, h2 = 0;
       for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (h2 * 31 + c) | 0; }
       return `${s.length}:${h1 >>> 0}:${h2 >>> 0}`;
     }, f);
+    KEYS[f] = key;
     if (key && seen.has(key) && process.env.DBE_DEDUPE !== '0') {   // DBE_DEDUPE=0 captures every frame (to check the reuse is exact)
       const src = seen.get(key);
       // the source may still be in flight in another worker; wait briefly for it to exist
@@ -62,6 +64,8 @@ await Promise.all(Array.from({ length: nw }, async (_, w) => {
 await b.close();
 const secs = (Date.now() - t0) / 1000;
 console.log(`${info.total} frames (${reused} reused) in ${secs.toFixed(1)} s, ${(secs * 1000 / Math.max(1, info.total)).toFixed(0)} ms/frame, ${nw} workers${plate ? ', over a static plate' : ''}`);
+// the frames' markup keys next to the video: two renders whose keys match at a frame drew the same picture there
+fs.writeFileSync(out + '.keys.json', JSON.stringify({ frames: KEYS, plate: plate ? plate.key : null }));
 const enc = ['-c:v', 'libx264', '-tune', 'animation', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', out];
 if (plate) spawnSync('ffmpeg', ['-v', 'error', '-y', '-loop', '1', '-framerate', String(info.fps), '-i', platePng, '-framerate', String(info.fps), '-i', path.join(dir, 'f%05d.png'),
   '-filter_complex', '[0:v]format=rgba[p];[1:v]format=rgba[f];[p][f]overlay=0:0:shortest=1:format=auto,format=yuv420p[v]', '-map', '[v]', '-r', String(info.fps), ...enc], { stdio: 'inherit' });

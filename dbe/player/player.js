@@ -61,7 +61,7 @@
   function staticLayer(sh, m) {
     if (!m || !rasterOk(sh, m)) return m;
     const k = strHash(m), r = RASTER.get(k);
-    if (r && r.url) return `<image href="${r.url}" x="0" y="0" width="${W}" height="${H}"/>`;
+    if (r && r.url) return `<image data-k="${k}" href="${r.url}" x="0" y="0" width="${W}" height="${H}"/>`;   // data-k: what it shows (blob URLs differ by run)
     if (!r) { const e = { url: null }; e.p = rasterize(m).then(u => { e.url = u; }, () => { e.url = null; e.failed = true; }); RASTER.set(k, e); }
     if (!RASTER.get(k).failed) PENDING.push(RASTER.get(k).p);
     return m;
@@ -487,7 +487,11 @@
   window.LINT = visualLint;
   // motion probe (plan 3.4): a part's position on screen over a span, for the review critic's before/after checks
   window.PROBE = (ci, part, t0, t1, fps = FPS) => { const out = [];
-    for (let f = Math.ceil(t0 * fps); f <= t1 * fps; f++) { const t = f / fps; frameAt(t, false); const cc = CASTS[ci]; if (!cc || !cc.p.parts[part]) { out.push([+t.toFixed(3), null, null]); continue; }
+    for (let f = Math.ceil(t0 * fps); f <= t1 * fps; f++) { const t = f / fps; frameAt(t, false); const cc = CASTS[ci];
+      if (part === '@look') {   // WP-19: the character's gaze in screen terms ([x, y], x > 0 looks right on screen), and where it stands
+        const lk = (cc && cc.pose && cc.pose.look) || [0, 0], fl = (cc && cc.flip) || 1;
+        out.push([+t.toFixed(3), +(lk[0] * fl).toFixed(3), +(lk[1] || 0).toFixed(3), cc ? +(W / 2 + (cc.x - VIEW[0]) * VIEW[2]).toFixed(1) : null]); continue; }
+      if (!cc || !cc.p.parts[part]) { out.push([+t.toFixed(3), null, null]); continue; }
       const q = Puppet.pointOf(cc.p, part, null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip });
       out.push([+t.toFixed(3), +(W / 2 + (q[0] - VIEW[0]) * VIEW[2]).toFixed(1), +(H / 2 + (q[1] - VIEW[1]) * VIEW[2]).toFixed(1)]); }
     return out; };

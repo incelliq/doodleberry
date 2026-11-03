@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Version Diff</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; --change: #d33; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select { font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  main { padding: 12px 16px; display: grid; gap: 12px; }
+  #pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 900px; }
+  #pair figure { margin: 0; } #pair figcaption { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  video { width: 100%; border-radius: 10px; background: #000; display: block; }
+  #bar { position: relative; height: 26px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; max-width: 900px; }
+  #bar .chg { position: absolute; top: 3px; bottom: 3px; background: var(--change); border-radius: 2px; min-width: 2px; opacity: .8; }
+  #bar .head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+  #state { font-weight: 600; } #state.changed { color: var(--change); } #msg, .muted { color: var(--muted); }
+  #strip { max-width: 900px; width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+  @media (max-width: 640px) { #pair { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Version diff</h1><select id="film" aria-label="Film"></select>
+  <button id="prev" title="previous changed frame">◀ change</button><button id="next" title="next changed frame">change ▶</button>
+  <span id="frame">frame 0</span><span id="state"></span><span id="msg"></span><span style="flex:1"></span><a href="/review">Review ↗</a> <a href="/">Studio ↗</a></header>
+<main>
+  <div class="muted">Red marks the frames that changed between the earlier version (kept when a review note is fixed) and the
+    latest render. Frames are compared by what they draw, so a mark means the picture really changed there. Click the bar or step through the changes.</div>
+  <div id="bar"></div>
+  <div id="pair"><figure><figcaption>before</figcaption><video id="va" muted playsinline preload="auto"></video></figure>
+    <figure><figcaption>after</figcaption><video id="vb" muted playsinline preload="auto"></video></figure></div>
+  <div id="summary" class="muted"></div>
+  <img id="strip" alt="the most changed frames: before, after and the change in red" hidden>
+</main>
+<script>
+const $ = id => document.getElementById(id), msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
+let D = null, film = null, fps = 30, frame = 0, changed = new Set(), list = [];
+function seek(f) {
+  frame = Math.max(0, Math.min(D.frames_compared - 1, f)); const t = (frame + 0.5) / fps;
+  $('va').currentTime = t; $('vb').currentTime = t; $('frame').textContent = `frame ${frame} · ${(frame / fps).toFixed(2)} s`;
+  const c = changed.has(frame); $('state').textContent = c ? 'changed' : 'unchanged'; $('state').className = c ? 'changed' : '';
+  $('bar').querySelector('.head').style.left = (100 * frame / D.frames_compared) + '%'; window.DIFF_STATE = { frame, changed: c };
+}
+async function load() {
+  msg('comparing…'); D = await api('film.diff', { name: film }); window.DIFF = D;
+  fps = (await api('timeline.get', { name: film })).fps || 30;
+  changed = new Set(); for (const r of D.ranges) for (let f = r.frames[0]; f <= r.frames[1]; f++) changed.add(f);
+  list = [...changed].sort((a, b) => a - b);
+  $('bar').innerHTML = D.ranges.map(r => `<div class="chg" style="left:${100 * r.frames[0] / D.frames_compared}%;width:${100 * (r.frames[1] - r.frames[0] + 1) / D.frames_compared}%" title="frames ${r.frames[0]}-${r.frames[1]} (${r.seconds[0]}-${r.seconds[1]} s)"></div>`).join('') + '<div class="head"></div>';
+  const v = Date.now(); $('va').src = '/' + D.a + '?v=' + v; $('vb').src = '/' + D.b + '?v=' + v;
+  $('summary').textContent = `${D.changed_frames} of ${D.frames_compared} frames changed, in ${D.ranges.length} span(s): ` + D.ranges.map(r => `${r.seconds[0]}–${r.seconds[1]} s`).join(', ') + ` (compared by ${D.by})`;
+  if (D.strip) { $('strip').src = '/' + D.strip + '?v=' + v; $('strip').hidden = false; }
+  msg(''); seek(list.length ? list[0] : 0); window.DIFF_READY = true;
+}
+$('bar').onclick = e => { const r = $('bar').getBoundingClientRect(); seek(Math.round((e.clientX - r.left) / r.width * D.frames_compared)); };
+$('next').onclick = () => { const n = list.find(f => f > frame); if (n != null) seek(n); };
+$('prev').onclick = () => { const n = [...list].reverse().find(f => f < frame); if (n != null) seek(n); };
+(async () => {
+  const films = (await api('engine.info')).films || [];
+  const want = new URLSearchParams(location.search).get('film');
+  $('film').innerHTML = films.map(f => `<option ${f === want ? 'selected' : ''}>${f}</option>`).join('');
+  film = want || $('film').value; $('film').onchange = () => { film = $('film').value; history.replaceState(null, '', '?film=' + film); load(); };
+  await load();
+})();
+</script>
+</body>
+</html>

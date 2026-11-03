@@ -1776,7 +1776,7 @@
       "ref": [
        "WP-19"
       ],
-      "note": "A visual diff between two versions of a film is in WP-19."
+      "note": "film.diff marks exactly the frames that changed between two versions of a film, with before and after side by side in Studio (WP-19)."
      }
     }
    ]

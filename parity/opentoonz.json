@@ -2109,7 +2109,7 @@
        "qa.run",
        "WP-19"
       ],
-      "note": "Contact sheets and stills are generated; a visual diff between two versions is WP-19."
+      "note": "Contact sheets and stills are generated, and film.diff marks the frames that changed between two versions (WP-19)."
      }
     },
     {

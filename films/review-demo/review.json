@@ -138,6 +138,122 @@
    "reason": "the edit did not change the motion as asked: held 1.62 s (was 1.62 s) (reverted)",
    "reviewer": "critic: measured motion + QA",
    "still_after": "films/review-demo/build/review/n4_after.png"
+  },
+  {
+   "id": "n5",
+   "frame": 102,
+   "t": 3.4,
+   "text": "Ravi should look at Momo when she answers",
+   "who": "director",
+   "status": "verified",
+   "intent": {
+    "kind": "gaze",
+    "who": "ravi",
+    "target": "momo",
+    "when": "next_line_of_target",
+    "line": null,
+    "away": false
+   },
+   "target": "ravi's look at momo while momo says l2 (3.39-5.21 s)",
+   "watch": "@look",
+   "edit": {
+    "look": [
+     [
+      "l2.start-0.1",
+      [
+       1.0,
+       0.05
+      ]
+     ],
+     [
+      "l2.end",
+      [
+       1.0,
+       0.05
+      ]
+     ],
+     [
+      "l2.end+0.3",
+      [
+       0,
+       0
+      ]
+     ]
+    ]
+   },
+   "measured": {
+    "before": {
+     "share_looking": 0.0
+    },
+    "after": {
+     "share_looking": 0.969
+    }
+   },
+   "check": "ravi looks at momo in 97% of the line's frames (was 0%)",
+   "reviewer": "critic: measured gaze + QA",
+   "diff": {
+    "frames_compared": 433,
+    "changed_frames": 64,
+    "ranges": [
+     {
+      "frames": [
+       98,
+       125
+      ],
+      "seconds": [
+       3.267,
+       4.2
+      ]
+     },
+     {
+      "frames": [
+       130,
+       165
+      ],
+      "seconds": [
+       4.333,
+       5.533
+      ]
+     }
+    ],
+    "length_differs": false,
+    "by": "frame keys",
+    "a": "films/review-demo/build/versions/prev.mp4",
+    "b": "films/review-demo/build/final.mp4",
+    "strip": "films/review-demo/build/diff/strip.png",
+    "most_changed": [
+     {
+      "frame": 107,
+      "pixels": 598,
+      "box": [
+       202,
+       745,
+       983,
+       1488
+      ]
+     },
+     {
+      "frame": 109,
+      "pixels": 595,
+      "box": [
+       195,
+       771,
+       984,
+       1486
+      ]
+     },
+     {
+      "frame": 119,
+      "pixels": 588,
+      "box": [
+       196,
+       769,
+       1019,
+       1488
+      ]
+     }
+    ]
+   }
   }
  ]
 }
