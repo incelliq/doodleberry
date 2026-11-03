@@ -4635,7 +4635,7 @@ def film_heal(name, rounds=3, revoice=False):
         # share by at least 3 points, else the shot needs new content, not a bigger character)
         ff = ((rep.get("layout") or {}).get("frame_fill") or {}).get("per_shot_mean") or {}
         for (sid, kind), (before, saved) in list(tried.items()):
-            if kind == "grow" and ff.get(sid, 0) > before - 0.03:
+            if kind == "grow" and saved is not None and ff.get(sid, 0) > before - 0.03:   # (None: already undone)
                 cur = _json(d / "shots.json")
                 for sh_ in cur["shots"]:
                     if sh_["id"] == sid:
@@ -5389,6 +5389,10 @@ def test_golden(update=False, film=""):
         bad, meas = _text2_test()
         failed += 1 if bad else 0
         results.append({"text2": "the sound-off cut of a dialogue film with a narrator and a thought shows a narration box, a thought cloud and speech bubbles, types with pauses on punctuation, and passes the reading-time rule", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "templates":   # WP-16: a quadruped, a bird and an object with a face, each with a clip set on every renderer
+        bad, meas = _templates_test()
+        failed += 1 if bad else 0
+        results.append({"templates": "Biscuit (quadruped), Pim (bird) and Kettle (object with a face) pass their templates' lint, and a shot playing each one's whole clip library draws alike in the SVG player, Synfig, Lottie and Grease Pencil", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "living":   # WP-27: corrections everywhere, companion guides, living films, intake, rebrand
         bad, meas = _living_test()
         failed += 1 if bad else 0
@@ -6987,9 +6991,10 @@ def soundoff_plan(s, tm, wpm=170, max_stretch=2.5, min_hold=1.2):
          max_stretch=("number", "longest a line may be held, as a multiple of its voiced length", 2.5),
          render=("boolean", "render the cut (false: only write the derived film and report the plan)", True))
 def film_soundoff(name, wpm=170, max_stretch=2.5, render=True):
-    """The sound-off cut (plan 2.13): the same film with no voice, every spoken line in a speech bubble (narration
-    with nobody on screen to speak it stays as a caption), each line held long enough to read, music and effects
-    re-timed to match. Built as the derived film <name>--soundoff and copied to build/final_soundoff.mp4."""
+    """The sound-off cut (plan 2.13): the same film with no voice, every spoken line in a speech bubble, each line held long enough to read, music and effects
+    re-timed to match. Narration with nobody on screen to speak it is typed into narration boxes, thoughts (script
+    style "thought") into thought clouds (WP-17). Built as the derived film <name>--soundoff and copied to
+    build/final_soundoff.mp4."""
     src = _film(name); s = _shots(name, resolve=False); sr = _shots(name); tm = _json(src / "timing.json", {})
     if not s.get("shots") or not tm.get("lines"):
         raise ValueError("film.soundoff needs a shots.json film with voiced lines (timing.json)")
@@ -7003,8 +7008,9 @@ def film_soundoff(name, wpm=170, max_stretch=2.5, render=True):
             shutil.copy(src / f, dst / f)
     score = _json(src / "score.json", {}); score["voice"] = False; (dst / "score.json").write_text(json.dumps(score, indent=1))
     s2 = json.loads(json.dumps(s)); s2.pop("soundoff", None)
-    s2["timewarp"] = plan["knots"]; s2["caption_lines"] = plan["captioned"]
-    s2["captions"] = bool(plan["captioned"])
+    s2["timewarp"] = plan["knots"]
+    # narration nobody on screen speaks goes in narration boxes (WP-17), typed out, rather than in captions
+    s2["narration_boxes"] = True; s2["caption_lines"] = []; s2["captions"] = False
     for sh in s2["shots"]:
         if any(c.get("speaker") for c in sh.get("cast", [])):
             sh["bubbles"] = True
@@ -7013,9 +7019,11 @@ def film_soundoff(name, wpm=170, max_stretch=2.5, render=True):
            "stretched_lines": plan["stretched"], "bubbled": plan["bubbled"], "captioned": plan["captioned"]}
     if not render:
         return out
-    r = film_render(dst.name)
-    shutil.copy(dst / "build" / "final.mp4", src / "build" / "final_soundoff.mp4")
-    return {**out, "final": f"films/{name}/build/final_soundoff.mp4", "qa": r.get("qa"), "lint": r.get("lint")}
+    h = film_heal(dst.name, rounds=2)   # render, and repair what the cut's own layout needs (bubbles move the camera's job)
+    q = _json(dst / "build" / "qa.json", {})
+    (src / "build").mkdir(exist_ok=True); shutil.copy(dst / "build" / "final.mp4", src / "build" / "final_soundoff.mp4")
+    return {**out, "final": f"films/{name}/build/final_soundoff.mp4", "qa": q.get("checks"), "lint": (q.get("lint") or {}).get("summary") if isinstance(q.get("lint"), dict) else q.get("lint"),
+            "healed": [x["what"] for e in h.get("rounds") or [] for x in e.get("repairs", [])]}
 
 
 # ---------------- beat grid and master-to-many cuts (plan 2.14) ----------------
@@ -9400,7 +9408,7 @@ def _sound2_test():
 
 def _text2_test():
     """WP-17 on zz-text, a copy of dialogue-demo with a narrator line first (nobody on screen speaks it) and a thought of
-    Priya's after Ravi's second line (script style "think"), voiced. Its sound-off cut (film.soundoff) is rendered:
+    Priya's after Ravi's second line (script style "thought"), voiced. Its sound-off cut (film.soundoff) is rendered:
     QA's reading-time rule (every bubble, thought and narration box on screen for words / 3 + 1 s on the cut's
     clock) and the rest of the bar must pass. The cut's player is asked what it draws in the middle of each line: a
     narration box for the narrator, a thought for Priya's thought, speech bubbles for the rest. The typewriter: in
@@ -9416,30 +9424,29 @@ def _text2_test():
         sc["speakers"]["narrator"] = {"voice": "kokoro:bm_george", "narrator": True}
         sc["lines"].insert(0, {"id": "n1", "speaker": "narrator", "fact": None, "text": "One afternoon, at the library, Ravi had news."})
         i3 = next(k for k, l in enumerate(sc["lines"]) if l["id"] == "l3")
-        sc["lines"].insert(i3 + 1, {"id": "th1", "speaker": "priya", "fact": None, "text": "Maybe I can finally see the rings of Saturn.", "style": "think"})
+        sc["lines"].insert(i3 + 1, {"id": "th1", "speaker": "priya", "fact": None, "text": "Maybe I can finally see the rings of Saturn.", "style": "thought"})
         (FILMS / name / "script.json").write_text(json.dumps(sc, indent=1))
         sj = _json(FILMS / name / "shots.json"); sj["shots"][0]["start_line"] = "n1"; (FILMS / name / "shots.json").write_text(json.dumps(sj, indent=1))
         voice_build(name); retime(name); acting_plan(name)
         r = film_soundoff(name)
         cut = f"{name}--soundoff"; qa = r.get("qa") or {}
         meas["qa_failures"] = sorted(k for k, v in qa.items() if v is False)
+        meas["outside_safe"] = ((_json(FILMS / f"{name}--soundoff" / "build" / "qa.json", {}).get("layout") or {}).get("text") or {}).get("outside_safe")
         if qa.get("layout:reading_time") is False or meas["qa_failures"]:
             bad.append(f"the sound-off cut fails QA: {meas['qa_failures']}")
-        cs = _shots(cut, resolve=False); kn = cs.get("timewarp") or []
         tm = _json(FILMS / cut / "timing.json")
-        to_cut = lambda t: _warp(kn, t, inverse=True)
-        probe = {l["id"]: round(to_cut((l["start"] + l["end"]) / 2), 3) for l in tm["lines"]}
+        probe = {l["id"]: round((l["start"] + l["end"]) / 2, 3) for l in tm["lines"]}   # frameAtTime takes film time (the player warps it)
         js = ("const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({args:['--allow-file-access-from-files']});const p=await b.newPage({viewport:{width:1080,height:1920}});"
               "await p.goto(process.argv[1]);await p.waitForFunction(()=>window.ready===true);const ts=JSON.parse(process.argv[2]);const out={};"
               "for(const [k,t] of Object.entries(ts)){await p.evaluate(t=>window.frameAtTime(t),t);out[k]=await p.evaluate(()=>[...(window.BUBBLE_KINDS||[])]);}"
               "const n1=JSON.parse(process.argv[3]);out.typed=[];for(const t of n1){await p.evaluate(t=>window.frameAtTime(t),t);out.typed.push(await p.evaluate(()=>[...document.querySelectorAll('#stage text')].map(e=>e.textContent).join('|')));}"
               "console.log(JSON.stringify(out));await b.close();})()")
-        n1 = next(l for l in tm["lines"] if l["id"] == "n1"); a, b_ = to_cut(n1["start"]), to_cut(n1["end"])
+        n1 = next(l for l in tm["lines"] if l["id"] == "n1"); a, b_ = n1["start"], n1["end"]
         ticks = [round(a + (b_ - a) * k / 40, 3) for k in range(41)]
         pr = subprocess.run(["node", "-e", js, "file://" + str(_player_page(cut)) + "?captions=0", json.dumps(probe), json.dumps(ticks)], cwd=ROOT, capture_output=True, text=True, timeout=600)
         got = json.loads(pr.stdout.strip().splitlines()[-1]) if pr.returncode == 0 and pr.stdout.strip() else {}
         meas["kinds"] = {k: got.get(k) for k in probe}
-        if "narrate" not in (got.get("n1") or []) or "think" not in (got.get("th1") or []) or "say" not in (got.get("l2") or []):
+        if "narrate" not in (got.get("n1") or []) or "thought" not in (got.get("th1") or []) or "say" not in (got.get("l2") or []):
             bad.append(f"what the cut draws: {meas['kinds']} {pr.stderr[-200:]}")
         box = [max((len(x) for x in t.split("|") if x and x in "One afternoon, at the library, Ravi had news."), default=0) for t in got.get("typed", [])]
         steps = [y - x for x, y in zip(box, box[1:])]
@@ -9450,4 +9457,38 @@ def _text2_test():
     finally:
         for n_ in (name, f"{name}--soundoff"):
             shutil.rmtree(FILMS / n_, ignore_errors=True)
+    return bad, meas
+
+
+
+def _templates_test():
+    """WP-16. For each new template (quadruped: Biscuit, bird: Pim, object: Kettle; drawn by
+    puppet/examples/make_critters.py): the puppet lints clean against its template, its template's clip library
+    exists for the player and the bake, and a scratch shot plays every clip in the library one after another (idle
+    under them). Renderer parity (render.parity: the SVG player against Synfig, Lottie and Grease Pencil at five
+    moments) must pass for each: the better of silhouette IoU and line F-score at least 0.85, colour within 24."""
+    from . import rparity as RP
+    bad, meas = [], {}
+    for pid, tpl in (("biscuit", "quadruped"), ("pim", "bird"), ("kettle", "object")):
+        pp = f"puppet/examples/{pid}.puppet.json"; lint = puppet_lint(pp)["issues"]
+        lib = _json(ROOT / "puppet" / "clips" / f"{tpl}.json", {}).get("clips") or {}
+        if any(i["level"] == "missing" for i in lint) or not lib or not (ROOT / "puppet" / "clips" / f"{tpl}.js").exists():
+            bad.append(f"{pid}: lint {lint[:2]}, clips {sorted(lib)}"); continue
+        t, clips = 0.3, [{"clip": "idle", "start": 0, "fadeIn": 0}]
+        for k, c in lib.items():
+            if k == "idle":
+                continue
+            d = c["duration"] * (2 if c.get("loop") else 1); clips.append({"clip": k, "start": round(t, 2), "end": round(t + d, 2), "weight": 2}); t += d + 0.3
+        name = f"zz-tpl-{pid}"; d_ = FILMS / name; shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        (d_ / "shots.json").write_text(json.dumps({"title": f"{pid} clip set", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "renderer": "svg", "set": "plain", "start": 0, "end": round(t + 0.3, 2), "bubbles": False,
+                                                    "cast": [{"puppet": pp, "place": {"x": 540, "y": 1500, "s": 1.3}, "timeline": {"clips": clips}}]}]}, indent=1))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        try:
+            dur = t + 0.3; times = [round(dur * k, 2) for k in (0.15, 0.35, 0.55, 0.75, 0.92)]
+            r = RP.run(name, "s1", times=times)
+            meas[pid] = {"clips": sorted(lib), "renderers": {k: {"min": v.get("min"), "colour": max(v.get("colour_diff") or [0]), "ok": v.get("ok")} for k, v in r["renderers"].items()}, "refused": r["refusals"]}
+            if not r["renderers"] or not r["ok"] or r["refusals"]:
+                bad.append(f"{pid}: {meas[pid]}")
+        finally:
+            shutil.rmtree(d_, ignore_errors=True)
     return bad, meas

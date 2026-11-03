@@ -921,6 +921,22 @@ The `sound2` test:
 Open: recorded voice-over into slots, checked against hand-marked timings; Kenney CC0 samples (the site refused
 automated downloads); prosody direction.
 
+## Bubbles and text, finished (WP-17)
+- **Thought clouds**: a script line with `"style": "thought"` is drawn as a cloud with round bumps all the way round,
+  trailing three shrinking puffs to the thinker's head.
+- **Narration boxes**: a line with `"style": "narration"`, or (in a cut with `narration_boxes`, which the sound-off
+  cut turns on) any line whose speaker is not on screen, is typed into a caption box at the top of the safe area.
+  The sound-off cut then shows no separate captions.
+- **Typewriter pauses**: letters typed out (silent bubbles, custom bubble text spread over a line, narration boxes)
+  pause after punctuation: a comma, semicolon or colon holds four letters' time, a full stop, ! or ? eight. Voiced
+  bubbles still reveal word by word with the voice.
+- The reading-time rule now covers a sound-off cut's bubbles, thoughts and narration boxes: each needs words / 3 + 1 s
+  on screen on the cut's own clock. The cut is rendered through `film.heal`.
+
+The `text2` test uses zz-text, a copy of dialogue-demo with a narrator line first and a thought of Priya's. In the
+middle of each line its sound-off cut draws a narration box for the narrator, a thought for Priya's thought and
+speech bubbles for the rest. The narration's typed letters hold at "One afternoon," for three of forty ticks.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

@@ -1,0 +1,224 @@
+{
+ "template": "quadruped",
+ "version": "0.1",
+ "artboard": [
+  700,
+  600
+ ],
+ "ground": 580,
+ "note": "Four-legged animals in side view, facing right: a body on the hips, a head on the body, two-part legs (front and hind, far and near), ears and a tail. The near legs draw in front of the body.",
+ "parts": [
+  {
+   "id": "hip",
+   "parent": null,
+   "pivot": [
+    350,
+    330
+   ],
+   "z": 20,
+   "required": false,
+   "label": "Root (no drawing)"
+  },
+  {
+   "id": "body",
+   "parent": "hip",
+   "pivot": [
+    350,
+    330
+   ],
+   "z": 22,
+   "required": true,
+   "label": "Body"
+  },
+  {
+   "id": "head",
+   "parent": "body",
+   "pivot": [
+    470,
+    275
+   ],
+   "z": 40,
+   "required": true,
+   "label": "Head"
+  },
+  {
+   "id": "ear_back",
+   "parent": "head",
+   "pivot": [
+    495,
+    182
+   ],
+   "z": 36,
+   "required": true,
+   "label": "Ear (far side)"
+  },
+  {
+   "id": "ear_near",
+   "parent": "head",
+   "pivot": [
+    540,
+    178
+   ],
+   "z": 44,
+   "required": true,
+   "label": "Ear (near side)"
+  },
+  {
+   "id": "tail",
+   "parent": "body",
+   "pivot": [
+    178,
+    290
+   ],
+   "z": 18,
+   "required": true,
+   "label": "Tail"
+  },
+  {
+   "id": "front_back_upper",
+   "parent": "body",
+   "pivot": [
+    440,
+    360
+   ],
+   "z": 14,
+   "required": true,
+   "label": "front back leg (upper)"
+  },
+  {
+   "id": "front_back_lower",
+   "parent": "front_back_upper",
+   "pivot": [
+    440,
+    455
+   ],
+   "z": 15,
+   "required": true,
+   "label": "front back leg (lower)"
+  },
+  {
+   "id": "front_near_upper",
+   "parent": "body",
+   "pivot": [
+    475,
+    360
+   ],
+   "z": 30,
+   "required": true,
+   "label": "front near leg (upper)"
+  },
+  {
+   "id": "front_near_lower",
+   "parent": "front_near_upper",
+   "pivot": [
+    475,
+    455
+   ],
+   "z": 31,
+   "required": true,
+   "label": "front near leg (lower)"
+  },
+  {
+   "id": "hind_back_upper",
+   "parent": "body",
+   "pivot": [
+    230,
+    360
+   ],
+   "z": 12,
+   "required": true,
+   "label": "hind back leg (upper)"
+  },
+  {
+   "id": "hind_back_lower",
+   "parent": "hind_back_upper",
+   "pivot": [
+    230,
+    455
+   ],
+   "z": 13,
+   "required": true,
+   "label": "hind back leg (lower)"
+  },
+  {
+   "id": "hind_near_upper",
+   "parent": "body",
+   "pivot": [
+    262,
+    360
+   ],
+   "z": 28,
+   "required": true,
+   "label": "hind near leg (upper)"
+  },
+  {
+   "id": "hind_near_lower",
+   "parent": "hind_near_upper",
+   "pivot": [
+    262,
+    455
+   ],
+   "z": 29,
+   "required": true,
+   "label": "hind near leg (lower)"
+  }
+ ],
+ "swaps": [
+  {
+   "id": "eyes",
+   "anchor": "head",
+   "z": 46,
+   "shapes": [
+    "open",
+    "half",
+    "closed"
+   ],
+   "required": [
+    "open",
+    "closed"
+   ],
+   "label": "Eyes"
+  },
+  {
+   "id": "pupils",
+   "anchor": "head",
+   "z": 47,
+   "shapes": [
+    "default"
+   ],
+   "required": [],
+   "movable": 6,
+   "label": "Pupils"
+  },
+  {
+   "id": "mouth",
+   "anchor": "head",
+   "z": 45,
+   "shapes": [
+    "closed",
+    "small",
+    "wide"
+   ],
+   "required": [
+    "closed",
+    "wide"
+   ],
+   "talk": [
+    "closed",
+    "small",
+    "wide"
+   ],
+   "label": "Mouth"
+  }
+ ],
+ "palette": [
+  "fur",
+  "fur2",
+  "nose",
+  "eye",
+  "tongue",
+  "ink",
+  "collar"
+ ],
+ "guide": []
+}

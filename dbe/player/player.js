@@ -183,8 +183,8 @@
     const step = 1 / 12, f = Math.floor(t / step), f0 = Math.floor(b.t0 / step), f1 = Math.floor(b.t1 / step);
     if (f < f0 || f > f1) return '';
     const i = f - f0, j = f1 - f, pop = i === 0 ? 0.55 : i === 1 ? 1.12 : j === 0 ? 0.5 : j === 1 ? 0.85 : 1;
-    const style = b.style || 'say', base = ({ say: 72, shout: 118, whisper: 50 }[style] || 72) * Math.min(1, H / 1920 * 1.4);  // landscape: smaller type, still >= the 16:9 minimum
-    const R = rows(b.text, { say: 13, shout: 9, whisper: 18 }[style] || 13), lh = base * 1.08;
+    const style = b.style || 'say', base = ({ say: 72, shout: 118, whisper: 50, thought: 64 }[style] || 72) * Math.min(1, H / 1920 * 1.4);  // landscape: smaller type, still >= the 16:9 minimum
+    const R = rows(b.text, { say: 13, shout: 9, whisper: 18, thought: 14 }[style] || 13), lh = base * 1.08;
     const bw = Math.max(...R.map(r => em(r))) * base * 0.5, bh = lh * R.length;
     let rx = (bw / 2 + 60) * pop, ry = (bh / 2 + 46) * pop; if (style === 'shout') { rx *= 1.2; ry *= 1.3; }
     // placement: above the speaker toward the frame centre, then the other side, then higher or lower, avoiding
@@ -201,18 +201,30 @@
     const n = 64, pts = [], k = Math.floor(t * 12) % 8;
     for (let q = 0; q < n; q++) { const th = 2 * Math.PI * q / n;
       let r = 1 + 0.018 * (Math.sin(3 * th + 6.28 * hash(k, idx)) + Math.sin(5 * th + 6.28 * hash(k + 9, idx)) + 0.6 * Math.sin(9 * th + 6.28 * hash(k + 17, idx)));
-      if (style === 'shout') r *= q % 4 < 2 ? 1 : 0.8; pts.push([cx + rx * r * Math.cos(th), cy + ry * r * Math.sin(th), th]); }
+      if (style === 'shout') r *= q % 4 < 2 ? 1 : 0.8;
+      if (style === 'thought') r *= 1 + 0.09 * Math.abs(Math.sin(5 * th));   // a cloud: round bumps all the way round
+      pts.push([cx + rx * r * Math.cos(th), cy + ry * r * Math.sin(th), th]); }
+    if (style === 'thought') {   // a thought trails off to the thinker in three shrinking puffs (WP-17)
+      KINDS.push('thought');
+      const [tx, ty] = [anchor[0], anchor[1] - 18], dots = [0.3, 0.55, 0.78].map((u, q) => { const ex = cx + (tx - cx) * u, ey = cy + ry * (1 - u) * 0.9 + (ty - cy) * u * 0.9; return `<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="${(26 - q * 7) * pop}" fill="#f6f5ef" stroke="${INK}" stroke-width="4"/>`; }).join('');
+      const dc = 'M' + pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L') + ' Z';
+      var thinkSvg = dots + `<path d="${dc}" fill="#f6f5ef" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>`;
+    } else KINDS.push(style);
     // tail: replace a few outline points with a spike to the speaker
     const [tx, ty] = [anchor[0], anchor[1] - 18], ang = (Math.atan2((ty - cy) / ry, (tx - cx) / rx) + 2 * Math.PI) % (2 * Math.PI), i0 = Math.round(ang / (2 * Math.PI) * n) % n;
     const path = []; for (let q = 0; q < n; q++) { const d = (q - i0 + n) % n; if (d === n - 3) path.push(pts[q], [tx, ty, 0]); else if (d > n - 3 || d < 3) continue; else path.push(pts[q]); }
     const dstr = 'M' + path.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L') + ' Z';
-    let svg = `<path d="${dstr}" fill="#f6f5ef" stroke="${INK}" stroke-width="${style === 'whisper' ? 4 : 5}" stroke-linejoin="round"${style === 'whisper' ? ' stroke-dasharray="12 12"' : ''}/>`;
+    let svg = style === 'thought' ? thinkSvg : `<path d="${dstr}" fill="#f6f5ef" stroke="${INK}" stroke-width="${style === 'whisper' ? 4 : 5}" stroke-linejoin="round"${style === 'whisper' ? ' stroke-dasharray="12 12"' : ''}/>`;
     // typewriter: voiced lines reveal word by word as spoken; silent ones letter by letter
     // voiced: word by word as spoken; custom bubble text: letters spread over the spoken line; silent: typed out
     const total = graphemes(R.join('')).length;
+    // typed letters pause on punctuation (WP-17): a comma holds four letters' time, a full stop, ! or ? eight
+    const gsAll = graphemes(R.join('')), wt = gsAll.map((g, q) => 1 + (q > 0 && /[,;:]/.test(gsAll[q - 1]) ? 4 : 0) + (q > 0 && /[.!?…]/.test(gsAll[q - 1]) && !/[.!?…]/.test(g) ? 8 : 0));
+    const typed = units => { let acc = 0, k = 0; for (; k < wt.length; k++) { acc += wt[k]; if (acc > units + 1e-9) break; } return k; };
+    const W_ALL = wt.reduce((a, v) => a + v, 0);
     const shown = b.words ? b.words.filter(w => w.start <= t).length
-      : b.speak ? Math.ceil(total * Math.min(1, Math.max(0, (t - b.speak[0]) / Math.max(0.2, b.speak[1] - b.speak[0]))))
-      : Math.floor(Math.max(0, t - b.t0 - 0.2) / (b.slow ? 0.42 : 0.05)) + (pop < 1 && i > 1 ? 99 : 0);
+      : b.speak ? typed(W_ALL * Math.min(1, Math.max(0, (t - b.speak[0]) / Math.max(0.2, b.speak[1] - b.speak[0]))))
+      : typed(Math.max(0, t - b.t0 - 0.2) / (b.slow ? 0.42 : 0.05)) + (pop < 1 && i > 1 ? 99 : 0);
     let left = shown, tspans = '';
     R.forEach((row, ri) => { let txt = row;
       if (b.words) { const ws = tokens(row), sep = nospace(row) ? '' : ' '; txt = ws.slice(0, Math.max(0, left)).join(sep); left -= ws.length; }
@@ -223,12 +235,28 @@
       else tspans += `<text x="${cx}" y="${y.toFixed(1)}" font-size="${base * pop}" text-anchor="middle"${style === 'whisper' ? ' fill="#59636d"' : ''}>${esc(txt)}</text>`; });
     return svg + `<g font-family="${HAND}" fill="${INK}">${tspans}</g>`;
   }
-  let BUBBLES = [], VIEW = [0, 0, 1];   // for visual lint: bubble boxes and the camera of the last frame drawn
+  let BUBBLES = [], VIEW = [0, 0, 1], KINDS = [];   // for visual lint: bubble boxes and the camera of the last frame drawn; the kinds drawn (WP-17)
+  // a narration box (WP-17): a narrator nobody on screen speaks for, in a caption box at the top of the safe area,
+  // typed out with the same punctuation pauses, word by word as voiced (or spread over the line in a sound-off cut)
+  function narrationBox(ln, t, idx) {
+    const t0 = ln.start - 0.12, t1 = ln.end + 0.6; if (t < t0 || t > t1) return '';
+    const base = 58 * Math.min(1, H / 1920 * 1.4), R = rows(ln.text, 24), lh = base * 1.15;
+    const SAFE = H > W ? [64, 200, 960] : [W * 0.05, H * 0.05, W * 0.95], bw = Math.min(SAFE[2] - SAFE[0], Math.max(...R.map(r => em(r))) * base * 0.5 + 70), bh = lh * R.length + 44;
+    const x0 = (SAFE[0] + SAFE[2]) / 2 - bw / 2, y0 = SAFE[1] + 16;
+    AVOID.push([x0, y0, x0 + bw, y0 + bh]); BUBBLES.push([x0, y0, x0 + bw, y0 + bh]); KINDS.push('narrate');
+    const gsAll = graphemes(R.join('')), wt = gsAll.map((g, q) => 1 + (q > 0 && /[,;:]/.test(gsAll[q - 1]) ? 4 : 0) + (q > 0 && /[.!?…]/.test(gsAll[q - 1]) && !/[.!?…]/.test(g) ? 8 : 0));
+    const W_ALL = wt.reduce((a, v) => a + v, 0), u = W_ALL * Math.min(1, Math.max(0, (t - ln.start) / Math.max(0.2, ln.end - ln.start)));
+    let acc = 0, left = 0; for (; left < wt.length; left++) { acc += wt[left]; if (acc > u + 1e-9) break; }
+    let out = `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="10" fill="#fff3c4" stroke="${INK}" stroke-width="4"/>`;
+    R.forEach((row, ri) => { const gs = graphemes(row), txt = gs.slice(0, Math.max(0, left)).join(''); left -= gs.length;
+      out += `<text x="${(x0 + 30).toFixed(1)}" y="${(y0 + 22 + lh * (ri + 0.8)).toFixed(1)}" font-size="${base}">${esc(txt)}</text>`; });
+    return `<g font-family="${HAND}" fill="${INK}">${out}</g>`;
+  }
   // bubbles are laid out in screen space, after the camera, so a zoomed or moving shot never pushes them out of frame
   function bubblesFor(sh, t, headsWorld, view) {
     const [vx, vy, vz] = view || [W / 2, H / 2, 1], toS = ([x, y]) => [W / 2 + (x - vx) * vz, H / 2 + (y - vy) * vz];
     const heads = {}; for (const [k, a] of Object.entries(headsWorld)) heads[k] = toS(a);
-    const out = []; let idx = 0; BUBBLES = [];
+    const out = []; let idx = 0; BUBBLES = []; KINDS = []; window.BUBBLE_KINDS = KINDS;
     AVOID = (sh.overlays || []).filter(o => (o.start == null || t >= o.start) && (o.end == null || t <= o.end)).map(overlayBox).filter(Boolean)
       .map(r => [...toS([r[0], r[1]]), ...toS([r[2], r[3]])]);
     const hw = 150 * H / 1920 * (H > W ? 1 : 1.5) * vz;
@@ -236,9 +264,13 @@
     if (sh.bubbles !== false) for (const ln of T.lines || []) { // voiced lines become bubbles for speakers in the shot
       const who = heads[ln.speaker]; if (!who || !sh.bubbles) continue;
       const sl = (SCRIPT.lines || []).find(l => l.id === ln.id) || {};
+      if (sl.style === 'narration') continue;   // a narration box, below
       out.push(bubble({ t0: ln.start - 0.12, t1: ln.end + 0.5, text: sl.bubble || ln.text, style: sl.style, words: sl.bubble ? null : ln.words, speak: [ln.start, ln.end] }, who, t, idx++));
     }
     for (const b of (sh.extra_bubbles || [])) if (heads[b.who]) out.push(bubble({ ...b, t0: b.start, t1: b.end }, heads[b.who], t, 50 + idx++));  // silent bubbles
+    // narrators nobody on screen speaks for (in a cut with narration boxes), and any line styled "narration"
+    for (const ln of T.lines || []) { const sl = (SCRIPT.lines || []).find(l => l.id === ln.id) || {};
+      if ((S.narration_boxes && !heads[ln.speaker]) || sl.style === 'narration') out.push(narrationBox({ ...ln, text: sl.bubble || ln.text }, t, 80 + idx++)); }
     return out.join('');
   }
 

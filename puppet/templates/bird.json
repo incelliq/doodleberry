@@ -1,0 +1,169 @@
+{
+ "template": "bird",
+ "version": "0.1",
+ "artboard": [
+  500,
+  600
+ ],
+ "ground": 580,
+ "note": "Birds in side view, facing right: a round body, a head with a crest, a beak that talks (the mouth swap), two wings (far and near), a tail and two thin legs.",
+ "parts": [
+  {
+   "id": "hip",
+   "parent": null,
+   "pivot": [
+    250,
+    450
+   ],
+   "z": 20,
+   "required": false,
+   "label": "Root (no drawing)"
+  },
+  {
+   "id": "body",
+   "parent": "hip",
+   "pivot": [
+    250,
+    430
+   ],
+   "z": 22,
+   "required": true,
+   "label": "Body"
+  },
+  {
+   "id": "head",
+   "parent": "body",
+   "pivot": [
+    290,
+    300
+   ],
+   "z": 40,
+   "required": true,
+   "label": "Head"
+  },
+  {
+   "id": "crest",
+   "parent": "head",
+   "pivot": [
+    312,
+    168
+   ],
+   "z": 41,
+   "required": true,
+   "label": "Crest"
+  },
+  {
+   "id": "wing_back",
+   "parent": "body",
+   "pivot": [
+    222,
+    330
+   ],
+   "z": 18,
+   "required": true,
+   "label": "Wing (far side)"
+  },
+  {
+   "id": "wing_near",
+   "parent": "body",
+   "pivot": [
+    232,
+    335
+   ],
+   "z": 30,
+   "required": true,
+   "label": "Wing (near side)"
+  },
+  {
+   "id": "tail",
+   "parent": "body",
+   "pivot": [
+    148,
+    400
+   ],
+   "z": 16,
+   "required": true,
+   "label": "Tail"
+  },
+  {
+   "id": "leg_back",
+   "parent": "hip",
+   "pivot": [
+    238,
+    452
+   ],
+   "z": 14,
+   "required": true,
+   "label": "Leg (far side)"
+  },
+  {
+   "id": "leg_near",
+   "parent": "hip",
+   "pivot": [
+    266,
+    452
+   ],
+   "z": 25,
+   "required": true,
+   "label": "Leg (near side)"
+  }
+ ],
+ "swaps": [
+  {
+   "id": "eyes",
+   "anchor": "head",
+   "z": 46,
+   "shapes": [
+    "open",
+    "half",
+    "closed"
+   ],
+   "required": [
+    "open",
+    "closed"
+   ],
+   "label": "Eyes"
+  },
+  {
+   "id": "pupils",
+   "anchor": "head",
+   "z": 47,
+   "shapes": [
+    "default"
+   ],
+   "required": [],
+   "movable": 5,
+   "label": "Pupils"
+  },
+  {
+   "id": "mouth",
+   "anchor": "head",
+   "z": 45,
+   "shapes": [
+    "closed",
+    "small",
+    "wide"
+   ],
+   "required": [
+    "closed",
+    "wide"
+   ],
+   "talk": [
+    "closed",
+    "small",
+    "wide"
+   ],
+   "label": "Beak (lip-sync)"
+  }
+ ],
+ "palette": [
+  "plume",
+  "plume2",
+  "belly",
+  "beak",
+  "leg",
+  "eye",
+  "ink"
+ ],
+ "guide": []
+}

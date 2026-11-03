@@ -92,8 +92,10 @@ def diagnose(rep, lint, shots_res, size, script=None):
                 break
     for sid in sorted(set_text):
         if next(s_ for s_ in shots if s_["id"] == sid).get("camera_auto"):
-            out.append({"check": "text_in_safe_area", "shot": sid, "what": "auto camera frames singles less tight, so the set's words stay inside the safe area", "edit": ("camera_auto", "zoom_single", -0.2)})
-            out.append({"check": "text_in_safe_area", "shot": sid, "what": "auto camera frames the group less tight too", "edit": ("camera_auto", "zoom", -0.15)})
+            out.append({"check": "text_in_safe_area", "shot": sid, "what": "auto camera frames singles less tight, so the set's words stay inside the safe area", "edit": ("camera_auto", "zoom_single", -0.35)})
+            out.append({"check": "text_in_safe_area", "shot": sid, "what": "auto camera frames the group less tight too", "edit": ("camera_auto", "zoom", -0.25)})
+            if next(s_ for s_ in shots if s_["id"] == sid).get("bubbles"):   # singles with speech bubbles have their own framing
+                out.append({"check": "text_in_safe_area", "shot": sid, "what": "and singles with bubbles less tight", "edit": ("camera_auto", "zoom_bubble", -0.25)})
     for (sid, kind, i), (dx, dy, wdt) in moves.items():
         out.append({"check": "text_in_safe_area", "shot": sid, "what": f"{kind}[{i}] moved {round(dx)}, {round(dy)} px into the safe area", "edit": ("move", kind, i, dx, dy)})
     for b in text.get("too_small") or []:
@@ -110,7 +112,7 @@ def diagnose(rep, lint, shots_res, size, script=None):
             if r["text"] and _texts(o).startswith(r["text"][:20]) and o.get("start") is not None:
                 out.append({"check": "reading_time", "shot": sh["id"], "what": f"{kind}[{i}] held {r['needs_s']} s for its words", "edit": ("hold", kind, i, r["needs_s"])})
                 break
-    if rd.get("caption_words_per_s", 0) > 3.2 and script is not None:
+    if (rd.get("caption_words_per_s") or 0) > 3.2 and script is not None:   # None when the film shows no captions
         out.append({"check": "reading_time", "shot": "*", "what": f"captions flow at {rd['caption_words_per_s']} words/s: re-voice slower",
                     "edit": ("revoice", round(min(1.3, rd["caption_words_per_s"] / 3.0), 3))})
     # frame fill
