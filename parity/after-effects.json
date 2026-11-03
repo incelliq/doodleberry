@@ -2042,7 +2042,7 @@
       "ref": [
        "export.lottie"
       ],
-      "note": "export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON. dotLottie, Telegram stickers and Lottie QA in two renderers are WP-23."
+      "note": "export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON; sticker.pack makes Telegram TGS stickers and lottie.qa checks Lottie in lottie-web and rlottie (WP-23). dotLottie is WP-23."
      }
     },
     {

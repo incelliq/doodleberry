@@ -194,7 +194,7 @@ covered, now added to their packages' scopes.
 | Vector resolution independence (4K for free) | NEW | ✅ | – | |
 | 12-fps-native rendering: render only unique stepped frames and encode at 24 or 30 | EMG | ✅ | – | stepped frames are captured once and reused (0.1); with static plates a doodle film on twos renders in 55% of the time (WP-15) |
 | Line-art GIFs: a 32-colour palette with Bayer dithering, sized for messaging | PRO | ⬜ | P1 | WP-23 |
-| Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ⬜ | P1 | WP-23 |
+| Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ✅ | – | `sticker.pack`: each move encoded for the four platforms, fitted to and checked against their limits (WP-23); emoji packs: WP-23 |
 | Merch- and print-ready stills: high resolution, transparent, using the original ink | NEW | ⬜ | P2 | WP-23 |
 | Interactive toy pages: a character with live boil, wobble and fps sliders, for audiences or for artists tuning a look | IDEA | ⬜ | P2 | WP-30 |
 | **Master to many cuts:** edit lists assemble one master render plus inserts (cards) into a full film, an episode series, teasers and recaps. Cuts fall on beats and inserts are whole bars, so the music keeps its phase | NEW | ✅ | – | `film.cuts` (2.14) |
@@ -369,7 +369,7 @@ Which open-source pieces implement which features. Licences were verified by the
 | Cel shadows, rims, outline offsets (§4) | Clipper2 (pyclipr), skia-pathops (keeps curves) | BSL-1.0 / BSD-3 | ✅ SVG (1.7); others: WP-14 |
 | Render speed (§7) | Worker pool + frame-hash dedupe + static-layer cache + PyAV piping + `-tune animation` | in-house / BSD-3 | ✅ (0.1) |
 | Faster rasteriser (§7) | Benchmark resvg and ThorVG behind a pixel-diff gate (harness saved) | Apache/MIT, MIT | ✅ decided: keep Chromium (0.2) |
-| Lottie export QA (§7, §9) | ThorVG + lottie-web golden images; schema validation from lottie-docs | MIT / CC BY 4.0 | 🟡 lottie-web renders work · WP-23 |
+| Lottie export QA (§7, §9) | ThorVG + lottie-web golden images; schema validation from lottie-docs | MIT / CC BY 4.0 | ✅ `lottie.qa`: lottie-web and rlottie (Telegram's renderer) compared with each other and the SVG renderer (WP-23) |
 | Lottie packaging with palette themes (§7) | dotLottie | MIT | ⬜ P2 · WP-23 |
 | Post effects: grain, LUT, vignette, xfade, motion blur (§4, §7) | ffmpeg filter graphs; accumulation blur in-house; SVT-AV1 film-grain | in stack | 🟡 grain, LUT, vignette (1.7); xfade transitions (WP-15); motion blur: WP-15 |
 | 3D pass compositing (§4) | oiiotool; three.js toon stack | Apache-2.0 / MIT | ⬜ P2 · WP-42 |

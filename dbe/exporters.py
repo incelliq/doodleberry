@@ -42,6 +42,14 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
         ind[0] += 1
         return ind[0]
 
+    def pos(values):
+        """a layer's position: spatial keyframes carry tangents (straight lines here), which rlottie needs"""
+        k = kf(values)
+        if k.get("a"):
+            for key in k["k"][:-1]:
+                key.setdefault("to", [0, 0, 0]); key.setdefault("ti", [0, 0, 0])
+        return k
+
     def kf(values, hold=False):
         """per-frame values -> Lottie animated property (drop repeats; a value held over several frames keeps a key
         at the end of the hold too, so the next change is not smeared back across the hold: WP-14)"""
@@ -57,6 +65,11 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
                 else:
                     k["i"] = {"x": [0.5], "y": [0.5]}; k["o"] = {"x": [0.5], "y": [0.5]}
                 ks.append(k); last = v
+        for k0, k1 in zip(ks, ks[1:]):   # explicit end values: rlottie (Telegram's renderer) needs them, lottie-web accepts them
+            if not k0.get("h"):
+                k0["e"] = k1["s"]
+        if len(ks) > 1:   # the last key is only a time and a value: easing on it stops rlottie drawing the layer after frame 0
+            ks[-1] = {k: v for k, v in ks[-1].items() if k in ("t", "s", "h")}
         return {"a": 1, "k": ks} if len(ks) > 1 else {"a": 0, "k": values[0] if isinstance(values[0], list) else values[0]}
 
     def shape_group(strokes, pal):
@@ -74,13 +87,14 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
             if not it:
                 continue
             fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
+            # Lottie draws the first item on top: the outline goes before the fill, as SVG paints it over the fill
+            if line:
+                it.append({"ty": "st", "c": {"a": 0, "k": G.hex_rgb(line) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
             if fill:
                 it.append({"ty": "fl", "c": {"a": 0, "k": G.hex_rgb(fill) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 2 if st.get("rule") == "evenodd" else 1})
-            if line:
-                it.append({"ty": "st", "c": {"a": 0, "k": G.hex_rgb(line) + [1]}, "o": {"a": 0, "k": 100}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
             it.append({"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}})
             items.append({"ty": "gr", "it": it})
-        return items
+        return items[::-1]   # and the last stroke drawn (on top in SVG) first
 
     def scaled(items, pivot, frs, pid):
         """v0.9 per-part scale on the part's own drawing only (children keep their proportions, as in puppet.js)"""
@@ -144,7 +158,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
         root = nid()
         layers.append({"ddd": 0, "ind": root, "ty": 3, "nm": f"{p['name']} root", "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                        "ks": {"o": {"a": 0, "k": 0}, "r": {"a": 0, "k": 0},
-                              "p": kf([[round(fr["x"], 2), round(fr["y"], 2), 0] for fr in frs]),
+                              "p": pos([[round(fr["x"], 2), round(fr["y"], 2), 0] for fr in frs]),
                               "a": kf([[round(hip[0] - (fr["offset"] or [0, 0])[0], 2), round(p["ground"] - (fr["offset"] or [0, 0])[1], 2), 0] for fr in frs]),
                               "s": kf([[round(100 * fr["s"] * fr["flip"] * (fr.get("squash") or 1), 2), round(100 * fr["s"], 2), 100] for fr in frs])}})
         ids = {pid: nid() for pid in p["parts"]}
@@ -153,7 +167,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
             par = part.get("parent")
             lay = {"ddd": 0, "ind": ids[pid], "ty": 4, "nm": pid if not view else f"{pid}@{view}", "parent": ids[par] if par in ids else root, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                    "ks": {"o": kf([100 * o for o in on], hold=True), "r": kf([round(fr["angles"].get(pid, 0) or 0, 2) for fr in frs]),
-                          "p": kf([[round(part["pivot"][0] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[0] + stretch_offset(p, pid, fr)[0], 2),
+                          "p": pos([[round(part["pivot"][0] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[0] + stretch_offset(p, pid, fr)[0], 2),
                                      round(part["pivot"][1] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[1] + stretch_offset(p, pid, fr)[1], 2), 0] for fr in frs]),
                           "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "s": {"a": 0, "k": [100, 100, 100]}},
                    "shapes": scaled(shape_group(part["strokes"], pal), part["pivot"], frs, pid), "_z": part.get("z", 0)}

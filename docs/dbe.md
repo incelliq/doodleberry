@@ -304,6 +304,42 @@ end, with a percent of the estimate. An HTTP call with `?async=1` runs as a job:
 and percent, and `?async=1&webhook=URL` also POSTs each event to URL (failures are noted on the job, never stop it);
 `DBE_PROGRESS=stderr` prints events from the CLI.
 
+## Sticker packs and Lottie QA (WP-23)
+`sticker.pack` makes a character's sticker pack for messaging platforms. Each move (default wave, celebrate, jump;
+WhatsApp packs need 3 to 30) is made once by `sticker.make`: the move is baked (`tools/bake.mjs`, eased in from rest
+and back out before the end so it loops without a jump, a happy face for the cheerful moves), drawn from the baked
+poses on a transparent 512 x 512 canvas framed to the whole move (`tools/sticker_frames.mjs`), and, for a vector
+character, the same baked poses placed on the canvas become Lottie. Each platform's file is then encoded from those
+frames (`dbe/stickers.py`), **fitted** (quality, then frame rate, come down until the file is inside the limit) and
+**checked** against every limit:
+
+| platform | file | limits checked |
+|---|---|---|
+| Telegram video | WebM, VP9 with alpha | one side 512 px, the other at most 512; at most 3 s and 30 fps; 256 KB; no sound |
+| Telegram animated | TGS (gzipped Lottie, `"tgs": 1`) | 512 x 512; at most 3 s; 30 or 60 fps; 64 KB; no images; no expressions; renders alike in two renderers |
+| WhatsApp | animated WebP, plus a 96 x 96 PNG tray icon | 512 x 512; at most 10 s; 500 KB; tray 50 KB |
+| Giphy | GIF with real transparency (Bayer-dithered palette with a transparent slot) | at least 2 frames; at least 20% of the first frame transparent |
+| iMessage | APNG | 300, 408 or 618 px square (408 here); 500 KB |
+
+Limits are from [Telegram's sticker docs](https://core.telegram.org/stickers), WhatsApp's sticker guidance (512 x
+512, 500 KB animated, 10 s), [Giphy's sticker best practices](https://support.giphy.com/hc/en-us/articles/360019683472)
+and [Apple's HIG for stickers](https://developer.apple.com/design/human-interface-guidelines/imessage-apps-and-stickers);
+Giphy states no file size cap. Measured on Pip (out/stickers/pip): every file of the three moves inside every limit;
+Telegram WebM 165 to 210 KB, TGS 8 to 9 KB, WhatsApp 329 to 443 KB, Giphy 282 to 505 KB, iMessage 369 to 481 KB.
+
+`lottie.qa` checks a Lottie file (or TGS) in two independent renderers, lottie-web (the web player, vendored) and
+rlottie (Samsung's renderer, which Telegram uses; `rlottie-python`, LGPL), against each other and, when given, the
+frames it was made from: silhouettes (IoU of the alpha) and colour where both draw. The two renderers must agree
+closely (IoU at least 0.99, colour within 3 levels); against the frames drawn by the SVG renderer the silhouette must
+hold (IoU at least 0.93). Pip's TGS stickers: the renderers agree at IoU 0.998 (colour within 1 level); against the
+master frames 0.940 to 0.964. Making them pass fixed three things in the Lottie exporter (`dbe/exporters.py`, so shot
+exports gain too): Lottie draws the first item on top, so strokes are now listed last-drawn first and each outline
+before its fill (the nose, blush, collar and hem had been hidden under fills and ears drawn over the head); every
+keyframe now carries its end value and position keys their spatial tangents; and the last keyframe carries no
+easing, which had stopped rlottie drawing the layers after frame 0. **Open:** the SVG renderer draws the legs a few
+pixels (up to 4 at artboard scale) from where Lottie, following the baked angles exactly, draws them while the root
+sways; the cause is not found yet. The `stickers` test makes Pip's pack and checks all of it.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

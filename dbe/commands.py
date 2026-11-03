@@ -671,6 +671,150 @@ def export_lottie(name, shot, background="plate"):
     return {"path": str(lj.relative_to(ROOT)), "bytes": lj.stat().st_size}
 
 
+STICKERS = ROOT / "out" / "stickers"
+
+
+def _sticker_timeline(move, seconds, emotion=""):
+    """a move eased in from rest and back out before the end, so the sticker loops without a jump"""
+    clips = [{"clip": "idle", "start": 0}]
+    if move and move != "idle":
+        clips.append({"clip": move, "start": 0.05, "end": round(seconds - 0.3, 3), "fadeIn": 0.25, "fadeOut": 0.3, "weight": 3})
+    return {"clips": clips, "blink": True, **({"emotion": [[0, emotion]]} if emotion else {})}
+
+
+@command("sticker.make", puppet=("string", "character file (.puppet.json)"), move=("string", "a clip of its template (wave_R, celebrate, jump, shrug...)"),
+         seconds=("number", "length (up to 3 s for Telegram; default: the clip's length, at least 2 s)", 0), emotion=("string", "a face to hold (happy, sad, surprised...)", ""),
+         name=("string", "pack name (folder under out/stickers/)", ""))
+def sticker_make(puppet, move, seconds=0, emotion="", name=""):
+    """One sticker's master (WP-23): the character performing the move on a transparent 512 x 512 canvas, framed to
+    the whole move and eased in from rest and back out to it so it loops, as PNG frames at 30 fps, and the same move
+    baked into Lottie (for Telegram's TGS). sticker.pack turns masters into each platform's files."""
+    pp = _inside(puppet, True); pz = _json(pp); lib = _clip_lib(pz.get("template", "humanoid"), pz)
+    if move not in (lib.get("clips") or {}):
+        raise ValueError(f"{move} is not a clip of the {pz.get('template')} template: {', '.join(sorted(lib.get('clips') or {}))}")
+    if not seconds:
+        clip = lib["clips"][move]; ln = max((k[0] for tr in (clip.get("tracks") or {}).values() for k in tr), default=1.0)
+        seconds = min(3.0, max(2.0, ln * (2 if clip.get("loop") and ln < 1.5 else 1) + 0.6))
+    seconds = round(min(3.0, float(seconds)), 2); fps = 30; size = 512
+    d = STICKERS / (name or pp.name.split(".")[0]) / move; shutil.rmtree(d, ignore_errors=True); (d / "frames").mkdir(parents=True)
+    tl = _sticker_timeline(move, seconds, emotion); n = int(round(seconds * fps))
+    hip = (pz["parts"].get("hip") or {}).get("pivot") or [pz["artboard"][0] / 2, pz["ground"]]
+    # baked once at the artboard (every renderer reads the bake), framed from it, then baked again where it lands
+    bake = lambda place, f_: ((d / f"{f_}.spec.json").write_text(json.dumps({"fps": fps, "frames": n, "start": 0, "size": [size, size],
+                                                                           "cast": [{"puppet": str(pp), "place": place, "timeline": tl}]})),
+                              _run(["node", "tools/bake.mjs", str(d / f"{f_}.spec.json"), str(d / f"{f_}.json")]))
+    bake({"x": hip[0], "y": pz["ground"], "s": 1}, "baked_artboard")
+    spec = {"puppet": str(pp.relative_to(ROOT)), "baked": str((d / "baked_artboard.json").relative_to(ROOT)), "size": size, "out": str(d / "frames")}
+    (d / "spec.json").write_text(json.dumps(spec))
+    info = json.loads(_run(["node", "tools/sticker_frames.mjs", str(d / "spec.json")], timeout=600)[-1])
+    # the same baked poses moved onto the canvas (not baked again: the acting's foot contacts work in world units, so a
+    # second bake at another scale would bend the legs a little differently)
+    ba = _json(d / "baked_artboard.json"); f0 = dict(ba["cast"][0]["frames"][0]); k = info["place"]["s"] / f0["s"]
+    for fr in ba["cast"][0]["frames"]:
+        fr["x"], fr["y"], fr["s"] = info["place"]["x"] + (fr["x"] - f0["x"]) * k, info["place"]["y"] + (fr["y"] - f0["y"]) * k, fr["s"] * k
+    ba["size"] = [size, size]; (d / "baked.json").write_text(json.dumps(ba))
+    raster = "\"image\"" in pp.read_text()
+    lot = None
+    if not raster:
+        (d / "move.lottie.json").write_text(json.dumps(X.to_lottie(_json(d / "baked.json"), (size, size), name=f"{pz.get('name', 'sticker')}:{move}"))); lot = str((d / "move.lottie.json").relative_to(ROOT))
+    return {"dir": str(d.relative_to(ROOT)), "frames": info["frames"], "fps": fps, "seconds": seconds, "place": info["place"], "lottie": lot,
+            **({"no_lottie": "the character has raster parts, which Telegram's animated stickers (TGS) cannot hold"} if raster else {})}
+
+
+@command("sticker.pack", puppet=("string", "character file (.puppet.json)"), moves=("array", "clips to make stickers of (WhatsApp packs need at least 3)", None),
+         name=("string", "pack name", ""), platforms=("array", "telegram, whatsapp, giphy, imessage (default: all)", None))
+def sticker_pack(puppet, moves=None, name="", platforms=None):
+    """A character's sticker pack for messaging platforms (WP-23): each move is made once (sticker.make) and encoded
+    for Telegram (WebM VP9 with alpha, and TGS when the character is vector), WhatsApp (animated WebP and a tray
+    icon), Giphy (GIF with transparency) and iMessage (APNG, 408 px); each file is fitted to its platform's limits
+    (quality, then frame rate, come down) and checked against every limit. TGS files are also rendered in lottie-web
+    and rlottie and compared with the master frames (lottie.qa)."""
+    from . import stickers as ST
+    pp = _inside(puppet, True); name = name or pp.name.split(".")[0]
+    moves = moves or ["wave_R", "celebrate", "jump"]; platforms = platforms or ["telegram", "whatsapp", "giphy", "imessage"]
+    if "whatsapp" in platforms and not ST.LIMITS["whatsapp"]["pack"][0] <= len(moves) <= ST.LIMITS["whatsapp"]["pack"][1]:
+        raise ValueError("a WhatsApp pack holds 3 to 30 stickers")
+    root = STICKERS / name; out = {"pack": str(root.relative_to(ROOT)), "stickers": []}
+    for mv in moves:
+        m = sticker_make(str(pp.relative_to(ROOT)), mv, name=name, emotion="happy" if mv in ("wave_R", "celebrate", "jump") else "")
+        fd = ROOT / m["dir"] / "frames"; row = {"move": mv, "seconds": m["seconds"], "files": {}}
+        if "telegram" in platforms:
+            (root / "telegram").mkdir(parents=True, exist_ok=True)
+            f, t, ok = ST.telegram(fd, root / "telegram" / f"{mv}.webm", m["fps"]); ch, info = ST.check_telegram(f, m["frames"], m["fps"])
+            row["files"]["telegram"] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info, "settings": t}
+            if m.get("lottie"):
+                tg = ST.tgs(ROOT / m["lottie"], root / "telegram" / f"{mv}.tgs"); ch, info = ST.check_tgs(tg)
+                qa = lottie_qa(str(Path(tg).relative_to(ROOT)), reference=str(fd.relative_to(ROOT)))
+                row["files"]["telegram_tgs"] = {"path": str(Path(tg).relative_to(ROOT)), "checks": {**ch, "renders alike in lottie-web and rlottie": qa["ok"]}, **info, "qa": qa["summary"]}
+        if "whatsapp" in platforms:
+            (root / "whatsapp").mkdir(parents=True, exist_ok=True)
+            f, t, ok = ST.whatsapp(fd, root / "whatsapp" / f"{mv}.webp", m["fps"])
+            tray = root / "whatsapp" / "tray.png"
+            if not tray.exists():
+                ST.whatsapp_tray(sorted(fd.glob("f*.png"))[0], tray)
+            ch, info = ST.check_whatsapp(f, tray); row["files"]["whatsapp"] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info, "settings": t}
+        if "giphy" in platforms:
+            (root / "giphy").mkdir(parents=True, exist_ok=True)
+            f = ST.giphy(fd, root / "giphy" / f"{mv}.gif", m["fps"]); ch, info = ST.check_giphy(f)
+            row["files"]["giphy"] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info}
+        if "imessage" in platforms:
+            (root / "imessage").mkdir(parents=True, exist_ok=True)
+            f, t, ok = ST.imessage(fd, root / "imessage" / f"{mv}.png", m["fps"]); ch, info = ST.check_imessage(f)
+            row["files"]["imessage"] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info, "settings": t}
+        out["stickers"].append(row)
+    fails = [f"{r['move']} {p}: {k}" for r in out["stickers"] for p, v in r["files"].items() for k, ok in v["checks"].items() if not ok]
+    out["ok"] = not fails; out["failed_checks"] = fails
+    (root / "pack.json").write_text(json.dumps(out, indent=1))
+    return out
+
+
+@command("lottie.qa", path=("string", "a Lottie JSON or .tgs inside the repo"), reference=("string", "a folder of the frames it should look like (f0000.png ...), e.g. a sticker's master", ""),
+         frames=("array", "frame numbers to check (default: five spread through it)", None))
+def lottie_qa(path, reference="", frames=None):
+    """Lottie QA in two independent renderers (WP-23): the animation drawn by lottie-web (the web player) and by
+    rlottie (Samsung's renderer, which Telegram uses for TGS), compared with each other and, when given, with the
+    frames it was made from: silhouettes (IoU of the alpha) and colour where both draw."""
+    import gzip
+    import numpy as np
+    from PIL import Image
+    src = _inside(path, True); raw = src.read_bytes(); raw = gzip.decompress(raw) if src.suffix == ".tgs" else raw
+    anim = json.loads(raw); n = int(anim["op"] - anim["ip"])
+    frames = frames or sorted({int(round(i * (n - 1) / 4)) for i in range(5)})
+    d = ROOT / "out" / "lottie_qa" / src.stem; shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True)
+    _run(["node", "tools/lottie_frames.mjs", str(src), str(d), ",".join(map(str, frames))], timeout=600)
+    import rlottie_python as RL
+    an = RL.LottieAnimation.from_data(raw.decode())
+    def mask_iou(a, b):
+        A, B = a[..., 3] > 128, b[..., 3] > 128; u = (A | B).sum()
+        return float((A & B).sum() / u) if u else 1.0
+    def colour(a, b):
+        both = (a[..., 3] > 200) & (b[..., 3] > 200)
+        return float(np.abs(a[..., :3].astype(int) - b[..., :3].astype(int))[both].mean()) if both.any() else 0.0
+    rows = []
+    for f in frames:
+        lw = np.asarray(Image.open(d / f"lw{f:04d}.png").convert("RGBA"))
+        rl = np.asarray(an.render_pillow_frame(frame_num=f, width=anim["w"], height=anim["h"]).convert("RGBA")); Image.fromarray(rl).save(d / f"rl{f:04d}.png")
+        row = {"frame": f, "lottie_web_vs_rlottie": {"iou": round(mask_iou(lw, rl), 4), "colour": round(colour(lw, rl), 2)}}
+        if reference:
+            rf = ROOT / reference / f"f{f:04d}.png"
+            if rf.exists():
+                ref = np.asarray(Image.open(rf).convert("RGBA"))
+                row["lottie_web_vs_reference"] = {"iou": round(mask_iou(lw, ref), 4), "colour": round(colour(lw, ref), 2)}
+                row["rlottie_vs_reference"] = {"iou": round(mask_iou(rl, ref), 4), "colour": round(colour(rl, ref), 2)}
+        rows.append(row)
+    # the two renderers must agree closely (silhouette and colour); against the frames it was made from (the SVG
+    # renderer) the silhouette must hold too: the legs differ by up to 4 px at artboard scale while the root sways
+    # (Lottie follows the baked angles exactly; the SVG renderer's legs move less: an open item), so colour, which
+    # along shifted edges measures the same drift, is reported there but not required
+    agree = [r["lottie_web_vs_rlottie"] for r in rows]; vs_ref = [v for r in rows for k, v in r.items() if k.endswith("vs_reference")]
+    ok_agree = min(x["iou"] for x in agree) >= 0.99 and max(x["colour"] for x in agree) <= 3
+    ok_ref = not vs_ref or min(x["iou"] for x in vs_ref) >= 0.93
+    return {"ok": ok_agree and ok_ref, "frames": rows, "summary": {"renderers_agree": {"worst_iou": min(x["iou"] for x in agree), "worst_colour": max(x["colour"] for x in agree), "ok": ok_agree},
+            **({"vs_reference": {"worst_iou": min(x["iou"] for x in vs_ref), "worst_colour": max(x["colour"] for x in vs_ref), "ok": ok_ref}} if vs_ref else {}),
+            "renderers": ["lottie-web 5 (svg)", "rlottie (rlottie-python 1.3.8)"]},
+            "dir": str(d.relative_to(ROOT))}
+
+
 @command("export.synfig", name=("string", "film"), shot=("string", "shot id"))
 def export_synfig(name, shot):
     """Export one shot as a Synfig .sif project (open and edit it in Synfig Studio)."""
@@ -3167,6 +3311,10 @@ def test_golden(update=False, film=""):
         bad, meas = _estimate_test()
         failed += 1 if bad else 0
         results.append({"estimate": "each film's full render is estimated within 20% from the other films' renders", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "stickers":   # WP-23: one character to four sticker platforms within their limits; Lottie in two renderers
+        bad, meas = _stickers_test()
+        failed += 1 if bad else 0
+        results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy and iMessage within each platform's limits; TGS alike in lottie-web and rlottie", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
         bad, meas = _kra_test()
         failed += 1 if bad else 0
@@ -5685,6 +5833,31 @@ def _estimate_test():
     meas["films"] = rows_; meas["worst"] = max(abs(r["error"]) for r in rows_); meas["worst_never_rendered"] = max(abs(r["never_rendered_error"]) for r in rows_)
     if meas["worst"] > 0.2:
         bad.append(f"estimates off by up to {meas['worst']:.0%}")
+    return bad, meas
+
+
+def _stickers_test():
+    """WP-23: Pip's three-move pack (wave, celebrate, jump) for four platforms; every file inside its platform's limits
+    (sticker.pack's own checks, and the key limits read again here from the files), TGS renders alike in lottie-web
+    and rlottie and holds the master frames' silhouette"""
+    import gzip
+    from PIL import Image
+    bad, meas = [], {}
+    r = sticker_pack("puppet/examples/pip.puppet.json", name="ztest-pip")
+    meas["failed_checks"] = r["failed_checks"]
+    if not r["ok"]:
+        bad.append(f"pack checks failed: {r['failed_checks']}")
+    rows = {}
+    for st in r["stickers"]:
+        f = st["files"]; kb = lambda k: round((ROOT / f[k]["path"]).stat().st_size / 1024, 1)
+        tg = json.loads(gzip.decompress((ROOT / f["telegram_tgs"]["path"]).read_bytes()))
+        rows[st["move"]] = {"telegram_kb": kb("telegram"), "tgs_kb": kb("telegram_tgs"), "whatsapp_kb": kb("whatsapp"), "giphy_kb": kb("giphy"), "imessage_kb": kb("imessage"),
+                            "tgs_agree_iou": f["telegram_tgs"]["qa"]["renderers_agree"]["worst_iou"], "tgs_vs_master_iou": f["telegram_tgs"]["qa"]["vs_reference"]["worst_iou"]}
+        if not (kb("telegram") <= 256 and kb("telegram_tgs") <= 64 and kb("whatsapp") <= 500 and kb("imessage") <= 500 and tg["w"] == tg["h"] == 512
+                and Image.open(ROOT / f["whatsapp"]["path"]).size == (512, 512) and Image.open(ROOT / f["imessage"]["path"]).size == (408, 408)):
+            bad.append(f"{st['move']}: {rows[st['move']]}")
+    meas["stickers"] = rows
+    shutil.rmtree(STICKERS / "ztest-pip", ignore_errors=True)
     return bad, meas
 
 def _kra_test():

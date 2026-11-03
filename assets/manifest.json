@@ -383,6 +383,12 @@
    "use": "editor hand-off timelines (film.handoff, WP-22); pip-installed, not committed"
   },
   {
+   "name": "rlottie-python 1.3.8 (Samsung rlottie, the renderer Telegram uses for animated stickers)",
+   "license": "LGPL-2.1-or-later",
+   "class": "copyleft",
+   "use": "the second, independent Lottie renderer in lottie.qa (WP-23); pip-installed, not committed, linked as a library"
+  },
+  {
    "name": "otio-kdenlive-adapter 0.0.3 (KDE) and otio-mlt-adapter 0.3.0",
    "license": "MIT",
    "class": "permissive",
