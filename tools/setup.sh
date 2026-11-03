@@ -5,6 +5,8 @@
 #   bash tools/setup.sh python     core, audio and tools requirements (large wheels fetched with plain HTTP first)
 #   bash tools/setup.sh models     Kokoro voice model files (+ the timed model) and MediaPipe models, checked by sha256
 #   bash tools/setup.sh node       Playwright and its Chromium, only if `require('playwright')` fails
+#   bash tools/setup.sh blender    Blender 5.2.3 LTS from blender.org (sha256 checked) into /opt/blender, for the Grease
+#                                  Pencil renderer (needs 4.3 or newer; Ubuntu's package is 4.0)
 #   bash tools/setup.sh oss        optional open-source parts (WP-34): Pencil2D, Inkscape, Synfig, libmypaint and the
 #                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
 # Then: python -m dbe engine.doctor
@@ -75,13 +77,24 @@ oss_deps() {
   DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need)
 }
 
+blender_dl() {
+  local ver="5.2.3" sha="78486c018b4443efe5e75ab54c290ed8c15abafd249b862c2c9ce2530a918eec"
+  if [ -x /opt/blender/blender ] && /opt/blender/blender --version 2>/dev/null | grep -q "Blender $ver"; then echo "blender: $ver installed"; return; fi
+  local tmp; tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/b.tar.xz" "https://download.blender.org/release/Blender${ver%.*}/blender-${ver}-linux-x64.tar.xz"
+  echo "$sha  $tmp/b.tar.xz" | sha256sum -c - || { echo "blender: checksum mismatch"; rm -rf "$tmp"; return 1; }
+  tar -xf "$tmp/b.tar.xz" -C /opt && ln -sfn "/opt/blender-${ver}-linux-x64" /opt/blender && ln -sf /opt/blender/blender /usr/local/bin/blender
+  rm -rf "$tmp"; blender --version | head -1
+}
+
 case "$what" in
   system) system ;;
   python) python_deps ;;
   models) models ;;
   node) node_deps ;;
   oss) oss_deps ;;
+  blender) blender_dl ;;
   all) system; python_deps; models; node_deps ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss]"; exit 2 ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

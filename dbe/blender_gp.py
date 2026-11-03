@@ -110,6 +110,12 @@ for fi, strokes in enumerate(data["data"]):
     if hasattr(dr, 'tag_positions_changed'):
         dr.tag_positions_changed()
 
-sc.render.filepath = out_prefix
-bpy.ops.render.render(animation=True)
+only = os.environ.get("DBE_GP_FRAMES")   # e.g. "10,25,40": render just these frames (renderer parity stills, WP-14)
+if only:
+    for f in [int(x) for x in only.split(",") if x.strip()]:
+        sc.frame_set(f); sc.render.filepath = f"{out_prefix}{f:04d}"
+        bpy.ops.render.render(write_still=True)
+else:
+    sc.render.filepath = out_prefix
+    bpy.ops.render.render(animation=True)
 print("GP_DONE", data["frames"])

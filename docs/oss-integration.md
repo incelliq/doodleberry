@@ -46,7 +46,7 @@ Measured on 2 November 2026 in this container (Ubuntu 24.04 packages).
 | Part | Licence (class) | Decision | Status |
 |---|---|---|---|
 | Natron 2.5 and its OpenFX plugins | GPL-2.0 (copyleft) | drive `NatronRenderer` on a generated project for heavy node graphs | planned (WP-36); not packaged here (AppImage or a source build: owner's permission) |
-| Blender compositor | GPL-2.0-or-later (copyleft) | link `bpy` in a separate Python and drive its compositor nodes | planned (WP-36, WP-42) |
+| Blender compositor | GPL-2.0-or-later (copyleft) | link `bpy` in a separate Python and drive its compositor nodes | planned (WP-36, WP-42); Blender 5.2.3 LTS installed (`bash tools/setup.sh blender`) and already drives the Grease Pencil renderer |
 | Our own node graph in the SVG and WebGL renderers | ours | build: blend modes, mattes, glows and multiplane are cheap in the browser renderer | planned (WP-36) |
 
 ## 5. Colour and image formats (WP-37)

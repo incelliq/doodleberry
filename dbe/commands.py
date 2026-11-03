@@ -502,6 +502,12 @@ def _bake(name, shot_id):
         cast.append({"puppet": str((ROOT / c["puppet"]).resolve()), "place": c.get("place", {"x": 540, "y": 1500, "s": 1}), "timeline": tl})
     spec = {"fps": fps, "frames": round((sh["end"] - sh["start"]) * fps), "start": sh["start"], "cast": cast, "step": (sh.get("style") or {}).get("step"),
             "size": s.get("size", [1080, 1920]), **({"camera": sh["camera"]} if sh.get("camera") else {})}
+    if not sh.get("camera") and (sh.get("camera_auto") or (sh.get("style") or {}).get("float")):
+        # the SVG player's own camera (auto framing, float drift), frame by frame, so every renderer frames the shot alike (WP-14)
+        vk = subprocess.run(["node", "tools/view_keys.mjs", str(_player_page(name)), shot_id, str(sh["start"]), str(fps), str(spec["frames"])],
+                            cwd=ROOT, capture_output=True, text=True, timeout=900)
+        if vk.returncode == 0 and vk.stdout.strip():
+            spec["camera"] = json.loads(vk.stdout.strip().splitlines()[-1])
     bdir = d / "build" / "shots"; bdir.mkdir(parents=True, exist_ok=True)
     (bdir / f"{shot_id}.spec.json").write_text(json.dumps(spec))
     _run(["node", "tools/bake.mjs", str(bdir / f"{shot_id}.spec.json"), str(bdir / f"{shot_id}.baked.json")])
@@ -560,10 +566,10 @@ def shot_render(name, shot, renderer=""):
     _require_valid(name)
     s, sh, bdir, baked = _bake(name, shot)
     own = sh.get("renderer", "svg"); renderer = renderer or own
-    if renderer != "svg" and any(st.get("image") for c in baked["cast"] for part in _json(c["puppet"])["parts"].values() for st in part["strokes"]):
-        raise ValueError(f"shot {shot} uses raster-part puppets (scanned ink); render it with svg (other renderers draw vector parts only, for now)")
-    if renderer != "svg" and sh.get("props"):
-        raise ValueError(f"shot {shot} has props; render it with svg (props are drawn by the SVG player only, for now)")
+    from . import rparity as RP   # WP-14: each renderer draws what it can, and says what it cannot
+    why = RP.refusal(renderer, sh, [_json(c["puppet"]) for c in baked["cast"]]) if renderer != "svg" else None
+    if why:
+        raise ValueError(f"shot {shot}: {why}; render it with svg")
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
     out = bdir / (f"{shot}.mp4" if renderer == own else f"{shot}.{renderer}.mp4")
     if renderer == "svg":
@@ -571,7 +577,8 @@ def shot_render(name, shot, renderer=""):
     elif renderer == "synfig":
         # characters by Synfig (alpha), over the animated set from the player
         setv = _set_video(name, sh, bdir)
-        sif = bdir / f"{shot}.sif"; sif.write_text(X.to_synfig(baked, (W, H), transparent=True))
+        (bdir / f"{shot}_assets").mkdir(exist_ok=True)
+        sif = bdir / f"{shot}.sif"; sif.write_text(X.to_synfig(baked, (W, H), transparent=True, assets_dir=bdir / f"{shot}_assets"))
         fr = bdir / f"{shot}_syn"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run(["synfig", str(sif), "-t", "png", "-o", str(fr / "f.png"), "-q"])
         frames = sorted(fr.glob("f.*.png"))
@@ -2361,6 +2368,11 @@ def test_golden(update=False, film=""):
         bad, meas = OSS.self_test(ROOT / "out" / "osstest")
         failed += 1 if bad else 0
         results.append({"oss": "MyPaint brushes, Pencil2D round trip, Inkscape booleans", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "rparity":   # renderer parity (WP-14): the same shots from every renderer that accepts them
+        from . import rparity as RPY
+        bad, meas = RPY.self_test(ROOT / "out" / "rparitytest")
+        failed += 1 if bad else 0
+        results.append({"rparity": "svg, synfig and lottie draw the same characters; refusals say why", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -3254,6 +3266,24 @@ def vector_boolean(shapes, op, size=None):
     keep their overlap. Returns the resulting path data, for puppet parts, set pieces and masks."""
     from . import oss
     return {"paths": oss.boolean(shapes, op, tuple(size or [1080, 1920]))}
+
+
+# ---------------- renderer parity (WP-14) ----------------
+@command("render.parity", name=("string", "film"), shot=("string", "shot id"), renderers=("array", "renderers to compare with svg", None),
+         times=("array", "moments (seconds into the shot; default 20, 50 and 80 percent)", None))
+def render_parity(name, shot, renderers=None, times=None):
+    """Renderer parity (WP-14): the shot's cast drawn alone by the SVG renderer and by Synfig, Lottie and Grease
+    Pencil at the same moments, compared by filled silhouette and by line (the better of the two), with the colour
+    difference where both have ink. Renderers that cannot draw the shot say why."""
+    from . import rparity as RP
+    return RP.run(name, shot, times=times, renderers=tuple(renderers or ("synfig", "lottie", "grease-pencil")))
+
+
+@command("render.parity_bench")
+def render_parity_bench():
+    """Renderer parity on every benchmark shot (WP-14); writes out/rparity/bench.json."""
+    from . import rparity as RP
+    return RP.bench()
 
 
 # ---------------- parity matrix (WP-41) ----------------

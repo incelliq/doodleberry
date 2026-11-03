@@ -31,7 +31,7 @@ covered, now added to their packages' scopes.
 |---|---|---|---|---|
 | Vector drawing: pressure ink, filled shapes, palette slots | PRO | ✅ | – | Rig Canvas |
 | Brush engine: stabiliser, tapered and textured brushes, gap-closing fill, eraser, lasso, transform | PRO | 🟡 | P1 | pressure strokes, simplify, gap-closing fill in the Rig Canvas (1.4); stabiliser, textured brushes, lasso, transform: WP-18, WP-34; textured natural-media brushes as a command: `brush.paint` with the MyPaint presets (WP-34) |
-| Raster parts (PNG/painted) with pivots | PRO (Moho, Spine, Live2D) | ✅ | – | puppet v0.3 raster parts (`puppet.from_ink`, `doodle.snap`); SVG renderer only, others: WP-14 |
+| Raster parts (PNG/painted) with pivots | PRO (Moho, Spine, Live2D) | ✅ | – | puppet v0.3 raster parts (`puppet.from_ink`, `doodle.snap`); SVG, Synfig and Lottie (render.parity, WP-14); Grease Pencil refuses them |
 | Import layered PSD/Krita/SVG/AI, auto-splitting parts by layer name | PRO (Character Animator, Moho) | 🟡 | P0 | `puppet.import` reads layered SVG, PSD and ORA (1.3); Krita .kra and AI: WP-18 |
 | Paper sketch → vector (scan or photo, then trace) | NEW | ⬜ | P1 | vector tracing (VTracer, potrace): WP-18 |
 | Templates with ghost guides (humanoid, quadruped, bird, blob, object-with-face) | PRO/NEW | 🟡 | P1 | humanoid and doodle templates; ghost guides for drawing requests (3.6); quadruped, bird, object: WP-16 |
@@ -69,7 +69,7 @@ covered, now added to their packages' scopes.
 | Squash and stretch on parts | PRO | 🟡 | P1 | whole-body squash; per-part squash: WP-11 |
 | Springs and dynamics (hair, ears, tails) | PRO (Character Animator dangles, Cartoon Animator spring bones) | ✅ | – | deterministic re-simulation |
 | Spring chains, cloth strips | PRO | 🟡 | P2 | springs (v0.2) and FABRIK chains (v0.6); cloth strips: WP-42 |
-| Z-order switching (arm in front of or behind the body) | PRO | ✅ | – | controls drive z (1.2) and clips carry `swaps.z` (3.5); Lottie and Synfig keep static order: WP-14 |
+| Z-order switching (arm in front of or behind the body) | PRO | ✅ | – | controls drive z (1.2) and clips carry `swaps.z` (3.5); Synfig and Lottie follow it too (a layer per order, WP-14) |
 | Rig retargeting across characters on one template | PRO | ✅ | – | clips are template-level |
 | Line-weight-preserving squash for blinks and squints: area-averaged resampling with re-inking, so a closed eye stays one solid line; dot eyes flatten to dashes | NEW | ✅ | – | area-averaged squash with re-inking in dbe/ink.py (1.8) |
 | Rig ability inventory: each character declares what it can do without new drawings (hop, blink, tilt, wave, wag) and what needs a drawing | IDEA | ✅ | – | `puppet.abilities` (2.12); feeds rig-aware writing (§5) and drawing requests (E20, 3.6) |

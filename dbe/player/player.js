@@ -274,8 +274,8 @@
     const sh = shotAt(t), st = sh.style || {};
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
-    let world = set.draw(tq, sh.set_opts || {}, W, H), ink = '';
-    if (sh.underlays && !bgOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
+    let world = castOnly ? '' : set.draw(tq, sh.set_opts || {}, W, H), ink = '';   // castonly=1: the characters alone (WP-14 renderer parity)
+    if (sh.underlays && !bgOnly && !castOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
     const heads = {}, casts = []; CASTS = casts;
     const planeInk = {}, onPlane = c => sh.comp && c.plane && c.plane !== 'stage' && !bgOnly;   // WP-36: cast members on depth planes
     for (const c of sh.cast || []) {
@@ -290,14 +290,14 @@
       if (tl.lookat) tl.lookat = [].concat(tl.lookat).map(la => ({ ...la, target_local: toLocal(p, worldOf(la.target, tq, casts), x, y, s, flip) }));
       const pose = Acting.evaluate(p, tl, tq, L.clips, L.presets);
       casts.push({ p, x, y, s, flip, pose, c, tl, L });
-      const shadow = st.shadow !== false ? `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>` : '';
+      const shadow = st.shadow !== false && !castOnly ? `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>` : '';
       const drawn = Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}) });
       if (onPlane(c)) planeInk[c.plane] = (planeInk[c.plane] || '') + shadow + drawn;
       else { world += shadow; ink += drawn; }
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
-    if (!bgOnly) ink += (sh.props || []).map(pr => propSVG(pr, tq, casts)).join('');
-    if (!bgOnly && sh.fx && window.FX) {  // motion effects from the motion itself (dbe/player/fx.js)
+    if (!bgOnly && !castOnly) ink += (sh.props || []).map(pr => propSVG(pr, tq, casts)).join('');
+    if (!bgOnly && !castOnly && sh.fx && window.FX) {  // motion effects from the motion itself (dbe/player/fx.js)
       const memo = {};
       const pointAt = (ci, part, tt) => { const cc = casts[ci]; if (!cc || tt < (sh.start || 0)) return null;
         const key = ci + ':' + tt.toFixed(4); let st2 = memo[key];
@@ -306,8 +306,8 @@
         return Puppet.pointOf(cc.p, part, null, st2.x, st2.y, { ...st2.pose, s: st2.s, flip: st2.flip }); };
       ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt, info) => propPos(pr, tt, casts, info) });
     }
-    if (!bgOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join(''); }
-    world += st.boil ? `<g filter="url(#boil)">${ink}</g>` : ink;
+    if (!bgOnly && !castOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join(''); }
+    world += st.boil && !castOnly ? `<g filter="url(#boil)">${ink}</g>` : ink;   // parity frames compare geometry, without the boil
     let svg = boilDefs(st, t) + world;
     if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2 + 6 * Math.cos(a)} ${H / 2 + 6 * Math.sin(a)}) scale(${z.toFixed(4)}) translate(${-W / 2} ${-H / 2})">${world}</g>`; }
@@ -321,16 +321,20 @@
       VIEW = view;
       svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS),
         drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
-    if (!bgOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#boil)">${bub}</g>` : bub; }
+    if (!bgOnly && !castOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#boil)">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
-    if (!bgOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
+    if (!bgOnly && !castOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;
   }
   const only = q.get('shot') ? S.shots.find(s => s.id === q.get('shot')) : null;
   const bgOnly = q.get('bg') === '1';
+  const castOnly = q.get('castonly') === '1';
+  if (castOnly) { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
   const t0 = only ? only.start : 0, t1 = only ? only.end : S.shots[S.shots.length - 1].end;
   window.FILMTIME = { start: t0, end: t1, fps: FPS };
   window.frameAtTime = t => { stage.innerHTML = frameAt(t, bgOnly); };
+  // the camera this player frames each moment with (auto camera, float drift): other renderers bake it as camera keys (WP-14)
+  window.viewsAt = ts => ts.map(t => { frameAt(t, false); return VIEW.slice(); });
   // time warp (plan 2.13, the sound-off cut): shots.json "timewarp": [[cut time, film time], ...] knots, increasing;
   // the cut is rendered on its own clock and each frame shows the film at the warped time (lines held for reading)
   const WK = S.timewarp && S.timewarp.length > 1 ? S.timewarp : null;

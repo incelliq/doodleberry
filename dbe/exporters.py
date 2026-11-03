@@ -23,6 +23,15 @@ def _view_masks(p, frs):
     return [(v, [1 if key(fr) == v else 0 for fr in frs]) for v in used]
 
 
+def z_track(frs, key, base):
+    """a part's (key) or a swap's ("@" + id) layer order on every frame: clips and controls may move it (WP-14)"""
+    return [((fr.get("z") or {}).get(key, base)) for fr in frs]
+
+
+def raster_strokes(strokes):
+    return [st for st in strokes if st.get("image") and not st.get("d")]
+
+
 def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
     """bg: a solid colour layer; bg_image: a PNG data URI embedded as an image asset (the set plate)"""
     W, H = size
@@ -34,9 +43,13 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
         return ind[0]
 
     def kf(values, hold=False):
-        """per-frame values -> Lottie animated property (drop repeats)"""
+        """per-frame values -> Lottie animated property (drop repeats; a value held over several frames keeps a key
+        at the end of the hold too, so the next change is not smeared back across the hold: WP-14)"""
         ks, last = [], None
         for f, v in enumerate(values):
+            if not hold and ks and v != last and ks[-1]["t"] < f - 1:
+                k = {"t": f - 1, "s": last if isinstance(last, list) else [last], "i": {"x": [0.5], "y": [0.5]}, "o": {"x": [0.5], "y": [0.5]}}
+                ks.append(k)
             if v != last or f == n - 1:
                 k = {"t": f, "s": v if isinstance(v, list) else [v]}
                 if hold:
@@ -65,12 +78,48 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
                 items.append({"ty": "gr", "it": it})
         return items
 
+    assets = []
+
+    def image_layers(parent_ind, strokes, vis):
+        """raster strokes (scans, brushes, drawn levels) as image layers in their part's space (WP-14)"""
+        out = []
+        for st in strokes:
+            aid = f"img{len(assets)}"
+            from PIL import Image as _I
+            import base64 as _b, io as _io
+            iw, ih = _I.open(_io.BytesIO(_b.b64decode(st["image"].split(",", 1)[1]))).size
+            assets.append({"id": aid, "w": iw, "h": ih, "u": "", "p": st["image"], "e": 1})
+            out.append({"ddd": 0, "ind": nid(), "ty": 2, "nm": aid, "refId": aid, "parent": parent_ind, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                        "ks": {"o": kf(vis, hold=True), "r": {"a": 0, "k": 0}, "a": {"a": 0, "k": [0, 0, 0]},
+                               "p": {"a": 0, "k": [st["x"], st["y"], 0]}, "s": {"a": 0, "k": [100 * st["w"] / iw, 100 * st["h"] / ih, 100]}}})
+        return out
+
+    def with_z(lay, vis, zs, rasters):
+        """a layer whose order changes over time becomes one copy per order, each shown only on its frames (the first
+        stays the transform parent of the part's children); raster strokes ride along as image layers"""
+        vis = [v if isinstance(v, (int, float)) else 100 for v in vis]
+        levels = sorted(set(zs), key=zs.index)
+        out = []
+        for k, zv in enumerate(levels):
+            l = lay if k == 0 else {**lay, "ind": nid(), "ks": dict(lay["ks"])}
+            mask = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
+            if len(levels) > 1 or "o" in lay["ks"]:
+                l["ks"]["o"] = kf(mask, hold=True)
+            l["_z"] = zv
+            out.append(l)
+            for im in image_layers(l["ind"] if k == 0 else lay.get("parent"), rasters, mask):
+                if k:
+                    im["parent"] = lay["ind"]
+                im["_z"] = zv + 0.001
+                out.append(im)
+        return out
+
     for c in baked["cast"]:
       p0 = _load(c["puppet"]); frs = c["frames"]
       root = None
       for view, on in _view_masks(p0, frs):
         p = G.in_view(p0, view); pal = p["palette"]
-        hip = p["parts"]["hip"]["pivot"]
+        hip = (p["parts"].get("hip") or {}).get("pivot") or [p["artboard"][0] / 2, p["ground"]]   # as the player: drawn levels have no hip
         root = nid()
         layers.append({"ddd": 0, "ind": root, "ty": 3, "nm": f"{p['name']} root", "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                        "ks": {"o": {"a": 0, "k": 0}, "r": {"a": 0, "k": 0},
@@ -88,9 +137,10 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
                    "shapes": shape_group(part["strokes"], pal), "_z": part.get("z", 0)}
             # hidden while a replacing swap shows
             repl = [(sid, sw) for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
+            vis = [0 if (repl and any(G.chosen_swaps(p, fr).get(sid) for sid, _ in repl)) or not o else 100 for fr, o in zip(frs, on)]
             if repl:
-                lay["ks"]["o"] = kf([0 if any(G.chosen_swaps(p, fr).get(sid) for sid, _ in repl) or not o else 100 for fr, o in zip(frs, on)], hold=True)
-            part_layers.append(lay)
+                lay["ks"]["o"] = kf(vis, hold=True)
+            part_layers += with_z(lay, vis, z_track(frs, pid, part.get("z", 0)), raster_strokes(part["strokes"]))
         for sid, sw in (p.get("swaps") or {}).items():
             for shape, strokes in sw["shapes"].items():
                 if not strokes:
@@ -103,7 +153,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
                               "p": kf([[round(((fr["look"] or [0, 0])[0] * sw.get("movable", 8) if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[0], 2),
                                          round(((fr["look"] or [0, 0])[1] * sw.get("movable", 8) * 0.7 if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[1], 2), 0] for fr in frs])},
                        "shapes": shape_group(strokes, pal), "_z": sw.get("z", 40)}
-                part_layers.append(lay)
+                part_layers += with_z(lay, vis, z_track(frs, "@" + sid, sw.get("z", 40)), raster_strokes(strokes))
         part_layers.sort(key=lambda l: -l["_z"])  # Lottie draws the first layer on top
         for l in part_layers:
             l.pop("_z", None)
@@ -111,7 +161,6 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
     if bg:
         layers.append({"ddd": 0, "ind": nid(), "ty": 1, "nm": "background", "sc": bg, "sw": W, "sh": H, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                        "ks": {"o": {"a": 0, "k": 100}, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [W / 2, H / 2, 0]}, "a": {"a": 0, "k": [W / 2, H / 2, 0]}, "s": {"a": 0, "k": [100, 100, 100]}}})
-    assets = []
     if bg_image:
         assets.append({"id": "plate", "w": W, "h": H, "u": "", "p": bg_image, "e": 1})
         layers.append({"ddd": 0, "ind": nid(), "ty": 2, "nm": "set", "refId": "plate", "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
@@ -157,7 +206,24 @@ def _shapes_sif(strokes, pal):
     return out
 
 
-def to_synfig(baked, size, bg_png=None, transparent=False):
+def _raster_sif(strokes, assets_dir):
+    """raster strokes as Synfig import layers (the images written to assets_dir; WP-14)"""
+    import base64 as _b
+    import hashlib
+    out = ""
+    for st in raster_strokes(strokes):
+        if not assets_dir:
+            continue
+        data = _b.b64decode(st["image"].split(",", 1)[1])
+        f = Path(assets_dir) / f"img_{hashlib.sha1(data).hexdigest()[:16]}.png"
+        if not f.exists():
+            f.write_bytes(data)
+        out += (f'<layer type="import" active="true" version="0.1"><param name="tl"><vector><x>{st["x"]:.3f}</x><y>{st["y"]:.3f}</y></vector></param>'
+                f'<param name="br"><vector><x>{st["x"] + st["w"]:.3f}</x><y>{st["y"] + st["h"]:.3f}</y></vector></param><param name="filename"><string>{f}</string></param></layer>')
+    return out
+
+
+def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
     W, H = size
     fps, n = baked["fps"], baked["frames"]
     U = 60.0  # pixels per synfig unit
@@ -180,19 +246,38 @@ def to_synfig(baked, size, bg_png=None, transparent=False):
             ang, sx, sy = math.atan2(b, a), k, k
         return e, f, math.degrees(ang), sx, sy
 
-    def anim_transform(mats):
-        wps_o, wps_a, wps_s = "", "", ""
+    def reduce(keys, tol):
+        """drop keys a straight line between their neighbours reproduces within tol (WP-14: long shots stayed under
+        the XML parser's 10 MB limit only with this)"""
+        if len(keys) <= 2:
+            return keys
+        out = [keys[0]]
+        for i in range(1, len(keys) - 1):
+            (f0, v0), (f1, v1), (f2, v2) = out[-1], keys[i], keys[i + 1]
+            k = (f1 - f0) / (f2 - f0)
+            if max(abs(a_ + (c_ - a_) * k - b_) for a_, b_, c_ in zip(v0, v1, v2)) > tol:
+                out.append(keys[i])
+        out.append(keys[-1])
+        return out
+
+    def anim_transform(mats, vis=None):
+        ko, ka, ks = [], [], []
         last = None
         for fi, m in enumerate(mats):
+            if vis is not None and not any(vis[max(0, fi - 1):fi + 2]):
+                continue   # hidden here and at both neighbours: its transform does not show
             e, f, ang, sx, sy = decompose(m)
             # keep angles continuous
             if last is not None:
                 while ang - last > 180: ang -= 360
                 while ang - last < -180: ang += 360
             last = ang
-            wps_o += f'<waypoint time="{t(fi)}" before="linear" after="linear"><vector><x>{e:.4f}</x><y>{f:.4f}</y></vector></waypoint>'
-            wps_a += f'<waypoint time="{t(fi)}" before="linear" after="linear"><angle value="{ang:.3f}"/></waypoint>'
-            wps_s += f'<waypoint time="{t(fi)}" before="linear" after="linear"><vector><x>{sx:.5f}</x><y>{sy:.5f}</y></vector></waypoint>'
+            ko.append((fi, (e, f))); ka.append((fi, (ang,))); ks.append((fi, (sx, sy)))
+        if not ko:
+            e, f, ang, sx, sy = decompose(mats[0]); ko, ka, ks = [(0, (e, f))], [(0, (ang,))], [(0, (sx, sy))]
+        wps_o = "".join(f'<waypoint time="{t(fi)}" before="linear" after="linear"><vector><x>{v[0]:.4f}</x><y>{v[1]:.4f}</y></vector></waypoint>' for fi, v in reduce(ko, 0.0016))
+        wps_a = "".join(f'<waypoint time="{t(fi)}" before="linear" after="linear"><angle value="{v[0]:.3f}"/></waypoint>' for fi, v in reduce(ka, 0.05))
+        wps_s = "".join(f'<waypoint time="{t(fi)}" before="linear" after="linear"><vector><x>{v[0]:.5f}</x><y>{v[1]:.5f}</y></vector></waypoint>' for fi, v in reduce(ks, 0.0005))
         return (f'<param name="transformation"><composite type="transformation"><offset><animated type="vector">{wps_o}</animated></offset>'
                 f'<angle><animated type="angle">{wps_a}</animated></angle><skew_angle><angle value="0"/></skew_angle>'
                 f'<scale><animated type="vector">{wps_s}</animated></scale></composite></param>')
@@ -222,7 +307,11 @@ def to_synfig(baked, size, bg_png=None, transparent=False):
             vis = [v * o for v, o in zip(vis, on)]
             if not any(vis):
                 continue
-            items.append((part.get("z", 0), f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vis)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats)}<param name="canvas"><canvas>{_shapes_sif(part["strokes"], pal)}</canvas></param></layer>'))
+            zs = z_track(frs, pid, part.get("z", 0))
+            for zv in sorted(set(zs), key=zs.index):   # a part whose layer order changes: one layer per order (WP-14)
+                vz = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
+                if any(vz):
+                    items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(part["strokes"], assets_dir)}{_shapes_sif(part["strokes"], pal)}</canvas></param></layer>'))
         for sid, sw in (p.get("swaps") or {}).items():
             for shape, strokes in sw["shapes"].items():
                 if not strokes:
@@ -239,7 +328,11 @@ def to_synfig(baked, size, bg_png=None, transparent=False):
                     if sid == "pupils" and fr.get("look"):
                         m = G.mul(m, [1, 0, 0, 1, fr["look"][0] * sw.get("movable", 8), fr["look"][1] * sw.get("movable", 8) * 0.7])
                     mats.append(G.mul(F, m))
-                items.append((sw.get("z", 40), f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vis)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats)}<param name="canvas"><canvas>{_shapes_sif(strokes, pal)}</canvas></param></layer>'))
+                zs = z_track(frs, "@" + sid, sw.get("z", 40))
+                for zv in sorted(set(zs), key=zs.index):
+                    vz = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
+                    if any(vz):
+                        items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(strokes, assets_dir)}{_shapes_sif(strokes, pal)}</canvas></param></layer>'))
       items.sort(key=lambda x: x[0])  # synfig: later layers draw on top
       body += "".join(s for _, s in items)
     return head + body + "</canvas>\n"

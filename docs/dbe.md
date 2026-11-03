@@ -69,6 +69,19 @@ environment variables below).
   `reminder.ics` for the person who posts it. Unapproved posts that are due are held, never sent. `post.done` records
   the published link; when all of a row's posts are out, the row is marked posted in the plan with every link.
   `post.status` and the board's Posting section show the queue, with Approve, Revoke and Posted buttons.
+- **Renderer parity** (WP-14, `dbe/rparity.py`): `render.parity {name, shot}` draws the shot's cast alone with the
+  SVG renderer (`castonly=1`, without line boil) and with Synfig, Lottie and Grease Pencil at the same moments, and
+  compares each with SVG: the better of the filled-silhouette overlap and a line F-score (ink within about 4 px of the
+  other's), at least 0.85, and the colour difference where both have ink, at most 24 of 255.
+  `render.parity_bench` runs every benchmark shot. A renderer that cannot draw a shot says why (`rparity.CAPABILITIES`;
+  `shot.render` refuses with the same reason), and styles a renderer draws without (line boil) are listed. What
+  parity fixed: the bake now records every swap set's drawing (drawn levels and control-driven swaps were lost to
+  the other renderers), auto-camera and float shots carry the SVG player's own camera into the bake
+  (`tools/view_keys.mjs`), Synfig and Lottie draw raster parts and drawn levels (import layers and image assets) and
+  clip-driven layer order (a layer per order, shown on its frames), Lottie keeps the end of every hold (changes no
+  longer smeared back across it) and drawn levels without a hip, Synfig keyframes are reduced (long shots stayed
+  over the XML parser's 10 MB limit), and single Synfig frames are asked for in seconds (a bare number is frames).
+  Blender 5.2.3 LTS (`bash tools/setup.sh blender`) runs the Grease Pencil renderer.
 - **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
   far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
   overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,

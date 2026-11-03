@@ -15,7 +15,7 @@ const t0 = await p.evaluate(() => window.FILMTIME.start);
 for (const t of ts) {
   await p.evaluate(tt => window.frameAtTime(tt), t0 + +t);
   await p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
-  await p.screenshot({ path: `${out}_${t}.png` });
+  await p.screenshot({ path: `${out}_${t}.png`, omitBackground: /castonly=1/.test(query || '') });   // cast-only stills keep transparency
 }
 if (errs.length) { console.error('page errors: ' + errs.join(' | ')); process.exitCode = 2; }
 await b.close();
