@@ -1905,11 +1905,11 @@
      "capability": "Sound panel with a waveform for syncing (1.4), with a choice of which sound layer to show (1.5.0).",
      "pro_use": "Hitting accents and phonemes by eye.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-40"
+       "sound.lanes"
       ],
-      "note": "Words and beats are known from timing.json and film.beats, but no waveform lanes in Studio (WP-40)."
+      "note": "Waveform lanes of each stem on the Studio sound page, with words and beats known from timing.json."
      }
     },
     {
@@ -2328,11 +2328,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.beats",
-       "script.slots",
+       "sound.audacity",
        "WP-40"
       ],
-      "note": "Timing comes from alignment, slots and the beat grid; importing labels from Audacity or Ardour is in WP-40's sound-editing scope."
+      "note": "Cue and music labels go out to Audacity (sound.audacity); importing labels back is WP-40."
      }
     }
    ]

@@ -9,22 +9,22 @@ Match: **command** (an existing command does it), **data** (a field of the film 
 measure), **partial** (partly there; the WP that finishes it), **gap** (missing; the WP that closes it), **n/a**
 (not relevant to an agent-run studio).
 
-Overall: 1396 capabilities; covered 37%, covered or partial 69% (of those that apply).
+Overall: 1396 capabilities; covered 38%, covered or partial 69% (of those that apply).
 
 | Tool | Chapters | Capabilities | Command | Data | Metric | Partial | Gap | n/a | Covered | Covered or partial |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Adobe After Effects | 19 | 161 | 30 | 33 | 1 | 41 | 43 | 13 | 43% | 71% |
+| Adobe After Effects | 19 | 161 | 31 | 33 | 1 | 41 | 42 | 13 | 44% | 72% |
 | Blender Grease Pencil | 26 | 150 | 9 | 23 | 1 | 52 | 56 | 9 | 23% | 60% |
-| Toon Boom Harmony | 25 | 182 | 25 | 47 | 0 | 52 | 50 | 8 | 41% | 71% |
+| Toon Boom Harmony | 25 | 182 | 26 | 47 | 0 | 53 | 48 | 8 | 42% | 72% |
 | Moho Pro | 34 | 186 | 24 | 42 | 1 | 63 | 38 | 18 | 40% | 77% |
-| Foundry Nuke | 32 | 189 | 28 | 25 | 2 | 39 | 55 | 40 | 37% | 63% |
+| Foundry Nuke | 32 | 189 | 29 | 25 | 2 | 38 | 55 | 40 | 38% | 63% |
 | OpenToonz | 26 | 191 | 33 | 33 | 1 | 49 | 65 | 10 | 37% | 64% |
-| Synfig Studio | 26 | 169 | 34 | 38 | 2 | 42 | 40 | 13 | 47% | 74% |
+| Synfig Studio | 26 | 169 | 35 | 38 | 2 | 42 | 39 | 13 | 48% | 75% |
 | TVPaint Animation | 26 | 168 | 30 | 13 | 1 | 68 | 48 | 8 | 28% | 70% |
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 36, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-40 17, WP-38 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 36, WP-23 23, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-30 7, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -264,7 +264,7 @@ Sources: [Adobe After Effects User Guide (official, helpx.adobe.com)](https://he
 | Lottie export through the Bodymovin or LottieFiles plug-ins (third-party), for web and app animation. | UI and web animations made in After Effects play natively in apps. | **command**: `export.lottie` (export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON. dotLottie, Telegram stickers and Lottie QA in two renderers are WP-23.) |
 | Creative Cloud Libraries: shared colours, character styles and graphics across projects and team members. | Brand assets stay consistent across a team. | **data**: `brand/<id>.json brand kits`, `cast library (cast.list)`, sets library (Brand kits, the cast library and the set library are shared, versioned data that every film can inherit.) |
 | A large third-party plug-in ecosystem (effects, rigging and particle tools). | Studios extend the app with specialised tools for particles, rigging and 3D. | **partial**: `vendor.check`, `vendor.build`, WP-34 (Doodleberry vendors open-source code with recorded licences (vendor.check, vendor.build); a plan for driving or linking open tools (Natron, OpenFX, Krita brushes) is WP-34.) |
-| Round trip to an audio editor (Audition) for deeper sound work. | Cleaning dialogue and building sound design outside the comp. | **gap**: WP-40 (Sound is mixed automatically; driving Audacity or Ardour and editing cues in Studio is WP-40.) |
+| Round trip to an audio editor (Audition) for deeper sound work. | Cleaning dialogue and building sound design outside the comp. | **command**: `sound.audacity` (sound.audacity writes an Audacity project (the stems at their offsets, cue and music labels) for deeper edits; the mix itself stays automatic and editable in Studio.) |
 
 ### Collaboration: Frame.io and Team Projects
 
@@ -808,8 +808,8 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | Importing sound files into sound layers | Dialogue, music and effects tracks | **partial**: `voice.build`, WP-13 (Voices are synthesised; human voice-over import with alignment is WP-13) |
-| Sound editor: trim, fade and volume envelopes | Clean up and mix tracks in the scene | **gap**: WP-40 (Moving, trimming and replacing cues in Studio is WP-40) |
-| Waveform display in the timeline | Animate to visible sound | **gap**: WP-40 (Waveform lanes are WP-40) |
+| Sound editor: trim, fade and volume envelopes | Clean up and mix tracks in the scene | **partial**: `sound.edit`, WP-40 (Cues move, change sound and level, trim and delete in Studio (sound.edit); fades and volume envelopes are WP-40.) |
+| Waveform display in the timeline | Animate to visible sound | **command**: `sound.lanes` (The Studio sound page draws voice, music, effects and mix waveform lanes (vendored wavesurfer.js).) |
 | Scrubbing sound with the playhead | Find sync points by ear | **partial**: `film.preview`, WP-40 (Player scrubs picture; audio scrubbing with lanes is WP-40) |
 | Automatic lip-sync detection into mouth shapes | Fast dialogue breakdown | **command**: `voice.build`, `lipsync.check` (Phoneme-level visemes; Rhubarb comparison when installed) |
 | Mapping detected phonemes to a character's mouth drawings | Fit each character's own mouth chart | **data**: puppet swaps mouth (talk, emotion charts) (Emotion-aware mouth charts) |
@@ -1014,7 +1014,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Interpolated switch layers: smooth morphs between switch drawings that share point counts. | Gives smooth mouth and hand transitions instead of pops. | **gap**: WP-43 (Swaps are discrete (the only exception is a squash smear on view changes). Morphs between drawings or views are in WP-43.) |
 | Frame-by-frame layers: traditional hand-drawn animation inside a rigged scene. | Used for effects, smears and hand-drawn moments mixed with the rig. | **gap**: WP-35 (Hand-drawn animation with drawn levels and an X-sheet is WP-35.) |
 | Note layers: sticky notes placed in the scene for collaborators. | Used for director or supervisor notes on specific shots. | **command**: `review.add`, `review.list`, `review.fix` (Notes are pinned to frames in review.json, and review.fix turns them into checked data edits.) |
-| Audio layers: several sound files placed on the timeline. | Used for dialogue, music and effects tracks lined up to picture. | **partial**: `voice.build`, `film.render`, WP-40 (Voice, a procedural score and timed cues are mixed with stems. Waveform lanes and moving, trimming or replacing audio clips are WP-40.) |
+| Audio layers: several sound files placed on the timeline. | Used for dialogue, music and effects tracks lined up to picture. | **partial**: `sound.lanes`, `sound.edit`, WP-40 (Voice, score and timed cues are mixed with stems, drawn as waveform lanes and edited in Studio; placing arbitrary sound files is WP-40.) |
 | 3D layers: imported 3D models (OBJ) or 2D shapes converted to 3D, in the scene. | Used for 3D props and sets under a 2D camera. | **partial**: `engine.info`, WP-42 (A three.js GLB renderer exists as a tool (tools/three/run3d.mjs), but no film command composites it with 2D. Blender 3D sets and passes are WP-42.) |
 | Patch layers: a masked copy that hides the seam where two overlapping parts meet. | Gives clean shoulders, hips and necks on cut-out rigs. | **partial**: `shots.json timeline z`, `puppet.coach`, WP-18 (Ink cuts keep hidden overlaps, puppet.coach measures gaps opened by bending, and layer order can be keyed per pose (v0.9) to swap layering at joints; masked patch copies are WP-18.) |
 | Text layers. | Used for on-screen text that stays editable. | **data**: `shots.json overlays` (This is the same match as moho-layer-tools-4.) |
@@ -1149,7 +1149,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Rescale keyframes: stretch or compress the timing of a range. | Used for quick timing fixes. | **partial**: `timeline.edit`, WP-19 (resize_clip changes a clip layer's length, and the puppet's 'acting.tempo' scales a character's clip speed. Rescaling an arbitrary range of keys is not offered (WP-19 timeline 2).) |
 | Copy deep frame or frame range: copy every layer's state at a time and paste it elsewhere. | Used for holds and returns to a key pose. | **partial**: `timeline.edit`, WP-19 (Poses and clips can be re-added at any time. A range copy across all characters is WP-19.) |
 | Nudge a physics object: give it an impulse at a frame. | Starts simulations on cue. | **command**: `physics.solve`, `shots.json physics impulses` (physics impulses {t, body, v} kick a body at a time; a prop's attach key starts a throw or drop.) |
-| Audio level, mute and restart of audio and movie tracks. | Used for a working mix while animating. | **partial**: `film.render`, WP-40 (The mix is automatic (ducking, then -14 LUFS measured by qa.run). Manual per-cue levels in Studio are WP-40.) |
+| Audio level, mute and restart of audio and movie tracks. | Used for a working mix while animating. | **partial**: `sound.edit`, WP-40 (The mix is automatic and each cue's level can be set in Studio (sound.edit gain); mute and restart of tracks are WP-40.) |
 | Align a layer with the camera (billboarding) and allow frame skipping during playback. | Keeps flat cards facing a 3D camera, and gives real-time previews. | **n/a** (There is no 3D camera in the 2D path, and the preview plays the renderer directly.) |
 
 ### Chapter 23: Scripts Menu (Pro Only)
@@ -1500,9 +1500,9 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | Loading audio and playing it in sync with pictures. | Checking timing against dialogue and music. | **command**: `film.animatic`, `export.web` (The animatic plays storyboard stills over the mix or the voice; the web player ships audio.ogg.) |
-| Showing the audio waveform against the animation timeline. | Timing keys to beats and syllables. | **partial**: `timeline.get`, WP-40 (The timeline shows lines with word timings; waveform lanes are WP-40.) |
+| Showing the audio waveform against the animation timeline. | Timing keys to beats and syllables. | **command**: `sound.lanes` (Waveform lanes for voice, music, effects and the mix on the Studio sound page.) |
 | Generating animation curves from audio amplitude. | Driving an effect from sound. | **command**: `acting.plan`, `voice.build` (Gestures land on emphasised words (loudness, pitch, length) and visemes come from aligned speech.) |
-| Multiple audio tracks trimmed and offset on the timeline (Nuke Studio). | Building temp mixes in review. | **partial**: `film.render`, `film.cuts`, WP-40 (film.render mixes voice, score and foley to -14 LUFS; film.cuts crossfades stems; moving and trimming cues in Studio is WP-40.) |
+| Multiple audio tracks trimmed and offset on the timeline (Nuke Studio). | Building temp mixes in review. | **partial**: `sound.edit`, WP-40 (Cues move and trim on the effects lane and music spans swap; offsetting whole tracks is WP-40.) |
 
 ### Previews and rendering (Viewer, Flipbook, Write, background and farm rendering)
 
@@ -1737,7 +1737,7 @@ Sources: [OpenToonz manual (Read the Docs, latest): table of contents](https://o
 | Cell timing operations: on twos and threes, each, increase or decrease step, reverse, swing, random, roll, time stretch. | Fast retiming of drawings and holds without redrawing. | **partial**: `timeline.edit`, WP-35 (style.step animates on 12s, 8s or 6s; clips have speed, fades and weights; cell-level exposure tools are WP-35.) |
 | Inserting or removing frames across the whole scene with keys shifting to match. | Opening up or tightening a scene after an edit note. | **partial**: `film.retime`, `timeline.edit`, WP-19 (Line-relative times reflow everything after a voice change; dragging lines and shots in Studio is WP-19.) |
 | Sub-xsheets: nest columns into a reusable sub-scene, open, edit in place, collapse, explode or save separately. | Reusable cycles and complex sections stay manageable. | **partial**: `film.cuts`, WP-36 (film.cuts assembles inserts from other films at edit level; nested sub-compositions inside a shot fit WP-36.) |
-| Soundtrack columns: load audio files, trim and move clips, set volume, scrub with the frame cursor. | Dialogue and music are timed against picture in the sheet. | **partial**: `voice.build`, `film.render`, WP-40 (Voices are synthesized and placed on lines and the score is generated from score.json; waveform lanes, trimming and importing music files are WP-40.) |
+| Soundtrack columns: load audio files, trim and move clips, set volume, scrub with the frame cursor. | Dialogue and music are timed against picture in the sheet. | **partial**: `sound.edit`, WP-40 (Voices and the score come from data; cues move, trim and change level in Studio; loading other audio files is WP-40.) |
 | Automatic lip sync from audio (Rhubarb), assigning mouth drawings to phonemes in a column. | Gets a first pass of mouth timing in seconds. | **command**: `voice.build`, `lipsync.check`, `doodle.say` (Visemes come from word and phoneme alignment; lipsync.check cross-checks against the voice and Rhubarb.) |
 | Importing lip-sync data from Papagayo-NG or Magpie files. | Lip-sync specialists break down dialogue in a dedicated tool. | **gap**: WP-13 (Importing external phoneme timings fits WP-13's recorded voice-over import with phone-level alignment.) |
 | Memos pinned to a frame and column. | Directors leave timing notes where the animator will see them. | **command**: `review.add`, `review.list` (Notes pinned to frames; review.fix turns them into data edits.) |
@@ -2149,7 +2149,7 @@ Sources: [Synfig User Manual: contents](https://synfig.readthedocs.io/en/latest/
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | Sound layer: an audio file placed with a delay and volume (audio is not rendered into the output file). | Animating to dialogue and music in the scene. | **command**: `voice.build`, `film.render` (Voices are synthesised and aligned, and film.render mixes voice, score, cues and foley and muxes them with the picture.) |
-| Sound panel with a waveform for syncing (1.4), with a choice of which sound layer to show (1.5.0). | Hitting accents and phonemes by eye. | **gap**: WP-40 (Words and beats are known from timing.json and film.beats, but no waveform lanes in Studio (WP-40).) |
+| Sound panel with a waveform for syncing (1.4), with a choice of which sound layer to show (1.5.0). | Hitting accents and phonemes by eye. | **command**: `sound.lanes` (Waveform lanes of each stem on the Studio sound page, with words and beats known from timing.json.) |
 | Audio playback while scrubbing and playing in the workarea. | Checking sync interactively. | **partial**: `export.web`, `film.animatic`, WP-40 (The web player and animatic play with sound; editing and scrubbing audio cues in the timeline is WP-40.) |
 | Lip-sync import from Papagayo (.pgo) and Rhubarb (TSV/XML, 1.5.0) driving a switch group of mouths. | Fast dialogue animation from a breakdown. | **command**: `voice.build`, `lipsync.check` (Visemes come from phoneme timings automatically; lipsync.check measures sync against the voice and against Rhubarb when installed.) |
 | Per-layer volume. | Balancing dialogue, music and effects. | **metric**: `qa.run` (The mix is rule-based (ducking, effects under music) and measured: -14 LUFS, true peak, effect onsets; mixcheck checks intelligibility.) |
@@ -2200,7 +2200,7 @@ Sources: [Synfig User Manual: contents](https://synfig.readthedocs.io/en/latest/
 | Plugin metadata file declaring names (translatable) and exec, importer and exporter entries. | Distributing in-house tools to every seat. | **command**: `engine.commands` (Commands carry their own input schemas, listed by engine.commands; adding one is a decorated function.) |
 | Importer and exporter plugins that add file formats to File > Import and File > Export (1.5.0). | Supporting studio-specific or new formats. | **command**: `export.lottie`, `export.synfig`, `export.web`, `puppet.import` (Formats are commands; editor formats (FCPXML, EDL) are WP-22 and sticker/alpha formats WP-23.) |
 | Plugins with simple dialogs that receive the current time and the selected layer (1.5.3). | Context-aware tools such as 'add a blink here'. | **command**: `acting.direct`, `review.add`, `review.fix` (Commands take times and frames as arguments; prose directions and frame notes become data edits.) |
-| Third-party plugins such as importing labels and timings from an audio editor, controller rigs and free-form deformation. | Bringing audio breakdowns in as timing marks; extra rigging aids. | **partial**: `film.beats`, `script.slots`, WP-40 (Timing comes from alignment, slots and the beat grid; importing labels from Audacity or Ardour is in WP-40's sound-editing scope.) |
+| Third-party plugins such as importing labels and timings from an audio editor, controller rigs and free-form deformation. | Bringing audio breakdowns in as timing marks; extra rigging aids. | **partial**: `sound.audacity`, WP-40 (Cue and music labels go out to Audacity (sound.audacity); importing labels back is WP-40.) |
 
 ### Configuration and preferences
 
@@ -2361,7 +2361,7 @@ Sources: [TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and s
 |---|---|---|
 | Loading several audio tracks from files or from the library, project-wide or per clip. | Dialogue, music and effects tracks drive timing in animatics and animation. | **partial**: `voice.build`, WP-13 (Voices are synthesised and aligned, the score is procedural and foley is automatic. Importing recorded human takes into slots is in WP-13.) |
 | Per-track settings: mute, volume, colour group, compact or full view. | Editors balance temp tracks while timing. | **partial**: `film.render`, WP-40 (The mix follows rules (ducking, effects below music, panning by screen position). Controls for each track in Studio are in WP-40.) |
-| Waveform display with drag-to-offset, trimming and a master track summing all tracks. | Animators read accents and syllables from the waveform. | **partial**: `timeline.get`, WP-40 (Dialogue lanes show lines with word ticks. Waveform lanes and cue trimming are in WP-40.) |
+| Waveform display with drag-to-offset, trimming and a master track summing all tracks. | Animators read accents and syllables from the waveform. | **partial**: `sound.lanes`, `sound.edit`, WP-40 (Waveform lanes with drag-to-move cues (snapped to frames), trims and a mix lane; trimming the stems themselves is WP-40.) |
 | Audio scrubbing: a short piece of sound plays as the playhead is dragged. | Finds the exact frame of a sound accent. | **gap**: WP-40 (Word timings are exact in data (timing.json), but there is no audio scrub in Studio.) |
 | A stopwatch for tapping beats to measure the rhythm of music or action. | Timing action to music or to an acted reference. | **command**: `film.beats` (The beat grid comes from the score's bpm, and shot changes and line starts are measured against it.) |
 | Timeline notes: drawn and typed annotations placed along time. | Directors leave timing notes for animators on the scene itself. | **command**: `review.add`, `review.list` (Notes are pinned to frames, and review.fix turns many of them into data edits.) |

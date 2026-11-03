@@ -493,7 +493,8 @@ def limit(x, ceiling_db=-1.6):  # leaves headroom for AAC overshoot (checked aft
 def main():
     film = Path(sys.argv[1])
     b = film / 'build'
-    score = json.loads((film / 'score.json').read_text())
+    # the score with a sound designer's music swaps (sound.json, WP-40), when film.render or sound.remix wrote it
+    score = json.loads(((b / 'score_mix.json') if (b / 'score_mix.json').exists() else (film / 'score.json')).read_text())
     timing = json.loads((film / 'timing.json').read_text())
     cues = json.loads((b / 'cues.json').read_text())
     total = score['length_s']

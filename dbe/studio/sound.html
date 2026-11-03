@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio Sound</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a;
+          --voice: #3f8f5a; --music: #3b6ea8; --sfx: #c4703a; --mix: #6b5b4e; --edited: #7a5cc4; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 13px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select, input { font: inherit; padding: 4px 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { padding: 12px 16px; display: grid; gap: 10px; }
+  .lane { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; }
+  .lane h3 { margin: 0 0 4px; font-size: 12px; color: var(--muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
+  .lane h3 i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+  #inspect { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  #pending { color: var(--muted); } #msg { color: var(--muted); } code { font: 12px ui-monospace, monospace; }
+  table { border-collapse: collapse; } td, th { padding: 2px 8px; text-align: left; border-bottom: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header><h1>🫐 Sound</h1><select id="film"></select>
+  <button id="play" class="primary">▶ Play mix</button><span id="time">0.00 s</span>
+  <button id="remix" class="primary" title="save the edits and make the mix again">♫ Remix</button>
+  <button id="audacity" title="stems and cue labels for Audacity">Audacity</button>
+  <span id="pending"></span><span id="msg"></span><span style="flex:1"></span><a href="/timeline">Timeline ↗</a> <a href="/">Studio ↗</a></header>
+<main>
+  <div id="inspect"><b>Drag a cue</b> on the effects lane to move it (it snaps to frames). Click a cue to change its sound, level or delete it.
+    Click a section's chip to swap its kind, or drag across the music lane to swap a span. <b>Remix</b> saves the edits to sound.json and makes the mix again; the edits apply on every render.
+    <div id="sel" style="margin-top:8px"></div><div id="result" style="margin-top:8px"></div></div>
+  <div class="lane"><h3><i style="background:var(--mix)"></i>mix</h3><div id="w-mix"></div><div id="ruler"></div></div>
+  <div class="lane"><h3><i style="background:var(--voice)"></i>voice</h3><div id="w-voice"></div></div>
+  <div class="lane"><h3><i style="background:var(--music)"></i>music <span id="kinds"></span></h3><div id="w-music"></div></div>
+  <div class="lane"><h3><i style="background:var(--sfx)"></i>effects and foley</h3><div id="w-sfx"></div></div>
+</main>
+<script src="/dbe/studio/vendor/wavesurfer/wavesurfer.min.js"></script>
+<script src="/dbe/studio/vendor/wavesurfer/regions.min.js"></script>
+<script src="/dbe/studio/vendor/wavesurfer/timeline.min.js"></script>
+<script>
+const $ = id => document.getElementById(id), msg = m => { $('msg').textContent = m; };
+async function api(cmd, args = {}) { const r = await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) }); const j = await r.json(); if (j.error) { msg(j.error); throw new Error(j.error); } return j.result; }
+let film = null, L = null, W = {}, R = {}, pending = { edits: [], music: [] }, selected = null, ver = Date.now();
+const SFX_TYPES = ['thud', 'pop_small', 'boing', 'whoosh', 'step', 'ding', 'swish', 'scratch', 'click'];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const snap = t => Math.round(t * L.fps) / L.fps;
+function showPending() { $('pending').textContent = pending.edits.length + pending.music.length ? `${pending.edits.length} cue edit(s), ${pending.music.length} music swap(s) unsaved` : ''; }
+
+function lane(key, url, color, height) {
+  if (W[key]) W[key].destroy();
+  const regions = WaveSurfer.Regions.create();
+  const ws = WaveSurfer.create({ container: '#w-' + key, url: url + '?v=' + ver, height, waveColor: color, progressColor: color, cursorColor: '#d33',
+    normalize: false, interact: key === 'mix', minPxPerSec: 60, plugins: key === 'mix' ? [regions, WaveSurfer.Timeline.create({ container: '#ruler' })] : [regions] });
+  W[key] = ws; R[key] = regions;
+  return new Promise(res => ws.on('ready', () => res(ws)));
+}
+
+function cueRegions() {
+  R.sfx.clearRegions();
+  for (const c of L.cues) {
+    const r = R.sfx.addRegion({ start: c.t, content: c.type, color: c.origin === 'edited' || c.origin === 'added' ? css('--edited') : css('--sfx'), drag: true, resize: false });
+    r.cue = c;
+  }
+}
+function musicRegions() {
+  R.music.clearRegions();
+  for (const s of L.sections) {
+    const r = R.music.addRegion({ start: s.start, end: Math.min(s.end, L.length), content: s.kind + (s.swapped ? ' (swapped)' : ''), color: s.swapped ? 'rgba(122,92,196,.22)' : 'rgba(59,110,168,.12)', drag: false, resize: false });
+    r.section = s;
+    if (r.element) r.element.style.pointerEvents = 'none';   // the bands show the sections; dragging across them swaps a span
+  }
+  $('kinds').innerHTML = L.sections.map((s, i) => `<button data-sec="${i}" style="padding:0 6px;font-size:11px">${s.kind}${s.swapped ? '*' : ''} ${s.start.toFixed(1)}–${s.end.toFixed(1)}</button>`).join(' ');
+  for (const b of document.querySelectorAll('[data-sec]')) b.onclick = () => { const s = L.sections[+b.dataset.sec], r = R.music.getRegions().find(x => x.section === s); onSection(r, s.start, Math.min(s.end, L.length)); };
+}
+
+function select(html) { $('sel').innerHTML = html; }
+function onCue(r) {
+  selected = r; const c = r.cue;
+  select(`<b>${c.type}</b> at <code>${r.start.toFixed(3)} s</code> (frame ${Math.round(r.start * L.fps)}, ${c.origin || 'derived'}) ·
+    sound <select id="ctype">${SFX_TYPES.map(t => `<option ${t === c.type ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    level <input id="cgain" type="number" step="0.1" min="0" max="2" value="${c.gain ?? 1}" style="width:5em"> <button id="capply">apply</button> <button id="cdel">delete</button>`);
+  $('capply').onclick = () => { const ty = $('ctype').value, g = +$('cgain').value;
+    if (ty !== c.type) pending.edits.push({ op: 'replace', type: c.type, t: c.t, with: ty });
+    if (g !== (c.gain ?? 1)) pending.edits.push({ op: 'gain', type: ty, t: c.t, gain: g });
+    r.setContent(ty); r.setOptions({ color: css('--edited') }); showPending(); };
+  $('cdel').onclick = () => { pending.edits.push({ op: 'delete', type: c.type, t: c.t }); r.remove(); select(''); showPending(); };
+}
+function onSection(r, start, end) {
+  const s = r.section || {};
+  select(`music <code>${start.toFixed(2)}–${end.toFixed(2)} s</code>${s.kind ? ` (${s.kind})` : ''} · swap to
+    <select id="mkind">${L.kinds.map(k => `<option ${k === s.kind ? 'selected' : ''}>${k}</option>`).join('')}</select> <button id="mapply">swap</button>`);
+  $('mapply').onclick = () => { const k = $('mkind').value; pending.music.push({ start: +start.toFixed(3), end: +end.toFixed(3), kind: k });
+    r.setContent(k + ' (swapping)'); r.setOptions({ color: 'rgba(122,92,196,.22)' }); showPending(); };
+}
+
+async function load() {
+  L = await api('sound.lanes', { name: film });
+  await Promise.all([lane('mix', `/films/${film}/build/mix.wav`, css('--mix'), 70), lane('voice', L.stems.voice, css('--voice'), 50),
+    lane('music', L.stems.music, css('--music'), 50), lane('sfx', L.stems.sfx, css('--sfx'), 60)]);
+  cueRegions(); musicRegions();
+  R.sfx.on('region-updated', r => { if (!r.cue) return; const t = snap(r.start); r.setOptions({ start: t, color: css('--edited') });
+    pending.edits.push({ op: 'move', type: r.cue.type, t: r.cue.t, to: +t.toFixed(3) }); showPending(); onCue(r); });
+  R.sfx.on('region-clicked', (r, e) => { e.stopPropagation(); onCue(r); });
+  R.music.on('region-clicked', (r, e) => { e.stopPropagation(); if (!r.section) onSection(r, snap(r.start), snap(r.end)); });
+  R.music.enableDragSelection({ color: 'rgba(122,92,196,.22)' });
+  R.music.on('region-created', r => { if (r.section) return; onSection(r, snap(r.start), snap(r.end)); });
+  W.mix.on('timeupdate', t => { $('time').textContent = t.toFixed(2) + ' s'; for (const k of ['voice', 'music', 'sfx']) W[k] && W[k].setTime(t); });
+  window.SOUND = { L, R, W, pending, ready: true };
+  msg(`${L.cues.length} cues, ${L.sections.length} music section(s)`);
+}
+
+$('play').onclick = () => W.mix && W.mix.playPause();
+$('remix').onclick = async () => {
+  try {
+    if (pending.edits.length || pending.music.length) await api('sound.edit', { name: film, edits: pending.edits, music: pending.music, append: true });
+    msg('mixing…'); $('remix').disabled = true;
+    const r = await api('sound.remix', { name: film });
+    pending = { edits: [], music: [] }; showPending(); ver = Date.now();
+    $('result').innerHTML = `<table><tr><th>moved</th><th>to</th><th>heard at</th><th>frames off</th></tr>${(r.moved || []).map(m => `<tr><td>${m.cue}</td><td>${m.to}</td><td>${m.onset ?? '–'}</td><td>${m.frame_error ?? '–'}</td></tr>`).join('')}</table>
+      ${(r.music || []).map(m => `<div>music ${m.span[0]}–${m.span[1]} s is ${m.kind}: ${m.music_level_db} dB</div>`).join('')}<div>mixed in ${r.seconds} s; QA ${Object.values(r.qa || {}).every(Boolean) ? 'passes' : 'has failures'}</div>`;
+    window.SOUND_RESULT = r;
+    await load(); msg('remixed');
+  } finally { $('remix').disabled = false; }
+};
+$('audacity').onclick = async () => { const r = await api('sound.audacity', { name: film }); msg('Audacity: ' + r.files.join(', ')); };
+(async () => {
+  const films = (await api('engine.info')).films || [];
+  const want = new URLSearchParams(location.search).get('film');
+  $('film').innerHTML = films.map(f => `<option ${f === want ? 'selected' : ''}>${f}</option>`).join('');
+  film = want || $('film').value; $('film').onchange = () => { film = $('film').value; history.replaceState(null, '', '?film=' + film); pending = { edits: [], music: [] }; showPending(); load(); };
+  await load();
+})();
+</script>
+</body>
+</html>

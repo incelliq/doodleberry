@@ -2078,11 +2078,11 @@
      "capability": "Round trip to an audio editor (Audition) for deeper sound work.",
      "pro_use": "Cleaning dialogue and building sound design outside the comp.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-40"
+       "sound.audacity"
       ],
-      "note": "Sound is mixed automatically; driving Audacity or Ardour and editing cues in Studio is WP-40."
+      "note": "sound.audacity writes an Audacity project (the stems at their offsets, cue and music labels) for deeper edits; the mix itself stays automatic and editable in Studio."
      }
     }
    ]

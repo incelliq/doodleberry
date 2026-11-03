@@ -686,6 +686,38 @@ def post_filters(post):
     return ",".join(chain)
 
 
+def _derive_cues(name, s):
+    """the film's sound cues before any sound edits: a soft whoosh on every cut, the cues shots declare, foley"""
+    d = FILMS / name
+    cues = [{"t": sh["start"], "type": "whoosh", "gain": 0.7} for sh in s["shots"][1:]]
+    for sh in s["shots"]:
+        cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1), **({"dur": c["dur"]} if c.get("dur") else {})} for c in sh.get("cues", [])]
+    if s.get("foley"):  # automatic foley from the motion (plan 2.7)
+        page = _player_page(name)
+        r = subprocess.run(["node", "tools/foley.mjs", str(page)], cwd=ROOT, capture_output=True, text=True, timeout=1800)
+        if r.returncode == 0 and r.stdout.strip():
+            cues += json.loads(r.stdout.strip().splitlines()[-1])
+    if s.get("timewarp"):  # the sound-off cut runs on its own clock
+        cues = [{**c, "t": round(_warp(s["timewarp"], c["t"], inverse=True), 3),
+                 **({"dur": round(_warp(s["timewarp"], c["t"] + c["dur"], inverse=True) - _warp(s["timewarp"], c["t"], inverse=True), 3)} if c.get("dur") else {})} for c in cues]
+    return sorted(cues, key=lambda c: c["t"])
+
+
+def _mix_inputs(name, s):
+    """write build/cues.json and build/score_mix.json for engine/audio.py: the derived cues and the score with the
+    sound designer's edits from sound.json applied (WP-40); returns the film length"""
+    from . import sound as SD
+    d = FILMS / name
+    ed = SD.resolve(_json(d / "sound.json", {}) or {}, _json(d / "timing.json", {}))   # line-relative times, this voicing
+    cues, rep = SD.apply_edits(_derive_cues(name, s), ed.get("edits"))
+    (d / "build" / "cues.json").write_text(json.dumps([{k: v for k, v in c.items() if k != "origin"} for c in cues]))
+    (d / "build" / "sound_report.json").write_text(json.dumps({"edits": rep, "cues": cues}))
+    total = _warp(s.get("timewarp"), s["shots"][-1]["end"], inverse=True)
+    score = _json(d / "score.json", {}); score["length_s"] = total; (d / "score.json").write_text(json.dumps(score, indent=1))
+    (d / "build" / "score_mix.json").write_text(json.dumps(SD.apply_music(score, ed.get("music"))))
+    return total
+
+
 @command("film.render", name=("string", "film"), only=("array", "shot ids to (re)render; default: only shots whose inputs changed", None),
          aspect=("string", "render another aspect ratio from the same film: 16:9 | 9:16 | 1:1 (default: the film's own)", ""))
 def film_render(name, only=None, aspect=""):
@@ -741,21 +773,7 @@ def film_render(name, only=None, aspect=""):
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-vf", f"subtitles={ass.relative_to(ROOT)}:fontsdir=engine/fonts",
               "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(capd)])
         pic = capd
-    # sound cues: a soft whoosh on every cut plus any cues the shots declare
-    cues = [{"t": sh["start"], "type": "whoosh", "gain": 0.7} for sh in s["shots"][1:]]
-    for sh in s["shots"]:
-        cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1), **({"dur": c["dur"]} if c.get("dur") else {})} for c in sh.get("cues", [])]
-    if s.get("foley"):  # automatic foley from the motion (plan 2.7)
-        page = _player_page(name)
-        r = subprocess.run(["node", "tools/foley.mjs", str(page)], cwd=ROOT, capture_output=True, text=True, timeout=1800)
-        if r.returncode == 0 and r.stdout.strip():
-            cues += json.loads(r.stdout.strip().splitlines()[-1])
-    if s.get("timewarp"):  # the sound-off cut runs on its own clock
-        cues = [{**c, "t": round(_warp(s["timewarp"], c["t"], inverse=True), 3),
-                 **({"dur": round(_warp(s["timewarp"], c["t"] + c["dur"], inverse=True) - _warp(s["timewarp"], c["t"], inverse=True), 3)} if c.get("dur") else {})} for c in cues]
-    (d / "build" / "cues.json").write_text(json.dumps(sorted(cues, key=lambda c: c["t"])))
-    total = _warp(s.get("timewarp"), s["shots"][-1]["end"], inverse=True)
-    score = _json(d / "score.json", {}); score["length_s"] = total; (d / "score.json").write_text(json.dumps(score, indent=1))
+    total = _mix_inputs(name, s)
     _run([PY, "engine/audio.py", f"films/{name}"])
     final = d / "build" / "final.mp4"
     M = _json(ROOT / "dbe" / "profiles.json")["master"]
@@ -2404,6 +2422,10 @@ def test_golden(update=False, film=""):
             bad, meas = [], {"skipped": "melt not installed (apt-get install melt)"}
         failed += 1 if bad else 0
         results.append({"handoff": "OTIO, Kdenlive, FCP7 XML, FCPXML and EDL read back; melt renders the cut identically", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "sound":   # sound editing (WP-40): edits and music swaps; the Studio page moves a foley hit and swaps music
+        bad, meas = _sound_test()
+        failed += 1 if bad else 0
+        results.append({"sound": "a foley hit moved and a music span swapped in Studio land at the right frame after a remix", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -4519,3 +4541,132 @@ def film_handoff(name, melt=True):
         res["melt_round_trip"] = HO.melt_round_trip(out, fps, W, H, shots)
     (out / "README.txt").write_text(f"{title}\n\n{HO.__doc__}\nMeasured: {json.dumps({k: res[k] for k in ('read_back', 'melt_plays_kdenlive')}, indent=1)}\n")
     return res
+
+
+# ---------------- sound editing (WP-40) ----------------
+@command("sound.lanes", name=("string", "film"))
+def sound_lanes(name):
+    """What the Studio sound page shows (WP-40): the stems (voice, music, sfx) as URLs to draw, the cues as the mix
+    hears them (after the sound edits; each marked derived, edited or added) and the music sections with their kinds."""
+    from . import sound as SD
+    d = _film(name); s = _shots(name)
+    b = d / "build"
+    if not (b / "stems").exists():
+        raise FileNotFoundError("render the film first (film.render)")
+    ed = _json(d / "sound.json", {}) or {}
+    rep = _json(b / "sound_report.json", {}) or {}
+    score = _json(b / "score_mix.json") or _json(d / "score.json", {})
+    tm = _json(d / "timing.json", {}) or {}
+    return {"film": name, "fps": s.get("fps", 30), "length": score.get("length_s"), "lines": [{"id": l["id"], "start": l["start"], "end": l["end"]} for l in tm.get("lines", [])],
+            "stems": {k: f"/films/{name}/build/stems/{k}.wav" for k in ("voice", "music", "sfx") if (b / "stems" / f"{k}.wav").exists()},
+            "cues": rep.get("cues") or _json(b / "cues.json", []), "sections": SD.sections_in_time(score), "edits": ed.get("edits", []), "music": ed.get("music", []),
+            "kinds": list(SD.KINDS)}
+
+
+@command("sound.edit", name=("string", "film"), edits=("array", "cue edits: move, gain, replace, trim, delete, add (see dbe/sound.py)", None),
+         music=("array", "music swaps [{start, end, kind}]", None), append=("boolean", "add to the film's edits instead of replacing them", True))
+def sound_edit(name, edits=None, music=None, append=True):
+    """Record a sound designer's edits in films/<name>/sound.json (WP-40): cue edits matched by type and nearest time,
+    and music swaps over a span (cut on the beat grid). Times given in seconds are stored against the nearest line
+    ("got.end-0.360"), so the edits follow the words through re-voicing. They apply every time the mix is made;
+    sound.remix hears them."""
+    from . import sound as SD
+    d = _film(name)
+    ed = _json(d / "sound.json", {}) or {}
+    for m in music or []:
+        if m.get("kind") not in SD.KINDS:
+            raise ValueError(f"music kind must be one of {', '.join(SD.KINDS)}")
+    tm = _json(d / "timing.json", {}) or {}
+    rel = lambda o, keys: {k: (SD.line_relative(float(v), tm) if k in keys and isinstance(v, (int, float)) else v) for k, v in o.items()}
+    ed["edits"] = (ed.get("edits", []) if append else []) + [rel(e, ("t", "to")) for e in edits or []]   # written against the lines
+    ed["music"] = (ed.get("music", []) if append else []) + [rel(m, ("start", "end")) for m in music or []]
+    (d / "sound.json").write_text(json.dumps(ed, indent=1) + "\n")
+    return {"edits": len(ed["edits"]), "music": len(ed["music"])}
+
+
+@command("sound.remix", name=("string", "film"))
+def sound_remix(name):
+    """Make the mix again with the sound edits (WP-40), without rendering a frame: cues derived again, sound.json
+    applied, engine/audio.py, then the mix muxed with the existing picture into build/final.mp4. Measures each moved
+    cue (its onset in the effects stem against the frame it was moved to) and each music swap (the music stem's level
+    in the span before and after)."""
+    import time
+    from . import sound as SD
+    d = _film(name); s = _shots(name); b = d / "build"
+    fps = s.get("fps", 30)
+    if not (b / "picture.mp4").exists():
+        raise FileNotFoundError("render the film first (film.render)")
+    before = {k: (b / "stems" / f"{k}.wav").read_bytes() if (b / "stems" / f"{k}.wav").exists() else None for k in ("music",)}
+    t0 = time.time()
+    total = _mix_inputs(name, s)
+    _run([PY, "engine/audio.py", f"films/{name}"])
+    pic = next(p for p in (b / "picture_cap.mp4", b / "picture_post.mp4", b / "picture.mp4") if p.exists() and (p.name != "picture_cap.mp4" or s.get("captions") is not False))
+    M = _json(ROOT / "dbe" / "profiles.json")["master"]
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(b / "mix.wav"), "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+          "-c:a", M["acodec"], "-ar", str(M["ar"]), "-b:a", M["ab"], "-af", "apad", "-t", f"{total:.3f}",
+          *(["-movflags", "+faststart"] if M.get("faststart") else []), str(b / "final.mp4")])
+    secs = round(time.time() - t0, 1)
+    ed = SD.resolve(_json(d / "sound.json", {}) or {}, _json(d / "timing.json", {}))
+    rep = (_json(b / "sound_report.json", {}) or {}).get("edits", [])
+    checks = []
+    for e, r in zip(ed.get("edits", []), rep):
+        if e.get("op") == "move" and r.get("ok"):
+            on = SD.onset(b / "stems" / "sfx.wav", float(e["to"]))
+            checks.append({"cue": e["type"], "from": e["t"], "to": e["to"], "onset": on, "frame_error": None if on is None else round(abs(on - float(e["to"])) * fps, 2),
+                           "old_place_level_db": SD.energy(b / "stems" / "sfx.wav", float(e["t"]) - 0.02, float(e["t"]) + 0.12)})
+    music = []
+    for m in ed.get("music", []):
+        music.append({"span": [m["start"], m["end"]], "kind": m["kind"], "music_level_db": SD.energy(b / "stems" / "music.wav", m["start"], m["end"]),
+                      "transient_level_db": SD.energy(b / "stems" / "music.wav", m["start"], m["end"], band=(4000, 12000))})
+    qa = qa_run(name)
+    return {"seconds": secs, "final": str((b / "final.mp4").relative_to(ROOT)), "edits": rep, "moved": checks, "music": music, "qa": qa.get("checks")}
+
+
+@command("sound.audacity", name=("string", "film"))
+def sound_audacity(name):
+    """Open the sound in Audacity for deeper edits (WP-40): build/audacity/project.lof imports the stems at their
+    offsets, cues.txt and music.txt import as label tracks (File > Import > Labels)."""
+    from . import sound as SD
+    lanes = sound_lanes(name)
+    b = FILMS / name / "build"
+    files = SD.audacity(b / "audacity", [b / "stems" / f"{k}.wav" for k in lanes["stems"]], lanes["cues"], lanes["sections"])
+    return {"files": [str(Path(f).relative_to(ROOT)) for f in files]}
+
+
+def _sound_test():
+    """WP-40 checks: cue edits and music swaps (pure), and, when fx-demo has been rendered, the Studio sound page on a
+    copy of it: drag the landing thud from 3.833 s to 4.2 s and swap 2.4-4.8 s to reflect, remix, and the thud's onset
+    must be within a frame of 4.2 s, the swapped span quieter with fewer transients"""
+    import socket
+    import time
+    from . import sound as SD
+    bad, meas = SD.self_test()
+    meas = {"edits": meas}
+    src = FILMS / "fx-demo"
+    if not (src / "build" / "stems" / "sfx.wav").exists():
+        meas["page"] = "skipped: render fx-demo first"
+        return bad, meas
+    tmp = FILMS / "zz-soundcheck"
+    shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(src, tmp, ignore=shutil.ignore_patterns("package", "master", "qa", "handoff"))
+    (tmp / "sound.json").write_text(json.dumps({"edits": [], "music": []}))
+    port = 8797
+    srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        sound_remix("zz-soundcheck")
+        before = SD.energy(tmp / "build" / "stems" / "music.wav", 2.4, 4.8, band=(4000, 12000))
+        for _ in range(50):
+            with socket.socket() as s_:
+                if s_.connect_ex(("127.0.0.1", port)) == 0:
+                    break
+            time.sleep(0.2)
+        r = subprocess.run(["node", "tools/sound_check.mjs", str(port), "zz-soundcheck", "thud", "3.833", "4.2", "2.4", "4.8", "reflect"], cwd=ROOT, capture_output=True, text=True, timeout=900)
+        out = json.loads((r.stdout or "{}").strip().splitlines()[-1]) if r.stdout.strip() else {"error": r.stderr[-400:]}
+        mv = (out.get("moved") or [{}])[0]; mu = (out.get("music") or [{}])[0]
+        meas["page"] = {"moved": mv, "music_transients_db": [before, mu.get("transient_level_db")], "errors": out.get("errors")}
+        if not (mv.get("frame_error") is not None and mv["frame_error"] <= 1 and mu.get("kind") == "reflect" and mu.get("transient_level_db", 0) < before - 3 and not out.get("errors")):
+            bad.append({"page": meas["page"], "raw": out if "error" in out else None})
+    finally:
+        srv.terminate()
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas

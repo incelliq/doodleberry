@@ -80,6 +80,15 @@ def film(d):
             for _, pose in (c.get("timeline") or {}).get("poses", []):
                 if "__presets__:" + str(pose) not in have and pose not in (json.loads(pp.read_text()).get("poses") or {}):
                     warns.append(f"shot {s['id']}: pose {pose!r} is neither a {tpl} preset nor one of the puppet's poses")
+    snd = json.loads((d / "sound.json").read_text()) if (d / "sound.json").exists() else None   # WP-40 sound edits
+    for e in (snd or {}).get("edits", []):
+        if e.get("op") not in ("move", "gain", "replace", "trim", "delete", "add"):
+            errs.append(f"sound.json: edit op {e.get('op')!r} is not move, gain, replace, trim, delete or add")
+        elif e.get("op") != "add" and ("type" not in e or "t" not in e):
+            errs.append(f"sound.json: a {e['op']} edit needs the cue's type and t")
+    for m in (snd or {}).get("music", []):
+        if m.get("kind") not in ("main", "intro", "finale", "reflect", "none") or not all(isinstance(m.get(k), (int, float, str)) for k in ("start", "end")):
+            errs.append(f"sound.json: music swap {m} needs start, end and a kind (main, intro, finale, reflect, none)")
     score = json.loads((d / "score.json").read_text()) if (d / "score.json").exists() else None
     palette = {"F", "Dm", "Bb", "C", "Gm", "Am"}   # engine/audio.py CHORDS: the music engine's F major palette
     for sec in (score or {}).get("sections", []):

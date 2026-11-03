@@ -38,6 +38,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "doodle.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/draw":       # WP-35: drawn levels: draw frame by frame with onion skins and an exposure sheet
             return self._send(200, (STUDIO.parent / "draw.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/sound":      # WP-40: waveform lanes, drag a foley hit, swap a music section, remix
+            return self._send(200, (STUDIO.parent / "sound.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
             return self._send(200, (STUDIO.parent / "actout.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/api":

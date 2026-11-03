@@ -1127,10 +1127,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "timeline.get",
+       "sound.lanes",
+       "sound.edit",
        "WP-40"
       ],
-      "note": "Dialogue lanes show lines with word ticks. Waveform lanes and cue trimming are in WP-40."
+      "note": "Waveform lanes with drag-to-move cues (snapped to frames), trims and a mix lane; trimming the stems themselves is WP-40."
      }
     },
     {

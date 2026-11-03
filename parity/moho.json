@@ -1167,11 +1167,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "voice.build",
-       "film.render",
+       "sound.lanes",
+       "sound.edit",
        "WP-40"
       ],
-      "note": "Voice, a procedural score and timed cues are mixed with stems. Waveform lanes and moving, trimming or replacing audio clips are WP-40."
+      "note": "Voice, score and timed cues are mixed with stems, drawn as waveform lanes and edited in Studio; placing arbitrary sound files is WP-40."
      }
     },
     {
@@ -2262,10 +2262,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.render",
+       "sound.edit",
        "WP-40"
       ],
-      "note": "The mix is automatic (ducking, then -14 LUFS measured by qa.run). Manual per-cue levels in Studio are WP-40."
+      "note": "The mix is automatic and each cue's level can be set in Studio (sound.edit gain); mute and restart of tracks are WP-40."
      }
     },
     {

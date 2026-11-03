@@ -439,6 +439,16 @@ OTIO file natively), timeline.mlt, timeline.xml (Final Cut Pro 7 XML: DaVinci Re
 and timeline.edl (CMX 3600, picture). Every file is read back with OTIO (clips, stem tracks, length); melt plays the
 Kdenlive project and renders the MLT one, compared with the shots frame by frame in YUV (identical on our films).
 
+## Sound editing (WP-40)
+The Studio sound page (`/sound?film=<name>`, linked from the timeline) draws waveform lanes for the mix, voice, music
+and effects (vendored wavesurfer.js 8). Drag a cue on the effects lane to move it (snapped to frames), click it to
+change its sound or level or delete it; click a music section's chip, or drag across the music lane, to swap a span to
+another kind (main, intro, finale, reflect, none). Remix saves the edits to `films/<name>/sound.json` (`sound.edit`)
+and makes the mix again without rendering a frame (`sound.remix`), then reports where each moved cue is heard in the
+effects stem and the level of each swapped span. The edits apply on every render: cues are derived again each time
+and edits find them by type and nearest time; music swaps cut the score's sections on the beat grid. `sound.lanes`
+serves the page; `sound.audacity` writes an Audacity project (the stems at their offsets, cue and music label tracks).
+
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values
 and an annotated PNG (problems circled and numbered): missing parts and swap shapes; joints that do not overlap their

@@ -1908,11 +1908,12 @@
      "capability": "Sound editor: trim, fade and volume envelopes",
      "pro_use": "Clean up and mix tracks in the scene",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "sound.edit",
        "WP-40"
       ],
-      "note": "Moving, trimming and replacing cues in Studio is WP-40"
+      "note": "Cues move, change sound and level, trim and delete in Studio (sound.edit); fades and volume envelopes are WP-40."
      }
     },
     {
@@ -1920,11 +1921,11 @@
      "capability": "Waveform display in the timeline",
      "pro_use": "Animate to visible sound",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-40"
+       "sound.lanes"
       ],
-      "note": "Waveform lanes are WP-40"
+      "note": "The Studio sound page draws voice, music, effects and mix waveform lanes (vendored wavesurfer.js)."
      }
     },
     {

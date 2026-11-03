@@ -172,6 +172,7 @@ covered, now added to their packages' scopes.
 | Loudness and intelligibility QA | NEW | ✅ | – | |
 | Footsteps, cloth and impact foley from the animation | EMG | ✅ | – | `foley` from contacts and fast moves (2.7) |
 | Spatial mix: pan by screen position | EMG | ✅ | – | panned by screen position (2.7) |
+| Sound editing in Studio: waveform lanes, cues moved, trimmed, replaced or deleted, music swapped by span, Audacity hand-off | PRO | ✅ | – | `sound.lanes/edit/remix/audacity`, Studio `/sound` with wavesurfer.js; edits in `sound.json`, line-relative, applied on every mix (WP-40) |
 | Cartoon SFX accents bound to moves: a boing per hop, pen-scratch ambience, a single "baa" sting | NEW | ✅ | – | boing per hop, pen scratch (2.13) |
 | **Sound-off mode:** bubble-only dialogue paced by reading time, for feeds watched on mute, built from the same film as the voiced version | IDEA | ✅ | – | `film.soundoff` (2.13) |
 | **Narration slots:** per-line start time and maximum length at a target pace (125–145 wpm), with short alternates, so a human or synthetic voice can be added later without re-cutting | NEW | ✅ | – | `script.slots` (2.16) |

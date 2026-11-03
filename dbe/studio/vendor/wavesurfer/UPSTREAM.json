@@ -1,0 +1,14 @@
+{
+ "name": "wavesurfer.js",
+ "repository": "https://github.com/katspaugh/wavesurfer.js",
+ "version": "8.0.5",
+ "archive": "https://registry.npmjs.org/wavesurfer.js/-/wavesurfer.js-8.0.5.tgz",
+ "sha256": "386400975c6ae54df89f3470c0ae42646d4ef1a28c43765d57aae6e1e3ad403e",
+ "integrity": "sha512-VRYjNG8vKhpMN9hKGgo6VzqQdnZ+AsDg4yIQppmntUagB+/vKbvirWZYSM+PYT03Z7Ry10f5Uqxadbutx47l/g==",
+ "license": "BSD-3-Clause",
+ "class": "permissive",
+ "license_files": ["LICENSE"],
+ "files": "dist/wavesurfer.min.js, dist/plugins/regions.min.js and dist/plugins/timeline.min.js from the npm package, unmodified",
+ "patches": [],
+ "use": "waveform lanes, draggable cue markers and music sections on the Studio sound page (/sound, WP-40)"
+}

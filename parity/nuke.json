@@ -1937,12 +1937,11 @@
      "capability": "Showing the audio waveform against the animation timeline.",
      "pro_use": "Timing keys to beats and syllables.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "timeline.get",
-       "WP-40"
+       "sound.lanes"
       ],
-      "note": "The timeline shows lines with word timings; waveform lanes are WP-40."
+      "note": "Waveform lanes for voice, music, effects and the mix on the Studio sound page."
      }
     },
     {
@@ -1965,11 +1964,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.render",
-       "film.cuts",
+       "sound.edit",
        "WP-40"
       ],
-      "note": "film.render mixes voice, score and foley to -14 LUFS; film.cuts crossfades stems; moving and trimming cues in Studio is WP-40."
+      "note": "Cues move and trim on the effects lane and music spans swap; offsetting whole tracks is WP-40."
      }
     }
    ]

@@ -1261,11 +1261,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "voice.build",
-       "film.render",
+       "sound.edit",
        "WP-40"
       ],
-      "note": "Voices are synthesized and placed on lines and the score is generated from score.json; waveform lanes, trimming and importing music files are WP-40."
+      "note": "Voices and the score come from data; cues move, trim and change level in Studio; loading other audio files is WP-40."
      }
     },
     {

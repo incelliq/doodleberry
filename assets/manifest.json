@@ -163,6 +163,20 @@
     "tools"
    ],
    "use": "colour raster to vector tracing (WP-18); built on request by vendor.build"
+  },
+  {
+   "path": "dbe/studio/vendor/wavesurfer/",
+   "kind": "code",
+   "name": "wavesurfer.js 8.0.5 (minified builds)",
+   "license": "BSD-3-Clause",
+   "class": "permissive",
+   "license_file": "dbe/studio/vendor/wavesurfer/LICENSE",
+   "source": "https://github.com/katspaugh/wavesurfer.js",
+   "attribution": "wavesurfer.js 8.0.5 (BSD-3-Clause)",
+   "used_by": [
+    "studio"
+   ],
+   "use": "waveform lanes and draggable cues on the Studio sound page (WP-40)"
   }
  ],
  "generated": [
