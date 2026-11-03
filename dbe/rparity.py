@@ -116,8 +116,14 @@ def line_f1(pa, pb, tol=1):
 
 
 def colour_diff(a, b):
-    """mean RGB difference (0-255) where both renders have ink: wrong colours or a wrong layer order show here"""
+    """mean RGB difference (0-255) where both renders have ink, a pixel in from every edge: wrong colours or a wrong
+    layer order show here; a line a pixel apart between renderers (line placement, which line_f1 judges) does not
+    (a pale fill inside dark ink read as a colour error at every outline, WP-16)"""
+    from scipy import ndimage
     m = (a[..., 3] > 200) & (b[..., 3] > 200)
+    lum = lambda x: x[..., :3].mean(-1)
+    edge = lambda x: ndimage.binary_dilation(np.abs(ndimage.sobel(lum(x), 0)) + np.abs(ndimage.sobel(lum(x), 1)) > 120, iterations=1)
+    m = m & ~edge(a) & ~edge(b)
     return float(np.abs(a[..., :3] - b[..., :3])[m].mean()) if m.any() else 0.0
 
 

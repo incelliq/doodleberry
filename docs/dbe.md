@@ -72,7 +72,8 @@ environment variables below).
 - **Renderer parity** (WP-14, `dbe/rparity.py`): `render.parity {name, shot}` draws the shot's cast alone with the
   SVG renderer (`castonly=1`, without line boil) and with Synfig, Lottie and Grease Pencil at the same moments, and
   compares each with SVG: the better of the filled-silhouette overlap and a line F-score (ink within about 4 px of the
-  other's), at least 0.85, and the colour difference where both have ink, at most 24 of 255.
+  other's), at least 0.85, and the colour difference where both have ink, a pixel in from every edge (lines a
+  pixel apart are judged by the line score, not as colour), at most 24 of 255.
   `render.parity_bench` runs every benchmark shot. A renderer that cannot draw a shot says why (`rparity.CAPABILITIES`;
   `shot.render` refuses with the same reason), and styles a renderer draws without (line boil) are listed. What
   parity fixed: the bake now records every swap set's drawing (drawn levels and control-driven swaps were lost to
