@@ -938,6 +938,22 @@ The `text2` test uses zz-text, a copy of dialogue-demo with a narrator line firs
 middle of each line its sound-off cut draws a narration box for the narrator, a thought for Priya's thought and
 speech bubbles for the rest. The narration's typed letters hold at "One afternoon," for three of forty ticks.
 
+## Templates: a quadruped, a bird and an object with a face (WP-16, part 1)
+`puppet/examples/make_critters.py` writes three new templates (puppet/templates/), their clip libraries
+(puppet/clips/, read by the player and the bake) and an original character for each, drawn from shapes:
+
+| template | character | parts | clips |
+|---|---|---|---|
+| quadruped | Biscuit, a dog | body on the hips, head, two ears, a tail, four two-part legs (far and near) | idle, walk (a trot), wag, bark (the mouth opens), sit, talk |
+| bird | Pim | round body, head with a crest, a beak that talks (the mouth swap), two wings, a tail, two thin legs | idle, flap, hop, peck, talk |
+| object | Kettle, a teapot | a body that carries the face, lid, spout, handle, optional stubby arms | idle, bounce, wave, whistle (the lid rattles), talk |
+
+They are ordinary cut-out puppets, so every tool draws them. The `templates` test lints each against its template and
+plays its whole clip library in one shot. Renderer parity then holds against Synfig, Lottie and Grease Pencil: scores
+of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in from every edge. A pale fill inside
+thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
+deliberately recoloured render still reads 38.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

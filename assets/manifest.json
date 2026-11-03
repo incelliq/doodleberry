@@ -446,6 +446,26 @@
    "path": "puppet/examples/nib_photo.png",
    "license": "CC0-1.0",
    "note": "drawn by make_nib_photo.py (a simulated phone photo of an original doodle)"
+  },
+  {
+   "path": "puppet/examples/biscuit.puppet.json",
+   "license": "CC0-1.0",
+   "note": "Biscuit, a dog (quadruped template), drawn in code by make_critters.py (WP-16)"
+  },
+  {
+   "path": "puppet/examples/pim.puppet.json",
+   "license": "CC0-1.0",
+   "note": "Pim, a bird (bird template), drawn in code by make_critters.py (WP-16)"
+  },
+  {
+   "path": "puppet/examples/kettle.puppet.json",
+   "license": "CC0-1.0",
+   "note": "Kettle, a teapot with a face (object template), drawn in code by make_critters.py (WP-16)"
+  },
+  {
+   "path": "puppet/templates/quadruped.json",
+   "license": "CC0-1.0",
+   "note": "quadruped, bird and object templates and their clip libraries (puppet/clips/), written by make_critters.py (WP-16)"
   }
  ],
  "tools_not_bundled": [

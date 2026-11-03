@@ -34,7 +34,7 @@ covered, now added to their packages' scopes.
 | Raster parts (PNG/painted) with pivots | PRO (Moho, Spine, Live2D) | ✅ | – | puppet v0.3 raster parts (`puppet.from_ink`, `doodle.snap`); SVG, Synfig and Lottie (render.parity, WP-14); Grease Pencil refuses them |
 | Import layered PSD/Krita/SVG/AI, auto-splitting parts by layer name | PRO (Character Animator, Moho) | 🟡 | P0 | `puppet.import` reads layered SVG, PSD, ORA (1.3) and Krita .kra directly (WP-18); AI: WP-18 |
 | Paper sketch → vector (scan or photo, then trace) | NEW | ⬜ | P1 | vector tracing (VTracer, potrace): WP-18 |
-| Templates with ghost guides (humanoid, quadruped, bird, blob, object-with-face) | PRO/NEW | 🟡 | P1 | humanoid and doodle templates; ghost guides for drawing requests (3.6); quadruped, bird, object: WP-16 |
+| Templates with ghost guides (humanoid, quadruped, bird, blob, object-with-face) | PRO/NEW | 🟡 | P1 | humanoid and doodle templates; ghost guides for drawing requests (3.6); quadruped, bird and object-with-a-face templates with clip libraries and example characters (Biscuit, Pim, Kettle), each drawn alike by every renderer (WP-16); blob open |
 | Model sheet and turnaround board (front, 3/4, side, back) with height lines | PRO | ✅ | – | `puppet.sheet` model sheets (1.4); `puppet.board` turnaround with the front view's height lines and an off-model check, in the Rig Canvas (WP-18) |
 | Expression sheet and mouth-chart boards with onion skin | PRO | ✅ | – | `puppet.board` mouth chart and expressions, side by side over an onion ghost, in the Rig Canvas (WP-18) |
 | Costumes and outfits as swap sets; accessories | PRO | ⬜ | P1 | outfits as swap sets: WP-16 |
