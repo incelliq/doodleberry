@@ -679,7 +679,7 @@
       "ref": [
        "WP-11"
       ],
-      "note": "Travel is straight or ballistic (props); follow-path constraints and walking along a path are WP-11, motion arcs are WP-09."
+      "note": "Travel is straight or ballistic (props, with motion arcs from fx.arcs); follow-path constraints and walking along a path are WP-11."
      }
     },
     {
@@ -1441,9 +1441,10 @@
       "kind": "partial",
       "ref": [
        "shot.render",
-       "WP-09"
+       "shots.json fx.arcs",
+       "WP-36"
       ],
-      "note": "Stepped timing (style.step) and speed lines exist; smears and motion trails are WP-09."
+      "note": "Stepped timing (style.step), speed lines, motion arcs and prop smears with multiples exist; echo, time displacement and timewarp are WP-36."
      }
     },
     {

@@ -372,6 +372,265 @@
        }
       }
      }
+    },
+    "props": {
+     "type": "array",
+     "description": "props: attach keys (ballistic flights, drops), baked physics tracks, squash/stretch/smear; see dbe/player/props.js",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "r": {
+        "type": "number",
+        "exclusiveMinimum": 0
+       },
+       "color": {
+        "type": "string"
+       },
+       "svg": {
+        "type": "string"
+       },
+       "shape": {
+        "enum": [
+         "ball",
+         "box"
+        ]
+       },
+       "size": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+       },
+       "gravity": {
+        "type": "number"
+       },
+       "travel": {
+        "type": "number"
+       },
+       "arc": {
+        "type": "number"
+       },
+       "spin": {
+        "type": "number"
+       },
+       "attach": {
+        "type": "array",
+        "items": {
+         "type": "array",
+         "minItems": 2,
+         "maxItems": 2
+        }
+       },
+       "track": {
+        "type": "object",
+        "required": [
+         "frames"
+        ],
+        "properties": {
+         "t0": {
+          "type": "number"
+         },
+         "fps": {
+          "type": "number",
+          "exclusiveMinimum": 0
+         },
+         "frames": {
+          "type": "array",
+          "items": {
+           "type": "array",
+           "minItems": 3,
+           "maxItems": 3,
+           "items": {
+            "type": "number"
+           }
+          }
+         },
+         "contacts": {
+          "type": "array",
+          "items": {
+           "type": "array"
+          }
+         }
+        }
+       },
+       "stretch": {
+        "type": [
+         "boolean",
+         "object"
+        ]
+       },
+       "squash": {
+        "type": [
+         "boolean",
+         "object"
+        ]
+       },
+       "smear": {
+        "type": [
+         "boolean",
+         "object"
+        ]
+       },
+       "impact": {
+        "type": "boolean"
+       },
+       "solved": {
+        "enum": [
+         "juggle",
+         "physics"
+        ]
+       }
+      }
+     }
+    },
+    "juggle": {
+     "type": "object",
+     "description": "WP-09 juggling solver input (juggle.solve): a siteswap on the beat grid",
+     "properties": {
+      "cast": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "pattern": {
+       "type": "string",
+       "pattern": "^[0-9a-z]+$"
+      },
+      "start": {
+       "type": [
+        "number",
+        "string"
+       ]
+      },
+      "end": {
+       "type": [
+        "number",
+        "string"
+       ]
+      },
+      "every": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "dwell": {
+       "type": "number",
+       "exclusiveMinimum": 0
+      },
+      "subdiv": {
+       "type": "integer",
+       "minimum": 1
+      },
+      "height": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "r": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "balls": {
+       "type": "array",
+       "items": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "physics": {
+     "type": "object",
+     "description": "WP-09 multi-body physics (physics.solve, deterministic Rapier), baked into prop tracks",
+     "properties": {
+      "start": {
+       "type": [
+        "number",
+        "string"
+       ]
+      },
+      "end": {
+       "type": [
+        "number",
+        "string"
+       ]
+      },
+      "gravity": {
+       "type": "number"
+      },
+      "floor": {
+       "type": "number"
+      },
+      "walls": {
+       "type": "boolean"
+      },
+      "retime": {
+       "type": [
+        "boolean",
+        "string",
+        "object"
+       ]
+      },
+      "solved_hash": {
+       "type": "string"
+      },
+      "bodies": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "id"
+        ],
+        "properties": {
+         "id": {
+          "type": "string"
+         },
+         "prop": {
+          "type": "boolean"
+         },
+         "shape": {
+          "enum": [
+           "ball",
+           "box"
+          ]
+         },
+         "r": {
+          "type": "number"
+         },
+         "size": {
+          "type": "array"
+         },
+         "at": {
+          "type": "array"
+         },
+         "v": {
+          "type": "array"
+         }
+        }
+       }
+      },
+      "static": {
+       "type": "array",
+       "items": {
+        "type": "object"
+       }
+      },
+      "impulses": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "required": [
+         "t",
+         "body"
+        ]
+       }
+      }
+     }
     }
    }
   }

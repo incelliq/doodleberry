@@ -1,0 +1,51 @@
+{
+ "titles": [
+  {
+   "text": "Three balls, one beat",
+   "by": "Claude (engine demo, WP-09)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "statement"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  },
+  {
+   "text": "Can Pip keep three balls up?",
+   "by": "Claude (engine demo, WP-09)",
+   "checks": {
+    "ok": true,
+    "truth": {
+     "ok": true,
+     "problems": [],
+     "kind": "question"
+    },
+    "newcomer": {
+     "ok": true,
+     "problems": []
+    }
+   }
+  }
+ ],
+ "thumbnails": [
+  {
+   "top": "THREE BALLS",
+   "bottom": "ON THE BEAT",
+   "by": "Claude (engine demo, WP-09)",
+   "checks": {
+    "ok": true,
+    "problems": []
+   }
+  }
+ ],
+ "chosen": {
+  "title": 0,
+  "thumbnail": 0
+ }
+}

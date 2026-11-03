@@ -1,0 +1,9 @@
+{
+  "name": "doodleberry-physics",
+  "private": true,
+  "description": "Deterministic 2D physics for the physics.solve bake (WP-09). Installed by `bash tools/setup.sh physics`.",
+  "type": "module",
+  "dependencies": {
+    "@dimforge/rapier2d-deterministic-compat": "0.21.0"
+  }
+}

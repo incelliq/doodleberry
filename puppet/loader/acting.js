@@ -7,7 +7,8 @@
 //     poses: [[0, 'neutral'], [3, 'arms_crossed']],     // preset keys (blended over `poseBlend` s)
 //     visemes: [[0.4, 'small'], [0.44, 'wide'], ...],    // from timing.json "visemes"[speaker]
 //     look: [[0, [1, 0]], [4, [-1, 0.3]]],               // gaze keys
-//     ik: { arm_R: [[1, [460, 420]]] },                  // reach targets in artboard space over time
+//     ik: { arm_R: [[1, [460, 420]]] },                  // reach targets in artboard space over time (a null key lets go)
+//     ik_bend: { arm_L: 1 },                             // which way an elbow or knee bends (default from LIMBS)
 //     pins: { foot_L: 'auto', foot_R: 'auto' },          // keep planted feet planted during walks
 //     springs: true,                                     // hair/tie/coat follow-through (from puppet.springs)
 //     blinks: [t, ...], blink: false,                   // scripted blinks; false turns off automatic blinking
@@ -29,7 +30,7 @@
         const [t0, v0] = keys[i - 1], [t1, v1] = keys[i];
         const k = smooth(clamp((t - t0) / (t1 - t0 || 1)));
         if (typeof v0 === 'number') return v0 + (v1 - v0) * k;
-        if (Array.isArray(v0)) return v0.map((x, j) => x + (v1[j] - x) * k);
+        if (Array.isArray(v0)) return Array.isArray(v1) ? v0.map((x, j) => x + (v1[j] - x) * k) : v0;
         return v0; // discrete values (swap names, contacts) hold until the next key
       }
     }
@@ -265,7 +266,8 @@
     // IK reach targets
     for (const [limb, keys] of Object.entries(tl.ik || {})) {
       const tgt = sampleKeys(keys, t); if (!tgt) continue;
-      const [u, l, e, bend] = LIMBS[limb]; Object.assign(pose.angles, ik2(puppet, pose, u, l, e, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]], bend));
+      const [u, l, e, bend0] = LIMBS[limb], bend = (tl.ik_bend || {})[limb] ?? bend0;
+      Object.assign(pose.angles, ik2(puppet, pose, u, l, e, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]], bend));
     }
     // foot pins: during contact phases a foot stays where it first touched down
     if (tl.pins) for (const foot of ['foot_L', 'foot_R']) {

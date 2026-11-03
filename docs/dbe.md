@@ -334,8 +334,13 @@ and any frame renders on its own:
 - `speed_lines: true | {"parts": ["hand_R", "hand_L"], "min": 650}`: three tapered strokes trail a part whose speed in
   the frame passes `min` px/s;
 - `dust: true | {"min_drop": 14}`: puffs at the feet when a character lands (its hips decelerate sharply after a drop);
-- `impacts: true`: a star burst where a prop arrives at the end of its travel (a catch or a drop).
-Off by default, so existing films are unchanged. `films/fx-demo` is the props demo with all three on.
+- `impacts: true`: a star burst where a prop arrives at the end of its travel (a catch or a drop);
+- `arcs: true | {"props": ["red"], "length": 0.5}`: the motion arc a moving prop has just travelled, a fading dotted
+  trail like an animator's arc guide (WP-09).
+Per prop (WP-09): `"stretch": true` stretches it along its velocity (area kept), `"squash": true` squashes it on every
+contact (catches, bounces, baked hits) and wobbles back, `"smear": true` draws a smear frame with multiples when it
+moves more than its radius in one frame. Off by default, so existing films are unchanged. `films/fx-demo` is the props
+demo with the first three on; `films/juggle-demo` uses all of them.
 
 ## Cartoon physics for props (plan 2.19, first part)
 A prop's attach key can ask for physics (SVG player; deterministic, so frames stay pure):
@@ -344,8 +349,22 @@ A prop's attach key can ask for physics (SVG player; deterministic, so frames st
   after re-voicing or translation.
 - `"drop": {"floor": y, "x": x, "e": 0.55, "roll": 0.75}`: released at the key time, the prop falls, bounces with
   restitution `e`, rolls towards `x` and spins as it rolls. With `fx.impacts` on, each bounce draws a ring.
-`gravity` (px/s², default 2600) is set per prop. Multi-body scenes (stacks, tumbling objects) are the next step, with the
-deterministic Rapier 2D build measured in the brainstorm.
+`gravity` (px/s², default 2600) is set per prop. Prop motion lives in `dbe/player/props.js`, shared by the player, the
+effects and the Node solvers.
+
+## Juggling and multi-body physics (WP-09)
+- `juggle.solve {name, shot}` reads the shot's `"juggle"` block (`pattern`: a vanilla siteswap such as `"3"`, `"441"`,
+  `"531"`; `start`, `end` (line-relative allowed); `every` beats per throw; `dwell` in throws; `subdiv` of the beat;
+  `height`; `balls`) and writes one prop per ball (held in a palm, then ballistic flights) and both arms' IK keys,
+  with every throw and catch on the beat grid of `score.json`. Output is tagged `"solved": "juggle"`; re-solving after a
+  tempo or voice change replaces it.
+- `physics.solve {name, shot}` bakes the shot's `"physics"` block with Rapier's deterministic build
+  (`bash tools/setup.sh physics`): `bodies` (balls and boxes, or `{"id", "prop": true}` to take over a prop from its
+  own motion at `start`), `static` boxes or segments (`"draw": true` shows them), `floor`, `walls`, `impulses`
+  (`{t, body, v}`), `retime` (the strongest contacts move to the nearest grid point; between them time is warped by
+  0.75 to 1.33×). The result is a `track` per prop (`{t0, fps, frames: [[x, y, deg]], contacts}`) and the bake's
+  sha256 in the block; a rerun reproduces it byte for byte (`python -m dbe test '{"film": "motion"}'`).
+- Timeline `ik_bend` (`{"arm_L": 1}`) picks which way an elbow or knee bends; a `null` IK key lets the limb go.
 
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values

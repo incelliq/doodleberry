@@ -1141,7 +1141,7 @@
       "ref": [
        "WP-15"
       ],
-      "note": "Sub-frame motion blur on fast shots only is WP-15; cartoon speed lines exist and smear frames are WP-09."
+      "note": "Sub-frame motion blur on fast shots only is WP-15; cartoon speed lines and prop smear frames exist."
      }
     },
     {
@@ -1153,9 +1153,10 @@
       "ref": [
        "shot.render",
        "shots.json fx.speed_lines",
-       "WP-09"
+       "shots.json props smear",
+       "WP-15"
       ],
-      "note": "Speed lines trail fast parts (data on a shot); smear frames and motion arcs are WP-09."
+      "note": "Speed lines trail fast parts, props smear with ghosted multiples and draw motion arcs; frame blending is WP-15."
      }
     },
     {

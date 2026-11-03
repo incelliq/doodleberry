@@ -2034,7 +2034,7 @@
       "ref": [
        "WP-42"
       ],
-      "note": "Props already fall, bounce and roll under gravity (drop, ballistic flight), but there is no particle system; multi-body physics is WP-09."
+      "note": "Props fall, bounce and roll under gravity, and multi-body scenes are baked with Rapier (physics.solve), but there is no particle system."
      }
     },
     {

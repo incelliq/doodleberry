@@ -965,7 +965,7 @@
        "shots.json shots[].cast[].place",
        "WP-11"
       ],
-      "note": "Point-to-point travel; follow-path constraints are WP-11; motion arcs WP-09"
+      "note": "Point-to-point travel; follow-path constraints are WP-11; props draw motion arcs (fx.arcs)"
      }
     },
     {

@@ -279,6 +279,13 @@
    "license": "Apache-2.0",
    "class": "permissive",
    "use": "image conversion and EXR tools, for WP-37"
+  },
+  {
+   "name": "Rapier 2D, deterministic build (@dimforge/rapier2d-deterministic-compat 0.21.0, npm)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "source": "https://github.com/dimforge/rapier",
+   "use": "multi-body physics bakes (physics.solve, WP-09); installed into tools/physics/node_modules by tools/setup.sh physics, not committed"
   }
  ],
  "external": [

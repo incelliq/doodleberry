@@ -640,11 +640,12 @@
      "capability": "Bone physics: pill-shaped collision regions, motors (speed and torque), and lock tip, inside a physics group.",
      "pro_use": "Used for ragdolls, machines and objects that tumble.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
-       "WP-09"
+       "physics.solve",
+       "WP-42"
       ],
-      "note": "Only props have physics (ballistic flights, drops, bounces). Multi-body scenes with deterministic Rapier are WP-09."
+      "note": "Rigid bodies (balls, boxes, props) collide with each other and with static colliders in physics.solve (deterministic Rapier). Physical bones (ragdolls, motors) are WP-42."
      }
     },
     {
@@ -680,9 +681,9 @@
      "match": {
       "kind": "gap",
       "ref": [
-       "WP-09"
+       "WP-42"
       ],
-      "note": "Springs follow only their driver part. Wind as an external force fits WP-09 (physics finished)."
+      "note": "physics.solve has gravity and kicks but no wind field; wind acting on springs and dynamic parts is WP-42."
      }
     },
     {
@@ -1336,12 +1337,12 @@
      "capability": "Physics tab: rigid bodies with mass, friction, bounciness and collisions between layers.",
      "pro_use": "Used for falling objects, stacks and collisions without hand keys.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "shots.json props attach flight/drop",
-       "WP-09"
+       "physics.solve",
+       "shots.json physics"
       ],
-      "note": "Single props get ballistic flights, drops, bounces and rolls, deterministically. Multi-body scenes with deterministic Rapier are WP-09."
+      "note": "Bodies with density, friction and restitution collide with each other and with static colliders (deterministic Rapier), baked into prop tracks; contacts can be retimed onto the beat."
      }
     }
    ]
@@ -2199,7 +2200,7 @@
        "puppet springs",
        "puppet chains wave"
       ],
-      "note": "Deterministic damped springs follow a driver part, and chains have a travelling wave. There is no gravity and no position or scale dynamics (WP-09)."
+      "note": "Deterministic damped springs follow a driver part, and chains have a travelling wave. Parts have no gravity and no position or scale dynamics (WP-42); props do (physics.solve)."
      }
     },
     {
@@ -2245,12 +2246,12 @@
      "capability": "Nudge a physics object: give it an impulse at a frame.",
      "pro_use": "Starts simulations on cue.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
-       "shots.json props attach flight",
-       "WP-09"
+       "physics.solve",
+       "shots.json physics impulses"
       ],
-      "note": "A prop's attach key starts a ballistic throw or drop at a time. Impulses in multi-body scenes are WP-09."
+      "note": "physics impulses {t, body, v} kick a body at a time; a prop's attach key starts a throw or drop."
      }
     },
     {

@@ -86,8 +86,8 @@ Measured on 2 November 2026 in this container (Ubuntu 24.04 packages).
 | Part | Licence (class) | Decision | Status |
 |---|---|---|---|
 | Blender `bpy` | GPL-2.0-or-later (copyleft) | link in a separate Python process | planned (WP-42) |
-| Rapier (2D physics) | Apache-2.0 (permissive) | link (WASM in the browser renderer) | planned (WP-09) |
-| Bullet (PyBullet) | zlib (permissive) | link for rigid bodies and cloth | planned (WP-09) |
+| **Rapier 0.21** (2D physics, cross-platform deterministic build) | Apache-2.0 (permissive) | link: the npm WASM package in Node (`tools/physics/`), baked into prop tracks so no renderer needs it | **working**: `physics.solve` (multi-body scenes, contacts retimed onto the beat); reruns byte-equal |
+| Bullet (PyBullet) | zlib (permissive) | link for cloth and soft bodies if needed | not needed for WP-09 (Rapier covers rigid bodies); planned with WP-42 if cloth is wanted |
 | Manifold | Apache-2.0 (permissive) | link (`manifold3d`) for solid booleans | planned (WP-42) |
 | OpenUSD | Apache-2.0 with trademark terms (permissive) | link (`usd-core`) for scene exchange | planned (WP-42) |
 
@@ -96,6 +96,7 @@ Measured on 2 November 2026 in this container (Ubuntu 24.04 packages).
     python -m dbe brush.paint '{"brush": "deevad/2B_pencil", "strokes": [[[40,120,0.3],[200,140,0.8],[360,120,0.3]]], "size": [400,240], "out": "out/stroke.png"}'
     python -m dbe pencil2d.write '{"frames": [{"frame": 1, "png": "a.png"}, {"frame": 3, "png": "b.png"}], "out": "out/level.pclx"}'
     python -m dbe pencil2d.render '{"file": "out/level.pclx", "out_dir": "out/level"}'
+    python -m dbe physics.solve '{"name": "juggle-demo", "shot": "s1"}'
     python -m dbe vector.boolean '{"shapes": ["<rect x=\"0\" y=\"0\" width=\"100\" height=\"100\"/>", "<circle cx=\"100\" cy=\"50\" r=\"50\"/>"], "op": "union"}'
 
 `bash tools/setup.sh oss` installs every installable part above (about 700 MB); `engine.doctor` reports them.

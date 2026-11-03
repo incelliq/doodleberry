@@ -1,9 +1,11 @@
 // Motion effects from the motion itself (plan 2.20): no hand placement. Enable per shot:
 //   "fx": {"speed_lines": true | {"parts": ["hand_R", "hand_L", "head"], "min": 650, "color": "#181e26"},
-//          "dust": true | {"min_drop": 14}, "impacts": true}
+//          "dust": true | {"min_drop": 14}, "impacts": true,
+//          "arcs": true | {"props": ["ball1"], "length": 0.5, "step": 0.0333, "color": "#181e26", "dots": true}}
 // - speed lines: three tapered strokes trailing a part whose speed (px/s in the frame) passes `min`
 // - dust: puffs at the feet when a character lands (its hips stop after falling at least `min_drop` px)
 // - impacts: a star burst where a prop arrives (caught or dropped at the end of its travel)
+// - arcs: the motion arc a moving prop has just travelled (WP-09), a fading dotted trail like an animator's arc guide
 // Everything is computed from poses at this and earlier times, so any frame renders on its own.
 (function () {
   const INK = '#181e26', f1 = n => (+n).toFixed(1), f3 = n => (+n).toFixed(3);
@@ -82,10 +84,31 @@
     return out;
   }
 
+  function arcs(cfg, props, propPos, t) {
+    const len = cfg.length ?? 0.5, step = cfg.step ?? 1 / 30, n = Math.max(2, Math.round(len / step)), only = cfg.props ? new Set(cfg.props) : null;
+    let out = '';
+    for (const pr of props) {
+      if (only && !only.has(pr.id)) continue;
+      const pts = []; for (let k = 0; k <= n; k++) { const q = propPos(pr, t - k * step); if (!q) break; pts.push(q); }
+      if (pts.length < 3) continue;
+      let travel = 0; for (let k = 1; k < pts.length; k++) travel += Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]);
+      if (travel < (pr.r || 34) * 1.5) continue;   // a held or resting prop draws no arc
+      const col = cfg.color || INK;
+      for (let k = 1; k < pts.length; k++) {
+        const a = pts[k - 1], b = pts[k], age = k / pts.length, op = 0.55 * (1 - age);
+        if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 0.5) continue;
+        out += `<path d="M${f1(a[0])} ${f1(a[1])} L${f1(b[0])} ${f1(b[1])}" stroke="${col}" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 9" opacity="${f3(op)}"/>`;
+        if (cfg.dots !== false && k % 2 === 0) out += `<circle cx="${f1(b[0])}" cy="${f1(b[1])}" r="${f1(4.5 * (1 - age * 0.6))}" fill="${col}" opacity="${f3(op)}"/>`;
+      }
+    }
+    return out;
+  }
+
   function render(sh, t, ctx) {
     const fx = sh.fx || {}; let out = '';
     if (fx.speed_lines) out += speedLines(fx.speed_lines === true ? {} : fx.speed_lines, ctx.casts, ctx.pointAt, t);
     if (fx.dust) out += dust(fx.dust === true ? {} : fx.dust, ctx.casts, ctx.pointAt, t);
+    if (fx.arcs) out += arcs(fx.arcs === true ? {} : fx.arcs, sh.props || [], ctx.propPos, t);
     if (fx.impacts) out += impacts(fx.impacts === true ? {} : fx.impacts, sh.props || [], ctx.propPos, t);
     return out;
   }

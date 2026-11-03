@@ -524,7 +524,7 @@ def _player_page(name):
     page = f"""<!doctype html><html><head><meta charset="utf-8"><style>@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}@font-face{{font-family:'Atkinson Mono';src:url('../../../engine/fonts/AtkinsonMono-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:400;src:url('../../../engine/fonts/NotoSansSinhala-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:700;src:url('../../../engine/fonts/NotoSansSinhala-700.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
-{clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
+{clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/props.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
 <script>window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     (d / "build" / "player.html").write_text(page)
@@ -629,7 +629,7 @@ def export_synfig(name, shot):
 
 
 # ---------------- whole film ----------------
-ENGINE_FILES = ["dbe/player/player.js", "dbe/player/kit.js", "dbe/player/fx.js", "dbe/player/comp.js", "puppet/loader/puppet.js", "puppet/loader/acting.js", "sets/sets.js", "sets/more.js", "tools/bake.mjs",
+ENGINE_FILES = ["dbe/player/player.js", "dbe/player/kit.js", "dbe/player/fx.js", "dbe/player/props.js", "dbe/player/comp.js", "puppet/loader/puppet.js", "puppet/loader/acting.js", "sets/sets.js", "sets/more.js", "tools/bake.mjs",
                 "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs"]
 
 
@@ -2373,6 +2373,10 @@ def test_golden(update=False, film=""):
         bad, meas = RPY.self_test(ROOT / "out" / "rparitytest")
         failed += 1 if bad else 0
         results.append({"rparity": "svg, synfig and lottie draw the same characters; refusals say why", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "motion":   # juggling and physics (WP-09): siteswaps, beat grid, deterministic Rapier bakes
+        bad, meas = _motion_test()
+        failed += 1 if bad else 0
+        results.append({"motion": "siteswaps, contacts on the beat grid, Rapier bakes rerun byte-equal", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
         from . import parity as PRT
         r = PRT.check()
@@ -3817,3 +3821,115 @@ def brand_assets(path="brand/brand.json", out="brand/out"):
         raise ValueError("brand.check fails: " + "; ".join(chk["errors"]))
     made = brand.assets(b, ROOT / out, str(ROOT / "engine" / "fonts" / "Fredoka.ttf"))
     return {"out": out, "files": made, "warnings": chk["warnings"]}
+
+
+# ---------------- motion: juggling and multi-body physics (WP-09) ----------------
+def _beat_grid(name):
+    sc = _json(FILMS / name / "score.json", {}) or {}
+    return 60.0 / float(sc.get("bpm") or 100), float(sc.get("offset_s") or 0)
+
+
+def _raw_shot(raw, shot):
+    for sh in raw["shots"]:
+        if sh["id"] == shot:
+            return sh
+    raise ValueError(f"no shot {shot!r}")
+
+
+def _juggle_into(name, raw, shot):
+    """solve the shot's juggle block into the raw shots.json (in memory); returns the solve summary or None"""
+    from . import juggle as J
+    rs = _raw_shot(raw, shot)
+    if not rs.get("juggle"):
+        return None
+    tm = _json(FILMS / name / "timing.json", {})
+    req = resolve_times(rs["juggle"], tm)
+    span = resolve_times({"start": rs.get("start", 0), "end": rs.get("end", 0)}, tm)
+    c = rs["cast"][int(req.get("cast", 0))]
+    pup = _json(ROOT / c["puppet"])
+    place = c.get("place") or {}
+    if isinstance(place, list):
+        place = place[0][1]
+    beat, off = _beat_grid(name)
+    res = J.solve(req, pup, place, beat, off, raw.get("fps", 30), float(span["start"]), float(span["end"]))
+    old = {p.get("id"): p for p in rs.get("props", []) if p.get("solved") == "juggle"}
+    for p in res["props"]:   # a later physics bake on the same ball survives a re-solve of the juggle
+        if "track" in old.get(p["id"], {}):
+            p["track"] = old[p["id"]]["track"]
+    J.apply(rs, res)
+    return {k: v for k, v in res.items() if k not in ("props", "ik", "ik_bend")}
+
+
+@command("juggle.solve", name=("string", "film"), shot=("string", "shot id"),
+         block=("object", "a juggle block to store first (pattern, start, end, every, dwell, subdiv, height, balls, cast); empty: the shot's own", None))
+def juggle_solve(name, shot, block=None):
+    """Solve a juggling pattern (WP-09): a siteswap ("3" cascade, "441", "531", ...) becomes one prop per ball with
+    ballistic flights and both arms' IK keys (a scoop while carrying, a lift while empty), every throw and catch on
+    the beat grid of score.json. The block stays in shots.json, so re-solving after a tempo change keeps it in step.
+    Returns the contacts and whether all of them are on the grid."""
+    d = _film(name)
+    raw = _json(d / "shots.json")
+    if block:
+        _raw_shot(raw, shot)["juggle"] = block
+    res = _juggle_into(name, raw, shot)
+    if res is None:
+        raise ValueError(f"shot {shot} has no juggle block")
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    return res
+
+
+@command("physics.solve", name=("string", "film"), shot=("string", "shot id"),
+         block=("object", "a physics block to store first (bodies, static, floor, walls, impulses, start, end, retime); empty: the shot's own", None))
+def physics_solve(name, shot, block=None):
+    """Bake a multi-body physics scene (WP-09) with Rapier's deterministic build: bodies (balls, boxes, or props
+    already in the shot, which start from their own motion) fall, bounce and collide with each other and with static
+    colliders; contacts are retimed onto the beat grid. Writes prop tracks into shots.json (re-solving the shot's
+    juggle first, if it has one) and the bake's sha256, which a rerun reproduces."""
+    d = _film(name)
+    raw = _json(d / "shots.json")
+    if block:
+        _raw_shot(raw, shot)["physics"] = block
+    res = _physics_into(name, raw, shot)
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    return res
+
+
+def _physics_into(name, raw, shot):
+    """juggle (if any) then bake the shot's physics into the raw shots.json in memory; returns the summary"""
+    from . import physics as PH
+    jug = _juggle_into(name, raw, shot)
+    rs = _raw_shot(raw, shot)
+    if not rs.get("physics"):
+        raise ValueError(f"shot {shot} has no physics block")
+    tm = _json(FILMS / name / "timing.json", {})
+    res_shot = resolve_times(rs, tm)
+    beat, off = _beat_grid(name)
+    blk = {k: v for k, v in res_shot["physics"].items() if k != "solved_hash"}
+    req = PH.request(blk, res_shot, raw.get("size", [1080, 1920]), raw.get("fps", 30), beat, off)
+    out = PH.run(req)
+    PH.apply(rs, {k: v for k, v in rs["physics"].items() if k != "solved_hash"}, out, req)
+    return {"hash": out["hash"], "rapier": out["rapier"], "keys": out["keys"], "contacts": len(out["contacts"]),
+            "bodies": list(out["bodies"]), **({"juggle": jug} if jug else {})}
+
+
+def _motion_test():
+    """WP-09 checks: the juggling solver, the physics bake, and juggle-demo re-solved from its blocks gives exactly the
+    committed props, IK keys and tracks (a rerun is hash-equal), with every juggling contact on the beat grid."""
+    from . import juggle as J, physics as PH
+    bad, meas = [], {}
+    j = J.self_test(); meas["juggle"] = j
+    if not j["ok"]:
+        bad.append({"juggle": j})
+    p = PH.self_test(); meas["physics"] = p
+    if not p["ok"]:
+        bad.append({"physics": p})
+    if PH.available() and (FILMS / "juggle-demo").exists():
+        raw = _json(FILMS / "juggle-demo" / "shots.json")
+        before = json.dumps(raw, sort_keys=True)
+        r = _physics_into("juggle-demo", raw, "s1")
+        same = json.dumps(raw, sort_keys=True) == before
+        meas["juggle_demo"] = {"rerun_equal": same, "hash": r["hash"][:16], "on_grid": r["juggle"]["on_grid"], "throws": r["juggle"]["throws"],
+                               "physics_keys_on_grid": all(abs(k["film"] / 0.3 - round(k["film"] / 0.3)) < 1e-6 for k in r["keys"]), "physics_keys": len(r["keys"])}
+        if not (same and r["juggle"]["on_grid"] and meas["juggle_demo"]["physics_keys_on_grid"] and r["keys"]):
+            bad.append({"juggle_demo": meas["juggle_demo"]})
+    return bad, meas

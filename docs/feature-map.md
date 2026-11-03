@@ -94,12 +94,12 @@ covered, now added to their packages' scopes.
 | Webcam face performance → puppet | PRO (Character Animator) | 🟡 | P1 | recorded takes become eye, brow, gaze and mouth keys (`actout.clip`, 3.5); live tracking: WP-12 |
 | "Act it out": phone video → body pose → clips and IK targets | NEW | ✅ | – | `actout.clip` and Studio /actout (plan 3.5), MediaPipe; rtmlib open |
 | 3D mocap retargeted to 2D | NEW | 🟡 | P2 | video to 2D clips with `actout.clip` (3.5); BVH and CMU mocap to 2D: WP-12 |
-| Animation principles as filters: anticipation, overshoot, follow-through, arcs | IDEA | ✅ | – | anticipation and overshoot filter (2.5), springs for follow-through; motion arcs: WP-09 |
-| Smears and motion lines on fast moves | PRO | 🟡 | P1 | speed lines, dust, impact stars from the motion (2.20); smears and arcs: WP-09 |
+| Animation principles as filters: anticipation, overshoot, follow-through, arcs | IDEA | ✅ | – | anticipation and overshoot filter (2.5), springs for follow-through; motion arcs on props (WP-09) |
+| Smears and motion lines on fast moves | PRO | ✅ | – | speed lines, dust, impact stars from the motion (2.20); smear frames, stretch, squash and motion arcs on props (WP-09) |
 | Multi-character interaction: handshake, hug, hand-off, eye contact | NEW | ⬜ | P1 | handshake, hug, hand-off, eye contact: WP-11 |
 | Listener behaviour: whoever isn't speaking reacts | NEW | ✅ | – | listener gaze, nods and blinks in `acting.plan` (2.3) |
 | Crowds with variation | PRO | ⬜ | P2 | crowds: WP-42 |
-| Prop physics: drops, bounces, rolls | PRO | ✅ | – | throws, drops, bounces, rolls solved at bake time (2.19); multi-body: WP-09 |
+| Prop physics: drops, bounces, rolls | PRO | ✅ | – | throws, drops, bounces, rolls solved at bake time (2.19); juggling and multi-body Rapier scenes on the beat (WP-09) |
 | Frame-by-frame drawn effects layer (hand-drawn splashes, smoke) | PRO (TVPaint, GP) | 🟡 | P2 | drawn levels play in films beside rigged puppets (`films/level-demo`: a campfire and a walk on twos); drawn frame by frame with onion skins on the Studio drawing page (`/draw`, WP-35) |
 | **Comedy timing toolkit:** scripted blinks on cue (one per dot of "..."), holds, double-takes, the long stare, the button move after the last line, rule-of-three escalation | NEW | ✅ | – | `acting.direct` gags and scripted blinks (2.11) |
 | Gag library: reusable beat patterns, e.g. stare plus slow push-in, shout plus camera shake, silent "..." bubble with blinks, tiny hop as a button | IDEA | ✅ | – | double take, long stare, slow burn, deadpan, button, rule of three (2.11); camera beats: WP-10 |

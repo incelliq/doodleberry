@@ -9,6 +9,7 @@
 #                                  Pencil renderer (needs 4.3 or newer; Ubuntu's package is 4.0)
 #   bash tools/setup.sh oss        optional open-source parts (WP-34): Pencil2D, Inkscape, Synfig, libmypaint and the
 #                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
+#   bash tools/setup.sh physics    deterministic Rapier 2D (npm, pinned in tools/physics/package.json) for physics.solve (WP-09)
 # Then: python -m dbe engine.doctor
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -77,6 +78,12 @@ oss_deps() {
   DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need)
 }
 
+physics_deps() {
+  # deterministic Rapier (Apache-2.0) for physics.solve (WP-09); pinned in tools/physics/package.json
+  if [ -d "tools/physics/node_modules/@dimforge/rapier2d-deterministic-compat" ]; then echo "physics: rapier ok"; return; fi
+  (cd tools/physics && npm install --no-audit --no-fund)
+}
+
 blender_dl() {
   local ver="5.2.3" sha="78486c018b4443efe5e75ab54c290ed8c15abafd249b862c2c9ce2530a918eec"
   if [ -x /opt/blender/blender ] && /opt/blender/blender --version 2>/dev/null | grep -q "Blender $ver"; then echo "blender: $ver installed"; return; fi
@@ -94,7 +101,8 @@ case "$what" in
   node) node_deps ;;
   oss) oss_deps ;;
   blender) blender_dl ;;
-  all) system; python_deps; models; node_deps ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender]"; exit 2 ;;
+  physics) physics_deps ;;
+  all) system; python_deps; models; node_deps; physics_deps ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

@@ -95,6 +95,9 @@ def check(deep=True):
         js = "require('playwright').chromium.launch().then(async b=>{const p=await b.newPage();await p.setContent('<b>ok</b>');console.log(await p.textContent('b'));await b.close()})"
         c2, o2 = _run(["node", "-e", js], timeout=90, env=env)
         add("headless Chromium starts", "core", c2 == 0 and o2.endswith("ok"), True, o2[-200:], "npx playwright install chromium   (or point PLAYWRIGHT_BROWSERS_PATH at an installed browser)")
+    from . import physics as PHY   # WP-09: deterministic Rapier for physics.solve (an npm package in tools/physics)
+    add("node package @dimforge/rapier2d-deterministic-compat", "tools", PHY.available(), False, str(PHY.PKG) if PHY.available() else "not installed",
+        "bash tools/setup.sh physics   (deterministic Rapier 0.21: physics.solve, WP-09)")
     egl = ctypes.util.find_library("EGL")
     add("system library libEGL", "tools", egl, False, egl or "missing (MediaPipe's native library needs it)", "apt-get install -y libegl1 libgles2")
     kd = VOICES / "kokoro"
