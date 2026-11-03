@@ -112,6 +112,9 @@ def check(deep=True):
     dlp = ROOT / "tools" / "dotlottie" / "node_modules" / "@lottiefiles" / "dotlottie-web"   # WP-23: draws .lottie themes in lottie.dotlottie's checks
     add("node package @lottiefiles/dotlottie-web", "tools", dlp.exists(), False, str(dlp) if dlp.exists() else "not installed",
         "bash tools/setup.sh dotlottie   (the dotLottie player: lottie.dotlottie and sticker.pack's dotlottie checks, WP-23)")
+    mbp = ROOT / "tools" / "mapboard" / "node_modules" / "d3-geo"   # WP-16: makes and checks the map board's data
+    add("node package d3-geo (map board)", "tools", mbp.exists(), False, str(mbp) if mbp.exists() else "not installed",
+        "bash tools/setup.sh maps   (d3-geo, topojson-client, world-atlas: tools/mapboard, WP-16)")
     from . import assists as ASM   # WP-43 ML assists: model files (fetched by tools/setup.sh models, or on first use)
     for name in ("rife49", "depth_small"):
         mp = ASM.MODELS / ASM.REGISTRY[name]["file"]

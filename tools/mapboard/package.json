@@ -1,0 +1,10 @@
+{
+  "name": "doodleberry-mapboard",
+  "private": true,
+  "description": "d3-geo and topojson-client with Natural Earth (world-atlas), to project the map board's countries (WP-16)",
+  "dependencies": {
+    "d3-geo": "3.1.1",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2"
+  }
+}

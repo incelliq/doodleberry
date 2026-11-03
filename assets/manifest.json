@@ -466,6 +466,24 @@
    "path": "puppet/templates/quadruped.json",
    "license": "CC0-1.0",
    "note": "quadruped, bird and object templates and their clip libraries (puppet/clips/), written by make_critters.py (WP-16)"
+  },
+  {
+   "path": "sets/maps/world.js",
+   "license": "public domain (Natural Earth via world-atlas)",
+   "class": "public-domain",
+   "note": "map board data projected with d3-geo by tools/mapboard/make.mjs (WP-16)"
+  },
+  {
+   "path": "sets/maps/south-asia.js",
+   "license": "public domain (Natural Earth via world-atlas)",
+   "class": "public-domain",
+   "note": "map board data projected with d3-geo by tools/mapboard/make.mjs (WP-16)"
+  },
+  {
+   "path": "sets/maps/indo-pacific.js",
+   "license": "public domain (Natural Earth via world-atlas)",
+   "class": "public-domain",
+   "note": "map board data projected with d3-geo by tools/mapboard/make.mjs (WP-16)"
   }
  ],
  "tools_not_bundled": [
@@ -713,6 +731,24 @@
    "license": "MIT",
    "class": "permissive",
    "use": "export.godot writes a Godot 4.5 project (WP-30); the engine is not bundled or run here"
+  },
+  {
+   "name": "d3-geo 3.1.1",
+   "license": "ISC",
+   "class": "permissive",
+   "use": "projects the map board's countries (Natural Earth 1) in tools/mapboard/make.mjs and checks the set's projection (WP-16); npm-installed into tools/mapboard (pinned), not committed"
+  },
+  {
+   "name": "topojson-client 3.1.0",
+   "license": "ISC",
+   "class": "permissive",
+   "use": "reads world-atlas TopoJSON in tools/mapboard (WP-16); npm-installed, not committed"
+  },
+  {
+   "name": "world-atlas 2.0.2 (Natural Earth 1:110m and 1:50m countries as TopoJSON)",
+   "license": "ISC (package); Natural Earth data public domain",
+   "class": "public-domain",
+   "use": "source of the map board's country shapes (WP-16); npm-installed into tools/mapboard, not committed"
   }
  ],
  "external": [

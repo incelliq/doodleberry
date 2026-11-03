@@ -22,7 +22,7 @@ from pathlib import Path
 
 ORD = {"first": 0, "second": 1, "third": 2, "fourth": 3, "fifth": 4, "1st": 0, "2nd": 1, "3rd": 2, "4th": 3, "5th": 4, "last": -1}
 NUMW = {"a": 1.0, "one": 1.0, "half a": 0.5, "a half": 0.5, "two": 2.0, "three": 3.0, "a quarter of a": 0.25}
-SETS = ["plain", "park", "clinic", "paper", "cutaway", "kitchen", "classroom", "office", "street", "farm", "bedroom", "forest", "lab", "night", "reservoir", "stage"]
+SETS = ["plain", "park", "clinic", "paper", "cutaway", "kitchen", "classroom", "office", "street", "farm", "bedroom", "forest", "lab", "night", "reservoir", "stage", "map"]
 ACT = r"\b(nod|nods|shrug|shrugs|wave|waves|point|points|look|looks|glance|glances|smile|smiles|frown|frowns|jump|jumps|clap|claps|laugh|laughs|sigh|sighs|turn|turns|lean|leans|scratch|scratches|facepalm|celebrat\w*|nervous|excited|sad|angry|happy|surprised|double take|stomp|stomps|cross|crosses|thumbs up|bow|bows)\b"
 
 

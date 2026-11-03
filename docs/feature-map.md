@@ -109,7 +109,7 @@ covered, now added to their packages' scopes.
 ## 4. Staging, camera, effects
 | Feature | Source | Status | Priority | Notes |
 |---|---|---|---|---|
-| Set templates | NEW | ✅ | – | 16 sets (1.6); map board and anatomy plates: WP-16 |
+| Set templates | NEW | ✅ | – | 16 sets (1.6); the map board (`set: "map"`: Natural Earth projected with d3-geo, pins, routes, regions, keyed pans; WP-16); anatomy plates: WP-16 |
 | Layered sets with parallax and multiplane depth | PRO (Harmony) | ✅ | P1 | shots.json `comp` depth planes: parallax by 1/depth, depth of field, cast on planes (`films/night-planes`, WP-36) |
 | Camera pan and zoom | PRO | ✅ | – | folded into the bake for every renderer |
 | Camera grammar: shake, follow a character, auto-framing with caption headroom, punch-in on emphasis | NEW | ✅ | – | `camera_auto` (2.6) |

@@ -954,6 +954,32 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Map board (WP-16)
+`"set": "map"` puts a framed map on a wall (the characters stand in front of it), or fills the frame with
+`"full": true`. The map data are Natural Earth countries (world-atlas TopoJSON, public domain) projected by d3-geo's
+Natural Earth 1 projection into SVG paths: `node tools/mapboard/make.mjs <name> <110m|50m|10m> <centre lon> [lon0 lat0
+lon1 lat1]` writes sets/maps/<name>.js (the box keeps what lies inside it plus 12 degrees). Made so far: `world`
+(1:110m), `south-asia` (1:50m, 60-100 E) and `indo-pacific` (1:110m, centred on 160 E, so the Pacific is not cut).
+The player page loads only the maps its shots use. Everything placed on the map uses the set's own copy of the
+projection (`MAPS.project`), so a pin lands where the data puts the place. `set_opts`:
+
+| key | what |
+|---|---|
+| `map` | which map (default `world`) |
+| `view` | `[lon0, lat0, lon1, lat1]` shown whole in the board, or keys `[{t, view}]` eased between (a pan or zoom) |
+| `highlight` | `[{country, colour, at}]`: a country fills in from `at` seconds |
+| `pins` | `[{lon, lat, label, at, colour}]`: a pin drops in with a bounce, then its label |
+| `routes` | `[{from, to, at, dur, colour, bend}]`: from and to are `[lon, lat]` or a country; a dashed curve draws itself |
+| `boxes` | `[{lon0, lat0, lon1, lat1, label, at, colour}]`: a region outlined (Natural Earth bends its sides) |
+| `labels` | `[{country or lon, lat, text, at}]` |
+| `title`, `land`, `sea`, `wall`, `floor`, `fit` | the board's title strip and colours; `fit: "cover"` fills the board instead |
+
+Faint swell marks drift on the sea so a held map never freezes. Every label is text, so it translates with the film.
+Setup: `bash tools/setup.sh maps` (d3-geo 3.1.1, topojson-client 3.1.0, world-atlas 2.0.2, pinned in
+tools/mapboard/package.json; ISC). Test `mapboard`: on every map the set's projection agrees with d3-geo's on a
+7.5 by 5 degree grid (largest difference 0), five capitals are inside their countries, the same time draws the same
+SVG, and in the real player page a pin's red is at the projected point after it drops and absent before.
+
 ## Palette variants per scene (WP-16)
 A shot with `"palette_variant": "night"` (or `sick`, `cold`, `warm`; cast/palette_variants.json) recolours its
 characters: every palette colour and every literal colour in their drawings (strokes, swap shapes, view overrides)

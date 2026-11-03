@@ -27,7 +27,7 @@ import numpy as np
 
 SETS = {"park": "in a park", "clinic": "in a clinic", "paper": "on a sheet of paper", "cutaway": "in a cutaway of the ground", "kitchen": "in a kitchen",
         "classroom": "in a classroom", "office": "in an office", "street": "on a street", "farm": "on a farm", "bedroom": "in a bedroom", "forest": "in a forest",
-        "lab": "in a lab", "night": "under a night sky", "reservoir": "by a reservoir", "stage": "on a stage", "space": "in space"}
+        "lab": "in a lab", "night": "under a night sky", "reservoir": "by a reservoir", "stage": "on a stage", "map": "in front of a map", "space": "in space"}
 VERBS = {"celebrate": "cheers", "clap": "claps", "cross_arms": "folds their arms", "facepalm": "puts their face in their hand", "head_shake": "shakes their head",
          "jump": "jumps", "nod": "nods", "point_L": "points", "point_R": "points", "present_L": "gestures to the side", "present_R": "gestures to the side",
          "run": "runs", "sad": "droops", "scratch_head": "scratches their head", "shrug": "shrugs", "stomp": "stomps", "surprised": "starts in surprise",

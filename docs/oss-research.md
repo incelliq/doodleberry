@@ -269,7 +269,7 @@ A note on supply: Doodleberry should keep an **asset licence manifest** (source 
 | BodyParts3D | lifesciencedb.jp/bp3d | **CC BY-SA 2.1 Japan** per Z-Anatomy's attribution and Wikipedia [R]. One source claims CC BY 4.0 for v4.0 [R], so check the DBCLS site | 3D anatomy meshes | 3D anatomy shots. Note share-alike on derivatives | M |
 | Z-Anatomy | github.com/Z-Anatomy | **CC BY-SA 4.0** [R]. **Some bundled parts are CC BY-NC-SA** (for example the inner ear) [R] SA NC | Blender atlas | Use per-mesh with care; check each component | M |
 | Gray's Anatomy (1918) plates | Wikimedia Commons | Public domain (age) [U] | Line plates, good for chalk restyling | Vectorise with VTracer or potrace and use as reference layers | S |
-| **Natural Earth** | naturalearthdata.com; github.com/nvkelso/natural-earth-vector | **Public domain** [V] | Vector and raster maps at 1:10m, 1:50m and 1:110m | Map shots: project to SVG with d3-geo (BSD-3 [U]) or `world-atlas` TopoJSON (ISC [R]) | S |
+| **Natural Earth** | naturalearthdata.com; github.com/nvkelso/natural-earth-vector | **Public domain** [V] | Vector and raster maps at 1:10m, 1:50m and 1:110m | Map shots: project to SVG with d3-geo (ISC [V]: 3.1.1's package.json and LICENSE) from `world-atlas` TopoJSON (ISC [V]). **Used:** the map board (WP-16, `set: "map"`, tools/mapboard/) | S |
 | OpenStreetMap | openstreetmap.org | **ODbL** (attribution plus share-alike on the database) [U] | — | Local maps only, with attribution | — |
 
 ---

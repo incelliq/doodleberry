@@ -578,11 +578,13 @@ def _player_page(name):
     (d / "build").mkdir(exist_ok=True)
     tags = "".join(f'<script>window.PUPPETS=window.PUPPETS||{{}};window.PUPPETS[{json.dumps(p)}]={(ROOT / p).read_text()};</script>' for p in puppets)
     clip_tags = "".join(f'<script src="../../../puppet/clips/{c.name}"></script>' for c in sorted((ROOT / "puppet" / "clips").glob("*.js")))
+    maps = sorted({(sh.get("set_opts") or {}).get("map", "world") for sh in _shots(name)["shots"] if sh.get("set") == "map"})   # WP-16: the map board's data, only the maps used
+    map_tags = "".join(f'<script src="../../../sets/maps/{m}.js"></script>' for m in maps if (ROOT / "sets" / "maps" / f"{m}.js").exists())
     fonts_css, fonts_js = _script_fonts()
     page = f"""<!doctype html><html><head><meta charset="utf-8"><style>{fonts_css}@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}@font-face{{font-family:'Atkinson Mono';src:url('../../../engine/fonts/AtkinsonMono-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:400;src:url('../../../engine/fonts/NotoSansSinhala-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:700;src:url('../../../engine/fonts/NotoSansSinhala-700.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
-{clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/props.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
+{clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../sets/map.js"></script>{map_tags}<script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/props.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
 <script>window.SCRIPT_FONTS={fonts_js};window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};window.PALETTE_VARIANTS={json.dumps(_json(ROOT / "cast" / "palette_variants.json", {"variants": {}})["variants"])};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     pp = d / "build" / "player.html"
@@ -1179,7 +1181,7 @@ def export_synfig(name, shot):
 
 # ---------------- whole film ----------------
 ENGINE_FILES = ["dbe/player/player.js", "dbe/player/kit.js", "dbe/player/fx.js", "dbe/player/props.js", "dbe/player/comp.js", "puppet/loader/puppet.js", "puppet/loader/acting.js", "sets/sets.js", "sets/more.js", "tools/bake.mjs",
-                "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs", "cast/palette_variants.json"]
+                "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs", "cast/palette_variants.json", "sets/map.js"] + sorted(f"sets/maps/{f.name}" for f in (ROOT / "sets" / "maps").glob("*.js"))
 
 
 # ---------- transitions (WP-15): made when the shots are joined, centred on the cut, so timing and sound are unchanged ----------
@@ -5404,6 +5406,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "mapboard":   # WP-16: the map board set
+        bad, meas = _mapboard_test()
+        failed += 1 if bad else 0
+        results.append({"mapboard": "the map board's projection agrees with d3-geo on every map, Natural Earth puts five capitals inside their countries, the set is a pure function of time, and in the player a pin lands where the projection says", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "living":   # WP-27: corrections everywhere, companion guides, living films, intake, rebrand
         bad, meas = _living_test()
         failed += 1 if bad else 0
@@ -6871,7 +6877,7 @@ def film_aspects(name, aspects=None):
 # ---------------- aspect ratios (plan 1.12) ----------------
 SET_FLOOR = {"plain": 1500, "park": 1500, "clinic": 1500, "paper": 1440, "cutaway": 1100}
 SET_FLOOR_FRAC = {"plain": 0.8, "park": 0.8, "clinic": 0.8, "paper": 0.8, "cutaway": 0.55, "kitchen": 0.78, "classroom": 0.8, "office": 0.8,
-                  "street": 0.82, "farm": 0.74, "bedroom": 0.8, "forest": 0.8, "lab": 0.8, "night": 0.82, "reservoir": 0.82, "stage": 0.8}
+                  "street": 0.82, "farm": 0.74, "bedroom": 0.8, "forest": 0.8, "lab": 0.8, "night": 0.82, "reservoir": 0.82, "stage": 0.8, "map": 0.8}
 ASPECT_SIZE = {"16:9": [1920, 1080], "9:16": [1080, 1920], "1:1": [1080, 1080]}
 
 
@@ -9517,6 +9523,52 @@ def _templates_test():
             shutil.rmtree(d_, ignore_errors=True)
     return bad, meas
 
+
+
+def _mapboard_test():
+    """WP-16 map board. tools/mapboard/check.mjs: for every map in sets/maps/, MAPS.project (sets/map.js) agrees with
+    d3-geo's geoNaturalEarth1 on a 7.5 x 5 degree grid; five capitals are inside their countries by d3-geo's
+    geoContains on the Natural Earth source and inside the drawn country's box; the same time draws the same SVG;
+    a pin is placed where the projection says and is hidden before its time. Then a scratch film with a map shot,
+    drawn by the real player page: the pin's red is at the projected point after it drops, and not before."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    if not (ROOT / "tools" / "mapboard" / "node_modules" / "d3-geo").exists():
+        return ["d3-geo is not installed: bash tools/setup.sh maps"], meas
+    r = subprocess.run(["node", "tools/mapboard/check.mjs"], cwd=ROOT, capture_output=True, text=True, timeout=300)
+    try:
+        chk = json.loads(r.stdout)
+    except ValueError:
+        return [f"check.mjs failed: {r.stderr[-300:]}"], meas
+    meas["maps"] = {k: {kk: v[kk] for kk in ("countries", "projection_max_err", "pure", "pin_err")} for k, v in chk["maps"].items()}
+    if not chk["ok"]:
+        bad.append(f"map check: {[k for k, v in chk['maps'].items() if not v['ok']]}")
+    name = "zz-map"; d_ = FILMS / name
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        opts = {"map": "south-asia", "view": [72, 4, 90, 16], "pins": [{"lon": 79.86, "lat": 6.93, "at": 0.5, "colour": "#e00000"}]}
+        (d_ / "shots.json").write_text(json.dumps({"title": "map", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "renderer": "svg", "set": "map", "set_opts": opts, "start": 0, "end": 2.0, "bubbles": False, "cast": []}]}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        pp = _player_page(name)
+        meas["page_loads_map"] = "sets/maps/south-asia.js" in pp.read_text()
+        js = ("globalThis.window=globalThis;const fs=require('fs');for(const f of ['sets/sets.js','sets/map.js','sets/maps/south-asia.js'])new Function(fs.readFileSync(f,'utf8'))();"
+              "const o=JSON.parse(process.argv[1]);const s=SETS.map.draw(1.5,o,1080,1920);const t=/<g transform=\"translate\\(([\\d.-]+) ([\\d.-]+)\\) scale\\(([\\d.]+)\\)\">/.exec(s);"
+              "const p=MAPS.project(MAPS['south-asia'],79.86,6.93);console.log(JSON.stringify([+t[1]+p[0]*t[3],+t[2]+p[1]*t[3]]));")
+        x, y = json.loads(subprocess.run(["node", "-e", js, json.dumps(opts)], cwd=ROOT, capture_output=True, text=True).stdout)
+        px = {}
+        for t in (0.2, 1.5):
+            png = d_ / f"f{t}.png"
+            _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(t), "1", str(png)], timeout=300)
+            a = np.asarray(Image.open(png).convert("RGB")).astype(int)
+            win = a[int(y) - 60:int(y) - 20, int(x) - 10:int(x) + 10]   # the pin's head sits 50 px above its point
+            px[t] = int(((win[..., 0] > 200) & (win[..., 1] < 60) & (win[..., 2] < 60)).sum())
+        meas["pin_red_px"] = {"before": px[0.2], "after": px[1.5], "at": [round(x, 1), round(y, 1)]}
+        if not meas["page_loads_map"] or px[0.2] > 0 or px[1.5] < 150:
+            bad.append(f"player: {meas['pin_red_px']}, map script on the page: {meas['page_loads_map']}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _palette_test():
     """WP-16 palette variants. Every cast puppet and example, through every variant in cast/palette_variants.json:
