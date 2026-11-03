@@ -647,7 +647,7 @@
       "ref": [
        "WP-15"
       ],
-      "note": "Shot changes use whoosh cuts; cross-dissolves, match cuts and wipes are WP-15."
+      "note": "Shot changes use whoosh cuts, and cross-dissolves, wipes, slides, dips and iris transitions (WP-15); match cuts are WP-15."
      }
     }
    ]
@@ -2063,7 +2063,7 @@
        "film.render",
        "WP-15"
       ],
-      "note": "Shots re-render only when their content hash changes; the static-layer cache is WP-15."
+      "note": "Shots re-render only when their content hash changes, and static sets are drawn once as plates (WP-15)."
      }
     },
     {
@@ -2128,7 +2128,7 @@
        "film.render",
        "WP-15"
       ],
-      "note": "Shot renders are reused while their hash is unchanged; per-layer caching (static layers) is WP-15."
+      "note": "Shot renders are reused while their hash is unchanged; a static set is cached as a plate (WP-15), other layers are not cached."
      }
     },
     {

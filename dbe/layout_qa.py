@@ -149,15 +149,23 @@ def reading_time(shots_resolved, timing, captions=True):
 
 
 # ---------------- seams, cold open, mix ----------------
-def seams(video, cuts, fps):
+def seams(video, cuts, fps, windows=None):
+    """windows: {cut time: (frames before, frames after)} for cuts made as transitions (WP-15): the largest change
+    from one frame to the next anywhere in the transition counts"""
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf", "scale=192:108,format=gray", "-f", "rawvideo", "-"], capture_output=True, check=True).stdout
     fr = np.frombuffer(raw, np.uint8).reshape(-1, 108, 192).astype(np.float32)
     d = np.abs(np.diff(fr, axis=0)).mean(axis=(1, 2))
     out = []
     for c in cuts:
         i = int(round(c * fps)) - 1
+        w = (windows or {}).get(round(c, 3))
         if 0 <= i < len(d):
-            out.append({"t": round(c, 3), "change": round(float(d[max(0, i - 1):i + 2].max()), 2)})
+            if w:   # a transition (WP-15): its sustained speed, the mean change per frame over the window (the blend's own rate
+                # plus the shots' motion; a wipe reveals unevenly, so single steps vary), with the largest step reported too
+                win = d[max(0, i - w[0] - 1):i + w[1] + 1]
+                out.append({"t": round(c, 3), "change": round(float(win.mean()), 2), "largest_step": round(float(win.max()), 2), "transition_frames": w[0] + w[1]})
+            else:
+                out.append({"t": round(c, 3), "change": round(float(d[max(0, i - 1):i + 2].max()), 2)})
     return {"seams": out, "median_change": round(float(np.median(d)), 2) if len(d) else 0}
 
 
@@ -303,7 +311,8 @@ def run(film_dir, page=None):
     if video.exists():
         rep["frame_fill"] = frame_fill(video, shots, cfg.get("ground"))
         rep["frame_fill"]["worst_bare"] = (rep["frame_fill"]["worst_frame"] or {}).get("bare", 0)
-        rep["seams"] = seams(video, [s["start"] for s in shots[1:]], fps)
+        tw = {round(x["at"], 3): (x["before"], x["after"]) for x in _json(d / "build" / "transitions.json", [])}
+        rep["seams"] = seams(video, [s["start"] for s in shots[1:]], fps, tw)
     boxes = []
     if page:
         tb = text_boxes(page); boxes += tb.get("boxes", [])

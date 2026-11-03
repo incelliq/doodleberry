@@ -282,7 +282,7 @@
        "film.render",
        "WP-15"
       ],
-      "note": "film.render re-renders only shots whose content hash changed and dedupes identical frames; a static-layer cache for unchanging set layers is WP-15."
+      "note": "film.render re-renders only shots whose content hash changed, dedupes identical frames and renders an unchanging set once as a plate under the frames (WP-15)."
      }
     },
     {
@@ -1459,7 +1459,7 @@
       "ref": [
        "WP-15"
       ],
-      "note": "Cuts carry a whoosh and QA checks seam smoothness, but picture transitions (dissolves, match cuts, wipes) are WP-15."
+      "note": "Shots can come in with a dissolve, linear wipe, slide, dip or iris (xfade over rendered handles, auto-sized for the seam check); gradient, block and card wipes and match cuts are not there (WP-15)."
      }
     },
     {
@@ -2196,7 +2196,7 @@
        "film.animatic",
        "WP-15"
       ],
-      "note": "The animatic and storyboard stand in for the full render; a static-layer cache and rendering only unique stepped frames are WP-15."
+      "note": "The animatic and storyboard stand in for the full render; renders capture only unique stepped frames and draw static sets once as plates (WP-15)."
      }
     },
     {

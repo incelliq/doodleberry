@@ -119,7 +119,7 @@ covered, now added to their packages' scopes.
 | Toon lighting: rim, cast shadows, colour script, time-of-day grade | PRO | 🟡 | P1 | `style.toon` cel shadows and rims in SVG (1.7); other renderers WP-14; colour script and grades WP-37 |
 | FX: particles (rain, dust, sparks), impact frames, speed lines | PRO | 🟡 | P1 | motion effects (2.20), cartoon physics (2.19), seeded particle presets (confetti, snow, rain) on depth planes (WP-42); sparks and emitters with forces: WP-42 |
 | Node compositor: masks, mattes, blend modes, blur, glow | PRO (Harmony, AE) | 🟡 | P2 | per-plane nodes in `comp` (grade, blur, glow, mask, blend; WP-36); light wrap, tracker and the graph editor: WP-36 part 2, WP-20 |
-| Transitions: whoosh cut, match cut, wipes | PRO | 🟡 | P1 | whoosh on cuts; match cuts, wipes, dissolves: WP-15 |
+| Transitions: whoosh cut, match cut, wipes | PRO | 🟡 | P1 | whoosh on cuts; dissolve, wipe, slide, dip and iris over rendered handles, auto-sized for the seam check (WP-15); match cuts: WP-15 |
 | Infographics layer: charts, maps, labels, callouts, cutaways bound to facts | NEW | ✅ | – | explainer kits (1.13, 1.15) and data-bound charts (2.17); maps: WP-16 |
 | Kinetic typography | PRO (AE) | 🟡 | P1 | word-highlight captions and pop-in titles (1.15); more: WP-15 |
 | **Line boil:** cycled smooth displacement fields (about 8, at 12 fps) so line art shimmers like redrawn frames. Per-layer seeds; bubbles and props boil too | PRO (AE turbulent displace) | ✅ | – | deterministic boil (1.9) |
@@ -188,11 +188,11 @@ covered, now added to their packages' scopes.
 | OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | ✅ | – | `film.handoff`: OTIO, Kdenlive, MLT, FCP 7 XML (Resolve, Premiere), FCPXML and EDL with shots, stems, captions and camera tracks; melt renders the cut byte for byte (WP-22) |
 | Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | ⬜ | P2 | sprite sheets and game formats: WP-30 |
 | Aspect-ratio re-staging (9:16 ↔ 16:9 ↔ 1:1 by re-blocking, not cropping) | IDEA | ✅ | – | `film.render` with `aspect` re-stages from the data (1.12); one command for all three: WP-24 |
-| Parallel render workers, frame reuse, static-layer cache | NEW | ✅ | – | browser per worker, frame dedupe (0.1); static-layer cache: WP-15 |
+| Parallel render workers, frame reuse, static-layer cache | NEW | ✅ | – | browser per worker, frame dedupe (0.1); static sets rendered once as a plate under transparent frames (WP-15) |
 | Incremental re-render (only changed shots) | NEW | ✅ | – | content hash per shot (0.4) |
 | Style passes: paper texture, grain, line boil, watercolour | PRO | ✅ | – | paper, grain, boil and post presets (1.7, 1.9); watercolour: WP-15 |
 | Vector resolution independence (4K for free) | NEW | ✅ | – | |
-| 12-fps-native rendering: render only unique stepped frames and encode at 24 or 30 | EMG | 🟡 | P1 | stepped frames are deduplicated (0.1); render only unique frames: WP-15 |
+| 12-fps-native rendering: render only unique stepped frames and encode at 24 or 30 | EMG | ✅ | – | stepped frames are captured once and reused (0.1); with static plates a doodle film on twos renders in 55% of the time (WP-15) |
 | Line-art GIFs: a 32-colour palette with Bayer dithering, sized for messaging | PRO | ⬜ | P1 | WP-23 |
 | Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ⬜ | P1 | WP-23 |
 | Merch- and print-ready stills: high resolution, transparent, using the original ink | NEW | ⬜ | P2 | WP-23 |
@@ -324,7 +324,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E19 | Ink-fidelity import + rigging + voice + shot data | **Doodle to series.** Any notebook doodle becomes a talking, acting series character in minutes, in the artist's own line. | ✅ `doodle.snap`, `doodle.keep` (3.6) |
 | E20 | Rig ability inventory + writer agent + Rig Canvas | **Human-in-the-loop production queue.** Scripts stay within what rigs can do; a missing pose becomes a drawing request; the new drawing joins the rig and the shot re-renders. | ✅ P1 (swap shapes, parts, pupils and a three-quarter view; poses and chains still in the Rig Canvas) |
 | E21 | Bubbles + voice timing + captions | **Sound-on and sound-off cuts from one film:** voiced with captions, or bubble-only paced for reading. | ✅ (2.13) |
-| E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | 🟡 boil, stepped timing, dedupe; unique-frame rendering: WP-15 |
+| E22 | Deterministic boil seeds + stepped timing + frame hashing | **Handmade look at half the cost.** The shimmer is reproducible, and 12 unique frames per second are reused across 24 or 30 fps output. | ✅ boil, stepped timing, dedupe; static plates make a doodle film on twos render in 55% of the time (WP-15) |
 | E23 | Original ink as raster parts + stills export | **Merch and stickers at full fidelity:** the artist's real line on shirts, prints and sticker packs. | ⬜ P2 · WP-23 |
 | E24 | Content planner + orchestrator + research gates + QA + posting packages | **A channel that runs itself, with a human at the checkpoints.** Calendar → briefs → parallel film agents → gated QA → posting packages; the owner approves. | 🟡 planner and orchestrator (3.7, 3.8); calendar to storyboard to session in one command (`plan.brief` launch, WP-06); posting with an approval per post (WP-08) |
 | E25 | Beat grid + edit lists + native aspect layouts | **One production, a week of posts:** a full film, an episode series, teasers and both aspect ratios, without re-animating. | ✅ (2.14) |
@@ -371,7 +371,7 @@ Which open-source pieces implement which features. Licences were verified by the
 | Faster rasteriser (§7) | Benchmark resvg and ThorVG behind a pixel-diff gate (harness saved) | Apache/MIT, MIT | ✅ decided: keep Chromium (0.2) |
 | Lottie export QA (§7, §9) | ThorVG + lottie-web golden images; schema validation from lottie-docs | MIT / CC BY 4.0 | 🟡 lottie-web renders work · WP-23 |
 | Lottie packaging with palette themes (§7) | dotLottie | MIT | ⬜ P2 · WP-23 |
-| Post effects: grain, LUT, vignette, xfade, motion blur (§4, §7) | ffmpeg filter graphs; accumulation blur in-house; SVT-AV1 film-grain | in stack | 🟡 grain, LUT, vignette (1.7); dissolves, motion blur: WP-15 |
+| Post effects: grain, LUT, vignette, xfade, motion blur (§4, §7) | ffmpeg filter graphs; accumulation blur in-house; SVT-AV1 film-grain | in stack | 🟡 grain, LUT, vignette (1.7); xfade transitions (WP-15); motion blur: WP-15 |
 | 3D pass compositing (§4) | oiiotool; three.js toon stack | Apache-2.0 / MIT | ⬜ P2 · WP-42 |
 | Editor hand-off (§7) | OpenTimelineIO (+ EDL/FCPXML adapters); `melt` for round trips | Apache-2.0 / LGPL | ✅ `film.handoff` (WP-22) |
 | Cast variety (§1, §10) | Open Peeps, Humaaans → puppets | CC0 | ✅ (1.5); Open Peeps, Humaaans: WP-16 |

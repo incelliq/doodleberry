@@ -24,10 +24,58 @@
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const INK = '#181e26', HAND = "'Patrick Hand','Fredoka','Noto Sans Sinhala',sans-serif";
+  // ---------- static-layer cache (WP-15) ----------
+  // A set whose markup does not change (a paper page with its grain filter, say) is rasterized once and every frame
+  // shows that image: filters such as full-frame grain cost the browser ~0.5 s a frame in software, the image almost
+  // nothing. Only where the set is drawn 1:1 (no camera move, float or depth planes: a scaled raster would soften),
+  // and only self-contained markup (no text, which needs the page's fonts; no external images). The image is a blob
+  // URL, so the frame's markup stays short; it is a pure function of the set's markup, so frames stay pure.
+  const RASTER = new Map(), PENDING = [];
+  const strHash = str => { let h1 = 0x811c9dc5 | 0, h2 = 0; for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (h2 * 31 + c) | 0; } return `${str.length}:${h1 >>> 0}:${h2 >>> 0}`; };
+  const rasterOk = (sh, m) => q.get('rastercache') !== '0' && !sh.camera && !sh.camera_auto && !(sh.style || {}).float && !sh.comp && !/<text|<foreignObject|href="(?!data:|#)/.test(m);
+  function rasterize(m) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${m}</svg>`;
+    return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); })
+      .then(im => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(im, 0, 0); return new Promise(r => c.toBlob(r, 'image/png')); })
+      .then(b => URL.createObjectURL(b));
+  }
+  // Plate mode (WP-15): when a shot's set is the same on every frame, the renderer asks for it once as a plate
+  // (window.platePrepare), the page then draws frames without it on a transparent background, and the frames are laid
+  // over the plate when encoding. PNG-encoding a full frame of paper grain is most of a frame's cost; the frames
+  // without it compress in a fraction of the time.
+  const PLATE = { on: false };
+  window.platePrepare = async () => {
+    if (bgOnly || castOnly || q.get('rastercache') === '0' || !window.FRAMES) return null;
+    let key = null, markup = null;
+    for (let f = 0; f < window.FRAMES; f++) {
+      const t = toFilm(toCut(t0) + f / FPS), sh = only || shotAt(t), st = sh.style || {}, tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;
+      const m = ((window.SETS || {})[sh.set || 'plain'] || window.SETS.plain).draw(tq, sh.set_opts || {}, W, H);
+      if (!rasterOk(sh, m)) return null;
+      const k = strHash(m); if (key === null) { key = k; markup = m; } else if (k !== key) return null;
+    }
+    const url = await rasterize(markup); const blob = await (await fetch(url)).blob();
+    const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+    PLATE.on = true; document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent';
+    return { png: b64, key };
+  };
+  function staticLayer(sh, m) {
+    if (!m || !rasterOk(sh, m)) return m;
+    const k = strHash(m), r = RASTER.get(k);
+    if (r && r.url) return `<image href="${r.url}" x="0" y="0" width="${W}" height="${H}"/>`;
+    if (!r) { const e = { url: null }; e.p = rasterize(m).then(u => { e.url = u; }, () => { e.url = null; e.failed = true; }); RASTER.set(k, e); }
+    if (!RASTER.get(k).failed) PENDING.push(RASTER.get(k).p);
+    return m;
+  }
+  const boilId = (st, t) => `boil-${Math.floor(t * ((st.boil || {}).fps || 12)) % ((st.boil || {}).frames || 8)}`;
   function boilDefs(st, t) {
     const b = st.boil; if (!b) return '';
     const k = Math.floor(t * (b.fps || 12)) % (b.frames || 8);
-    return `<defs><filter id="boil" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="${b.freq || 0.022}" numOctaves="2" seed="${k + 1}"/>` +
+    // the region needs only room for the displacement (scale/2 = 2.5 px at the default 5); a tight region is ~25% less
+    // work for the browser (WP-15), and the noise is in user space, so the pixels inside are the same
+    const m = Math.max(0.5, Math.min(10, (b.amount ?? 5) * 0.6));
+    // the id carries the boil phase (as filter ids carry the frame tag): with one fixed id Chrome painted the same
+    // boil differently depending on the frames before it (WP-15); within a step the markup still repeats exactly
+    return `<defs><filter id="boil-${k}" x="-${m}%" y="-${m}%" width="${100 + 2 * m}%" height="${100 + 2 * m}%"><feTurbulence type="fractalNoise" baseFrequency="${b.freq || 0.022}" numOctaves="2" seed="${k + 1}"/>` +
       `<feDisplacementMap in="SourceGraphic" scale="${b.amount ?? 5}" xChannelSelector="R" yChannelSelector="G"/></filter></defs>`;
   }
   function overlay(o, t) {
@@ -237,10 +285,10 @@
   }
 
   function frameAt(t, bgOnly) {
-    const sh = shotAt(t), st = sh.style || {};
+    const sh = only || shotAt(t), st = sh.style || {};   // a shot render keeps its shot through its handles (WP-15)
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
-    let world = castOnly ? '' : set.draw(tq, sh.set_opts || {}, W, H), ink = '';   // castonly=1: the characters alone (WP-14 renderer parity)
+    let world = castOnly || PLATE.on ? '' : staticLayer(sh, set.draw(tq, sh.set_opts || {}, W, H)), ink = '';   // plate mode: the set comes from the plate   // castonly=1: the characters alone (WP-14 renderer parity)
     if (sh.underlays && !bgOnly && !castOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
     const heads = {}, casts = []; CASTS = casts;
     const planeInk = {}, onPlane = c => sh.comp && c.plane && c.plane !== 'stage' && !bgOnly;   // WP-36: cast members on depth planes
@@ -280,7 +328,7 @@
       ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt, info) => PROPS.pos(pr, tt, pctx, info), pctx });
     }
     if (!bgOnly && !castOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join(''); }
-    world += st.boil && !castOnly ? `<g filter="url(#boil)">${ink}</g>` : ink;   // parity frames compare geometry, without the boil
+    world += st.boil && !castOnly ? `<g filter="url(#${boilId(st, t)})">${ink}</g>` : ink;   // parity frames compare geometry, without the boil
     let svg = boilDefs(st, t) + world;
     if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2 + 6 * Math.cos(a)} ${H / 2 + 6 * Math.sin(a)}) scale(${z.toFixed(4)}) translate(${-W / 2} ${-H / 2})">${world}</g>`; }
@@ -294,7 +342,7 @@
       VIEW = view;
       svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS),
         drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
-    if (!bgOnly && !castOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#boil)">${bub}</g>` : bub; }
+    if (!bgOnly && !castOnly) { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
     if (!bgOnly && !castOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;
@@ -303,17 +351,27 @@
   const bgOnly = q.get('bg') === '1';
   const castOnly = q.get('castonly') === '1';
   if (castOnly) { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
-  const t0 = only ? only.start : 0, t1 = only ? only.end : S.shots[S.shots.length - 1].end;
+  // ?pre=&post= (seconds): handles before and after a shot, rendered for transitions made at assembly (WP-15)
+  const t0 = only ? only.start - (+q.get('pre') || 0) : 0, t1 = only ? only.end + (+q.get('post') || 0) : S.shots[S.shots.length - 1].end;
   window.FILMTIME = { start: t0, end: t1, fps: FPS };
   // a frame with images (WP-42 plates) is ready only when they have loaded and decoded, so a render never captures a
   // half-loaded frame: the returned promise resolves then (renderers await it)
   window.frameAtTime = t => {
     stage.innerHTML = frameAt(t, bgOnly);
-    const imgs = [...stage.querySelectorAll('image')].map(im => im.getAttribute('href')).filter(h => h && !h.startsWith('data:'));
+    if (PENDING.length) {   // a static layer was rasterized for the first time: draw the frame again with its image
+      const ps = PENDING.splice(0);
+      return Promise.all(ps).then(() => { stage.innerHTML = frameAt(t, bgOnly); PENDING.length = 0; return settle(); });
+    }
+    return settle();
+  };
+  function settle() {
+    // every image, data: URIs too (raster puppet parts): one not yet decoded would be captured missing (WP-15 found
+    // reused and re-captured frames differing by this); decoding an image the page already holds is quick
+    const imgs = [...new Set([...stage.querySelectorAll('image')].map(im => im.getAttribute('href')).filter(Boolean))];
     if (!imgs.length) return;
     return Promise.all(imgs.map(src => { const im = new Image(); im.src = src; return im.decode().catch(() => null); }))
       .then(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
-  };
+  }
   // the camera this player frames each moment with (auto camera, float drift): other renderers bake it as camera keys (WP-14)
   window.viewsAt = ts => ts.map(t => { frameAt(t, false); return VIEW.slice(); });
   // time warp (plan 2.13, the sound-off cut): shots.json "timewarp": [[cut time, film time], ...] knots, increasing;

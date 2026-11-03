@@ -66,6 +66,14 @@ def film(d):
     ids = [s["id"] for s in shots["shots"]]
     if len(set(ids)) != len(ids):
         errs.append(f"shots.json: duplicate shot ids {sorted({i for i in ids if ids.count(i) > 1})}")
+    if shots["shots"] and shots["shots"][0].get("transition"):
+        errs.append(f"shot {shots['shots'][0]['id']}: the first shot has nothing to come in from (transition)")
+    for a_, b_ in zip(shots["shots"], shots["shots"][1:]):   # a transition takes half its length from each shot (WP-15)
+        tr = b_.get("transition")
+        if tr and isinstance(tr.get("dur", 0.5), (int, float)) and all(isinstance(x.get(k), (int, float)) for x in (a_, b_) for k in ("start", "end")):
+            half = tr.get("dur", 0.5) / 2
+            if half > min(a_["end"] - a_["start"], b_["end"] - b_["start"]):
+                errs.append(f"shot {b_['id']}: a {tr.get('dur', 0.5)} s transition is longer than twice a shot it joins")
     clips = _clip_names()
     for s in shots["shots"]:
         for c in s.get("cast", []):

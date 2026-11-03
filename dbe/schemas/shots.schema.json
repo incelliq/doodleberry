@@ -739,6 +739,54 @@
        }
       }
      }
+    },
+    "transition": {
+     "type": "object",
+     "description": "WP-15: how this shot comes in from the one before (made when the film is assembled; the cut stays at this shot's start, the transition is centred on it)",
+     "required": [
+      "kind"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "kind": {
+       "enum": [
+        "dissolve",
+        "wipe",
+        "slide",
+        "dip",
+        "iris"
+       ]
+      },
+      "dur": {
+       "oneOf": [
+        {
+         "type": "number",
+         "exclusiveMinimum": 0,
+         "maximum": 3
+        },
+        {
+         "const": "auto"
+        }
+       ],
+       "description": "seconds (default 0.5), or \"auto\": long enough for the seam check, from how different the shots are across the cut (up to 1 s each side)"
+      },
+      "dir": {
+       "enum": [
+        "left",
+        "right",
+        "up",
+        "down"
+       ],
+       "description": "wipe and slide: the way the edge moves (default left)"
+      },
+      "color": {
+       "enum": [
+        "black",
+        "white"
+       ],
+       "description": "dip: the colour it dips through (default black)"
+      }
+     }
     }
    }
   },

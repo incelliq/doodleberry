@@ -1223,7 +1223,7 @@
        "film.render",
        "WP-15"
       ],
-      "note": "Content-hash per shot and frame dedupe; static-layer cache is WP-15"
+      "note": "Content-hash per shot and frame dedupe; static sets drawn once as plates (WP-15)"
      }
     },
     {

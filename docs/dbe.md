@@ -243,6 +243,43 @@ encodes with `-tune animation`. It hashes each frame's SVG and links repeats ins
 12s (`style.step: 12`) reuse about 60% of frames. Measured on pip-park shot 1 (171 frames, 4 CPUs): 116 → 82 ms/frame,
 and 62 ms/frame when stepped.
 
+**Static plates and the boil (WP-15).** Profiling a doodle film on twos (`nib-hello`, paper set, boil, 12 drawings a
+second at 30 fps) showed where a frame goes: building and hashing it takes about 20 ms, the screenshot over a second,
+of which the boil filter is about half and PNG-encoding a full page of paper grain most of the rest; frame reuse was
+already working (117 of 195 frames). So:
+- **Plates.** When a shot's set is the same on every frame (`window.platePrepare` checks every frame's set markup and
+  that nothing would scale it: no camera keys, auto camera, float or depth planes; no text, which needs the page's
+  fonts), the player draws it once into a PNG plate, the renderer captures the frames without it on a transparent
+  background, and ffmpeg lays them over the plate. Frames laid over the plate match frames drawn whole within one
+  level. `DBE_PLATE=0` turns it off. Sets that change within a shot keep a per-frame raster cache when their markup
+  repeats (`?rastercache=0` turns both off).
+- **Every image decoded.** Frames now wait for every image to decode, raster puppet parts (data URIs) included; one
+  not yet decoded was sometimes captured missing.
+- The boil filter's id carries its phase, and its region is only as large as the displacement needs.
+- Measured end to end on `nib-hello` (195 frames, 4 workers, including the encode): 117.3 s before, 64.9 s now
+  (55%). Reused frames are the first paint of their step; rendering every frame instead differs in 2 parts in
+  100,000 of the pixels (at most 73 levels, in boiled lines), because Chrome paints identical boil markup slightly
+  differently when it follows itself. Two every-frame renders differ from each other by a tenth of that.
+  `DBE_DEDUPE=0` captures every frame and `DBE_KEEP_FRAMES=dir` keeps the PNGs. The `stepped` test lays three
+  frames over the plate and compares them with the frames drawn whole.
+
+## Transitions (WP-15)
+A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
+"dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when
+the shots are joined (ffmpeg `xfade`), centred on the cut: the outgoing shot runs on past its end and the incoming
+one starts early, over **handles** the SVG player renders (`?pre=&post=` seconds; the shot keeps its own set, cast
+and acting through them); other renderers hold their first and last frames instead. The cut stays at the shot's start,
+so the picture keeps its length and the sound its sync, and each shot's own `<id>.mp4` stays exact (cut from
+`<id>.hd.mp4`) for the hand-off and edits. `dur: "auto"` sizes a transition from the rendered shots: how different
+they are across the cut (for a dip, each one's distance from the colour), so the blend alone changes each frame by
+at most 75% of the seam limit, up to 1.25 s each side. The transitions made are in `build/transitions.json`, and the
+seam check (layout QA) scores a transitioned cut by its mean change per frame over the transition, reporting the
+largest single step too; a hard cut is still scored by its largest step. Measured on `data-demo`, whose three shots
+change set at each cut (hard cuts 68 and 168): an auto dissolve (28 frames) scores 2.86 and an auto wipe (66 frames)
+3.25 against the 3.5 limit, the film keeps its 288 frames and QA passes with no advisories. The `transitions` test
+joins three coloured shots with a dissolve and an auto dip: 180 frames, half-way at the cut, pure colour outside,
+hard cuts 30 and 40 fail and the transitions 1.76 and 2.69 pass.
+
 ## Renderer notes
 The set is always drawn by the SVG player, so clouds drift, the camera works and characters keep a ground shadow.
 Synfig and Grease Pencil draw only the characters, with alpha, and ffmpeg composites them over the set video. Lottie

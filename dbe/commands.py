@@ -575,7 +575,12 @@ def shot_render(name, shot, renderer=""):
         raise ValueError(f"shot {shot}: {why}; render it with svg")
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
     out = bdir / (f"{shot}.mp4" if renderer == own else f"{shot}.{renderer}.mp4")
-    if renderer == "svg":
+    pre, post = _handles(_shots(name), shot, fps) if renderer == own else (0, 0)
+    if renderer == "svg" and (pre or post):   # handles for transitions (WP-15): rendered, then the shot itself cut from them
+        hd = bdir / f"{shot}.hd.mp4"
+        _render_page(_player_page(name), f"shot={shot}&pre={pre / fps}&post={post / fps}", hd)
+        _cut_frames(hd, pre, baked["frames"], out)
+    elif renderer == "svg":
         _render_page(_player_page(name), f"shot={shot}", out)
     elif renderer == "synfig":
         # characters by Synfig (alpha), over the animated set from the player
@@ -603,6 +608,9 @@ window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);a
         _render_page(page, "", out)
     else:
         raise ValueError(f"unknown renderer {renderer}")
+    if renderer != "svg" and (pre or post):   # other renderers: the first and last frames held as handles
+        _run(["ffmpeg", "-v", "error", "-y", "-i", str(out), "-vf", f"tpad=start_mode=clone:start_duration={pre / fps}:stop_mode=clone:stop_duration={post / fps}",
+              "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(bdir / f"{shot}.hd.mp4")])
     if renderer == own:   # record what was rendered, so film.render reuses this shot while it is unchanged
         (bdir / f"{shot}.hash").write_text(_shot_hash(name, next(x for x in _shots(name)["shots"] if x["id"] == shot), _shots(name)))
     return {"shot": shot, "renderer": renderer, "frames": baked["frames"], "path": str(out.relative_to(ROOT))}
@@ -636,12 +644,110 @@ ENGINE_FILES = ["dbe/player/player.js", "dbe/player/kit.js", "dbe/player/fx.js",
                 "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs"]
 
 
+# ---------- transitions (WP-15): made when the shots are joined, centred on the cut, so timing and sound are unchanged ----------
+XFADE = {"dissolve": lambda tr: "fade", "wipe": lambda tr: "wipe" + tr.get("dir", "left"), "slide": lambda tr: "slide" + tr.get("dir", "left"),
+         "dip": lambda tr: "fadeblack" if tr.get("color", "black") == "black" else "fadewhite", "iris": lambda tr: "circleopen"}
+
+
+AUTO_MAX_S = 1.25   # dur "auto": at most this much from each side of the cut
+
+
+def _tr_frames(tr, fps, auto_frames=None):
+    """frames taken from before the cut and after it. dur "auto" uses the frames chosen at assembly (auto_frames), and
+    for the handles the most it may take (AUTO_MAX_S each side)"""
+    if tr.get("dur", 0.5) == "auto":
+        d = auto_frames if auto_frames else 2 * int(round(AUTO_MAX_S * fps))
+    else:
+        d = max(2, int(round(tr.get("dur", 0.5) * fps)))
+    return d // 2, d - d // 2
+
+
+def _handles(s, shot_id, fps):
+    """frames of handle a shot needs (before its start, after its end) for the transitions it takes part in"""
+    shots = s["shots"]; i = next(k for k, x in enumerate(shots) if x["id"] == shot_id)
+    pre = _tr_frames(shots[i]["transition"], fps)[1] if i > 0 and shots[i].get("transition") else 0
+    post = _tr_frames(shots[i + 1]["transition"], fps)[0] if i + 1 < len(shots) and shots[i + 1].get("transition") else 0
+    return pre, post
+
+
+def _cut_frames(src, start, n, out):
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-vf", f"trim=start_frame={start}:end_frame={start + n},setpts=PTS-STARTPTS",
+          "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", str(out)])
+
+
+def _gray_frame(f, k):
+    """a frame of a video, small and grey, as layout QA measures seams"""
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(f), "-vf", f"select=eq(n\\,{k}),scale=192:108,format=gray", "-frames:v", "1", "-f", "rawvideo", "-"],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.uint8).astype(np.float32)
+
+
+def _auto_lengths(d, s, fps):
+    """dur "auto": long enough that the blend alone changes each frame by at most 75% of the seam check's limit, given
+    how different the two shots are across the cut (measured on the rendered shots); within the handles rendered"""
+    import math
+    from . import layout_qa as LQ
+    seam_max = LQ.config_for(s)[1]["seam_max"]; bd = d / "build" / "shots"; out = {}
+    for a_, b_ in zip(s["shots"], s["shots"][1:]):
+        tr = b_.get("transition")
+        if not tr or tr.get("dur") != "auto":
+            continue
+        na = int(round((a_["end"] - a_["start"]) * fps))
+        ga, gb = _gray_frame(bd / f"{a_['id']}.mp4", na - 1), _gray_frame(bd / f"{b_['id']}.mp4", 0)
+        if tr["kind"] == "dip":   # down to the colour and back up: each shot's distance from it
+            c = 0.0 if tr.get("color", "black") == "black" else 255.0
+            ch = float(abs(ga - c).mean() + abs(gb - c).mean())
+        else:
+            ch = float(abs(ga - gb).mean())
+        frames = int(min(2 * int(round(AUTO_MAX_S * fps)), max(6, math.ceil(ch / (0.75 * seam_max)))))
+        out[b_["id"]] = {"frames": frames + frames % 2, "change": round(ch, 2)}
+    return out
+
+
+def _join_shots(d, s, fps, pic):
+    """the shots joined into the picture: cuts, and transitions where a shot asks for one (xfade over rendered handles:
+    the outgoing shot runs on past its end, the incoming one starts early, and the blend is centred on the cut)"""
+    shots = s["shots"]; bd = d / "build" / "shots"
+    if not any(x.get("transition") for x in shots[1:]):
+        (d / "build" / "transitions.json").unlink(missing_ok=True)
+        lst = bd / "concat.txt"
+        lst.write_text("".join(f"file '{(bd / (x['id'] + '.mp4')).resolve()}'\n" for x in shots))
+        _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), str(pic)])
+        return []
+    auto = _auto_lengths(d, s, fps)
+    used = lambda k: _tr_frames(shots[k]["transition"], fps, (auto.get(shots[k]["id"]) or {}).get("frames")) if 0 < k < len(shots) and shots[k].get("transition") else (0, 0)
+    ins, fc, made, length, prev = [], [], [], 0, None
+    for i, x in enumerate(shots):
+        hpre, hpost = _handles(s, x["id"], fps)          # handles rendered
+        pre, post = used(i)[1], used(i + 1)[0] if i + 1 < len(shots) else 0   # handles used (auto may use less)
+        f = bd / (x["id"] + (".hd.mp4" if (hpre or hpost) else ".mp4"))
+        ins += ["-i", str(f)]
+        n0 = int(round((x["end"] - x["start"]) * fps)); n = n0 + pre + post
+        fc.append(f"[{i}:v]fps={fps},trim=start_frame={hpre - pre}:end_frame={hpre + n0 + post},setpts=PTS-STARTPTS,format=yuv420p[s{i}]")
+        if prev is None:
+            prev, length = f"[s{i}]", n; continue
+        tr = x.get("transition")
+        if tr:
+            a, b = used(i); dur = (a + b) / fps
+            fc.append(f"{prev}[s{i}]xfade=transition={XFADE[tr['kind']](tr)}:duration={dur:.6f}:offset={(length - a - b) / fps:.6f}[j{i}]")
+            length += n - a - b
+            made.append({"shot": x["id"], "kind": tr["kind"], "frames": a + b, "before": a, "after": b, "at": x["start"], **({"change": auto[x["id"]]["change"]} if x["id"] in auto else {})})
+        else:
+            fc.append(f"{prev}[s{i}]concat=n=2:v=1:a=0[j{i}]"); length += n
+        prev = f"[j{i}]"
+    _run(["ffmpeg", "-v", "error", "-y", *ins, "-filter_complex", ";".join(fc), "-map", prev, "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), str(pic)])
+    (d / "build" / "transitions.json").write_text(json.dumps(made, indent=1))   # layout QA measures the seams over these
+    return made
+
+
 def _shot_hash(name, sh, s):
     """content hash of everything a shot's picture depends on: the resolved shot, film size/fps, puppets and clip
     libraries, lip-sync data for its speakers, and the renderer code. Unchanged hash = the old render is still right."""
     import hashlib
     h = hashlib.sha256()
-    h.update(json.dumps({"shot": sh, "size": s.get("size"), "fps": s.get("fps"), "captions": s.get("captions")}, sort_keys=True).encode())
+    h.update(json.dumps({"shot": sh, "size": s.get("size"), "fps": s.get("fps"), "captions": s.get("captions"),
+                         "handles": _handles(s, sh["id"], s.get("fps", 30)) if sh.get("id") in {x["id"] for x in s["shots"]} else None}, sort_keys=True).encode())
     # lines and mouth cues the shot can show; the auto camera also looks at lines up to 0.5 s around the shot
     mg = 0.5 if sh.get("camera_auto") else 0.0
     tm = _json(FILMS / name / "timing.json", {}); a0, a1 = sh.get("start", 0) - mg, sh.get("end", 1e9) + mg
@@ -745,10 +851,8 @@ def film_render(name, only=None, aspect=""):
             done.append(shot_render(name, sh["id"])); hf.write_text(hsh)
         else:
             skipped.append(sh["id"])
-    lst = d / "build" / "shots" / "concat.txt"
-    lst.write_text("".join(f"file '{(d / 'build' / 'shots' / (sh['id'] + '.mp4')).resolve()}'\n" for sh in s["shots"]))
     pic = d / "build" / "picture.mp4"
-    _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-r", str(fps), str(pic)])
+    transitions = _join_shots(d, s, fps, pic)
     if s.get("post"):  # finishing (plan 1.7): grade, vignette, grain, LUT, before captions so text stays crisp
         vf = post_filters(s["post"])
         if vf:
@@ -790,7 +894,7 @@ def film_render(name, only=None, aspect=""):
     if s.get("soundoff") and not s.get("timewarp"):  # every film ships a voiced cut and a bubble-only cut (plan 2.13)
         so = film_soundoff(name, **(s["soundoff"] if isinstance(s["soundoff"], dict) else {}))
         qa = {**qa, "soundoff": {k: so.get(k) for k in ("final", "qa", "stretched_lines", "length_s")}}
-    return {"rendered": done, "unchanged": skipped, "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
+    return {"rendered": done, "unchanged": skipped, **({"transitions": transitions} if transitions else {}), "final": str(final.relative_to(ROOT)), "size_mb": round(mb, 1), "under_cap": mb <= M.get("max_mb", 100),
             "subtitles": ["build/captions.srt", "build/captions.vtt"], "qa": qa.get("checks"), "layout_advisory": qa.get("layout_advisory_failures"), "lint": qa.get("lint"),
             **({"soundoff": qa["soundoff"]} if qa.get("soundoff") else {})}
 
@@ -2656,6 +2760,14 @@ def test_golden(update=False, film=""):
         bad, meas = _boards_test()
         failed += 1 if bad else 0
         results.append({"boards": "mouth chart, expression and turnaround boards render; a view drawn off model is caught", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "stepped":   # WP-15: frames over a static plate match frames drawn whole
+        bad, meas = _stepped_test()
+        failed += 1 if bad else 0
+        results.append({"stepped": "a shot drawn without its static set and laid over the plate matches the frame drawn whole", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "transitions":   # WP-15: transitions made at assembly keep the length and pass the seam check
+        bad, meas = _transitions_test()
+        failed += 1 if bad else 0
+        results.append({"transitions": "dissolve and auto-length dip over handles: same length, blend centred on the cut, seams pass where a hard cut fails", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
         bad, meas = _kra_test()
         failed += 1 if bad else 0
@@ -4946,6 +5058,76 @@ def _boards_test():
     meas["seeded_off_model"] = r["off_model"]
     if not any(o["view"] == "side" and o["landmark"] == "hips" for o in r["off_model"]):
         bad.append(f"turnaround: a side view 40 units taller at the hips was not caught: {r['off_model']}")
+    return bad, meas
+
+
+def _stepped_test():
+    """WP-15: nib-hello's set (a paper page with grain) is the same on every frame, so the player offers it as a plate;
+    three frames drawn without it, laid over the plate, must match the frames drawn whole (within 2 levels)"""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    out = ROOT / "out" / "steppedtest"; shutil.rmtree(out, ignore_errors=True)
+    page = _player_page("nib-hello")
+    r = subprocess.run(["node", "tools/plate_check.mjs", f"file://{page}?shot=s1", str(out), "0,40,120"], cwd=ROOT, capture_output=True, text=True, timeout=600)
+    res = json.loads(r.stdout.strip().splitlines()[-1]) if r.stdout.strip() else {"error": r.stderr[-300:]}
+    if not res.get("plate"):
+        return [f"no plate offered for nib-hello: {res}"], meas
+    pl = Image.open(out / "plate.png").convert("RGBA"); worst = 0
+    for f in (0, 40, 120):
+        whole = np.asarray(Image.open(out / f"normal_{f}.png").convert("RGB")).astype(int)
+        c = pl.copy(); c.alpha_composite(Image.open(out / f"plate_{f}.png").convert("RGBA"))
+        worst = max(worst, int(np.abs(whole - np.asarray(c.convert("RGB")).astype(int)).max()))
+    meas["max_difference"] = worst
+    if worst > 2:
+        bad.append(f"plate frames differ from whole frames by up to {worst}")
+    return bad, meas
+
+
+def _transitions_test():
+    """WP-15: three synthetic shots (red, green, blue; 2 s each) joined with a 0.5 s dissolve and an auto-length dip,
+    over handles: the picture keeps 180 frames, the dissolve is half-way at the cut, colours are pure outside the
+    transitions, and the seam check fails the hard cuts but passes the transitions"""
+    import numpy as np
+    from . import layout_qa as LQ
+    bad, meas = [], {}
+    d = ROOT / "out" / "transtest"; shutil.rmtree(d, ignore_errors=True); bd = d / "build" / "shots"; bd.mkdir(parents=True)
+    fps = 30
+    s = {"fps": fps, "shots": [{"id": "a", "start": 0, "end": 2}, {"id": "b", "start": 2, "end": 4, "transition": {"kind": "dissolve", "dur": 0.5}},
+                               {"id": "c", "start": 4, "end": 6, "transition": {"kind": "dip", "dur": "auto"}}]}
+    col = {"a": "0xd03030", "b": "0x30b040", "c": "0x3050d0"}
+    def clip(path, colour, n):
+        _run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c={colour}:s=192x108:r={fps}", "-frames:v", str(n), "-c:v", "libx264", "-crf", "1", "-pix_fmt", "yuv420p", str(path)])
+    for x in s["shots"]:
+        pre, post = _handles(s, x["id"], fps)
+        clip(bd / f"{x['id']}.mp4", col[x["id"]], 60)
+        if pre or post:
+            clip(bd / f"{x['id']}.hd.mp4", col[x["id"]], 60 + pre + post)
+    pic = d / "build" / "picture.mp4"
+    made = _join_shots(d, s, fps, pic)
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(pic), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, check=True).stdout
+    fr = np.frombuffer(raw, np.uint8).reshape(-1, 108, 192, 3).astype(int)[:, 54, 96]
+    meas["frames"] = len(fr); meas["transitions"] = made
+    if len(fr) != 180:
+        bad.append(f"{len(fr)} frames, not 180")
+    a_, b_ = _tr_frames(s["shots"][1]["transition"], fps)
+    mid = fr[60 - 1:60 + 1].mean(axis=0)   # half-way between red and green at the cut
+    meas["at_cut"] = mid.round().tolist()
+    if not (abs(mid[0] - (0xd0 + 0x30) / 2) < 25 and abs(mid[1] - (0x30 + 0xb0) / 2) < 25):
+        bad.append(f"the dissolve is not half-way at the cut: {mid.round().tolist()}")
+    for k, c_ in ((10, "a"), (60 + b_ + 5, "b"), (175, "c")):
+        want = [int(col[c_][i:i + 2], 16) for i in (2, 4, 6)]
+        if np.abs(fr[k] - want).max() > 12:
+            bad.append(f"frame {k} is {fr[k].tolist()}, not {c_}'s colour {want}")
+    tw = {round(x["at"], 3): (x["before"], x["after"]) for x in made}
+    with_tr = LQ.seams(pic, [2, 4], fps, tw)["seams"]
+    cut = d / "build" / "cut.mp4"; (bd / "list.txt").write_text("".join(f"file '{(bd / (x + '.mp4')).resolve()}'\n" for x in "abc"))
+    _run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(bd / "list.txt"), "-c", "copy", str(cut)])
+    hard = LQ.seams(cut, [2, 4], fps)["seams"]
+    seam_max = LQ.DEFAULTS["seam_max"]
+    meas["seams"] = {"hard_cuts": [x["change"] for x in hard], "transitions": [x["change"] for x in with_tr], "limit": seam_max}
+    if any(x["change"] <= seam_max for x in hard) or any(x["change"] > seam_max for x in with_tr):
+        bad.append(f"seams: {meas['seams']}")
     return bad, meas
 
 def _kra_test():
