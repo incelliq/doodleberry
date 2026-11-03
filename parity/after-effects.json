@@ -1322,9 +1322,10 @@
       "kind": "partial",
       "ref": [
        "brand.check",
-       "WP-24"
+       "qa.run",
+       "WP-37"
       ],
-      "note": "brand.check measures palette contrast and colour-blind separation; checks on rendered frames (colour-blind, flash) are WP-24. No scopes."
+      "note": "brand.check measures palette contrast and colour-blind separation, and qa.run checks rendered frames for flashes and colour-blind confusions (WP-24). No scopes. Scopes and readouts belong with colour work (WP-37)."
      }
     },
     {

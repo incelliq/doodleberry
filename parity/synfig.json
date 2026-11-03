@@ -399,9 +399,10 @@
      "match": {
       "kind": "command",
       "ref": [
-       "film.render"
+       "film.render",
+       "film.aspects"
       ],
-      "note": "film.render with aspect 16:9 or 1:1 re-stages the film for the new frame rather than cropping; one command for all aspects is WP-24."
+      "note": "film.render with aspect 16:9 or 1:1 re-stages the film for the new frame rather than cropping; film.aspects renders every aspect with its own QA (WP-24)."
      }
     },
     {

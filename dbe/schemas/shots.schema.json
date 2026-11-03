@@ -787,6 +787,17 @@
        "description": "dip: the colour it dips through (default black)"
       }
      }
+    },
+    "describe": {
+     "description": "WP-24: the audio description's words for this shot's start (replacing the generated ones); false: leave it undescribed",
+     "oneOf": [
+      {
+       "type": "string"
+      },
+      {
+       "const": false
+      }
+     ]
     }
    }
   },
@@ -959,6 +970,26 @@
     {
      "type": "string",
      "pattern": "^[a-z0-9][a-z0-9_-]{0,40}$"
+    }
+   ]
+  },
+  "audio_description": {
+   "description": "WP-24: audio description made with every render (film.describe). false: none; an object passes options (voice, extend)",
+   "oneOf": [
+    {
+     "type": "boolean"
+    },
+    {
+     "type": "object",
+     "properties": {
+      "voice": {
+       "type": "string"
+      },
+      "extend": {
+       "type": "boolean"
+      }
+     },
+     "additionalProperties": false
     }
    ]
   }

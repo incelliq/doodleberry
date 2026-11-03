@@ -1502,11 +1502,12 @@
      "capability": "Measuring average intensity per frame.",
      "pro_use": "Detecting and removing flicker.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
-       "WP-24"
+       "qa.run",
+       "WP-37"
       ],
-      "note": "WP-24 adds a flash check (WCAG 2.3) on frames."
+      "note": "qa.run's flash check measures relative luminance per area of every frame (WCAG 2.3.1, WP-24); there is no general per-frame intensity readout. Scopes and readouts belong with colour work (WP-37)."
      }
     },
     {
@@ -2579,8 +2580,10 @@
      "pro_use": "Fixing timelapse and lighting flicker.",
      "match": {
       "kind": "not_applicable",
-      "ref": [],
-      "note": "Rendered frames have no exposure flicker; a flash check for viewers' safety is WP-24."
+      "ref": [
+       "qa.run"
+      ],
+      "note": "Rendered frames have no exposure flicker; the flash check (qa.run, WP-24) guards viewers' safety."
      }
     },
     {

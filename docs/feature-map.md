@@ -187,7 +187,7 @@ covered, now added to their packages' scopes.
 | WebM and ProRes with alpha, GIF/APNG, stickers | PRO | ✅ | – | `shot.alpha` (WebM VP9 alpha, ProRes 4444), `film.formats` (GIF, APNG), `sticker.pack` (WP-23) |
 | OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | ✅ | – | `film.handoff`: OTIO, Kdenlive, MLT, FCP 7 XML (Resolve, Premiere), FCPXML and EDL with shots, stems, captions and camera tracks; melt renders the cut byte for byte (WP-22) |
 | Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | ⬜ | P2 | sprite sheets and game formats: WP-30 |
-| Aspect-ratio re-staging (9:16 ↔ 16:9 ↔ 1:1 by re-blocking, not cropping) | IDEA | ✅ | – | `film.render` with `aspect` re-stages from the data (1.12); one command for all three: WP-24 |
+| Aspect-ratio re-staging (9:16 ↔ 16:9 ↔ 1:1 by re-blocking, not cropping) | IDEA | ✅ | – | `film.render` with `aspect` re-stages from the data (1.12); `film.aspects` renders all three with per-aspect QA (WP-24) |
 | Parallel render workers, frame reuse, static-layer cache | NEW | ✅ | – | browser per worker, frame dedupe (0.1); static sets rendered once as a plate under transparent frames (WP-15) |
 | Incremental re-render (only changed shots) | NEW | ✅ | – | content hash per shot (0.4) |
 | Style passes: paper texture, grain, line boil, watercolour | PRO | ✅ | – | paper, grain, boil and post presets (1.7, 1.9); watercolour: WP-15 |
@@ -211,9 +211,9 @@ covered, now added to their packages' scopes.
 | Cultural adaptation: swap sets, props, names per market | IDEA | ⬜ | P2 | WP-25 |
 | Sidecar SRT/VTT plus burned-in captions | PRO | ✅ | – | `film.render` writes .srt and .vtt (0.8) |
 | Audio-description track generated from the shot list | EMG | ⬜ | P1 | WP-24 |
-| Flash and photosensitivity check (WCAG 2.3) | NEW | ⬜ | P1 | WP-24 |
-| Colour-blind-safe palette check | NEW | 🟡 | P2 | `brand.check` CVD separation (1.14); on frames: WP-24 |
-| Reduced-motion variant | IDEA | ⬜ | P2 | WP-24 |
+| Flash and photosensitivity check (WCAG 2.3) | NEW | ✅ | – | `qa.run` flash check: WCAG 2.3.1 general and red flash, by area, failing the film (WP-24) |
+| Colour-blind-safe palette check | NEW | ✅ | – | `brand.check` CVD separation (1.14); on frames and chart colours in `qa.run` (WP-24) |
+| Reduced-motion variant | IDEA | ✅ | – | `film.reduced_motion`: camera steadied, boil and motion effects off, measured (WP-24) |
 | Sign-language inset presenter | IDEA | ⬜ | P2 | not planned: needs Deaf community partners |
 | Platform packs: safe zones, thumbnails, titles, descriptions | NEW | ✅ | – | `film.package` platform files (0.13) |
 | Interactive web films: branching, quizzes, click-to-explore | EMG | ⬜ | P2 | WP-30 |
@@ -307,7 +307,7 @@ These come from stacking primitives we already have. Each one is cheap because t
 | E2 | Line-relative times + TTS + alignment | **Edit the script and the film follows.** Change a sentence and acting, cuts, captions and cues re-flow. Localisation is a special case. | ✅ `film.retime`, `film.revoice` (0.6, 2.16) |
 | E3 | Foot pins + contact frames + clips | **Automatic foley.** Footsteps on every plant, cloth swishes on fast arm moves, thuds on landings. | ✅ (2.7) |
 | E4 | Character screen positions + the mix | **Spatial audio.** Voices and effects pan with the character. | ✅ (2.7) |
-| E5 | `shots.json` semantics (who, where, doing what) | **Audio description, alt text, chapter markers, transcripts and thumbnails, all auto-generated.** We know what is on screen without vision models. | 🟡 alt text and chapters in `film.package` (0.13); AD track: WP-24 |
+| E5 | `shots.json` semantics (who, where, doing what) | **Audio description, alt text, chapter markers, transcripts and thumbnails, all auto-generated.** We know what is on screen without vision models. | ✅ alt text and chapters in `film.package` (0.13); audio description with every render, `film.describe` (WP-24) |
 | E6 | Puppets + views + IK + poses | **One character, every medium:** video, comic panels, storybook pages, stickers, thumbnails, print, merch. Pose a still, render a page. | ⬜ P1 · WP-30 |
 | E7 | Baked acting + Lottie + clip library | **The cast in apps and games:** animated stickers, in-app mascots, game sprites, all from the same rig. | 🟡 · WP-30 |
 | E8 | Live web player + data | **Personalised films rendered in the viewer's browser:** their name, language and region, at zero server cost. | ⬜ P2 · WP-30 |

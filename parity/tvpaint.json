@@ -325,10 +325,10 @@
       "kind": "partial",
       "ref": [
        "film.render",
-       "WP-24",
-       "WP-37"
+       "WP-37",
+       "film.aspects"
       ],
-      "note": "film.render with an aspect re-stages a film natively for 16:9 or 1:1, and vector art scales freely. One command for every aspect is in WP-24; higher frame-rate and 4K masters are in WP-37."
+      "note": "film.render with an aspect re-stages a film natively for 16:9 or 1:1, and vector art scales freely. film.aspects renders every aspect with its own QA (WP-24); higher frame-rate and 4K masters are in WP-37."
      }
     }
    ]

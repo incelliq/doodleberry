@@ -17,14 +17,14 @@ Overall: 1396 capabilities; covered 38%, covered or partial 70% (of those that a
 | Blender Grease Pencil | 26 | 150 | 9 | 23 | 1 | 52 | 56 | 9 | 23% | 60% |
 | Toon Boom Harmony | 25 | 182 | 28 | 47 | 0 | 52 | 47 | 8 | 43% | 73% |
 | Moho Pro | 34 | 186 | 25 | 42 | 1 | 62 | 38 | 18 | 40% | 77% |
-| Foundry Nuke | 32 | 189 | 29 | 25 | 2 | 38 | 55 | 40 | 38% | 63% |
+| Foundry Nuke | 32 | 189 | 29 | 25 | 2 | 39 | 54 | 40 | 38% | 64% |
 | OpenToonz | 26 | 191 | 34 | 33 | 1 | 48 | 65 | 10 | 38% | 64% |
 | Synfig Studio | 26 | 169 | 38 | 38 | 2 | 40 | 38 | 13 | 50% | 76% |
 | TVPaint Animation | 26 | 168 | 33 | 13 | 1 | 66 | 47 | 8 | 29% | 71% |
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 37, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-23 8, WP-30 8, WP-29 4, WP-17 3, WP-24 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
+WP-36 161, WP-35 106, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 39, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-23 8, WP-30 8, WP-29 4, WP-17 3, WP-33 2, WP-26 1, WP-27 1, WP-25 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -177,7 +177,7 @@ Sources: [Adobe After Effects User Guide (official, helpx.adobe.com)](https://he
 | OpenColorIO and ACES colour management with display and view transforms plus OCIO effects. | Film and VFX pipelines share one colour space across every app. | **command**: `film.master` (film.master manages colour with OpenColorIO 2.6 and its built-in ACES 2.1 studio config (ACEScg working space); film.from_master applies the inverse texture transform or the ACES output transform for review.) |
 | Colour correction effects: curves, levels, hue and saturation, colour balance, Lumetri, and LUT application. | Grading shots to a look and matching elements to each other. | **data**: `shots.json post {preset, grade, lut, vignette, grain}` (Film-wide finishing with presets (crisp, film, warm, cool, paper, noir), arbitrary ffmpeg grade filters and a .cube LUT. Per-shot grades and a colour script are WP-37.) |
 | HDR monitoring of compositions in HLG or PQ on local and external displays (25.2) and HDR metadata on export (25.4). | HDR deliverables are judged on a real HDR display while working. | **gap**: WP-37 (SDR only; an HDR master is in WP-37.) |
-| Colour scopes (waveform, vectorscope, histogram) for judging exposure and colour. | Graders check legal levels and balance objectively. | **partial**: `brand.check`, WP-24 (brand.check measures palette contrast and colour-blind separation; checks on rendered frames (colour-blind, flash) are WP-24. No scopes.) |
+| Colour scopes (waveform, vectorscope, histogram) for judging exposure and colour. | Graders check legal levels and balance objectively. | **partial**: `brand.check`, `qa.run`, WP-37 (brand.check measures palette contrast and colour-blind separation, and qa.run checks rendered frames for flashes and colour-blind confusions (WP-24). No scopes. Scopes and readouts belong with colour work (WP-37).) |
 | Recolouring art consistently across a project. | Night versions, seasonal variants or a client's new brand colours. | **partial**: `puppet.lint`, WP-16 (Puppets use palette slots (puppet.lint flags raw colours) and sets recolour with set_opts; palette variants per scene (night, sick, cold) are WP-16.) |
 
 ### Effects and animation presets
@@ -1431,7 +1431,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Measuring average intensity per frame. | Detecting and removing flicker. | **gap**: WP-24 (WP-24 adds a flash check (WCAG 2.3) on frames.) |
+| Measuring average intensity per frame. | Detecting and removing flicker. | **partial**: `qa.run`, WP-37 (qa.run's flash check measures relative luminance per area of every frame (WCAG 2.3.1, WP-24); there is no general per-frame intensity readout. Scopes and readouts belong with colour work (WP-37).) |
 | Finding the region of a frame that holds content (auto-crop). | Detecting black borders and empty areas. | **metric**: `qa.run frame fill (bare share)` (Layout QA measures how much of each frame is bare, with per-style thresholds.) |
 | Tracking the brightest or darkest pixel over time. | Following a light source for flares. | **n/a** (Light positions are known from the data.) |
 | Turning image analysis into curves that drive other parameters. | Linking an effect to a measured change in the picture. | **gap**: WP-36 (Doodleberry drives acting from the voice (acting.plan) but not from picture analysis; would join WP-36.) |
@@ -1587,7 +1587,7 @@ Sources: [Nuke Online Help: User Guide (landing page)](https://learn.foundry.com
 
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
-| Removing flicker from footage (Deflicker). | Fixing timelapse and lighting flicker. | **n/a** (Rendered frames have no exposure flicker; a flash check for viewers' safety is WP-24.) |
+| Removing flicker from footage (Deflicker). | Fixing timelapse and lighting flicker. | **n/a**: `qa.run` (Rendered frames have no exposure flicker; the flash check (qa.run, WP-24) guards viewers' safety.) |
 | Matching grain to a plate (Regrain). | Making added elements share the plate's grain. | **data**: `shots.json post.grain` (Uniform seeded grain; there is no plate to match.) |
 | Wire and rig removal. | Removing stunt rigs from live action. | **n/a** (No live action.) |
 | Aligning and steadying shots (Align, Steadiness). | Matching two passes of a camera move. | **n/a** (No live action.) |
@@ -1958,7 +1958,7 @@ Sources: [Synfig User Manual: contents](https://synfig.readthedocs.io/en/latest/
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | Canvas properties: pixel size, image area in units, frame rate, start and end time, background. | Setting a delivery format once per project. | **data**: `shots.json size`, `shots.json fps`, `shots.json shots[].start/end` (Size and fps are film fields; qa.run enforces 1080x1920 at 30 fps; shot times may be line-relative.) |
-| Resizing the canvas with presets and a keep-aspect option (1.5.1, 1.5.3). | Making a square or landscape version of a vertical piece. | **command**: `film.render` (film.render with aspect 16:9 or 1:1 re-stages the film for the new frame rather than cropping; one command for all aspects is WP-24.) |
+| Resizing the canvas with presets and a keep-aspect option (1.5.1, 1.5.3). | Making a square or landscape version of a vertical piece. | **command**: `film.render`, `film.aspects` (film.render with aspect 16:9 or 1:1 re-stages the film for the new frame rather than cropping; film.aspects renders every aspect with its own QA (WP-24).) |
 | Per-document gamma (1.4; new files linear at 1.0, old files kept at 2.2). | Matching colour blending to the rest of the pipeline. | **gap**: WP-37 (Colours are plain sRGB in the browser and ffmpeg; managed colour (OCIO, ACES) is WP-37.) |
 | Grid with snapping for placing handles. | Aligning layout elements and mechanical props. | **n/a** (Positions are numbers in data written by agents or commands; there is no hand placement to snap.) |
 | Rulers and guides, rotatable and editable from 1.5.3. | Marking title-safe areas, horizons and eye lines. | **metric**: `qa.run` (Instead of drawn guides, qa.run measures every word's box against the platform-safe area and type minimums; brand.assets writes safe-area overlays.) |
@@ -2262,7 +2262,7 @@ Sources: [TVPaint Animation 12 user manual (doc.tvpaint.com), introduction and s
 | Saving and save-as, so successive versions can be kept. | Teams keep numbered versions to roll back after bad changes. | **command**: `film.write` (film.write validates each source file on write; films are text, so git holds every version.) |
 | Guidance and features for keeping work safe: backups, local storage, not touching files while they are open. | Studios guard against lost days of drawing after a crash. | **data**: git history of films/<name>/, `prod.launch worktree per film` (Films are small text files under version control. Each production session gets its own worktree and branch.) |
 | Project templates: blank projects with preset resolution, rate and layers. | Series productions start every episode from the same technical setup. | **command**: `film.from_template` (Format templates build a storyboard from a brief, with the frame size and pacing rules set. These are narrative templates as well as technical ones.) |
-| Modify project: resize or resample, crop and change the frame rate of an existing project. | Re-purposing a scene for a new delivery format or a higher-resolution master. | **partial**: `film.render`, WP-24, WP-37 (film.render with an aspect re-stages a film natively for 16:9 or 1:1, and vector art scales freely. One command for every aspect is in WP-24; higher frame-rate and 4K masters are in WP-37.) |
+| Modify project: resize or resample, crop and change the frame rate of an existing project. | Re-purposing a scene for a new delivery format or a higher-resolution master. | **partial**: `film.render`, WP-37, `film.aspects` (film.render with an aspect re-stages a film natively for 16:9 or 1:1, and vector art scales freely. film.aspects renders every aspect with its own QA (WP-24); higher frame-rate and 4K masters are in WP-37.) |
 
 ### Canvas display
 

@@ -391,6 +391,60 @@ installs) with the total ink reported (nib-hello: 220% at the 99.9th percentile;
 by default; film-level grading and grain are a video pass and not applied. `transparent=true` draws the characters
 alone on a transparent background as a PNG at that resolution, for merch. The `alpha` test covers all three commands.
 
+## Accessibility: flashes, colour vision, audio description, reduced motion, aspects (WP-24)
+**Flash check** (`dbe/access.py`, in `qa.run` as `flash_wcag_2.3.1`, failing the film). WCAG 2.2 success criterion
+2.3.1 and its definitions: a *transition* is a change in relative luminance of at least 0.1 where the darker image is
+below 0.80; a *flash* is a pair of opposing transitions; more than three flashes in any one second fail when the
+flashing area covers at least 25% of a 10-degree field of view. *Red flash*: the same for saturated red
+(R / (R + G + B) >= 0.8, change in (R - G - B) x 320 above 20). Three choices make it measure flashes and not motion,
+each found on our own films: luminance is averaged over blocks a 30th of the short side (as broadcast analysers,
+ITU-R BT.1702, average areas; per pixel, a character's ink outline shifting by one pixel counted as flashing);
+flashes are counted per block (a pan sweeping the dark chalkboard edge across the frame changes each block once and
+is no flash); and the 10-degree field is sized from how wide the frame looks: 13 degrees for portrait and square
+video on a phone at about 30 cm (10 degrees is three quarters of the width), 30 for landscape on a desktop or TV (a
+third of the width, WCAG's own 341 x 256 of 1024 x 768). With the window a third of a portrait frame, a character
+walking across a light background "flashed". On made clips: full-screen flashing at 5 Hz fails and at 2 Hz passes,
+45% of the frame at 5 Hz fails, a corner passes, red flashing fails the red check, a fade and a pan pass. Every
+rendered film passes (at most 2 flashes in a second, in films with handheld cameras).
+
+**Colour vision.** Machado, Oliveira and Fernandes (2009) matrices at full severity for protanopia, deuteranopia
+and tritanopia, in linear RGB. `qa.run` samples a frame every 2 s and reports colour pairs that a viewer with normal
+vision tells apart (Delta E 76 >= 15), that touch in the picture, and that fall below 7 under a simulation
+(advisory: dark greens against browns in the classroom set are the usual ones); chart colours (an overlay's
+`colors`) must stay at least 15 apart under every simulation (`chart colours apart in colour-blind vision`, failing).
+Red and green chart colours: 7.3 for deuteranopes; blue and orange: 97 or more.
+
+**Audio description** (`film.describe`, `dbe/audiodesc.py`, made by every `film.render` unless shots.json
+`"audio_description": false`; the `audio_description` QA check). What the picture shows that the words do not is
+already in shots.json: the set, who is in a shot and how they come in, what they do (their clips and held faces),
+and text, numbers and charts on screen. Each shot gives short present-tense sentences ("Ravi and Priya are in a
+classroom." "Ravi points." "A bar chart, Telescope nights per month: 4 bars, highest for March at 9."); on-screen
+text the narration already says is not read again; a shot's own `"describe": "..."` replaces the generated words
+(`false` leaves it out). Sentences go in the **pauses** between lines first (0.15 s clear of speech, before the shot
+ends, minor parts dropped and then read up to 20% faster if needed) with the film's sound 10 dB lower under them.
+Our films leave about 0.4 s between lines, so most descriptions do not fit: what matters (the setting, who comes in,
+text, numbers and charts) is then **extended** (WCAG 1.2.7): the picture holds on the frame at the end of the line
+being spoken (a hold never splits a line), the description is read in silence, and the film carries on; gestures
+and faces are read in pauses or left out (an earlier version extended every nod and shrug and nearly doubled a
+12.8 s film). The described cut, `build/final_ad.mp4`, has the described track marked `visual_impaired` and
+`descriptions` (and the film's own track as well when nothing was extended); `build/ad.vtt` (WebVTT descriptions),
+`build/captions_ad.vtt` (the captions retimed to the holds) and `build/ad.json` go with it. The voice is a clean
+Kokoro voice no speaker of the film uses. Checks from the file: no description over speech, every shot with
+something to describe reached, -14 LUFS and true peak below -1 dBTP, the track marked, the length the holds account
+for. dialogue-demo: 1 description in a pause and 1 hold (12.8 s to 15.5 s); data-demo: 3 holds (9.6 s to 20.8 s,
+the chart is read out); Whisper hears every held description (100% of their words).
+
+**Reduced motion** (`film.reduced_motion`): the film without what can trouble viewers whom movement unsettles: no
+handheld drift, punch-ins or automatic reframing, camera moves held at their widest framing, no line boil, slides,
+wipes and irises made dissolves, speed lines and impact bursts dropped; acting, timing and words unchanged. Built as
+`<name>--calm`, copied to `build/final_calm.mp4` with its own QA and audio description. Camera movement is measured
+from both files by phase correlation: dialogue-demo 2,340 px/s at the 95th percentile, 0 after.
+
+**All aspects from one command** (`film.aspects`): 9:16, 16:9 and 1:1 rendered (re-staged, `film.render aspect`),
+each with its own QA (17 checks on nib-hello, among them layout, the flash check and audio description) and a row
+per aspect: its file, failed checks, ok. The described cuts of the other aspects are copied next to the master
+(`final_ad_16x9.mp4`). The `access` test covers all of it.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

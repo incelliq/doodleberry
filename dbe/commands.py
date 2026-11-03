@@ -1456,7 +1456,8 @@ def film_render(name, only=None, aspect=""):
                 raise ValueError(f"aspect must be one of {list(ASPECT_SIZE)}")
             dname, tag = _derive_aspect(name, aspect)
             r = film_render(dname, only)
-            for f, to in (("final.mp4", f"final_{tag}.mp4"), ("captions.srt", f"captions_{tag}.srt"), ("captions.vtt", f"captions_{tag}.vtt")):
+            for f, to in (("final.mp4", f"final_{tag}.mp4"), ("captions.srt", f"captions_{tag}.srt"), ("captions.vtt", f"captions_{tag}.vtt"),
+                          ("final_ad.mp4", f"final_ad_{tag}.mp4"), ("ad.vtt", f"ad_{tag}.vtt"), ("captions_ad.vtt", f"captions_ad_{tag}.vtt")):
                 if (FILMS / dname / "build" / f).exists():
                     shutil.copy(FILMS / dname / "build" / f, FILMS / name / "build" / to)
             return {**r, "aspect": aspect, "final": f"films/{name}/build/final_{tag}.mp4", "derived_film": dname}
@@ -1537,6 +1538,17 @@ def film_render(name, only=None, aspect=""):
         so = film_soundoff(name, **(s["soundoff"] if isinstance(s["soundoff"], dict) else {}))
         qa = {**qa, "soundoff": {k: so.get(k) for k in ("final", "qa", "stretched_lines", "length_s")}}
         stage("soundoff")
+    if s.get("audio_description", True) is not False and not name.endswith("--soundoff"):   # WP-24: every final ships described
+        try:
+            ad = film_describe(name, **(s["audio_description"] if isinstance(s.get("audio_description"), dict) else {}))
+            qa.setdefault("checks", {})["audio_description"] = ad["ok"]
+            qa["audio_description"] = {k: ad.get(k) for k in ("in_pauses", "holds", "held_s", "length_s", "checks", "voice")}
+        except Exception as e:   # recorded, never hidden: the check fails
+            qa.setdefault("checks", {})["audio_description"] = False; qa["audio_description"] = {"error": str(e)[-400:]}
+        if (d / "build" / "qa.json").exists():
+            qj = _json(d / "build" / "qa.json"); qj.setdefault("checks", {})["audio_description"] = qa["checks"]["audio_description"]; qj["audio_description"] = qa["audio_description"]
+            (d / "build" / "qa.json").write_text(json.dumps(qj, indent=1))
+        stage("describe")
     from . import graph as GR   # WP-20: what the picture, mix, final and QA were made from
     GR.record(d, "picture", GR.picture_inputs(d, s)); GR.record(d, "mix", GR.mix_inputs(d))
     GR.record(d, "final", GR.final_inputs(d, s)); GR.record(d, "qa", GR.qa_inputs(d))
@@ -1575,6 +1587,17 @@ def qa_run(name, layout=True):
             rep.setdefault("checks", {})["lipsync"] = rep["lipsync"]["ok"]
     except Exception:
         rep["lipsync"] = {"error": (ls.stderr or ls.stdout)[-400:]}
+    # WP-24: flashes (WCAG 2.3.1, general and red) fail the film; colour vision is advisory, except chart colours
+    from . import access as AC
+    fv = FILMS / name / "build" / "final.mp4"
+    if fv.exists():
+        rep["flash"] = AC.flash_check(fv); rep.setdefault("checks", {})["flash_wcag_2.3.1"] = rep["flash"]["ok"]
+        dc = sorted({c for sh in _json(FILMS / name / "shots.json", {"shots": []})["shots"] for o in (sh.get("overlays") or []) + (sh.get("underlays") or [])
+                     for c in (o.get("colors") or []) if isinstance(c, str) and c.startswith("#")})
+        cv = AC.colour_check(fv, data_colours=dc)
+        rep["colour_vision"] = {"frames_checked": cv["frames_checked"], "frames_with_confusions": cv["frames_with_confusions"], "pairs": cv["confusable_pairs"][:6], "data_colours": cv["data_colours"]}
+        if dc and len(dc) > 1:
+            rep["checks"]["chart colours apart in colour-blind vision"] = cv["data_ok"]
     if layout and (FILMS / name / "shots.json").exists():
         from . import layout_qa
         lay = layout_qa.run(FILMS / name, page=_player_page(name))
@@ -3615,6 +3638,10 @@ def test_golden(update=False, film=""):
         bad, meas = _stickers_test()
         failed += 1 if bad else 0
         results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy, iMessage and as Telegram, Discord and Slack emoji within each platform's limits; TGS alike in lottie-web and rlottie; the pack as a dotLottie whose themes draw alike in the dotLottie player and lottie-web", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "access":   # WP-24: flash check, colour vision, audio description, reduced motion, three aspects
+        bad, meas = _access_test()
+        failed += 1 if bad else 0
+        results.append({"access": "flash check catches flashing (general, red, by area) and passes motion; colour-blind simulation; audio description in pauses and holds, heard by Whisper; reduced motion steadies the camera; three aspects pass QA from one command", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "alpha":   # WP-23: a shot's characters with alpha, and the film as GIF / APNG / line-art GIF
         bad, meas = _alpha_formats_test()
         failed += 1 if bad else 0
@@ -4855,6 +4882,159 @@ def puppet_from_blend(recipe):
     out = _run([PY, "dbe/cutout_import.py", str(work), str(op), str(work / "spec.json")])
     return {"puppet": str(op.relative_to(ROOT)), "extract": json.loads(line[7:]), "report": json.loads(out[-1]),
             "lint": puppet_lint(str(op.relative_to(ROOT))).get("issues"), "credit": R.get("credit")}
+
+
+# ---------------- accessibility (WP-24) ----------------
+AD_VOICES = ["kokoro:bf_emma", "kokoro:am_michael", "kokoro:af_sarah", "kokoro:bm_george"]
+
+
+def _ad_voice(name):
+    sc = _json(FILMS / name / "script.json", {}); want = (sc.get("audio_description") or {}).get("voice")
+    used = {v.get("voice") for v in (sc.get("speakers") or {}).values()}; reg = _voice_registry()
+    for v in ([want] if want else []) + AD_VOICES:
+        if v not in used and reg.get(v, {}).get("status") == "clean":
+            return v
+    raise RuntimeError("no clean Kokoro voice for audio description (bash tools/setup.sh models)")
+
+
+def _streams(f):
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=index,codec_type:stream_disposition=default,visual_impaired,descriptions:stream_tags=title,language",
+                        "-of", "json", str(f)], capture_output=True, text=True)
+    return json.loads(r.stdout or "{}").get("streams", [])
+
+
+def _loudness_of(f, stream="a:0"):
+    r = subprocess.run(["ffmpeg", "-nostats", "-i", str(f), "-map", f"0:{stream}", "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True)
+    I = re.findall(r"I:\s+(-?[\d.]+) LUFS", r.stderr); tp = re.findall(r"Peak:\s+(-?[\d.]+) dBFS", r.stderr)
+    return (float(I[-1]) if I else None), (float(tp[-1]) if tp else None)
+
+
+@command("film.describe", name=("string", "film"), voice=("string", "a clean voice for the describer (default: one the film's speakers do not use)", ""),
+         extend=("boolean", "hold the picture to read what does not fit the pauses (extended description, WCAG 1.2.7)", True))
+def film_describe(name, voice="", extend=True):
+    """Audio description (WP-24): what the picture shows that the words do not (the set, who comes in and what they
+    do, faces held, text, numbers and charts on screen), written from shots.json, read in the pauses between lines
+    with the film's sound lowered, and, where the pauses are too short, in holds of the picture (extended
+    description). Writes build/ad.json, build/ad.vtt (WebVTT descriptions on the described cut's clock),
+    build/captions_ad.vtt, build/ad_mix.wav and build/final_ad.mp4: the described cut, with the film's own sound as a
+    second track when nothing was extended (else the described track alone, marked). Checks, read back from the
+    file: no description over speech, every described shot reached, -14 LUFS and true peak below -1 dBTP, the track
+    marked as description, and the length the holds account for. A shot's own words: "describe": "..." (or false)."""
+    import soundfile as sf
+    from . import audiodesc as AD
+    d = _film(name); s = _shots(name); final = d / "build" / "final.mp4"
+    if not final.exists():
+        raise FileNotFoundError(f"{name} has no build/final.mp4: render it first")
+    raw_tm = _json(d / "timing.json", {}); tm = _cut_timing(s, raw_tm); k = s.get("timewarp"); fps = s.get("fps", 30)
+    W = s.get("size", [1080, 1920])[0]
+    puppets = {c["puppet"]: _json(ROOT / c["puppet"], {}) for sh in s["shots"] for c in sh.get("cast", []) if (ROOT / c["puppet"]).exists()}
+    rt = lambda v, dflt=None: dflt if v is None else _resolve_time(v, raw_tm)
+    evs = AD.events(s, raw_tm, puppets, _json(d / "data.json", {}), W, rt)
+    if k:   # a re-timed cut: event and shot times onto its clock
+        evs = [(round(_warp(k, e[0], inverse=True), 3), *e[1:]) for e in evs]
+    total = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(final)])[-1])
+    shot_end = {sh["id"]: (_warp(k, sh["end"], inverse=True) if k else sh["end"]) for sh in s["shots"]}
+    cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend)
+    voice = voice or _ad_voice(name)
+    main, sr = sf.read(d / "build" / "mix.wav", dtype="float32")
+    cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues])
+    hold_clips = AD.voice_all([h["text"] for h in holds], voice, VOICES, sr)
+    for c, a in zip(cues, cue_clips):
+        c["voiced_s"] = round(len(a) / sr, 3)
+    for h, a in zip(holds, hold_clips):
+        h["voiced_s"] = round(len(a) / sr, 3); h["dur"] = round(round((h["voiced_s"] + sum(AD.HOLD_PAD)) * fps) / fps, 4)
+    shift = AD.shift_of(holds)
+    y = AD.build_audio(main, sr, cues, cue_clips, holds, hold_clips)
+    sf.write(d / "build" / "ad_mix.wav", y, sr)
+    desc = [{**c, "start": round(shift(c["start"]), 3), "end": round(shift(c["start"]) + c["voiced_s"], 3)} for c in cues] + \
+           [{"start": round(shift(h["at"]) - h["dur"] + AD.HOLD_PAD[0], 3), "end": round(shift(h["at"]) - h["dur"] + AD.HOLD_PAD[0] + h["voiced_s"], 3), "text": h["text"], "hold": True}
+            for h in holds]
+    desc.sort(key=lambda c: c["start"])
+    (d / "build" / "ad.vtt").write_text(AD.vtt(desc))
+    if (d / "build" / "captions.vtt").exists():
+        (d / "build" / "captions_ad.vtt").write_text(AD.retime_vtt((d / "build" / "captions.vtt").read_text(), shift))
+    pic = d / "build" / "ad_picture.mp4"; AD.build_video(final, holds, fps, pic)
+    out = d / "build" / "final_ad.mp4"; length = total + sum(h["dur"] for h in holds)
+    two = not holds   # with holds the film's own sound no longer lines up with the picture: the described track alone
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(d / "build" / "ad_mix.wav"), *(["-i", str(final)] if two else []),
+          "-map", "0:v", *(["-map", "2:a"] if two else []), "-map", "1:a", "-c:v", "copy", *(["-c:a:0", "copy"] if two else []),
+          f"-c:a:{1 if two else 0}", "aac", f"-b:a:{1 if two else 0}", "192k", f"-ar:a:{1 if two else 0}", "48000", "-t", f"{length:.3f}",
+          *(["-disposition:a:0", "default", "-metadata:s:a:0", "title=Main"] if two else []),
+          f"-disposition:a:{1 if two else 0}", ("visual_impaired+descriptions" if two else "default+visual_impaired+descriptions"),
+          f"-metadata:s:a:{1 if two else 0}", "title=Audio description", "-movflags", "+faststart", str(out)])
+    pic.unlink(missing_ok=True)
+    # checks, read back from the files
+    speech = [(shift(l["start"]), shift(l["end"])) for l in tm.get("lines", [])]
+    over = [c["text"] for c in desc if any(c["start"] < b - 0.05 and c["end"] > a + 0.05 for a, b in speech)]
+    want = {e[3] for e in evs if e[1] >= 2}; reached = {c["shot"] for c in cues} | {x for h in holds for x in h["shots"]}
+    ai = 1 if two else 0; I, tp = _loudness_of(out, f"a:{ai}"); st = [x for x in _streams(out) if x.get("codec_type") == "audio"]
+    dispo = st[ai].get("disposition", {}) if len(st) > ai else {}
+    got = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(out)])[-1])
+    checks = {"no description over speech": not over, "every described shot reached": want <= reached, "described track -14 ±1 LUFS": I is not None and abs(I + 14) <= 1,
+              "described track true peak <= -1": tp is not None and tp <= -1.0, "track marked as description": bool(dispo.get("visual_impaired")) and bool(dispo.get("descriptions")),
+              "length as held": abs(got - length) <= 0.1}
+    rep = {"voice": voice, "cues": cues, "holds": holds, "dropped": dropped, "length_s": {"film": round(total, 3), "described": round(got, 3)},
+           "loudness": {"lufs": I, "true_peak": tp}, "tracks": ["main", "audio description"] if two else ["audio description"], "checks": checks, "ok": all(checks.values()),
+           "files": {"video": "build/final_ad.mp4", "descriptions": "build/ad.vtt", "captions": "build/captions_ad.vtt", "mix": "build/ad_mix.wav"}, **({"over_speech": over} if over else {})}
+    (d / "build" / "ad.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+    return {k_: v for k_, v in rep.items() if k_ not in ("cues", "holds")} | {"in_pauses": len(cues), "holds": len(holds), "held_s": round(sum(h["dur"] for h in holds), 2),
+                                                                         "descriptions": [c["text"] for c in desc]}
+
+
+def _derive_variant(name, suffix, shots):
+    """films/<name>--<suffix>: the same film data with other shots (voice and timing reused)"""
+    src = _film(name); dst = FILMS / f"{name}--{suffix}"
+    (dst / "build").mkdir(parents=True, exist_ok=True)
+    for f in ("script.json", "timing.json", "facts.json", "score.json", "ledger.json", "ledger.md", "research_log.md", "brief.md", "data.json", "sound.json"):
+        if (src / f).exists():
+            shutil.copy(src / f, dst / f)
+    for f in ("voice.wav", "voice_fx.wav"):
+        if (src / "build" / f).exists():
+            shutil.copy(src / "build" / f, dst / "build" / f)
+    (dst / "shots.json").write_text(json.dumps(shots, indent=1))
+    return dst.name
+
+
+@command("film.reduced_motion", name=("string", "film"), render=("boolean", "render it (else only write the variant's shots)", True))
+def film_reduced_motion(name, render=True):
+    """A reduced-motion version of a film (WP-24), for viewers whom movement on screen unsettles: no handheld drift,
+    punch-ins or automatic reframing, camera moves held at their widest framing, no line boil, slides, wipes and irises
+    made into dissolves, speed lines and impact bursts dropped. The acting, timing and words are the same. Built as the
+    derived film <name>--calm and copied to build/final_calm.mp4 (with its audio description); the camera movement
+    and picture change of both versions are measured from the files."""
+    from . import access as AC
+    s0 = _shots(name, resolve=False); s1, changes = AC.reduce_motion(s0); s1.pop("soundoff", None)
+    dname = _derive_variant(name, "calm", s1)
+    out = {"variant": dname, "changes": changes}
+    if not render:
+        return out
+    r = film_render(dname); d = _film(name); dd = FILMS / dname / "build"
+    for f, to in (("final.mp4", "final_calm.mp4"), ("final_ad.mp4", "final_ad_calm.mp4"), ("captions.vtt", "captions_calm.vtt")):
+        if (dd / f).exists():
+            shutil.copy(dd / f, d / "build" / to)
+    before = AC.motion(d / "build" / "final.mp4") if (d / "build" / "final.mp4").exists() else None
+    after = AC.motion(d / "build" / "final_calm.mp4")
+    fails = [k for k, v in (r.get("qa") or {}).items() if v is False]
+    return {**out, "final": f"films/{name}/build/final_calm.mp4", "qa_failures": fails, "motion": {"before": before, "after": after}}
+
+
+@command("film.aspects", name=("string", "film"), aspects=("array", "9:16, 16:9, 1:1 (default all three)", None))
+def film_aspects(name, aspects=None):
+    """Every aspect from one command (WP-24): the film rendered for 9:16, 16:9 and 1:1 (re-staged for each frame:
+    film.render aspect), each with its own QA (size, frame rate, stills, loudness, fact tracing, layout and safe areas,
+    flash check) and audio description. -> one row per aspect: the file, its failed checks, and ok when none failed."""
+    aspects = aspects or ["9:16", "16:9", "1:1"]; rows = []
+    own = _shots(name, resolve=False).get("size", [1080, 1920])
+    for a in aspects:
+        if a not in ASPECT_SIZE:
+            raise ValueError(f"aspect must be one of {list(ASPECT_SIZE)}")
+        r = film_render(name, aspect=a)
+        fname = r.get("derived_film") or name
+        qa = _json(FILMS / fname / "build" / "qa.json", {}); checks = {**(qa.get("checks") or {}), **{k: v for k, v in (r.get("qa") or {}).items()}}
+        fails = sorted(k for k, v in checks.items() if v is False)
+        rows.append({"aspect": a, "film": fname, "final": r.get("final"), "size": ASPECT_SIZE[a], "own": ASPECT_SIZE[a] == own, "checks": len(checks), "failed": fails,
+                     "flash": (qa.get("flash") or {}).get("general", {}).get("worst_flashes_per_second"), "audio_description": checks.get("audio_description"), "ok": not fails})
+    return {"film": name, "aspects": rows, "ok": all(r["ok"] for r in rows)}
 
 
 # ---------------- aspect ratios (plan 1.12) ----------------
@@ -6181,6 +6361,109 @@ def _stickers_test():
         pass
     shutil.rmtree(STICKERS / "ztest-pip", ignore_errors=True)
     return bad, meas
+
+def _access_test():
+    """WP-24. Flash check on made clips: full-screen flashing at 5 Hz fails and at 2 Hz passes, a third of the frame
+    flashing at 5 Hz fails, a corner flashing passes, red flashing fails the red check, a fade and a pan of a dark
+    edge pass; rendered films pass. Colour vision: red and green chart colours collide for deuteranopes, blue and
+    orange do not. Audio description of dialogue-demo and data-demo: every check of film.describe, and Whisper hears
+    the descriptions read in holds (at least 80% of their words). Reduced motion: dialogue-demo's camera moves at most
+    a quarter as fast at the 95th percentile and QA holds. Aspects: nib-hello in 9:16, 16:9 and 1:1 from film.aspects,
+    every check of every aspect passing, each with audio description."""
+    import numpy as np
+    from . import access as AC
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "access_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    W, H, fps = 540, 960, 30
+
+    def clip(name, fn, secs=3):
+        pr = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(fps), "-i", "-", "-c:v", "libx264", "-crf", "12",
+                               "-pix_fmt", "yuv444p", str(tmp / f"{name}.mp4")], stdin=subprocess.PIPE)
+        for i in range(fps * secs):
+            pr.stdin.write(fn(i).astype(np.uint8).tobytes())
+        pr.stdin.close(); pr.wait(); return tmp / f"{name}.mp4"
+    base = lambda c: np.full((H, W, 3), c, np.uint8)
+
+    def flashing(hz, box=None, on=(255, 255, 255), off=(30, 30, 30)):
+        def fn(i):
+            f = base(off)
+            if int(i * 2 * hz / fps) % 2:
+                if box is None:
+                    f[:] = on
+                else:
+                    y0, y1, x0, x1 = box; f[y0:y1, x0:x1] = on
+            return f
+        return fn
+    def pan(i):   # a dark half sweeping across a light frame and back once
+        f = base(235); x = int(W * (0.5 + 0.45 * np.sin(i / (fps * 3) * 2 * np.pi))); f[:, :x] = 25; return f
+    cases = {"white_5hz": (flashing(5), False), "white_2hz": (flashing(2), True), "third_5hz": (flashing(5, (H // 3, H // 3 + int(H * 0.45), 0, W)), False),
+             "corner_5hz": (flashing(5, (0, 60, 0, 60)), True), "red_5hz": (flashing(5, on=(225, 10, 10), off=(70, 20, 20)), False),
+             "fade": (lambda i: base(int(255 * i / (fps * 3))), True), "pan": (pan, True)}
+    meas["flash_clips"] = {}
+    for k, (fn, want) in cases.items():
+        r = AC.flash_check(clip(k, fn))
+        meas["flash_clips"][k] = {"ok": r["ok"], "general": r["general"]["worst_flashes_per_second"], "red": r["red"]["worst_flashes_per_second"]}
+        if r["ok"] != want or (k == "red_5hz" and r["red"]["ok"]):
+            bad.append(f"flash {k}: {meas['flash_clips'][k]} (expected ok={want})")
+    meas["flash_films"] = {}
+    for f in ("nib-hello", "dialogue-demo", "telescope-talk"):
+        v = FILMS / f / "build" / "final.mp4"
+        if v.exists():
+            r = AC.flash_check(v); meas["flash_films"][f] = r["general"]["worst_flashes_per_second"]
+            if not r["ok"]:
+                bad.append(f"flash {f}: {r['general']}")
+    rg, bo = AC.colours_apart(["#d62728", "#2ca02c"]), AC.colours_apart(["#1f77b4", "#ff7f0e"])
+    meas["colour_vision"] = {"red_green": {k: v["min_delta_e"] for k, v in rg.items()}, "blue_orange": {k: v["min_delta_e"] for k, v in bo.items()}}
+    if rg["deuteranopia"]["ok"] or not all(v["ok"] for v in bo.values()) or AC.simulate(np.array([[128, 128, 128]]), "protanopia")[0].tolist() != [128, 128, 128]:
+        bad.append(f"colour vision: {meas['colour_vision']}")
+    # audio description
+    import re as _re
+    import soundfile as sf
+    from scipy.signal import resample_poly
+    from . import audiodesc as AD
+    num = {str(i): w for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve".split())}
+    words = lambda t: {num.get(w, w) for w in _re.findall(r"[a-z0-9']+", t.lower())}
+    try:
+        from faster_whisper import WhisperModel
+        wm = WhisperModel("small.en", device="cpu", compute_type="int8")
+    except Exception as e:
+        wm = None; meas["whisper"] = f"skipped: {str(e)[:80]}"
+    meas["audio_description"] = {}
+    for f in ("dialogue-demo", "data-demo"):
+        if not (FILMS / f / "build" / "final.mp4").exists():
+            meas["audio_description"][f] = "skipped: not rendered here"; continue
+        r = film_describe(f); ad = _json(FILMS / f / "build" / "ad.json"); row = {"in_pauses": r["in_pauses"], "holds": r["holds"], "length_s": r["length_s"]}
+        if not r["ok"]:
+            bad.append(f"{f} description checks: {r['checks']}")
+        if wm and ad["holds"]:
+            y, sr = sf.read(FILMS / f / "build" / "ad_mix.wav", dtype="float32"); m = y.mean(1); sh = AD.shift_of(ad["holds"]); heard = []
+            for h in ad["holds"]:
+                seg = m[int((sh(h["at"]) - h["dur"]) * sr):int(sh(h["at"]) * sr)]
+                txt = " ".join(x.text for x in wm.transcribe(resample_poly(seg, 16000, sr).astype("float32"), language="en")[0])
+                heard.append(round(len(words(h["text"]) & words(txt)) / max(1, len(words(h["text"]))), 2))
+            row["heard"] = heard
+            if min(heard) < 0.8:
+                bad.append(f"{f}: descriptions not heard: {heard}")
+        meas["audio_description"][f] = row
+    # reduced motion
+    if (FILMS / "dialogue-demo" / "build" / "voice.wav").exists():
+        rm = film_reduced_motion("dialogue-demo"); mo = rm["motion"]
+        meas["reduced_motion"] = {"changes": rm["changes"], "camera_p95_px_s": [mo["before"]["camera_px_s"]["p95"], mo["after"]["camera_px_s"]["p95"]], "qa_failures": rm["qa_failures"]}
+        if rm["qa_failures"] or mo["after"]["camera_px_s"]["p95"] > 0.25 * mo["before"]["camera_px_s"]["p95"]:
+            bad.append(f"reduced motion: {meas['reduced_motion']}")
+    for n in ("night-planes", "fx-demo", "nib-hello"):   # the transform on other films
+        _, ch = AC.reduce_motion(_shots(n, resolve=False))
+        meas.setdefault("reduced_motion_changes", {})[n] = ch
+        if not ch:
+            bad.append(f"reduced motion changed nothing in {n}")
+    # three aspects
+    if (FILMS / "nib-hello" / "build" / "voice.wav").exists():
+        a = film_aspects("nib-hello"); meas["aspects"] = {r["aspect"]: {"checks": r["checks"], "failed": r["failed"], "flash": r["flash"]} for r in a["aspects"]}
+        if not a["ok"] or not all(r["audio_description"] for r in a["aspects"]):
+            bad.append(f"aspects: {meas['aspects']}")
+    shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
 
 def _alpha_formats_test():
     """WP-23: nib-hello's shot as WebM with alpha and ProRes 4444: each read back by an alpha-aware decoder matches
