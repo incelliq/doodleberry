@@ -1,0 +1,8 @@
+{
+  "name": "doodleberry-dotlottie",
+  "private": true,
+  "description": "the dotLottie player (ThorVG in WebAssembly), to check .lottie files and their themes (WP-23)",
+  "dependencies": {
+    "@lottiefiles/dotlottie-web": "0.82.1"
+  }
+}

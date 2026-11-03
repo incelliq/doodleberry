@@ -5,6 +5,7 @@
 """
 import json
 import math
+import re
 from pathlib import Path
 
 from . import geom as G
@@ -32,9 +33,19 @@ def raster_strokes(strokes):
     return [st for st in strokes if st.get("image") and not st.get("d")]
 
 
-def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
-    """bg: a solid colour layer; bg_image: a PNG data URI embedded as an image asset (the set plate)"""
+def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=False):
+    """bg: a solid colour layer; bg_image: a PNG data URI embedded as an image asset (the set plate). slots (WP-23):
+    every colour taken from a puppet's palette names its slot ("sid": "skin", or "<puppet>.skin" with several in the
+    cast) and the root "slots" holds each slot's value, so a dotLottie theme (or a player) can recolour by name"""
     W, H = size
+    SL = {"on": slots, "prefix": "", "slots": {}}
+
+    def colour_prop(v, pal):
+        """a colour property; with slots, palette colours carry their slot id"""
+        hexv = G.colour(v, pal); prop = {"a": 0, "k": G.hex_rgb(hexv) + [1]}
+        if SL["on"] and not v.startswith("#"):
+            sid = SL["prefix"] + v; prop["sid"] = sid; SL["slots"].setdefault(sid, {"p": {"a": 0, "k": prop["k"]}})
+        return prop
     fps, n = baked["fps"], baked["frames"]
     layers, ind = [], [0]
 
@@ -89,9 +100,9 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
             fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
             # Lottie draws the first item on top: the outline goes before the fill, as SVG paints it over the fill
             if line:
-                it.append({"ty": "st", "c": {"a": 0, "k": G.hex_rgb(line) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
+                it.append({"ty": "st", "c": colour_prop(st.get("stroke"), pal), "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
             if fill:
-                it.append({"ty": "fl", "c": {"a": 0, "k": G.hex_rgb(fill) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 2 if st.get("rule") == "evenodd" else 1})
+                it.append({"ty": "fl", "c": colour_prop(st.get("fill"), pal), "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 2 if st.get("rule") == "evenodd" else 1})
             it.append({"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}})
             items.append({"ty": "gr", "it": it})
         return items[::-1]   # and the last stroke drawn (on top in SVG) first
@@ -151,6 +162,8 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
 
     for c in baked["cast"]:
       p0 = _load(c["puppet"]); frs = c["frames"]
+      if len(baked["cast"]) > 1:
+          SL["prefix"] = re.sub(r"[^a-zA-Z0-9_-]+", "_", p0.get("name") or Path(c["puppet"]).stem.split(".")[0]) + "."
       root = None
       for view, on in _view_masks(p0, frs):
         p = G.in_view(p0, view); pal = p["palette"]
@@ -207,7 +220,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
         assets.append({"id": "plate", "w": W, "h": H, "u": "", "p": bg_image, "e": 1})
         layers.append({"ddd": 0, "ind": nid(), "ty": 2, "nm": "set", "refId": "plate", "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                        "ks": {"o": {"a": 0, "k": 100}, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [W / 2, H / 2, 0]}, "a": {"a": 0, "k": [W / 2, H / 2, 0]}, "s": {"a": 0, "k": [100, 100, 100]}}})
-    return {"v": "5.7.4", "fr": fps, "ip": 0, "op": n, "w": W, "h": H, "nm": name, "ddd": 0, "assets": assets, "layers": layers}
+    return {"v": "5.7.4", "fr": fps, "ip": 0, "op": n, "w": W, "h": H, "nm": name, "ddd": 0, "assets": assets, "layers": layers, **({"slots": SL["slots"]} if slots else {})}
 
 
 # ======================= Synfig =======================

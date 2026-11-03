@@ -340,6 +340,57 @@ easing, which had stopped rlottie drawing the layers after frame 0. **Open:** th
 pixels (up to 4 at artboard scale) from where Lottie, following the baked angles exactly, draws them while the root
 sways; the cause is not found yet. The `stickers` test makes Pip's pack and checks all of it.
 
+**Emoji.** `sticker.pack` with platforms `telegram_emoji` (WebM VP9 with alpha, 100 x 100, at most 3 s, 30 fps and
+256 KB), `discord` (GIF, 128 x 128, 256 KB) and `slack` (GIF, 128 x 128, 128 KB) makes the same moves as custom emoji,
+fitted (fewer colours, then frames) and checked the same way. Pip's three moves: Telegram emoji 26 to 33 KB, Discord
+106 to 191 KB, Slack 76 to 106 KB (Slack's 128 KB cap takes fewer colours and frames).
+
+## dotLottie with palette themes (WP-23)
+`export.lottie slots=true` (and `sticker.make`'s masters, which `lottie.dotlottie` re-exports) give every colour taken
+from a puppet's palette a **slot** named after the palette entry: the property carries `"sid": "skin"` and the
+animation's root `"slots": {"skin": {"p": {"a": 0, "k": [r, g, b, 1]}}}` (with several characters in a shot, the slot
+is `<puppet>.skin`). `lottie.dotlottie` packs animations into one dotLottie 2.0 file (`dbe/dotlottie.py`, after
+[the 2.0 spec](https://dotlottie.io/spec/2.0/)): `manifest.json` (`"version": "2"`, the animations, the themes),
+`a/<id>.json`, and one `t/<theme>.json` per theme, a list of `Color` rules for those slots. Themes are presets worked
+out from the palette (`original` to switch back, `night` a cool, darker cast over every colour alike, `pastel`,
+`mono`) or given by slot name (`{"team": {"cloth1": "#2a9d8f"}}`; a slot the characters do not have is refused).
+`sticker.pack` with platform `dotlottie` puts the whole pack in one file with the four presets.
+
+Each file is checked by reading it back (ZIP with deflate, manifest fields, every animation and theme present, ids
+allowed, every rule a colour of a known slot, every slotted property backed by a slot) and by drawing every animation
+in every theme in the **dotLottie player** (`@lottiefiles/dotlottie-web`, ThorVG in WebAssembly, in Chromium:
+`tools/dotlottie_frames.mjs`; `bash tools/setup.sh dotlottie`) and in **lottie-web** from the same animation with the
+theme's colours written in (`DL.themed`): the two must agree (IoU at least 0.98, colour within 4 levels), each theme
+other than `original` must change the picture, and `original` must not. Pip's pack: 27 KB for three moves and four
+themes; the two renderers agree at IoU 0.998, colour within 1.5 levels; the themes move colour by 33 to 39 levels.
+
+## Alpha video, film formats and print stills (WP-23)
+`shot.alpha` delivers a shot's characters alone with alpha for an editor or compositor: the player draws the cast
+without the set, bubbles or captions (`castonly=1`) and `tools/three/run3d.mjs` captures it on a transparent page
+(`DBE_ALPHA=1`, the PNG frames kept), then **WebM** (VP9, `yuva420p`, CRF 24) and **ProRes 4444** (`prores_ks`,
+`yuva444p10le`, 16-bit alpha, in .mov) are encoded. Each is read back with an alpha-aware decoder (libvpx for WebM:
+ffmpeg's own VP9 decoder drops the alpha) and compared with its frames at five points: silhouette IoU at least 0.97
+(WebM) or 0.995 (ProRes), colour within 8 or 2 levels. nib-hello's shot: WebM 1.0 MB, IoU 0.993 to 0.997, colour 1.4
+to 1.8; ProRes 57 MB, IoU 0.997 to 0.999, colour 0.04. The test also checks the WebM's `alpha_mode` tag and the
+ProRes profile and pixel format.
+
+`film.formats` turns the finished film into image animations (silent; width 480 and 15 fps by default; `start` and
+`seconds` for a clip): **GIF** (one palette of 256 for the clip, error-diffusion dithered), **APNG** (full colour)
+and a **line-art GIF** (32 colours, ordered Bayer dithering: a flat, printed look in about half the size). Each is
+read back: width, frame count and length, colours within the palette, and closeness to the film's own frames (mean
+difference after a light blur, since dithering trades exact pixels for the right average). nib-hello, 3 s: GIF
+2.2 MB (difference 0.9), APNG 8.6 MB (0), line-art 1.2 MB with 31 colours (1.1).
+
+`film.still` makes a print-ready still of one moment (`time` in seconds or a line reference): the player draws the
+frame at print resolution (`tools/still.mjs`, a device scale factor, the raster cache off), since its drawing is
+vector; drawn at 2.7 times, its steepest edges are twice as steep as the video frame enlarged. It covers the trim and
+the bleed (3 mm by default, cut from the frame's edges) and is saved as an RGB PNG with its dpi, a **PDF** whose
+TrimBox and BleedBox are set, with crop marks in a 10 mm slug, and a **CMYK TIFF** converted through an ICC profile
+(the printer's own via `cmyk_profile`, else a generic public-domain one: ArgyllCMS's "Chemical proof", which Krita
+installs) with the total ink reported (nib-hello: 220% at the 99.9th percentile; flagged above 320%). Captions are off
+by default; film-level grading and grain are a video pass and not applied. `transparent=true` draws the characters
+alone on a transparent background as a PNG at that resolution, for merch. The `alpha` test covers all three commands.
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when

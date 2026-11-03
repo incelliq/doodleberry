@@ -308,7 +308,7 @@ A note on supply: Doodleberry should keep an **asset licence manifest** (source 
 
 **Also worth doing, outside the top 10:**
 - Synfig Skeleton Deformation and Switch layers in the `.sif` exporter (M).
-- dotLottie packaging with palette slots mapped to themes (S–M).
+- dotLottie packaging with palette slots mapped to themes (S–M). Done in WP-23: `lottie.dotlottie`, checked in @lottiefiles/dotlottie-web 0.82.1 (MIT, ThorVG in WebAssembly), which also serves as the ThorVG check of our Lottie.
 - An ffmpeg `post` preset command: grain, LUT, vignette, accumulation motion blur (S).
 - oiiotool for 3D pass compositing (S).
 

@@ -10,6 +10,7 @@
 #   bash tools/setup.sh oss        optional open-source parts (WP-34): Pencil2D, Inkscape, Synfig, libmypaint and the
 #                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
 #   bash tools/setup.sh physics    deterministic Rapier 2D (npm, pinned in tools/physics/package.json) for physics.solve (WP-09)
+#   bash tools/setup.sh dotlottie  the dotLottie player (npm, pinned in tools/dotlottie/package.json) for lottie.dotlottie's checks (WP-23)
 # Then: python -m dbe engine.doctor
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -87,6 +88,12 @@ physics_deps() {
   (cd tools/physics && npm install --no-audit --no-fund)
 }
 
+dotlottie_deps() {
+  # @lottiefiles/dotlottie-web (MIT; ThorVG in WebAssembly) draws .lottie files and their themes in lottie.dotlottie's checks (WP-23)
+  if [ -d "tools/dotlottie/node_modules/@lottiefiles/dotlottie-web" ]; then echo "dotlottie: player ok"; return; fi
+  (cd tools/dotlottie && npm install --no-audit --no-fund)
+}
+
 blender_dl() {
   local ver="5.2.3" sha="78486c018b4443efe5e75ab54c290ed8c15abafd249b862c2c9ce2530a918eec"
   if [ -x /opt/blender/blender ] && /opt/blender/blender --version 2>/dev/null | grep -q "Blender $ver"; then echo "blender: $ver installed"; return; fi
@@ -105,7 +112,8 @@ case "$what" in
   oss) oss_deps ;;
   blender) blender_dl ;;
   physics) physics_deps ;;
-  all) system; python_deps; models; node_deps; physics_deps ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics]"; exit 2 ;;
+  dotlottie) dotlottie_deps ;;
+  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

@@ -184,7 +184,7 @@ covered, now added to their packages' scopes.
 | Renderer routing per shot (SVG, Synfig, Grease Pencil, Lottie) | NEW | ✅ | – | |
 | Composited character layers over the animated set | NEW | ✅ | – | |
 | Video, Lottie, web player, Synfig and Grease Pencil project exports | PRO/NEW | 🟡 | – | video, Lottie, web player and Synfig projects (`export.*`); the Grease Pencil path renders frames and a JSON bake but saves no `.blend` project yet (found by the WP-41 parity sweep): WP-14 |
-| WebM and ProRes with alpha, GIF/APNG, stickers | PRO | ⬜ | P1 | alpha video, GIF, APNG: WP-23 |
+| WebM and ProRes with alpha, GIF/APNG, stickers | PRO | ✅ | – | `shot.alpha` (WebM VP9 alpha, ProRes 4444), `film.formats` (GIF, APNG), `sticker.pack` (WP-23) |
 | OpenTimelineIO / FCPXML / EDL hand-off to editors | PRO | ✅ | – | `film.handoff`: OTIO, Kdenlive, MLT, FCP 7 XML (Resolve, Premiere), FCPXML and EDL with shots, stems, captions and camera tracks; melt renders the cut byte for byte (WP-22) |
 | Game runtime export: sprite sheets, Spine-like JSON for Godot or Unity | PRO (Spine) | ⬜ | P2 | sprite sheets and game formats: WP-30 |
 | Aspect-ratio re-staging (9:16 ↔ 16:9 ↔ 1:1 by re-blocking, not cropping) | IDEA | ✅ | – | `film.render` with `aspect` re-stages from the data (1.12); one command for all three: WP-24 |
@@ -193,9 +193,9 @@ covered, now added to their packages' scopes.
 | Style passes: paper texture, grain, line boil, watercolour | PRO | ✅ | – | paper, grain, boil and post presets (1.7, 1.9); watercolour: WP-15 |
 | Vector resolution independence (4K for free) | NEW | ✅ | – | |
 | 12-fps-native rendering: render only unique stepped frames and encode at 24 or 30 | EMG | ✅ | – | stepped frames are captured once and reused (0.1); with static plates a doodle film on twos renders in 55% of the time (WP-15) |
-| Line-art GIFs: a 32-colour palette with Bayer dithering, sized for messaging | PRO | ⬜ | P1 | WP-23 |
-| Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ✅ | – | `sticker.pack`: each move encoded for the four platforms, fitted to and checked against their limits (WP-23); emoji packs: WP-23 |
-| Merch- and print-ready stills: high resolution, transparent, using the original ink | NEW | ⬜ | P2 | WP-23 |
+| Line-art GIFs: a 32-colour palette with Bayer dithering, sized for messaging | PRO | ✅ | – | `film.formats` format `lineart` (WP-23) |
+| Sticker and emoji packs: Telegram (WebM/TGS), WhatsApp (WebP), Giphy (GIF), iMessage (APNG) | NEW | ✅ | – | `sticker.pack`: each move encoded for the four platforms, and as Telegram, Discord and Slack emoji, fitted to and checked against their limits (WP-23) |
+| Merch- and print-ready stills: high resolution, transparent, using the original ink | NEW | ✅ | – | `film.still`: drawn at print resolution, PDF with trim and bleed, CMYK TIFF, or the characters alone on transparent (WP-23) |
 | Interactive toy pages: a character with live boil, wobble and fps sliders, for audiences or for artists tuning a look | IDEA | ⬜ | P2 | WP-30 |
 | **Master to many cuts:** edit lists assemble one master render plus inserts (cards) into a full film, an episode series, teasers and recaps. Cuts fall on beats and inserts are whole bars, so the music keeps its phase | NEW | ✅ | – | `film.cuts` (2.14) |
 | **Native dual-aspect composition:** 16:9 and 9:16 are laid out separately with the same story and timings, never cropped or letterboxed | NEW | ✅ | – | 1.12 |
@@ -370,7 +370,7 @@ Which open-source pieces implement which features. Licences were verified by the
 | Render speed (§7) | Worker pool + frame-hash dedupe + static-layer cache + PyAV piping + `-tune animation` | in-house / BSD-3 | ✅ (0.1) |
 | Faster rasteriser (§7) | Benchmark resvg and ThorVG behind a pixel-diff gate (harness saved) | Apache/MIT, MIT | ✅ decided: keep Chromium (0.2) |
 | Lottie export QA (§7, §9) | ThorVG + lottie-web golden images; schema validation from lottie-docs | MIT / CC BY 4.0 | ✅ `lottie.qa`: lottie-web and rlottie (Telegram's renderer) compared with each other and the SVG renderer (WP-23) |
-| Lottie packaging with palette themes (§7) | dotLottie | MIT | ⬜ P2 · WP-23 |
+| Lottie packaging with palette themes (§7) | dotLottie | MIT | ✅ `lottie.dotlottie`: palette slots, themes, checked in the dotLottie player and lottie-web (WP-23) |
 | Post effects: grain, LUT, vignette, xfade, motion blur (§4, §7) | ffmpeg filter graphs; accumulation blur in-house; SVT-AV1 film-grain | in stack | 🟡 grain, LUT, vignette (1.7); xfade transitions (WP-15); motion blur: WP-15 |
 | 3D pass compositing (§4) | oiiotool; three.js toon stack | Apache-2.0 / MIT | ⬜ P2 · WP-42 |
 | Editor hand-off (§7) | OpenTimelineIO (+ EDL/FCPXML adapters); `melt` for round trips | Apache-2.0 / LGPL | ✅ `film.handoff` (WP-22) |
@@ -382,7 +382,7 @@ Which open-source pieces implement which features. Licences were verified by the
 | Ink-fidelity import (§1) | numpy, scipy (ndimage), Pillow: blur-divide, threshold, connected components | BSD / BSD / HPND | ✅ (1.8) |
 | Line boil (§4) | SVG `feTurbulence` + `feDisplacementMap` with cycled seeds (SVG renderer); numpy displacement fields for raster paths | built in | ✅ (1.9) |
 | Bubbles and typewriter (§4) | in-house; Patrick Hand and other OFL hand fonts | OFL | ✅ (2.10); thought clouds, letters: WP-17 |
-| Line-art GIFs and stickers (§7) | ffmpeg `palettegen`/`paletteuse` (Bayer); libwebp; Lottie for TGS | in stack / BSD | ⬜ P1 · WP-23 |
+| Line-art GIFs and stickers (§7) | ffmpeg `palettegen`/`paletteuse` (Bayer); libwebp; Lottie for TGS | in stack / BSD | ✅ `film.formats`, `sticker.pack` (WP-23) |
 | Frame fill, seams (§9) | numpy box filters and frame differences on ffmpeg grey frames (playbook reference code) | BSD | ✅ (0.11) |
 | Safe-zone text and type sizes (§9) | Playwright: each text element's bounding box in the rendered page; platform UI mock overlays | Apache-2.0 | ✅ (0.11) |
 | Palette checks (§10) | colour-science (CIEDE2000, Machado 2009 CVD simulation) | BSD-3 | ✅ (1.14) |

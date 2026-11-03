@@ -1881,13 +1881,14 @@
      "capability": "Export animation to video and image sequences: MP4 (H.264 default in 14.5, H.265), MOV ProRes with alpha, AVI, PNG/TIFF/WebP/PSD sequences, animated GIF and SVG sequences.",
      "pro_use": "Delivers to editors, platforms and compositors.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "film.render",
        "shot.render",
-       "WP-23"
+       "shot.alpha",
+       "film.formats"
       ],
-      "note": "film.render delivers H.264 per the platform profiles. WebM and ProRes with alpha, GIF and APNG are WP-23."
+      "note": "film.render delivers H.264 per the platform profiles; shot.alpha WebM and ProRes 4444 with alpha, film.formats GIF and APNG (WP-23)."
      }
     },
     {
@@ -1936,11 +1937,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "film.storyboard",
+       "film.still",
        "puppet.sheet",
        "WP-23"
       ],
-      "note": "Stills and model sheets exist (PNG, plus SVG from the Rig Canvas sheet). Print-ready transparent stills are WP-23."
+      "note": "A single frame exports as PNG, PDF and CMYK TIFF at print resolution (film.still, WP-23) and model sheets as SVG; a film frame as SVG is not exported yet."
      }
     },
     {
@@ -2627,9 +2628,10 @@
      "match": {
       "kind": "data",
       "ref": [
-       "dbe/profiles.json encoding profiles"
+       "dbe/profiles.json encoding profiles",
+       "dbe/stickers.py LIMITS"
       ],
-      "note": "Per-platform encoding profiles (H.264 CRF 18, AAC 48 kHz, faststart, size caps) are used by film.package. More formats are WP-23."
+      "note": "Per-platform encoding profiles (H.264 CRF 18, AAC 48 kHz, faststart, size caps) are used by film.package; sticker and emoji limits per platform are in dbe/stickers.py (WP-23)."
      }
     }
    ]

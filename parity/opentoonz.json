@@ -965,9 +965,10 @@
       "ref": [
        "puppet.export_layers",
        "puppet.sheet",
+       "film.still",
        "WP-23"
       ],
-      "note": "Puppets export as layered SVG/ORA/PSD and model sheets as PNG; print-ready transparent stills are WP-23."
+      "note": "Puppets export as layered SVG/ORA/PSD and model sheets as PNG; film.still makes print-ready stills of a film moment (WP-23)."
      }
     }
    ]
@@ -2122,9 +2123,11 @@
        "film.render",
        "export.web",
        "export.lottie",
-       "WP-23"
+       "shot.alpha",
+       "film.formats",
+       "WP-30"
       ],
-      "note": "MP4 (H.264/AAC), web player and Lottie exist; WebM and ProRes with alpha, GIF and APNG are WP-23, sprite sheets WP-30."
+      "note": "MP4 (H.264/AAC), web player and Lottie exist; WebM and ProRes with alpha (shot.alpha), GIF and APNG (film.formats); sprite sheets are WP-30."
      }
     },
     {
@@ -2144,12 +2147,12 @@
      "capability": "Rendering with an alpha channel.",
      "pro_use": "Hand transparent animation to compositing.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "shot.render",
-       "WP-23"
+       "shot.alpha"
       ],
-      "note": "Synfig and Grease Pencil render characters with alpha internally before compositing; alpha deliverables are WP-23."
+      "note": "Synfig and Grease Pencil render characters with alpha internally before compositing; shot.alpha delivers a shot's characters with alpha (WebM, ProRes 4444)."
      }
     },
     {
@@ -2417,9 +2420,10 @@
       "ref": [
        "puppet.import",
        "puppet.export_layers",
+       "film.formats",
        "WP-23"
       ],
-      "note": "Puppets convert to and from layered files; general image and video format conversion is WP-23."
+      "note": "Puppets convert to and from layered files; films convert to GIF and APNG (film.formats); general image and video conversion is not a command."
      }
     }
    ]
@@ -2534,6 +2538,7 @@
       "ref": [
        "puppet.import",
        "puppet.export_layers",
+       "film.formats",
        "WP-23"
       ],
       "note": ""

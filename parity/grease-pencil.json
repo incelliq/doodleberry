@@ -2163,9 +2163,10 @@
        "puppet.export_layers",
        "export.lottie",
        "export.web",
+       "film.still",
        "WP-23"
       ],
-      "note": "Layered SVG of a puppet in rest pose, Lottie and a live web player exist; animated SVG and other formats are WP-23."
+      "note": "Layered SVG of a puppet in rest pose, Lottie and a live web player exist, and film.still prints a frame at any resolution; animated SVG is not made."
      }
     },
     {

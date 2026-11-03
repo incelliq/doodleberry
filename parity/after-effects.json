@@ -372,7 +372,7 @@
       "ref": [
        "WP-36"
       ],
-      "note": "Internally Synfig and Grease Pencil renders are composited with alpha over the set by ffmpeg; user-supplied footage with alpha needs WP-36 (and alpha outputs WP-23)."
+      "note": "Internally Synfig and Grease Pencil renders are composited with alpha over the set by ffmpeg; user-supplied footage with alpha needs WP-36 (alpha outputs exist: shot.alpha, WP-23)."
      }
     },
     {
@@ -1176,12 +1176,12 @@
      "capability": "Alpha channels throughout: rendering, compositing and outputting with transparency.",
      "pro_use": "Elements are rendered separately and layered, or delivered with alpha for other tools.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "shot.render",
-       "WP-23"
+       "shot.alpha"
       ],
-      "note": "Synfig and Grease Pencil characters render with alpha and are composited over the set; delivering video with alpha (ProRes 4444, WebM) is WP-23."
+      "note": "Synfig and Grease Pencil characters render with alpha and are composited over the set; shot.alpha delivers a shot's characters as WebM (VP9 with alpha) and ProRes 4444, each read back with an alpha-aware decoder and compared with its frames (WP-23)."
      }
     },
     {
@@ -1825,9 +1825,10 @@
      "match": {
       "kind": "gap",
       "ref": [
+       "shot.alpha",
        "WP-23"
       ],
-      "note": "No alpha deliverables yet, so no alpha views; they come with alpha outputs in WP-23."
+      "note": "shot.alpha delivers alpha video (WP-23) and checks its matte by reading it back; there is no channel or transparency-grid viewer in Studio yet."
      }
     },
     {
@@ -1870,9 +1871,11 @@
       "ref": [
        "film.render",
        "film.cuts",
+       "shot.alpha",
+       "film.formats",
        "WP-23"
       ],
-      "note": "film.render writes the master (plus aspects, sound-off cut, captions); film.cuts assembles many cuts from it. Extra formats per render (WebM, ProRes, GIF, APNG) are WP-23."
+      "note": "film.render writes the master (plus aspects, sound-off cut, captions); film.cuts assembles many cuts from it; shot.alpha (WebM, ProRes 4444) and film.formats (GIF, APNG, line-art GIF) are separate commands, not output modules of one render pass."
      }
     },
     {
@@ -1892,11 +1895,12 @@
      "capability": "Codecs with alpha and intermediates (ProRes 4444, PNG sequences), and hand-off to Media Encoder for H.264 or HEVC.",
      "pro_use": "Handing elements to editors and compositors at full quality.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-23"
+       "shot.alpha",
+       "film.master"
       ],
-      "note": "H.264 masters only; alpha video and intermediates are WP-23."
+      "note": "shot.alpha writes ProRes 4444 and WebM with alpha (WP-23); the PNG frames it is made from are kept next to them."
      }
     },
     {
@@ -1909,9 +1913,10 @@
        "film.storyboard",
        "cover.make",
        "puppet.sheet",
+       "film.still",
        "WP-37"
       ],
-      "note": "Stills come from storyboards, covers and model sheets; print-ready stills are WP-23 and OpenEXR multi-pass output WP-37."
+      "note": "Stills come from storyboards, covers and model sheets; film.still draws a moment at print resolution (PNG, PDF with trim and bleed boxes, CMYK TIFF) (WP-23); OpenEXR multi-pass output is WP-37."
      }
     },
     {
@@ -2040,9 +2045,10 @@
      "match": {
       "kind": "command",
       "ref": [
-       "export.lottie"
+       "export.lottie",
+       "lottie.dotlottie"
       ],
-      "note": "export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON; sticker.pack makes Telegram TGS stickers and lottie.qa checks Lottie in lottie-web and rlottie (WP-23). dotLottie is WP-23."
+      "note": "export.lottie bakes one shot's puppet animation (views, swaps, lip-sync, springs) to Lottie JSON, optionally with palette slots; sticker.pack makes Telegram TGS stickers, lottie.qa checks Lottie in lottie-web and rlottie, and lottie.dotlottie packs animations as dotLottie 2.0 with palette themes (WP-23)."
      }
     },
     {

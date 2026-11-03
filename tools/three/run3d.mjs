@@ -6,6 +6,8 @@
 // Plate mode (WP-15): when the page offers a static plate (window.platePrepare: the SVG player, for a shot whose set is
 // the same on every frame), frames are captured on a transparent background without the set and laid over the plate
 // by ffmpeg; encoding frames without a full page of paper grain is much cheaper. DBE_PLATE=0 turns it off.
+// DBE_ALPHA=1 (WP-23): frames captured on a transparent background and kept as PNGs (DBE_KEEP_FRAMES), no MP4 made:
+// for alpha deliverables of a page that draws no background (the player's castonly=1).
 import { createRequire } from 'module'; import fs from 'fs'; import os from 'os'; import path from 'path'; import { spawnSync } from 'child_process';
 const require = createRequire(import.meta.url); const { chromium } = require('playwright');
 const [page, out, nwArg] = process.argv.slice(2);
@@ -18,7 +20,8 @@ const t0 = Date.now();
 // probe size and frame count once
 const probe = await b.newPage(); await probe.goto(url); await probe.waitForFunction(() => window.ready === true, null, { timeout: 60000 });
 const info = await probe.evaluate(() => ({ total: window.FRAMES, w: (window.FILM || {}).width || 1080, h: (window.FILM || {}).height || 1920, fps: (window.FILM || {}).fps || 30 }));
-const plate = process.env.DBE_PLATE === '0' ? null : await probe.evaluate(() => window.platePrepare ? window.platePrepare() : null);
+const alpha = process.env.DBE_ALPHA === '1';
+const plate = process.env.DBE_PLATE === '0' || alpha ? null : await probe.evaluate(() => window.platePrepare ? window.platePrepare() : null);
 const platePng = plate ? path.join(dir, 'plate.png') : null;
 if (plate) fs.writeFileSync(platePng, Buffer.from(plate.png.split(',')[1], 'base64'));
 await probe.close();
@@ -32,6 +35,7 @@ await Promise.all(Array.from({ length: nw }, async (_, w) => {
   p.on('pageerror', e => console.log('ERR', String(e)));
   await p.goto(url); await p.waitForFunction(() => window.ready === true, null, { timeout: 60000 });
   const cdp = await p.context().newCDPSession(p);
+  if (alpha) await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
   if (plate) {   // this page draws without the set too, on a transparent background
     const k = await p.evaluate(() => window.platePrepare().then(r => r && r.key));
     if (k !== plate.key) throw new Error('plate differs between workers');
@@ -66,6 +70,7 @@ const secs = (Date.now() - t0) / 1000;
 console.log(`${info.total} frames (${reused} reused) in ${secs.toFixed(1)} s, ${(secs * 1000 / Math.max(1, info.total)).toFixed(0)} ms/frame, ${nw} workers${plate ? ', over a static plate' : ''}${waitedMs > 100 ? `, ${(waitedMs / 1000).toFixed(1)} s waiting on other workers` : ''}`);
 // the frames' markup keys next to the video: two renders whose keys match at a frame drew the same picture there
 fs.writeFileSync(out + '.keys.json', JSON.stringify({ frames: KEYS, plate: plate ? plate.key : null }));
+if (alpha) { fs.renameSync(dir, process.env.DBE_KEEP_FRAMES); process.exit(0); }
 const enc = ['-c:v', 'libx264', '-tune', 'animation', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', out];
 if (plate) spawnSync('ffmpeg', ['-v', 'error', '-y', '-loop', '1', '-framerate', String(info.fps), '-i', platePng, '-framerate', String(info.fps), '-i', path.join(dir, 'f%05d.png'),
   '-filter_complex', '[0:v]format=rgba[p];[1:v]format=rgba[f];[p][f]overlay=0:0:shortest=1:format=auto,format=yuv420p[v]', '-map', '[v]', '-r', String(info.fps), ...enc], { stdio: 'inherit' });

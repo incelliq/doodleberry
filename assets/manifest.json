@@ -385,8 +385,20 @@
   {
    "name": "rlottie-python 1.3.8 (Samsung rlottie, the renderer Telegram uses for animated stickers)",
    "license": "LGPL-2.1-or-later",
-   "class": "copyleft",
+   "class": "weak-copyleft",
    "use": "the second, independent Lottie renderer in lottie.qa (WP-23); pip-installed, not committed, linked as a library"
+  },
+  {
+   "name": "@lottiefiles/dotlottie-web 0.82.1 (the dotLottie player: ThorVG compiled to WebAssembly)",
+   "license": "MIT",
+   "class": "permissive",
+   "use": "draws every animation of a .lottie in every theme in lottie.dotlottie's checks (WP-23); npm-installed into tools/dotlottie (pinned), not committed"
+  },
+  {
+   "name": "Chemical proof CMYK ICC profile (Graeme W. Gill, ArgyllCMS; in the krita-data package as cmyk.icm)",
+   "license": "public domain",
+   "class": "public-domain",
+   "use": "the default CMYK conversion of film.still's TIFF (WP-23); read from the system, not committed; a printer's own profile can be passed instead"
   },
   {
    "name": "otio-kdenlive-adapter 0.0.3 (KDE) and otio-mlt-adapter 0.3.0",

@@ -12,6 +12,9 @@ result is checked against every limit (dimensions, length, frame rate, file size
 | WhatsApp        | animated WebP                | 512 x 512, at most 10 s, 500 KB; a 96 x 96 PNG tray icon, 50 KB; 3 to 30 stickers a pack |
 | Giphy           | GIF with transparency        | at least 2 frames; at least 20% of the first frame transparent          |
 | iMessage        | APNG                         | 300, 408 or 618 px square (408 here), 500 KB                            |
+| Telegram emoji  | WebM, VP9 with alpha         | 100 x 100, at most 3 s and 30 fps, 256 KB, no sound                    |
+| Discord emoji   | GIF with transparency        | 128 x 128, 256 KB                                                       |
+| Slack emoji     | GIF with transparency        | 128 x 128, 128 KB                                                       |
 """
 import gzip
 import io
@@ -28,6 +31,9 @@ LIMITS = {
     "whatsapp": {"side": 512, "max_s": 10.0, "max_kb": 500, "tray": 96, "tray_kb": 50, "pack": (3, 30)},
     "giphy": {"min_frames": 2, "min_transparent": 0.20},
     "imessage": {"side": 408, "max_kb": 500},
+    "telegram_emoji": {"side": 100, "max_s": 3.0, "max_fps": 30, "max_kb": 256},
+    "discord": {"side": 128, "max_kb": 256},
+    "slack": {"side": 128, "max_kb": 128},
 }
 
 
@@ -58,9 +64,9 @@ def _fit(make, tries):
     return last[0], last[1], False
 
 
-def telegram(frames_dir, out, fps, size=512):
-    """WebM VP9 with alpha, 512 px, under 256 KB (lower bitrate, then 24 or 15 fps)"""
-    L = LIMITS["telegram"]; fr = frames_of(frames_dir)
+def telegram(frames_dir, out, fps, size=512, kind="telegram"):
+    """WebM VP9 with alpha, 512 px (100 for an emoji), under 256 KB (lower bitrate, then 24 or 15 fps)"""
+    L = LIMITS[kind]; size = L["side"]
 
     def make(rate, crf, bv):
         step = max(1, round(fps / rate))
@@ -72,12 +78,12 @@ def telegram(frames_dir, out, fps, size=512):
     return _fit(make, tries)
 
 
-def check_telegram(f, frames_n, fps):
-    L = LIMITS["telegram"]; pr = _probe(f); st = pr["streams"][0]; num, den = map(int, st["avg_frame_rate"].split("/"))
+def check_telegram(f, frames_n, fps, kind="telegram"):
+    L = LIMITS[kind]; side = L["side"]; pr = _probe(f); st = pr["streams"][0]; num, den = map(int, st["avg_frame_rate"].split("/"))
     dur = float(pr["format"].get("duration") or 0)
     rate = num / den if den else 0
     has_alpha = (st.get("tags") or {}).get("alpha_mode") == "1" or "a" in (st.get("pix_fmt") or "")
-    checks = {"codec vp9": st["codec_name"] == "vp9", "one side 512, other at most 512": max(st["width"], st["height"]) == 512 and min(st["width"], st["height"]) <= 512,
+    checks = {"codec vp9": st["codec_name"] == "vp9", (f"one side {side}, other at most {side}" if kind == "telegram" else f"{side} x {side}"): max(st["width"], st["height"]) == side and min(st["width"], st["height"]) <= side and (kind == "telegram" or st["width"] == st["height"]),
               "at most 3 s": dur <= L["max_s"] + 1e-3, "at most 30 fps": rate <= L["max_fps"] + 1e-3, "at most 256 KB": Path(f).stat().st_size <= L["max_kb"] * 1024,
               "no sound": len(pr["streams"]) == 1, "alpha": has_alpha}
     return checks, {"bytes": Path(f).stat().st_size, "seconds": round(dur, 3), "fps": round(rate, 2), "size": [st["width"], st["height"]]}
@@ -179,4 +185,25 @@ def check_imessage(f):
     L = LIMITS["imessage"]; im = Image.open(f); n = getattr(im, "n_frames", 1)
     checks = {"APNG": im.format == "PNG" and n > 1, "square 300, 408 or 618 px": im.size[0] == im.size[1] and im.size[0] in (300, 408, 618),
               "at most 500 KB": Path(f).stat().st_size <= L["max_kb"] * 1024, "transparent": "A" in im.mode or im.info.get("transparency") is not None or im.mode == "RGBA"}
+    return checks, {"bytes": Path(f).stat().st_size, "frames": n, "size": list(im.size)}
+
+
+def emoji_gif(frames_dir, out, fps, kind):
+    """a GIF emoji (Discord, Slack): small and square, fitted under the size limit (fewer colours, then frames)"""
+    L = LIMITS[kind]; side = L["side"]
+
+    def make(rate, colours):
+        step = max(1, round(fps / rate))
+        _ff(["-framerate", str(fps), "-i", str(Path(frames_dir) / "f%04d.png"), "-filter_complex",
+             f"[0:v]select='not(mod(n\\,{step}))',setpts=N/{rate}/TB,scale={side}:{side}:flags=lanczos,split[a][b];[a]palettegen=max_colors={colours}:reserve_transparent=1:stats_mode=full[p];[b][p]paletteuse=alpha_threshold=128:dither=bayer:bayer_scale=3",
+             "-r", str(rate), "-loop", "0", str(out)])
+        return out, Path(out).stat().st_size <= L["max_kb"] * 1024
+    return _fit(make, [dict(rate=min(30, fps), colours=256), dict(rate=20, colours=128), dict(rate=15, colours=64), dict(rate=12, colours=48), dict(rate=10, colours=32)])
+
+
+def check_emoji_gif(f, kind):
+    L = LIMITS[kind]; im = Image.open(f); n = getattr(im, "n_frames", 1); im.seek(0)
+    a = np.asarray(im.convert("RGBA"))[..., 3]
+    checks = {"GIF": im.format == "GIF", f"{L['side']} x {L['side']}": im.size == (L["side"], L["side"]), "animated": n > 1,
+              f"at most {L['max_kb']} KB": Path(f).stat().st_size <= L["max_kb"] * 1024, "transparent": bool((a == 0).any())}
     return checks, {"bytes": Path(f).stat().st_size, "frames": n, "size": list(im.size)}

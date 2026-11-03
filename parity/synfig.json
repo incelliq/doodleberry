@@ -2079,13 +2079,15 @@
      "capability": "Output targets: PNG and PNG sequences, GIF, BMP, ffmpeg video (AVI default from 1.4, lossless H.264, WebM from 1.5.3), ImageMagick formats.",
      "pro_use": "Delivering to editors, the web and print.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "film.render",
        "film.package",
-       "WP-23"
+       "shot.alpha",
+       "film.formats",
+       "sticker.pack"
       ],
-      "note": "H.264 MP4 with per-platform encoding profiles; WebM and ProRes with alpha, GIF, APNG and stickers are WP-23."
+      "note": "H.264 MP4 with per-platform encoding profiles; WebM and ProRes with alpha (shot.alpha), GIF and APNG (film.formats) and sticker packs (sticker.pack) (WP-23)."
      }
     },
     {
@@ -2135,9 +2137,10 @@
       "kind": "partial",
       "ref": [
        "shot.render",
-       "WP-23"
+       "shot.alpha",
+       "WP-37"
       ],
-      "note": "Synfig and Grease Pencil renders are made with alpha internally and composited; alpha deliverables (WebM, ProRes) and EXR passes are WP-23 and WP-37."
+      "note": "Synfig and Grease Pencil renders are made with alpha internally and composited; shot.alpha delivers WebM and ProRes with alpha (WP-23); EXR passes are WP-37."
      }
     },
     {
@@ -2170,11 +2173,11 @@
      "capability": "Physical resolution (DPI) for print output.",
      "pro_use": "Posters, books and merchandise stills.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-23"
+       "film.still"
       ],
-      "note": "Print-ready stills are WP-23."
+      "note": "film.still: a moment drawn at print resolution as PNG, PDF (TrimBox, BleedBox, crop marks) and CMYK TIFF (WP-23)."
      }
     },
     {
@@ -2232,7 +2235,7 @@
       "ref": [
        "WP-14"
       ],
-      "note": "export.lottie writes characters and the set image only; text, props and other elements in Lottie are renderer parity (WP-14); Lottie QA and dotLottie are WP-23."
+      "note": "export.lottie writes characters and the set image only; text, props and other elements in Lottie are renderer parity (WP-14); Lottie QA (lottie.qa) and dotLottie (lottie.dotlottie) exist (WP-23)."
      }
     },
     {
@@ -2240,13 +2243,13 @@
      "capability": "Exporting a still image of a chosen frame.",
      "pro_use": "Thumbnails, posters and review stills.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "film.storyboard",
        "cover.make",
-       "WP-23"
+       "film.still"
       ],
-      "note": "Storyboard stills and scored cover frames per cut and platform; print-ready transparent stills at high resolution are WP-23."
+      "note": "Storyboard stills and scored cover frames per cut and platform; film.still makes print-ready stills at any resolution, and transparent ones of the characters alone (WP-23)."
      }
     },
     {
@@ -2302,9 +2305,11 @@
        "export.lottie",
        "export.synfig",
        "export.web",
-       "puppet.import"
+       "puppet.import",
+       "sticker.pack",
+       "shot.alpha"
       ],
-      "note": "Formats are commands; editor formats (FCPXML, EDL) are WP-22 and sticker/alpha formats WP-23."
+      "note": "Formats are commands; editor formats (FCPXML, EDL) are WP-22 and sticker and alpha formats WP-23 (sticker.pack, shot.alpha, film.formats, lottie.dotlottie)."
      }
     },
     {

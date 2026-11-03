@@ -342,10 +342,11 @@
        "film.render",
        "shot.render",
        "export.web",
-       "WP-23",
+       "shot.alpha",
+       "film.formats",
        "WP-37"
       ],
-      "note": "Output is H.264 MP4 by platform profile (and Lottie, Synfig, web player exports); ProRes/WebM with alpha, GIF and APNG are WP-23, EXR masters WP-37."
+      "note": "Output is H.264 MP4 by platform profile (and Lottie, Synfig, web player exports); ProRes 4444 and WebM with alpha (shot.alpha), GIF and APNG (film.formats); EXR masters are WP-37."
      }
     },
     {

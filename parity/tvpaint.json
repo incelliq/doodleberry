@@ -354,12 +354,12 @@
      "capability": "A canvas background (colour or checkerboard) kept out of exports, with layers stacked on it like cels.",
      "pro_use": "Artists judge line and colour against neutral or transparent grounds and export with alpha.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "export.lottie",
-       "WP-23"
+       "shot.alpha"
       ],
-      "note": "Synfig and Grease Pencil render characters with alpha before compositing, and export.lottie can leave out the set (background none). Alpha video deliverables are in WP-23."
+      "note": "Synfig and Grease Pencil render characters with alpha before compositing, export.lottie can leave out the set (background none), and shot.alpha delivers the characters as WebM and ProRes 4444 with alpha (WP-23)."
      }
     },
     {
@@ -1599,13 +1599,14 @@
      "capability": "Exporting movies and image sequences in many formats (MP4, MOV, AVI, GIF, PNG, TGA, TIFF, PSD), with palette reduction and dithering options.",
      "pro_use": "Delivers to clients, compositors and the web.",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "film.render",
        "shot.render",
-       "WP-23"
+       "shot.alpha",
+       "film.formats"
       ],
-      "note": "H.264 MP4 per platform profile. WebM and ProRes with alpha, GIF, APNG and dithered line-art GIFs are in WP-23."
+      "note": "H.264 MP4 per platform profile; WebM and ProRes with alpha (shot.alpha), GIF, APNG and dithered line-art GIFs (film.formats) (WP-23)."
      }
     },
     {
@@ -1692,9 +1693,10 @@
       "kind": "partial",
       "ref": [
        "film.storyboard",
+       "film.still",
        "WP-23"
       ],
-      "note": "Storyboard PDFs exist; print-ready stills are in WP-23."
+      "note": "Storyboard PDFs exist; film.still makes a print-ready still (PDF with trim and bleed, CMYK TIFF) of one moment (WP-23)."
      }
     },
     {
@@ -2329,11 +2331,11 @@
      "capability": "Official ProRes encoding on every operating system (12.1).",
      "pro_use": "Broadcast and post-production deliveries.",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-23"
+       "shot.alpha"
       ],
-      "note": "ProRes with alpha is in WP-23."
+      "note": "shot.alpha writes ProRes 4444 with alpha (WP-23)."
      }
     },
     {

@@ -657,8 +657,9 @@ window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);a
 
 
 @command("export.lottie", name=("string", "film"), shot=("string", "shot id"),
-         background=("string", "plate (embed the set as an image, default) | none (transparent, for overlays)", "plate"))
-def export_lottie(name, shot, background="plate"):
+         background=("string", "plate (embed the set as an image, default) | none (transparent, for overlays)", "plate"),
+         slots=("boolean", "name every palette colour as a slot (for dotLottie themes, lottie.dotlottie)", False))
+def export_lottie(name, shot, background="plate", slots=False):
     """Export one shot's puppet animation as Lottie JSON (web, apps, After Effects). Views, swaps, lip-sync and
     springs are baked; the set is embedded as an image unless background is none."""
     import base64
@@ -667,8 +668,210 @@ def export_lottie(name, shot, background="plate"):
     img = None
     if background == "plate":
         img = "data:image/png;base64," + base64.b64encode(_bg_png(name, sh, bdir).read_bytes()).decode()
-    lj.write_text(json.dumps(X.to_lottie(baked, s.get("size", [1080, 1920]), name=f"{name}:{shot}", bg=sh.get("lottie_bg"), bg_image=img)))
+    lj.write_text(json.dumps(X.to_lottie(baked, s.get("size", [1080, 1920]), name=f"{name}:{shot}", bg=sh.get("lottie_bg"), bg_image=img, slots=slots)))
     return {"path": str(lj.relative_to(ROOT)), "bytes": lj.stat().st_size}
+
+
+ALPHA_FORMATS = {   # WP-23: a shot's characters with alpha, for editors and compositors
+    "webm": {"ext": "webm", "args": ["-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-crf", "24", "-b:v", "0", "-auto-alt-ref", "0"], "decoder": ["-c:v", "libvpx-vp9"]},
+    "prores": {"ext": "mov", "args": ["-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le", "-alpha_bits", "16", "-vendor", "apl0"], "decoder": []},
+}
+
+
+def _alpha_check(video, frames_dir, decoder, n, frames=None):
+    """read the file back with an alpha-aware decoder and compare a few frames with the PNGs it was made from:
+    silhouettes (IoU of the alpha) and colour where both are opaque"""
+    import numpy as np
+    from PIL import Image
+    frames = frames or sorted({int(round(i * (n - 1) / 4)) for i in range(5)})
+    tmp = Path(str(video) + ".check"); shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir()
+    sel = "+".join(f"eq(n\\,{f})" for f in frames)
+    _run(["ffmpeg", "-v", "error", "-y", *decoder, "-i", str(video), "-vf", f"select='{sel}'", "-vsync", "0", "-pix_fmt", "rgba", str(tmp / "c%02d.png")])
+    rows = []
+    for i, f in enumerate(frames):
+        a = np.asarray(Image.open(tmp / f"c{i + 1:02d}.png").convert("RGBA")).astype(int); b = np.asarray(Image.open(Path(frames_dir) / f"f{f:05d}.png").convert("RGBA")).astype(int)
+        A, B = a[..., 3] > 128, b[..., 3] > 128; u = (A | B).sum(); both = (a[..., 3] > 200) & (b[..., 3] > 200)
+        rows.append({"frame": f, "iou": round(float((A & B).sum() / u) if u else 1.0, 4), "colour": round(float(np.abs(a[..., :3] - b[..., :3])[both].mean()) if both.any() else 0.0, 2),
+                     "transparent": round(float((a[..., 3] == 0).mean()), 3)})
+    shutil.rmtree(tmp, ignore_errors=True)
+    return rows
+
+
+@command("shot.alpha", name=("string", "film"), shot=("string", "shot id"), formats=("array", "webm (VP9 with alpha) and/or prores (ProRes 4444 in .mov); default both", None))
+def shot_alpha(name, shot, formats=None):
+    """A shot's characters alone on a transparent background (WP-23), for an editor or compositor to lay over their
+    own picture: WebM (VP9 with alpha, for the web and editors that read it) and ProRes 4444 with alpha (.mov). The
+    player draws the cast without the set, bubbles or captions (castonly=1) on a transparent page; each file is read
+    back with an alpha-aware decoder and compared with the frames it was made from."""
+    _require_valid(name)
+    s, sh, bdir, baked = _bake(name, shot); fps = s.get("fps", 30)
+    formats = formats or ["webm", "prores"]
+    for f in formats:
+        if f not in ALPHA_FORMATS:
+            raise ValueError(f"unknown alpha format {f}: {', '.join(ALPHA_FORMATS)}")
+    fr = bdir / f"{shot}_alpha"; shutil.rmtree(fr, ignore_errors=True)
+    env_keep = {"DBE_ALPHA": "1", "DBE_KEEP_FRAMES": str(fr)}
+    old = {k: os.environ.get(k) for k in env_keep}; os.environ.update(env_keep)
+    try:
+        _render_page(_player_page(name), f"shot={shot}&castonly=1", bdir / f"{shot}.alpha.mp4")
+    finally:
+        for k, v in old.items():
+            os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
+    n = len(sorted(fr.glob("f*.png"))); out = {"shot": shot, "frames": n, "fps": fps, "files": {}}
+    for f in formats:
+        F = ALPHA_FORMATS[f]; v = bdir / f"{shot}.alpha.{F['ext']}"
+        _run(["ffmpeg", "-v", "error", "-y", "-framerate", str(fps), "-i", str(fr / "f%05d.png"), *F["args"], "-an", str(v)])
+        rows = _alpha_check(v, fr, F["decoder"], n)
+        lossy = f == "webm"
+        ok = all(r["iou"] >= (0.97 if lossy else 0.995) and r["colour"] <= (8 if lossy else 2) for r in rows) and any(r["transparent"] > 0.2 for r in rows)
+        out["files"][f] = {"path": str(v.relative_to(ROOT)), "bytes": v.stat().st_size, "ok": ok, "check": rows}
+    out["ok"] = all(x["ok"] for x in out["files"].values())
+    return out
+
+
+FILM_FORMATS = {   # WP-23: a finished film as an image animation; palette: colours, dither: ffmpeg paletteuse
+    "gif": {"ext": "gif", "colours": 256, "dither": "sierra2_4a"},
+    "apng": {"ext": "png", "colours": None, "dither": None},
+    "lineart": {"ext": "gif", "colours": 32, "dither": "bayer:bayer_scale=2"},   # a flat, printed look; small files
+}
+
+
+@command("film.formats", name=("string", "film"), formats=("array", "gif, apng, lineart (a 32-colour GIF with Bayer dithering); default all", None),
+         width=("integer", "width in px (height follows)", 480), fps=("integer", "frames a second", 15), start=("number", "from (s)", 0), seconds=("number", "length (s; default the whole film)", 0))
+def film_formats(name, formats=None, width=480, fps=15, start=0, seconds=0):
+    """The finished film (build/final.mp4) as image animations (WP-23): GIF (one palette of 256 for the whole film,
+    error-diffusion dithered), APNG (full colour) and a line-art GIF (32 colours, ordered Bayer dithering: a flat,
+    printed look in a small file). Silent. Each file is read back and checked: size, frame count and length, colours
+    within the palette, and how close its frames are to the film's."""
+    import numpy as np
+    from PIL import Image
+    d = _film(name); src = d / "build" / "final.mp4"
+    if not src.exists():
+        raise FileNotFoundError(f"{name} has no build/final.mp4: render it first")
+    formats = formats or list(FILM_FORMATS)
+    for f in formats:
+        if f not in FILM_FORMATS:
+            raise ValueError(f"unknown format {f}: {', '.join(FILM_FORMATS)}")
+    dur = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(src)])[-1])
+    seconds = min(seconds or dur - start, dur - start); width = int(width) // 2 * 2
+    od = d / "build" / "formats"; od.mkdir(parents=True, exist_ok=True)
+    cut = ["-ss", str(start), "-t", str(seconds), "-i", str(src)]; base = f"fps={fps},scale={width}:-2:flags=lanczos"
+    ref = od / "ref"; shutil.rmtree(ref, ignore_errors=True); ref.mkdir()   # the film's own frames at this size, to compare with
+    _run(["ffmpeg", "-v", "error", "-y", *cut, "-vf", base, str(ref / "r%04d.png")])
+    refs = sorted(ref.glob("r*.png")); out = {"film": name, "files": {}}
+    for f in formats:
+        F = FILM_FORMATS[f]; o = od / f"{name}.{f}.{F['ext']}" if f == "lineart" else od / f"{name}.{F['ext']}"
+        if f == "apng":
+            _run(["ffmpeg", "-v", "error", "-y", *cut, "-vf", base, "-an", "-plays", "0", "-f", "apng", str(o)])
+        else:
+            _run(["ffmpeg", "-v", "error", "-y", *cut, "-filter_complex", f"[0:v]{base},split[a][b];[a]palettegen=max_colors={F['colours']}:stats_mode=full[p];[b][p]paletteuse=dither={F['dither']}",
+                  "-an", "-loop", "0", str(o)])
+        im = Image.open(o); n = getattr(im, "n_frames", 1); ms = 0; cols = set(); err = []
+        picks = sorted({int(round(i * (n - 1) / 4)) for i in range(5)})
+        for i in range(n):
+            im.seek(i); ms += im.info.get("duration", 0)
+            if i in picks:
+                a = np.asarray(im.convert("RGB")).astype(int); cols |= set(map(tuple, a.reshape(-1, 3)[::7].tolist()))
+                if i < len(refs):
+                    b = np.asarray(Image.open(refs[i]).convert("RGB").resize(im.size)).astype(int)
+                    # compared after a light blur: dithering trades exact pixels for the right average colour
+                    from PIL import ImageFilter
+                    bl = lambda x: np.asarray(Image.fromarray(x.astype("uint8")).filter(ImageFilter.BoxBlur(2))).astype(int)
+                    err.append(round(float(np.abs(bl(a) - bl(b)).mean()), 2))
+        limit = F["colours"] or 1 << 24
+        checks = {"size": im.size[0] == width, "frames": abs(n - len(refs)) <= 1, "length": abs(ms / 1000 - seconds) <= 2 / fps + 0.05,
+                  "colours within palette": len(cols) <= limit, "close to the film": bool(err) and max(err) <= (4 if f == "apng" else 12 if f == "gif" else 18)}
+        out["files"][f] = {"path": str(o.relative_to(ROOT)), "bytes": o.stat().st_size, "frames": n, "seconds": round(ms / 1000, 2), "size": list(im.size),
+                           "colours_seen": len(cols), "error": err, "checks": checks, "ok": all(checks.values())}
+    shutil.rmtree(ref, ignore_errors=True)
+    out["ok"] = all(x["ok"] for x in out["files"].values())
+    return out
+
+
+CMYK_PROFILES = [Path("/usr/share/color/icc/krita/cmyk.icm"), Path("/usr/share/color/icc/ghostscript/default_cmyk.icc")]   # public-domain generic CMYK (Argyll's "Chemical proof", Ghostscript's default)
+
+
+def _crop_marks(img, trim, bleed, slug, mark):
+    """corner crop marks in the slug, at the trim lines, kept off the bleed"""
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(img); x0, y0 = slug + bleed, slug + bleed; x1, y1 = x0 + trim[0], y0 + trim[1]; w = max(1, round(mark / 60))
+    for x in (x0, x1):
+        for ya, yb in ((0, slug - mark // 6), (img.height - slug + mark // 6, img.height)):
+            d.line([(x, ya), (x, yb)], fill=(0, 0, 0), width=w)
+    for y in (y0, y1):
+        for xa, xb in ((0, slug - mark // 6), (img.width - slug + mark // 6, img.width)):
+            d.line([(xa, y), (xb, y)], fill=(0, 0, 0), width=w)
+    return img
+
+
+@command("film.still", name=("string", "film"), time=("string", "film time: seconds, or a line reference such as \"l2.start+0.4\""),
+         width_mm=("number", "printed width of the picture (trim), mm; its height follows the frame", 120), dpi=("integer", "dots per inch", 300),
+         bleed_mm=("number", "bleed beyond the trim on each side, mm", 3), marks=("boolean", "crop marks in a slug outside the bleed", True),
+         captions=("boolean", "draw the captions", False), cmyk_profile=("string", "a CMYK ICC profile from the printer (default: a generic public-domain one)", ""),
+         transparent=("boolean", "the characters alone on a transparent background (merch: a PNG with alpha at print resolution, no bleed, PDF or CMYK)", False))
+def film_still(name, time, width_mm=120, dpi=300, bleed_mm=3, marks=True, captions=False, cmyk_profile="", transparent=False):
+    """A print-ready still of one moment of the film (WP-23). The player draws the frame at print resolution (its
+    drawing is vector, so it is drawn large rather than enlarged), covering the trim and the bleed, and it is saved as
+    an RGB PNG at that resolution, a PDF whose TrimBox and BleedBox are set (with crop marks in a slug outside the
+    bleed) and a CMYK TIFF converted through an ICC profile. The bleed is picture cut from the frame's edges (about
+    bleed / width of each side); keep what matters inside the trim. Film-level grading and grain are not applied (they
+    are a video pass). transparent=true draws only the characters, on a transparent background, as a PNG with alpha at
+    that resolution (for merch: shirts, stickers, prints over other art)."""
+    from PIL import Image, ImageCms
+    import pypdf
+    from pypdf.generic import RectangleObject
+    d = _film(name); s = _shots(name); W, H = s.get("size", [1080, 1920])
+    t = _resolve_time(time if not str(time).replace(".", "", 1).isdigit() else float(time), _json(d / "timing.json", {}))
+    mm = lambda v: v / 25.4 * dpi
+    if transparent:
+        tw = round(mm(width_mm)); od = d / "build" / "stills"; od.mkdir(parents=True, exist_ok=True); png = od / f"{name}-{str(t).replace('.', '_')}s.cast.png"
+        _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + "?rastercache=0&captions=0&castonly=1", str(t), f"{tw / W:.6f}", str(png), "transparent"], timeout=600)
+        im = Image.open(png).convert("RGBA"); im.save(png, dpi=(dpi, dpi), optimize=True)
+        import numpy as np
+        a = np.asarray(im)[..., 3]; bb = im.getbbox()
+        ck = {"dpi": round(Image.open(png).info["dpi"][0]) == dpi and im.width == tw, "transparent background": bool(float((a == 0).mean()) > 0.2 and a[0, 0] == 0),
+              "characters drawn": bool(bb) and float((a > 128).mean()) > 0.002}
+        return {"time": t, "png": str(png.relative_to(ROOT)), "size_px": list(im.size), "dpi": dpi, "art_box_px": list(bb) if bb else None,
+                "transparent_share": round(float((a == 0).mean()), 3), "checks": ck, "ok": all(ck.values())}
+    tw = round(mm(width_mm)); th = round(tw * H / W); b = round(mm(bleed_mm)); slug = round(mm(10)) if marks else 0
+    scale = max((tw + 2 * b) / W, (th + 2 * b) / H) * 1.0005
+    od = d / "build" / "stills"; od.mkdir(parents=True, exist_ok=True); stem = f"{name}-{str(t).replace('.', '_')}s"
+    raw = od / f"{stem}.raw.png"
+    _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + "?rastercache=0" + ("" if captions else "&captions=0"), str(t), f"{scale:.6f}", str(raw)], timeout=600)
+    im = Image.open(raw).convert("RGB"); cw, ch = tw + 2 * b, th + 2 * b
+    im = im.crop(((im.width - cw) // 2, (im.height - ch) // 2, (im.width - cw) // 2 + cw, (im.height - ch) // 2 + ch)); raw.unlink()
+    png = od / f"{stem}.png"; im.save(png, dpi=(dpi, dpi), optimize=True)
+    page = Image.new("RGB", (cw + 2 * slug, ch + 2 * slug), (255, 255, 255)); page.paste(im, (slug, slug))
+    if marks:
+        _crop_marks(page, (tw, th), b, slug, slug)
+    pdf = od / f"{stem}.pdf"; page.save(pdf, "PDF", resolution=dpi)
+    pt = lambda px: px / dpi * 72
+    r = pypdf.PdfReader(pdf); w_ = pypdf.PdfWriter(); pg = r.pages[0]
+    pg.trimbox = RectangleObject([pt(slug + b), pt(slug + b), pt(slug + b + tw), pt(slug + b + th)])
+    pg.bleedbox = RectangleObject([pt(slug), pt(slug), pt(slug + cw), pt(slug + ch)])
+    w_.add_page(pg); w_.add_metadata({"/Title": f"{name} at {t} s", "/Creator": "Doodleberry film.still"})
+    with open(pdf, "wb") as f:
+        w_.write(f)
+    out = {"time": t, "trim_px": [tw, th], "bleed_px": b, "dpi": dpi, "trim_mm": [width_mm, round(th / dpi * 25.4, 2)], "png": str(png.relative_to(ROOT)), "pdf": str(pdf.relative_to(ROOT))}
+    prof = Path(cmyk_profile) if cmyk_profile else next((p for p in CMYK_PROFILES if p.exists()), None)
+    if prof and prof.exists():
+        cp = ImageCms.getOpenProfile(str(prof))
+        cm = ImageCms.profileToProfile(im, ImageCms.createProfile("sRGB"), cp, outputMode="CMYK", renderingIntent=ImageCms.Intent.RELATIVE_COLORIMETRIC)
+        tif = od / f"{stem}.cmyk.tif"; cm.save(tif, compression="tiff_lzw", dpi=(dpi, dpi), icc_profile=cp.tobytes())
+        import numpy as np
+        tac = np.asarray(cm).astype(int).sum(axis=2) / 255 * 100
+        out.update(tiff=str(tif.relative_to(ROOT)), cmyk_profile=ImageCms.getProfileDescription(cp).strip(), max_ink_percent=round(float(np.percentile(tac, 99.9)), 1))
+    else:
+        out["tiff"] = None; out["no_tiff"] = "no CMYK profile found: pass the printer's (cmyk_profile)"
+    # read back
+    rp = pypdf.PdfReader(pdf).pages[0]; tb, bb = rp.trimbox, rp.bleedbox
+    ck = {"trim size": abs(float(tb.width) / 72 * 25.4 - width_mm) < 0.2, "bleed each side": abs((float(bb.width) - float(tb.width)) / 2 / 72 * 25.4 - bleed_mm) < 0.2,
+          "dpi": round(Image.open(png).info["dpi"][0]) == dpi and Image.open(png).size == (cw, ch),
+          "pdf image resolution": abs(page.width / (float(rp.mediabox.width) / 72) - dpi) < 1}
+    if out.get("tiff"):
+        ti = Image.open(ROOT / out["tiff"]); ck["cmyk with profile"] = ti.mode == "CMYK" and bool(ti.info.get("icc_profile")); ck["ink at most 320%"] = out["max_ink_percent"] <= 320
+    out["checks"] = ck; out["ok"] = all(ck.values())
+    return out
 
 
 STICKERS = ROOT / "out" / "stickers"
@@ -722,11 +925,13 @@ def sticker_make(puppet, move, seconds=0, emotion="", name=""):
 
 
 @command("sticker.pack", puppet=("string", "character file (.puppet.json)"), moves=("array", "clips to make stickers of (WhatsApp packs need at least 3)", None),
-         name=("string", "pack name", ""), platforms=("array", "telegram, whatsapp, giphy, imessage (default: all)", None))
+         name=("string", "pack name", ""), platforms=("array", "stickers: telegram, whatsapp, giphy, imessage (the default); emoji: telegram_emoji, discord, slack; dotlottie (the pack in one file, with themes)", None))
 def sticker_pack(puppet, moves=None, name="", platforms=None):
     """A character's sticker pack for messaging platforms (WP-23): each move is made once (sticker.make) and encoded
     for Telegram (WebM VP9 with alpha, and TGS when the character is vector), WhatsApp (animated WebP and a tray
-    icon), Giphy (GIF with transparency) and iMessage (APNG, 408 px); each file is fitted to its platform's limits
+    icon), Giphy (GIF with transparency) and iMessage (APNG, 408 px), and on request as emoji for Telegram (100 px
+    WebM), Discord and Slack (128 px GIFs, 256 and 128 KB), and the whole pack as one dotLottie with palette themes;
+    each file is fitted to its platform's limits
     (quality, then frame rate, come down) and checked against every limit. TGS files are also rendered in lottie-web
     and rlottie and compared with the master frames (lottie.qa)."""
     from . import stickers as ST
@@ -761,8 +966,23 @@ def sticker_pack(puppet, moves=None, name="", platforms=None):
             (root / "imessage").mkdir(parents=True, exist_ok=True)
             f, t, ok = ST.imessage(fd, root / "imessage" / f"{mv}.png", m["fps"]); ch, info = ST.check_imessage(f)
             row["files"]["imessage"] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info, "settings": t}
+        if "telegram_emoji" in platforms:
+            (root / "telegram_emoji").mkdir(parents=True, exist_ok=True)
+            f, t, ok = ST.telegram(fd, root / "telegram_emoji" / f"{mv}.webm", m["fps"], kind="telegram_emoji"); ch, info = ST.check_telegram(f, m["frames"], m["fps"], kind="telegram_emoji")
+            row["files"]["telegram_emoji"] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info, "settings": t}
+        for kind in ("discord", "slack"):
+            if kind in platforms:
+                (root / kind).mkdir(parents=True, exist_ok=True)
+                f, t, ok = ST.emoji_gif(fd, root / kind / f"{mv}.gif", m["fps"], kind); ch, info = ST.check_emoji_gif(f, kind)
+                row["files"][kind] = {"path": str(Path(f).relative_to(ROOT)), "checks": ch, **info, "settings": t}
         out["stickers"].append(row)
+    if "dotlottie" in platforms:   # the whole pack as one dotLottie with palette themes (vector characters only)
+        vec = [r["move"] for r in out["stickers"] if (root / r["move"] / "move.lottie.json").exists()]
+        if vec:
+            dl = lottie_dotlottie([str((root / mv).relative_to(ROOT)) for mv in vec], out=str((root / "dotlottie" / f"{name}.lottie").relative_to(ROOT)))
+            out["dotlottie"] = {"path": dl["path"], "bytes": dl["bytes"], "themes": dl["themes"], "checks": dl["checks"], "qa": dl["qa"]}
     fails = [f"{r['move']} {p}: {k}" for r in out["stickers"] for p, v in r["files"].items() for k, ok in v["checks"].items() if not ok]
+    fails += [f"dotlottie: {k}" for k, ok in (out.get("dotlottie") or {}).get("checks", {}).items() if not ok]
     out["ok"] = not fails; out["failed_checks"] = fails
     (root / "pack.json").write_text(json.dumps(out, indent=1))
     return out
@@ -813,6 +1033,86 @@ def lottie_qa(path, reference="", frames=None):
             **({"vs_reference": {"worst_iou": min(x["iou"] for x in vs_ref), "worst_colour": max(x["colour"] for x in vs_ref), "ok": ok_ref}} if vs_ref else {}),
             "renderers": ["lottie-web 5 (svg)", "rlottie (rlottie-python 1.3.8)"]},
             "dir": str(d.relative_to(ROOT))}
+
+
+def _dotlottie_qa(path, frames=None):
+    """each animation in each theme drawn by the dotLottie player (ThorVG) and by lottie-web from the same animation
+    with the theme's colours written into it: the two must agree (silhouette and colour), and a theme must draw
+    differently from no theme where it changes colours"""
+    import numpy as np
+    from PIL import Image
+    from . import dotlottie as DL
+    src = _inside(path, True); ck, info = DL.check(src)
+    import zipfile
+    z = zipfile.ZipFile(src); anims = {a: json.loads(z.read(f"a/{a}.json")) for a in info["animations"]}; themes = {t: json.loads(z.read(f"t/{t}.json")) for t in info["themes"]}
+    d = ROOT / "out" / "lottie_qa" / (src.stem + ".dotlottie"); shutil.rmtree(d, ignore_errors=True); d.mkdir(parents=True)
+    n = min(int(a["op"] - a["ip"]) for a in anims.values()); frames = frames or sorted({int(round(i * (n - 1) / 2)) for i in range(3)})
+    _run(["node", "tools/dotlottie_frames.mjs", str(src), str(d / "dl"), ",".join(map(str, frames)), "*"], timeout=600)
+    rows = []
+    for aid, a in anims.items():
+        for tid in [None, *themes]:
+            cols = {r["id"]: r["value"] for r in themes[tid]["rules"]} if tid else {}
+            j = d / f"{aid}__{tid or 'none'}.json"; j.write_text(json.dumps(DL.themed(a, cols)))
+            lw = d / f"lw_{aid}__{tid or 'none'}"; lw.mkdir()
+            _run(["node", "tools/lottie_frames.mjs", str(j), str(lw), ",".join(map(str, frames))], timeout=600)
+            for f in frames:
+                A = np.asarray(Image.open(d / "dl" / f"{aid}__{tid or 'none'}__{f:04d}.png").convert("RGBA")).astype(int); B = np.asarray(Image.open(lw / f"lw{f:04d}.png").convert("RGBA")).astype(int)
+                ma, mb = A[..., 3] > 128, B[..., 3] > 128; u = (ma | mb).sum(); both = (A[..., 3] > 200) & (B[..., 3] > 200)
+                row = {"animation": aid, "theme": tid, "frame": f, "iou": round(float((ma & mb).sum() / u) if u else 1.0, 4),
+                       "colour": round(float(np.abs(A[..., :3] - B[..., :3])[both].mean()) if both.any() else 0.0, 2)}
+                if tid:
+                    N = np.asarray(Image.open(d / "dl" / f"{aid}__none__{f:04d}.png").convert("RGBA")).astype(int); bb = (A[..., 3] > 200) & (N[..., 3] > 200)
+                    row["changed_vs_none"] = round(float(np.abs(A[..., :3] - N[..., :3])[bb].mean()) if bb.any() else 0.0, 2)
+                rows.append(row)
+    ok_agree = min(r["iou"] for r in rows) >= 0.98 and max(r["colour"] for r in rows) <= 4
+    orig = {r["id"]: r["value"] for r in themes.get("original", {"rules": []})["rules"]}
+    moved = [r for r in rows if r["theme"] and r["theme"] != "original"]
+    ok_change = all(r["changed_vs_none"] > 3 for r in moved) and all(r["changed_vs_none"] <= 1 for r in rows if r["theme"] == "original" and orig)
+    return {"ok": all(ck.values()) and ok_agree and ok_change, "checks": {**ck, "dotLottie player and lottie-web agree": ok_agree, "themes recolour (original does not)": ok_change},
+            "summary": {"worst_iou": min(r["iou"] for r in rows), "worst_colour": max(r["colour"] for r in rows),
+                        "theme_change": {t: min(r["changed_vs_none"] for r in rows if r["theme"] == t) for t in themes}},
+            "frames": rows, "info": {k: v for k, v in info.items() if k != "manifest"}, "dir": str(d.relative_to(ROOT)),
+            "renderers": ["dotLottie player (@lottiefiles/dotlottie-web 0.82.1, ThorVG)", "lottie-web 5 (svg)"]}
+
+
+@command("lottie.dotlottie", sources=("array", "Lottie JSONs inside the repo exported with slots (export.lottie slots=true; sticker.make), or sticker folders (out/stickers/<pack>/<move>)"),
+         themes=("object", "{theme id: preset name (original, night, pastel, mono) or {slot: \"#hex\"}} (default: the four presets)", None),
+         out=("string", "the .lottie to write (default out/dotlottie/<first id>.lottie)", ""), initial_theme=("string", "the theme a player starts with", ""))
+def lottie_dotlottie(sources, themes=None, out="", initial_theme=""):
+    """Pack Lottie animations into one dotLottie 2.0 file (WP-23) with palette themes: every colour from a puppet's
+    palette is a named slot ("skin", "cloth1"...), and each theme is a set of colour rules for those slots, so a
+    player switches a character's look without another file. Checked by reading the archive back against the 2.0
+    layout and by drawing every animation in every theme in the dotLottie player and in lottie-web."""
+    from . import dotlottie as DL
+    anims = []
+    for sp in sources:
+        p = _inside(sp, True)
+        if p.is_dir():   # a sticker master: export its bake again with slots
+            aid = p.name; a = X.to_lottie(_json(p / "baked.json"), tuple(_json(p / "baked.json").get("size") or [512, 512]), name=aid, slots=True)
+        else:
+            aid = p.name.split(".")[0]; a = _json(p)
+        if not a.get("slots"):
+            raise ValueError(f"{sp} has no slots: export it with slots (export.lottie slots=true)")
+        anims.append((re.sub(r"[^a-zA-Z0-9._ -]", "_", aid), a))
+    slots = {}
+    for _, a in anims:
+        slots.update(DL.slots_of(a))
+    themes = themes if themes is not None else {p: p for p in DL.PRESETS}
+    cols = {}
+    for tid, t in themes.items():
+        if isinstance(t, str):
+            cols[tid] = DL.preset(t, slots)
+        else:
+            unknown = set(t) - set(slots)
+            if unknown:
+                raise ValueError(f"theme {tid}: no slots {sorted(unknown)} (slots: {', '.join(sorted(slots))})")
+            cols[tid] = {k: DL.hex_rgba(v) if isinstance(v, str) else v for k, v in t.items()}
+    o = Path(out) if out else ROOT / "out" / "dotlottie" / f"{anims[0][0]}.lottie"; o = o if o.is_absolute() else ROOT / o
+    o.parent.mkdir(parents=True, exist_ok=True)
+    DL.pack(anims, cols, o, initial_theme=initial_theme or None)
+    qa = _dotlottie_qa(str(o.relative_to(ROOT)))
+    return {"path": str(o.relative_to(ROOT)), "bytes": o.stat().st_size, "animations": [a for a, _ in anims], "themes": list(cols), "slots": sorted(slots),
+            "ok": qa["ok"], "checks": qa["checks"], "qa": qa["summary"]}
 
 
 @command("export.synfig", name=("string", "film"), shot=("string", "shot id"))
@@ -3314,7 +3614,11 @@ def test_golden(update=False, film=""):
     if not film or film == "stickers":   # WP-23: one character to four sticker platforms within their limits; Lottie in two renderers
         bad, meas = _stickers_test()
         failed += 1 if bad else 0
-        results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy and iMessage within each platform's limits; TGS alike in lottie-web and rlottie", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy, iMessage and as Telegram, Discord and Slack emoji within each platform's limits; TGS alike in lottie-web and rlottie; the pack as a dotLottie whose themes draw alike in the dotLottie player and lottie-web", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "alpha":   # WP-23: a shot's characters with alpha, and the film as GIF / APNG / line-art GIF
+        bad, meas = _alpha_formats_test()
+        failed += 1 if bad else 0
+        results.append({"alpha": "a shot's cast as WebM (VP9 alpha) and ProRes 4444 read back alike to its frames; a print still with trim, bleed and CMYK, sharper than an enlarged frame; the film as GIF, APNG and a 32-colour line-art GIF within their palettes", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
         bad, meas = _kra_test()
         failed += 1 if bad else 0
@@ -5843,7 +6147,7 @@ def _stickers_test():
     import gzip
     from PIL import Image
     bad, meas = [], {}
-    r = sticker_pack("puppet/examples/pip.puppet.json", name="ztest-pip")
+    r = sticker_pack("puppet/examples/pip.puppet.json", name="ztest-pip", platforms=["telegram", "whatsapp", "giphy", "imessage", "telegram_emoji", "discord", "slack", "dotlottie"])
     meas["failed_checks"] = r["failed_checks"]
     if not r["ok"]:
         bad.append(f"pack checks failed: {r['failed_checks']}")
@@ -5852,13 +6156,86 @@ def _stickers_test():
         f = st["files"]; kb = lambda k: round((ROOT / f[k]["path"]).stat().st_size / 1024, 1)
         tg = json.loads(gzip.decompress((ROOT / f["telegram_tgs"]["path"]).read_bytes()))
         rows[st["move"]] = {"telegram_kb": kb("telegram"), "tgs_kb": kb("telegram_tgs"), "whatsapp_kb": kb("whatsapp"), "giphy_kb": kb("giphy"), "imessage_kb": kb("imessage"),
-                            "tgs_agree_iou": f["telegram_tgs"]["qa"]["renderers_agree"]["worst_iou"], "tgs_vs_master_iou": f["telegram_tgs"]["qa"]["vs_reference"]["worst_iou"]}
+                            "tgs_agree_iou": f["telegram_tgs"]["qa"]["renderers_agree"]["worst_iou"], "tgs_vs_master_iou": f["telegram_tgs"]["qa"]["vs_reference"]["worst_iou"],
+                            "emoji_kb": {k: kb(k) for k in ("telegram_emoji", "discord", "slack")}}
+        if not (f["telegram_emoji"]["size"] == [100, 100] and kb("telegram_emoji") <= 256 and Image.open(ROOT / f["discord"]["path"]).size == (128, 128) and kb("discord") <= 256
+                and Image.open(ROOT / f["slack"]["path"]).size == (128, 128) and kb("slack") <= 128):
+            bad.append(f"{st['move']} emoji: {rows[st['move']]['emoji_kb']}")
         if not (kb("telegram") <= 256 and kb("telegram_tgs") <= 64 and kb("whatsapp") <= 500 and kb("imessage") <= 500 and tg["w"] == tg["h"] == 512
                 and Image.open(ROOT / f["whatsapp"]["path"]).size == (512, 512) and Image.open(ROOT / f["imessage"]["path"]).size == (408, 408)):
             bad.append(f"{st['move']}: {rows[st['move']]}")
     meas["stickers"] = rows
+    dl = r.get("dotlottie") or {}; meas["dotlottie"] = {"kb": round(dl.get("bytes", 0) / 1024, 1), **dl.get("qa", {})}
+    if not dl or not all(dl["checks"].values()):
+        bad.append(f"pack dotLottie: {dl.get('checks')}")
+    # a custom theme (team colours by slot name), and a theme naming a slot the character does not have is refused
+    t = lottie_dotlottie([str((STICKERS / "ztest-pip" / "wave_R").relative_to(ROOT))], themes={"team": {"cloth1": "#2a9d8f", "cloth2": "#264653"}},
+                         out="out/stickers/ztest-pip/team.lottie")
+    meas["custom_theme"] = t["qa"]
+    if not t["ok"] or t["qa"]["theme_change"]["team"] <= 3:
+        bad.append(f"custom theme: {t['checks']} {t['qa']}")
+    try:
+        lottie_dotlottie([str((STICKERS / "ztest-pip" / "wave_R").relative_to(ROOT))], themes={"x": {"cape": "#000000"}}, out="out/stickers/ztest-pip/x.lottie")
+        bad.append("a theme with an unknown slot was accepted")
+    except ValueError:
+        pass
     shutil.rmtree(STICKERS / "ztest-pip", ignore_errors=True)
     return bad, meas
+
+def _alpha_formats_test():
+    """WP-23: nib-hello's shot as WebM with alpha and ProRes 4444: each read back by an alpha-aware decoder matches
+    the frames it was made from (silhouette and colour), is mostly transparent, and says it carries alpha (WebM's
+    alpha_mode tag; ProRes profile 4444 with an alpha pixel format). The film as GIF, APNG and line-art GIF passes
+    film.formats' checks, and the line-art GIF holds at most 32 colours and is smaller than the GIF."""
+    bad, meas = [], {}
+    r = shot_alpha("nib-hello", "s1")
+    meas["alpha"] = {k: {"bytes": v["bytes"], "worst_iou": min(x["iou"] for x in v["check"]), "worst_colour": max(x["colour"] for x in v["check"])} for k, v in r["files"].items()}
+    if not r["ok"]:
+        bad.append(f"alpha files do not read back alike: {meas['alpha']}")
+    pr = lambda f, e: json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_entries", e, "-of", "json", str(ROOT / f)], capture_output=True, text=True).stdout)["streams"][0]
+    w = pr(r["files"]["webm"]["path"], "stream=codec_name:stream_tags=alpha_mode"); m = pr(r["files"]["prores"]["path"], "stream=codec_name,profile,pix_fmt")
+    meas["webm"], meas["prores"] = w, m
+    if (w.get("tags") or {}).get("alpha_mode") != "1":
+        bad.append(f"WebM has no alpha_mode tag: {w}")
+    if not (m["codec_name"] == "prores" and "4444" in m.get("profile", "") and m.get("pix_fmt", "").startswith("yuva")):
+        bad.append(f"ProRes is not 4444 with alpha: {m}")
+    for f in ("webm", "prores"):
+        (ROOT / r["files"][f]["path"]).unlink(missing_ok=True)
+    # a print still: trim and bleed boxes, resolution, CMYK; drawn large, it is sharper than the video frame enlarged
+    import numpy as np
+    from PIL import Image
+    st = film_still("nib-hello", "2.5", width_mm=240, dpi=300)   # 2.7 times the frame
+    one = FILMS / "nib-hello" / "build" / "stills" / "one.png"
+    _run(["node", "tools/still.mjs", "file://" + str(_player_page("nib-hello")) + "?rastercache=0&captions=0", "2.5", "1", str(one)])
+    big = Image.open(ROOT / st["png"]).convert("L"); up = Image.open(one).convert("L")
+    sc = max(big.width / up.width, big.height / up.height) * 1.0005; up = up.resize((round(up.width * sc), round(up.height * sc)), Image.LANCZOS)
+    up = up.crop(((up.width - big.width) // 2, (up.height - big.height) // 2, (up.width - big.width) // 2 + big.width, (up.height - big.height) // 2 + big.height))
+    def edge(im):   # the steepest edges (ink lines): 99.9th percentile of the gradient; an enlarged frame's edges are soft
+        a = np.asarray(im).astype(float); return float(np.percentile(np.hypot(np.diff(a, axis=1)[:-1], np.diff(a, axis=0)[:, :-1]), 99.9))
+    meas["still"] = {k: st[k] for k in ("trim_px", "bleed_px", "dpi", "max_ink_percent", "cmyk_profile") if k in st}
+    meas["still"]["edge_steepness_vs_enlarged_frame"] = round(edge(big) / max(1e-6, edge(up)), 2)
+    if not st["ok"]:
+        bad.append(f"still checks: {st['checks']}")
+    if meas["still"]["edge_steepness_vs_enlarged_frame"] < 1.5:
+        bad.append(f"still is not sharper than an enlarged video frame: {meas['still']}")
+    tr = film_still("nib-hello", "2.5", width_mm=200, dpi=300, transparent=True); meas["transparent_still"] = {k: tr[k] for k in ("size_px", "transparent_share", "art_box_px")}
+    if not tr["ok"]:
+        bad.append(f"transparent still: {tr['checks']}")
+    shutil.rmtree(FILMS / "nib-hello" / "build" / "stills", ignore_errors=True)
+    shutil.rmtree(FILMS / "nib-hello" / "build" / "shots" / "s1_alpha", ignore_errors=True)
+    if not (FILMS / "nib-hello" / "build" / "final.mp4").exists():
+        meas["formats"] = "skipped: nib-hello has no build/final.mp4 here (film.render)"
+        return bad, meas
+    r = film_formats("nib-hello", seconds=3)
+    meas["formats"] = {k: {"kb": round(v["bytes"] / 1024), "colours": v["colours_seen"], "error": max(v["error"]), "frames": v["frames"]} for k, v in r["files"].items()}
+    if not r["ok"]:
+        bad.append(f"film formats fail their checks: {[(k, v['checks']) for k, v in r['files'].items() if not v['ok']]}")
+    fs = r["files"]
+    if not (fs["lineart"]["colours_seen"] <= 32 and fs["lineart"]["bytes"] < fs["gif"]["bytes"]):
+        bad.append(f"line-art GIF: {meas['formats']['lineart']} vs GIF {meas['formats']['gif']}")
+    shutil.rmtree(FILMS / "nib-hello" / "build" / "formats", ignore_errors=True)
+    return bad, meas
+
 
 def _kra_test():
     """WP-18: tests/fixtures/kra/tiny.kra was saved by Krita 5.2.2 from tiny.ora (groups, a hidden swap shape, a hidden

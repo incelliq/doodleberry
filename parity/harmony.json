@@ -2161,13 +2161,13 @@
      "capability": "Movie export in many codecs",
      "pro_use": "Deliver previews and finals",
      "match": {
-      "kind": "partial",
+      "kind": "command",
       "ref": [
        "film.render",
        "film.package",
-       "WP-23"
+       "shot.alpha"
       ],
-      "note": "H.264 platform profiles; ProRes and WebM with alpha are WP-23"
+      "note": "H.264 platform profiles; ProRes 4444 and WebM with alpha from shot.alpha (WP-23)"
      }
     },
     {
@@ -2175,11 +2175,11 @@
      "capability": "Animated GIF export",
      "pro_use": "Previews and social posts",
      "match": {
-      "kind": "gap",
+      "kind": "command",
       "ref": [
-       "WP-23"
+       "film.formats"
       ],
-      "note": "GIF, APNG and line-art GIFs are WP-23"
+      "note": "film.formats: GIF, APNG and a 32-colour line-art GIF with Bayer dithering, each read back and checked (WP-23)"
      }
     },
     {

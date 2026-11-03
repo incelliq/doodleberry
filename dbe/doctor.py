@@ -99,6 +99,9 @@ def check(deep=True):
     from . import physics as PHY   # WP-09: deterministic Rapier for physics.solve (an npm package in tools/physics)
     add("node package @dimforge/rapier2d-deterministic-compat", "tools", PHY.available(), False, str(PHY.PKG) if PHY.available() else "not installed",
         "bash tools/setup.sh physics   (deterministic Rapier 0.21: physics.solve, WP-09)")
+    dlp = ROOT / "tools" / "dotlottie" / "node_modules" / "@lottiefiles" / "dotlottie-web"   # WP-23: draws .lottie themes in lottie.dotlottie's checks
+    add("node package @lottiefiles/dotlottie-web", "tools", dlp.exists(), False, str(dlp) if dlp.exists() else "not installed",
+        "bash tools/setup.sh dotlottie   (the dotLottie player: lottie.dotlottie and sticker.pack's dotlottie checks, WP-23)")
     from . import assists as ASM   # WP-43 ML assists: model files (fetched by tools/setup.sh models, or on first use)
     for name in ("rife49", "depth_small"):
         mp = ASM.MODELS / ASM.REGISTRY[name]["file"]
