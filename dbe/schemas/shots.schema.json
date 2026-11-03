@@ -233,6 +233,16 @@
     "set": {
      "type": "string"
     },
+    "palette_variant": {
+     "type": "string",
+     "enum": [
+      "night",
+      "sick",
+      "cold",
+      "warm"
+     ],
+     "description": "recolour the shot's characters (cast/palette_variants.json, WP-16)"
+    },
     "set_opts": {
      "type": "object"
     },

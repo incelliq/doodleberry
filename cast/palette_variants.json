@@ -1,0 +1,9 @@
+{
+ "note": "WP-16: palette variants per scene. A shot with \"palette_variant\": <name> recolours its characters (every palette colour and every literal colour in their drawings) the same way in every renderer: desaturate toward grey by desat, mix toward tint by tint_amt, multiply each channel by mult, clamp, round. Raster parts (photos, scans) are not recoloured.",
+ "variants": {
+  "night": {"desat": 0.25, "tint": "#1e2a55", "tint_amt": 0.18, "mult": [0.62, 0.68, 0.92], "about": "moonlight: darker, cooler, a little grey"},
+  "sick": {"desat": 0.2, "tint": "#a8c26a", "tint_amt": 0.24, "mult": [0.95, 1.0, 0.85], "about": "a queasy green cast"},
+  "cold": {"desat": 0.15, "tint": "#9cc3ec", "tint_amt": 0.22, "mult": [0.94, 0.99, 1.06], "about": "frosty: paler and bluer"},
+  "warm": {"desat": 0.0, "tint": "#ffb066", "tint_amt": 0.15, "mult": [1.04, 0.99, 0.9], "about": "golden hour"}
+ }
+}

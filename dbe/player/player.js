@@ -21,6 +21,10 @@
   // ---------- doodle style: boil, ink overlays, speech bubbles ----------
   const SCRIPT = window.SCRIPT || {};
   const libFor = p => (window.CLIPLIB || {})[p.template] || LIB;
+  // a shot's palette variant (WP-16: night, sick, cold, warm) recolours its characters; recoloured once per puppet and variant
+  const VARIANTS = {};
+  const puppetFor = (path, v) => { const p = PUP[path]; if (!p || !v || !(window.PALETTE_VARIANTS || {})[v]) return p;
+    const k = path + '|' + v; return VARIANTS[k] || (VARIANTS[k] = Puppet.recolour(p, window.PALETTE_VARIANTS[v])); };
   const hash = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   // ---------- writing systems (WP-25): a rounded font per script after the Latin ones; direction; widths ----------
@@ -356,7 +360,7 @@
     const heads = {}, casts = []; CASTS = casts;
     const planeInk = {}, onPlane = c => sh.comp && c.plane && c.plane !== 'stage' && !bgOnly;   // WP-36: cast members on depth planes
     for (const c of sh.cast || []) {
-      const p = PUP[c.puppet]; if (!p) continue;
+      const p = puppetFor(c.puppet, sh.palette_variant); if (!p) continue;
       if (bgOnly) { // the set plate for other renderers keeps each character's ground shadow
         const [x, y, s] = placeAt(c.place || { x: W / 2, y: set.floorAt ? set.floorAt(W, H) : set.floor }, tq);
         if (st.shadow !== false) world += `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>`; continue;

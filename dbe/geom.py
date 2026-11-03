@@ -271,3 +271,48 @@ def bend_point(q, pivot, axis, width, theta_deg):
     end = arc(L); want = rigid(pivot[0] + h * ax[0], pivot[1] + h * ax[1])
     w = max(0.0, min(1.0, u / L)); w = w * w * (3 - 2 * w)
     return (lx - (end[0] - want[0]) * w, ly - (end[1] - want[1]) * w)
+
+
+# ---------- palette variants per scene (WP-16; mirrors Puppet.recolour in puppet.js) ----------
+def recolour_hex(h, v):
+    """one colour through a variant {desat, tint, tint_amt, mult}: the same arithmetic and rounding as puppet.js"""
+    import math
+    if not isinstance(h, str) or not h.startswith("#") or len(h) not in (4, 7):
+        return h
+    if len(h) == 4:
+        h = "#" + "".join(c * 2 for c in h[1:])
+    c = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    g = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]; d = v.get("desat", 0)
+    c = [x + (g - x) * d for x in c]
+    if v.get("tint"):
+        t = [int(v["tint"][i:i + 2], 16) / 255 for i in (1, 3, 5)]; a = v.get("tint_amt", 0)
+        c = [x + (y - x) * a for x, y in zip(c, t)]
+    m = v.get("mult", [1, 1, 1])
+    c = [min(1.0, max(0.0, x * k)) for x, k in zip(c, m)]
+    return "#" + "".join(f"{int(math.floor(x * 255 + 0.5)):02x}" for x in c)
+
+
+def recolour(puppet, v):
+    """a copy of a puppet with every palette colour and every literal colour in its drawings put through a variant"""
+    import copy
+    p = copy.deepcopy(puppet)
+    p["palette"] = {k: recolour_hex(x, v) for k, x in (p.get("palette") or {}).items()}
+
+    def strokes(lst):
+        for st in lst or []:
+            for k in ("fill", "stroke"):
+                if isinstance(st.get(k), str) and st[k].startswith("#"):
+                    st[k] = recolour_hex(st[k], v)
+    for part in p.get("parts", {}).values():
+        strokes(part.get("strokes"))
+    for sw in (p.get("swaps") or {}).values():
+        for sh in (sw.get("shapes") or {}).values():
+            strokes(sh)
+    for view in (p.get("views") or {}).values():
+        for part in (view.get("parts") or {}).values():
+            strokes(part.get("strokes") if isinstance(part, dict) else None)
+        for sw in (view.get("swaps") or {}).values():
+            for sh in ((sw or {}).get("shapes") or {}).values():
+                strokes(sh)
+    return p
+

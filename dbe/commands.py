@@ -544,11 +544,18 @@ def _bake(name, shot_id, probe_frames=None):
     timing = _json(d / "timing.json", {})
     fps = s.get("fps", 30)
     cast = []
-    for c in sh.get("cast", []):
+    variant = (_json(ROOT / "cast" / "palette_variants.json", {"variants": {}})["variants"]).get(sh.get("palette_variant") or "")
+    for ci, c in enumerate(sh.get("cast", [])):
         tl = dict(c.get("timeline", {}))
         if "visemes_from" in tl:
             tl["visemes"] = (timing.get("visemes") or {}).get(tl.pop("visemes_from"), [])
-        cast.append({"puppet": str((ROOT / c["puppet"]).resolve()), "place": c.get("place", {"x": 540, "y": 1500, "s": 1}), "timeline": tl})
+        pp = (ROOT / c["puppet"]).resolve()
+        if variant:   # WP-16: every renderer reads the bake's puppet, so the recoloured copy reaches them all alike
+            from . import geom as G
+            vdir = d / "build" / "shots"; vdir.mkdir(parents=True, exist_ok=True)
+            vp = vdir / f"{shot_id}.cast{ci}.{sh['palette_variant']}.puppet.json"; vp.write_text(json.dumps(G.recolour(_json(pp), variant)))
+            pp = vp
+        cast.append({"puppet": str(pp), "place": c.get("place", {"x": 540, "y": 1500, "s": 1}), "timeline": tl})
     spec = {"fps": fps, "frames": probe_frames or round((sh["end"] - sh["start"]) * fps), "start": sh["start"], "cast": cast, "step": (sh.get("style") or {}).get("step"),
             "size": s.get("size", [1080, 1920]), **({"camera": sh["camera"]} if sh.get("camera") else {})}
     if not sh.get("camera") and (sh.get("camera_auto") or (sh.get("style") or {}).get("float")):
@@ -576,7 +583,7 @@ def _player_page(name):
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
 <script src="../../../engine/timeline.js"></script><script src="../../../puppet/loader/puppet.js"></script><script src="../../../puppet/loader/acting.js"></script>
 {clip_tags}<script src="../../../sets/sets.js"></script><script src="../../../sets/more.js"></script><script src="../../../assets/icons/lucide.js"></script><script src="../../../dbe/player/kit.js"></script><script src="../../../dbe/player/props.js"></script><script src="../../../dbe/player/fx.js"></script><script src="../../../dbe/player/comp.js"></script>{tags}
-<script>window.SCRIPT_FONTS={fonts_js};window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};</script>
+<script>window.SCRIPT_FONTS={fonts_js};window.SHOTS={json.dumps(_shots(name))};window.TIMING={json.dumps(_json(d / 'timing.json', {}))};window.SCRIPT={json.dumps(_json(d / 'script.json', {}))};window.DATA={json.dumps(_json(d / 'data.json', {}))};window.BRAND={json.dumps(_brand_kit(_shots(name)))};window.PALETTE_VARIANTS={json.dumps(_json(ROOT / "cast" / "palette_variants.json", {"variants": {}})["variants"])};</script>
 <script src="../../../dbe/player/player.js"></script></body></html>"""
     pp = d / "build" / "player.html"
     if not pp.exists() or pp.read_text() != page:   # written whole (a temporary file, then renamed): render workers read it at once (WP-38)
@@ -1172,7 +1179,7 @@ def export_synfig(name, shot):
 
 # ---------------- whole film ----------------
 ENGINE_FILES = ["dbe/player/player.js", "dbe/player/kit.js", "dbe/player/fx.js", "dbe/player/props.js", "dbe/player/comp.js", "puppet/loader/puppet.js", "puppet/loader/acting.js", "sets/sets.js", "sets/more.js", "tools/bake.mjs",
-                "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs"]
+                "dbe/exporters.py", "dbe/geom.py", "dbe/blender_gp.py", "tools/three/run3d.mjs", "cast/palette_variants.json"]
 
 
 # ---------- transitions (WP-15): made when the shots are joined, centred on the cut, so timing and sound are unchanged ----------
@@ -5393,6 +5400,10 @@ def test_golden(update=False, film=""):
         bad, meas = _templates_test()
         failed += 1 if bad else 0
         results.append({"templates": "Biscuit (quadruped), Pim (bird) and Kettle (object with a face) pass their templates' lint, and a shot playing each one's whole clip library draws alike in the SVG player, Synfig, Lottie and Grease Pencil", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "palette":   # WP-16: palette variants per scene, alike in every renderer
+        bad, meas = _palette_test()
+        failed += 1 if bad else 0
+        results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "living":   # WP-27: corrections everywhere, companion guides, living films, intake, rebrand
         bad, meas = _living_test()
         failed += 1 if bad else 0
@@ -9505,3 +9516,53 @@ def _templates_test():
         finally:
             shutil.rmtree(d_, ignore_errors=True)
     return bad, meas
+
+
+def _palette_test():
+    """WP-16 palette variants. Every cast puppet and example, through every variant in cast/palette_variants.json:
+    Puppet.recolour (puppet.js, the player) and geom.recolour (the bake's copy every other renderer reads) give the
+    same colours, every one. A scratch shot of Pip and Biscuit with "palette_variant": "night": renderer parity
+    holds against Synfig, Lottie and Grease Pencil, and against the same shot by day the characters are darker
+    (mean luminance down by at least a fifth) and bluer (blue's share up)."""
+    import numpy as np
+    from . import geom as G, rparity as RP
+    bad, meas = [], {}
+    V = _json(ROOT / "cast" / "palette_variants.json")["variants"]
+    pups = sorted({e["path"] for e in _json(ROOT / "cast" / "index.json")["puppets"] if (ROOT / e["path"]).exists()} | {str(p.relative_to(ROOT)) for p in (ROOT / "puppet" / "examples").glob("*.puppet.json")})
+    js = ("globalThis.window=globalThis;const fs=require('fs');new Function(fs.readFileSync('puppet/loader/puppet.js','utf8'))();const V=JSON.parse(process.argv[1]);const out={};"
+          "for(const p of JSON.parse(process.argv[2])){const P=JSON.parse(fs.readFileSync(p,'utf8'));for(const [k,v] of Object.entries(V)){out[p+'|'+k]=JSON.stringify(Puppet.recolour(P,v));}}console.log(JSON.stringify(out));")
+    r = subprocess.run(["node", "-e", js, json.dumps(V), json.dumps(pups)], cwd=ROOT, capture_output=True, text=True)
+    out = json.loads(r.stdout) if r.returncode == 0 else {}
+    diff = []
+    for p in pups:
+        P = _json(ROOT / p)
+        for k, v in V.items():
+            a = json.loads(out.get(f"{p}|{k}", "null") or "null"); b = G.recolour(P, v)
+            if a != b:
+                diff.append(f"{p}|{k}")
+    meas["recoloured"] = {"puppets": len(pups), "variants": len(V), "mismatches": diff[:5]}
+    if diff or not out:
+        bad.append(f"puppet.js and geom.py recolour differently: {diff[:3]} {r.stderr[-200:]}")
+    name = "zz-palette"; d_ = FILMS / name
+    try:
+        res = {}
+        for tag, var in (("day", None), ("night", "night")):
+            shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+            cast = [{"puppet": "puppet/examples/pip.puppet.json", "place": {"x": 360, "y": 1500, "s": 0.9}, "timeline": {"clips": [{"clip": "idle", "start": 0, "fadeIn": 0}, {"clip": "wave_R", "start": 0.4}]}},
+                    {"puppet": "puppet/examples/biscuit.puppet.json", "place": {"x": 760, "y": 1500, "s": 0.8}, "timeline": {"clips": [{"clip": "idle", "start": 0, "fadeIn": 0}, {"clip": "wag", "start": 0.3, "end": 2.0}]}}]
+            (d_ / "shots.json").write_text(json.dumps({"title": "palette", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "renderer": "svg", "set": "plain", "start": 0, "end": 2.5, "bubbles": False,
+                                                       **({"palette_variant": var} if var else {}), "cast": cast}]}))
+            (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+            rp = RP.run(name, "s1", times=[0.6, 1.4, 2.2])
+            sv = RP.rgba(ROOT / "out" / "rparity" / name / "s1" / "svg_1.400.png").astype(float); m = sv[..., 3] > 200
+            res[tag] = {"ok": rp["ok"], "renderers": {k: (v.get("min"), max(v.get("colour_diff") or [0])) for k, v in rp["renderers"].items()},
+                        "luma": round(float((sv[..., :3][m] @ [0.299, 0.587, 0.114]).mean()), 1), "blue_share": round(float(sv[..., 2][m].sum() / sv[..., :3][m].sum()), 3)}
+        meas["shot"] = res
+        if not res["night"]["ok"] or not res["day"]["ok"]:
+            bad.append(f"parity: {res}")
+        if not (res["night"]["luma"] < 0.8 * res["day"]["luma"] and res["night"]["blue_share"] > res["day"]["blue_share"]):
+            bad.append(f"night is not darker and bluer: {res}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
+

@@ -24,6 +24,30 @@
   const apply = (m, [x, y]) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
   const I = [1, 0, 0, 1, 0, 0];
 
+  // palette variants per scene (WP-16; mirrored by dbe/geom.py recolour): desaturate, tint, multiply, clamp, round
+  function recolourHex(h, v) {
+    if (typeof h !== 'string' || h[0] !== '#' || (h.length !== 4 && h.length !== 7)) return h;
+    if (h.length === 4) h = '#' + [...h.slice(1)].map(c => c + c).join('');
+    let c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+    const g = 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2], d = v.desat || 0;
+    c = c.map(x => x + (g - x) * d);
+    if (v.tint) { const t = [1, 3, 5].map(i => parseInt(v.tint.slice(i, i + 2), 16) / 255), a = v.tint_amt || 0; c = c.map((x, k) => x + (t[k] - x) * a); }
+    const m = v.mult || [1, 1, 1];
+    c = c.map((x, k) => Math.min(1, Math.max(0, x * m[k])));
+    return '#' + c.map(x => Math.floor(x * 255 + 0.5).toString(16).padStart(2, '0')).join('');
+  }
+  function recolour(puppet, v) {
+    const p = JSON.parse(JSON.stringify(puppet));
+    p.palette = Object.fromEntries(Object.entries(p.palette || {}).map(([k, x]) => [k, recolourHex(x, v)]));
+    const strokes = lst => { for (const st of lst || []) for (const k of ['fill', 'stroke']) if (typeof st[k] === 'string' && st[k][0] === '#') st[k] = recolourHex(st[k], v); };
+    for (const part of Object.values(p.parts || {})) strokes(part.strokes);
+    for (const sw of Object.values(p.swaps || {})) for (const sh of Object.values(sw.shapes || {})) strokes(sh);
+    for (const view of Object.values(p.views || {})) {
+      for (const part of Object.values(view.parts || {})) if (part && typeof part === 'object') strokes(part.strokes);
+      for (const sw of Object.values(view.swaps || {})) for (const sh of Object.values((sw || {}).shapes || {})) strokes(sh);
+    }
+    return p;
+  }
   function colourOf(v, pal) { if (!v) return 'none'; return v[0] === '#' || v === 'none' ? v : pal[v] || '#ff00ff'; }
   // v0.5 toon shading (render option toon: {dir: [x, y] towards the light, d: 7, shade: '#2a1a10', opacity: 0.22, rim: 0}):
   // within each filled vector shape, the band facing away from the light is shaded: the shape is clipped to itself,
@@ -291,5 +315,5 @@
     return out;
   }
 
-  root.Puppet = { render, pointOf, fromTemplate, lint, matrices, inView };
+  root.Puppet = { render, pointOf, fromTemplate, lint, matrices, inView, recolour, recolourHex };
 })(typeof window !== 'undefined' ? window : globalThis);

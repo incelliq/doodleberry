@@ -954,6 +954,20 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Palette variants per scene (WP-16)
+A shot with `"palette_variant": "night"` (or `sick`, `cold`, `warm`; cast/palette_variants.json) recolours its
+characters: every palette colour and every literal colour in their drawings (strokes, swap shapes, view overrides)
+is pulled toward grey by `desat`, mixed toward `tint` by `tint_amt`, multiplied channel by channel by `mult`, clamped
+and rounded. The same arithmetic is in the player (`Puppet.recolour` in puppet/loader/puppet.js) and the bake
+(`geom.recolour`): the bake writes a recoloured copy of each puppet beside the shot
+(build/shots/<shot>.cast<i>.<variant>.puppet.json), so Synfig, Lottie and Grease Pencil draw what the player draws.
+Raster parts are not recoloured. The variants file is renderer input, so changing it re-renders the shots that use it.
+
+Test `palette`: the player and the bake give the same colours for all 20 cast and example puppets in all 4 variants.
+A shot of Pip and Biscuit by day and by night draws alike in Synfig, Lottie and Grease Pencil (score 1.0, colour
+difference 0.1 to 0.2). The night version is darker (mean luma 85 against 143) and bluer (blue share 0.36 against
+0.23).
+
 ## Render farm (WP-38, part 1)
 `farm.render {"name", "workers", "pin", "cache", "fresh", "assemble"}` (dbe/farm.py) splits a film into one task per
 shot that is neither already rendered nor in the shared cache. Tasks go into a queue on disk (out/farm/runs/<run>/),
