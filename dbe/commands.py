@@ -4009,8 +4009,9 @@ def interact_solve(name, shot, block=None):
     return res
 
 
-@command("interact.measure", name=("string", "film"), shot=("string", "shot id"))
-def interact_measure(name, shot):
+@command("interact.measure", name=("string", "film"), shot=("string", "shot id"),
+         points=("array", "optional checks [{cast, part, t, want: [x, y]}]: how far a part is from a frame point", None))
+def interact_measure(name, shot, points=None):
     """The WP-11 measurements on the baked frames every renderer reads: how far a planted foot moves in the frame
     while it is in contact (max and mean px per frame, per walking character) and how far apart the two hands are
     during each solved handshake (max px)."""
@@ -4021,10 +4022,10 @@ def interact_measure(name, shot):
         hands.append({"a": h["a"], "b": h["b"], "start": h["start"], "end": h["end"]})
     with tempfile.TemporaryDirectory(prefix="measure_") as td:
         o, op = Path(td) / "m.json", Path(td) / "opts.json"
-        op.write_text(json.dumps({"hands": hands}))
+        op.write_text(json.dumps({"hands": hands, "points": points or []}))
         _node_json(["tools/interact.mjs", "measure", bdir / f"{shot}.spec.json", bdir / f"{shot}.baked.json", o, op])
         m = json.loads(o.read_text())
-    m["ok"] = all(f["max_slide_px"] <= 1.0 for f in m["feet"]) and all(h["max_gap_px"] <= 2.0 for h in m["hands"])
+    m["ok"] = all(f["max_slide_px"] <= 1.0 for f in m["feet"]) and all(h["max_gap_px"] <= 2.0 for h in m["hands"]) and all(q["gap_px"] <= 2.0 for q in m.get("points", []))
     return m
 
 
@@ -4047,4 +4048,20 @@ def _interact_test():
         meas["handshake_demo"] = {"resolve_equal": same, "feet": [{k: f[k] for k in ("cast", "max_slide_px", "mean_slide_px", "planted_frames")} for f in m["feet"]], "hands": m["hands"]}
         if not (same and m["ok"] and m["feet"] and m["hands"]):
             bad.append({"handshake_demo": meas["handshake_demo"]})
+    # v0.9: dbe/geom.py (Synfig, Grease Pencil) computes the same matrices as puppet.js with stretched parts
+    from . import geom as G
+    pose = {"angles": {"upperarm_R": 35, "forearm_R": -50, "hand_R": 10, "head": 6}, "shifts": {"head": [3, -2]}, "scales": {"upperarm_R": [0.9, 1.4], "forearm_R": [1, 1.2], "torso": [1.1, 0.95]}}
+    r = subprocess.run(["node", "tools/interact.mjs", "matrices", json.dumps(pose)], cwd=ROOT, capture_output=True, text=True, timeout=120)
+    js = json.loads(r.stdout or "{}")
+    py = G.part_matrices(_json(ROOT / "puppet/examples/pip.puppet.json"), pose["angles"], pose["shifts"], pose["scales"])
+    err = max((abs(a - b) for k in py for a, b in zip(py[k], js.get(k, [0] * 6))), default=1)
+    meas["geom_vs_loader"] = round(err, 9)
+    if err > 1e-6:
+        bad.append({"geom_vs_loader": err})
+    # stretch-demo: the stretched arm reaches the balloon string on the baked frames
+    if (FILMS / "stretch-demo").exists():
+        m2 = interact_measure("stretch-demo", "s1", points=[{"cast": 0, "part": "hand_R", "t": 3.0, "want": [722, 640]}])
+        meas["stretch_demo"] = m2["points"]
+        if not m2["ok"]:
+            bad.append({"stretch_demo": m2["points"]})
     return bad, meas

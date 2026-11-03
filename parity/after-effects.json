@@ -678,10 +678,10 @@
       "kind": "partial",
       "ref": [
        "shots.json place.path",
-       "interact.solve",
-       "WP-11"
+       "shots.json props path",
+       "WP-20"
       ],
-      "note": "Characters walk along Catmull-Rom paths at constant speed (with ease), facing the way they go; props travel straight or ballistic with motion arcs (fx.arcs). Editing paths in a viewer and follow-path for props are WP-11."
+      "note": "Characters walk and props travel along Catmull-Rom paths with ease, auto-oriented; editing the paths in a viewer is WP-20 (graph view)."
      }
     },
     {

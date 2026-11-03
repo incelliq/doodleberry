@@ -8,6 +8,9 @@
 //     "flight": "ballistic"  a true gravity arc: leaves the previous parent where it was at the key time and lands on
 //                            this target where it is at "arrive" (line-relative times allowed upstream)
 //     "drop": {"floor": y, "x": x, "e": 0.5, "roll": 0.6}  released at the key time: falls, bounces and rolls to rest
+//   "path": {"points": [[x, y], ...], "start", "speed" | "end", "ease", "orient": true, "offset": deg}  follows a
+//             Catmull-Rom curve by arc length (WP-11), turning to face along it when "orient"; with "attach" too, the
+//             path takes over between its start and end
 //   "track": {"t0", "fps", "frames": [[x, y, deg], ...], "contacts": [[t, x, y], ...]}  a baked simulation
 //             (physics.solve, Rapier); after its last frame the prop holds. With "attach" too, the track takes over at t0.
 // Drawing (all optional, WP-09):
@@ -52,6 +55,16 @@
       const s = trackAt(tr, t); if (!s) return null;
       if (info) { info.spin = s[2]; info.bounces = (tr.contacts || []).filter(c => c[0] <= t); }
       return [s[0], s[1]];
+    }
+    const pa = pr.path, A = root.Acting;
+    if (pa && A) {
+      const st = pa.start || 0, en = pa.end != null ? pa.end : st + A.pathTable(pa).L / Math.max(1e-3, pa.speed || 150) + (pa.ease || 0);
+      if (!keys.length || (t >= st && t <= en)) {
+        const q = A.pathAt(pa, t);
+        if (info && pa.orient) { const a = A.pathAt(pa, Math.max(st, t - 0.01)), b = A.pathAt(pa, Math.min(en, t + 0.01));
+          const dx = b[0] - a[0], dy = b[1] - a[1]; info.spin = (Math.hypot(dx, dy) > 1e-6 ? Math.atan2(dy, dx) * 57.2958 : (pa._last || 0)) + (pa.offset || 0); }
+        return [q[0], q[1]];
+      }
     }
     if (!keys.length || t < keys[0][0]) return null;
     let k = 0; while (k + 1 < keys.length && keys[k + 1][0] <= t) k++;

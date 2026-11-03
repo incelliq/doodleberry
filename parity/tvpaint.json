@@ -1002,12 +1002,12 @@
      "capability": "Squash and stretch of individual members, scaled in both directions.",
      "pro_use": "Adds elasticity and impact to cut-out motion.",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
-       "shots.json: timeline clips (whole-body squash)",
-       "WP-11"
+       "shots.json timeline scales",
+       "puppet format v0.9"
       ],
-      "note": "Only the whole body squashes today; squash and stretch per part is in WP-11."
+      "note": "Per-part squash and stretch (timeline scales, controls, stretchy IK), local to the part so children keep their proportions; every renderer draws it."
      }
     },
     {
@@ -1015,12 +1015,12 @@
      "capability": "Bone locking and bone constraints.",
      "pro_use": "Keeps feet planted and limbs bound while other bones move.",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
        "shots.json timeline ik_weight",
-       "WP-11"
+       "puppet format v0.9 copy_rotation"
       ],
-      "note": "Two-bone and FABRIK IK with IK/FK blending and targets on other characters, foot pins along paths, joint limits, look-at and parent switching exist. Copy-rotation constraints are in WP-11."
+      "note": "Two-bone and FABRIK IK with IK/FK blending and targets on other characters, stretchy limbs, foot pins along paths, joint limits, look-at, copy rotation and parent switching exist."
      }
     },
     {
@@ -1982,11 +1982,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json: camera_auto handheld",
-       "shots.json: cast[].place",
-       "WP-11"
+       "shots.json props path",
+       "WP-36"
       ],
-      "note": "Handheld drift and keyed placement exist. Follow-path is in WP-11, and tracking footage in WP-36."
+      "note": "Handheld drift, keyed placement and paths for characters and props exist; tracking footage is WP-36."
      }
     },
     {
@@ -2056,11 +2055,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shots.json: cast[].place",
-       "shots.json: props flight / drop",
-       "WP-11"
+       "shots.json props path",
+       "WP-15",
+       "WP-36"
       ],
-      "note": "Keyed placement, ballistic prop flights and drops exist. Follow-path is in WP-11, motion blur in WP-15, and 3D-style rotations of 2D layers in WP-36."
+      "note": "Keyed placement, paths for props and characters, ballistic flights and drops exist. Motion blur is WP-15, and 3D-style rotations of 2D layers WP-36."
      }
     },
     {

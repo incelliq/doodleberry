@@ -81,6 +81,9 @@
 <script src="vendor/perfect-freehand.js"></script>
 <script src="../loader/sheet.js"></script>
 <script>
+  // a feature raises the format version to the one that introduced it, never lowers it (v0.9 files stay v0.9)
+  const atLeast = (v, w) => { const n = x => String(x || '0').split('.').map(Number); const [a, b] = [n(v), n(w)]; return (a[0] - b[0] || (a[1] || 0) - (b[1] || 0)) >= 0 ? v : w; };
+
 (function () {
   const T = window.TEMPLATES.humanoid;
   const KEY = 'rigcanvas.puppet';
@@ -310,7 +313,7 @@
     const clip = { duration: round(keys[keys.length - 1].t), tracks };
     if (keys.some(k => k.pose.offset)) clip.offset = keys.map(k => [round(k.t), k.pose.offset || [0, 0]]);
     for (const sw of ['mouth', 'brows', 'eyes']) if (keys.some(k => k.pose[sw])) clip.swaps = { ...(clip.swaps || {}), [sw]: keys.filter(k => k.pose[sw]).map(k => [round(k.t), k.pose[sw]]) };
-    P.clips = P.clips || {}; P.clips[n] = clip; P.version = '0.7'; keys = []; save(); posePanel(); $('action').value = 'clip:' + n; };
+    P.clips = P.clips || {}; P.clips[n] = clip; P.version = atLeast(P.version, '0.7'); keys = []; save(); posePanel(); $('action').value = 'clip:' + n; };
 
   // ---------- stage ----------
   function drawStage() {
@@ -359,7 +362,7 @@
   $('clear').onclick = () => { if (!confirm(view ? `Remove the "${view}" drawing of this slot (it will inherit the front again)?` : 'Clear everything drawn in this slot?')) return;
     if (view) { const v = ov(); if (active.kind === 'part') delete v.parts[active.id]; else if (v.swaps[active.id]) delete v.swaps[active.id].shapes[active.shape]; } else strokesOf(active).length = 0; save(); refresh(); };
   $('view').onchange = () => { let v = $('view').value;
-    if (v === '+') { v = (prompt('Name the new view (e.g. side, 3q, back):', 'side') || '').trim().replace(/\W+/g, '_'); if (v) { P.views = P.views || {}; P.views[v] = P.views[v] || { parts: {}, swaps: {} }; P.version = '0.2'; save(); } }
+    if (v === '+') { v = (prompt('Name the new view (e.g. side, 3q, back):', 'side') || '').trim().replace(/\W+/g, '_'); if (v) { P.views = P.views || {}; P.views[v] = P.views[v] || { parts: {}, swaps: {} }; P.version = atLeast(P.version, '0.2'); save(); } }
     view = v === '+' ? view : v; refresh(); };
   $('onion').onclick = () => { onion = !onion; $('onion').classList.toggle('on', onion); drawStage(); };
   $('name').value = P.name; $('name').oninput = () => { P.name = $('name').value; save(); };

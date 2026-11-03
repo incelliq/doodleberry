@@ -200,3 +200,29 @@ drawings and whose **`xsheet`** is the exposure sheet:
 - Commands: `level.make` (drawings plus timing), `level.xsheet` (retime, or write the cells), `level.from_pencil2d`
   (a Pencil2D animation, with its holds), `level.onion` (onion-skin drawings around a frame). Raster drawings render
   in the SVG renderer; vector drawings everywhere.
+
+## v0.9 additions: squash and stretch, constraints, angle-driven drawings, whole-face lip-sync (WP-11)
+All optional; v0.8 files stay valid. The loader, the bake (`tools/bake.mjs` records `scales`), `dbe/geom.py` and the
+Synfig, Lottie and Grease Pencil exporters all follow them.
+
+- **Per-part squash and stretch** (a pose quantity, not stored in the file): `pose.scales[part] = [sx, sy]` in the
+  part's rest axes, about its pivot. The scale is *local*: it stretches the part's own drawing (and swaps anchored to
+  it) and carries its children's pivots with it, but children keep their own proportions, so nothing shears. Timelines
+  key it (`"scales": {"forearm_R": [[t, 1.3]]}`: a number stretches along the part's rest axis, from its pivot to its
+  first child, and squeezes across by 1/sqrt(k)), controls drive it (`"target": "scale.head"`), and stretchy IK sets it
+  (`"ik_stretch": {"arm_R": 1.4}`: past full reach both bones stretch, up to 1.4x, so the hand still lands).
+- **Fill rule** on a stroke: `"rule": "evenodd"` cuts holes where subpaths overlap (a ring, the letter O, a donut
+  hole). Lottie writes it as the fill rule; Synfig cuts the inner contours out; Grease Pencil fills cannot have
+  holes, so the outer contour and its holes become one keyhole polygon (joined by a zero-width bridge).
+- **Free per-part attributes**: `parts[id].attrs = {...}`: any JSON (material, a sound, notes). Every tool keeps them;
+  renderers ignore them.
+- **Drawing substitution by angle**: `swaps[sid].by_angle = {"part": "forearm_R", "world": false,
+  "shapes": [[-180, -40, "hand_back"], [-40, 40, "hand_side"], [40, 180, "hand_front"]]}`: when nothing else picks the
+  drawing, the part's final angle (its local angle, or its angle in the frame with `world`) chooses it.
+- **Per-pose layer order**: a named pose may carry `"z": {"arm_R": 30}`, applied while the pose holds; timelines key it
+  with `"z": [[t, {"arm_R": 30}]]` (held until the next key).
+- **Copy rotation**: `"copy_rotation": [{"part": "tail", "from": "hip", "factor": -0.5, "offset": 0, "weight": 1}]` on the
+  puppet (or in a timeline): the part takes `factor` times the other part's angle, plus `offset`.
+- **Whole-face lip-sync**: `"lipsync": {"O": {"angles": {"head": -2}, "shifts": {"@brows": [0, -4]}, "scales": {"head": [1, 1.03]}}, "wide": {...}}`:
+  with visemes, the current mouth shape's pose is added to the face (cross-faded over 0.06 s from the previous one), so
+  the jaw, cheeks and brows move with the words.

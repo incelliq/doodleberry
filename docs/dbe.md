@@ -382,6 +382,12 @@ effects and the Node solvers.
   holds out a hand to the meeting point and pumps it, a takes b's hand; both blended in and out) and `eye_contact`
   (`{a, b, start, end}`). `interact.measure` reports planted-foot slide and hand gaps on the baked frames (the
   `interact` test requires at most 1 px and 2 px). `films/handshake-demo` is the demo.
+- Part 2 (puppet format v0.9, `puppet/spec/puppet-format.md`): timeline `scales` (`{"head": [[t, 0.86]]}`: per-part
+  squash and stretch), `ik_stretch` (`{"arm_R": 1.8}`: stretchy limbs), `copy_rotation`, `z` (layer order keys); on the
+  puppet, `swaps[sid].by_angle`, `lipsync`, per-pose `z`, part `attrs` and stroke `rule: "evenodd"`. A prop may follow
+  a path: `"path": {"points", "start", "end" | "speed", "ease", "orient": true}`. `interact.measure` also takes
+  `points` (how far a part is from a frame point at a time). `films/stretch-demo` is the demo. `render.parity` compares
+  the characters even in shots with props, effects or planes, and lists those as `not_compared`.
 
 ## Drawing coach (plan 1.10)
 `puppet.coach` checks a character (a puppet, or a layered drawing before import) and returns advice with measured values

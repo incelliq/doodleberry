@@ -362,12 +362,11 @@
      "capability": "Custom attributes on layers and custom properties on the drawing data.",
      "pro_use": "Pipelines tag layers and drawings with data their scripts read (status, pass names, variants).",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
-       "puppet.lint",
-       "WP-11"
+       "puppet format v0.9 attrs"
       ],
-      "note": "Puppets carry meta (author, licence) and the schema is fixed; free per-part attributes are not defined. NEW: should join WP-11 with the next puppet-format bump.",
+      "note": "Parts carry free attributes (attrs: any JSON), kept by every tool and ignored by the renderers.",
       "added_to_scope": true
      }
     },
@@ -458,12 +457,12 @@
      "capability": "Per-layer location, rotation and scale.",
      "pro_use": "Nudge or animate parts of a drawing without redrawing.",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
-       "timeline.edit",
-       "WP-11"
+       "shots.json timeline scales",
+       "shots.json timeline z"
       ],
-      "note": "Parts rotate about pivots and move with pose shifts; per-part scale (squash and stretch) is WP-11."
+      "note": "Parts rotate about pivots, move with pose shifts and scale per part (v0.9), with layer order keys; every renderer draws them."
      }
     },
     {
@@ -819,10 +818,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "shot.render",
-       "WP-11"
+       "shots.json timeline scales",
+       "WP-18"
       ],
-      "note": "Whole-body squash and bendy limbs exist; per-part squash and stretch is WP-11; free-form cage warps are not planned."
+      "note": "Whole-body squash, bendy limbs and per-part squash and stretch exist; free-form cage warps are WP-18 (Rig Canvas tools)."
      }
     },
     {

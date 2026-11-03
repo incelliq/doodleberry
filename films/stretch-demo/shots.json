@@ -1,0 +1,44 @@
+{
+ "title": "Stretch",
+ "size": [1080, 1920],
+ "fps": 30,
+ "captions": false,
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "paper",
+   "start": 0,
+   "end": "got.end+0.5",
+   "start_line": "oh",
+   "end_line": "got",
+   "style": {"shadow": true},
+   "bubbles": true,
+   "cast": [
+    {
+     "puppet": "puppet/examples/tam.puppet.json",
+     "speaker": "tam",
+     "place": {"x": 540, "y": 1500, "s": 0.9},
+     "timeline": {
+      "clips": [{"clip": "idle", "start": 0, "fadeIn": 0}, {"clip": "talk_beat", "start": "oh.start", "additive": true}],
+      "visemes_from": "tam",
+      "look": [[0.4, [0, 0]], [0.8, [0.4, -1]], [3.6, [0.4, -1]], [3.9, [0, 0]]],
+      "ik": {"arm_R": [[1.6, {"x": 713.6, "y": 837.6}], [2.0, {"x": 713.6, "y": 837.6}], [2.4, {"x": 699.3, "y": 759.2}], [2.6, {"x": 704.9, "y": 719.1}],
+                        [2.8, {"x": 713.3, "y": 679.6}], [3.0, {"x": 722, "y": 640}], [3.6, {"x": 700, "y": 900}], [4.2, {"x": 660, "y": 1080}]]},
+      "ik_weight": {"arm_R": [[1.6, 0], [2.3, 1], [4.2, 1], [4.8, 0.6]]},
+      "ik_stretch": {"arm_R": 1.8},
+      "copy_rotation": [{"part": "upperarm_L", "from": "upperarm_R", "factor": -0.45}],
+      "scales": {"head": [[3.25, 1], [3.35, 0.86], [3.5, 1.08], [3.65, 1]]},
+      "springs": true
+     }
+    }
+   ],
+   "props": [
+    {"id": "balloon", "r": 40, "travel": 0.01, "impact": false,
+     "svg": "<path d='M0 0 C -14 -40 14 -80 0 -122' fill='none' stroke='#181e26' stroke-width='3'/><ellipse cx='0' cy='-182' rx='50' ry='62' fill='#e8603c' stroke='#181e26' stroke-width='5'/><path d='M-6 -120 L6 -120 L0 -128 Z' fill='#e8603c' stroke='#181e26' stroke-width='3'/><ellipse cx='-16' cy='-204' rx='10' ry='18' fill='#fff' opacity='0.5'/>",
+     "path": {"points": [[690, 1150], [770, 960], [700, 800], [722, 640]], "start": 0.3, "end": 3.0},
+     "attach": [[0, {"x": 690, "y": 1150}], [3.0, {"cast": 0, "part": "hand_R"}]]}
+   ]
+  }
+ ]
+}

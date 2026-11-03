@@ -244,14 +244,14 @@
    "template": "humanoid",
    "author": "doodleberry (generated example)",
    "license": "CC0-1.0",
-   "provenance": "Pip recoloured by puppet/examples/make_tam.py (front and side views)",
+   "provenance": "Pip recoloured by puppet/examples/make_tam.py (front and side views), with v0.9 features",
    "rights": {
     "type": "open"
    },
    "views": [
     "side"
    ],
-   "sha256": "5beef16871f5d21b",
+   "sha256": "002b38102f18276a",
    "voice": {
     "voice": "kokoro:am_puck"
    },

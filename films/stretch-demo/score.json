@@ -1,0 +1,8 @@
+{
+ "length_s": 4.466,
+ "bpm": 100,
+ "offset_s": 0,
+ "sections": [
+  {"kind": "main", "from_beat": 0, "to_beat": 8, "chords": ["G", "Em", "C", "D"], "end_chord": "G"}
+ ]
+}

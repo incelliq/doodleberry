@@ -60,23 +60,44 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
         return {"a": 1, "k": ks} if len(ks) > 1 else {"a": 0, "k": values[0] if isinstance(values[0], list) else values[0]}
 
     def shape_group(strokes, pal):
+        """one group per stroke: its subpaths share one fill, so an even-odd stroke (v0.9 fill rule) cuts holes"""
         items = []
         for st in strokes:
+            it = []
             for segs, closed in G.parse_path(st.get("d") or ""):
                 v = [list(s[0]) for s in segs]
                 o = [[s[1][0] - s[0][0], s[1][1] - s[0][1]] for s in segs]
                 i_ = [[segs[k - 1][2][0] - segs[k - 1][3][0], segs[k - 1][2][1] - segs[k - 1][3][1]] for k in range(len(segs))]
                 if not closed:
                     v.append(list(segs[-1][3])); o.append([0, 0]); i_[0] = [0, 0]; i_.append([segs[-1][2][0] - segs[-1][3][0], segs[-1][2][1] - segs[-1][3][1]])
-                it = [{"ty": "sh", "ks": {"a": 0, "k": {"i": i_, "o": o, "v": v, "c": closed}}}]
-                fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
-                if fill:
-                    it.append({"ty": "fl", "c": {"a": 0, "k": G.hex_rgb(fill) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 1})
-                if line:
-                    it.append({"ty": "st", "c": {"a": 0, "k": G.hex_rgb(line) + [1]}, "o": {"a": 0, "k": 100}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
-                it.append({"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}})
-                items.append({"ty": "gr", "it": it})
+                it.append({"ty": "sh", "ks": {"a": 0, "k": {"i": i_, "o": o, "v": v, "c": closed}}})
+            if not it:
+                continue
+            fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
+            if fill:
+                it.append({"ty": "fl", "c": {"a": 0, "k": G.hex_rgb(fill) + [1]}, "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 2 if st.get("rule") == "evenodd" else 1})
+            if line:
+                it.append({"ty": "st", "c": {"a": 0, "k": G.hex_rgb(line) + [1]}, "o": {"a": 0, "k": 100}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
+            it.append({"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}})
+            items.append({"ty": "gr", "it": it})
         return items
+
+    def scaled(items, pivot, frs, pid):
+        """v0.9 per-part scale on the part's own drawing only (children keep their proportions, as in puppet.js)"""
+        sc = [G._scale_of(fr.get("scales"), pid) or [1, 1] for fr in frs]
+        if all(v == [1, 1] for v in sc):
+            return items
+        return [{"ty": "gr", "it": items + [{"ty": "tr", "p": {"a": 0, "k": list(pivot)}, "a": {"a": 0, "k": list(pivot)}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100},
+                                             "s": kf([[round(100 * v[0], 3), round(100 * v[1], 3)] for v in sc])}]}]
+
+    def stretch_offset(p, pid, fr):
+        """where a part's pivot moves because its parent is stretched (v0.9)"""
+        par = p["parts"][pid].get("parent")
+        ps = G._scale_of(fr.get("scales"), par) if par in p["parts"] else None
+        if not ps:
+            return [0, 0]
+        pp, cp = p["parts"][par]["pivot"], p["parts"][pid]["pivot"]
+        return [(ps[0] - 1) * (cp[0] - pp[0]), (ps[1] - 1) * (cp[1] - pp[1])]
 
     assets = []
 
@@ -132,9 +153,10 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
             par = part.get("parent")
             lay = {"ddd": 0, "ind": ids[pid], "ty": 4, "nm": pid if not view else f"{pid}@{view}", "parent": ids[par] if par in ids else root, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
                    "ks": {"o": kf([100 * o for o in on], hold=True), "r": kf([round(fr["angles"].get(pid, 0) or 0, 2) for fr in frs]),
-                          "p": kf([[round(part["pivot"][0] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[0], 2), round(part["pivot"][1] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[1], 2), 0] for fr in frs]),
+                          "p": kf([[round(part["pivot"][0] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[0] + stretch_offset(p, pid, fr)[0], 2),
+                                     round(part["pivot"][1] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[1] + stretch_offset(p, pid, fr)[1], 2), 0] for fr in frs]),
                           "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "s": {"a": 0, "k": [100, 100, 100]}},
-                   "shapes": shape_group(part["strokes"], pal), "_z": part.get("z", 0)}
+                   "shapes": scaled(shape_group(part["strokes"], pal), part["pivot"], frs, pid), "_z": part.get("z", 0)}
             # hidden while a replacing swap shows
             repl = [(sid, sw) for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
             vis = [0 if (repl and any(G.chosen_swaps(p, fr).get(sid) for sid, _ in repl)) or not o else 100 for fr, o in zip(frs, on)]
@@ -148,10 +170,16 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None):
                 vis = [100 if G.chosen_swaps(p, fr).get(sid) == shape and o else 0 for fr, o in zip(frs, on)]
                 if not any(vis):
                     continue
+                offs = [[((fr["look"] or [0, 0])[0] * sw.get("movable", 8) if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[0],
+                         ((fr["look"] or [0, 0])[1] * sw.get("movable", 8) * 0.7 if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[1]] for fr in frs]
+                apiv = (p["parts"].get(sw["anchor"]) or {}).get("pivot") or [0, 0]
+                asc = [G._scale_of(fr.get("scales"), sw["anchor"]) or [1, 1] for fr in frs]
+                anch = any(v != [1, 1] for v in asc)   # anchored to a stretched part: scale about its pivot, as puppet.js does
                 lay = {"ddd": 0, "ind": nid(), "ty": 4, "nm": f"{sid}:{shape}" + (f"@{view}" if view else ""), "parent": ids.get(sw["anchor"], root), "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
-                       "ks": {"o": kf(vis, hold=True), "r": {"a": 0, "k": 0}, "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
-                              "p": kf([[round(((fr["look"] or [0, 0])[0] * sw.get("movable", 8) if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[0], 2),
-                                         round(((fr["look"] or [0, 0])[1] * sw.get("movable", 8) * 0.7 if sid == "pupils" else 0) + ((fr.get("shifts") or {}).get("@" + sid) or [0, 0])[1], 2), 0] for fr in frs])},
+                       "ks": {"o": kf(vis, hold=True), "r": {"a": 0, "k": 0},
+                              "a": kf([[round(apiv[0] - o_[0], 2), round(apiv[1] - o_[1], 2), 0] for o_ in offs]) if anch else {"a": 0, "k": [0, 0, 0]},
+                              "s": kf([[round(100 * v[0], 3), round(100 * v[1], 3), 100] for v in asc]) if anch else {"a": 0, "k": [100, 100, 100]},
+                              "p": {"a": 0, "k": [apiv[0], apiv[1], 0]} if anch else kf([[round(o_[0], 2), round(o_[1], 2), 0] for o_ in offs])},
                        "shapes": shape_group(strokes, pal), "_z": sw.get("z", 40)}
                 part_layers += with_z(lay, vis, z_track(frs, "@" + sid, sw.get("z", 40)), raster_strokes(strokes))
         part_layers.sort(key=lambda l: -l["_z"])  # Lottie draws the first layer on top
@@ -198,10 +226,20 @@ def _shapes_sif(strokes, pal):
     out = ""
     for st in strokes:
         fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
-        for segs, closed in G.parse_path(st.get("d") or ""):
-            if fill and closed:
-                out += f'<layer type="region" active="true" version="0.1"><param name="amount"><real value="{st.get("opacity", 1):.3f}"/></param><param name="color">{_sif_color(fill)}</param><param name="bline">{_bline(segs, True)}</param></layer>'
-            if line:
+        subs = G.parse_path(st.get("d") or "")
+        region = lambda segs, extra="": (f'<layer type="region" active="true" version="0.1"><param name="amount"><real value="{st.get("opacity", 1):.3f}"/></param>{extra}'
+                                         f'<param name="color">{_sif_color(fill)}</param><param name="bline">{_bline(segs, True)}</param></layer>')
+        closed_subs = [segs for segs, closed in subs if closed]
+        if fill and st.get("rule") == "evenodd" and len(closed_subs) > 1:
+            # v0.9 even-odd fill: the first contour fills, the others cut holes ("alpha over"), inside a group so the
+            # cuts only reach this stroke
+            cut = '<param name="blend_method"><integer value="19"/></param>'
+            inner = region(closed_subs[0]) + "".join(region(sg, cut) for sg in closed_subs[1:])
+            out += f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{inner}</canvas></param></layer>'
+        elif fill:
+            out += "".join(region(sg) for sg in closed_subs)
+        if line:
+            for segs, closed in subs:
                 out += f'<layer type="outline" active="true" version="0.2"><param name="color">{_sif_color(line)}</param><param name="width"><real value="{st.get("width", 3):.3f}"/></param><param name="sharp_cusps"><bool value="false"/></param><param name="round_tip[0]"><bool value="true"/></param><param name="round_tip[1]"><bool value="true"/></param><param name="bline">{_bline(segs, closed)}</param></layer>'
     return out
 
@@ -237,13 +275,15 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
                  f'<param name="br"><vector><x>{W / 2 / U:.4f}</x><y>{-H / 2 / U:.4f}</y></vector></param><param name="filename"><string>{bg_png}</string></param></layer>')
 
     def decompose(m):
+        """offset, angle and scale of a matrix without shear (per-part scales are local, v0.9: a part's x and y axes
+        stay perpendicular, so an uneven scale needs no skew)"""
         a, b, c, d, e, f = m
         det = a * d - b * c
-        k = math.hypot(a, b)
+        kx, ky = math.hypot(a, b), math.hypot(c, d)
         if det < 0:
-            ang, sx, sy = math.atan2(-b, -a), -k, k
+            ang, sx, sy = math.atan2(-b, -a), -kx, ky
         else:
-            ang, sx, sy = math.atan2(b, a), k, k
+            ang, sx, sy = math.atan2(b, a), kx, ky
         return e, f, math.degrees(ang), sx, sy
 
     def reduce(keys, tol):
@@ -296,7 +336,7 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
       items = []
       for view, on in _view_masks(p0, frs):
         p = G.in_view(p0, view); pal = p["palette"]
-        Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts")) for fr in frs]
+        Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales")) for fr in frs]
         Rs = [G.root_matrix(p, fr) for fr in frs]
         for pid, part in p["parts"].items():
             if not part["strokes"]:
@@ -339,6 +379,19 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
 
 
 # ======================= Grease Pencil frames =======================
+def _keyhole(polys):
+    """one simple polygon for an even-odd fill: the largest contour, with each other contour cut in through a bridge"""
+    def area(q):
+        return sum(q[i][0] * q[(i + 1) % len(q)][1] - q[(i + 1) % len(q)][0] * q[i][1] for i in range(len(q))) / 2
+    polys = sorted(polys, key=lambda q: -abs(area(q)))
+    out = list(polys[0])
+    for hole in polys[1:]:
+        h = hole if (area(hole) > 0) != (area(polys[0]) > 0) else hole[::-1]   # holes wind the other way
+        i, j = min(((i, j) for i in range(len(out)) for j in range(len(h))), key=lambda ij: (out[ij[0]][0] - h[ij[1]][0]) ** 2 + (out[ij[0]][1] - h[ij[1]][1]) ** 2)
+        out = out[:i + 1] + h[j:] + h[:j + 1] + out[i:]
+    return out
+
+
 def to_gp_frames(baked, size, per=6):
     """per frame, a z-ordered list of world-space strokes (polylines) with fill/line colours, for blender_gp.py"""
     out = {"fps": baked["fps"], "frames": baked["frames"], "size": list(size), "palette": {}, "data": []}
@@ -347,7 +400,7 @@ def to_gp_frames(baked, size, per=6):
         strokes = []
         for c in baked["cast"]:
             p = pals.setdefault(c["puppet"], _load(c["puppet"])); fr = c["frames"][f]; p = G.in_view(p, fr.get("view")); pal = p["palette"]
-            M = G.part_matrices(p, fr["angles"], fr.get("shifts")); R = G.root_matrix(p, fr)
+            M = G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales")); R = G.root_matrix(p, fr)
             sw = G.chosen_swaps(p, fr)
             items = []
             for pid, part in p["parts"].items():
@@ -370,7 +423,23 @@ def to_gp_frames(baked, size, per=6):
             items.sort(key=lambda x: x[0])
             for _, m, sts in items:
                 for st in sts:
-                    for segs, closed in G.parse_path(st.get("d") or ""):
+                    subs = G.parse_path(st.get("d") or "")
+                    if st.get("rule") == "evenodd" and st.get("fill") and sum(1 for _, c in subs if c) > 1:
+                        # v0.9 even-odd fill: Grease Pencil fills cannot have holes, so the outer contour and its holes
+                        # become one keyhole polygon (joined by a zero-width bridge); the outlines are drawn separately
+                        polys = []
+                        for segs, closed in subs:
+                            if not closed:
+                                continue
+                            if isinstance(m, tuple) and m and m[0] == "bend":
+                                _, Mp, piv, ax, wd, th = m
+                                polys.append([G.apply(Mp, G.bend_point(q, piv, ax, wd, th)) for q in G.sample(segs, per)])
+                            else:
+                                polys.append([G.apply(m, q) for q in G.sample(segs, per)])
+                        strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in _keyhole(polys)], "closed": True,
+                                        "fill": G.colour(st.get("fill"), pal), "line": None, "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})
+                        st = {**st, "fill": None}
+                    for segs, closed in subs:
                         if isinstance(m, tuple) and m and m[0] == "bend":
                             _, Mp, piv, ax, wd, th = m
                             pts = [G.apply(Mp, G.bend_point(q, piv, ax, wd, th)) for q in G.sample(segs, per)]

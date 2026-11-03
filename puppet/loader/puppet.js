@@ -178,18 +178,26 @@
   }
 
   // world matrices for every part (parents first)
+  // v0.9 per-part squash and stretch: pose.scales[part] = [sx, sy] in the part's rest axes, about its pivot. The scale
+  // is local: it stretches the part's own drawing and carries its children's pivots with it, but children keep their
+  // own proportions (no shear from a stretched parent), so every exporter can reproduce it exactly.
+  const scaleAbout = (sc, [px, py]) => [sc[0], 0, 0, sc[1], px - sc[0] * px, py - sc[1] * py];
+  function scaleOf(pose, id) { const v = pose.scales && pose.scales[id]; return v == null ? null : Array.isArray(v) ? v : [v, v]; }
   function matrices(p, pose) {
-    const parts = p.parts, M = {};
+    const parts = p.parts, M = {}, B = {};   // B: the part's bone frame (no own scale), for its children
     const order = Object.keys(parts);
-    const done = new Set();
     const visit = id => {
-      if (done.has(id)) return; const part = parts[id];
+      if (B[id]) return; const part = parts[id];
       const par = part.parent && parts[part.parent] ? part.parent : null;
       if (par) visit(par);
       // v0.4: pose.shifts[part] = [dx, dy] moves a part (and its children) in its parent's space before it rotates
-      const sh = (pose.shifts && pose.shifts[id]) || null;
+      const sh = (pose.shifts && pose.shifts[id]) || null, ps = par ? scaleOf(pose, par) : null;
+      let dx = sh ? sh[0] : 0, dy = sh ? sh[1] : 0;
+      if (ps) { const pp = parts[par].pivot; dx += (ps[0] - 1) * (part.pivot[0] - pp[0]); dy += (ps[1] - 1) * (part.pivot[1] - pp[1]); }   // the parent's stretch moves this pivot
       const local = rotAbout((pose.angles && pose.angles[id]) || 0, part.pivot);
-      M[id] = mul(par ? M[par] : I, sh ? mul([1, 0, 0, 1, sh[0], sh[1]], local) : local); done.add(id);
+      B[id] = mul(par ? B[par] : I, dx || dy ? mul([1, 0, 0, 1, dx, dy], local) : local);
+      const own = scaleOf(pose, id);
+      M[id] = own ? mul(B[id], scaleAbout(own, part.pivot)) : B[id];
     };
     order.forEach(visit);
     return M;

@@ -788,11 +788,11 @@
      "capability": "Winding style (non-zero or even-odd) to make holes in self-overlapping regions.",
      "pro_use": "Rings, letters and cut-through shapes from one path.",
      "match": {
-      "kind": "gap",
+      "kind": "data",
       "ref": [
-       "WP-11"
+       "puppet format v0.9 rule"
       ],
-      "note": "Puppet strokes have no fill-rule field (holes are drawn as separate shapes); a fill-rule field is a puppet-format change and should join WP-11 (puppet format v0.8).",
+      "note": "Strokes take a fill rule (rule: evenodd) that cuts holes; Lottie and Synfig write it, Grease Pencil gets keyhole polygons.",
       "added_to_scope": true
      }
     }
@@ -1493,11 +1493,13 @@
      "capability": "Bone length scaling (local and recursive) to stretch limbs.",
      "pro_use": "Cartoon stretch on reaches and jumps.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
+       "shots.json timeline scales",
+       "shots.json timeline ik_stretch",
        "WP-11"
       ],
-      "note": "Only whole-body squash; per-part squash and stretch is WP-11."
+      "note": "Per-part scale along the bone (local, carrying the children's pivots) and stretchy IK limbs; a recursive scale that also scales the children is WP-11."
      }
     },
     {
@@ -1593,9 +1595,10 @@
       "kind": "partial",
       "ref": [
        "shots.json place.path",
-       "WP-11"
+       "shots.json props path",
+       "WP-20"
       ],
-      "note": "A character's position is bound to a spline (place.path, by arc length); binding other values to spline points or tangents is WP-11."
+      "note": "Positions of characters and props are bound to splines by arc length; binding other values to spline points or tangents is WP-20."
      }
     },
     {

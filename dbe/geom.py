@@ -137,22 +137,40 @@ def apply(m, p):
     return (m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5])
 
 
-def part_matrices(puppet, angles, shifts=None):
-    """world matrices per part; shifts[part] = [dx, dy] moves a part in its parent's space before it rotates (v0.4)"""
-    parts, M = puppet["parts"], {}
+def _scale_of(scales, pid):
+    v = (scales or {}).get(pid)
+    return None if v is None else (list(v) if isinstance(v, (list, tuple)) else [v, v])
+
+
+def part_matrices(puppet, angles, shifts=None, scales=None):
+    """world matrices per part; shifts[part] = [dx, dy] moves a part in its parent's space before it rotates (v0.4);
+    scales[part] = [sx, sy] stretches the part's own drawing about its pivot and carries its children's pivots, without
+    shearing them (v0.9, same maths as puppet.js)"""
+    parts, M, B = puppet["parts"], {}, {}
     shifts = shifts or {}
 
     def visit(pid):
-        if pid in M:
+        if pid in B:
             return
         par = parts[pid].get("parent")
         par = par if par in parts else None
         if par:
             visit(par)
+        dx, dy = (shifts.get(pid) or [0, 0])
+        ps = _scale_of(scales, par) if par else None
+        if ps:
+            pp, cp = parts[par]["pivot"], parts[pid]["pivot"]
+            dx += (ps[0] - 1) * (cp[0] - pp[0]); dy += (ps[1] - 1) * (cp[1] - pp[1])
         local = rot_about(angles.get(pid, 0) or 0, parts[pid]["pivot"])
-        if shifts.get(pid):
-            local = mul([1, 0, 0, 1, shifts[pid][0], shifts[pid][1]], local)
-        M[pid] = mul(M[par] if par else I, local)
+        if dx or dy:
+            local = mul([1, 0, 0, 1, dx, dy], local)
+        B[pid] = mul(B[par] if par else I, local)
+        own = _scale_of(scales, pid)
+        if own:
+            px, py = parts[pid]["pivot"]
+            M[pid] = mul(B[pid], [own[0], 0, 0, own[1], px - own[0] * px, py - own[1] * py])
+        else:
+            M[pid] = B[pid]
     for pid in parts:
         visit(pid)
     return M

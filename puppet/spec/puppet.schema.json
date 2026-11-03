@@ -104,7 +104,7 @@
   },
   "poses": {
    "type": "object",
-   "description": "v0.2: named key poses",
+   "description": "v0.2: named key poses ({angles}; v0.9: an optional z map sets layer order while the pose holds)",
    "additionalProperties": {
     "type": "object"
    }
@@ -223,6 +223,52 @@
      }
     }
    }
+  },
+  "lipsync": {
+   "type": "object",
+   "description": "v0.9: phoneme poses for the whole face: mouth shape -> {angles, shifts, scales}, cross-faded as the mouth changes",
+   "additionalProperties": {
+    "type": "object",
+    "properties": {
+     "angles": {
+      "type": "object"
+     },
+     "shifts": {
+      "type": "object"
+     },
+     "scales": {
+      "type": "object"
+     }
+    }
+   }
+  },
+  "copy_rotation": {
+   "type": "array",
+   "description": "v0.9: copy-rotation constraints [{part, from, factor, offset, weight}]",
+   "items": {
+    "type": "object",
+    "required": [
+     "part",
+     "from"
+    ],
+    "properties": {
+     "part": {
+      "type": "string"
+     },
+     "from": {
+      "type": "string"
+     },
+     "factor": {
+      "type": "number"
+     },
+     "offset": {
+      "type": "number"
+     },
+     "weight": {
+      "type": "number"
+     }
+    }
+   }
   }
  },
  "$defs": {
@@ -277,6 +323,10 @@
      },
      "minItems": 2,
      "maxItems": 2
+    },
+    "attrs": {
+     "type": "object",
+     "description": "v0.9: free per-part attributes (any JSON values: material, sound, notes); kept by every tool, ignored by the renderers"
     }
    }
   },
@@ -367,6 +417,41 @@
          "minItems": 3,
          "maxItems": 3
         }
+       }
+      }
+     }
+    },
+    "by_angle": {
+     "type": "object",
+     "description": "v0.9: drawing substitution driven by a part's angle",
+     "required": [
+      "part",
+      "shapes"
+     ],
+     "properties": {
+      "part": {
+       "type": "string"
+      },
+      "world": {
+       "type": "boolean"
+      },
+      "shapes": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "prefixItems": [
+         {
+          "type": "number"
+         },
+         {
+          "type": "number"
+         },
+         {
+          "type": "string"
+         }
+        ]
        }
       }
      }

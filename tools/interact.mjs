@@ -96,7 +96,7 @@ function measure(spec, baked, opts) {
   const base = path.dirname(path.resolve(args[0]));
   const res = { feet: [], hands: [] };
   const P = spec.cast.map(c => pup(path.resolve(base, c.puppet)));
-  const world = (ci, f, part) => { const fr = baked.cast[ci].frames[f]; return Puppet.pointOf(P[ci], part, null, fr.x, fr.y, { angles: fr.angles, offset: fr.offset, view: fr.view, s: fr.s, flip: fr.flip, squash: fr.squash }); };
+  const world = (ci, f, part) => { const fr = baked.cast[ci].frames[f]; return Puppet.pointOf(P[ci], part, null, fr.x, fr.y, { angles: fr.angles, offset: fr.offset, view: fr.view, s: fr.s, flip: fr.flip, squash: fr.squash, shifts: fr.shifts || undefined, scales: fr.scales || undefined }); };
   spec.cast.forEach((c, ci) => {
     const tl = { ...(c.timeline || {}) }; if (!tl.pins) return;
     const L = libOf(P[ci]); let max = 0, sum = 0, n = 0, worst = null;
@@ -122,6 +122,8 @@ function measure(spec, baked, opts) {
     }
     res.hands.push({ a: h.a, b: h.b, max_gap_px: r3(max), frames: n });
   }
+  res.points = (opts.points || []).map(q => { const f = Math.round((q.t - spec.start) * spec.fps), w = world(q.cast, f, q.part);
+    return { ...q, at: w.map(r1), gap_px: r3(Math.hypot(w[0] - q.want[0], w[1] - q.want[1])) }; });
   return res;
 }
 
@@ -152,10 +154,32 @@ function selftest() {
   if (Object.values(raw.angles).some(v => !isFinite(v))) bad.push({ unresolved_target: true });
   const res = Acting.resolveTargets({ ik: { arm_R: [[0, { cast: 1, part: 'hand_R' }]] } }, 1, w => [w[0] + 1, w[1] + 2], () => [10, 20]);
   if (JSON.stringify(res.ik.arm_R) !== '[[0,[11,22]]]') bad.push({ resolve: res.ik });
-  return { ok: !bad.length, bad, path_length: r1(T.L) };
+  // v0.9: stretchy IK lands past full reach; a stretched parent carries its child's pivot without shearing it
+  const far = [300 + 330, 350 + 260];   // well past Pip's arm reach (about 230)
+  const st1 = Acting.evaluate(pip, { clips: tl.clips, ik: { arm_R: [[0, far]] }, ik_stretch: { arm_R: 2 } }, 1, L.clips, L.presets);
+  const wr = Puppet.pointOf(pip, 'hand_R', null, 0, 0, st1), gap = Math.hypot(wr[0] + hipOf(pip)[0] - far[0], wr[1] + pip.ground - far[1]);
+  if (gap > 0.5 || !st1.scales || !st1.scales.upperarm_R) bad.push({ ik_stretch: gap });
+  const M = Puppet.matrices(pip, { angles: { upperarm_R: 30, forearm_R: -20 }, scales: { upperarm_R: [1, 1.5] } });
+  const elbow = [M.forearm_R[0] * 378 + M.forearm_R[2] * 470 + M.forearm_R[4], M.forearm_R[1] * 378 + M.forearm_R[3] * 470 + M.forearm_R[5]];
+  const axes = M.forearm_R, shear = Math.abs(axes[0] * axes[2] + axes[1] * axes[3]);
+  const want = Puppet.matrices(pip, { angles: { upperarm_R: 30 } }).upperarm_R, up = [372 + (378 - 372) * 1, 350 + (470 - 350) * 1.5], wE = [want[0] * up[0] + want[2] * up[1] + want[4], want[1] * up[0] + want[3] * up[1] + want[5]];
+  if (Math.hypot(elbow[0] - wE[0], elbow[1] - wE[1]) > 1e-6 || shear > 1e-9) bad.push({ local_scale: { elbow, wE, shear } });
+  // copy rotation, angle-driven drawings, layer order keys, whole-face lip-sync
+  const tam = pup('puppet/examples/tam.puppet.json');
+  const cr = Acting.evaluate(tam, { clips: [], set: {}, copy_rotation: [{ part: 'upperarm_L', from: 'upperarm_R', factor: -0.5 }], poses: [], ik: { arm_R: [[0, [470, 200]]] } }, 1, L.clips, L.presets);
+  if (!close(cr.angles.upperarm_L, -0.5 * cr.angles.upperarm_R, 1e-9)) bad.push({ copy_rotation: [cr.angles.upperarm_L, cr.angles.upperarm_R] });
+  if (cr.hand_R_pose !== 'hold') bad.push({ by_angle_up: cr.hand_R_pose });
+  const down = Acting.evaluate(tam, { clips: [] }, 1, L.clips, L.presets); if (down.hand_R_pose != null) bad.push({ by_angle_down: down.hand_R_pose });
+  const zk = Acting.evaluate(tam, { clips: [], z: [[0, {}], [2, { arm_R: 30 }]] }, 2.5, L.clips, L.presets); if (!zk.z || zk.z.arm_R !== 30) bad.push({ z_keys: zk.z });
+  const vis = [[0.5, 'O'], [1.0, 'closed']], lO = Acting.evaluate(tam, { clips: [], visemes: vis }, 0.8, L.clips, L.presets), lC = Acting.evaluate(tam, { clips: [], visemes: vis }, 1.4, L.clips, L.presets);
+  if (!close(lO.angles.head || 0, -1.5, 1e-9) || !lO.shifts || !close(lO.shifts['@brows'][1], -4, 1e-9) || Math.abs(lC.angles.head || 0) > 1e-9) bad.push({ lipsync: [lO.angles.head, lC.angles.head] });
+  return { ok: !bad.length, bad, path_length: r1(T.L), ik_stretch_gap: r3(gap), ik_stretch_k: st1.scales.upperarm_R.map(r3) };
 }
 
 if (op === 'selftest') { process.stdout.write(JSON.stringify(selftest())); }
+else if (op === 'matrices') {   // for the Python check that dbe/geom.py follows puppet.js (v0.9 scales)
+  const pip = pup('puppet/examples/pip.puppet.json'), pose = JSON.parse(args[0]);
+  process.stdout.write(JSON.stringify(Puppet.matrices(pip, pose))); }
 else if (op === 'solve') { const req = JSON.parse(fs.readFileSync(args[0], 'utf8')); fs.writeFileSync(args[1], JSON.stringify(solve(req))); }
 else if (op === 'measure') { const spec = JSON.parse(fs.readFileSync(args[0], 'utf8')), baked = JSON.parse(fs.readFileSync(args[1], 'utf8')), opts = args[3] ? JSON.parse(fs.readFileSync(args[3], 'utf8')) : {};
   fs.writeFileSync(args[2], JSON.stringify(measure(spec, baked, opts))); }

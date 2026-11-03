@@ -1013,10 +1013,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "puppet controls",
-       "WP-11"
+       "puppet format v0.9 copy_rotation",
+       "WP-20"
       ],
-      "note": "Piecewise-linear driven keys; copy-rotation constraints are WP-11; scene.js frame functions can compute anything"
+      "note": "Piecewise-linear driven keys and copy-rotation constraints (v0.9); scene.js frame functions can compute anything. Expression columns are WP-20 (graph view)."
      }
     }
    ]
@@ -1606,11 +1606,12 @@
      "capability": "Envelope deformers that reshape outlines",
      "pro_use": "Squash a head or bulge a belly",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
-       "WP-11"
+       "shots.json timeline scales",
+       "WP-18"
       ],
-      "note": "Per-part squash and stretch is WP-11; contour envelopes are not planned elsewhere"
+      "note": "Per-part squash and stretch and bendy limbs reshape parts; contour envelope deformers are WP-18."
      }
     },
     {

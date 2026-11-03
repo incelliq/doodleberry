@@ -11,6 +11,10 @@
 //     ik_bend: { arm_L: 1 },                             // which way an elbow or knee bends (default from LIMBS)
 //     ik_weight: { arm_R: [[2, 0], [2.4, 1]] },          // IK/FK blend per limb: 0 = the clips' pose, 1 = the reach target
 //     lookat: [{part: 'head', target: [x, y] | {cast, part}, limit: 30, start, end, ease: 0.3}],   // a window eases in and out
+//     scales: { forearm_R: [[1, 1], [1.2, 1.3]] },       // v0.9 squash and stretch per part: k (along its rest axis, area kept) or [sx, sy]
+//     ik_stretch: { arm_R: 1.4 },                        // v0.9 stretchy limbs: past full reach the bones stretch up to 1.4x
+//     copy_rotation: [{ part: 'tail', from: 'hip', factor: -0.5 }],   // v0.9 a part copies another's angle
+//     z: [[0, {}], [2, { arm_R: 30 }]],                   // v0.9 layer order keys (per-pose z-order)
 //     pins: {...}, travel: {path: {...}},                 // planted feet stay put while the root walks a path (WP-11)
 //     pins: { foot_L: 'auto', foot_R: 'auto' },          // keep planted feet planted during walks
 //     springs: true,                                     // hair/tie/coat follow-through (from puppet.springs)
@@ -121,13 +125,15 @@
     const parent = parts[upper].parent, Mp = parent ? M[parent] : [1, 0, 0, 1, 0, 0];
     const pu = parts[upper].pivot, pl = parts[lower].pivot, pe = parts[end].pivot;
     const S = [Mp[0] * pu[0] + Mp[2] * pu[1] + Mp[4], Mp[1] * pu[0] + Mp[3] * pu[1] + Mp[5]];
-    const L1 = Math.hypot(pl[0] - pu[0], pl[1] - pu[1]), L2 = Math.hypot(pe[0] - pl[0], pe[1] - pl[1]);
+    const sc = id => { const v = pose.scales && pose.scales[id]; return v == null ? [1, 1] : Array.isArray(v) ? v : [v, v]; }, su = sc(upper), sl = sc(lower);
+    const vU = [(pl[0] - pu[0]) * su[0], (pl[1] - pu[1]) * su[1]], vL = [(pe[0] - pl[0]) * sl[0], (pe[1] - pl[1]) * sl[1]];   // v0.9: stretched bones
+    const L1 = Math.hypot(vU[0], vU[1]), L2 = Math.hypot(vL[0], vL[1]);
     const dx = target[0] - S[0], dy = target[1] - S[1];
     const d = clamp(Math.hypot(dx, dy), Math.abs(L1 - L2) + 1e-3, L1 + L2 - 1e-3);
     const a = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
     const b = Math.acos(clamp((L1 * L1 + L2 * L2 - d * d) / (2 * L1 * L2), -1, 1));
     const upW = Math.atan2(dy, dx) - bend * a, loW = upW + bend * (Math.PI - b);
-    const r1 = Math.atan2(pl[1] - pu[1], pl[0] - pu[0]), r2 = Math.atan2(pe[1] - pl[1], pe[0] - pl[0]);
+    const r1 = Math.atan2(vU[1], vU[0]), r2 = Math.atan2(vL[1], vL[0]);
     const pW = angOf(Mp);
     return { [upper]: deg(upW - pW - r1), [lower]: deg(loW - upW - (r2 - r1)) };
   }
@@ -308,6 +314,43 @@
     return out;
   }
 
+  // ---------- v0.9 squash and stretch per part ----------
+  // a number k stretches a part along its rest axis (pivot to its first child, or down) and squeezes it across by
+  // 1/sqrt(k) so its area is kept; [sx, sy] scales the rest axes directly
+  function stretchOf(puppet, id, k) {
+    if (Array.isArray(k)) return k;
+    const parts = puppet.parts, part = parts[id]; if (!part) return [1, 1];
+    const child = Object.entries(parts).find(([, c]) => c.parent === id);
+    const v = child ? [child[1].pivot[0] - part.pivot[0], child[1].pivot[1] - part.pivot[1]] : [0, 1];
+    const across = 1 / Math.sqrt(Math.max(1e-3, k));
+    return Math.abs(v[1]) >= Math.abs(v[0]) ? [across, k] : [k, across];
+  }
+  // v0.9 drawing substitution driven by angle: swaps[sid].by_angle = {part, world: false, shapes: [[min, max, shape], ...]}
+  function swapByAngle(puppet, pose) {
+    for (const [sid, sw] of Object.entries(puppet.swaps || {})) {
+      const ba = sw.by_angle; if (!ba || pose[sid] != null) continue;
+      let a = (pose.angles || {})[ba.part] || 0;
+      if (ba.world) { const M = P.matrices(puppet, pose)[ba.part]; if (M) a = angOf(M) * 57.2958; }
+      while (a > 180) a -= 360; while (a <= -180) a += 360;
+      const hit = (ba.shapes || []).find(([lo, hi]) => a >= lo && a < hi); if (hit) pose[sid] = hit[2];
+    }
+  }
+  // v0.9 phoneme poses for the whole face: puppet.lipsync = {shape: {angles, shifts, scales}} follows the mouth shape,
+  // cross-faded over `fade` s, so the jaw, cheeks and brows move with the words, not only the mouth drawing
+  function lipsyncPose(puppet, tl, t, emo) {
+    const ls = puppet.lipsync; if (!ls || !tl.visemes || !tl.visemes.length) return null;
+    const fade = ls._fade ?? 0.06, held = heldVisemes(tl.visemes, tl.viseme_hold ?? (puppet.acting || {}).viseme_hold ?? 0);
+    let cur = 'closed', prev = 'closed', t0 = -1e9;
+    for (const [ct, sh] of held) { if (ct > t + 0.033) break; prev = cur; cur = sh; t0 = ct; }
+    const w = clamp((t + 0.033 - t0) / fade), A = ls[prev] || {}, Bp = ls[cur] || {}, out = { angles: {}, shifts: {}, scales: {} };
+    for (const k of ['angles', 'shifts', 'scales']) for (const id of new Set([...Object.keys(A[k] || {}), ...Object.keys(Bp[k] || {})])) {
+      const a = (A[k] || {})[id], b = (Bp[k] || {})[id], z = k === 'scales' ? 1 : 0;
+      const mix = (x, y) => (x ?? z) + ((y ?? z) - (x ?? z)) * w;
+      out[k][id] = Array.isArray(a) || Array.isArray(b) ? [0, 1].map(j => mix((a || [z, z])[j], (b || [z, z])[j])) : mix(a, b);
+    }
+    return out;
+  }
+
   const OWN = new WeakMap();
   function ownClips(puppet, CLIPS) { let m = OWN.get(puppet); if (!m || m.lib !== CLIPS) { m = { lib: CLIPS, all: { ...CLIPS, ...puppet.clips } }; OWN.set(puppet, m); } return m.all; }
 
@@ -345,7 +388,17 @@
         else if (kind === 'shift') { pose.shifts = pose.shifts || {}; const o = pose.shifts[id] || [0, 0]; pose.shifts[id] = [o[0] + val[0], o[1] + val[1]]; }
         else if (kind === 'swap') pose[id] = val;
         else if (kind === 'z') { pose.z = pose.z || {}; pose.z[id] = val; }
+        else if (kind === 'scale') { pose.scales = pose.scales || {}; pose.scales[id] = stretchOf(puppet, id, val); }
       }
+    }
+    // v0.9: per-part squash and stretch keys, layer order keys, whole-face phoneme poses
+    for (const [id, keys] of Object.entries(tl.scales || {})) { const v = sampleKeys(keys, t); if (v == null) continue; pose.scales = { ...(pose.scales || {}), [id]: stretchOf(puppet, id, v) }; }
+    if (tl.z) { const zv = sampleKeys(tl.z, t); if (zv) pose.z = { ...(pose.z || {}), ...zv }; }
+    const lp = lipsyncPose(puppet, tl, t, emo);
+    if (lp) {
+      for (const [id, v] of Object.entries(lp.angles)) pose.angles[id] = (pose.angles[id] || 0) + v;
+      for (const [id, v] of Object.entries(lp.shifts)) { pose.shifts = pose.shifts || {}; const o = pose.shifts[id] || [0, 0]; pose.shifts[id] = [o[0] + v[0], o[1] + v[1]]; }
+      for (const [id, v] of Object.entries(lp.scales)) { pose.scales = pose.scales || {}; const o = stretchOf(puppet, id, pose.scales[id] ?? 1), n = stretchOf(puppet, id, v); pose.scales[id] = [o[0] * n[0], o[1] * n[1]]; }
     }
     // look-at constraint: rotate a part so its aim vector points at a target (artboard coordinates), clamped
     for (const la of [].concat(tl.lookat || [])) {
@@ -364,6 +417,19 @@
       const tgt = sampleKeys(keys, t); if (!Array.isArray(tgt) || !LIMBS[limb]) continue;   // unresolved targets are skipped
       const wk = (tl.ik_weight || {})[limb], w = wk ? clamp(sampleKeys(wk, t) ?? 1) : 1; if (w <= 0) continue;
       const [u, l, e, bend0] = LIMBS[limb], bend = (tl.ik_bend || {})[limb] ?? bend0;
+      const mx = (tl.ik_stretch || {})[limb];
+      if (mx && mx > 1) {   // v0.9 stretchy limbs: past full reach, both bones stretch (up to mx times) to touch the target
+        const Mi = P.matrices(P.inView(puppet, pose.view), pose), par = puppet.parts[u].parent, Mp = par ? Mi[par] : [1, 0, 0, 1, 0, 0], pu = P.inView(puppet, pose.view).parts[u].pivot;
+        const S = [Mp[0] * pu[0] + Mp[2] * pu[1] + Mp[4], Mp[1] * pu[0] + Mp[3] * pu[1] + Mp[5]], want = [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]];
+        const vp = P.inView(puppet, pose.view).parts, reach = Math.hypot(vp[l].pivot[0] - pu[0], vp[l].pivot[1] - pu[1]) + Math.hypot(vp[e].pivot[0] - vp[l].pivot[0], vp[e].pivot[1] - vp[l].pivot[1]);
+        const d = Math.hypot(want[0] - S[0], want[1] - S[1]) / (Math.hypot(Mp[0], Mp[1]) || 1);
+        let k = clamp(d / reach * 1.0005, 1, mx);
+        if (k > 1) { pose.scales = { ...(pose.scales || {}), [u]: stretchOf(puppet, u, k), [l]: stretchOf(puppet, l, k) };
+          for (let it = 0; it < 2; it++) { const su = pose.scales[u], sl = pose.scales[l];   // the squeeze across shortens a slanted bone: correct k
+            const len = Math.hypot((vp[l].pivot[0] - pu[0]) * su[0], (vp[l].pivot[1] - pu[1]) * su[1]) + Math.hypot((vp[e].pivot[0] - vp[l].pivot[0]) * sl[0], (vp[e].pivot[1] - vp[l].pivot[1]) * sl[1]);
+            k = clamp(k * d * 1.0005 / len, 1, mx); pose.scales[u] = stretchOf(puppet, u, k); pose.scales[l] = stretchOf(puppet, l, k); } }
+        else if (pose.scales) { delete pose.scales[u]; delete pose.scales[l]; }
+      }
       const sol = ik2(puppet, pose, u, l, e, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]], bend);
       for (const [k, v] of Object.entries(sol)) { let d = v - (pose.angles[k] || 0); while (d > 180) d -= 360; while (d < -180) d += 360; pose.angles[k] = (pose.angles[k] || 0) + d * w; }
     }
@@ -394,6 +460,13 @@
       const keys = (tl.chains || {})[name]; if (!keys) continue;
       const tgt = sampleKeys(keys, t); if (tgt) solveChain(puppet, pose, ch, [tgt[0] - (pose.offset || [0, 0])[0], tgt[1] - (pose.offset || [0, 0])[1]]);
     }
+    // v0.9 copy-rotation constraints: copy_rotation = [{part, from, factor: 1, offset: 0, weight: 1}] (a tail that
+    // follows the hips, a sleeve that follows the forearm, a second wheel that turns with the first)
+    for (const cr of [].concat(tl.copy_rotation || puppet.copy_rotation || [])) {
+      if (!puppet.parts[cr.part]) continue;
+      const v = (pose.angles[cr.from] || 0) * (cr.factor ?? 1) + (cr.offset || 0), w = cr.weight ?? 1;
+      pose.angles[cr.part] = (pose.angles[cr.part] || 0) * (1 - w) + v * w;
+    }
     // joint limits (v0.6): parts[id].limits = [min, max] degrees from the rest pose; everything above is clamped
     const limit = () => { for (const [id, part] of Object.entries(puppet.parts)) if (part.limits && pose.angles[id] != null) pose.angles[id] = clamp(pose.angles[id], part.limits[0], part.limits[1]); };
     limit();
@@ -405,8 +478,9 @@
       pose.angles[part] = (pose.angles[part] || 0) + clamp((lag - now) * (sp.gain ?? 1), -(sp.limit || 35), sp.limit || 35);
     }
     if (tl.springs !== false && puppet.springs) limit();
+    swapByAngle(P.inView(puppet, pose.view), pose);   // v0.9: drawings chosen by a part's final angle
     return pose;
   }
 
-  root.Acting = { pathAt, pathDist, pathTable, placeAt, contactStart, resolveTargets, crossRefs, evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
+  root.Acting = { stretchOf, swapByAngle, lipsyncPose, pathAt, pathDist, pathTable, placeAt, contactStart, resolveTargets, crossRefs, evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
 })(typeof window !== 'undefined' ? window : globalThis);

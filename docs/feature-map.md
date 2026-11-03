@@ -58,15 +58,15 @@ covered, now added to their packages' scopes.
 | N-bone IK chains (FABRIK): tails, tentacles, spines | PRO (Spine, Moho) | ✅ | – | FABRIK chains with a living wave, puppet v0.6 (2.5) |
 | IK/FK switching and blending | PRO | ✅ | – | timeline `ik_weight` per limb blends the clips' pose and the reach target over time (WP-11) |
 | Joint limits | PRO | ✅ | – | puppet v0.6 joint limits (2.5) |
-| Constraints: look-at, copy rotation, follow path, parent switching (prop moves hand to hand) | PRO | 🟡 | P0 | look-at (with time windows) and parent switching with arcs (1.2); characters follow paths and reach for each other (WP-11 part 1); copy rotation and follow path for props: WP-11 |
+| Constraints: look-at, copy rotation, follow path, parent switching (prop moves hand to hand) | PRO | ✅ | – | look-at (with time windows) and parent switching with arcs (1.2); characters and props follow paths, characters reach for each other, copy rotation (WP-11) |
 | Swap sets (mouths, eyes, hands) | PRO | ✅ | – | |
-| Drawing substitution driven by angle or control | PRO (Harmony) | 🟡 | P1 | controls drive swaps (1.2); substitution by a part's angle: WP-11 |
+| Drawing substitution driven by angle or control | PRO (Harmony) | ✅ | – | controls drive swaps (1.2); `swaps[sid].by_angle` picks a drawing from a part's local or frame angle (puppet format v0.9, WP-11) |
 | Smart bones / driven keys / corrective drawings | PRO (Moho) | ✅ | – | `controls` with driven keys for angles, shifts, swaps and z (1.2) |
 | Multi-view rigs with switching | PRO | ✅ | – | v0.2 views plus a squash smear |
 | Inbetween views by vector morph (front → 3/4 → side) | IDEA | ⬜ | P2 | in-between views by morph: WP-43 |
 | 2.5D parametric head turn | PRO (Live2D, Cartoon Animator 360 head) | ✅ | – | the `turn` control drives the head's three-quarter offsets (1.2) |
 | Mesh and warp deformation, bendy limbs, weights | PRO (Spine, Moho, OpenToonz Plastic, Harmony deformers) | ✅ | – | bendy limbs (1.1) and mesh strokes with skinning (puppet v0.5); other renderers: WP-14 |
-| Squash and stretch on parts | PRO | 🟡 | P1 | whole-body squash; per-part squash: WP-11 |
+| Squash and stretch on parts | PRO | ✅ | – | whole-body squash; per-part squash and stretch (timeline `scales`, controls, stretchy IK `ik_stretch`) in every renderer (v0.9, WP-11) |
 | Springs and dynamics (hair, ears, tails) | PRO (Character Animator dangles, Cartoon Animator spring bones) | ✅ | – | deterministic re-simulation |
 | Spring chains, cloth strips | PRO | 🟡 | P2 | springs (v0.2) and FABRIK chains (v0.6); cloth strips: WP-42 |
 | Z-order switching (arm in front of or behind the body) | PRO | ✅ | – | controls drive z (1.2) and clips carry `swaps.z` (3.5); Synfig and Lottie follow it too (a layer per order, WP-14) |

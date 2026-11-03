@@ -1433,10 +1433,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "timeline.edit",
-       "WP-11"
+       "shots.json place",
+       "shots.json timeline z",
+       "WP-36"
       ],
-      "note": "Placement keys carry x, y, scale and flip; whole-object rotation and shear keys and animated cross-character stacking order would join WP-11 (per-pose z-order)."
+      "note": "Placement keys carry x, y, scale and flip, and per-part layer order is keyed (v0.9); whole-object rotation and shear keys and stacking order across characters are WP-36."
      }
     },
     {
@@ -1447,9 +1448,10 @@
       "kind": "partial",
       "ref": [
        "shots.json place.path",
-       "WP-11"
+       "shots.json props path",
+       "WP-20"
       ],
-      "note": "Characters walk along drawn paths and turn to face their direction (place.path); props travel on ballistic arcs. Follow-path for props with keys snapped to path points is WP-11."
+      "note": "Characters and props move along drawn paths, turning to face their direction; snapping keys to path points is WP-20."
      }
     },
     {

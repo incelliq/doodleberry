@@ -655,10 +655,10 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "puppet controls",
+       "puppet format v0.9 by_angle",
        "WP-11"
       ],
-      "note": "Controls (v0.4 driven keys) drive angles, shifts, swaps and z from one value, but they are keyed in the timeline rather than driven by a bone's angle, and they cannot morph points. Substitution driven by angle is WP-11. Point morphs are WP-43."
+      "note": "Controls (v0.4 driven keys) drive angles, shifts, swaps, z and scale from one value, and swaps can follow a part's angle (v0.9 by_angle); corrective point shapes driven by a bone's angle are WP-11."
      }
     },
     {
@@ -704,12 +704,12 @@
      "capability": "Bone constraints: angle limits, point-at targets (now reaching a full 360 degrees), copy and independent targeting, and ignoring IK.",
      "pro_use": "Keeps rigs from breaking and automates eye aim and props.",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
        "shots.json timeline ik_weight",
-       "WP-11"
+       "puppet format v0.9 copy_rotation"
       ],
-      "note": "Joint limits, look-at (with time windows), IK/FK blending and IK targets on other characters exist. Copy-rotation constraints and follow-path for parts are WP-11."
+      "note": "Joint limits, look-at with time windows, IK/FK blending, IK targets on other characters, stretchy IK and copy-rotation constraints exist."
      }
     },
     {
@@ -751,12 +751,12 @@
      "capability": "Follow path: a layer travels along a drawn curve, optionally oriented to it.",
      "pro_use": "Used for flights, vehicles and characters walking a curved route.",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
        "shots.json place.path",
-       "WP-11"
+       "shots.json props path"
       ],
-      "note": "Characters walk along drawn curves (place.path), turning to face the way they go; follow-path for props and other layers is WP-11."
+      "note": "Characters walk along drawn curves (place.path) and props follow paths (props path, oriented to the curve when asked)."
      }
     },
     {
@@ -1193,11 +1193,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "puppet.from_ink",
+       "shots.json timeline z",
        "puppet.coach",
-       "WP-11"
+       "WP-18"
       ],
-      "note": "Ink cuts keep hidden overlaps, and puppet.coach measures gaps opened by bending. Per-pose z-order (to swap layering at joints) is WP-11."
+      "note": "Ink cuts keep hidden overlaps, puppet.coach measures gaps opened by bending, and layer order can be keyed per pose (v0.9) to swap layering at joints; masked patch copies are WP-18."
      }
     },
     {
@@ -1756,12 +1756,11 @@
      "capability": "Smart Bone lip sync (14.5): phoneme poses that drive the whole face (jaw, cheeks) rather than only mouth drawings.",
      "pro_use": "Gives richer, rig-driven dialogue acting.",
      "match": {
-      "kind": "partial",
+      "kind": "data",
       "ref": [
-       "voice.build",
-       "WP-11"
+       "puppet format v0.9 lipsync"
       ],
-      "note": "Mouths are swaps mapped through emotion-aware charts. Driving controls or face parts from visemes is a puppet-format change and should join WP-11.",
+      "note": "Phoneme poses drive the whole face (lipsync: angles, shifts and scales per mouth shape, cross-faded with the visemes) besides the mouth drawings.",
       "added_to_scope": true
      }
     }
@@ -2525,11 +2524,12 @@
      "capability": "Frame-dependent warping: keyed changes to the warp mesh or curver over time.",
      "pro_use": "Used for hand-tuned squash and stretch on specific frames.",
      "match": {
-      "kind": "gap",
+      "kind": "partial",
       "ref": [
-       "WP-11"
+       "shots.json timeline scales",
+       "WP-34"
       ],
-      "note": "Only whole-body squash exists. Per-part squash and stretch are in WP-11, and general warp animation is WP-34."
+      "note": "Keyed per-part squash and stretch (timeline scales) and whole-body squash exist; general warp-mesh animation is WP-34."
      }
     },
     {

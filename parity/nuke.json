@@ -1001,10 +1001,11 @@
      "match": {
       "kind": "partial",
       "ref": [
-       "puppet.from_blend",
-       "WP-11"
+       "shots.json timeline scales",
+       "puppet format v0.9 by_angle",
+       "WP-36"
       ],
-      "note": "Mesh parts with vertex weights deform with bones (Blender-imported rigs); per-part squash and stretch and angle-driven drawing substitution are WP-11."
+      "note": "Mesh parts deform with bones; per-part squash and stretch and angle-driven drawing substitution exist (v0.9). Grid and spline warps of images are WP-36."
      }
     },
     {

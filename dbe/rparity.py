@@ -36,6 +36,7 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
     "motion effects (fx)": {"svg"},
     "toon shading": {"svg"},
     "compositor planes (comp)": {"svg"},
+    "even-odd fills (holes)": {"svg", "synfig", "lottie", "grease-pencil"},   # v0.9 (Grease Pencil: keyhole polygons)
     "overlays and kit": {"svg"},
 }
 
@@ -50,6 +51,9 @@ def degrades(renderer, shot):
     return sorted(k for k, ok in DEGRADES.items() if renderer not in ok and (k != "line boil" or st.get("boil")))
 
 
+SHOT_EXTRAS = ("props", "fx", "comp")   # drawn by the SVG renderer around the characters, not by the characters
+
+
 def needs(shot, puppets):
     """the features a shot uses"""
     f = {"vector parts", "swaps and lip-sync"}
@@ -62,10 +66,14 @@ def needs(shot, puppets):
             f.add("drawn levels (raster)" if p.get("template") == "level" else "raster parts")
         if any("mesh" in st for st in strokes):
             f.add("mesh parts")
+        if any(st.get("rule") == "evenodd" for st in strokes):
+            f.add("even-odd fills (holes)")
         if p.get("views"):
             f.add("views")
         if any((c.get("z") or {}) for c in (p.get("clips") or {}).values()) or (p.get("controls") and any("z." in json.dumps(v) for v in p["controls"].values())):
             f.add("clip-driven layer order")
+    if any((c.get("timeline") or {}).get("z") for c in shot.get("cast", [])) or any((pz or {}).get("z") for p in puppets for pz in (p.get("poses") or {}).values()):
+        f.add("clip-driven layer order")   # v0.9 layer order keys and per-pose z
     if shot.get("props"):
         f.add("props")
     if shot.get("fx"):
@@ -188,9 +196,13 @@ def run(name, shot, times=None, renderers=("synfig", "lottie", "grease-pencil"),
     times = times or [round(dur * k, 3) for k in (0.2, 0.5, 0.8)]
     out = ROOT / "out" / "rparity" / name / shot; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
     refp = stills_svg(C, name, shot, times, out); ref = [silhouette(p) for p in refp]; refc = [rgba(p) for p in refp]
-    res = {"film": name, "shot": shot, "times": times, "needs": sorted(needs(sh, puppets)), "renderers": {}, "refusals": {}}
+    # parity compares the characters drawn alone: shot-level extras (props, effects, planes, toon) are not part of it,
+    # so they do not refuse the comparison (shot.render still refuses them for a full render); they are listed instead
+    cast_sh = {k: v for k, v in sh.items() if k not in SHOT_EXTRAS}
+    res = {"film": name, "shot": shot, "times": times, "needs": sorted(needs(cast_sh, puppets)), "not_compared": sorted(needs(sh, puppets) - needs(cast_sh, puppets)),
+           "renderers": {}, "refusals": {}}
     for r in renderers:
-        why = refusal(r, sh, puppets)
+        why = refusal(r, cast_sh, puppets)
         if not why and r == "grease-pencil" and not C.BLENDER:
             why = "grease-pencil: Blender is not installed (DBE_BLENDER)"
         if not why and r not in STILLS:
@@ -214,7 +226,7 @@ def run(name, shot, times=None, renderers=("synfig", "lottie", "grease-pencil"),
 
 BENCH = [("pip-park", "s1"), ("pip-park", "s2"), ("pip-park", "s3"), ("direct-demo", "s1"), ("dialogue-demo", "s1"), ("clips-demo", "s1"),
          ("nib-hello", "s1"), ("level-demo", "s1"), ("fx-demo", "s1"), ("props-demo", "s1"), ("night-planes", "s1"),
-         ("juggle-demo", "s1"), ("handshake-demo", "s1")]
+         ("juggle-demo", "s1"), ("handshake-demo", "s1"), ("stretch-demo", "s1")]
 
 
 def bench(shots=None):
