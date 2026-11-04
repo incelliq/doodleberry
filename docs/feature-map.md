@@ -93,10 +93,10 @@ covered, now added to their packages' scopes.
 | Natural-language acting direction ("Pip is nervous, glances at the door") → timeline | NEW | ✅ | – | `acting.direct` (2.4) |
 | Webcam face performance → puppet | PRO (Character Animator) | 🟡 | P1 | recorded takes become eye, brow, gaze and mouth keys (`actout.clip`, 3.5); live tracking: WP-12 |
 | "Act it out": phone video → body pose → clips and IK targets | NEW | ✅ | – | `actout.clip` and Studio /actout (plan 3.5), MediaPipe; WP-12: head turn into the `turn` control (clip control tracks, format v0.10), the camera's motion taken out from the background, several people as several clips; rtmlib and other detectors open |
-| 3D mocap retargeted to 2D | NEW | 🟡 | P2 | video to 2D clips with `actout.clip` (3.5); BVH in and out (`clip.bvh_import`, `clip.bvh_export`, WP-12; a real 3D take not yet tried); CMU ASF/AMC to 2D: WP-12 |
+| 3D mocap retargeted to 2D | NEW | ✅ | – | video to 2D clips with `actout.clip` (3.5); BVH in and out (`clip.bvh_import`, `clip.bvh_export`); CMU ASF/AMC takes retargeted to the puppet's rest pose, seen from the side or front (`clip.cmu_import`; a real CMU walk tested) (WP-12) |
 | Animation principles as filters: anticipation, overshoot, follow-through, arcs | IDEA | ✅ | – | anticipation and overshoot filter (2.5), springs for follow-through; motion arcs on props (WP-09) |
 | Smears and motion lines on fast moves | PRO | ✅ | – | speed lines, dust, impact stars from the motion (2.20); smear frames, stretch, squash and motion arcs on props (WP-09) |
-| Multi-character interaction: handshake, hug, hand-off, eye contact | NEW | 🟡 | P1 | handshakes and eye contact (`interact.solve`, IK targets on another character, every renderer); hand-offs through props (1.2); hug: WP-11 |
+| Multi-character interaction: handshake, hug, hand-off, eye contact | NEW | ✅ | – | handshakes, hugs and eye contact (`interact.solve`, IK targets on another character, every renderer; WP-11); hand-offs through props (1.2) |
 | Listener behaviour: whoever isn't speaking reacts | NEW | ✅ | – | listener gaze, nods and blinks in `acting.plan` (2.3) |
 | Crowds with variation | PRO | ✅ | – | `proc.cook` crowd nodes: seeded scatter, cast members on depth planes standing on the 3D ground, idles out of phase, reactions at seeded times (WP-42) |
 | Prop physics: drops, bounces, rolls | PRO | ✅ | – | throws, drops, bounces, rolls solved at bake time (2.19); juggling and multi-body Rapier scenes on the beat (WP-09) |

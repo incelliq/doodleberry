@@ -1041,6 +1041,27 @@ because it finds "pitch" in noise); shout 136 Hz against 107 and a spectral cent
 excited the widest intonation (0.31 against 0.23) and 10% quicker; calm and sad narrower (0.15, 0.14) and slower;
 sad the lowest (100 Hz) and darkest (1.5 kHz). faster-whisper transcribes all six without an error.
 
+## CMU motion capture and hugs (WP-12, WP-11)
+`clip.cmu_import {"subject", "trial", "puppet", "name", "plane", "save"}` turns a take from the CMU Graphics Lab
+Motion Capture Database (ASF skeleton and AMC motion, 120 fps; fetched once into out/cmu/, not committed; CMU: free
+for all uses, not to be resold) into a 2D clip. Forward kinematics as the format defines it (each bone's rotation is
+its axis frame C times the frame's rotations M times C inverse, after its parent's), then the take seen from the
+side (the actor's way of travel to the right; for walks, runs and jumps on side-view puppets) or the front. Each
+part's angle is its bone's direction on screen against the puppet's own rest direction for that part (the next joint
+of its chain: CMU's rest pose is a T-pose, the puppet's is arms down); a bone pointing at the camera holds its
+angle; resampled to 30 fps, keys reduced. The BVH importer now reads a motion-capture actor as facing the camera, so
+their left arm drives the puppet's right-of-picture arm (`facing`: "camera" or "away").
+
+Test `cmu` (subject 02 trial 01, a walk, on Pip): bones keep their length through the take; from the side the thighs
+alternate (correlation -0.89) through 50 degrees, each arm swings against its own leg (-0.82, -0.93), the stride is
+1.05 Hz and the root travels forward; from the front the same take has no stride (the legs swing towards the camera:
++0.81); it plays on Pip in the player.
+
+Hugs (`interact.hugs: [{a, b, start, hold, reach}]`): both arms of each character go round the other's back by IK, to
+points on the partner's torso, blending in and out; heads turn to each other. In the `interact` test (a copy of
+handshake-demo where the two walk closer and hug) all four hands stay on their targets while the hug holds (0 px on
+the baked frames) at 72% of arm reach.
+
 ## Branching interactive films (WP-30)
 shots.json `"branches": [{"after": "s2", "prompt": "What do you want to know?", "choices": [{"label": "How far is
 it?", "shots": ["s3"]}, {"label": "Why is it warm, then?", "shots": ["s4"]}], "then": "s5"}]` makes the interactive

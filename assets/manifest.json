@@ -811,6 +811,16 @@
    "credit": "Servier Medical Art by Servier, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
    "sha256": "f990937abb5d6b53103ff708842e607b0b1e5ced599a07dcd2b2a6b42136f2c6",
    "use": "anatomy plate 'lungs' (Lungs and windpipe): the player's plate overlay; fetched by plate.fetch (WP-16); credited by film.credits"
+  },
+  {
+   "id": "cmu-mocap",
+   "path": "out/cmu/",
+   "in_git": false,
+   "source_url": "http://mocap.cs.cmu.edu/",
+   "license": "CMU Graphics Lab Motion Capture Database terms: free for all uses, may be included in commercial products, not to be resold as data",
+   "class": "permissive",
+   "credit": "The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.",
+   "use": "clip.cmu_import: takes fetched on demand and turned into 2D clips (WP-12)"
   }
  ]
 }

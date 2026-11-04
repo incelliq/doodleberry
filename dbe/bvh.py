@@ -162,14 +162,25 @@ def _fk(b, row):
     return pos, rot
 
 
-def to_clip(text, puppet, fps=30, tol=0.5):
-    """a BVH as a clip for this puppet: {clip, matched: {part: joint}, unmatched: [joints], method}"""
+def side_swap(part, facing):
+    """our puppets face the viewer and name their parts by the side of the picture they are drawn on (upperarm_L on
+    the left); an actor facing the camera has their left on the picture's right, so a motion-capture "left" drives
+    the puppet's _R part (facing "camera"); "away" keeps the names"""
+    if facing != "camera" or not part:
+        return part
+    return part[:-2] + ("_R" if part.endswith("_L") else "_L") if part.endswith(("_L", "_R")) else part
+
+
+def to_clip(text, puppet, fps=30, tol=0.5, facing="camera"):
+    """a BVH as a clip for this puppet: {clip, matched: {part: joint}, unmatched: [joints], method}. facing: how a
+    motion-capture actor stands to the camera ("camera": their left is on the picture's right); our own skeleton
+    (joints named as the puppet's parts) is read as it is."""
     from .actout import reduce_keys
     b = parse(text); J = b["joints"]; parts = puppet["parts"]
     norm = lambda s: re.sub(r"[_.]([lr])$", r".\1", re.sub(r"^(mixamorig[:_]?|bip01[ _]?|[a-z]+:)", "", s.strip().lower()).replace(" ", ""))   # upperarm_L, UpperArm.L
     match = {}
     for i, j in enumerate(J):
-        p = j["name"] if j["name"] in parts else MAP.get(norm(j["name"]))
+        p = j["name"] if j["name"] in parts else side_swap(MAP.get(norm(j["name"])), facing)
         if p in parts and p not in match:
             match[p] = i
     own = all(j["name"] in parts for j in J) and all(j["channels"][-3:] == ["Zrotation", "Xrotation", "Yrotation"] for j in J)

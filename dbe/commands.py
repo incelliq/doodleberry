@@ -392,17 +392,41 @@ def clip_bvh_export(puppet, clip, out="", fps=30, scale=1.0):
 
 @command("clip.bvh_import", bvh=("string", "a .bvh file (ours, or motion capture with the usual joint names: Hips, Spine, LeftArm, ...)"),
          puppet=("string", "the puppet it is for"), name=("string", "clip name"), save=("boolean", "add it to the puppet's own clips", False),
-         tol=("number", "degrees the reduced keys may stray", 0.5))
-def clip_bvh_import(bvh, puppet, name, save=False, tol=0.5):
+         tol=("number", "degrees the reduced keys may stray", 0.5), facing=("string", "camera (the actor faces the camera: their left drives the puppet's right-of-picture parts) | away", "camera"))
+def clip_bvh_import(bvh, puppet, name, save=False, tol=0.5, facing="camera"):
     """Motion capture as a clip (WP-12): joints matched to the puppet's parts by name; a 3D take is seen from the front
     (each bone projected on the picture plane against its rest direction); keys reduced. With save, it becomes one of
     the puppet's own clips (format v0.7)."""
     from . import bvh as BV
     pz = _json(ROOT / puppet)
-    r = BV.to_clip((ROOT / bvh).read_text() if not Path(bvh).is_absolute() else Path(bvh).read_text(), pz, tol=tol)
+    r = BV.to_clip((ROOT / bvh).read_text() if not Path(bvh).is_absolute() else Path(bvh).read_text(), pz, tol=tol, facing=facing)
     if save:
         pz.setdefault("clips", {})[name] = r["clip"]; (ROOT / puppet).write_text(json.dumps(pz))
     return {"name": name, **r, "saved": bool(save)}
+
+
+@command("clip.cmu_import", subject=("string", "CMU subject, e.g. 02"), trial=("string", "trial, e.g. 01 (subject 02 trial 01 is a walk)"),
+         puppet=("string", "the puppet it is for"), name=("string", "clip name"), plane=("string", "side (walks, runs, jumps; side-view puppets) | front", "side"),
+         save=("boolean", "add it to the puppet's own clips", False), tol=("number", "degrees the reduced keys may stray", 0.6))
+def clip_cmu_import(subject, trial, puppet, name, plane="side", save=False, tol=0.6):
+    """CMU motion capture (mocap.cs.cmu.edu, ASF skeleton + AMC motion at 120 fps) as a 2D clip (WP-12): forward
+    kinematics as the format defines it, the take seen from the side (the actor's travel to the right) or the front,
+    each part's bone angle against the rest pose, resampled to 30 fps and keys reduced. The files are fetched once
+    into out/cmu/ (CMU: free for all uses, not to be resold; not committed)."""
+    import urllib.request
+    from . import asfamc as AM
+    cache = ROOT / "out" / "cmu"; cache.mkdir(parents=True, exist_ok=True)
+    subject, trial = f"{int(subject):02d}", f"{int(trial):02d}"
+    files = {}
+    for f in (f"{subject}.asf", f"{subject}_{trial}.amc"):
+        if not (cache / f).exists():
+            urllib.request.urlretrieve(f"http://mocap.cs.cmu.edu/subjects/{subject}/{f}", cache / f)
+        files[f.split(".")[-1]] = (cache / f).read_text()
+    pz = _json(ROOT / puppet)
+    r = AM.to_clip(files["asf"], files["amc"], pz, plane=plane, tol=tol)
+    if save:
+        pz.setdefault("clips", {})[name] = r["clip"]; (ROOT / puppet).write_text(json.dumps(pz))
+    return {"name": name, "source": f"CMU subject {subject} trial {trial}", **r, "saved": bool(save)}
 
 
 def _clip_named(pz, clip):
@@ -5688,6 +5712,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "cmu":   # WP-12: CMU motion capture to 2D
+        bad, meas = _cmu_test()
+        failed += 1 if bad else 0
+        results.append({"cmu": "a CMU walk (subject 02 trial 01) seen from the side walks: thighs alternate, each arm swings against its leg, a stride about once a second, bones keep their length, and it plays on Pip in the player", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "sprites":   # WP-30: sprite sheets
         bad, meas = _sprites_test()
         failed += 1 if bad else 0
@@ -9898,6 +9926,48 @@ def _templates_test():
 
 
 
+
+def _cmu_test():
+    """WP-12 CMU. clip.cmu_import of subject 02 trial 01 (a walk) for Pip, seen from the side. The take's bones keep
+    their length through it (forward kinematics holds together); the clip: the two thighs alternate (correlation below
+    -0.6) with a swing of 30 to 70 degrees, each upper arm swings against its own side's thigh (correlation below
+    -0.5), the stride at 0.7 to 1.4 Hz, and the root travels forward (to the right). From the front the same take has
+    no such stride (the legs swing towards the camera). It plays on Pip (side view) in the player without page errors."""
+    import numpy as np
+    from . import asfamc as AM, bvh as BV
+    bad, meas = [], {}
+    r = clip_cmu_import("02", "01", "puppet/examples/pip.puppet.json", "cmu_walk")
+    c = r["clip"]; n = r["frames"]
+    asf = AM.parse_asf((ROOT / "out/cmu/02.asf").read_text()); fr = AM.parse_amc((ROOT / "out/cmu/02_01.amc").read_text())
+    lens = [float(np.linalg.norm(np.subtract(*AM.fk(asf, f)["ltibia"]))) for f in fr[::40]]
+    meas["bone_length_spread"] = round(max(lens) - min(lens), 6)
+    S = lambda cl, p: np.array([BV.sample(cl["tracks"][p], i / 30) for i in range(n)])
+    tl, tr, ul, ur = S(c, "thigh_L"), S(c, "thigh_R"), S(c, "upperarm_L"), S(c, "upperarm_R")
+    f = np.fft.rfft(tl - tl.mean()); fq = np.fft.rfftfreq(n, 1 / 30)
+    meas["side"] = {"thighs_corr": round(float(np.corrcoef(tl, tr)[0, 1]), 2), "thigh_swing": round(float(tl.max() - tl.min()), 1),
+                    "arm_vs_own_thigh": [round(float(np.corrcoef(ul, tl)[0, 1]), 2), round(float(np.corrcoef(ur, tr)[0, 1]), 2)],
+                    "stride_hz": round(float(fq[np.argmax(np.abs(f[1:])) + 1]), 2), "travel_px": c["offset"][-1][1][0]}
+    m = meas["side"]
+    if not (meas["bone_length_spread"] < 1e-6 and m["thighs_corr"] < -0.6 and 30 <= m["thigh_swing"] <= 70 and max(m["arm_vs_own_thigh"]) < -0.5 and 0.7 <= m["stride_hz"] <= 1.4 and m["travel_px"] > 0):
+        bad.append(f"side walk: {m}")
+    fr_ = clip_cmu_import("02", "01", "puppet/examples/pip.puppet.json", "cmu_walk", plane="front")["clip"]
+    meas["front_thighs_corr"] = round(float(np.corrcoef(S(fr_, "thigh_L"), S(fr_, "thigh_R"))[0, 1]), 2)
+    d_ = FILMS / "zz-cmu"
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        pz = _json(ROOT / "puppet/examples/pip.puppet.json"); pz.setdefault("clips", {})["cmu_walk"] = c
+        (d_ / "pip.puppet.json").write_text(json.dumps(pz))
+        (d_ / "shots.json").write_text(json.dumps({"title": "cmu", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "set": "plain", "start": 0, "end": c["duration"], "bubbles": False,
+            "cast": [{"puppet": "films/zz-cmu/pip.puppet.json", "place": {"x": 300, "y": 1500, "s": 0.9}, "timeline": {"view": [[0, "side"]], "clips": [{"clip": "cmu_walk", "start": 0, "fadeIn": 0}]}}]}]}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        rr = subprocess.run(["node", "tools/stills.mjs", str(_player_page("zz-cmu")), "shot=s1&castonly=1&captions=0", str(d_ / "w"), "0.5", "1.0", "1.5"], cwd=ROOT, capture_output=True, text=True, timeout=300)
+        meas["plays"] = rr.returncode == 0 and all((d_ / f"w_{t}.png").exists() for t in ("0.5", "1.0", "1.5"))
+        if not meas["plays"]:
+            bad.append(f"player: {rr.stderr[-300:]}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
+
 def _sprites_test():
     """WP-30 sprite sheets. export.sprites on Biscuit (the quadruped: six clips) at 12 fps. Every atlas rectangle lies
     inside the sheet and none overlap; every frame rebuilt from the sheet (pasted at spriteSourceSize into its
@@ -10162,8 +10232,8 @@ def _bvh_test():
             for f in frames:
                 pos, _ = BV._fk(b, b["frames"][f])
                 bl_err = max(bl_err, max(float(np.hypot(pos[i][0] - got[str(f)][n][0], pos[i][1] - got[str(f)][n][2])) for i, n in enumerate(jn)))
-        def back(text):
-            cl = BV.to_clip(text, pz)["clip"]; d = c.get("duration", 1)
+        def back(text):   # the renamed skeleton is ours (its left drawn on the left): read with facing "away"
+            cl = BV.to_clip(text, pz, facing="away")["clip"]; d = c.get("duration", 1)
             return max(abs((BV.sample(k, i / 30) or 0) - (BV.sample(cl["tracks"].get(p), i / 30) or 0)) for p, k in c["tracks"].items() for i in range(int(d * 30) + 1))
         renamed = txt
         for a, b2 in names.items():
