@@ -10,6 +10,9 @@ the dearest first so no worker is left with a long shot at the end. A worker cla
 its own folder (atomic on one filesystem: two workers never take the same shot), renders it, puts it in the cache and
 records how long it took. Workers are processes (`python -m dbe farm.worker`), here each pinned to its own CPU core
 to stand for one machine; on several machines they share the repository and out/farm over a network filesystem.
+Pinned workers run with tools/farm/keep_affinity.c preloaded: SwiftShader (Chromium's software WebGL) pins its own
+threads to core 0 upwards whatever cores the process may use, so without it every worker drew its 3D on core 0
+(measured: each shot 1.8 times slower with three workers than with one).
 
 **Assembly**: when the queue is empty, film.render runs as usual: every shot is fresh, so it only joins, mixes and
 checks. Frames are identical to a single-machine render because a shot is rendered whole by the same code from the

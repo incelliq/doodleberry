@@ -4113,6 +4113,12 @@ def farm_render(name, workers=3, pin=True, cache=True, fresh=False, assemble=Tru
     _player_page(name)   # written once before the workers start
     ncpu = os.cpu_count() or 1; procs = []
     env = {**os.environ, "DBE_RENDER_WORKERS": "1", "DBE_FARM_CACHE": "1" if cache else "0"}
+    if pin:   # SwiftShader pins its threads to core 0 up whatever the process may use: keep them on the worker's own core
+        so = ROOT / "out" / "farm" / "keep_affinity.so"; src = ROOT / "tools" / "farm" / "keep_affinity.c"
+        if not so.exists() or so.stat().st_mtime < src.stat().st_mtime:
+            so.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["cc", "-shared", "-fPIC", "-O2", "-o", str(so), str(src), "-ldl"], check=True, capture_output=True)
+        env["LD_PRELOAD"] = " ".join(x for x in (str(so), os.environ.get("LD_PRELOAD", "")) if x)
     for i in range(max(1, workers) if tasks else 0):
         cmd = [PY, "-m", "dbe", "farm.worker", json.dumps({"run": run, "worker": f"w{i + 1}"})]
         procs.append(subprocess.Popen((["taskset", "-c", str(i % ncpu)] if pin else []) + cmd, cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=open(q / f"w{i + 1}.log", "w")))
