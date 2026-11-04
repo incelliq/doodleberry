@@ -1113,6 +1113,7 @@ asked by name: minutes of CPU).
 | Detector | mean OKS | OKS >= 0.5 | OKS >= 0.75 | missed | ms per image |
 |---|---|---|---|---|---|
 | RTMPose-m (rtmlib) | 0.944 | 0.988 | 0.975 | 0 | 284 |
+| Sapiens pose 0.3B (top-down on the same YOLOX boxes) | 0.930 | 0.988 | 0.963 | 0 | about 13,400 |
 | YOLO11m-pose | 0.919 | 0.988 | 0.963 | 0 | 245 |
 | MediaPipe Pose (full) | 0.836 | 0.963 | 0.825 | 1 | 40 |
 
@@ -1122,7 +1123,10 @@ definition, so part of its gap is a different idea of where a joint is, not only
 takes: act-out also needs MediaPipe's heels, toes and hand points, which COCO's 17 do not have, and runs seven times
 faster. Act-out keeps MediaPipe; RTMPose is the one to try first where body accuracy matters more than speed (rtmlib's
 whole-body model, DWPose's 133 points, has the feet and hands; not yet tried). OpenPose
-(a Caffe build, CMU's non-commercial licence) and Sapiens (0.3 to 2 billion parameters) were not run.
+(a Caffe build, CMU's non-commercial licence) was not run. Sapiens (Meta's 0.3B model, CC BY-NC 4.0, 1.3 GB, sha256
+pinned) runs top-down on rtmlib's YOLOX person boxes, its 308 Goliath points mapped to COCO's 17: second on accuracy
+(0.930), about fifty times slower than the rest on this CPU (13.4 s an image alone; the 80-image run, 16.7 s, shared the
+machine with other tests, as did the others' times in it, which the table gives as measured alone).
 
 ## OpenToonz scenes (WP-34)
 `export.opentoonz {"name", "shot", "render"}` writes a shot's drawn levels (template "level") as an OpenToonz 1.8

@@ -145,7 +145,7 @@ This list leaves out what Doodleberry already does.
 | audio2photoreal | github.com/facebookresearch/audio2photoreal | **CC BY-NC 4.0** [V] NC | — | GPU | Avoid | — |
 | OpenPose | github.com/CMU-Perceptual-Computing-Lab/openpose | **Academic or non-profit, non-commercial only** [V] NC | — | — | Avoid; use MediaPipe or rtmlib | — |
 | Ultralytics YOLO-pose | github.com/ultralytics/ultralytics | **AGPL-3.0** [V] AGPL | 8.4.202 [V] | Yes (torch CPU) | In-house only (AGPL allowed for R&D since 2 Nov 2026). Measured (`pose.benchmark`): YOLO11m-pose mean OKS 0.919, 245 ms per image | — |
-| Sapiens (Meta) | github.com/facebookresearch/sapiens | **CC BY-NC 4.0** [V] NC | — | — | Avoid | — |
+| Sapiens (Meta) | github.com/facebookresearch/sapiens | **CC BY-NC 4.0** [V] NC | 0.3B TorchScript [V] | Yes, slowly (torch CPU, 13 s an image) | In-house only (NC allowed for R&D since 2 Nov 2026). Measured (`pose.benchmark`): mean OKS 0.930, second to RTMPose; too slow for takes on this CPU | — |
 
 **Recommendation for gestures.** Every open co-speech model I found has NC or unclear terms in its code, data or body model. Build a **prosody-driven beat-gesture scheduler** instead, with no new dependencies:
 - **Beat gestures:** pick out F0 peaks (from pyworld, already in the stack) and stressed words (Whisper words with espeak stress marks).
