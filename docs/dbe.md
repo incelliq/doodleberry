@@ -1710,6 +1710,15 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   gives the ACES output transform for review), scaled and encoded with the master's audio, checked by the QA bar and
   compared with the film's own render.
 - `image.scopes {image}`: histogram, waveform and vectorscope of a frame.
+- **Looks** (ASC CDL, part 2): `look.save {name, id, slope, offset, power, saturation}` writes
+  `films/<name>/looks/<id>.cc`, a ColorCorrection file that Resolve, Baselight, Nuke and OpenColorIO read. The grade
+  is applied in ACEScct, the log space colourists use with ACES: OpenColorIO's CDL transform in the ASC style, with its
+  clamps. `look.preview {name, id, time}` shows a frame before and after, with scopes; `film.from_master {look}` grades
+  the master's straight colour (un-premultiplied, then premultiplied again) before the view. The `looks` test:
+  - the .cc reads back through OpenColorIO exactly as saved;
+  - OpenColorIO's CDL matches the ASC v1.2 formula within 1e-5;
+  - an identity look leaves a frame of nib-hello's mean colour unchanged;
+  - a warm look warms it. In ACEScct a slope of 0.9 on blue is strong: the frame's mean blue fell from 223 to 112.
 
 ## Editor hand-off (WP-22)
 `film.handoff {name}` (after `film.render`) writes `films/<name>/build/handoff/`: the shots as rendered (`media/`), the

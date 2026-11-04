@@ -163,3 +163,39 @@ def scopes(rgb8):
 
 def checksums(folder):
     return {str(p.relative_to(folder)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(Path(folder).rglob("*")) if p.is_file() and p.name != "MANIFEST.json"}
+
+
+# ---------------- looks: ASC CDL (WP-37) ----------------
+# A look is an ASC Color Decision List correction: per channel out = (in * slope + offset) ** power (negative values held
+# at 0 before the power), then saturation about Rec. 709 luma. Graded in ACEScct (the log space colourists use with
+# ACES), so the same numbers mean the same thing in Resolve, Baselight or Nuke. Saved as a .cc file editors read.
+def cdl_of(look):
+    return {"slope": [float(v) for v in look.get("slope", [1, 1, 1])], "offset": [float(v) for v in look.get("offset", [0, 0, 0])],
+            "power": [float(v) for v in look.get("power", [1, 1, 1])], "saturation": float(look.get("saturation", 1.0))}
+
+
+def cc_xml(look, cid):
+    c = cdl_of(look); j = lambda v: " ".join(f"{x:.6f}" for x in v)
+    return (f'<?xml version="1.0" encoding="UTF-8"?>\n<ColorCorrection id="{cid}">\n  <SOPNode>\n    <Slope>{j(c["slope"])}</Slope>\n'
+            f'    <Offset>{j(c["offset"])}</Offset>\n    <Power>{j(c["power"])}</Power>\n  </SOPNode>\n  <SatNode>\n'
+            f'    <Saturation>{c["saturation"]:.6f}</Saturation>\n  </SatNode>\n</ColorCorrection>\n')
+
+
+def cdl_numpy(rgb, look):
+    """the ASC CDL formula itself (v1.2, with its clamps to 0..1 after the SOP and after saturation), for checking
+    OpenColorIO's"""
+    c = cdl_of(look); x = np.clip(rgb * np.array(c["slope"], np.float32) + np.array(c["offset"], np.float32), 0, 1)
+    x = np.power(x, np.array(c["power"], np.float32))
+    luma = x @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+    return np.clip(luma[..., None] + c["saturation"] * (x - luma[..., None]), 0, 1).astype(np.float32)
+
+
+def apply_look(acescg_rgb, look):
+    """ACEScg -> ACEScct -> the CDL (OpenColorIO's CDLTransform, ASC style) -> ACEScg"""
+    import PyOpenColorIO as O
+    c = cdl_of(look)
+    t = O.CDLTransform(); t.setSlope(c["slope"]); t.setOffset(c["offset"]); t.setPower(c["power"]); t.setSat(c["saturation"])
+    t.setStyle(O.CDL_ASC)
+    log = to_space(acescg_rgb, WORK, "ACEScct")
+    O.Config.CreateRaw().getProcessor(t).getDefaultCPUProcessor().applyRGB(log)
+    return to_space(log, "ACEScct", WORK)

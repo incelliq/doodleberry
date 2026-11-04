@@ -2995,6 +2995,42 @@ def _humaaans_test():
     return bad, meas
 
 
+def _looks_test():
+    import numpy as np
+    import PyOpenColorIO as O
+    from . import master as MA
+    bad, meas = [], {}
+    name = "nib-hello"
+    if not (FILMS / name / "build" / "final.mp4").exists():
+        return [], {"skipped": "nib-hello is not rendered here"}
+    looks = FILMS / name / "looks"; existed = looks.exists()
+    try:
+        warm = {"slope": [1.08, 1.0, 0.9], "offset": [0.01, 0.0, -0.01], "power": [0.97, 1.0, 1.04], "saturation": 1.1}
+        look_save(name, "zz_warm", **warm); look_save(name, "zz_identity")
+        back = _look(name, "zz_warm"); meas["read_back"] = back
+        if any(abs(a - b) > 1e-6 for k in ("slope", "offset", "power") for a, b in zip(back[k], warm[k])) or abs(back["saturation"] - warm["saturation"]) > 1e-6:
+            bad.append(f"the .cc did not read back as saved: {back}")
+        x = np.random.default_rng(1).random((64, 64, 3)).astype(np.float32); a = x.copy()
+        t = O.CDLTransform(); t.setSlope(warm["slope"]); t.setOffset(warm["offset"]); t.setPower(warm["power"]); t.setSat(warm["saturation"]); t.setStyle(O.CDL_ASC)
+        O.Config.CreateRaw().getProcessor(t).getDefaultCPUProcessor().applyRGB(a)
+        meas["ocio_vs_asc_formula_max"] = float(np.abs(a - MA.cdl_numpy(x, warm)).max())
+        if meas["ocio_vs_asc_formula_max"] > 1e-4:
+            bad.append(f"OpenColorIO's CDL differs from the ASC formula by {meas['ocio_vs_asc_formula_max']}")
+        p0 = look_preview(name, "zz_identity", 3.0); p1 = look_preview(name, "zz_warm", 3.0)
+        meas["identity"] = {"before": p0["mean_rgb_before"], "after": p0["mean_rgb_after"]}; meas["warm"] = {"before": p1["mean_rgb_before"], "after": p1["mean_rgb_after"]}
+        if max(abs(a_ - b_) for a_, b_ in zip(p0["mean_rgb_before"], p0["mean_rgb_after"])) > 0.5:
+            bad.append(f"an identity look changed the colours: {meas['identity']}")
+        rb = lambda m: m[0] - m[2]
+        if not rb(p1["mean_rgb_after"]) > rb(p1["mean_rgb_before"]) + 2:
+            bad.append(f"the warm look did not warm the frame: {meas['warm']}")
+    finally:
+        for f in ("zz_warm", "zz_identity"):
+            (looks / f"{f}.cc").unlink(missing_ok=True)
+        if not existed:
+            shutil.rmtree(looks, ignore_errors=True)
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -6533,6 +6569,10 @@ def test_golden(update=False, film=""):
         bad, meas = _humaaans_test()
         failed += 1 if bad else 0
         results.append({"humaaans": "Humaaans' single pieces become one puppet whose swap sets rebuild the kit's finished figures at rest (silhouette IoU), and whose body leans and head nods at the waist and neck", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "looks":   # WP-37: ASC CDL looks
+        bad, meas = _looks_test()
+        failed += 1 if bad else 0
+        results.append({"looks": "a CDL look saved as a .cc reads back through OpenColorIO unchanged; OpenColorIO's CDL matches the ASC formula; an identity look leaves the film's colours as they were; a warm look warms a frame of nib-hello", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0
@@ -8996,9 +9036,55 @@ def film_master(name, scale=2, fps=0, passes=None):
             "seconds": {"render": round(t_render, 1), "exr": round(t_exr, 1)}, "gigabytes": round(gb, 2)}
 
 
+@command("look.save", name=("string", "film"), id=("string", "look name, e.g. warm"), slope=("array", "[r, g, b]", None), offset=("array", "[r, g, b]", None),
+         power=("array", "[r, g, b]", None), saturation=("number", "", 1.0))
+def look_save(name, id, slope=None, offset=None, power=None, saturation=1.0):
+    """A look as an ASC CDL correction (WP-37), graded in ACEScct: films/<name>/looks/<id>.cc, a ColorCorrection file
+    Resolve, Baselight, Nuke and OpenColorIO read. film.from_master and look.preview apply it."""
+    from . import master as MA
+    import re as _re
+    if not _re.fullmatch(r"[A-Za-z0-9_-]{1,40}", id):
+        raise ValueError("look ids are letters, digits, - and _")
+    look = MA.cdl_of({k: v for k, v in (("slope", slope), ("offset", offset), ("power", power), ("saturation", saturation)) if v is not None})
+    d = _film(name) / "looks"; d.mkdir(exist_ok=True); (d / f"{id}.cc").write_text(MA.cc_xml(look, id))
+    return {"look": id, "file": str((d / f"{id}.cc").relative_to(ROOT)), **look}
+
+
+def _look(name, id):
+    import PyOpenColorIO as O
+    f = _film(name) / "looks" / f"{id}.cc"
+    if not f.exists():
+        raise FileNotFoundError(f"no look {id} (look.save first)")
+    t = O.CDLTransform.CreateFromFile(str(f), id)   # read back through OpenColorIO, as any other tool would
+    return {"slope": list(t.getSlope()), "offset": list(t.getOffset()), "power": list(t.getPower()), "saturation": t.getSat()}
+
+
+@command("look.preview", name=("string", "film"), id=("string", "look"), time=("number", "film time (s)", 1.0))
+def look_preview(name, id, time=1.0):
+    """A frame of the finished film before and after a look (WP-37), side by side in build/looks/<id>.png, with the mean
+    colour shift and a scopes picture of the graded frame"""
+    import numpy as np
+    from PIL import Image
+    from . import master as MA
+    d = _film(name); src = d / "build" / "final.mp4"
+    if not src.exists():
+        raise FileNotFoundError(f"{name} has no build/final.mp4: render it first")
+    s = _shots(name); W, H = s.get("size", [1080, 1920])
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", str(time), "-i", str(src), "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+    a = np.frombuffer(raw, np.uint8).reshape(H, W, 3)
+    cg = MA.to_space(a.astype(np.float32) / 255, MA.SRC_SPACE, MA.WORK)
+    b = np.clip(MA.to_space(MA.apply_look(cg, _look(name, id)), MA.WORK, MA.SRC_SPACE) * 255 + 0.5, 0, 255).astype(np.uint8)
+    od = d / "build" / "looks"; od.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(np.concatenate([a, b], axis=1)).resize((W, H // 2)).save(od / f"{id}.png")
+    Image.fromarray(MA.scopes(b)).save(od / f"{id}_scopes.png")
+    return {"preview": str((od / f"{id}.png").relative_to(ROOT)), "scopes": str((od / f"{id}_scopes.png").relative_to(ROOT)),
+            "mean_rgb_before": [round(float(v), 1) for v in a.reshape(-1, 3).mean(0)], "mean_rgb_after": [round(float(v), 1) for v in b.reshape(-1, 3).mean(0)]}
+
+
 @command("film.from_master", name=("string", "film"), size=("array", "encode size (default: the film's own)", None),
-         view=("string", "texture (back exactly as the artist's colours) | aces (the ACES 2.1 output transform, for review)", "texture"))
-def film_from_master(name, size=None, view="texture"):
+         view=("string", "texture (back exactly as the artist's colours) | aces (the ACES 2.1 output transform, for review)", "texture"),
+         look=("string", "a look saved with look.save, applied in ACEScct before the view (WP-37)", ""))
+def film_from_master(name, size=None, view="texture", look=""):
     """Derive the social encode from the master (WP-37): each EXR's beauty layer goes from ACEScg back to sRGB through
     OpenColorIO, is scaled to the delivery size and encoded (H.264, the master's mixed audio) to
     build/final_from_master.mp4, then checked by the film QA bar. Reports how close it is to the film's own render."""
@@ -9019,8 +9105,13 @@ def film_from_master(name, size=None, view="texture"):
     cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "16", "-pix_fmt", "yuv420p", "-tune", "animation", "-movflags", "+faststart", str(dst)]
     pr = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     probe = {}
+    cdl = _look(name, look) if look else None
     for i, f in enumerate(frames):
-        rgb = MA.display(MA.read_exr(f), view)
+        ex = MA.read_exr(f)
+        if cdl:   # grade the straight colour (the master is premultiplied), then premultiply again
+            ex = ex.copy(); al = np.clip(ex[..., 3:4], 0, 1); st = np.where(al > 1e-4, ex[..., :3] / np.maximum(al, 1e-4), 0)
+            ex[..., :3] = MA.apply_look(np.ascontiguousarray(st, np.float32), cdl) * al
+        rgb = MA.display(ex, view)
         im = Image.fromarray(rgb).resize((W, H), Image.LANCZOS)
         if i in (0, len(frames) // 2, len(frames) - 1):
             probe[i] = np.asarray(im).astype(np.float32)
