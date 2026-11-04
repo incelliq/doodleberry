@@ -207,6 +207,10 @@
     "plane": {
      "type": "string",
      "description": "WP-36: the depth plane this cast member is drawn on (default: stage)"
+    },
+    "outfit": {
+     "type": "string",
+     "description": "an outfit the puppet carries (meta.outfits, made by the generator's outfits; WP-16)"
     }
    }
   },

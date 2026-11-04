@@ -6,7 +6,11 @@ SPEC (all optional): {"name": "Ama", "build": "slim|average|broad", "age": "chil
   "skin": "#c68a62", "hair": {"style": "short|bob|long|curly|bun|ponytail|spiky|bald|hijab", "color": "#2b1d14"},
   "top": {"style": "tee|shirt|hoodie|sweater|jacket|dress|overalls", "color": "#e0703c", "color2": "#ffffff"},
   "bottom": {"style": "trousers|shorts|skirt", "color": "#2f4f6f"}, "shoes": "#f1f1ee", "eyes": "#5a3a22",
-  "accessories": ["glasses", "beard", "moustache", "freckles", "earrings", "tie"]}
+  "accessories": ["glasses", "beard", "moustache", "freckles", "earrings", "tie"],
+  "look": {"line", "eye", "head", "ink"}, "outfits": {"coat": {"top": {...}, "bottom": {...}, "shoes": "#..."}}}
+Outfits (WP-16) are swap sets: every body part an outfit draws differently gets a swap that replaces the part while
+the outfit is worn, with its own palette slots (<outfit>_cloth1, ...); meta.outfits lists {outfit: {swap: shape}},
+which a shot's cast entry selects with "outfit": "<name>".
 Every character gets the full humanoid rig (template parts, eyes/half/closed, pupils, four brows, eight mouths,
 right-hand poses), a `turn` control, springy hair, and palette slots so outfits can be recoloured later.
 """
@@ -251,8 +255,38 @@ def generate(spec):
             "meta": {"author": "Doodleberry character generator", "license": "CC0-1.0", "generator": "puppet/generator.py", "spec": spec}}
 
 
+OUTFIT_KEYS = ("cloth1", "cloth2", "cloth3", "shoe")
+
+
+def with_outfits(spec):
+    """the puppet with spec["outfits"] as swap sets on the parts each outfit changes"""
+    base = generate({k: v for k, v in spec.items() if k != "outfits"})
+    outs = spec.get("outfits") or {}
+    if not outs:
+        return base
+    sel = {}
+    for name, o in outs.items():
+        if not name.replace("_", "").isalnum():
+            raise ValueError(f"outfit names are letters, digits and _: {name!r}")
+        alt = generate({**{k: v for k, v in spec.items() if k != "outfits"}, **o})
+        remap = {k: f"{name}_{k}" for k in OUTFIT_KEYS if alt["palette"][k] != base["palette"][k]}   # only the colours it changes
+        for k, v in remap.items():
+            base["palette"][v] = alt["palette"][k]
+        sel[name] = {}
+        for pid, part in alt["parts"].items():
+            strokes = [{**st_, **{f: remap.get(st_[f], st_[f]) for f in ("fill", "stroke") if f in st_}} for st_ in part["strokes"]]
+            if strokes == base["parts"][pid]["strokes"]:
+                continue
+            sid = f"outfit_{pid}"
+            sw = base["swaps"].setdefault(sid, {"anchor": pid, "z": base["parts"][pid]["z"], "replaces": pid, "shapes": {}})
+            sw["shapes"][name] = strokes
+            sel[name][sid] = name
+    base["meta"]["outfits"] = sel
+    return base
+
+
 if __name__ == "__main__":
     spec = json.loads(Path(sys.argv[1]).read_text()) if len(sys.argv) > 1 and sys.argv[1] != "-" else json.loads(sys.stdin.read())
-    pz = generate(spec)
+    pz = with_outfits(spec)
     Path(sys.argv[2]).write_text(json.dumps(pz))
     print(json.dumps({"name": pz["name"], "parts": len(pz["parts"]), "strokes": sum(len(p["strokes"]) for p in pz["parts"].values())}))

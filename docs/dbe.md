@@ -954,6 +954,17 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Outfits as swap sets (WP-16)
+A generated character can carry outfits: `cast.generate` spec `"outfits": {"coat": {"top": {...}, "bottom": {...}},
+"gown": {...}}`. Each outfit is drawn by the generator like the character's own clothes, and every body part it draws
+differently becomes a swap that replaces the part while the outfit is worn, with its own palette slots for the
+colours it changes (`coat_cloth1`, ...). The puppet's `meta.outfits` lists, for each outfit, the swaps it selects; a
+shot's cast entry picks one with `"outfit": "coat"`, which the shot loader turns into the timeline's `set` keys.
+The puppet format is unchanged: swaps that replace a part (as hand poses do) already reach the player, the bake and
+every exporter. Test `outfits`: a character with a coat (jacket, trousers) and a gown (a dress) lints clean; a shot
+in each draws alike in Synfig, Lottie and Grease Pencil (1.0); against its own clothes the torso changes (mean
+difference 50 and 73 levels) and the face does not (0).
+
 ## Character bibles and continuity (WP-16)
 `cast.bible {"id", "set"}` keeps a character's bible in cast/bible/<id>.json: personality, voice (with a voice per
 language, `by_lang`), acting profile, gesture tendencies in words, clips it never plays, look (outfit, what it always

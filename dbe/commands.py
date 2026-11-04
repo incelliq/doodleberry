@@ -320,8 +320,8 @@ def cast_generate(spec, id):
     if not _re.match(r"^[a-z0-9_-]+$", id):
         raise ValueError("id must be lowercase letters, digits, - or _")
     sys.path.insert(0, str(ROOT / "puppet"))
-    from generator import generate
-    pz = generate({**spec, "id": id})
+    from generator import with_outfits
+    pz = with_outfits({**spec, "id": id})   # WP-16: spec "outfits" become swap sets
     out = ROOT / "cast" / "generated" / f"{id}.puppet.json"; out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(pz))
     reg = cast_add(str(out.relative_to(ROOT)), id, "Doodleberry character generator", "CC0-1.0",
@@ -553,6 +553,13 @@ def _shots(name, resolve=True):
     if (FILMS / name / "data.json").exists():   # data-bound text and charts (plan 2.17)
         from .databind import bind
         r = bind(r, _json(FILMS / name / "data.json", {}), lang=r.get("locale") or r.get("lang"))
+    for sh in r.get("shots", []):   # WP-16 outfits: a cast entry's "outfit" selects the puppet's outfit swap set (meta.outfits)
+        for c in sh.get("cast", []):
+            if c.get("outfit"):
+                sel = ((_json(ROOT / c["puppet"], {}) or {}).get("meta") or {}).get("outfits", {}).get(c["outfit"])
+                if sel is None:
+                    raise ValueError(f"shot {sh.get('id')}: {c['puppet']} has no outfit {c['outfit']!r}")
+                tl = c.setdefault("timeline", {}); tl["set"] = {**sel, **(tl.get("set") or {})}
     if r.get("beat_cuts") and (FILMS / name / "score.json").exists() and tm.get("lines"):
         # cuts on the music (plan 2.14): each shot change moves to the bar line (else beat) in the pause it falls in
         from . import edit as E
@@ -5465,6 +5472,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "outfits":   # WP-16: outfits as swap sets
+        bad, meas = _outfits_test()
+        failed += 1 if bad else 0
+        results.append({"outfits": "a generated character with two outfits lints clean; a shot cast with each outfit draws it alike in Synfig, Lottie and Grease Pencil; the body changes colour and the face does not", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "bible":   # WP-16: character bibles and continuity
         bad, meas = _bible_test()
         failed += 1 if bad else 0
@@ -9593,6 +9604,58 @@ def _templates_test():
 
 
 
+
+
+def _outfits_test():
+    """WP-16 outfits. A character generated with outfits coat (jacket and dark trousers) and gown (a dress): it lints
+    clean; three scratch shots cast it in its own clothes, the coat and the gown ("outfit" on the cast entry); each
+    draws alike in Synfig, Lottie and Grease Pencil (renderer parity); against its own clothes, the torso area's
+    colour changes in both outfits and the head area's does not."""
+    import numpy as np
+    sys.path.insert(0, str(ROOT / "puppet"))
+    from generator import with_outfits
+    from . import rparity as RP
+    bad, meas = [], {}
+    d_ = FILMS / "zz-outfits"
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        pz = with_outfits({"id": "zz-outfits", "name": "Dee", "top": {"style": "tee", "color": "#e0703c"}, "bottom": {"style": "shorts", "color": "#2f4f6f"},
+                           "outfits": {"coat": {"top": {"style": "jacket", "color": "#5a3a2a", "color2": "#e8dcc8"}, "bottom": {"style": "trousers", "color": "#333344"}},
+                                       "gown": {"top": {"style": "dress", "color": "#8a3fc0"}}}})
+        pth = d_ / "dee.puppet.json"; pth.write_text(json.dumps(pz)); rel = str(pth.relative_to(ROOT))
+        meas["outfits"] = {k: len(v) for k, v in pz["meta"]["outfits"].items()}
+        meas["lint_issues"] = puppet_lint(rel)["issues"]
+        if meas["lint_issues"]:
+            bad.append(f"lint: {meas['lint_issues'][:3]}")
+        shots = [{"id": f"s{i + 1}", "renderer": "svg", "set": "plain", "start": i * 1.5, "end": (i + 1) * 1.5, "bubbles": False,
+                  "cast": [{"puppet": rel, **({"outfit": o} if o else {}), "place": {"x": 540, "y": 1500, "s": 1.1},
+                            "timeline": {"clips": [{"clip": "idle", "start": i * 1.5, "fadeIn": 0}, {"clip": "wave_R", "start": i * 1.5 + 1.0}]}}]}
+                 for i, o in enumerate([None, "coat", "gown"])]
+        (d_ / "shots.json").write_text(json.dumps({"title": "outfits", "size": [1080, 1920], "fps": 30, "shots": shots}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        px, par = {}, {}
+        for i, o in enumerate(["own", "coat", "gown"]):
+            rp = RP.run("zz-outfits", f"s{i + 1}", times=[0.9, 1.3])   # within the shot: arms down (compared for colour), then waving
+            par[o] = {k: (v.get("min"), max(v.get("colour_diff") or [0])) for k, v in rp["renderers"].items()}
+            if not rp["ok"]:
+                bad.append(f"parity {o}: {par[o]}")
+            png = ROOT / "out" / "rparity" / "zz-outfits" / f"s{i + 1}" / "svg_0.900.png"
+            px[o] = RP.rgba(png, size=(1080, 1920)).astype(float)   # full size, so the part boxes below are in frame pixels
+        meas["parity"] = par
+        H, W = px["own"].shape[:2]
+        # torso and head areas, from the puppet's pivots on the 1.1x placement (artboard 600 wide, ground at y 1500)
+        art = pz["artboard"]; k = 1.1; ox, oy = 540 - art[0] / 2 * k, 1500 - pz["ground"] * k
+        box = lambda x, y, r: (slice(int(oy + y * k - r), int(oy + y * k + r)), slice(int(ox + x * k - r), int(ox + x * k + r)))
+        tb = box(*pz["parts"]["torso"]["pivot"], 40)
+        hb = box(300, pz["parts"]["head"]["pivot"][1] - 50, 30)   # the face (the head's pivot is the neck, where a collar shows)
+        diff = lambda a, b, bx: float(np.abs(px[a][bx][..., :3] - px[b][bx][..., :3]).mean())
+        meas["torso_change"] = {o: round(diff("own", o, tb), 1) for o in ("coat", "gown")}
+        meas["head_change"] = {o: round(diff("own", o, hb), 1) for o in ("coat", "gown")}
+        if not all(v > 20 for v in meas["torso_change"].values()) or not all(v < 3 for v in meas["head_change"].values()):
+            bad.append(f"torso should change and head stay: {meas['torso_change']} {meas['head_change']}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _bible_test():
     """WP-16 bibles. A scratch film zz-bible (counted as an appearance for the test) gives Ravi a voice other than his
