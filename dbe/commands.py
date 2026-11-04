@@ -3883,6 +3883,24 @@ def film_continuity(name):
     return out
 
 
+@command("export.svg", name=("string", "film"), time=("number", "a frame at this film time (seconds)", None),
+         start=("number", "or an animated SVG from here", None), end=("number", "to here", None), fps=("integer", "frames per second of the animated SVG", 12))
+def export_svg(name, time=None, start=None, end=None, fps=12):
+    """A film frame as a standalone SVG, or a stretch of the film as one animated SVG (WP-23): the player's own markup
+    with its images and the fonts its text uses embedded (out/svg/<film>/). The animated SVG shows each frame for
+    1/fps s and loops (SMIL), ids kept apart per frame, repeated images stored once; it plays in browsers without
+    script. Long stretches make large files: it suits stickers and loops, not whole films."""
+    od = ROOT / "out" / "svg" / name; od.mkdir(parents=True, exist_ok=True); pp = _player_page(name)
+    url = "file://" + str(pp) + "?rastercache=0&captions=0"
+    if time is not None:
+        o = od / f"frame_{float(time):.3f}.svg"; r = _run(["node", "tools/svg_frame.mjs", url, str(o), "still", str(time)], timeout=600)
+    elif start is not None and end is not None:
+        o = od / f"anim_{float(start):.2f}-{float(end):.2f}_{fps}fps.svg"; r = _run(["node", "tools/svg_frame.mjs", url, str(o), "anim", str(start), str(end), str(fps)], timeout=3600)
+    else:
+        raise ValueError("give time, or start and end")
+    return {**json.loads(r[-1]), "file": str(o.relative_to(ROOT))}
+
+
 @command("export.sprites", puppet=("string", "puppet file"), clips=("array", "clip names (default: every clip in its library)", None),
          fps=("integer", "frames per second of the sheet", 12), scale=("number", "character scale in the frame", 1.0))
 def export_sprites(puppet, clips=None, fps=12, scale=1.0):
@@ -5875,6 +5893,10 @@ def test_golden(update=False, film=""):
         bad, meas = _continuity_test()
         failed += 1 if bad else 0
         results.append({"continuity": "a cut-up dialogue with none of the faults has no issues; each fault (sides swapped, eyeline away, direction reversed) is found by its rule; a marked line cross is accepted", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "svgexport":   # WP-23: a film frame as SVG, animated SVG
+        bad, meas = _svgexport_test()
+        failed += 1 if bad else 0
+        results.append({"svgexport": "a frame as a standalone SVG and an animated SVG both draw as the player does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10378,6 +10400,39 @@ def _continuity_test():
             bad.append({"sizes": sz, "why": "the lone close shots should be tighter than the two-shots"})
     finally:
         shutil.rmtree(zz, ignore_errors=True)
+    return bad, meas
+
+
+def _svgexport_test():
+    """WP-23 film frames as SVG. A frame of nib-hello (raster Nib on the set's rasterized static layer, a sign with
+    text) exported as a standalone SVG and drawn in a blank page matches the player's own frame (mean difference under
+    2 on 0-255, under 2% of pixels off by more than 32); an animated SVG of 1.5 s at 12 fps, drawn at three of its
+    moments, matches the player at the same film times; repeated images are stored once."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "svgexport_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    pp = _player_page("nib-hello")
+    def cmp(a, b):
+        x = np.asarray(Image.open(a).convert("RGB")).astype(float); y = np.asarray(Image.open(b).convert("RGB").resize((x.shape[1], x.shape[0]))).astype(float)
+        d = np.abs(x - y); return round(float(d.mean()), 3), round(float((d.max(-1) > 32).mean()), 4)
+    def ref(t):
+        o = tmp / f"player_{t:.3f}.png"
+        _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(t), "1", str(o)], timeout=600); return o
+    r1 = export_svg("nib-hello", time=2.5); f1 = ROOT / r1["file"]; png = tmp / "svg_still.png"
+    _run(["node", "tools/svg_still.mjs", str(f1), str(png)], timeout=300)
+    meas["still"] = {"bytes": r1["bytes"], "fonts": r1["fonts"], "diff": cmp(ref(2.5), png)}
+    r2 = export_svg("nib-hello", start=2.0, end=3.5, fps=12); f2 = ROOT / r2["file"]; meas["anim"] = {"bytes": r2["bytes"], "frames": r2["frames"], "shared_images": r2["shared_images"], "diff": {}}
+    for k in (0, 7, 17):
+        t = 2.0 + k / 12; png = tmp / f"svg_anim_{k}.png"
+        _run(["node", "tools/svg_still.mjs", str(f2), str(png), f"{k / 12 + 0.01:.4f}"], timeout=300)
+        meas["anim"]["diff"][k] = cmp(ref(t), png)
+    for what, d in [("still", meas["still"]["diff"])] + [(f"anim frame {k}", v) for k, v in meas["anim"]["diff"].items()]:
+        if d[0] > 2 or d[1] > 0.02:
+            bad.append({what: d})
+    if r2["shared_images"] < 1:
+        bad.append("the static layer image was not shared between frames")
+    shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
 
 

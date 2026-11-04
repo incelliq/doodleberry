@@ -397,6 +397,17 @@ installs) with the total ink reported (nib-hello: 220% at the 99.9th percentile;
 by default; film-level grading and grain are a video pass and not applied. `transparent=true` draws the characters
 alone on a transparent background as a PNG at that resolution, for merch. The `alpha` test covers all three commands.
 
+
+**SVG frames** (`export.svg {name, time}` or `{name, start, end, fps}`, `tools/svg_frame.mjs`): the player's own SVG
+markup made standalone, in out/svg/<film>/: rasterized static layers (blob images in the page) become data URIs,
+the fonts its text uses are embedded (data URIs) and each text element carries its computed font, at the film's
+size. The animated form holds each frame as a group shown for 1/fps s, looping (SMIL, discrete: it plays in a
+browser without script), each frame's ids prefixed so their definitions cannot clash, and images repeated exactly
+stored once (`<use>`). Test `svgexport` (nib-hello: raster Nib on the rasterized set, a sign with text): the frame
+drawn from its SVG in a blank page matches the player exactly (difference 0.0), and a 1.5 s animated SVG at 12 fps
+(18 frames, 0.55 MB with its five images shared, 4.5 MB without) matches the player at three moments, exactly. Long
+stretches make large files: it suits stickers and loops.
+
 ## Accessibility: flashes, colour vision, audio description, reduced motion, aspects (WP-24)
 **Flash check** (`dbe/access.py`, in `qa.run` as `flash_wcag_2.3.1`, failing the film). WCAG 2.2 success criterion
 2.3.1 and its definitions: a *transition* is a change in relative luminance of at least 0.1 where the darker image is
