@@ -134,9 +134,11 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
     if any("{{" in ln.get("text", "") + ln.get("alt", "") for ln in script["lines"]) and not (film / "data.json").exists():
         raise SystemExit("script lines hold {{...}} data bindings but there is no data.json: run film.data first")
     if (film / "data.json").exists() and any("{{" in ln.get("text", "") + ln.get("alt", "") for ln in script["lines"]):
-        import sys as _sys   # data-bound narration (plan 2.17): numbers come from data.json
-        _sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dbe"))
-        from databind import bind_text
+        # data-bound narration (plan 2.17): numbers come from data.json. databind is loaded by its path: putting dbe/
+        # on sys.path would let dbe/packaging.py shadow the `packaging` library (pyworld's pkg_resources imports it)
+        import importlib.util
+        _spec = importlib.util.spec_from_file_location("databind", Path(__file__).resolve().parent.parent / "dbe" / "databind.py")
+        _db = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_db); bind_text = _db.bind_text
         _data = json.loads((film / "data.json").read_text())
         for ln in script["lines"]:
             for k in ("text", "alt"):
