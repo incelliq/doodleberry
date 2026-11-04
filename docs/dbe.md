@@ -1006,6 +1006,22 @@ family's factors (bold-round 1.5, 1.456, 1.12; fine 0.7, 0.816, 0.96; each withi
 family; every member lints clean; a shot with one member of each family draws alike in Synfig, Lottie and Grease
 Pencil (1.0).
 
+## BVH motion out and in (WP-12)
+`clip.bvh_export {"puppet", "clip"}` writes a clip as BVH: the puppet's part tree is the skeleton (each joint named
+after its part, offset from its parent's pivot, y up) and the clip is sampled per frame the way the player plays it
+(smoothstep between keys); each joint's Z rotation is the part's angle, negated because the artboard's y points
+down; the root carries the clip's offset. `clip.bvh_import {"bvh", "puppet", "name", "save"}` reads one back: our
+own files by their Z rotations, other skeletons by joint name (Hips, Spine, LeftArm, LeftForeArm, mixamorig:,
+UpperArm_L, ...), posed in 3D with their own channel order and seen from the front (each bone, or for a bone with no
+length its own axis, against its rest direction on the picture plane); keys are reduced, and `save` adds it to the
+puppet's own clips. tools/blender/bvh_check.py prints the joint positions Blender's importer reads.
+
+Test `bvh` (four humanoid clips on Ravi, one with a moving root): the BVH's joints sit where the puppet's own
+geometry puts them (within 0.0003 artboard px), Blender reads the same positions (within 0.0003), and the clips
+come back within 0.48 degrees, both as our skeleton and with the joints renamed to motion-capture names. Open: the
+3D path has only been tested on these planar motions: no real motion-capture BVH was reachable from here to test
+the projection of out-of-plane movement.
+
 ## Map board (WP-16)
 `"set": "map"` puts a framed map on a wall (the characters stand in front of it), or fills the frame with
 `"full": true`. The map data are Natural Earth countries (world-atlas TopoJSON, public domain) projected by d3-geo's

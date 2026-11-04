@@ -378,6 +378,44 @@ def acting_plan(name):
     return {"film": name, "plan": json.loads(r[-1])}
 
 
+@command("clip.bvh_export", puppet=("string", "puppet file"), clip=("string", "a clip name in the puppet's template library (puppet/clips/<template>.json) or its own clips, or a clip .json file"),
+         out=("string", "where to write the .bvh (default out/bvh/<puppet>_<clip>.bvh)", ""), fps=("integer", "frames per second", 30), scale=("number", "units per artboard pixel", 1.0))
+def clip_bvh_export(puppet, clip, out="", fps=30, scale=1.0):
+    """A clip as BVH motion capture (WP-12): the puppet's part tree as the skeleton, the clip sampled per frame the way
+    the player plays it. Blender, MotionBuilder and other tools read it."""
+    from . import bvh as BV
+    pz = _json(ROOT / puppet); c = _clip_named(pz, clip)
+    o = ROOT / (out or f"out/bvh/{Path(puppet).name.split('.')[0]}_{Path(clip).stem}.bvh"); o.parent.mkdir(parents=True, exist_ok=True)
+    o.write_text(BV.export(pz, c, fps=fps, scale=scale, name=clip))
+    return {"path": str(o.relative_to(ROOT)), "joints": len(pz["parts"]), "frames": int(round((c.get("duration") or 0) * fps)) + 1}
+
+
+@command("clip.bvh_import", bvh=("string", "a .bvh file (ours, or motion capture with the usual joint names: Hips, Spine, LeftArm, ...)"),
+         puppet=("string", "the puppet it is for"), name=("string", "clip name"), save=("boolean", "add it to the puppet's own clips", False),
+         tol=("number", "degrees the reduced keys may stray", 0.5))
+def clip_bvh_import(bvh, puppet, name, save=False, tol=0.5):
+    """Motion capture as a clip (WP-12): joints matched to the puppet's parts by name; a 3D take is seen from the front
+    (each bone projected on the picture plane against its rest direction); keys reduced. With save, it becomes one of
+    the puppet's own clips (format v0.7)."""
+    from . import bvh as BV
+    pz = _json(ROOT / puppet)
+    r = BV.to_clip((ROOT / bvh).read_text() if not Path(bvh).is_absolute() else Path(bvh).read_text(), pz, tol=tol)
+    if save:
+        pz.setdefault("clips", {})[name] = r["clip"]; (ROOT / puppet).write_text(json.dumps(pz))
+    return {"name": name, **r, "saved": bool(save)}
+
+
+def _clip_named(pz, clip):
+    if clip.endswith(".json") and (ROOT / clip).exists():
+        return _json(ROOT / clip)
+    if clip in (pz.get("clips") or {}):
+        return pz["clips"][clip]
+    lib = _json(ROOT / "puppet" / "clips" / f"{pz.get('template', 'humanoid')}.json", {"clips": {}})["clips"]
+    if clip not in lib:
+        raise KeyError(f"no clip {clip!r} for this puppet (its own: {', '.join(pz.get('clips') or {}) or 'none'}; library: {', '.join(lib)})")
+    return lib[clip]
+
+
 @command("plate.fetch", ids=("array", "plate ids (default: every plate in assets/plates/plates.json)", None))
 def plate_fetch(ids=None):
     """Download anatomy plates (Servier Medical Art, CC BY 4.0) into assets/external/plates/ and check each against its
@@ -5488,6 +5526,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "bvh":   # WP-12: BVH motion out and in
+        bad, meas = _bvh_test()
+        failed += 1 if bad else 0
+        results.append({"bvh": "four library clips go out as BVH whose joints sit where the puppet's own geometry puts them, Blender's importer reads the same joint positions, and they come back as clips within 0.6 degrees, both as our skeleton and renamed to motion-capture joint names (read as a 3D skeleton)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "plates":   # WP-16: anatomy plates
         bad, meas = _plates_test()
         failed += 1 if bad else 0
@@ -9626,6 +9668,54 @@ def _templates_test():
 
 
 
+
+
+def _bvh_test():
+    """WP-12 BVH. For four humanoid library clips on Ravi (talk_beat, wave_R, shrug, celebrate with a moving root):
+    clip.bvh_export; every joint's position from the BVH (forward kinematics) equals the puppet's own geometry
+    (geom.part_matrices plus the root offset) within 0.01 px; Blender's BVH importer gives the same joint positions
+    (within 0.01); clip.bvh_import brings the clip back within 0.6 degrees on every track at every frame, read as our
+    skeleton and, with the joints renamed to motion-capture names (Hips, Spine, LeftArm, ...), as a 3D skeleton."""
+    import re as _re
+    import numpy as np
+    from . import bvh as BV, geom as G
+    bad, meas = [], {}
+    pz = _json(ROOT / "cast/generated/ravi.puppet.json"); lib = _json(ROOT / "puppet/clips/humanoid.json")["clips"]
+    names = {"hip": "Hips", "torso": "Spine", "neck": "Neck", "head": "Head", "upperarm_L": "LeftArm", "forearm_L": "LeftForeArm", "hand_L": "LeftHand",
+             "upperarm_R": "RightArm", "forearm_R": "RightForeArm", "hand_R": "RightHand", "thigh_L": "LeftUpLeg", "shin_L": "LeftLeg", "foot_L": "LeftFoot",
+             "thigh_R": "RightUpLeg", "shin_R": "RightLeg", "foot_R": "RightFoot"}
+    tmp = ROOT / "out" / "bvh" / "test"; tmp.mkdir(parents=True, exist_ok=True)
+    for cn in ("talk_beat", "wave_R", "shrug", "celebrate"):
+        r = clip_bvh_export("cast/generated/ravi.puppet.json", cn, out=f"out/bvh/test/{cn}.bvh")
+        txt = (ROOT / r["path"]).read_text(); b = BV.parse(txt); jn = [j["name"] for j in b["joints"]]; c = lib[cn]
+        F = len(b["frames"]); root = pz["parts"]["hip"]["pivot"]; geo = 0.0
+        for f in range(0, F, 4):
+            ang = {p: BV.sample(k, f / 30) or 0 for p, k in c["tracks"].items()}; M = G.part_matrices(pz, ang)
+            o = BV.sample(c.get("offset"), f / 30) or [0, 0]; pos, _ = BV._fk(b, b["frames"][f])
+            for i, n in enumerate(jn):
+                wx, wy = G.apply(M[n], pz["parts"][n]["pivot"])
+                geo = max(geo, float(np.hypot(wx + o[0] - root[0] - pos[i][0], -(wy + o[1] - root[1]) - pos[i][1])))
+        frames = [0, F // 2, F - 1]
+        bl = subprocess.run([BLENDER, "-b", "--factory-startup", "--python", "tools/blender/bvh_check.py", "--", str(ROOT / r["path"]), str(tmp / f"{cn}.json"), *map(str, frames)],
+                            cwd=ROOT, capture_output=True, text=True, timeout=600) if BLENDER else None
+        bl_err = None
+        if bl is not None and bl.returncode == 0:
+            got = _json(tmp / f"{cn}.json"); bl_err = 0.0
+            for f in frames:
+                pos, _ = BV._fk(b, b["frames"][f])
+                bl_err = max(bl_err, max(float(np.hypot(pos[i][0] - got[str(f)][n][0], pos[i][1] - got[str(f)][n][2])) for i, n in enumerate(jn)))
+        def back(text):
+            cl = BV.to_clip(text, pz)["clip"]; d = c.get("duration", 1)
+            return max(abs((BV.sample(k, i / 30) or 0) - (BV.sample(cl["tracks"].get(p), i / 30) or 0)) for p, k in c["tracks"].items() for i in range(int(d * 30) + 1))
+        renamed = txt
+        for a, b2 in names.items():
+            renamed = _re.sub(rf"(JOINT|ROOT) {a}\n", rf"\1 {b2}\n", renamed)
+        m = {"geometry_px": round(geo, 4), "blender": None if bl_err is None else round(bl_err, 4), "back_own_deg": round(back(txt), 3), "back_mocap_deg": round(back(renamed), 3)}
+        meas[cn] = m
+        if m["geometry_px"] > 0.01 or m["blender"] is None or m["blender"] > 0.01 or m["back_own_deg"] > 0.6 or m["back_mocap_deg"] > 0.6:
+            bad.append(f"{cn}: {m}")
+    shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
 
 def _plates_test():
     """WP-16 anatomy plates. plate.fetch (downloads once; every file must match its recorded sha256). A scratch shot
