@@ -337,14 +337,45 @@
     },
     "comp": {
      "type": "object",
-     "description": "WP-36 compositor: depth planes (parallax 1/depth, depth of field from focus and dof) and per-plane nodes (grade, blur, glow, mask, blend); see dbe/player/comp.js",
+     "description": "WP-36 compositor: depth planes (parallax 1/depth, depth of field from focus and dof) and per-plane nodes (grade, blur, glow, mask, blend, lightwrap), camera roll, keyed values and expressions, tracked regions; see dbe/player/comp.js",
      "properties": {
       "focus": {
-       "type": "number"
+       "description": "a number, keys [[t, v], ...] (linear) or an expression \"=...\" (WP-36)",
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "array",
+          "minItems": 2
+         }
+        },
+        {
+         "type": "string",
+         "pattern": "^="
+        }
+       ]
       },
       "dof": {
-       "type": "number",
-       "minimum": 0
+       "description": "a number, keys [[t, v], ...] (linear) or an expression \"=...\" (WP-36)",
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "array",
+          "minItems": 2
+         }
+        },
+        {
+         "type": "string",
+         "pattern": "^="
+        }
+       ]
       },
       "planes": {
        "type": "array",
@@ -358,8 +389,23 @@
           "type": "string"
          },
          "depth": {
-          "type": "number",
-          "exclusiveMinimum": 0
+          "description": "a number, keys [[t, v], ...] (linear) or an expression \"=...\" (WP-36)",
+          "anyOf": [
+           {
+            "type": "number"
+           },
+           {
+            "type": "array",
+            "items": {
+             "type": "array",
+             "minItems": 2
+            }
+           },
+           {
+            "type": "string",
+            "pattern": "^="
+           }
+          ]
          },
          "set": {
           "type": "string"
@@ -374,7 +420,23 @@
           "type": "array"
          },
          "opacity": {
-          "type": "number"
+          "description": "a number, keys [[t, v], ...] (linear) or an expression \"=...\" (WP-36)",
+          "anyOf": [
+           {
+            "type": "number"
+           },
+           {
+            "type": "array",
+            "items": {
+             "type": "array",
+             "minItems": 2
+            }
+           },
+           {
+            "type": "string",
+            "pattern": "^="
+           }
+          ]
          },
          "screen": {
           "type": "boolean",
@@ -401,7 +463,8 @@
            "blur",
            "glow",
            "mask",
-           "blend"
+           "blend",
+           "lightwrap"
           ]
          },
          "plane": {
@@ -416,6 +479,36 @@
         "dolly"
        ],
        "description": "WP-42: dolly = true perspective (matches 3D renders framed by the shot camera)"
+      },
+      "roll": {
+       "description": "WP-36: camera roll about the frame centre, degrees; a number, keys [[t, v], ...] (linear) or an expression \"=...\" (WP-36)",
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "array",
+          "minItems": 2
+         }
+        },
+        {
+         "type": "string",
+         "pattern": "^="
+        }
+       ]
+      },
+      "tracks": {
+       "type": "object",
+       "description": "WP-36: tracked regions (comp.track): id -> [[t, x, y, luma], ...]",
+       "additionalProperties": {
+        "type": "array",
+        "items": {
+         "type": "array",
+         "minItems": 3
+        }
+       }
       }
      }
     },

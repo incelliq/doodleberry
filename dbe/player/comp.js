@@ -25,6 +25,15 @@
 //     ]
 //   }
 //
+//   WP-36, part 2:
+//     "roll": 4 | [[t, deg], ...] | "=2*sin(t)"   camera roll about the frame centre (degrees)
+//     any number in a plane, node or "roll"/"focus"/"dof" may be keyed ([[t, v], ...], linear) or an expression
+//       ("=0.9 + 0.1*sin(2*t)"; t, sin, cos, abs, min, max, pow, sqrt, floor, clamp(v, a, b), pi, and
+//       track("id", "x" | "y" | "luma") for a tracked region, below): pure functions of time
+//     {"type": "lightwrap", "plane": "stage", "from": ["sky", "hills"], "radius": 14, "strength": 0.7}
+//       the planes behind (or those listed) bleed their light onto the plane's edges (the real background, blurred)
+//     "tracks": {"sign": [[t, x, y, luma], ...]}   written by comp.track (a region followed through a plate); an item
+//       with "attach": "sign" moves with it ("offset" adds [dx, dy], each keyed or an expression too)
 // Parallax: a plane at depth d follows the camera by 1/d (the stage, d = 1, moves with it; far planes move less, near
 // planes more), and zooms by 1 + (zoom - 1) / d. "drift" moves a plane on its own (px/s). Ids start with "comp-": the
 // AI-look lint treats them as deliberate compositing, not generic effects.
@@ -33,7 +42,48 @@
   const SAFE = s => String(s).replace(/<\/?(script|foreignObject|iframe)[^>]*>/gi, '').replace(/\son\w+\s*=/gi, ' data-x=');
   function hex(c) { const s = String(c || '#000').replace('#', ''); const v = s.length === 3 ? s.split('').map(x => x + x).join('') : s; return [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16) / 255); }
 
+  // WP-36: keyed values and expressions, pure functions of time
+  function keyed(keys, t) {
+    if (!keys.length) return 0; if (t <= keys[0][0]) return keys[0][1]; const L = keys[keys.length - 1]; if (t >= L[0]) return L[1];
+    for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) { const [t0, v0] = keys[i - 1], [t1, v1] = keys[i], u = (t - t0) / Math.max(1e-9, t1 - t0); return v0 + (v1 - v0) * u; }
+    return L[1];
+  }
+  const EXPR = new Map();
+  const FN = { sin: Math.sin, cos: Math.cos, abs: Math.abs, min: Math.min, max: Math.max, pow: Math.pow, sqrt: Math.sqrt, floor: Math.floor,
+    clamp: (v, a, b) => Math.max(a, Math.min(b, v)), pi: Math.PI };
+  function compile(src) {
+    if (EXPR.has(src)) return EXPR.get(src);
+    const body = src.replace(/^=/, '');
+    // only numbers, operators, brackets, commas, quoted ids and whitelisted names: anything else is refused
+    const names = body.replace(/"[^"]*"|'[^']*'/g, '""').match(/[A-Za-z_]\w*/g) || [];
+    for (const n of names) if (n !== 't' && n !== 'track' && !Object.prototype.hasOwnProperty.call(FN, n)) throw new Error(`comp expression: unknown name ${n} in ${src}`);
+    const bare = body.replace(/"[^"]*"|'[^']*'/g, '""');
+    if (/[;{}\[\]=`\\]/.test(bare) || /\.(?!\d)/.test(bare.replace(/\d\.\d/g, '0'))) throw new Error(`comp expression: not allowed: ${src}`);   // no property access
+    const f = new Function('t', 'track', ...Object.keys(FN), `return (${body});`);
+    EXPR.set(src, f); return f;
+  }
+  function trackVal(ctx, id, field, t) {
+    const tr = ((ctx.comp || {}).tracks || {})[id]; if (!tr || !tr.length) return 0;
+    const col = { x: 1, y: 2, luma: 3 }[field || 'x'] || 1;
+    return keyed(tr.map(r => [r[0], r[col] ?? 0]), t);
+  }
+  function V(v, t, ctx, dflt) {
+    if (v == null) return dflt;
+    if (typeof v === 'number') return v;
+    if (Array.isArray(v) && v.length && Array.isArray(v[0])) return keyed(v, t);
+    if (typeof v === 'string' && v.startsWith('=')) return +compile(v)(t, (id, f) => trackVal(ctx, id, f, t), ...Object.values(FN));
+    return v;
+  }
+  const VALUED = ['brightness', 'contrast', 'saturation', 'tint_amount', 'radius', 'strength', 'opacity', 'feather', 'depth'];
+  const at = (o, t, ctx) => { const r = { ...o }; for (const k of VALUED) if (k in r) r[k] = V(r[k], t, ctx); if (Array.isArray(r.drift) && !Array.isArray(r.drift[0])) r.drift = r.drift.map(x => V(x, t, ctx, 0)); return r; };
+
   function item(it, t, tag, k, ctx) {
+    if (it.attach || it.offset) {   // WP-36: an item following a tracked region, or moved by keys or an expression
+      const dx = (it.attach ? trackVal(ctx, it.attach, 'x', t) - trackVal(ctx, it.attach, 'x', (((ctx.comp || {}).tracks || {})[it.attach] || [[0]])[0][0]) : 0) + V((it.offset || [])[0], t, ctx, 0);
+      const dy = (it.attach ? trackVal(ctx, it.attach, 'y', t) - trackVal(ctx, it.attach, 'y', (((ctx.comp || {}).tracks || {})[it.attach] || [[0]])[0][0]) : 0) + V((it.offset || [])[1], t, ctx, 0);
+      const { attach, offset, ...rest } = it;
+      return `<g transform="translate(${f2(dx)} ${f2(dy)})">${item(rest, t, tag, k, ctx)}</g>`;
+    }
     if (it.type === 'shape') return SAFE(it.svg || '');
     if (it.type === 'gradient') {
       const id = `comp-g-${tag}-${k}`, [x, y, w, h] = it.rect || [0, 0, ctx.W, ctx.H];
@@ -113,6 +163,17 @@
     return `<filter id="${id}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">${prim}</filter>`;
   }
 
+  // WP-36: light wrap. The planes behind are drawn again (a copy, blurred) over this plane, screened, through a mask
+  // that keeps only a band just inside the plane's edges (its alpha minus its blurred alpha). No feImage: Chromium will
+  // not read elements holding the player's cached raster layers into a filter
+  function wrapDefs(pid, nd, W, H) {
+    const r = nd.radius ?? 14, k = Math.max(0, nd.strength ?? 0.7), U = `filterUnits="userSpaceOnUse" x="${-W}" y="${-H}" width="${3 * W}" height="${3 * H}"`;
+    return `<filter id="${pid}-wedge" ${U} color-interpolation-filters="sRGB"><feGaussianBlur in="SourceAlpha" stdDeviation="${f2(r / 2)}" result="ab"/>`
+      + `<feComposite in="SourceAlpha" in2="ab" operator="out" result="edge"/><feFlood flood-color="#fff"/><feComposite in2="edge" operator="in" result="w"/>`
+      + `<feComponentTransfer in="w"><feFuncA type="linear" slope="${(2 * k).toFixed(3)}"/></feComponentTransfer></filter>`
+      + `<filter id="${pid}-wblur" ${U} color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="${f2(r / 2)}"/></filter>`;
+  }
+
   function maskFor(id, nd, W, H) {
     const sh = nd.shape || {}; let s = '';
     if (sh.ellipse) { const [cx, cy, rx, ry] = sh.ellipse; s = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"`; }
@@ -128,11 +189,13 @@
   //       drawSet(name, opts, t), overlay(item, t), tag: frame tag}
   function compose(sh, ctx) {
     const c = sh.comp || {}, W = ctx.W, H = ctx.H, t = ctx.t, tag = ctx.tag;
-    const planes = (c.planes || []).slice();
+    ctx = { ...ctx, comp: c };
+    const planes = (c.planes || []).map(p => at(p, t, ctx));
     if (!planes.some(p => p.id === 'stage')) planes.push({ id: 'stage', depth: 1 });
     const order = planes.map((p, i) => ({ ...p, i })).sort((a, b) => (b.depth ?? 1) - (a.depth ?? 1) || a.i - b.i);
-    const focus = c.focus ?? 1, dof = c.dof ?? 0;
-    let defs = '', body = '';
+    const focus = V(c.focus, t, ctx, 1), dof = V(c.dof, t, ctx, 0);
+    const allNodes = (c.nodes || []).map(n => at(n, t, ctx));
+    let defs = '', body = ''; const drawn = {};
     for (const p of order) {
       const d = Math.max(0.05, p.depth ?? 1), pid = `comp-${p.id}-${tag}`;
       let content = '';
@@ -140,8 +203,8 @@
       if (p.set && ctx.drawSet) content += ctx.drawSet(p.set, p.set_opts || {}, t);
       content += (p.items || []).map((it, k) => item(it, t, `${p.id}-${tag}`, k, ctx)).join('');
       content += (ctx.planeInk || {})[p.id] || '';
-      const nodes = (c.nodes || []).filter(n => n.plane === p.id);
-      const fl = filterFor(`${pid}-fx`, nodes.filter(n => n.type !== 'mask' && n.type !== 'blend'), dof * Math.abs(1 / d - 1 / focus));
+      const nodes = allNodes.filter(n => n.plane === p.id);
+      const fl = filterFor(`${pid}-fx`, nodes.filter(n => n.type !== 'mask' && n.type !== 'blend' && n.type !== 'lightwrap'), dof * Math.abs(1 / d - 1 / focus));
       if (fl) defs += fl;
       const mk = nodes.find(n => n.type === 'mask'); const bl = nodes.find(n => n.type === 'blend');
       if (mk) defs += maskFor(`${pid}-mask`, mk, W, H);
@@ -149,10 +212,19 @@
       // a screen-locked plane (WP-42: a 3D render already framed by the shot camera) does not move with the 2D camera
       let g = `<g${p.screen ? '' : ` transform="${camFor(d, ctx.view, W, H, p.drift, t, c.zoom)}"`}${fl ? ` filter="url(#${pid}-fx)"` : ''}>${inner}</g>`;
       if (mk && mk.screen) g = `<g mask="url(#${pid}-mask)">${g}</g>`;                            // a screen mask stays put (a vignette)
+      const lw = nodes.find(n => n.type === 'lightwrap');
+      let wrap = '';
+      if (lw) {   // the planes behind (or those named), as drawn so far, blurred and screened onto this plane's inner edges
+        const from = lw.from || order.filter(q => (q.depth ?? 1) > d && drawn[q.id]).map(q => q.id);
+        defs += wrapDefs(pid, lw, W, H) + `<mask id="${pid}-wmask" maskUnits="userSpaceOnUse" x="${-W}" y="${-H}" width="${3 * W}" height="${3 * H}"><g filter="url(#${pid}-wedge)">${g}</g></mask>`;
+        wrap = `<g mask="url(#${pid}-wmask)" style="mix-blend-mode:screen"><g filter="url(#${pid}-wblur)">${from.map(id => drawn[id] || '').join('')}</g></g>`;
+      }
       if (bl || p.opacity != null) g = `<g style="${bl ? `mix-blend-mode:${bl.mode || 'normal'}` : ''}" opacity="${bl ? (bl.opacity ?? 1) : p.opacity}">${g}</g>`;
-      body += g;
+      drawn[p.id] = g; body += g + wrap;
     }
+    const roll = V(c.roll, t, ctx, 0);   // WP-36: camera roll about the frame centre
+    if (roll) body = `<g transform="rotate(${(+roll).toFixed(3)} ${f2(W / 2)} ${f2(H / 2)})">${body}</g>`;
     return `<defs>${defs}</defs><g style="isolation:isolate">${body}</g>`;
   }
-  root.COMP = { compose, camFor };
+  root.COMP = { compose, camFor, value: V, compile };
 })(typeof window !== 'undefined' ? window : globalThis);

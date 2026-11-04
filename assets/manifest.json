@@ -889,6 +889,48 @@
    "class": "permissive",
    "credit": "The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217.",
    "use": "clip.cmu_import: takes fetched on demand and turned into 2D clips (WP-12)"
+  },
+  {
+   "id": "kenney-impact",
+   "path": "assets/external/sounds/kenney-impact/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/impact-sounds",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Sound effects: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "recorded footsteps and impacts for cues mapped in assets/sounds.json, when a score asks for samples (WP-13); every file pinned by sha256 there"
+  },
+  {
+   "id": "openpeeps",
+   "path": "assets/external/openpeeps/",
+   "in_git": false,
+   "source_url": "https://www.openpeeps.com/",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Open Peeps by Pablo Stanley, CC0",
+   "use": "cast.import_peeps: the site's 49 per-peep SVGs read as a parts kit into cast/external/peep.puppet.json (WP-16); sha256 of each in the puppet's meta.sources"
+  },
+  {
+   "id": "openpeeps-kit",
+   "path": "assets/external/openpeeps-kit/",
+   "in_git": false,
+   "source_url": "https://www.openpeeps.com/ (the Gumroad 'Flat Assets' download, owner's machine)",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Open Peeps by Pablo Stanley, CC0",
+   "provenance": "the 166 'Separate Atoms' SVGs (pose, head, face, body, facial-hair, accessories) copied from github.com/jenshor/open-peeps (packages/open_peeps/assets/atoms), checked against the owner's own download from Gumroad: 22 sha256 compared across every folder, all equal, and the same file count per folder (Flat Assets (1).zip, sha256 2e0a4e79c868ae71f7d1b010ecd111c5015103e097d712955964636cad89ceb5)",
+   "use": "cast.import_peeps builds the peep puppet from the full kit when it is here (WP-16)"
+  },
+  {
+   "id": "humaaans",
+   "path": "assets/external/humaaans/",
+   "in_git": false,
+   "source_url": "https://www.humaaans.com/ (the Gumroad 'Flat Assets' download, owner's machine)",
+   "license": "CC0-1.0 (humaaans.com today; the 2019 release was CC BY 4.0, so the credit is kept)",
+   "class": "attribution",
+   "credit": "Humaaans by Pablo Stanley",
+   "provenance": "the 79 SVGs of 'Flat Assets' copied from github.com/Calinou/humaaans, checked against the owner's own download: 13 sha256 compared across every folder, all equal, and 79 files in both (Flat Assets (2).zip, sha256 cd38c5f1cf893a73bf8cddbe3728f244c485514a44a0ccd9c67cf7f7d50a8087)",
+   "use": "cast.import_humaaans: the Single Pieces as a puppet with swap sets (WP-16)"
   }
  ]
 }

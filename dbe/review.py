@@ -213,3 +213,35 @@ def gaze_share(track, direction, t0, t1):
         return 0.0
     ok = sum(1 for _, x, y, *_ in rows if (x * direction[0] > 0.5 if direction[0] else abs(x) < 0.3))
     return round(ok / len(rows), 3)
+
+
+# ---------- placement and camera notes (WP-19): "Ravi should stand further left", "push in", "go wider" ----------
+def layout_intent(text, cast_names):
+    """-> {"kind": "placement", who, dir (+1 right, -1 left), px, toward} or {"kind": "camera", step (+1 closer,
+    -1 wider)} or None. Screen directions: left and right as the viewer sees them."""
+    t = text.lower()
+    at = {n: m.start() for n in cast_names for m in [re.search(rf"\b{re.escape(n.lower())}\b", t)] if m}
+    who = min(at, key=at.get) if at else None   # the character named first is the one to move
+    px = 120.0
+    m = re.search(r"by\s+(\d+)\s*(px|pixels?)", t)
+    if m:
+        px = float(m.group(1))
+    elif re.search(r"\b(a (little|bit)|slightly|a touch)\b", t):
+        px = 60.0
+    elif re.search(r"\b(much|a lot|way)\b", t):
+        px = 240.0
+    if who and re.search(r"\b(stand|move|step|put|place|sit|be|is|further|farther|more|too far)\b", t):
+        other = next((n for n in cast_names if n != who and re.search(rf"\b{re.escape(n.lower())}\b", t)), None)
+        if other and re.search(r"\b(closer to|nearer|next to|towards?)\b", t):
+            return {"kind": "placement", "who": who, "toward": other, "dir": None, "px": px}
+        if other and re.search(r"\b(further from|farther from|away from|apart)\b", t):
+            return {"kind": "placement", "who": who, "toward": other, "dir": None, "px": -px}
+        if re.search(r"\btoo far (to the )?left\b", t) or re.search(r"\b(further|farther|more|move|step|stand|put|place)\b.*\bright\b", t) and not re.search(r"\btoo far (to the )?right\b", t):
+            return {"kind": "placement", "who": who, "toward": None, "dir": 1, "px": px}
+        if re.search(r"\btoo far (to the )?right\b", t) or re.search(r"\b(further|farther|more|move|step|stand|put|place)\b.*\bleft\b", t):
+            return {"kind": "placement", "who": who, "toward": None, "dir": -1, "px": px}
+    if re.search(r"\b(push in|move in|go in|zoom in|tighter|too wide|closer on|get closer|closer shot)\b", t):
+        return {"kind": "camera", "step": 1}
+    if re.search(r"\b(pull back|pull out|go wider|wider|zoom out|too tight|too close|wide shot)\b", t):
+        return {"kind": "camera", "step": -1}
+    return None

@@ -339,6 +339,57 @@ def family_spec(fam, member, i):
     return {**sp, "top": top, "bottom": bottom, "hair": hair, "look": {**fam["look"], **(sp.get("look") or {})}}
 
 
+@command("cast.import_peeps", folder=("string", "Open Peeps SVGs: the kit's 'Separate Atoms' folder, or openpeeps.com's per-peep busts (the default folder means the kit when assets/external/openpeeps-kit is here)", "assets/external/openpeeps"),
+         fetch=("boolean", "download the SVGs openpeeps.com links first (CC0; into the folder, not in git)", False),
+         name=("string", "character name", "Peep"), picks=("object", "the default look: {body, head, face, facial-hair, accessories} piece names", None),
+         out=("string", "where to write the puppet", "cast/external/peep.puppet.json"),
+         body=("string", "bust (head and shoulders), standing or sitting (full-body poses; needs the kit)", "bust"))
+def cast_import_peeps(folder="assets/external/openpeeps", fetch=False, name="Peep", picks=None, out="cast/external/peep.puppet.json", body="bust"):
+    """Open Peeps (Pablo Stanley, CC0) to a puppet (WP-16). The site's peeps share one bust layout with their pieces in
+    named groups, so reading them all recovers the kit: 22 bodies, 30 heads, 18 faces, 9 facial hairs and 7
+    accessories from openpeeps.com's 49 downloads. The puppet has a part per piece (body, head, face, beard,
+    glasses) and a swap set per category that replaces it (outfit, hair, expression, beard_style, accessory), so a
+    pose or cast entry mixes and matches them by name. Every source file is listed with its sha256 in meta.sources."""
+    import hashlib
+    import re as _re
+    import urllib.request
+    from . import peeps as PE
+    kit = ROOT / "assets" / "external" / "openpeeps-kit" / "Separate Atoms"
+    if folder == "assets/external/openpeeps" and not fetch and kit.is_dir():
+        folder = str(kit)   # the full kit (the owner's Gumroad download) when it is here: more pieces than the site's busts
+    d = Path(folder) if Path(folder).is_absolute() else ROOT / folder; d.mkdir(parents=True, exist_ok=True)
+    fetched = 0
+    if fetch:
+        page = urllib.request.urlopen("https://www.openpeeps.com/", timeout=60).read().decode("utf8", "replace")
+        for u in sorted(set(_re.findall(r'https://[^"\' ]+_peep-\d+\.svg', page))):
+            f = d / u.rsplit("/", 1)[1]
+            if not f.exists():
+                f.write_bytes(urllib.request.urlopen(u, timeout=60).read()); fetched += 1
+    if body in ("standing", "sitting"):   # full-body poses with the head on top, at the kit's own layout
+        if not (d / "pose" / body).is_dir():
+            raise ValueError(f"full-body peeps need the kit's Separate Atoms (pose/{body}); {d} has none")
+        pz, rep = PE.build_full(d, body, name, picks)
+    else:
+        pz, rep = PE.build(d, name, picks)
+    dst = ROOT / out; dst.parent.mkdir(parents=True, exist_ok=True); dst.write_text(json.dumps(pz))
+    return {"puppet": str(dst.relative_to(ROOT)) if str(dst).startswith(str(ROOT)) else str(dst), "fetched": fetched, **rep,
+            "swap_sets": {k: len(v["shapes"]) for k, v in pz["swaps"].items()}, "lint": puppet_lint(str(dst.relative_to(ROOT)))["issues"] if str(dst).startswith(str(ROOT)) else None}
+
+
+@command("cast.import_humaaans", folder=("string", "the Humaaans 'Flat Assets' folder (with 'Single Pieces')", "assets/external/humaaans/Flat Assets"),
+         name=("string", "character name", "Humaaan"), picks=("object", "the default look: {head, body, legs} piece names", None),
+         out=("string", "where to write the puppet", "cast/external/humaaan.puppet.json"))
+def cast_import_humaaans(folder="assets/external/humaaans/Flat Assets", name="Humaaan", picks=None, out="cast/external/humaaan.puppet.json"):
+    """Humaaans (Pablo Stanley) to a puppet (WP-16): the kit's single pieces (18 heads, 10 bodies, 12 bottoms) at the
+    rest layout of the finished figures, as parts legs -> body -> head that turn at the waist and neck, with swap sets
+    replacing each (hair, outfit, legs). Every source file is listed with its sha256 in meta.sources."""
+    from . import humaaans as HU
+    d = Path(folder) if Path(folder).is_absolute() else ROOT / folder
+    pz, rep = HU.build(d, name, picks)
+    dst = ROOT / out; dst.parent.mkdir(parents=True, exist_ok=True); dst.write_text(json.dumps(pz))
+    return {"puppet": str(dst.relative_to(ROOT)), **rep, "swap_sets": {k: len(v["shapes"]) for k, v in pz["swaps"].items()}, "lint": puppet_lint(str(dst.relative_to(ROOT)))["issues"]}
+
+
 @command("cast.family", family=("string", "a family in cast/families.json (house, bold-round, fine, ...)"),
          members=("array", "[{id, spec}]: each member's own generator spec (name, build, age, skin, hair style, ...); the family supplies the look and colours"),
          register=("boolean", "add them to the cast library (else only report the specs)", True))
@@ -555,6 +606,12 @@ def film_provenance(name):
     man = _json(ROOT / "assets" / "manifest.json", {"files": []})
     uses = {"captions", "player"} | {f"renderer:{sh.get('renderer', 'svg')}" for sh in s["shots"]}
     files += [{"path": f["path"], "license": f.get("license"), "class": f.get("class")} for f in man["files"] if set(f.get("used_by", [])) & uses]
+    packs = _json(ROOT / "assets" / "sounds.json", {"packs": {}})["packs"]   # WP-13: recorded samples the mix played
+    played = {}
+    for u in _json(d / "build" / "samples_used.json", []) or []:
+        played.setdefault(u["sample"].split(":", 1)[0], set()).add(u["sample"])
+    files += [{"path": f"sound pack {k}: {len(v)} samples ({packs.get(k, {}).get('name', k)})", "license": packs.get(k, {}).get("license", "unrecorded"),
+               "class": packs.get(k, {}).get("class")} for k, v in sorted(played.items())]
     status = {k: v.get("status", "unknown") for k, v in _voice_registry().items()}
     models = []   # WP-43: models that shaped a puppet the film uses (a level's proposed in-betweens, for example)
     for p in sorted({c["puppet"] for sh in s["shots"] for c in sh.get("cast", [])}):
@@ -937,6 +994,71 @@ def shot_alpha(name, shot, formats=None):
         out["files"][f] = {"path": str(v.relative_to(ROOT)), "bytes": v.stat().st_size, "ok": ok, "check": rows}
     out["ok"] = all(x["ok"] for x in out["files"].values())
     return out
+
+
+@command("shot.outputs", name=("string", "film"), shot=("string", "shot id"),
+         outputs=("array", "png (the frame sequence), webm, prores (both with alpha), mp4 (over `background`), gif; default all", None),
+         castonly=("boolean", "the characters alone on transparency (otherwise the whole frame, set included)", True),
+         background=("string", "colour the mp4 and gif are laid over", "#ffffff"))
+def shot_outputs(name, shot, outputs=None, castonly=True, background="#ffffff"):
+    """Several outputs from one render pass (WP-23): the player draws the shot once into RGBA frames, and every
+    output is encoded from those frames: the PNG sequence itself, WebM and ProRes 4444 with alpha, an MP4 and a GIF
+    over a background colour. Alpha files are read back with an alpha-aware decoder and compared with the frames;
+    the rest are checked for frame count. Reports how long the pass and each encode took."""
+    import time
+    _require_valid(name)
+    s, sh, bdir, baked = _bake(name, shot); fps = s.get("fps", 30)
+    outputs = outputs or ["png", "webm", "prores", "mp4", "gif"]
+    for o in outputs:
+        if o not in ("png", "webm", "prores", "mp4", "gif"):
+            raise ValueError(f"unknown output {o}")
+    od = bdir / f"{shot}_outputs"; fr = od / "frames"; shutil.rmtree(od, ignore_errors=True); od.mkdir(parents=True)
+    env_keep = {"DBE_ALPHA": "1", "DBE_KEEP_FRAMES": str(fr)}
+    old = {k: os.environ.get(k) for k in env_keep}; os.environ.update(env_keep)
+    t = time.time()
+    try:
+        _render_page(_player_page(name), f"shot={shot}" + ("&castonly=1" if castonly else ""), od / "pass.mp4")
+    finally:
+        for k, v in old.items():
+            os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
+    (od / "pass.mp4").unlink(missing_ok=True)
+    n = len(sorted(fr.glob("f*.png"))); out = {"shot": shot, "frames": n, "fps": fps, "render_passes": 1, "pass_s": round(time.time() - t, 2), "files": {}}
+    bg = background.lstrip("#")
+    for o in outputs:
+        t = time.time()
+        if o == "png":
+            out["files"]["png"] = {"path": str(fr.relative_to(ROOT)), "frames": n, "ok": n > 0, "encode_s": 0.0}; continue
+        if o in ALPHA_FORMATS:
+            F = ALPHA_FORMATS[o]; v = od / f"{shot}.alpha.{F['ext']}"
+            _run(["ffmpeg", "-v", "error", "-y", "-framerate", str(fps), "-i", str(fr / "f%05d.png"), *F["args"], "-an", str(v)])
+            rows = _alpha_check(v, fr, F["decoder"], n); lossy = o == "webm"
+            ok = all(r["iou"] >= (0.97 if lossy else 0.995) and r["colour"] <= (8 if lossy else 2) for r in rows) and (not castonly or any(r["transparent"] > 0.2 for r in rows))
+            out["files"][o] = {"path": str(v.relative_to(ROOT)), "bytes": v.stat().st_size, "ok": ok, "check": rows}
+        else:
+            v = od / f"{shot}.{o}"
+            over = f"color=c=0x{bg}:s={{w}}x{{h}}:r={fps}"
+            from PIL import Image
+            w, h = Image.open(fr / "f00000.png").size if (fr / "f00000.png").exists() else Image.open(sorted(fr.glob("f*.png"))[0]).size
+            flt = f"[1:v][0:v]overlay=shortest=1:format=auto" + (",split[a][b];[a]palettegen=stats_mode=full[p];[b][p]paletteuse" if o == "gif" else ",format=yuv420p")
+            args = ["-c:v", "libx264", "-crf", "18", "-movflags", "+faststart"] if o == "mp4" else []
+            _run(["ffmpeg", "-v", "error", "-y", "-framerate", str(fps), "-i", str(fr / "f%05d.png"), "-f", "lavfi", "-i", over.format(w=w, h=h),
+                  "-filter_complex", flt, *args, "-an", str(v)])
+            got = int(_run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", str(v)])[-1])
+            out["files"][o] = {"path": str(v.relative_to(ROOT)), "bytes": v.stat().st_size, "frames": got, "ok": got == n}
+        out["files"][o]["encode_s"] = round(time.time() - t, 2)
+    out["ok"] = all(x["ok"] for x in out["files"].values())
+    return out
+
+
+@command("shot.frames", name=("string", "film"), shot=("string", "shot id"))
+def shot_frames(name, shot):
+    """The RGBA frames kept for a shot (by shot.outputs, else shot.alpha), for the Studio channels view (WP-23)"""
+    b = _film(name) / "build" / "shots"
+    for d in (b / f"{shot}_outputs" / "frames", b / f"{shot}_alpha"):
+        fr = sorted(d.glob("f*.png")) if d.exists() else []
+        if fr:
+            return {"dir": str(d.relative_to(ROOT)), "frames": [str(f.relative_to(ROOT)) for f in fr]}
+    return {"dir": None, "frames": []}
 
 
 FILM_FORMATS = {   # WP-23: a finished film as an image animation; palette: colours, dither: ffmpeg paletteuse
@@ -2325,6 +2447,79 @@ def _frame_keys(d, s, fps):
     return out
 
 
+def _review_layout(name, n, lay, shot):
+    """a placement or camera note (WP-19): move the character (its place.x) or the shot's automatic camera closer or
+    wider, re-bake, and the critic measures on the baked frames: the character's screen position moved the asked way
+    by at least half the asked distance (placement), or the main character's height on screen grew or shrank by 10%
+    (camera); and film.continuity finds no new issue (a move must not swap two characters across the line). Then the
+    film is rendered and QA must not get worse; otherwise the edit is reverted."""
+    from . import continuity as CT
+    d = _film(name); n["intent"] = lay; s = _shots(name); W, H = s.get("size", [1080, 1920])
+    raw_before = (d / "shots.json").read_text(); s_raw = json.loads(raw_before)
+    sraw = next(x for x in s_raw["shots"] if x["id"] == shot["id"])
+    puppets = {c["puppet"]: _json(ROOT / c["puppet"]) for sh in s["shots"] for c in sh.get("cast", [])}
+
+    def measure():
+        s_ = _shots(name); sh_ = next(x for x in s_["shots"] if x["id"] == shot["id"])
+        _, _, _, baked = _bake(name, shot["id"]); return CT.summary(sh_, baked, puppets, (W, H))
+    cont_before = film_continuity(name)["issues"]; before = measure()
+    names = {c["who"].lower(): c["i"] for c in shot["cast"]}
+    key = lambda who: next((k for k in before if k.lower() == who.lower()), None)
+    if lay["kind"] == "placement":
+        ci = names.get(lay["who"].lower()); k = key(lay["who"])
+        if ci is None or not k:
+            n.update(status="needs_human", reason=f"{lay['who']} is not in this shot"); return n
+        rs = next(x for x in s["shots"] if x["id"] == shot["id"])
+        if lay["toward"]:
+            ko = key(lay["toward"])
+            if not ko:
+                n.update(status="needs_human", reason=f"{lay['toward']} is not in this shot"); return n
+            lay = {**lay, "dir": 1 if before[ko]["x"] > before[k]["x"] else -1}
+            if lay["px"] < 0:
+                lay = {**lay, "dir": -lay["dir"], "px": -lay["px"]}
+            n["intent"] = lay
+        place = sraw["cast"][ci].setdefault("place", dict(rs["cast"][ci].get("place") or {}))
+        x0 = place.get("x", rs["cast"][ci]["place"]["x"]); place["x"] = round(min(W - 60, max(60, x0 + lay["dir"] * lay["px"])), 1)
+        edit = {"cast": ci, "place.x": [x0, place["x"]]}; want = lay["dir"] * lay["px"]
+    else:
+        if sraw.get("camera"):
+            n.update(status="needs_human", reason="this shot has hand-set camera keys; change them on the timeline"); return n
+        ca = sraw["camera_auto"] if isinstance(sraw.get("camera_auto"), dict) else {}
+        old = {k_: ca.get(k_, dflt) for k_, dflt in (("zoom_single", 1.9), ("zoom", 1.45))}
+        for k_ in old:
+            ca[k_] = round(min(2.6, max(1.0, old[k_] + 0.25 * lay["step"])), 2)
+        sraw["camera_auto"] = ca; edit = {"camera_auto": [old, {k_: ca[k_] for k_ in old}]}
+    qa_before = (_json(d / "build" / "qa.json", {}).get("checks") or {})
+    film_write(name, "shots.json", json.dumps(s_raw, indent=1, ensure_ascii=False))
+    after = measure(); cont_after = film_continuity(name)["issues"]
+    new_issues = [i for i in cont_after if i not in cont_before]
+    if lay["kind"] == "placement":
+        k = key(lay["who"]); moved = after[k]["x"] - before[k]["x"]
+        ok = moved * lay["dir"] >= 0.5 * lay["px"] and after[k]["visible"]
+        msg = f"{lay['who']} stands at x {after[k]['x']:.0f} on screen (was {before[k]['x']:.0f}): moved {moved:+.0f} px, asked {want:+.0f}"
+        meas = {"before": {"x": round(before[k]["x"], 1)}, "after": {"x": round(after[k]["x"], 1)}}
+    else:
+        main = max(before, key=lambda k_: before[k_]["ground"] - before[k_]["top"]) if before else None
+        hb = before[main]["ground"] - before[main]["top"]; ha = after[main]["ground"] - after[main]["top"]
+        ok = (ha > hb * 1.1) if lay["step"] > 0 else (ha < hb / 1.1)
+        sz = lambda m_: CT.size_of(m_["top"], m_["ground"], H)
+        msg = f"{main} is {ha:.0f} px tall on screen (was {hb:.0f}), shot size {sz(after[main])} (was {sz(before[main])})"
+        meas = {"before": {"height_px": round(hb, 1), "size": sz(before[main])}, "after": {"height_px": round(ha, 1), "size": sz(after[main])}}
+    n.update(target=f"shot {shot['id']}", edit=edit, measured=meas, check=msg + (f"; continuity: {new_issues}" if new_issues else ""))
+    if not ok or new_issues:
+        (d / "shots.json").write_text(raw_before); _player_page(name)
+        n.update(status="needs_human", reason=("it broke continuity: " + "; ".join(i["what"] for i in new_issues) if new_issues else "the frame did not change as asked: " + msg) + " (reverted)")
+        return n
+    _keep_version(name)
+    r = film_render(name); qa_after = r.get("qa") or {}
+    worse = [k_ for k_, v in qa_after.items() if v is False and qa_before.get(k_) is not False]
+    if worse:
+        (d / "shots.json").write_text(raw_before); film_render(name)
+        n.update(status="needs_human", reason=f"the edit broke QA ({', '.join(worse)}); reverted"); return n
+    n.update(status="verified", reviewer="critic: baked frames, continuity + QA")
+    return n
+
+
 def _review_gaze(name, n, gz, shot):
     """a gaze note (WP-19): set the character's look toward the other over the line the note means (line-relative
     keys), re-render, and the critic checks the share of frames looking the asked way before and after, then QA"""
@@ -2463,6 +2658,9 @@ def review_fix(name, id=""):
         gz = RV.gaze_intent(n["text"], [c["who"] for c in shot["cast"]])
         if gz:   # WP-19: where a character looks
             out.append(_review_gaze(name, n, gz, shot)); continue
+        lay = RV.layout_intent(n["text"], [c["who"] for c in shot["cast"]])
+        if lay:   # WP-19: where a character stands, or how close the camera is
+            out.append(_review_layout(name, n, lay, shot)); continue
         intent = RV.interpret(n["text"], [c["who"] for c in shot["cast"]])
         n["intent"] = intent
         if not intent["verb"]:
@@ -2503,6 +2701,298 @@ def review_fix(name, id=""):
         out.append(n)
     (d / "review.json").write_text(json.dumps(rv, indent=1, ensure_ascii=False))
     return {"fixed": [n["id"] for n in out if n["status"] == "verified"], "needs_human": [n["id"] for n in out if n["status"] == "needs_human"], "notes": out}
+
+
+def _samples_test():
+    """WP-13 sample library on zz-samples: a music-and-effects film (no voice), 7 s, with four steps on grass, two on
+    wood, a thud and a pop. Mixed with "samples": true and without."""
+    import numpy as np
+    import soundfile as sf
+    lib = sound_samples()
+    if not lib["packs"] or not any(p["present_and_matching"] for p in lib["packs"].values()):
+        return [], {"skipped": "no sample pack here (python -m dbe sound.import_pack ...; see docs/dbe.md)"}
+    bad, meas = [], {"packs": lib["packs"]}
+    for pid, p in lib["packs"].items():
+        if p["present_and_matching"] != p["files"]:
+            bad.append(f"{pid}: {p['files'] - p['present_and_matching']} files missing or changed")
+    name = "zz-samples"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); (d / "build").mkdir(parents=True)
+    try:
+        score = {"length_s": 7.0, "bpm": 100, "offset_s": 0, "voice": False, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 11, "chords": ["F", "C", "Dm", "Bb"], "end_chord": "F"}]}
+        cues = [{"t": t, "type": "step", "surface": "grass", "pan": 0.0} for t in (1.0, 1.5, 2.0, 2.5)] + [{"t": t, "type": "step", "surface": "wood", "pan": 0.0} for t in (3.5, 4.0)] \
+            + [{"t": 5.0, "type": "thud", "pan": 0.0}, {"t": 6.0, "type": "pop", "pan": 0.0}]
+        (d / "timing.json").write_text(json.dumps({"lines": []})); (d / "script.json").write_text(json.dumps({"lines": []}))
+        (d / "build" / "cues.json").write_text(json.dumps(cues))
+        out = {}
+        for mode in (False, True):
+            sc = {**score, **({"samples": True} if mode else {})}; (d / "score.json").write_text(json.dumps(sc))
+            (d / "build" / "samples_used.json").unlink(missing_ok=True)
+            r = subprocess.run([sys.executable, str(ROOT / "engine" / "audio.py"), str(d)], capture_output=True, text=True, timeout=600)
+            if r.returncode:
+                bad.append(f"mixer ({'samples' if mode else 'synth'}): {r.stderr[-400:]}"); return bad, meas
+            fx, sr = sf.read(d / "build" / "sfx.wav"); out[mode] = {"fx": fx.mean(1), "report": json.loads(r.stdout.strip().splitlines()[-1]),
+                                                                  "used": _json(d / "build" / "samples_used.json", None)}
+        used = out[True]["used"] or []; meas["used"] = [u["sample"] for u in used]
+        if out[False]["used"] is not None:
+            bad.append("without samples the mixer still wrote samples_used.json")
+        grass = [u["sample"] for u in used if u.get("surface") == "grass"]; wood = [u["sample"] for u in used if u.get("surface") == "wood"]
+        if len(grass) != 4 or len(set(grass)) != 4 or len(wood) != 2 or len(set(wood)) != 2 or not any(u["type"] == "thud" for u in used) or any(u["type"] == "pop" for u in used):
+            bad.append(f"samples played: {meas['used']}")
+
+        def centroid(x, t):
+            seg = x[int(t * sr): int((t + 0.25) * sr)]; S = np.abs(np.fft.rfft(seg * np.hanning(len(seg)))); f = np.fft.rfftfreq(len(seg), 1 / sr)
+            return float((S * f).sum() / (S.sum() + 1e-12))
+        meas["centroid_hz"] = {"grass": [round(centroid(out[True]["fx"], t)) for t in (1.0, 1.5, 2.0, 2.5)], "wood": [round(centroid(out[True]["fx"], t)) for t in (3.5, 4.0)]}
+        g, w = meas["centroid_hz"]["grass"], meas["centroid_hz"]["wood"]
+        if not (min(g) > max(w) or max(g) < min(w)):
+            bad.append(f"grass and wood recordings overlap in brightness: {meas['centroid_hz']}")
+        diff = lambda t: float(np.abs(out[True]["fx"][int(t * sr): int((t + 0.2) * sr)] - out[False]["fx"][int(t * sr): int((t + 0.2) * sr)]).max())
+        meas["changed_vs_synth"] = {"step": round(diff(1.0), 4), "pop (unmapped)": round(diff(6.0), 4)}
+        from . import vendoring as V
+        pv = V.provenance(d, {}, [{"path": f"sound pack {k}", "license": lib_["license"], "class": lib_["class"]} for k, lib_ in _json(ROOT / "assets" / "sounds.json")["packs"].items()
+                                  if any(u["sample"].startswith(k + ":") for u in used)])
+        meas["posting"] = {"listed": [u["id"] for u in pv["used"]], "flags": pv["flags"]}
+        if not pv["used"] or pv["flags"]:
+            bad.append(f"posting gate: {meas['posting']} (CC0 samples should be listed and not flagged)")
+        rep = out[True]["report"]; meas["mix"] = {"lufs": rep["mix_lufs"], "true_peak_db": rep["mix_true_peak_db"]}
+        if meas["changed_vs_synth"]["step"] < 1e-3 or abs(rep["mix_lufs"] + 14) > 1 or rep["mix_true_peak_db"] > -1:
+            bad.append(f"the samples did not reach the mix, or it misses the bar: {meas}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _peeps_test():
+    """WP-16: cast.import_peeps on the downloaded Open Peeps (skipped when none are here), then for four peeps the
+    puppet posed with that peep's pieces (by swap set) is drawn by the loader and compared with the peep's own SVG
+    drawn by Chromium: ink and white areas by IoU"""
+    import re as _re
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    d = ROOT / "assets" / "external" / "openpeeps"
+    if not d.exists() or len(list(d.glob("*.svg"))) < 10:
+        return [], {"skipped": "no Open Peeps here (python -m dbe cast.import_peeps '{\"fetch\": true}')"}
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="peeps_"))
+    try:
+        atoms = ROOT / "assets" / "external" / "openpeeps-kit" / "Separate Atoms"
+        sources = [("site", str(d))] + ([("kit", str(atoms))] if atoms.is_dir() else [])
+        for label, folder in sources:
+            r = cast_import_peeps(folder=folder, out=f"out/peeps_test/peep_{label}.puppet.json")
+            meas[f"{label}_swap_sets"] = r["swap_sets"]
+            if r["lint"] or min(r["swap_sets"].values()) < 5:
+                bad.append(f"{label}: kit or lint: {r['swap_sets']}, {r['lint']}")
+        if atoms.is_dir():   # full-body poses: lint clean, and every head sits on its pose's neck
+            from . import peeps as PE
+            for kind in ("standing", "sitting"):
+                rf = cast_import_peeps(folder=str(atoms), body=kind, out=f"out/peeps_test/peep_{kind}.puppet.json")
+                pz = _json(ROOT / rf["puppet"]); hb = PE._bbox(pz["parts"]["head"]["strokes"]); worst = 0.0
+                for pn, strokes in pz["swaps"]["pose"]["shapes"].items():
+                    pb = PE._bbox(strokes); top = [st for st in strokes]
+                    # the pose's neck: its drawing within 30 units below the head's bottom must span the head's centre
+                    xs = [p[0] for st in top for segs, _ in PE.G.parse_path(st["d"]) for p in PE.G.sample(segs, 3) if hb[3] - 30 <= p[1] <= hb[3] + 10]
+                    off = min(abs(x - (hb[0] + hb[2]) / 2) for x in xs) if xs else 999.0
+                    worst = max(worst, off)
+                meas[f"full_{kind}"] = {"poses": len(pz["swaps"]["pose"]["shapes"]), "lint": rf["lint"], "neck_gap_worst": round(worst, 1)}
+                if rf["lint"] or worst > 25:
+                    bad.append(f"full-body {kind}: {meas[f'full_{kind}']}")
+        r = {"puppet": f"out/peeps_test/peep_{sources[-1][0]}.puppet.json"}   # the busts are rebuilt from the fullest source here
+        meas["rebuilt_from"] = sources[-1][0]
+        SW = {"body": "outfit", "head": "hair", "face": "expression", "facial-hair": "beard_style", "accessories": "accessory"}
+        files = sorted(d.glob("*.svg")); chosen = [files[i] for i in (0, len(files) // 3, 2 * len(files) // 3, len(files) - 1)]
+        for f in chosen:
+            pick = {m.group(1): ("none" if m.group(2).startswith("*-None") else m.group(2)) for m in _re.finditer(r'<g id="(body|head|face|facial-hair|accessories)/([^"]+)"', f.read_text())}
+            pose = {SW[k]: v for k, v in pick.items()}
+            if meas["rebuilt_from"] == "kit":   # the site names a few pieces differently ("Smiling" is the kit's "Smile"): match by drawing
+                from . import peeps as PE
+                kp, sp = _json(ROOT / r["puppet"]), _json(ROOT / "out/peeps_test/peep_site.puppet.json")
+                for k_, v in list(pose.items()):
+                    if v not in kp["swaps"][k_]["shapes"] and v in sp["swaps"][k_]["shapes"]:
+                        want = PE._bbox(sp["swaps"][k_]["shapes"][v])
+                        best = min(kp["swaps"][k_]["shapes"].items(), key=lambda kv: sum(abs(a - b) for a, b in zip(PE._bbox(kv[1]) or (0, 0, 0, 0), want or (0, 0, 0, 0))))
+                        pose[k_] = best[0]; meas.setdefault("renamed", {})[v] = best[0]
+            spec = {"size": [256, 340], "bg": "#808080", "items": [{"puppet": r["puppet"], "x": 120, "y": 324, "s": 1, "pose": pose}]}
+            (tmp / "spec.json").write_text(json.dumps(spec))
+            subprocess.run(["node", str(ROOT / "tools" / "pose_still.mjs"), str(tmp / "spec.json"), str(tmp / "p.png")], check=True, cwd=ROOT, timeout=120)
+            (tmp / "o.html").write_text(f'<html><body style="margin:0;background:#808080"><img src="file://{f.resolve()}" width="240" height="324"></body></html>')
+            subprocess.run(["node", "-e", "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({args:['--allow-file-access-from-files']});const p=await b.newPage({viewport:{width:240,height:324}});"
+                            f"await p.goto('file://{tmp / 'o.html'}');await p.waitForTimeout(300);await p.screenshot({{path:'{tmp / 'o.png'}'}});await b.close();}})()"],
+                           check=True, cwd=ROOT / "tools", timeout=120, env={**os.environ, "NODE_PATH": subprocess.run(["npm", "root", "-g"], capture_output=True, text=True).stdout.strip()})
+            a = np.asarray(Image.open(tmp / "p.png").convert("L"), float)[8:8 + 324, 8:8 + 240]   # pose_still's page keeps the body's 8 px margin
+            b = np.asarray(Image.open(tmp / "o.png").convert("L"), float)
+            iou = lambda x, y: float((x & y).sum() / max(1, (x | y).sum()))
+            m = {"ink_iou": round(iou(a < 60, b < 60), 4), "white_iou": round(iou(a > 200, b > 200), 4)}
+            meas[f.name.rsplit("_", 1)[-1]] = {**m, "pieces": pick}
+            if m["ink_iou"] < 0.98 or m["white_iou"] < 0.98:
+                bad.append(f"{f.name}: {m}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _outputs_test():
+    """WP-23: shot.outputs on nib-hello s1 (all five outputs from one pass), then /channels on one of its frames"""
+    import threading
+    import numpy as np
+    from http.server import ThreadingHTTPServer
+    from PIL import Image
+    from .server import Handler
+    bad, meas = [], {}
+    r = shot_outputs("nib-hello", "s1")
+    meas["pass"] = {"frames": r["frames"], "render_passes": r["render_passes"], "pass_s": r["pass_s"]}
+    meas["files"] = {k: {kk: vv for kk, vv in v.items() if kk in ("bytes", "frames", "ok", "encode_s")} for k, v in r["files"].items()}
+    if not r["ok"] or r["render_passes"] != 1 or set(r["files"]) != {"png", "webm", "prores", "mp4", "gif"}:
+        bad.append(f"outputs: {meas}")
+    tmp = ROOT / "out" / "outputs_test"; tmp.mkdir(parents=True, exist_ok=True)
+    _run(["ffmpeg", "-v", "error", "-y", "-ss", "3", "-i", str(ROOT / r["files"]["mp4"]["path"]), "-frames:v", "1", str(tmp / "m.png")])
+    corner = np.asarray(Image.open(tmp / "m.png").convert("RGB"))[4:20, 4:20].mean(axis=(0, 1)).round(1).tolist(); meas["mp4_corner"] = corner
+    if min(corner) < 250:
+        bad.append(f"the MP4 is not over the white background: corner {corner}")
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler); threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        o = subprocess.run(["node", str(ROOT / "tools" / "channels_check.mjs"), f"http://127.0.0.1:{srv.server_address[1]}/channels?film=nib-hello&shot=s1&frame=100"],
+                           capture_output=True, text=True, timeout=300, cwd=ROOT)
+        c = json.loads(o.stdout.strip().splitlines()[-1]) if o.stdout.strip() else {"errs": [o.stderr[-300:]]}
+    finally:
+        srv.shutdown()
+    meas["channels"] = {"alpha_view_max_diff": (c.get("alpha") or {}).get("max_diff"), "transparent": round((c.get("drawn") or {}).get("transparent", 0), 3),
+                        "edges": round((c.get("drawn") or {}).get("partial", 0), 4), "errors": c.get("errs")}
+    if c.get("errs") or (c.get("alpha") or {}).get("max_diff") != 0 or not (c.get("drawn") or {}).get("src", "").endswith("f00100.png"):
+        bad.append(f"channels view: {meas['channels']}")
+    return bad, meas
+
+
+def _comp2_test():
+    """WP-36 part 2 on zz-comp2, a copy of night-planes, drawn by the player at 540 px wide in variants of its comp"""
+    import copy
+    import cv2
+    import numpy as np
+    from PIL import Image
+    from . import comptrack as CTK
+    bad, meas = [], {}
+    src = FILMS / "night-planes"; name = "zz-comp2"; d = FILMS / name
+    shutil.rmtree(d, ignore_errors=True); shutil.copytree(src, d, ignore=shutil.ignore_patterns("build"))
+    base = _json(d / "shots.json")
+    try:
+        def stills(variant, times, shot_set=None):
+            sj = copy.deepcopy(base); variant(sj["shots"][0]["comp"]); sj["shots"][0].update(shot_set or {}); (d / "shots.json").write_text(json.dumps(sj, indent=1))
+            (d / "build").mkdir(exist_ok=True); page = _player_page(name); od = d / "build" / "st"; shutil.rmtree(od, ignore_errors=True); od.mkdir()
+            _run(["node", "tools/board_stills.mjs", str(page), str(od), "540", *[str(t) for t in times]], timeout=600)
+            return [np.asarray(Image.open(od / f"still_{i}.png").convert("RGB")).astype(float) for i in range(len(times))]
+        a0, a2 = stills(lambda c: None, [0.5, 2.0])
+        # roll: the frame turned by 8 degrees about its centre (ORB features matched, a similarity fitted)
+        (r8,) = stills(lambda c: c.__setitem__("roll", 8), [0.5])
+        orb = cv2.ORB_create(3000); g = lambda im: cv2.cvtColor(im.astype(np.uint8), cv2.COLOR_RGB2GRAY)
+        k1, d1 = orb.detectAndCompute(g(a0), None); k2, d2 = orb.detectAndCompute(g(r8), None)
+        m = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True).match(d1, d2)
+        M, _ = cv2.estimateAffinePartial2D(np.float32([k1[x.queryIdx].pt for x in m]), np.float32([k2[x.trainIdx].pt for x in m]), method=cv2.RANSAC)
+        ang = float(np.degrees(np.arctan2(M[1, 0], M[0, 0]))); meas["roll_deg"] = {"asked": 8, "measured": round(ang, 2), "matches": len(m)}
+        if abs(ang - 8) > 0.5:
+            bad.append(f"roll: {meas['roll_deg']}")
+        # a keyed grade: the sky plane's brightness 0.4 at 0 s rising to 1.4 at 2 s (an expression adds a flicker of 0)
+        k0, k2 = stills(lambda c: c["nodes"].append({"type": "grade", "plane": "sky", "brightness": [[0, 0.4], [2.0, 1.4]], "contrast": "=1 + 0*sin(t)"}), [0.5, 2.0])
+        sky = lambda im: float(im[30:200, 20:230].mean())   # upper left: sky and stars, away from the moon
+        meas["keyed_sky"] = {"plain": [round(sky(a0), 1), round(sky(a2), 1)], "keyed": [round(sky(k0), 1), round(sky(k2), 1)]}
+        if not (sky(k0) < sky(a0) and sky(k2) > sky(a2) and sky(k2) > 1.5 * sky(k0)):
+            bad.append(f"keyed grade: {meas['keyed_sky']}")
+        # light wrap on the stage (Ravi) in front of a warm, bright plane: his edges take its light, his middle does not
+        warm = {"id": "warm", "depth": 1.5, "items": [{"type": "shape", "svg": "<rect x='-400' y='300' width='1900' height='1300' fill='#ffb040'/>"}]}
+        (b0,) = stills(lambda c: c["planes"].append(warm), [0.5])
+        (w0,) = stills(lambda c: (c["planes"].append(warm), c["nodes"].append({"type": "lightwrap", "plane": "stage", "radius": 24, "strength": 1.0})), [0.5])
+        diff = (w0 - b0).mean(axis=2); ch = np.abs(diff) > 6
+        edges = cv2.dilate(cv2.Canny(g(b0), 40, 120), np.ones((49, 49), np.uint8)) > 0   # within the wrap radius (24 px) of an edge
+        meas["lightwrap"] = {"changed_share": round(float(ch.mean()), 4), "near_edges": round(float((ch & edges).sum() / max(1, ch.sum())), 3),
+                             "brighter": round(float((diff[ch] > 0).mean()) if ch.any() else 0, 3), "mean_change": round(float(diff[ch].mean()) if ch.any() else 0, 1)}
+        if not (0.001 < ch.mean() < 0.1 and meas["lightwrap"]["near_edges"] > 0.8 and meas["lightwrap"]["brighter"] > 0.9):
+            bad.append(f"light wrap: {meas['lightwrap']}")
+        # the tracker: a textured square moving over a textured plate (sub-pixel path), followed, then a red dot attached
+        rng = np.random.default_rng(5); pd = d / "plate"; pd.mkdir(exist_ok=True)
+        bgp = (cv2.GaussianBlur(rng.random((960, 540)).astype(np.float32), (0, 0), 2) * 255)
+        sq = (cv2.GaussianBlur(rng.random((48, 48)).astype(np.float32), (0, 0), 1.2) * 0.6 + 0.4) * 255
+        truth = []
+        for k in range(60):
+            cx, cy = 120 + 4.13 * k, 400 + 60 * np.sin(k / 10); M2 = np.float32([[1, 0, cx - 24], [0, 1, cy - 24]])
+            lay = cv2.warpAffine(sq, M2, (540, 960), flags=cv2.INTER_CUBIC); msk = cv2.warpAffine(np.ones_like(sq), M2, (540, 960))
+            cv2.imwrite(str(pd / f"f_{k:04d}.png"), np.clip(bgp * (1 - msk) + lay, 0, 255).astype(np.uint8)); truth.append((cx, cy))
+        tr = comp_track(name, "s1", "box", "plate/f_%04d.png", [96, 376, 48, 48], start=0, fps=30, scale=2)
+        rows = _json(d / "shots.json")["shots"][0]["comp"]["tracks"]["box"]
+        err = [float(np.hypot(r[1] / 2 - x, r[2] / 2 - y)) for r, (x, y) in zip(rows, truth)]
+        meas["tracker"] = {"frames": tr["frames"], "mean_px": round(float(np.mean(err)), 3), "max_px": round(float(np.max(err)), 3), "weakest_match": tr["weakest_match"]}
+        if np.mean(err) > 0.5 or np.max(err) > 1.5:
+            bad.append(f"tracker: {meas['tracker']}")
+        base = _json(d / "shots.json")   # now with the track
+        dot = {"id": "dots", "depth": 1, "screen": True, "items": [{"type": "shape", "svg": f"<circle cx='{rows[0][1]}' cy='{rows[0][2]}' r='18' fill='#ff0000'/>", "attach": "box"}]}
+        (s1,) = stills(lambda c: c["planes"].append(dot), [1.5], {"bubbles": False})   # screen-locked, the speech bubble off (it would cover the dot)
+        red = (s1[..., 0] > 200) & (s1[..., 1] < 60) & (s1[..., 2] < 60); ys, xs = np.nonzero(red); k = 1080 / s1.shape[1]
+        want = next(r for r in rows if abs(r[0] - 1.5) < 1e-6)
+        got = [float(xs.mean() * k), float(ys.mean() * k)] if len(xs) else None
+        meas["attached"] = {"at_1.5s": [round(v, 1) for v in got] if got else None, "track": want[1:3]}
+        if not got or np.hypot(got[0] - want[1], got[1] - want[2]) > 4:
+            bad.append(f"attached shape: {meas['attached']}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _humaaans_test():
+    """WP-16: cast.import_humaaans (skipped when the kit is not here); every finished standing or sitting figure whose
+    pieces sit at the rest layout unrotated is rebuilt from the puppet's swap sets, drawn by the loader and compared with
+    the figure's own SVG drawn by Chromium (silhouettes; the figures recolour the skin, so colour is reported only)"""
+    import re as _re
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    from . import humaaans as HU
+    d = ROOT / "assets" / "external" / "humaaans" / "Flat Assets"
+    if not (d / "Single Pieces").exists():
+        return [], {"skipped": "the Humaaans kit is not here (assets/external/humaaans/Flat Assets)"}
+    bad, meas = [], {}
+    r = cast_import_humaaans(out="out/humaaans_test/humaaan.puppet.json")
+    meas["kit"] = r["swap_sets"]; meas["lint"] = r["lint"]
+    if r["lint"]:
+        bad.append(f"lint: {r['lint']}")
+    tmp = Path(tempfile.mkdtemp(prefix="humaaans_")); node_path = subprocess.run(["npm", "root", "-g"], capture_output=True, text=True).stdout.strip()
+    rows = {}
+    try:
+        for f in sorted((d / "Humaaans").glob("*.svg")):
+            s_ = f.read_text()
+            outer = _re.search(r'<g id="A-Human/[^"]*" transform="translate\(([-\d.]+), ([-\d.]+)\)"', s_)
+            got = {m.group(1): (m.group(2), m.group(3)) for m in _re.finditer(r'<g id="(Head/Front|Body|Bottom/Standing|Bottom/Sitting)/([^"]+)"( transform="[^"]*")?', s_)}
+            rest = {"Head/Front": ' transform="translate(82.000000, 0.000000)"', "Body": ' transform="translate(22.000000, 82.000000)"'}
+            legs = got.get("Bottom/Standing") or got.get("Bottom/Sitting")
+            if not outer or "Head/Front" not in got or "Body" not in got or not legs or any(got[k][1] != v for k, v in rest.items()) or legs[1] != ' transform="translate(0.000000, 187.000000)"':
+                continue
+            ox, oy = float(outer.group(1)), float(outer.group(2))
+            pose = {"hair": HU._norm(got["Head/Front"][0]), "outfit": HU._norm(got["Body"][0]), "legs": ("sit-" if "Bottom/Sitting" in got else "") + HU._norm(legs[0])}
+            pz = _json(ROOT / r["puppet"])
+            pose = {k: (v if v in pz["swaps"][k]["shapes"] else next((n for n in pz["swaps"][k]["shapes"] if n.lower().replace("-", "") == v.lower().replace("-", "")), v)) for k, v in pose.items()}
+            spec = {"size": [400, 500], "bg": "#808080", "items": [{"puppet": r["puppet"], "x": 150 + ox, "y": 426 + oy, "s": 1, "pose": pose}]}
+            (tmp / "spec.json").write_text(json.dumps(spec))
+            subprocess.run(["node", str(ROOT / "tools" / "pose_still.mjs"), str(tmp / "spec.json"), str(tmp / "p.png")], check=True, cwd=ROOT, timeout=120)
+            (tmp / "o.html").write_text(f'<html><body style="margin:0;background:#808080"><img src="file://{f.resolve()}" width="380" height="480"></body></html>')
+            subprocess.run(["node", "-e", "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:380,height:480}});"
+                            f"await p.goto('file://{tmp / 'o.html'}');await p.waitForTimeout(300);await p.screenshot({{path:'{tmp / 'o.png'}'}});await b.close();}})()"],
+                           check=True, cwd=ROOT / "tools", timeout=120, env={**os.environ, "NODE_PATH": node_path})
+            a = np.asarray(Image.open(tmp / "p.png").convert("RGB"), float)[8:488, 8:388]; b = np.asarray(Image.open(tmp / "o.png").convert("RGB"), float)
+            fg = lambda x: np.abs(x - 128).sum(2) > 30
+            A, B = fg(a), fg(b); both = A & B
+            rows[f.stem] = {"iou": round(float(both.sum() / max(1, (A | B).sum())), 4), "same_colour": round(float((np.abs(a - b).sum(2)[both] < 12).mean()), 3), "pieces": pose}
+        meas["figures"] = rows
+        if len(rows) < 5 or min(v["iou"] for v in rows.values()) < 0.98:
+            bad.append(f"figures: {len(rows)} compared, worst IoU {min([v['iou'] for v in rows.values()] or [0])}")
+        # joints: a lean at the waist and a nod at the neck move the drawing
+        spec = {"size": [400, 500], "bg": "#808080", "items": [{"puppet": r["puppet"], "x": 190, "y": 470, "s": 1, "pose": {}}]}
+        (tmp / "spec.json").write_text(json.dumps(spec)); subprocess.run(["node", str(ROOT / "tools" / "pose_still.mjs"), str(tmp / "spec.json"), str(tmp / "rest.png")], check=True, cwd=ROOT, timeout=120)
+        spec["items"][0]["pose"] = {"angles": {"body": 12, "head": -10}}
+        (tmp / "spec.json").write_text(json.dumps(spec)); subprocess.run(["node", str(ROOT / "tools" / "pose_still.mjs"), str(tmp / "spec.json"), str(tmp / "lean.png")], check=True, cwd=ROOT, timeout=120)
+        r0 = np.asarray(Image.open(tmp / "rest.png").convert("L"), float); r1 = np.asarray(Image.open(tmp / "lean.png").convert("L"), float)
+        top, bottom = float(np.abs(r0[:250] - r1[:250]).mean()), float(np.abs(r0[330:] - r1[330:]).mean())
+        meas["lean"] = {"upper_change": round(top, 2), "legs_change": round(bottom, 2)}
+        if not (top > 5 * max(bottom, 0.2)):
+            bad.append(f"the lean should move the upper body, not the legs: {meas['lean']}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
 
 
 def _live_test():
@@ -6019,6 +6509,30 @@ def test_golden(update=False, film=""):
         bad, meas = _live_test()
         failed += 1 if bad else 0
         results.append({"live": "the live page's per-frame retarget recovers synthetic takes' angles, and on a fake webcam (a COCO photo) MediaPipe in the page gives the same angles, median over the frames, as Python MediaPipe on that video", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "samples":   # WP-13: recorded CC0 samples stand in for mapped cues when a score asks
+        bad, meas = _samples_test()
+        failed += 1 if bad else 0
+        results.append({"samples": "the sample library's files match their hashes; a score with samples on plays the mapped recordings (variants taking turns, grass and wood told apart), leaves unmapped cues synthesized, lists what played, and still mixes to the loudness bar; without it nothing changes", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "peeps":   # WP-16: Open Peeps (CC0) to a puppet with mix-and-match swap sets
+        bad, meas = _peeps_test()
+        failed += 1 if bad else 0
+        results.append({"peeps": "Open Peeps' site SVGs become one puppet whose swap sets rebuild any of the downloaded peeps: the puppet posed as a peep draws like that peep's own SVG", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "outputs":   # WP-23: several outputs from one render pass; the Studio channels view
+        bad, meas = _outputs_test()
+        failed += 1 if bad else 0
+        results.append({"outputs": "one render pass of nib-hello's shot gives a PNG sequence, WebM and ProRes with alpha (read back alike), and an MP4 and GIF over white with every frame; the Studio channels view shows that shot's alpha exactly", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "layoutnotes":   # WP-19: review notes about where a character stands and how close the camera is
+        bad, meas = _layout_notes_test()
+        failed += 1 if bad else 0
+        results.append({"layoutnotes": "\"Ravi should stand a little further left\" and \"push in\" on review-demo become shots.json edits the critic verifies on the baked frames (screen position, the main character's height), with continuity and QA held", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "comp2":   # WP-36 part 2: roll, keyed values and expressions, light wrap, region tracker
+        bad, meas = _comp2_test()
+        failed += 1 if bad else 0
+        results.append({"comp2": "on night-planes: camera roll turns the frame by the asked angle, a keyed grade brightens the sky over time, light wrap brightens only the foreground's edges, and a region tracked through a plate (sub-pixel) carries an attached shape to where the region went", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "humaaans":   # WP-16: Humaaans to a puppet with swap sets and joints
+        bad, meas = _humaaans_test()
+        failed += 1 if bad else 0
+        results.append({"humaaans": "Humaaans' single pieces become one puppet whose swap sets rebuild the kit's finished figures at rest (silhouette IoU), and whose body leans and head nods at the waist and neck", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0
@@ -8211,6 +8725,29 @@ def _proc_into(name, raw, shot, force=(), dry=False):
     return report
 
 
+@command("comp.track", name=("string", "film"), shot=("string", "shot id"), id=("string", "track id (items attach to it; expressions read it)"),
+         src=("string", "the plate: an image sequence (printf pattern like proc/<key>/f_%04d.png, or a glob) or a video, from the film folder or the project root"),
+         region=("array", "[x, y, w, h] on the plate's first frame, in its pixels"), start=("number", "film time of the plate's first frame (s)", 0),
+         fps=("number", "plate frames per second", 30), scale=("number", "plate pixels to frame pixels (a 540-wide plate in a 1080-wide film: 2)", 1))
+def comp_track(name, shot, id, src, region, start=0, fps=30, scale=1):
+    """Follow a region through a plate (WP-36): template matching with sub-pixel peaks (dbe/comptrack.py) gives the
+    region's centre and mean luminance per frame, written to the shot's comp.tracks.<id> as [t, x, y, luma] in frame
+    pixels. An item with "attach": id moves with it; any keyed parameter can read it in an expression
+    (track("id", "x" | "y" | "luma")), so the picture drives the composite."""
+    from . import comptrack as CT
+    d = _film(name); root = d if (d / str(src).split("%")[0].split("*")[0]).parent.exists() or (d / src).exists() else ROOT
+    rows = CT.track(CT.frames_of(src, root, fps), region)
+    if len(rows) < 2:
+        raise ValueError(f"the plate {src} has fewer than two frames")
+    sj = _json(d / "shots.json"); sh = next((x for x in sj["shots"] if x["id"] == shot), None)
+    if sh is None:
+        raise ValueError(f"no shot {shot}")
+    comp = sh.setdefault("comp", {}); comp.setdefault("tracks", {})[id] = [[round(start + k / fps, 4), round(x * scale, 2), round(y * scale, 2), round(l, 4)] for k, (x, y, l, _) in enumerate(rows)]
+    film_write(name, "shots.json", json.dumps(sj, indent=1, ensure_ascii=False))
+    sc = [r[3] for r in rows[1:]]
+    return {"track": id, "frames": len(rows), "from": comp["tracks"][id][0][1:3], "to": comp["tracks"][id][-1][1:3], "weakest_match": round(min(sc), 3), "mean_match": round(sum(sc) / len(sc), 3)}
+
+
 @command("proc.cook", name=("string", "film"), shot=("string", "shot id"),
          force=("array", "node ids to cook again even if cached", None),
          block=("object", "a proc block to store first ({nodes: {...}, floor}); empty: the shot's own", None))
@@ -8621,6 +9158,50 @@ def film_handoff(name, melt=True):
 
 
 # ---------------- sound editing (WP-40) ----------------
+@command("sound.import_pack", folder=("string", "a folder of recorded samples (.ogg, .wav, .flac; searched recursively), absolute or from the project root"),
+         pack=("string", "pack id, e.g. kenney-impact"), source=("string", "where the files came from (a URL)"), license=("string", "SPDX id, e.g. CC0-1.0"),
+         name=("string", "display name", ""), map=("object", "cue type (or type/surface) -> group in this pack, e.g. {\"step/grass\": \"footstep_grass\"}", None))
+def sound_import_pack(folder, pack, source, license, name="", map=None):
+    """A recorded sample pack into the sample library (WP-13): the files are copied to assets/external/sounds/<pack>/
+    (git-ignored, like every downloaded pack) and recorded in assets/sounds.json (tracked) with their sha256, licence
+    and class, and which cues they can stand in for. A film plays them when its score says "samples": true (or lists
+    pack ids): mapped cues use the recording (variants take turns), the rest stay synthesized, and build/
+    samples_used.json lists what played. A file whose hash no longer matches is not played."""
+    import hashlib
+    from . import vendoring as V
+    src = Path(folder) if Path(folder).is_absolute() else ROOT / folder
+    files = sorted(f for f in src.rglob("*") if f.suffix.lower() in (".ogg", ".wav", ".flac") and f.is_file() and not f.name.lower().startswith("preview"))
+    if not files:
+        raise ValueError(f"no .ogg, .wav or .flac files under {src}")
+    names = [f.name for f in files]
+    if len(set(names)) != len(names):
+        raise ValueError("two files share a name; the library keys samples by file name")
+    dst = ROOT / "assets" / "external" / "sounds" / pack; dst.mkdir(parents=True, exist_ok=True)
+    hashes = {}
+    for f in files:
+        b = f.read_bytes(); hashes[f.name] = hashlib.sha256(b).hexdigest(); (dst / f.name).write_bytes(b)
+    regp = ROOT / "assets" / "sounds.json"; reg = _json(regp, {"note": "", "packs": {}, "map": {}})
+    reg["note"] = "recorded sample packs (WP-13): files in assets/external/sounds/<pack>/ (not in git), pinned by sha256; map: cue type or type/surface -> pack:group"
+    reg["packs"][pack] = {**reg["packs"].get(pack, {}), "name": name or pack, "source": source, "license": license, "class": V.classify(license), "dir": f"assets/external/sounds/{pack}", "files": hashes}
+    for k, g in (map or {}).items():
+        reg["map"][k] = f"{pack}:{g}"
+    regp.write_text(json.dumps(reg, indent=1) + "\n")
+    groups = sorted({n.rsplit(".", 1)[0].rstrip("0123456789").rstrip("_") for n in names})
+    return {"pack": pack, "files": len(hashes), "groups": groups, "license": license, "class": reg["packs"][pack]["class"], "mapped": {k: v for k, v in reg["map"].items() if v.startswith(pack + ":")}}
+
+
+@command("sound.samples")
+def sound_samples():
+    """The sample library (assets/sounds.json): each pack, whether its files are here and match their hashes, and the
+    cues it stands in for"""
+    import hashlib
+    reg = _json(ROOT / "assets" / "sounds.json", {"packs": {}, "map": {}}); out = {}
+    for pid, pk in reg["packs"].items():
+        d = ROOT / pk["dir"]; ok = [n for n, h in pk["files"].items() if (d / n).exists() and hashlib.sha256((d / n).read_bytes()).hexdigest() == h]
+        out[pid] = {"name": pk["name"], "license": pk["license"], "class": pk["class"], "files": len(pk["files"]), "present_and_matching": len(ok)}
+    return {"packs": out, "map": reg["map"]}
+
+
 @command("sound.lanes", name=("string", "film"))
 def sound_lanes(name):
     """What the Studio sound page shows (WP-40): the stems (voice, music, sfx) as URLs to draw, the cues as the mix
@@ -8811,6 +9392,36 @@ def _transitions_test():
     meas["seams"] = {"hard_cuts": [x["change"] for x in hard], "transitions": [x["change"] for x in with_tr], "limit": seam_max}
     if any(x["change"] <= seam_max for x in hard) or any(x["change"] > seam_max for x in with_tr):
         bad.append(f"seams: {meas['seams']}")
+    return bad, meas
+
+
+def _layout_notes_test():
+    """WP-19 on a copy of review-demo (when voiced here): a placement note and a camera note, each fixed by review.fix
+    and checked by the critic; a note naming nobody in the shot is left to a human"""
+    bad, meas = [], {}
+    src = FILMS / "review-demo"
+    if not (src / "build" / "voice.wav").exists():
+        return [], {"skipped": "review-demo is not voiced here (voice.build)"}
+    name = "zz-layoutnotes"; tmp = FILMS / name; shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(src, tmp, ignore=shutil.ignore_patterns("package", "master", "qa", "handoff", "versions", "diff", "review"))
+    try:
+        (tmp / "review.json").write_text(json.dumps({"notes": []}))
+        film_render(name)
+        for fr, text in ((60, "Ravi should stand a little further left"), (60, "push in on this"), (60, "Priya should stand further right")):
+            review_add(name, fr, text)
+        r = review_fix(name); notes = {n["text"]: n for n in r["notes"]}
+        for text, n in notes.items():
+            meas[text] = {"status": n["status"], "check": n.get("check") or n.get("reason"), "measured": n.get("measured")}
+        a, b, c = (notes[t] for t in ("Ravi should stand a little further left", "push in on this", "Priya should stand further right"))
+        if a["status"] != "verified" or a["measured"]["after"]["x"] - a["measured"]["before"]["x"] > -30:
+            bad.append(f"placement: {meas['Ravi should stand a little further left']}")
+        if b["status"] != "verified" or b["measured"]["after"]["height_px"] < 1.1 * b["measured"]["before"]["height_px"]:
+            bad.append(f"camera: {meas['push in on this']}")
+        if c["status"] != "needs_human":
+            bad.append(f"a note about someone not in the shot was acted on: {meas['Priya should stand further right']}")
+        sj = _json(tmp / "shots.json"); meas["shots_json"] = {"ravi_x": sj["shots"][0]["cast"][0]["place"]["x"], "camera_auto": sj["shots"][0].get("camera_auto")}
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
 
 

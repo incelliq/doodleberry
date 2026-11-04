@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Channels</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select, input { font: inherit; padding: 4px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { padding: 12px 16px; display: grid; gap: 10px; } .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #view { max-width: 100%; max-height: 74vh; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 8px; background: #888; }
+  #info, label { color: var(--muted); }
+</style>
+</head>
+<body>
+<header><h1>🫐 Channels</h1><span id="msg">A frame's colour and alpha, one channel at a time (WP-23).</span><span style="flex:1"></span><a href="/">Studio ↗</a></header>
+<main>
+  <div class="row"><label for="film">Film</label><select id="film"></select><label for="shot">Shot</label><select id="shot"></select>
+    <button id="make" title="render this shot's characters once into RGBA frames (shot.outputs, PNG only)">Render RGBA frames</button>
+    <label>or a file <input type="file" id="file" accept="image/png,image/webp"></label></div>
+  <div class="row"><label for="frame">Frame</label><input type="range" id="frame" min="0" max="0" value="0" style="width:min(480px,60vw)"><span id="fno"></span></div>
+  <div class="row" id="modes"></div>
+  <canvas id="view"></canvas>
+  <div id="info"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+const MODES = [['rgba', 'over checker'], ['rgb', 'RGB (alpha ignored)'], ['a', 'alpha'], ['r', 'red'], ['g', 'green'], ['b', 'blue'], ['premult', 'premultiplied'], ['matte', 'matte edges']];
+let mode = q.get('mode') || 'rgba', frames = [], img = null, src = null;
+const CH = window.CHANNELS = { ready: false };
+$('modes').innerHTML = MODES.map(([k, l]) => `<button data-m="${k}">${l}</button>`).join('');
+$('modes').onclick = e => { if (e.target.dataset.m) { mode = e.target.dataset.m; draw(); } };
+async function api(cmd, args = {}) { const r = await (await fetch('/api/' + cmd, { method: 'POST', body: JSON.stringify(args) })).json(); if (r.error) { $('msg').textContent = r.error; throw new Error(r.error); } return r.result; }
+// the pixels for a mode: a pure function of the source RGBA (exposed for the test)
+function shade(d, mode, w) {
+  const o = new Uint8ClampedArray(d.length);
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3], x = (i / 4) % w, y = Math.floor(i / 4 / w), chk = ((x >> 4) + (y >> 4)) % 2 ? 204 : 153;
+    let R, G, B;
+    if (mode === 'rgba') { const k = a / 255; R = r * k + chk * (1 - k); G = g * k + chk * (1 - k); B = b * k + chk * (1 - k); }
+    else if (mode === 'rgb') { R = r; G = g; B = b; }
+    else if (mode === 'a') { R = G = B = a; }
+    else if (mode === 'r') { R = G = B = r; } else if (mode === 'g') { R = G = B = g; } else if (mode === 'b') { R = G = B = b; }
+    else if (mode === 'premult') { const k = a / 255; R = r * k; G = g * k; B = b * k; }
+    else { const e = a > 0 && a < 255; R = e ? 232 : a ? 60 : 0; G = e ? 116 : a ? 60 : 0; B = e ? 58 : a ? 60 : 0; }   // partly transparent pixels in orange
+    o[i] = R; o[i + 1] = G; o[i + 2] = B; o[i + 3] = 255;
+  }
+  return o;
+}
+CH.shade = (arr, m, w) => Array.from(shade(Uint8ClampedArray.from(arr), m, w));
+function draw() {
+  for (const b of $('modes').children) b.classList.toggle('on', b.dataset.m === mode);
+  if (!img) return;
+  const c = $('view'), w = img.naturalWidth, h = img.naturalHeight; c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.clearRect(0, 0, w, h); x.drawImage(img, 0, 0);
+  const id = x.getImageData(0, 0, w, h), d = id.data; let t = 0, part = 0;
+  for (let i = 3; i < d.length; i += 4) { if (d[i] === 0) t++; else if (d[i] < 255) part++; }
+  id.data.set(shade(d, mode, w)); x.putImageData(id, 0, 0);
+  const n = d.length / 4;
+  $('info').textContent = `${w}×${h} · transparent ${(100 * t / n).toFixed(1)}% · partly transparent (edges) ${(100 * part / n).toFixed(2)}% · ${src}`;
+  CH.drawn = { mode, w, h, transparent: t / n, partial: part / n, src }; CH.ready = true;
+}
+function load(url) { src = url; img = new Image(); img.onload = draw; img.src = url; }
+async function listFrames() {
+  const r = await api('shot.frames', { name: $('film').value, shot: $('shot').value });
+  frames = r.frames; $('frame').max = Math.max(0, frames.length - 1); $('frame').value = 0;
+  if (frames.length) { showFrame(); $('msg').textContent = `${frames.length} RGBA frames from ${r.dir}`; }
+  else { img = null; $('msg').textContent = 'no RGBA frames for this shot yet: Render RGBA frames'; }
+}
+function showFrame() { const i = +$('frame').value; $('fno').textContent = `${i} / ${frames.length - 1}`; load('/' + frames[i]); }
+$('frame').oninput = showFrame;
+$('file').onchange = e => { const f = e.target.files[0]; if (f) load(URL.createObjectURL(f)); };
+$('make').onclick = async () => { $('make').disabled = true; $('msg').textContent = 'rendering the shot once into RGBA frames…';
+  try { await api('shot.outputs', { name: $('film').value, shot: $('shot').value, outputs: ['png'] }); await listFrames(); } finally { $('make').disabled = false; } };
+$('film').onchange = async () => { const g = await api('film.get', { name: $('film').value }); const sj = JSON.parse(g.files['shots.json'] || '{"shots": []}');
+  $('shot').innerHTML = sj.shots.map(x => `<option>${x.id}</option>`).join(''); if (q.get('shot')) $('shot').value = q.get('shot'); await listFrames(); };
+$('shot').onchange = listFrames;
+(async () => {
+  draw();
+  if (q.get('src')) { load(q.get('src')); return; }
+  const f = await api('engine.info'); $('film').innerHTML = f.films.map(x => `<option>${x}</option>`).join('');
+  if (q.get('film')) $('film').value = q.get('film');
+  await $('film').onchange();
+  if (q.get('frame')) { $('frame').value = q.get('frame'); showFrame(); }
+})();
+</script>
+</body>
+</html>

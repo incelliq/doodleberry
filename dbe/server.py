@@ -52,6 +52,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "desk.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
             return self._send(200, (STUDIO.parent / "actout.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/channels":   # WP-23: a frame's colour and alpha, one channel at a time
+            return self._send(200, (STUDIO.parent / "channels.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/live":       # WP-12: a character following the webcam live (MediaPipe in the browser)
             return self._send(200, (STUDIO.parent / "live.html").read_bytes(), "text/html; charset=utf-8")
         if p.startswith("/models/"):   # the act-out models the live page loads (only those, from the models folder)

@@ -404,6 +404,54 @@ def sfx(kind, dur=None, surface=None):
 # ---------------- mix ----------------
 # each effect type's loudness relative to the narrator (LU); cue gains add on top,
 # and the effects bus is carved in the speech band while the narrator talks
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def sample_library():
+    """assets/sounds.json (WP-13): recorded sample packs (files under assets/external/sounds/<pack>/, not in git, each
+    pinned by sha256) and which cue (type, or type/surface) each group of samples can stand in for"""
+    p = ROOT / 'assets' / 'sounds.json'
+    return json.loads(p.read_text()) if p.exists() else {'packs': {}, 'map': {}}
+
+
+def sample_for(cue, lib, packs=None, turns=None):
+    """the recorded sample a cue plays, or None (then it is synthesized). A group's variants (footstep_grass_000..004)
+    take turns in cue order (`turns` counts each group's cues so far), so the choice is a pure function of the cue
+    list; the file must match its sha256. -> (path, name) or None"""
+    import hashlib
+    key = f"{cue['type']}/{cue['surface']}" if cue.get('surface') else cue['type']
+    ref = cue.get('sample') or lib['map'].get(key) or (lib['map'].get(cue['type']) if not cue.get('surface') else None)
+    if not ref:
+        return None
+    pack, group = ref.split(':', 1)
+    pk = lib['packs'].get(pack)
+    if not pk or (packs is not None and pack not in packs):
+        return None
+    names = sorted(n for n in pk['files'] if n.rsplit('.', 1)[0].rstrip('0123456789').rstrip('_') == group or n.rsplit('.', 1)[0] == group)
+    if not names:
+        return None
+    k = 0
+    if turns is not None:
+        k = turns.get(ref, 0); turns[ref] = k + 1
+    name = names[k % len(names)]
+    f = ROOT / pk['dir'] / name
+    if not f.exists() or hashlib.sha256(f.read_bytes()).hexdigest() != pk['files'][name]:
+        return None
+    return f, f"{pack}:{name}"
+
+
+def load_sample(path):
+    """a sample file as mono float64 at SR, its leading silence (under -50 dB of its peak) trimmed"""
+    from math import gcd
+    x, sr = sf.read(str(path), dtype='float64', always_2d=True)
+    x = x.mean(axis=1)
+    if sr != SR:
+        g = gcd(SR, sr); x = resample_poly(x, SR // g, sr // g)
+    pk = np.abs(x).max() or 1.0
+    on = int(np.argmax(np.abs(x) > pk * 10 ** (-50 / 20)))
+    return x[max(0, on - int(0.002 * SR)):]
+
+
 SFX_LEVEL = {'scratch': -19, 'step': -16, 'thud': -10, 'swish': -15, 'pop': -7, 'pop_small': -10, 'whoosh': -13, 'twinkle': -9, 'boing': -6, 'wink': -10,
              'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
              'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11,
@@ -427,13 +475,18 @@ def presence(voice, n, attack=0.04, release=0.35):
     return np.interp(np.arange(n), np.arange(len(out)) * hop, out)
 
 
-def multiband_duck(x, pres, low_db=-5, mid_db=-12, high_db=-6):
-    """Duck a stereo signal under the voice, hardest where words live (200 Hz-5 kHz)."""
+def multiband_duck(x, pres, low_db=-5, mid_db=-12, high_db=-6, block=1 << 20):
+    """Duck a stereo signal under the voice, hardest where words live (200 Hz-5 kHz). The bands are combined block by
+    block into the low band's buffer: per sample the same arithmetic as low * gl + (x - low - high) * gm + high * gh
+    on whole arrays, without five more full-length temporaries (WP-38)."""
     low = lp(x.T, 200, 4).T
     high = hp(x.T, 5000, 4).T
-    mid = x - low - high
-    g = lambda d: (10 ** (d * pres / 20))[:, None]
-    return low * g(low_db) + mid * g(mid_db) + high * g(high_db)
+    g = lambda d, a, b: (10 ** (d * pres[a:b] / 20))[:, None]
+    for a in range(0, len(x), block):
+        b = min(len(x), a + block)
+        mid = x[a:b] - low[a:b] - high[a:b]
+        low[a:b] = low[a:b] * g(low_db, a, b) + mid * g(mid_db, a, b) + high[a:b] * g(high_db, a, b)
+    return low
 
 
 def level_lines(voice, lines, meter, max_db=5):
@@ -518,13 +571,21 @@ def to_st(x, pan=0.0):
 def _peak4(x2, chunk=1 << 20, pad=64):
     """per input sample, the largest magnitude of its 4x-oversampled values over all channels, computed in chunks
     (with `pad` samples of real neighbours either side, far more than the resampling filter reaches), so a long film
-    is never upsampled whole: 4 times a 20-minute stereo mix did not fit in memory (WP-38 long-form)"""
+    is never upsampled whole: 4 times a 20-minute stereo mix did not fit in memory (WP-38 long-form). The maxima are
+    taken channel by channel and over each sample's 4 values with np.maximum, not a strided max over an axis: the same
+    values, about 8 times faster on a long mix (WP-38)."""
     n = len(x2); out = np.empty(n)
     for a in range(0, n, chunk):
         b = min(n, a + chunk); a0, b0 = max(0, a - pad), min(n, b + pad)
-        up = np.abs(resample_poly(x2[a0:b0], 4, 1, axis=0)).max(axis=1)
-        up = np.pad(up, (0, max(0, 4 * (b0 - a0) - len(up))))[: 4 * (b0 - a0)].reshape(-1, 4).max(axis=1)
-        out[a:b] = up[a - a0: a - a0 + (b - a)]
+        up = resample_poly(x2[a0:b0], 4, 1, axis=0)
+        m = np.abs(up[:, 0])
+        for c in range(1, up.shape[1]):
+            np.maximum(m, np.abs(up[:, c]), out=m)
+        if len(m) < 4 * (b0 - a0):
+            m = np.pad(m, (0, 4 * (b0 - a0) - len(m)))
+        q = m[: 4 * (b0 - a0)].reshape(-1, 4)
+        r = np.maximum(np.maximum(q[:, 0], q[:, 1]), np.maximum(q[:, 2], q[:, 3]))
+        out[a:b] = r[a - a0: a - a0 + (b - a)]
     return out
 
 
@@ -533,16 +594,30 @@ def true_peak_db(x):
     return 20 * np.log10(float(_peak4(x2).max()) + 1e-12)
 
 
-def limit(x, ceiling_db=-1.6):  # leaves headroom for AAC overshoot (checked after encode)
-    """Linked-stereo gain-reduction limiter on a 4x-oversampled envelope, 5 ms lookahead."""
+def limit(x, ceiling_db=-1.6, inplace=False):  # leaves headroom for AAC overshoot (checked after encode)
+    """Linked-stereo gain-reduction limiter on a 4x-oversampled envelope, 5 ms lookahead. inplace: scale x itself
+    (the same numbers, without a second full-length buffer)."""
     from scipy.ndimage import minimum_filter1d
     c = 10 ** (ceiling_db / 20)
     x2 = x if x.ndim == 2 else x[:, None]
     pk = _peak4(x2)
     g = minimum_filter1d(np.minimum(1, c / (pk + 1e-12)), size=2 * int(0.005 * SR) + 1)
+    del pk
     k = int(0.004 * SR)
     g = np.convolve(g, np.ones(k) / k, mode='same')
+    if inplace:
+        x *= (g[:, None] if x.ndim == 2 else g)
+        return x
     return x * (g[:, None] if x.ndim == 2 else g)
+
+
+def _write(path, x, gain=None, block=1 << 20):
+    """x (times gain) to a 24-bit WAV block by block: the same bytes as sf.write of the whole float32 array, without
+    a full-length float32 (and scaled) copy of it"""
+    with sf.SoundFile(path, 'w', SR, 1 if x.ndim == 1 else x.shape[1], 'PCM_24') as f:
+        for a in range(0, len(x), block):
+            y = x[a:a + block]
+            f.write((y * gain if gain is not None else y).astype(np.float32))
 
 
 def main():
@@ -585,14 +660,20 @@ def main():
     mo = mus; del mus
     mo[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
     for _ in range(3):
-        mo = limit(mo * 10 ** ((-14 - meter.integrated_loudness(mo)) / 20))
-    sf.write(b / 'music.wav', mo.astype(np.float32), SR, subtype='PCM_24')
+        mo *= 10 ** ((-14 - meter.integrated_loudness(mo)) / 20); limit(mo, inplace=True)
+    _write(b / 'music.wav', mo)
     music_lufs = round(meter.integrated_loudness(mo), 2); del mo
 
     # ---- effects: each levelled to its type's target, dipped a little under speech
     fx = np.zeros((n + SR * 2, 2))
+    # recorded samples stand in for mapped cues when the score asks (WP-13: "samples": true, or a list of pack ids);
+    # otherwise every effect is synthesized exactly as before
+    want = score.get('samples'); lib = sample_library() if want else None; used = []; turns = {}
     for c in cues:
-        x = declick(hp(sfx(c['type'], c.get('dur'), c.get('surface')), 250))
+        hit = sample_for(c, lib, None if want is True else want, turns) if want else None
+        if hit:
+            used.append({'t': c['t'], 'type': c['type'], **({'surface': c['surface']} if c.get('surface') else {}), 'sample': hit[1]})
+        x = declick(hp(load_sample(hit[0]) if hit else sfx(c['type'], c.get('dur'), c.get('surface')), 250))
         L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
                  for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
         g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)
@@ -604,6 +685,8 @@ def main():
         else:
             add_st(fx, x, c['t'], g, c['pan'] if 'pan' in c else 0.12 * np.sin(c['t'] * 2.3))   # foley cues carry their screen position
     fx = fx[:n]
+    if want:
+        (b / 'samples_used.json').write_text(json.dumps(used, indent=1))
     rooms = json.loads((b / 'rooms.json').read_text()) if (b / 'rooms.json').exists() else []   # WP-13: each set's own room
     fx = fx + room_reverb(fx, rooms, 'fx_wet', 0.16, ir)
     # keep the effects' punch and sparkle, clear their speech band under words
@@ -612,19 +695,19 @@ def main():
 
     vo = to_st(voice) + room_reverb(voice, rooms, 'voice_wet', 0.035, ir)
     del voice
-    mix = vo + mus_d + fx
+    mix = vo + mus_d; mix += fx   # (vo + mus_d) + fx, as before, in one buffer
     mix[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
     gain = 1.0
     for _ in range(4):
         g = 10 ** ((-14 - meter.integrated_loudness(mix)) / 20)
         gain *= g
-        mix = limit(mix * g)
-    sf.write(b / 'mix.wav', mix.astype(np.float32), SR, subtype='PCM_24')
+        mix *= g; limit(mix, inplace=True)
+    _write(b / 'mix.wav', mix)
     # stems at their mixed level, for mixcheck.py
     (b / 'stems').mkdir(exist_ok=True)
     for name, x in (('voice', vo), ('music', mus_d), ('sfx', fx)):
-        sf.write(b / 'stems' / f'{name}.wav', (x * gain).astype(np.float32), SR, subtype='PCM_24')
-    sf.write(b / 'sfx.wav', (fx * gain).astype(np.float32), SR, subtype='PCM_24')
+        _write(b / 'stems' / f'{name}.wav', x, gain)
+    _write(b / 'sfx.wav', fx, gain)
     del vo, mus_d, fx
 
     timing['beats'] = beats

@@ -99,6 +99,32 @@ environment variables below).
   planes paint the world. Ids start with `comp-`, which the AI-look lint treats as deliberate. `films/night-planes`
   (golden frames): a sky with a glowing moon, hills, a masked and screen-blended mist band, the stage and foreground
   grass under a slow camera push.
+- **Compositor, part 2** (WP-36):
+  - **Camera roll**: `"roll"` in degrees, turning the whole composite about the frame centre.
+  - **Keyed values and expressions**: any number in a plane or node, and `roll`, `focus` and `dof`, may be keys
+    (`[[t, v], ...]`, linear) or an expression (`"=0.9 + 0.1*sin(2*t)"`). Expressions may use `t`, sin, cos, abs,
+    min, max, pow, sqrt, floor, clamp, pi, and `track("id", "x" | "y" | "luma")`. Anything else is refused,
+    property access and inherited names included. They are pure functions of time.
+  - **Light wrap**: the node `{"type": "lightwrap", "plane": "stage", "radius", "strength", "from"}` takes the planes
+    behind (or those named), blurs them, and screens them over the plane through a mask. The mask keeps a band just
+    inside the plane's edges (its alpha minus its blurred alpha). It is built from masks and plain filters, not
+    `feImage`: Chromium will not read the player's cached raster layers into a filter, and it silently drew nothing.
+  - **Region tracker**: `comp.track` follows a rectangle through a plate (an image sequence or a video). It uses
+    normalised cross-correlation in a window around the last position, with a parabola through the peak for
+    sub-pixel positions (`dbe/comptrack.py`). It writes `comp.tracks.<id>` as `[t, x, y, luma]`. An item with
+    `"attach": id` (and `"offset"`) moves with it, and an expression can read the position or the region's
+    brightness, so the picture drives a parameter.
+
+  Test `comp2`, on a copy of night-planes:
+  - roll asked 8 degrees, measured 7.95 (ORB features, a fitted similarity);
+  - a sky grade keyed from 0.4 to 1.4 takes the sky from 23 to 51 levels (36 unkeyed);
+  - light wrap in front of a warm plane changes 2.7% of the frame, 98% of it within the wrap radius of an edge and
+    all of it brighter (+45 levels);
+  - a textured square moving sub-pixel over a textured plate is tracked within 0.26 px mean (0.45 max) over 60
+    frames;
+  - a dot attached to the track lands within 0.7 px of it in the player.
+
+  night-planes' golden frames are unchanged.
 - **Drawn levels** (WP-35, puppet format v0.8): hand-drawn animation as a sequence of drawings with an exposure
   sheet. `level.make` builds one from drawings (PNG, transparent) and a timing (on ones, twos, threes, or holds per
   drawing) into `cast/levels/<name>.puppet.json`; `level.xsheet` retimes it or writes the cells; `level.from_pencil2d`
@@ -397,6 +423,20 @@ TrimBox and BleedBox are set, with crop marks in a 10 mm slug, and a **CMYK TIFF
 installs) with the total ink reported (nib-hello: 220% at the 99.9th percentile; flagged above 320%). Captions are off
 by default; film-level grading and grain are a video pass and not applied. `transparent=true` draws the characters
 alone on a transparent background as a PNG at that resolution, for merch. The `alpha` test covers all three commands.
+
+**Several outputs from one pass.** `shot.outputs` draws a shot once into RGBA frames (the cast alone by default,
+`castonly: false` for the whole frame) and encodes every output from them: the PNG sequence itself, WebM and ProRes
+4444 with alpha (read back and compared as `shot.alpha` does), and an MP4 and a GIF over a `background` colour (each
+checked for its frame count). It reports the pass and each encode separately. nib-hello's 195-frame shot: one 8 s pass,
+then WebM 43 s, ProRes 22 s, GIF 16 s, MP4 7 s (on 4 cores, with another job running), all checks passing.
+
+**Channels view** (http://127.0.0.1:8770/channels, linked from Studio). It shows a shot's RGBA frames, or any PNG
+dropped on it, one view at a time: over a checkerboard, RGB with the alpha ignored, alpha alone, red, green, blue,
+premultiplied, and matte edges (partly transparent pixels in orange, a quick look at the antialiasing). It also gives
+the share of transparent and partly transparent pixels. **Render RGBA frames** runs `shot.outputs` (PNG only); the page
+reads frames through `shot.frames`. Test `outputs`: all five outputs come from one pass and pass their checks, the
+MP4's corner is the white background, and on frame 100 of that shot the alpha view equals the frame's own alpha
+channel, pixel for pixel (98% transparent, 2% edge).
 
 
 **SVG frames** (`export.svg {name, time}` or `{name, start, end, fps}`, `tools/svg_frame.mjs`): the player's own SVG
@@ -985,8 +1025,31 @@ The `sound2` test:
 - The outdoor room falls 30 dB in 0.16 s, the hall in 0.68 s.
 - In a foley-enabled copy of pip-park, all of Pip's steps land on grass and the park's outdoor room goes to the mix.
 
-Open: recorded voice-over into slots, checked against hand-marked timings; Kenney CC0 samples (the site refused
-automated downloads); prosody direction.
+Open: recorded voice-over into slots, checked against hand-marked timings; prosody direction (done since: see
+Prosody direction).
+
+**Recorded samples** (WP-13). `sound.import_pack` copies a folder of recordings into `assets/external/sounds/<pack>/`
+(not in git) and records it in `assets/sounds.json` (in git): every file's sha256, the licence and its class, and
+which cues the pack stands in for (`"step/grass": "kenney-impact:footstep_grass"`, `"thud": ...`). `sound.samples`
+says which packs are here and intact. A film plays them only when its score says `"samples": true` (or lists pack
+ids). Then a mapped cue plays the recording, mono, at 48 kHz, its leading silence trimmed, and levelled like any
+effect. A group's variants take turns in cue order, so the choice is a pure function of the cue list. A file whose
+hash no longer matches is skipped, and its cue is synthesized as before. Unmapped cues (tile steps, pops, whooshes)
+stay synthesized. `build/samples_used.json` lists what played, and `film.provenance` lists each pack used with its
+licence class for the posting gate. Without `"samples"`, the mix is unchanged.
+
+The pack here is Kenney's Impact Sounds 1.0 (CC0, 130 files: footsteps on carpet, concrete, grass, snow and wood, and
+21 kinds of impact). kenney.nl refuses downloads from this container. So the files came from a copy on GitHub and
+were checked against Kenney's own zip, downloaded on the owner's machine by the Remote Control helper. Ten of the 130
+sha256 hashes were compared one by one across ten groups and all matched. Both copies hold 128 distinct files with the
+same two duplicate pairs. The copy had renamed `impactBell_heavy_000` to `impact_bell_heavy_000`; the library keeps
+Kenney's names.
+Test `samples` uses a 7 s music-and-effects film with four grass steps, two wood steps, a thud and a pop:
+- with samples on, the four grass steps play four different recordings and the two wood steps two;
+- the recordings are told apart (spectral centroid 3.4 to 4.2 kHz on grass, 0.29 to 0.32 kHz on wood);
+- the pop stays synthesized, the mix holds -14.0 LUFS and -1.6 dBTP, and the posting gate lists the pack (CC0, not
+  flagged);
+- with samples off, nothing is listed.
 
 ## Bubbles and text, finished (WP-17)
 - **Thought clouds**: a script line with `"style": "thought"` is drawn as a cloud with round bumps all the way round,
@@ -1056,6 +1119,61 @@ The puppet format is unchanged: swaps that replace a part (as hand poses do) alr
 every exporter. Test `outfits`: a character with a coat (jacket, trousers) and a gown (a dress) lints clean; a shot
 in each draws alike in Synfig, Lottie and Grease Pencil (1.0); against its own clothes the torso changes (mean
 difference 50 and 73 levels) and the face does not (0).
+
+## Open Peeps (WP-16)
+`cast.import_peeps` (with `"fetch": true` to download first; CC0, by Pablo Stanley) turns openpeeps.com's per-peep
+SVGs into one puppet. The site offers only finished peeps, not the parts kit, which is a Sketch or Figma file behind
+a Gumroad checkout that asks for an email. But every finished peep is the same 240 x 324 bust, with its pieces in
+named groups at fixed offsets: `body/`, `head/` (head with hair or hat), `face/`, `facial-hair/`, `accessories/`.
+So reading all 49 recovers the kit, each piece once and already placed: 22 bodies, 30 heads, 18 faces, 9 facial hairs
+and 7 accessories (plus "none"). The puppet (doodle template) is hip -> body -> head -> face, beard and glasses. Each
+category is a swap set replacing its part: `outfit`, `hair`, `expression`, `beard_style`, `accessory`. A pose or cast
+entry mixes them by name (`{"hair": "Turban", "expression": "Smile-Big"}`). Ink is the palette's `ink`, the white
+fill `paper`. `meta.sources` lists every SVG read, with its sha256. The format is unchanged: replacing swaps already
+reach the player, the bake and the exporters.
+
+Test `peeps` (skipped when the SVGs are not here): the puppet lints clean, and four peeps rebuilt from its swap sets,
+drawn by the loader, match their own SVGs drawn by Chromium. Ink IoU is 0.997 to 0.9996, white areas 0.998 to
+0.9996.
+
+**The full kit.** The owner downloaded the Gumroad kit ("Flat Assets") on their machine. Its "Separate Atoms" are one
+SVG per piece on a shared canvas per category. The same 166 files are on GitHub (jenshor/open-peeps). The helper
+session hashed the owner's copy, and 22 of those hashes, from every folder, were compared with the GitHub copy: all
+equal, with the same count in each folder. That copy is in `assets/external/openpeeps-kit/` (not in git). Each atom
+goes into the bust at the scale the site's busts use (150/710) and each category's offset, and lands within 0.06 px of
+the site's piece. `cast.import_peeps` uses the kit when it is here: 30 bodies, 46 heads, 30 faces, 17 facial hairs
+(with none) and 9 accessories. The `peeps` test rebuilds the same four site peeps from the kit puppet (ink IoU 0.989
+to 0.998). The site calls one face "Smiling", which is the kit's "Smile"; the test matches it by its drawing.
+
+**Full-body peeps** (`"body": "standing"` or `"sitting"`). The kit's 34 headless poses (23 standing, 11 sitting)
+get the head on top at the kit's own full-size layout. That layout was read from the kit's "a person" files and 48
+templates on the owner's machine: every standing template puts the head (124.68, -107.60) from the pose and every
+sitting one (106.82, -114.43), at a quarter scale. At full size: pose (-121, 634), head (404, 180) standing; (-81, 637)
+and (345, 180) sitting; inside the head, face (159, 186), facial hair (123, 338), accessories (47, 241). The puppet is
+hip -> body (the pose) -> head -> face, beard and glasses, at 0.3 of the kit's size, with a `pose` swap set beside
+the other five. The head turns at the neck. In the `peeps` test both kinds lint clean, and for every pose the
+drawing just under the head's bottom edge passes within 21 units of the head's centre (the neck under the head).
+
+Open: the faces are whole expressions, not mouth shapes, so lip-sync needs a mouth drawn per face; the bust's arms
+are part of each body drawing, so they cannot gesture.
+
+## Humaaans (WP-16)
+`cast.import_humaaans` turns the Humaaans kit's "Single Pieces" (18 heads, 10 bodies, 8 standing and 4 sitting
+bottoms; by Pablo Stanley) into one puppet. The finished figures stack a head at (82, 0), a body at (22, 82) and the
+legs at (0, 187) of a 300 x 426 figure; figures that turn a head or lean a body move these, so only unturned ones set
+the rest layout. The puppet is hip -> legs -> body -> head. The body turns at the waist (the top centre of the legs)
+and the head at the neck (the bottom centre of the head's skin), drawn head first, then legs, then body, as the
+figures stack them (the collar over the neck). Swap sets replace each part: `hair`, `outfit`, `legs` (sitting ones
+are `sit-...`). Fills become palette slots. Arms are drawn into each body, so they do not move on their own.
+
+The kit came the same way as Open Peeps' (Gumroad, on the owner's machine). Its 79 SVGs are on GitHub
+(Calinou/humaaans); 13 hashes from every folder matched the owner's copy. That mirror says CC BY 4.0, the licence of
+the 2019 release; humaaans.com says CC0 today. The manifest records it as attribution, so Pablo Stanley is credited.
+
+Test `humaaans`: the puppet lints clean, and the five finished standing figures at the rest layout, rebuilt from its
+swap sets, match their own SVGs (silhouette IoU 0.997 to 0.999). The figures recolour the skin, so colour agrees on
+75 to 99% of shared pixels. A 12 degree lean and a 10 degree nod change the upper half of the frame (5.0 levels mean)
+and leave the legs untouched (0.0).
 
 ## Character bibles and continuity (WP-16)
 `cast.bible {"id", "set"}` keeps a character's bible in cast/bible/<id>.json: personality, voice (with a voice per
@@ -1314,8 +1432,20 @@ true-peak check upsampled the whole film 4x at once, reverb ran one FFT over it:
 output, 11.0 GB, then buffers freed as soon as used), the described picture's single filter graph buffered the
 whole film and was killed (now built piece by piece), and the mix alone took 60 minutes.
 
+**A leaner mixer** (WP-38, measured 4 Nov 2026 on the 23-minute film's mix inputs, each run alone): a profile
+showed the limiter's true-peak pass taking half the time, mostly in strided maxima over the 4x-oversampled signal,
+and the memory peaking in the multiband ducker, which held five full-length temporaries. Now:
+- the true peak takes its maxima channel by channel and over each sample's four values with `np.maximum`;
+- the limiter scales the mix in place;
+- the ducker combines its bands block by block into the low band's buffer;
+- the WAVs are written block by block.
+Each step keeps the arithmetic per sample, so the output is the same: all six files (mix, music, effects and the
+three stems) are byte-identical to before. The time went from 785 s to 572 s, and the peak memory from 8.9 GB to
+7.0 GB. A 3-million-sample check confirms the ducker alone is bit-identical.
+
 **Open:**
-- The mix of a 23-minute film still takes about an hour and 11 GB: a streaming mixer (block by block) would bound it.
+- A truly streaming mixer (memory bounded whatever the length) would need the reverbs and the loudness passes done
+  block by block too; their results would then differ from today's in the last bits.
 
 The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
 shots over three workers (from the one worker's own shot times), or under 0.4.
@@ -1970,6 +2100,20 @@ Studio page http://127.0.0.1:8770/diff?film=FILM ("What changed" in the review r
 bar, steps from change to change and shows both versions side by side at that frame. The `gaze` test does all of
 this on a copy of `review-demo` (Ravi's look put back to camera first): verified at 97% from 0%, no changed frame
 outside the line's window, and the page shows the same spans.
+
+**Placement and camera notes (WP-19).** "Ravi should stand a little further left", "Momo is too far right", "move Ravi
+closer to Momo", "Momo should step away from Ravi" (the character named first moves; 120 px, 60 for "a little",
+240 for "a lot", or "by N px"), and "push in" / "go wider" / "too tight". A placement note moves the cast entry's
+`place.x`. A camera note steps the shot's automatic camera 0.25 closer or wider, as the director's desk does; a
+shot with hand-set camera keys is left to a human. The critic measures on the baked frames. The character's median
+screen position must move the asked way by at least half the distance, or the main character's height on screen must
+grow or shrink by 10% (the shot size is reported, ELS to ECU). `film.continuity` must find no new issue: a move that
+puts two characters on the wrong sides of the line across a cut is reverted. Then the film is rendered and QA must
+hold. Test `layoutnotes` on a copy of `review-demo`:
+- "Ravi should stand a little further left": verified, 300 -> 240 px on screen;
+- "push in on this": verified, Ravi 818 -> 1759 px tall, full shot -> medium long shot. The shot had no automatic
+  camera, so the note turned it on one step closer than its defaults: a large first step;
+- "Priya should stand further right" (nobody of that name in the shot): left to a human.
 
 **Continuity** (`film.continuity {name}`, `dbe/continuity.py`, WP-19), measured on the baked frames (screen positions
 with the shot camera folded in), written to `build/continuity.json`:
