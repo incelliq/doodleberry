@@ -579,6 +579,15 @@ def main():
     ir = reverb_ir()
     mus = mus + reverb(mus, ir, 0.22)
     mus_d = multiband_duck(mus, pres)
+    # music-only version, undocked, at programme loudness: made now, so the undocked music need not be kept to the end
+    # (each full-length stereo buffer of a 20-minute film is about 1 GB; WP-38 long-form)
+    fade = int(score.get('fade_out_s', 0.6) * SR)
+    mo = mus; del mus
+    mo[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
+    for _ in range(3):
+        mo = limit(mo * 10 ** ((-14 - meter.integrated_loudness(mo)) / 20))
+    sf.write(b / 'music.wav', mo.astype(np.float32), SR, subtype='PCM_24')
+    music_lufs = round(meter.integrated_loudness(mo), 2); del mo
 
     # ---- effects: each levelled to its type's target, dipped a little under speech
     fx = np.zeros((n + SR * 2, 2))
@@ -599,10 +608,11 @@ def main():
     fx = fx + room_reverb(fx, rooms, 'fx_wet', 0.16, ir)
     # keep the effects' punch and sparkle, clear their speech band under words
     fx = multiband_duck(fx, pres, low_db=-2, mid_db=-8, high_db=-3)
+    del pres
 
     vo = to_st(voice) + room_reverb(voice, rooms, 'voice_wet', 0.035, ir)
+    del voice
     mix = vo + mus_d + fx
-    fade = int(score.get('fade_out_s', 0.6) * SR)
     mix[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
     gain = 1.0
     for _ in range(4):
@@ -615,12 +625,7 @@ def main():
     for name, x in (('voice', vo), ('music', mus_d), ('sfx', fx)):
         sf.write(b / 'stems' / f'{name}.wav', (x * gain).astype(np.float32), SR, subtype='PCM_24')
     sf.write(b / 'sfx.wav', (fx * gain).astype(np.float32), SR, subtype='PCM_24')
-    # music-only version, undocked, at programme loudness
-    mo = mus.copy()
-    mo[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
-    for _ in range(3):
-        mo = limit(mo * 10 ** ((-14 - meter.integrated_loudness(mo)) / 20))
-    sf.write(b / 'music.wav', mo.astype(np.float32), SR, subtype='PCM_24')
+    del vo, mus_d, fx
 
     timing['beats'] = beats
     timing['bpm'] = score['bpm']
@@ -629,7 +634,7 @@ def main():
     print(json.dumps({
         'mix_lufs': round(meter.integrated_loudness(mix), 2),
         'mix_true_peak_db': round(true_peak_db(mix), 2),
-        'music_lufs': round(meter.integrated_loudness(mo), 2),
+        'music_lufs': music_lufs,
         'beats': len(beats), 'cues': len(cues),
     }))
 
