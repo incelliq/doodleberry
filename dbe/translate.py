@@ -82,6 +82,11 @@ def translate(texts, lang, src="en", beam=4):
             out.append((None, f"the model dropped a data binding ({', '.join(mp[t] for t in lost)}): translate this one by hand")); continue
         for tok, ph in mp.items():
             text = text.replace(tok, ph)
+        if t_code == "sin_Sinh" and re.search(r"\u0DCA (?=[\u0DBB\u0DBA])", text):
+            # NLLB learnt Sinhala with the zero-width joiner stripped: a rakaransaya or yansaya comes out as a hal kirima, a
+            # space and ra or ya ("රාත් රී" for "රාත්‍රී"), which looks exactly like a word ending before a word starting with
+            # ra or ya ("කින් රාත්‍රී"); it cannot be told apart from the text, so the reviewer is told where to look
+            out.append((text, "machine draft; check the conjuncts: a hal kirima before a space and ra or ya may need to be joined (ZWJ)")); continue
         out.append((text, "machine draft"))
     return out
 
@@ -96,15 +101,19 @@ def draft(i18n_path, source, lang, refresh=False):
     todo = [k for k in source if not strings.get(k) or (refresh and k in prev and k not in (spec.get("reviewed") or []))]
     res = translate([source[k] for k in todo], lang) if todo else []
     filled, failed = [], []
+    notes = {}
     for k, (t, why) in zip(todo, res):
         if t is None:
             strings[k] = ""; failed.append({"key": k, "why": why})
         else:
             strings[k] = t; filled.append(k)
+            if why != "machine draft":
+                notes[k] = why
     mach.update({"model": NAME, "license": LICENSE, "at": datetime.date.today().isoformat(), "keys": sorted((prev | set(filled)) - {f["key"] for f in failed}),
-                 "drafts": {k: strings[k] for k in filled} | {k: v for k, v in (mach.get("drafts") or {}).items() if k not in filled}})
+                 "drafts": {k: strings[k] for k in filled} | {k: v for k, v in (mach.get("drafts") or {}).items() if k not in filled},
+                 "notes": notes | {k: v for k, v in (mach.get("notes") or {}).items() if k not in filled}})
     p.parent.mkdir(parents=True, exist_ok=True); p.write_text(json.dumps(spec, indent=1, ensure_ascii=False))
-    return {"file": str(p), "drafted": len(filled), "failed": failed, "kept": len([k for k in source if k not in todo])}
+    return {"file": str(p), "drafted": len(filled), "failed": failed, "notes": notes, "kept": len([k for k in source if k not in todo])}
 
 
 def unreviewed(spec):

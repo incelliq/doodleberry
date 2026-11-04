@@ -1041,6 +1041,38 @@ because it finds "pitch" in noise); shout 136 Hz against 107 and a spectral cent
 excited the widest intonation (0.31 against 0.23) and 10% quicker; calm and sad narrower (0.15, 0.14) and slower;
 sad the lowest (100 Hz) and darkest (1.5 kHz). faster-whisper transcribes all six without an error.
 
+## Sprite sheets (WP-30)
+`export.sprites {"puppet", "clips", "fps", "scale"}` draws each clip of a character alone (the player, transparent) at
+the sheet's frame rate, trims every frame to its ink and packs them into one PNG (shelves, tallest first). Beside it:
+the atlas in TexturePacker's JSON hash layout (frames with their rectangle, trim, untrimmed size and pivot, plus an
+`animations` map clip -> frames), read by Phaser, PixiJS, Cocos, Defold and Unity's TexturePacker importer; and a
+Godot 4 SpriteFrames resource, one animation per clip, each frame an AtlasTexture whose margin restores the untrimmed
+frame. Test `sprites` (Biscuit, six clips, 65 frames at 12 fps): no rectangle overlaps, every frame rebuilt from the
+sheet equals the player's own still exactly, and Godot 4.5 plays "wag" from the SpriteFrames identically to the
+stills (mean difference 0.0). Unity itself is not run here.
+
+## Machine-translation drafts (WP-25)
+`film.translate {"name", "lang"}` drafts every untranslated string of a film into i18n/<lang>.json with NLLB-200
+(Meta's distilled 600M checkpoint, converted here to CTranslate2 int8 once; CC BY-NC 4.0). Each {{...}} binding is
+swapped for a distinct number while translating and put back; a string whose binding does not come back is left empty
+and listed. Strings a person wrote are never touched; the file records which strings are machine drafts. Sinhala:
+NLLB learnt it with the zero-width joiner stripped, so a rakaransaya or yansaya comes out as a hal kirima, a space and
+ra or ya ("රාත් රී" for "රාත්‍රී"); that cannot be told from a word boundary, so such drafts carry a note for the
+reviewer rather than a guess. `film.localize` lists the machine strings nobody has reviewed (`reviewed` in the i18n
+file clears them) and records the model in the version's provenance.json, so the posting gate flags it.
+
+Audio description now follows the version's language: the describer writes English and translates its sentences with
+the same model before they are placed, voiced by a voice for the language the speakers do not use (Kokoro where it
+speaks the language, else Piper).
+
+Measured (test `translate`, data-demo): Spanish 19 strings and Sinhala 20 drafted in about 4 s each on the CPU, every
+binding kept, the hand-written string untouched; 9 Sinhala drafts carry the conjunct note.
+
+Charts read right to left in right-to-left films (test `rtl_chart`: data-demo-ar's bars, from the left, are
+data-demo's reversed).
+
+Voices registered without their own URL are fetched from the rhasspy piper-voices catalogue (its path and md5).
+
 ## CMU motion capture and hugs (WP-12, WP-11)
 `clip.cmu_import {"subject", "trial", "puppet", "name", "plane", "save"}` turns a take from the CMU Graphics Lab
 Motion Capture Database (ASF skeleton and AMC motion, 120 fps; fetched once into out/cmu/, not committed; CMU: free

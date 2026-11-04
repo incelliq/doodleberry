@@ -758,6 +758,18 @@
    "license": "ISC (package); Natural Earth data public domain",
    "class": "public-domain",
    "use": "source of the map board's country shapes (WP-16); npm-installed into tools/mapboard, not committed"
+  },
+  {
+   "name": "NLLB-200 distilled 600M (Meta), converted to CTranslate2 int8",
+   "license": "CC-BY-NC-4.0",
+   "class": "non-commercial",
+   "use": "film.translate drafts and translated audio description (WP-25); downloaded into the models folder and converted there; flagged at the posting gate when it shaped a version"
+  },
+  {
+   "name": "transformers, torch (CPU) and sentencepiece",
+   "license": "Apache-2.0 / BSD-3-Clause / Apache-2.0",
+   "class": "permissive",
+   "use": "converting NLLB to CTranslate2 once and tokenizing (WP-25)"
   }
  ],
  "external": [

@@ -5090,8 +5090,18 @@ def ensure_voice(vid):
     r = _voice_registry().get(vid) or {}; f = Path(VOICES) / f"{vid}.onnx"
     if f.exists():
         return "present"
+    if not r.get("url") and vid in _voice_registry():   # a registered Piper voice without its own URL: the piper-voices catalogue's
+        cat = Path(VOICES) / "piper-voices.json"            # path and md5 (rhasspy/piper-voices voices.json)
+        base = "https://huggingface.co/rhasspy/piper-voices/resolve/main/"
+        if not cat.exists():
+            cat.parent.mkdir(parents=True, exist_ok=True); urllib.request.urlretrieve(base + "voices.json", cat)
+        ent = json.loads(cat.read_text()).get(vid)
+        if ent:
+            onnx = next((k for k in ent["files"] if k.endswith(f"{vid}.onnx")), None)
+            if onnx:
+                r = {**r, "url": base + onnx, "md5": ent["files"][onnx].get("md5_digest")}
     if not r.get("url"):
-        raise FileNotFoundError(f"voice {vid} is not in {VOICES} and has no download URL in voices/registry.json")
+        raise FileNotFoundError(f"voice {vid} is not in {VOICES} and has no download URL in voices/registry.json or the piper-voices catalogue")
     f.parent.mkdir(parents=True, exist_ok=True)
     for suffix in ("", ".json"):
         urllib.request.urlretrieve(r["url"] + suffix, str(f) + suffix)
@@ -5712,6 +5722,14 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "translate":   # WP-25: machine-translation drafts
+        bad, meas = _translate_test()
+        failed += 1 if bad else 0
+        results.append({"translate": "data-demo drafted in Spanish and Sinhala by NLLB keeps every data binding and never touches a string a person wrote; a localized version lists the drafts nobody has reviewed, records the model so the posting gate flags it, and clears the flag once they are reviewed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "rtl_chart":   # WP-25: charts read right to left in right-to-left films
+        bad, meas = _rtl_chart_test()
+        failed += 1 if bad else 0
+        results.append({"rtl_chart": "the Arabic data-demo draws its bar chart right to left: the bars' heights read from the left are the English chart's reversed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "cmu":   # WP-12: CMU motion capture to 2D
         bad, meas = _cmu_test()
         failed += 1 if bad else 0
@@ -9926,6 +9944,80 @@ def _templates_test():
 
 
 
+
+
+
+def _translate_test():
+    """WP-25 translation drafts on a scratch copy of data-demo (zz-tr). A translator has written one Spanish string
+    by hand; film.translate es and si: every other string drafted, each draft's {{...}} bindings the same as its
+    source's, the hand-written string kept. film.localize es (render off): its review flags list the unreviewed
+    machine strings and its provenance.json records NLLB (film.provenance flags it: CC BY-NC); with every machine
+    key listed under "reviewed" the review flag goes (the model stays recorded)."""
+    import re as _re
+    bad, meas = [], {}
+    src, d_ = FILMS / "data-demo", FILMS / "zz-tr"
+    try:
+        shutil.rmtree(d_, ignore_errors=True); shutil.copytree(src, d_, ignore=shutil.ignore_patterns("build", "i18n"))
+        (d_ / "i18n").mkdir()
+        rows = film_strings("zz-tr")["strings"]; src_txt = {r["key"]: r["text"] for r in rows}
+        hand_key = "line:l1"
+        (d_ / "i18n" / "es.json").write_text(json.dumps({"lang": "es", "source": src_txt, "strings": {hand_key: "Así de seguido usó el club el telescopio."}, "voices": {}, "swaps": {}}))
+        for lang in ("es", "si"):
+            r = film_translate("zz-tr", lang); spec = _json(d_ / "i18n" / f"{lang}.json")
+            binds = lambda t: sorted(_re.findall(r"\{\{[^}]+\}\}", t or ""))
+            wrong = [k for k in src_txt if spec["strings"].get(k) and binds(spec["strings"][k]) != binds(src_txt[k])]
+            meas[lang] = {"drafted": r["drafted"], "failed": [f["key"] for f in r["failed"]], "notes": len(r.get("notes") or {}), "binding_changes": wrong,
+                          "sample": {k: spec["strings"].get(k) for k in ("line:l2", "line:l3")}}
+            if wrong or r["drafted"] + len(r["failed"]) + (1 if lang == "es" else 0) != len(src_txt):
+                bad.append(f"{lang}: {meas[lang]}")
+        es = _json(d_ / "i18n" / "es.json")
+        meas["hand_kept"] = es["strings"][hand_key] == "Así de seguido usó el club el telescopio." and hand_key not in es["machine"]["keys"]
+        if not meas["hand_kept"]:
+            bad.append("the hand-written string was overwritten or counted as machine")
+        loc = film_localize("zz-tr", "es", render=False)
+        flags = [f for f in loc["review_flags"] if isinstance(f, dict) and f.get("rule") == "machine_translation"]
+        prov = film_provenance("zz-tr-es")
+        meas["localize"] = {"machine_flag": bool(flags), "provenance_flags": [f for f in prov["flags"] if "NLLB" in f]}
+        if not flags or not meas["localize"]["provenance_flags"]:
+            bad.append(f"localize: {meas['localize']}")
+        es["reviewed"] = es["machine"]["keys"]; (d_ / "i18n" / "es.json").write_text(json.dumps(es, ensure_ascii=False))
+        loc2 = film_localize("zz-tr", "es", render=False)
+        meas["after_review_flag"] = any(isinstance(f, dict) and f.get("rule") == "machine_translation" for f in loc2["review_flags"])
+        if meas["after_review_flag"]:
+            bad.append("the machine-translation flag stays after review")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True); shutil.rmtree(FILMS / "zz-tr-es", ignore_errors=True)
+    return bad, meas
+
+def _rtl_chart_test():
+    """WP-25 RTL charts. data-demo and data-demo-ar (the same data: 4, 6, 9, 8 nights) drawn by the player once the
+    bar chart is full: the bars (the chart's blue) found column by column from the left; the Arabic heights are the
+    English ones reversed (January, the first month, on the right)."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    def heights(name):
+        s = _shots(name); sh = s["shots"][1]; t = round(sh["start"] + 2.0 - s["shots"][0]["start"], 3)
+        png = ROOT / "out" / f"rtl_{name}.png"
+        _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + "?rastercache=0&captions=0", str(sh["start"] + 2.0), "1", str(png)], timeout=300)
+        a = np.asarray(Image.open(png).convert("RGB")).astype(int)
+        blue = (np.abs(a[..., 0] - 0x1a) < 30) & (np.abs(a[..., 1] - 0x62) < 30) & (np.abs(a[..., 2] - 0xc2) < 30)
+        cols = blue.sum(0); on = cols > 20; runs, x = [], 0
+        while x < len(on):   # bars: runs of blue columns, each one's height
+            if on[x]:
+                x0 = x
+                while x < len(on) and on[x]:
+                    x += 1
+                if x - x0 > 20:
+                    runs.append(int(cols[x0:x].max()))
+            x += 1
+        png.unlink(missing_ok=True)
+        return runs
+    en, ar = heights("data-demo"), heights("data-demo-ar")
+    meas = {"en_from_left": en, "ar_from_left": ar}
+    if len(en) != 4 or len(ar) != 4 or any(abs(a - b) > 3 for a, b in zip(ar, en[::-1])):
+        bad.append(f"the Arabic bars are not the English ones reversed: {meas}")
+    return bad, meas
 
 def _cmu_test():
     """WP-12 CMU. clip.cmu_import of subject 02 trial 01 (a walk) for Pip, seen from the side. The take's bones keep
