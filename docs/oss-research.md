@@ -119,7 +119,7 @@ This list leaves out what Doodleberry already does.
 | Spine runtimes | github.com/EsotericSoftware/spine-runtimes | **Proprietary "Spine Runtimes License"**: "each user of the Products must obtain their own Spine Editor license" [V]. **Not open source** | Very active | Yes | Only as an export target for clients who own Spine. Do not embed the runtime | M |
 | Rive | github.com/rive-app/rive-runtime, rive-wasm | Runtimes MIT [V]; **the editor is proprietary SaaS** | Very active | Yes (wasm in Chromium, or C++) | `.riv` files are binary and editor-authored, so generating them is hard. Skip unless clients ask | L |
 | Inochi2D | github.com/Inochi2D/inochi2d | BSD-2-Clause [V] | Active (copyright through 2026) | Headless rendering unclear [U]; written in D | Open alternative to Live2D (mesh-deformed puppets driven by parameters). Possible future "2.5D puppet" export. Large effort | L |
-| OpenToonz / Tahoma2D | github.com/opentoonz/opentoonz, github.com/tahoma2d/tahoma2d | BSD-3-Clause, with third-party parts under their own licences [V] | Active | `tcomposer` render CLI exists [U]; needs Qt | Little value. Possible `.tnz` scene export for studios | L |
+| OpenToonz / Tahoma2D | github.com/opentoonz/opentoonz, github.com/tahoma2d/tahoma2d | BSD-3-Clause, with third-party parts under their own licences [V] | Active | `tcomposer` render CLI exists [V: built from 1.8.0 here, renders headless under Xvfb]; needs Qt | `.tnz` scene export for studios: `export.opentoonz` (WP-34), checked by tcomposer itself | L |
 | Moho format | lostmarble.com | Proprietary app | — | — | If needed, emit Papagayo/Moho `.dat` switch files from our viseme track (trivial) | S |
 
 ---

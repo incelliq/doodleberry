@@ -158,11 +158,10 @@ opentoonz_build() {
   (cd "$src/thirdparty/tiff-4.0.3" && { [ -f libtiff/.libs/libtiff.a ] || { ./configure --with-pic --disable-jbig --disable-lzma && make -j"$(nproc)"; }; })
   mkdir -p "$src/toonz/build" && (cd "$src/toonz/build" && cmake ../sources -DCMAKE_BUILD_TYPE=Release -DWITH_TRANSLATION=OFF -DCMAKE_INSTALL_PREFIX=/opt/opentoonz \
     && make -j"$(nproc)" tcomposer)
-  local b="$src/toonz/build"; mkdir -p /opt/opentoonz/bin /opt/opentoonz/lib
-  cp "$b/bin/tcomposer" /opt/opentoonz/bin/ 2>/dev/null || cp "$(find "$b" -name tcomposer -type f -perm -u+x | head -1)" /opt/opentoonz/bin/
-  find "$b" -name '*.so*' -exec cp -P {} /opt/opentoonz/lib/ \;
+  local b="$src/toonz/build"; mkdir -p /opt/opentoonz/bin /opt/opentoonz/lib/opentoonz
+  cp "$b/bin/tcomposer" /opt/opentoonz/bin/ && cp -P "$b"/lib/opentoonz/*.so* /opt/opentoonz/lib/opentoonz/   # export.opentoonz sets LD_LIBRARY_PATH to it
   rm -rf /opt/opentoonz/stuff && cp -r "$src/stuff" /opt/opentoonz/stuff
-  /opt/opentoonz/bin/tcomposer 2>&1 | head -2 || true
+  LD_LIBRARY_PATH=/opt/opentoonz/lib/opentoonz /opt/opentoonz/bin/tcomposer 2>&1 | head -2 || true
 }
 
 plates_dl() {

@@ -3759,7 +3759,9 @@ def _tcomposer_check(name, sh, od, n, size, skipped):
     cmd = ["xvfb-run", "-a", TCOMPOSER, str(od / "scene.tnz"), "-o", str(rd / "f.png"), "-range", "1", str(n)]
     if TOONZ_STUFF.exists():
         cmd += ["-TOONZROOT", str(TOONZ_STUFF)]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+    lib = Path(TCOMPOSER).resolve().parent.parent / "lib" / "opentoonz"   # its own libraries, wherever it was installed
+    env = {**os.environ, "LD_LIBRARY_PATH": ":".join(x for x in (str(lib), os.environ.get("LD_LIBRARY_PATH", "")) if x)}
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, env=env)
     got = sorted(rd.glob("f*.png"))
     if len(got) < n:
         return {"ok": False, "frames": len(got), "error": (r.stdout + r.stderr)[-600:]}
@@ -3811,6 +3813,7 @@ def export_opentoonz(name, shot, render=True):
     if not columns:
         raise ValueError(f"shot {shot} has no drawn levels to export (OpenToonz scenes carry frame-by-frame levels)")
     (od / "scene.tnz").write_text(TZ.scene((W, H), n, fps, levels, columns))
+    TZ.project(od)
     out = {"scene": str((od / "scene.tnz").relative_to(ROOT)), "levels": [l["name"] for l in levels], "frames": n, "not_exported": skipped}
     if render and TCOMPOSER:
         out["tcomposer"] = _tcomposer_check(name, sh, od, n, (W, H), skipped)
@@ -5800,6 +5803,10 @@ def test_golden(update=False, film=""):
         bad, meas = _rtl_chart_test()
         failed += 1 if bad else 0
         results.append({"rtl_chart": "the Arabic data-demo draws its bar chart right to left: the bars' heights read from the left are the English chart's reversed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "opentoonz":   # WP-34: a drawn shot as an OpenToonz scene, rendered by OpenToonz itself
+        bad, meas = _opentoonz_test()
+        failed += 1 if bad else 0
+        results.append({"opentoonz": "level-demo's shot as an OpenToonz 1.8 scene: two drawn levels, the cut-out character listed as not exported, the xsheet exposing every frame's drawing; OpenToonz's tcomposer renders it and three frames match the player's drawing of the same characters", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "posebench":   # WP-12: pose detectors by measured accuracy (minutes on the CPU; only when asked)
         r = pose_benchmark(); res = r["results"]
         bad = [{n: v["error"]} for n, v in res.items() if "error" in v]
@@ -10095,6 +10102,37 @@ def _rtl_chart_test():
     if len(en) != 4 or len(ar) != 4 or any(abs(a - b) > 3 for a, b in zip(ar, en[::-1])):
         bad.append(f"the Arabic bars are not the English ones reversed: {meas}")
     return bad, meas
+
+def _opentoonz_test():
+    """WP-34. export.opentoonz on level-demo s1: the scene names two levels (campfire, doodle-walk) and lists Ravi (a
+    cut-out) as not exported; the xsheet's cells, read back from scene.tnz, expose a drawing on every frame for each
+    column and agree with the bake's drawing on every frame; with tcomposer installed, its render of 147 frames
+    matches the player's drawing of the same characters on three frames (alpha IoU 0.95 or more, mean colour
+    difference 12 or less); without it, that part is reported as skipped."""
+    import re as _re
+    bad = []
+    r = export_opentoonz("level-demo", "s1", render=bool(TCOMPOSER))
+    meas = {"levels": r["levels"], "frames": r["frames"], "not_exported": [x["cast"] for x in r["not_exported"]], "tcomposer": r.get("tcomposer")}
+    if r["levels"] != ["L1_campfire", "L2_doodlewalk"] or meas["not_exported"] != ["Ravi"]:
+        bad.append({"levels": r["levels"], "not_exported": meas["not_exported"]})
+    tnz = (ROOT / r["scene"]).read_text(); _, _, _, baked = _bake("level-demo", "s1")
+    cols = _re.findall(r"<levelColumn id='\d+'>.*?</levelColumn>", tnz)
+    levels = [c for c in baked["cast"] if _json(c["puppet"]).get("template") == "level"]
+    for col, c in zip(cols, levels):
+        exp = [None] * r["frames"]
+        for row, cnt, d in _re.findall(r"<cell>(\d+) (\d+) <level id='\d+'/>(\d+) 0</cell>", col):
+            for f in range(int(row), int(row) + int(cnt)):
+                exp[f] = int(d)
+        shapes = sorted(_json(c["puppet"])["swaps"]["level"]["shapes"]); want = [shapes.index(fr["level"]) + 1 if fr.get("level") else None for fr in c["frames"]]
+        if exp != want:
+            bad.append({"column": c.get("name") or c["puppet"], "first_mismatch": next(i for i, (a, b) in enumerate(zip(exp, want)) if a != b)})
+    tc = r.get("tcomposer")
+    if TCOMPOSER and not (isinstance(tc, dict) and tc.get("ok") and tc.get("frames") == r["frames"]):
+        bad.append({"tcomposer": tc})
+    if not TCOMPOSER:
+        meas["tcomposer"] = "skipped: not installed (bash tools/setup.sh opentoonz)"
+    return bad, meas
+
 
 def _cmu_test():
     """WP-12 CMU. clip.cmu_import of subject 02 trial 01 (a walk) for Pip, seen from the side. The take's bones keep

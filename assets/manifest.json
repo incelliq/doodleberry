@@ -742,6 +742,12 @@
    "use": "export.godot writes a Godot 4.5 project (WP-30); setup.sh godot installs the engine into /opt/godot, where it imports the project and renders a shot with Movie Maker under Xvfb to check it against the player"
   },
   {
+   "name": "OpenToonz 1.8.0 tcomposer (built from source, tag v1.8.0 checked by commit)",
+   "license": "BSD-3-Clause (its bundled libtiff 4.0.3: libtiff licence, permissive)",
+   "class": "permissive",
+   "use": "export.opentoonz writes an OpenToonz scene (WP-34); setup.sh opentoonz builds OpenToonz's command-line renderer into /opt/opentoonz, which renders the scene under Xvfb to check it against the player"
+  },
+  {
    "name": "d3-geo 3.1.1",
    "license": "ISC",
    "class": "permissive",

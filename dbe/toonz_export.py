@@ -60,7 +60,8 @@ def scene(size, n_frames, fps, levels, columns):
         out.append(f"<level id='{lv['id']}'>{lv['name']}<info dpiType=\"image\"/><path>\"{lv['path']}\"</path></level>")
     out.append("</levels><folder name=\"Cast\" type=\"default\"><levels>" + "".join(f"<level id='{lv['id']}'/>" for lv in levels) + "</levels></folder></levelSet>")
     out.append("<xsheet><columns>")
-    fx_id = 100; col_fx = []
+    # id='n' is OpenToonz's object table: one numbering for the whole file (levels, columns, fxs), each id once
+    nid = max([lv["id"] for lv in levels] or [0]); col_fx = []
     for ci, col in enumerate(columns):
         runs, f = [], 0
         cells = col["cells"]
@@ -72,8 +73,8 @@ def scene(size, n_frames, fps, levels, columns):
                 g += 1
             runs.append(f"<cell>{f} {g - f + 1} <level id='{col['level']}'/>{cells[f]:04d} 0</cell>")
             f = g + 1
-        fx_id += 1; col_fx.append(fx_id)
-        out.append(f"<levelColumn id='{ci + 2}'><status>0</status><cells>{''.join(runs)}</cells>"
+        col_id, fx_id = nid + 1, nid + 2; nid += 2; col_fx.append(fx_id)
+        out.append(f"<levelColumn id='{col_id}'><status>0</status><cells>{''.join(runs)}</cells>"
                    f"<fx><Toonz_columnFx id='{fx_id}'><params></params><ports></ports><numberId>{ci}</numberId><name>Col{ci + 1}</name><fxId>\"\"</fxId><opened>0</opened></Toonz_columnFx></fx></levelColumn>")
     out.append("</columns><pegbars>")
     peg = lambda pid, parent, extra="": (f'<pegbar id="{pid}"><parent handle="B" id="{parent}" parentHandle="B"></parent><isOpened>0</isOpened>'
@@ -85,20 +86,33 @@ def scene(size, n_frames, fps, levels, columns):
         out.append(peg(f"Col{ci + 1}", "Table", _ch("x", col["x"], 0) + _ch("y", col["y"], 0) + _ch("sx", col["sx"], 1) + _ch("sc", col["sc"], 1)))
     out.append("<grid_dimension>1</grid_dimension></pegbars>")
     out.append("<fxnodes><terminal>" + "".join(f"<fxnode><Toonz_columnFx id='{i}'/></fxnode>" for i in col_fx) + "</terminal>"
-               "<xsheet><Toonz_xsheetFx id='2'><params></params><ports></ports><dagNodePos>0 0</dagNodePos><numberId>0</numberId><name>Xsheet</name><fxId>\"\"</fxId><opened>0</opened></Toonz_xsheetFx></xsheet>"
-               "<output><Toonz_outputFx id='3'><params></params><ports><source><Toonz_xsheetFx id='2'/></source></ports><dagNodePos>0 0</dagNodePos><numberId>0</numberId><name>Output</name><fxId>\"\"</fxId><opened>0</opened></Toonz_outputFx></output>"
+               f"<xsheet><Toonz_xsheetFx id='{nid + 1}'><params></params><ports></ports><dagNodePos>0 0</dagNodePos><numberId>0</numberId><name>Xsheet</name><fxId>\"\"</fxId><opened>0</opened></Toonz_xsheetFx></xsheet>"
+               f"<output><Toonz_outputFx id='{nid + 2}'><params></params><ports><source><Toonz_xsheetFx id='{nid + 1}'/></source></ports><dagNodePos>0 0</dagNodePos><numberId>0</numberId><name>Output</name><fxId>\"\"</fxId><opened>0</opened></Toonz_outputFx></output>"
                "<grid_dimension>1</grid_dimension></fxnodes></xsheet><history></history></tnz>")
     return "\n".join(out) + "\n"
 
 
+def project(folder, name="doodleberry"):
+    """make the export folder its own OpenToonz project (tcomposer and OpenToonz look for scenes.xml beside a scene and
+    a <name>_otprj.xml in the project folder it names): scenes, drawings and inputs here, renders in render/"""
+    folder = Path(folder)
+    (folder / "scenes.xml").write_text('<parentProject type="projectFolder">"."</parentProject>\n')
+    dirs = {"+scenes": ".", "+drawings": ".", "+inputs": ".", "+extras": ".", "+outputs": "render", "+palettes": "."}
+    (folder / f"{name}_otprj.xml").write_text("<project><version>70 1</version><folders>"
+                                              + "".join(f'<folder name="{k}" path="{v}"/>' for k, v in dirs.items()) + "</folders></project>\n")
+
+
 def column_from_bake(cast_frames, puppet, size, drawing_index):
     """a level character's xsheet cells and pegbar keys from its baked frames"""
-    W, H = size; aw, ah = puppet["artboard"]; piv = (puppet["parts"].get("root") or next(iter(puppet["parts"].values())))["pivot"]
+    W, H = size; aw, ah = puppet["artboard"]
+    # the point the player puts at the character's (x, y): its hip's x and its ground line (as player.js and bake.mjs)
+    hip = (puppet["parts"].get("hip") or {}).get("pivot") or [aw / 2, puppet.get("ground", ah)]
+    piv = (hip[0], puppet.get("ground", ah))
     cells, x, y, sc, sx = [], [], [], [], []
     for f, fr in enumerate(cast_frames):
         d = fr.get("level"); cells.append(drawing_index.get(d) if d else None)
         s, flip = fr["s"], fr.get("flip", 1)
-        # the drawing's centre (OpenToonz puts a level's image centre at its column's origin), from the pivot at (x, y)
+        # the drawing's centre (OpenToonz puts a level's image centre at its column's origin), from the ground point at (x, y)
         cxp = fr["x"] + (aw / 2 - piv[0]) * s * flip + fr.get("offset", [0, 0])[0] * s * flip
         cyp = fr["y"] + (ah / 2 - piv[1]) * s + fr.get("offset", [0, 0])[1] * s
         x.append((f, (cxp - W / 2) / DPI)); y.append((f, -(cyp - H / 2) / DPI)); sc.append((f, s)); sx.append((f, float(flip)))

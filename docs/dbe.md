@@ -1051,6 +1051,24 @@ frame. Test `sprites` (Biscuit, six clips, 65 frames at 12 fps): no rectangle ov
 sheet equals the player's own still exactly, and Godot 4.5 plays "wag" from the SpriteFrames identically to the
 stills (mean difference 0.0). Unity itself is not run here.
 
+## OpenToonz scenes (WP-34)
+`export.opentoonz {"name", "shot", "render"}` writes a shot's drawn levels (template "level") as an OpenToonz 1.8
+scene in build/opentoonz/<shot>/: `scene.tnz`, a raster level per drawn character (one PNG per drawing at its
+artboard size, 120 dpi, so a drawing pixel is a camera pixel at 100%), the xsheet exposing each frame's drawing as
+the bake has it (a clip's timing, speed and loops come over exactly), and each column's pegbar keyed on every frame
+with the character's position (its ground point, as the player places it), scale and flip. The folder is its own
+OpenToonz project (`scenes.xml` and `doodleberry_otprj.xml`), so OpenToonz opens it and its renderer finds it.
+Cut-out puppets are not OpenToonz levels: they are listed under `not_exported`. In the file, every `id='n'` is one
+object table for the whole scene (levels, columns and fxs share it), as OpenToonz reads it.
+
+With `render` (default) and OpenToonz's renderer installed (`bash tools/setup.sh opentoonz`: OpenToonz 1.8.0 from
+source, the tag checked by commit, its bundled libtiff and only the `tcomposer` target, about 25 minutes on four
+cores, into /opt/opentoonz), `tcomposer` renders the scene under Xvfb, and three frames are compared with the
+player's drawing of the same characters alone (a scratch copy of the shot without the cut-out cast). Test `opentoonz`
+(level-demo s1: the campfire and the walking doodle, Ravi not exported): the xsheet read back from scene.tnz exposes
+the bake's drawing on every frame of both columns, and tcomposer's 147 frames match the player at frames 0, 73 and
+146 (alpha IoU 0.998 to 0.999, mean colour difference 0.31 to 0.33 on 0-255).
+
 ## Machine-translation drafts (WP-25)
 `film.translate {"name", "lang"}` drafts every untranslated string of a film into i18n/<lang>.json with NLLB-200
 (Meta's distilled 600M checkpoint, converted here to CTranslate2 int8 once; CC BY-NC 4.0). Each {{...}} binding is
