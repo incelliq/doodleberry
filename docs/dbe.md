@@ -1051,6 +1051,31 @@ frame. Test `sprites` (Biscuit, six clips, 65 frames at 12 fps): no rectangle ov
 sheet equals the player's own still exactly, and Godot 4.5 plays "wag" from the SpriteFrames identically to the
 stills (mean difference 0.0). Unity itself is not run here.
 
+## Pose detectors compared (WP-12)
+`pose.benchmark {"detectors", "limit"}` runs MediaPipe Pose Landmarker (what act-out uses), RTMPose (rtmlib
+"balanced": a YOLOX-m person detector, then RTMPose-m, ONNX on the CPU) and Ultralytics YOLO11m-pose on 80
+single-person photos from COCO val2017 (tests/posebench: the first 80 with one annotated person, at least 14
+labelled keypoints and an area over 40,000 px; images fetched from their URLs) and scores each image by COCO's
+keypoint similarity (OKS, COCO's per-keypoint sigmas, the person's area as scale, over the labelled keypoints).
+MediaPipe's 33 landmarks map onto COCO's 17. Results in out/posebench/result.json. Test `posebench` (only when
+asked by name: minutes of CPU).
+
+**Measured** (80 images, 4 CPU cores):
+
+| Detector | mean OKS | OKS >= 0.5 | OKS >= 0.75 | missed | ms per image |
+|---|---|---|---|---|---|
+| RTMPose-m (rtmlib) | 0.944 | 0.988 | 0.975 | 0 | 284 |
+| YOLO11m-pose | 0.919 | 0.988 | 0.963 | 0 | 245 |
+| MediaPipe Pose (full) | 0.836 | 0.963 | 0.825 | 1 | 40 |
+
+What this does and does not say: RTMPose and YOLO11 learnt COCO's own keypoint definitions (where a hip or an ear is
+marked) from COCO train2017, which these val2017 images are not part of; MediaPipe learnt its own 33-landmark
+definition, so part of its gap is a different idea of where a joint is, not only error. These are still photos, not
+takes: act-out also needs MediaPipe's heels, toes and hand points, which COCO's 17 do not have, and runs seven times
+faster. Act-out keeps MediaPipe; RTMPose is the one to try first where body accuracy matters more than speed (rtmlib's
+whole-body model, DWPose's 133 points, has the feet and hands; not yet tried). OpenPose
+(a Caffe build, CMU's non-commercial licence) and Sapiens (0.3 to 2 billion parameters) were not run.
+
 ## OpenToonz scenes (WP-34)
 `export.opentoonz {"name", "shot", "render"}` writes a shot's drawn levels (template "level") as an OpenToonz 1.8
 scene in build/opentoonz/<shot>/: `scene.tnz`, a raster level per drawn character (one PNG per drawing at its

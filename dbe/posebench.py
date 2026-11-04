@@ -73,10 +73,13 @@ def run(bench_json, img_dir, detectors):
         except Exception as e:   # a detector that cannot load here is reported, not hidden
             out[name] = {"error": str(e)[:300]}; continue
         scores, ts = [], []
-        for it in b["items"]:
-            img = np.asarray(Image.open(Path(img_dir) / it["file"]).convert("RGB"))
-            t = time.time(); p = det(img); ts.append(time.time() - t)
-            scores.append(oks(p, it["kp"], it["area"]))
+        try:
+            for it in b["items"]:
+                img = np.asarray(Image.open(Path(img_dir) / it["file"]).convert("RGB"))
+                t = time.time(); p = det(img); ts.append(time.time() - t)
+                scores.append(oks(p, it["kp"], it["area"]))
+        except Exception as e:   # one that fails while running is reported too
+            out[name] = {"error": f"on image {len(scores) + 1}: {str(e)[:300]}"}; continue
         s = np.array(scores)
         out[name] = {"images": len(s), "mean_oks": round(float(s.mean()), 3), "oks>=0.5": round(float((s >= 0.5).mean()), 3), "oks>=0.75": round(float((s >= 0.75).mean()), 3),
                      "missed": int((s == 0).sum()), "ms_per_image": round(1000 * float(np.median(ts[1:] or ts)), 1)}

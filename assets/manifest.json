@@ -552,6 +552,24 @@
    "use": "fetched on first use into DBE_MODELS (~/.cache/doodleberry/models), pinned by sha256 in dbe/actout.py; not in git"
   },
   {
+   "name": "rtmlib 0.0.16 with RTMPose-m (body7, 256x192) and YOLOX-m (HumanArt) ONNX models",
+   "license": "Apache-2.0 (rtmlib, MMPose's RTMPose and YOLOX weights); body7 mixes seven datasets, some research-only",
+   "class": "permissive code and weights; training data partly research-only",
+   "use": "pose.benchmark (WP-12): one of the detectors compared; pip-installed, models fetched by rtmlib into ~/.cache/rtmlib; not in git"
+  },
+  {
+   "name": "Ultralytics 8.4.202 with YOLO11m-pose weights",
+   "license": "AGPL-3.0 (library and weights)",
+   "class": "copyleft (AGPL): fine in-house; flagged if anything it makes goes into a posted film",
+   "use": "pose.benchmark (WP-12): one of the detectors compared; pip-installed (with torchvision 0.29.2+cpu, matching torch 2.14.1+cpu), weights fetched into DBE_MODELS; not in git"
+  },
+  {
+   "name": "COCO val2017 person keypoint annotations (80 images listed in tests/posebench)",
+   "license": "CC BY 4.0 (annotations); the images are Flickr photos under their own licences",
+   "class": "attribution",
+   "use": "pose.benchmark's ground truth (WP-12); the 80 images are fetched from cocodataset.org into ~/.cache/doodleberry/coco-val2017, not stored"
+  },
+  {
    "name": "Pencil2D 0.6.6 (Ubuntu package)",
    "license": "GPL-2.0",
    "class": "copyleft",
