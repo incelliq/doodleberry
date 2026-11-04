@@ -18,7 +18,7 @@
     ]
    },
    "start": 0,
-   "end": "q1.start-0.3",
+   "end": 4.211,
    "start_line": "hook",
    "end_line": "hook",
    "bubbles": false,
@@ -37,10 +37,38 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.909,
+        "end": 1.809,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 1.684,
+        "weight": 3,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "momo"
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        0.4,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
      }
     }
    ],
@@ -71,8 +99,8 @@
      "galaxy?"
     ]
    },
-   "start": "q1.start-0.3",
-   "end": "q2.start-0.3",
+   "start": 4.211,
+   "end": 13.166,
    "start_line": "q1",
    "end_line": "a1",
    "bubbles": false,
@@ -94,10 +122,55 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 4.411,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 4.577,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 12.966,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "momo"
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        4.211,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        4.411,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        6.294,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       13.266
+      ]
      }
     },
     {
@@ -114,10 +187,70 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 6.044,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 10.57,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 8.42,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 6.445,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 7.495,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "ravi"
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        6.244,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        4.261,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        6.444,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       6.344
+      ]
      }
     }
    ],
@@ -162,8 +295,8 @@
      "galaxy?"
     ]
    },
-   "start": "q2.start-0.3",
-   "end": "button.end+1.2",
+   "start": 13.166,
+   "end": 28.071,
    "start_line": "q2",
    "end_line": "button",
    "bubbles": false,
@@ -185,10 +318,69 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 13.486,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 13.856,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 23.699,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 24.099,
+        "end": 25.499,
+        "weight": 3,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "momo"
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        13.166,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        13.366,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        16.138,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        24.099,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       23.999
+      ]
      }
     },
     {
@@ -205,10 +397,71 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 15.888,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 18.249,
+        "end": 19.649,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.779,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 26.621,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "ravi"
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        16.088,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        13.216,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        16.288,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        23.949,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       16.188,
+       26.921
+      ]
      }
     }
    ],
