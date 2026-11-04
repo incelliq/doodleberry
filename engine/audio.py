@@ -480,9 +480,13 @@ def reverb_ir(rt60=1.1, length=1.6, predelay=0.018):
 
 
 def reverb(x, ir, wet):
-    from scipy.signal import fftconvolve
+    # overlap-add (block by block): the same convolution as one FFT of the whole film, in a fraction of the memory
+    # (a 20-minute film's single FFT took gigabytes; WP-38 long-form)
+    from scipy.signal import oaconvolve
     send = x.mean(axis=1) if x.ndim == 2 else x
-    out = np.stack([fftconvolve(send, ir[:, c])[: len(send)] for c in range(2)], axis=1)
+    out = np.empty((len(send), 2))
+    for c in range(2):
+        out[:, c] = oaconvolve(send, ir[:, c])[: len(send)]
     return out * wet
 
 
@@ -511,9 +515,22 @@ def to_st(x, pan=0.0):
     return np.stack([x * l, x * r], axis=1)
 
 
+def _peak4(x2, chunk=1 << 20, pad=64):
+    """per input sample, the largest magnitude of its 4x-oversampled values over all channels, computed in chunks
+    (with `pad` samples of real neighbours either side, far more than the resampling filter reaches), so a long film
+    is never upsampled whole: 4 times a 20-minute stereo mix did not fit in memory (WP-38 long-form)"""
+    n = len(x2); out = np.empty(n)
+    for a in range(0, n, chunk):
+        b = min(n, a + chunk); a0, b0 = max(0, a - pad), min(n, b + pad)
+        up = np.abs(resample_poly(x2[a0:b0], 4, 1, axis=0)).max(axis=1)
+        up = np.pad(up, (0, max(0, 4 * (b0 - a0) - len(up))))[: 4 * (b0 - a0)].reshape(-1, 4).max(axis=1)
+        out[a:b] = up[a - a0: a - a0 + (b - a)]
+    return out
+
+
 def true_peak_db(x):
-    up = resample_poly(x, 4, 1, axis=0)
-    return 20 * np.log10(np.max(np.abs(up)) + 1e-12)
+    x2 = x if x.ndim == 2 else x[:, None]
+    return 20 * np.log10(float(_peak4(x2).max()) + 1e-12)
 
 
 def limit(x, ceiling_db=-1.6):  # leaves headroom for AAC overshoot (checked after encode)
@@ -521,8 +538,7 @@ def limit(x, ceiling_db=-1.6):  # leaves headroom for AAC overshoot (checked aft
     from scipy.ndimage import minimum_filter1d
     c = 10 ** (ceiling_db / 20)
     x2 = x if x.ndim == 2 else x[:, None]
-    up = np.abs(resample_poly(x2, 4, 1, axis=0)).max(axis=1)
-    pk = np.pad(up, (0, max(0, 4 * len(x2) - len(up))))[: 4 * len(x2)].reshape(-1, 4).max(axis=1)
+    pk = _peak4(x2)
     g = minimum_filter1d(np.minimum(1, c / (pk + 1e-12)), size=2 * int(0.005 * SR) + 1)
     k = int(0.004 * SR)
     g = np.convolve(g, np.ones(k) / k, mode='same')
