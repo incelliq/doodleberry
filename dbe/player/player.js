@@ -534,8 +534,13 @@
   const lerpK = (k, i, j, v) => { if (v <= k[0][i]) return k[0][j] + (v - k[0][i]); for (let n = 1; n < k.length; n++) if (v <= k[n][i]) { const a = k[n - 1], b = k[n]; return a[j] + (b[j] - a[j]) * (v - a[i]) / ((b[i] - a[i]) || 1); } return k[k.length - 1][j] + (v - k[k.length - 1][i]); };
   const toFilm = tc => WK ? lerpK(WK, 0, 1, tc) : tc, toCut = tf => WK ? lerpK(WK, 1, 0, tf) : tf;
   window.TIMEWARP = { toFilm, toCut };
-  window.renderFrame = f => window.frameAtTime(toFilm(toCut(t0) + f / FPS));
-  window.FRAMES = Math.round((toCut(t1) - toCut(t0)) * FPS);
+  // WP-15 sub-frame motion blur: ?sub=N&shutter=s makes the page N times as many frames, frame f's sample k at
+  // f + ((k + 0.5) / N - 0.5) * s (centred on the frame, spread over s of its interval: 0.5 is a 180-degree shutter);
+  // shot.render averages each group of N back into one frame
+  const SUB = Math.max(1, Math.round(+q.get('sub') || 1)), SHUT = q.get('shutter') != null ? +q.get('shutter') : 0.5;
+  window.renderFrame = SUB === 1 ? f => window.frameAtTime(toFilm(toCut(t0) + f / FPS))
+    : g => { const f = Math.floor(g / SUB), k = g - f * SUB; return window.frameAtTime(toFilm(toCut(t0) + (f + ((k + 0.5) / SUB - 0.5) * SHUT) / FPS)); };
+  window.FRAMES = Math.round((toCut(t1) - toCut(t0)) * FPS) * SUB;
   // ---------- foley events (plan 2.7): footsteps on contacts, thuds on landings, swishes on fast moves, pops on catches ----------
   // Returns [{t, type, gain, pan}] for the whole film, computed from the same poses the frames show.
   function foleyEvents() {
@@ -649,7 +654,7 @@
       const q = Puppet.pointOf(cc.p, part, null, cc.x, cc.y, { ...cc.pose, s: cc.s, flip: cc.flip });
       out.push([+t.toFixed(3), +(W / 2 + (q[0] - VIEW[0]) * VIEW[2]).toFixed(1), +(H / 2 + (q[1] - VIEW[1]) * VIEW[2]).toFixed(1)]); }
     return out; };
-  window.FILM = { width: W, height: H, fps: FPS, frames: window.FRAMES, ready: false };
+  window.FILM = { width: W, height: H, fps: FPS * SUB, frames: window.FRAMES, ready: false };
   (document.fonts ? Promise.all([document.fonts.load('700 40px Fredoka'), document.fonts.load("40px 'Patrick Hand'"), document.fonts.load("30px 'Atkinson Mono'"), document.fonts.load("40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"), document.fonts.load("700 40px 'Noto Sans Sinhala'", "\u0DB6\u0DD2"),
     // the fonts of every other writing system the film's text uses (WP-25)
     ...SFONTS.filter(f => f.ranges && reOf([f]).test(ALLTXT)).flatMap(f => [document.fonts.load(`40px '${f.family}'`, f.sample), document.fonts.load(`700 40px '${f.family}'`, f.sample)])]) : Promise.resolve()).then(() => { window.FILM.ready = true; window.ready = true; });

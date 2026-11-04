@@ -758,6 +758,25 @@ def _render_page(page, query, out, log=None):
     return rec
 
 
+def _render_svg(name, sh, query, out, fps, log=None):
+    """the SVG player's render of a shot; with the shot style's "motion_blur": {"samples": N, "shutter": 0.5} (WP-15),
+    N samples per frame spread over the shutter, averaged back into one frame (ffmpeg tmix), frame keys joined per frame"""
+    mb = (sh.get("style") or {}).get("motion_blur")
+    if not mb:
+        return _render_page(_player_page(name), query, out, log=log)
+    n = max(2, int(mb.get("samples", 4))); shut = float(mb.get("shutter", 0.5))
+    hi = out.with_name(out.stem + ".sub.mp4")
+    rec = _render_page(_player_page(name), f"{query}&sub={n}&shutter={shut}", hi, log=log)
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(hi), "-vf", f"tmix=frames={n},select='eq(mod(n\\,{n})\\,{n - 1})',setpts=N/{fps}/TB",
+          "-r", str(fps), "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", "-tune", "animation", str(out)])
+    hk = _json(Path(str(hi) + ".keys.json"))
+    if hk:   # a blurred frame is drawn by its samples: its key is theirs together
+        fr = hk.get("frames") or []
+        Path(str(out) + ".keys.json").write_text(json.dumps({**hk, "frames": ["|".join(str(x) for x in fr[i:i + n]) for i in range(0, len(fr), n)]}))
+    hi.unlink(missing_ok=True); Path(str(hi) + ".keys.json").unlink(missing_ok=True)
+    return {**rec, "motion_blur": {"samples": n, "shutter": shut}}
+
+
 def _set_video(name, sh, bdir):
     """the shot's set (with drifting clouds, ground shadows) rendered as video by the player, for compositing"""
     v = bdir / f"{sh['id']}.set.mp4"
@@ -803,13 +822,13 @@ def shot_render(name, shot, renderer=""):
     lg = {"film": name, "shot": shot, "renderer": renderer, **feat, "bake_s": bake_s, **({"probe": pr} if pr else {})}
     if renderer == "svg" and (pre or post):   # handles for transitions (WP-15): rendered, then the shot itself cut from them
         hd = bdir / f"{shot}.hd.mp4"
-        _render_page(_player_page(name), f"shot={shot}&pre={pre / fps}&post={post / fps}", hd, log=lg)
+        _render_svg(name, sh, f"shot={shot}&pre={pre / fps}&post={post / fps}", hd, fps, log=lg)
         _cut_frames(hd, pre, baked["frames"], out)
         hk = _json(Path(str(hd) + ".keys.json"))
         if hk:   # the exact shot's frame keys, cut from the handles' like its frames
             Path(str(out) + ".keys.json").write_text(json.dumps({**hk, "frames": hk["frames"][pre:pre + baked["frames"]]}))
     elif renderer == "svg":
-        _render_page(_player_page(name), f"shot={shot}", out, log=lg)
+        _render_svg(name, sh, f"shot={shot}", out, fps, log=lg)
     elif renderer == "synfig":
         # characters by Synfig (alpha), over the animated set from the player
         setv = _set_video(name, sh, bdir)
@@ -5909,6 +5928,10 @@ def test_golden(update=False, film=""):
         bad, meas = _boilmove_test()
         failed += 1 if bad else 0
         results.append({"boilmove": "the line boil advances while a character moves and holds still when nothing does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "motionblur":   # WP-15: sub-frame motion blur
+        bad, meas = _motionblur_test()
+        failed += 1 if bad else 0
+        results.append({"motionblur": "a fast move rendered with sub-frame motion blur: same frames, each the mean of its samples, visibly smeared", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10578,6 +10601,44 @@ def _boilmove_test():
             return round(float(np.abs(ims[0] - ims[1]).mean()), 4)
         meas["moving"] = diff(0.50, 0.59); meas["still"] = diff(2.20, 2.29); meas["ordinary_still"] = diff(5.20, 5.29)
         if not (meas["moving"] > 0.05 and meas["still"] < 0.01 and meas["ordinary_still"] > 0.05):   # still: only a spring settling, far under a boil step
+            bad.append(meas)
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
+    return bad, meas
+
+
+def _motionblur_test():
+    """WP-15 sub-frame motion blur. Pip carried 700 px across the frame in 0.5 s, rendered by shot.render with the style
+    "motion_blur": {"samples": 8, "shutter": 1} and without: the same number of frames; a blurred frame equals the mean
+    of the eight sub-frame stills the player draws at their times (mean difference under 2.5 on 0-255, encoding
+    included); and it changes a moving frame (against the sharp render) at least five times as much as a still one (Pip has stopped:
+    only encoding noise)."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    zz = FILMS / "zz-mblur"; shutil.rmtree(zz, ignore_errors=True); zz.mkdir()
+    try:
+        place = [[0, {"x": 200, "y": 1500, "s": 1.0}], [0.5, {"x": 900, "y": 1500, "s": 1.0}], [1.0, {"x": 900, "y": 1500, "s": 1.0}]]
+        cast = [{"puppet": "puppet/examples/pip.puppet.json", "place": place, "timeline": {"blink": False, "clips": []}}]
+        shots = [{"id": "s1", "set": "plain", "start": 0, "end": 1, "bubbles": False, "cast": cast, "style": {"motion_blur": {"samples": 8, "shutter": 1}}},
+                 {"id": "s2", "set": "plain", "start": 0, "end": 1, "bubbles": False, "cast": cast}]
+        (zz / "shots.json").write_text(json.dumps({"title": "mblur", "size": [1080, 1920], "fps": 30, "captions": False, "shots": shots}))
+        (zz / "script.json").write_text('{"lines": [{"id": "l1", "text": "Whoosh."}]}'); (zz / "timing.json").write_text('{"lines": []}')   # a valid film; nothing is voiced
+        shot_render("zz-mblur", "s1"); shot_render("zz-mblur", "s2")
+        def frames(p_):
+            raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(p_), "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True).stdout
+            return np.frombuffer(raw, np.uint8).reshape(-1, 1920, 1080).astype(float)
+        blur, sharp = frames(zz / "build" / "shots" / "s1.mp4"), frames(zz / "build" / "shots" / "s2.mp4")
+        meas["frames"] = [len(blur), len(sharp)]
+        f = 6; pp = _player_page("zz-mblur"); subs = []
+        for k in range(8):
+            t = (f + ((k + 0.5) / 8 - 0.5) * 1.0) / 30; png = zz / f"sub_{k}.png"
+            _run(["node", "tools/still.mjs", "file://" + str(pp) + "?shot=s1&rastercache=0&captions=0", f"{t:.5f}", "1", str(png)], timeout=600)
+            subs.append(np.asarray(Image.open(png).convert("L")).astype(float))
+        mean = np.mean(subs, axis=0); meas["vs_mean_of_samples"] = round(float(np.abs(blur[f] - mean).mean()), 3)
+        # blur changes a moving frame and leaves a still one alone (Pip stops at 0.5 s): blurred against sharp
+        meas["blur_vs_sharp"] = {"moving_frame_6": round(float(np.abs(blur[6] - sharp[6]).mean()), 3), "still_frame_25": round(float(np.abs(blur[25] - sharp[25]).mean()), 3)}
+        if meas["frames"][0] != meas["frames"][1] or meas["vs_mean_of_samples"] > 2.5 or meas["blur_vs_sharp"]["moving_frame_6"] < 5 * max(0.05, meas["blur_vs_sharp"]["still_frame_25"]):
             bad.append(meas)
     finally:
         shutil.rmtree(zz, ignore_errors=True)

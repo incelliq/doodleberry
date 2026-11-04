@@ -1303,6 +1303,14 @@ five words already spoken at 1.7 s ("did you know the library", none of the rest
 The same test draws a line off both ways (kit `draw` with `off`): half way through, the half it clears first is
 empty (ink 0.004 against 0.35) and the other still drawn; after it, nothing is left.
 
+**Sub-frame motion blur**: a shot style's `"motion_blur": {"samples": 8, "shutter": 0.5}` renders `samples` moments
+per frame, spread over `shutter` of the frame interval and centred on the frame's time (0.5 is a 180-degree shutter),
+and averages each group back into one frame (the player's `?sub=N&shutter=s`, then ffmpeg `tmix`); each frame's key
+is its samples' keys together, so film.diff still sees what changed. It costs `samples` times the render. Test
+`motionblur`: Pip carried 700 px in 0.5 s with 8 samples and a full shutter: 30 frames as without; a blurred frame
+equals the mean of its eight samples drawn as stills (0.12 on 0-255, encoding included); blur changes a moving frame
+(3.0 against the sharp render) and leaves a still one alone (0.04).
+
 **Boil only while moving**: a shot style's `"boil": {"while_moving": true, "still": 0.5}` advances the line boil on a
 boil step only if a character moved during it (its root, or any part beyond `still` degrees or px), so a held drawing
 holds still and the lines live when the acting does; on a still step the boil keeps the phase of the last moving one
