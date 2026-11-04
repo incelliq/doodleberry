@@ -954,6 +954,21 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Character family looks (WP-16)
+A family is a look shared by a set of characters, on top of `cast.generate`: `line` (stroke weight factor), `eye`
+(eye and pupil size factor), `head` (head size factor) and `ink` (line colour), plus palettes the members' tops,
+bottoms and hair are drawn from (cast/families.json: `house`, the style of every character so far; `bold-round`,
+heavy navy line with bigger heads and eyes; `fine`, thin warm-grey line, smaller eyes). `cast.family {"family",
+"members": [{id, spec}]}` makes and registers each member (the member's own spec wins; colours go round the family's
+palettes by the member's place, so a family stays varied) and marks the cast entry with its family. The generator
+takes the same `look` in any spec. With no look, a generated character is exactly as before.
+
+Test `family`: three members (a teen, an adult with glasses, an elder) in each family. Inside a family the median
+stroke width is the same for all; against the house family, line weight, eye radius and head radius stand at the
+family's factors (bold-round 1.5, 1.456, 1.12; fine 0.7, 0.816, 0.96; each within 3%); ink and colours come from the
+family; every member lints clean; a shot with one member of each family draws alike in Synfig, Lottie and Grease
+Pencil (1.0).
+
 ## Map board (WP-16)
 `"set": "map"` puts a framed map on a wall (the characters stand in front of it), or fills the frame with
 `"full": true`. The map data are Natural Earth countries (world-atlas TopoJSON, public domain) projected by d3-geo's
@@ -966,15 +981,15 @@ projection (`MAPS.project`), so a pin lands where the data puts the place. `set_
 | key | what |
 |---|---|
 | `map` | which map (default `world`) |
-| `view` | `[lon0, lat0, lon1, lat1]` shown whole in the board, or keys `[{t, view}]` eased between (a pan or zoom) |
-| `highlight` | `[{country, colour, at}]`: a country fills in from `at` seconds |
-| `pins` | `[{lon, lat, label, at, colour}]`: a pin drops in with a bounce, then its label |
-| `routes` | `[{from, to, at, dur, colour, bend}]`: from and to are `[lon, lat]` or a country; a dashed curve draws itself |
-| `boxes` | `[{lon0, lat0, lon1, lat1, label, at, colour}]`: a region outlined (Natural Earth bends its sides) |
-| `labels` | `[{country or lon, lat, text, at}]` |
+| `view` | `[lon0, lat0, lon1, lat1]` shown whole in the board, or keys `[{t, view}]` eased between (a pan or zoom); `t` in film time, as a line reference (`"ask.start"`) |
+| `highlight` | `[{country, colour, start}]`: a country fills in from `start` |
+| `pins` | `[{lon, lat, label, start, colour}]`: a pin drops in with a bounce, then its label |
+| `routes` | `[{from, to, start, dur, colour, bend}]`: from and to are `[lon, lat]` or a country; a dashed curve draws itself |
+| `boxes` | `[{lon0, lat0, lon1, lat1, label, start, colour}]`: a region outlined (Natural Earth bends its sides) |
+| `labels` | `[{country or lon, lat, text, start}]` |
 | `title`, `land`, `sea`, `wall`, `floor`, `fit` | the board's title strip and colours; `fit: "cover"` fills the board instead |
 
-Faint swell marks drift on the sea so a held map never freezes. Every label is text, so it translates with the film.
+Times are film seconds written as line references (`"hook.start+1.2"`), resolved like every shot time, so re-voicing keeps the map in step. Faint swell marks drift on the sea so a held map never freezes. Every label is text, so it translates with the film.
 Setup: `bash tools/setup.sh maps` (d3-geo 3.1.1, topojson-client 3.1.0, world-atlas 2.0.2, pinned in
 tools/mapboard/package.json; ISC). Test `mapboard`: on every map the set's projection agrees with d3-geo's on a
 7.5 by 5 degree grid (largest difference 0), five capitals are inside their countries, the same time draws the same

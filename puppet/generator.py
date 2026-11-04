@@ -41,11 +41,15 @@ line = lambda d, width=4, col="ink": {"d": d, "fill": "none", "stroke": col, "wi
 
 AGE = {"child": (0.74, 1.12), "teen": (0.9, 1.04), "adult": (1.0, 1.0), "elder": (0.97, 1.0)}   # body height scale, head scale
 BUILD = {"slim": 0.86, "average": 1.0, "broad": 1.18}
+# family look (WP-16): line = stroke weight factor, eye = eye and pupil size factor, head = head size factor, ink = line colour
+LOOK = {"line": 1.0, "eye": 1.0, "head": 1.0, "ink": "#24160e"}
 
 
 def generate(spec):
     name = spec.get("name", "Guest")
     kb, kh = AGE.get(spec.get("age", "adult"), AGE["adult"])
+    look = {**LOOK, **(spec.get("look") or {})}   # WP-16: a family look shared by a set of characters (cast/families.json)
+    kh *= look["head"]
     wb = BUILD.get(spec.get("build", "average"), 1.0)
     ground = T["ground"]; P0 = {p["id"]: p["pivot"] for p in T["parts"]}
     neck_y0 = P0["neck"][1]
@@ -169,11 +173,12 @@ def generate(spec):
         add(ft, st(f"M{f(fx - 26)} {f(fy - 14)} C{f(fx - 30)} {f(fy + 14)} {f(fx - 18)} {f(ground - 10)} {f(fx)} {f(ground)} L{f(fx + 50)} {f(ground)} C{f(fx + 62)} {f(ground - 2)} {f(fx + 60)} {f(fy + 12)} {f(fx + 40)} {f(fy + 4)} L{f(fx + 16)} {f(fy - 16)} Z", "shoe"))
 
     # ---- face swaps (scaled with the head)
-    E = [H(272, 262), H(328, 262)]; s = kh
+    E = [H(272, 262), H(328, 262)]; s = kh * look["eye"]   # eyes and pupils follow the family's eye size
     eyes = {"open": [st(ellipse(x, y, 13 * s, 16 * s), "eye", width=3.5) for x, y in E],
             "half": [st(f"M{f(x - 13 * s)} {f(y)} A{f(13 * s)} {f(9 * s)} 0 0 0 {f(x + 13 * s)} {f(y)} Z", "eye", width=3.5) for x, y in E] + [line(f"M{f(x - 14 * s)} {f(y)} L{f(x + 14 * s)} {f(y)}", 3.5) for x, y in E],
             "closed": [line(f"M{f(x - 13 * s)} {f(y + 2)} Q{f(x)} {f(y + 10 * s)} {f(x + 13 * s)} {f(y + 2)}", 4) for x, y in E]}
     pupils = {"default": [{"d": ellipse(x, y + 1, 7 * s, 8 * s), "fill": "iris"} for x, y in E] + [{"d": ellipse(x, y + 1, 4 * s, 4.5 * s), "fill": "ink"} for x, y in E] + [{"d": ellipse(x + 2.5 * s, y - 2.5 * s, 2 * s, 2 * s), "fill": "eye"} for x, y in E]}
+    s = kh   # brows and mouth keep the head's scale
     brow = lambda di, do: [line(f"M{f(x - 14 * s)} {f(y - 26 * s + (do if x < 300 else di))} Q{f(x)} {f(y - 34 * s)} {f(x + 14 * s)} {f(y - 26 * s + (di if x < 300 else do))}", 5, "hair" if hs not in ("bald", "hijab") else "ink") for x, y in E]
     brows = {"neutral": brow(0, 0), "raised": brow(-8, -8), "worried": brow(-8, 4), "angry": brow(8, -4)}
     Mx, My = H(300, 320)
@@ -201,7 +206,7 @@ def generate(spec):
         turn["drives"].append({"target": "shift.face_extras", "keys": [[-1, [-14 * kh, 0]], [0, [0, 0]], [1, [14 * kh, 0]]]})
     palette = {"skin": spec.get("skin", "#d9a27a"), "hair": hair.get("color", "#3a2618"), "cloth1": top.get("color", "#e0703c"), "cloth2": bot.get("color", "#2f4f6f"),
                "cloth3": top.get("color2", "#f4f1e8"), "shoe": spec.get("shoes", "#f1f1ee"), "eye": "#ffffff", "iris": spec.get("eyes", "#5a3a22"),
-               "ink": "#24160e", "blush": "#ff8f8a", "mouth": "#6a2420", "tongue": "#e27a76"}
+               "ink": look["ink"], "blush": "#ff8f8a", "mouth": "#6a2420", "tongue": "#e27a76"}
     springs = {"hair_back": {"driver": "head", "freq": 2.2, "damping": 0.3, "gain": 1.3 if hs in ("long", "ponytail", "bun") else 0.8, "limit": 20}}
     parts["head"]["limits"] = [-30, 30]   # v0.6 joint limit: no clip, look-at or spring can wring the neck
     chains = {}
@@ -235,6 +240,11 @@ def generate(spec):
         chains["tail"] = {"parts": ids, "tip": [round(pts[-1][0], 1), round(pts[-1][1], 1)], "wave": {"amp": tail.get("wag", 7), "freq": 0.55, "lag": 0.7}}
         for i, pid in enumerate(ids[1:], 1):
             springs[pid] = {"driver": ids[i - 1], "freq": 2.6, "damping": 0.35, "gain": 0.7, "limit": 25}
+    if look["line"] != 1.0:   # the family's line weight: every stroke, body and face alike
+        for strokes in [p["strokes"] for p in parts.values()] + [sh for sw in swaps.values() for sh in sw["shapes"].values()]:
+            for k in strokes:
+                if "width" in k:
+                    k["width"] = round(k["width"] * look["line"], 2)
     return {"format": "doodleberry.puppet", "version": "0.6", "name": name, "template": "humanoid", "artboard": T["artboard"], "ground": ground,
             "palette": palette, "parts": parts, "swaps": swaps, "controls": {"turn": turn}, "springs": springs, **({"chains": chains} if chains else {}),
             "anchors": {"bubble": [round(hc[0], 1), round(hc[1] - hry - 20, 1)]},

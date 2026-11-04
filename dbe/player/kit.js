@@ -46,7 +46,8 @@
   function title(o, t, ctx) {
     const W = ctx.W, words = String(o.text).split(/\s+/), fs = o.size || 120, per = o.per_word ?? 0.14, s = since(o, t);
     const font = fontFor(o.text, BODY), cw = sinhala(o.text) ? 0.62 : 0.56;
-    const lens = words.map(w => w.length * fs * cw), gap = fs * 0.28, total = lens.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
+    const ew = c => /[A-Z]/.test(c) ? cw * 1.22 : /[0-9]/.test(c) ? cw * 1.08 : cw;   // Fredoka Bold capitals are wider: estimated at 0.56 em they overlapped and swallowed the gaps
+    const lens = words.map(w => [...w].reduce((a, c) => a + ew(c), 0) * fs), gap = fs * 0.28, total = lens.reduce((a, b) => a + b, 0) + gap * (words.length - 1);
     let x = (o.x ?? W / 2) - total / 2, out = '';
     words.forEach((w, i) => {
       const u = (s - i * per) / 0.32; if (u <= 0) { x += lens[i] + gap; return; }

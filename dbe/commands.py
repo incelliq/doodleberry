@@ -329,6 +329,41 @@ def cast_generate(spec, id):
     return {"puppet": str(out.relative_to(ROOT)), "registered": reg["registered"]["id"], "warnings": reg.get("warnings")}
 
 
+def family_spec(fam, member, i):
+    """WP-16: a member's generator spec in a family's look: the family's look, and clothes and hair from its palettes
+    (by the member's place in the family, so a family stays varied), under the member's own spec"""
+    sp = dict(member.get("spec") or {})
+    top = {"color": fam["cloth"][i % len(fam["cloth"])], **(sp.get("top") or {})}
+    bottom = {"color": fam["bottoms"][i % len(fam["bottoms"])], **(sp.get("bottom") or {})}
+    hair = {"color": fam["hair"][i % len(fam["hair"])], **(sp.get("hair") or {})}
+    return {**sp, "top": top, "bottom": bottom, "hair": hair, "look": {**fam["look"], **(sp.get("look") or {})}}
+
+
+@command("cast.family", family=("string", "a family in cast/families.json (house, bold-round, fine, ...)"),
+         members=("array", "[{id, spec}]: each member's own generator spec (name, build, age, skin, hair style, ...); the family supplies the look and colours"),
+         register=("boolean", "add them to the cast library (else only report the specs)", True))
+def cast_family(family, members, register=True):
+    """Make a set of characters that share a family look (WP-16): one line weight and ink, one eye and head size, and
+    clothes and hair from the family's palettes, on top of cast.generate. Each member's own spec wins."""
+    fams = _json(ROOT / "cast" / "families.json")["families"]
+    if family not in fams:
+        raise ValueError(f"no family {family!r} (have {', '.join(fams)})")
+    out = []
+    for i, m in enumerate(members):
+        sp = family_spec(fams[family], m, i)
+        if register:
+            r = cast_generate(sp, m["id"])
+            idx = _json(ROOT / "cast" / "index.json")
+            for e in idx["puppets"]:
+                if e["id"] == m["id"]:
+                    e["family"] = family
+            (ROOT / "cast" / "index.json").write_text(json.dumps(idx, indent=1, ensure_ascii=False) + "\n")
+            out.append({"id": m["id"], "puppet": r["puppet"], "spec": sp})
+        else:
+            out.append({"id": m["id"], "spec": sp})
+    return {"family": family, "look": fams[family]["look"], "members": out}
+
+
 @command("acting.plan", name=("string", "film (voiced: run voice.build first)"))
 def acting_plan(name):
     """Gesture planner: every speaking cast member acts from the script and the voice with no hand-placed clips:
@@ -1928,7 +1963,12 @@ def film_data(name, refresh=False, revoice=False, render=False):
     old_hash = hashes()
     from .databind import bind_text
     sc = _json(d / "script.json", {})
-    old_lines = {ln["id"]: bind_text(ln["text"], old_data, sc.get("lang")) for ln in sc.get("lines", []) if "{{" in ln.get("text", "")} if old_data else {}
+    def _bound(text, data):   # a line naming a value the old data.json did not have yet reads as changed, not as an error
+        try:
+            return bind_text(text, data, sc.get("lang"))
+        except KeyError:
+            return None
+    old_lines = {ln["id"]: _bound(ln["text"], old_data) for ln in sc.get("lines", []) if "{{" in ln.get("text", "")} if old_data else {}
     ran = []
     for py in sorted(an.glob("*.py")):
         subprocess.run([PY, py.name], cwd=an, check=True, capture_output=True, text=True, timeout=1800)
@@ -5406,6 +5446,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "family":   # WP-16: character family looks
+        bad, meas = _family_test()
+        failed += 1 if bad else 0
+        results.append({"family": "three families of three: inside a family every member has the same line weight, ink, eye and head size and colours from the family's palettes; between families those differ by the family's factors; every member lints clean; a mixed shot draws alike in Synfig, Lottie and Grease Pencil", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "mapboard":   # WP-16: the map board set
         bad, meas = _mapboard_test()
         failed += 1 if bad else 0
@@ -9524,6 +9568,71 @@ def _templates_test():
     return bad, meas
 
 
+
+
+def _family_test():
+    """WP-16 family looks. Three members in each of cast/families.json's families, made with cast.family's specs
+    (not registered): measured from the puppets, the median stroke width, the open-eye radius and the head radius are
+    equal inside a family (within 2%) and stand to the house family's as the family's line, eye and head factors (within
+    3%); every stroke is in the family's ink; clothes and hair are from the family's palettes; and every member passes
+    puppet lint. Then one member of each family in one scratch shot: renderer parity against Synfig, Lottie and
+    Grease Pencil."""
+    import re as _re
+    import statistics as _st
+    sys.path.insert(0, str(ROOT / "puppet"))
+    from generator import generate
+    from . import rparity as RP
+    bad, meas = [], {}
+    fams = _json(ROOT / "cast" / "families.json")["families"]
+    people = [{"id": "a", "spec": {"name": "A", "build": "slim", "age": "teen", "skin": "#c68a62", "hair": {"style": "bob"}}},
+              {"id": "b", "spec": {"name": "B", "build": "broad", "age": "adult", "skin": "#8d5a3b", "hair": {"style": "short"}, "accessories": ["glasses"]}},
+              {"id": "c", "spec": {"name": "C", "build": "average", "age": "elder", "skin": "#e8b48e", "hair": {"style": "bun"}}}]
+    def metrics(pz):
+        widths = [k["width"] for p in pz["parts"].values() for k in p["strokes"] if "width" in k]
+        eye = [float(x) for x in _re.findall(r"A([\d.]+) ", pz["swaps"]["eyes"]["shapes"]["open"][0]["d"])][:1]
+        head = next((float(x) for k in pz["parts"]["head"]["strokes"] for x in _re.findall(r"A([\d.]+) ", k["d"])[:1]), None)
+        return {"line": _st.median(widths), "eye": eye[0] if eye else None, "head": head}
+    made, by = {}, {}
+    for fname, fam in fams.items():
+        rows = []
+        for i, m in enumerate(people):
+            sp = family_spec(fam, m, i); pz = generate({**sp, "id": f"{fname}-{m['id']}"})
+            made[(fname, m["id"])] = pz
+            mt = metrics(pz); mt["ink_ok"] = pz["palette"]["ink"] == fam["look"]["ink"]
+            mt["colours_ok"] = pz["palette"]["cloth1"] in fam["cloth"] and pz["palette"]["cloth2"] in fam["bottoms"] and pz["palette"]["hair"] in fam["hair"]
+            rows.append(mt)
+        by[fname] = rows
+    house = by["house"]
+    for fname, rows in by.items():
+        lk = fams[fname]["look"]; r0 = rows[0]
+        same = all(abs(r[k] / r0[k] - 1) < 0.02 for r in rows for k in ("line",))
+        # eye and head radius also scale with age (the head scale of a child or teen): compare member by member with house
+        ratios = {k: [round(r[k] / h[k], 3) for r, h in zip(rows, house)] for k in ("line", "eye", "head")}
+        want = {"line": lk["line"], "eye": lk["eye"] * lk["head"], "head": lk["head"]}
+        ok = same and all(abs(v / want[k] - 1) < 0.03 for k in ratios for v in ratios[k]) and all(r["ink_ok"] and r["colours_ok"] for r in rows)
+        meas[fname] = {"ratios_to_house": ratios, "want": want, "line_same_in_family": same, "ink_and_colours": all(r["ink_ok"] and r["colours_ok"] for r in rows)}
+        if not ok:
+            bad.append(f"{fname}: {meas[fname]}")
+    name = "zz-family"; d_ = FILMS / name
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        cast, lint = [], {}
+        for j, fname in enumerate(fams):
+            pz = made[(fname, people[j]["id"])]; pth = d_ / f"{fname}.puppet.json"; pth.write_text(json.dumps(pz))
+            rel = str(pth.relative_to(ROOT)); lint[fname] = len(puppet_lint(rel)["issues"])
+            cast.append({"puppet": rel, "place": {"x": 220 + 320 * j, "y": 1500, "s": 0.75}, "timeline": {"clips": [{"clip": "idle", "start": 0, "fadeIn": 0}, {"clip": "wave_R", "start": 0.3 + 0.3 * j}]}})
+        meas["lint_issues"] = lint
+        if any(lint.values()):
+            bad.append(f"lint: {lint}")
+        (d_ / "shots.json").write_text(json.dumps({"title": "family", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "renderer": "svg", "set": "plain", "start": 0, "end": 2.0, "bubbles": False, "cast": cast}]}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        rp = RP.run(name, "s1", times=[0.5, 1.5])
+        meas["parity"] = {k: (v.get("min"), max(v.get("colour_diff") or [0])) for k, v in rp["renderers"].items()}
+        if not rp["ok"]:
+            bad.append(f"parity: {meas['parity']}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _mapboard_test():
     """WP-16 map board. tools/mapboard/check.mjs: for every map in sets/maps/, MAPS.project (sets/map.js) agrees with
