@@ -1173,13 +1173,18 @@ several machines the workers share the repository and out/farm over a network fi
 acts and renders a synthetic counting episode of a given length on the farm and reports its time, memory, cache size,
 assembly time and QA.
 
-**Measured** on a seven-shot synthetic dialogue (1,768 frames), with other work on the fourth core: one worker
-took 2,145 s and three workers 756 s, 0.353 of the time, each busy 746 to 754 s.
+**Measured** on a seven-shot synthetic dialogue (1,768 frames, four shots in the 3D layer): one worker took 894 s
+and three workers 320 s, 0.358 of the time (the best split of these shots over three workers: 0.353), each busy
+262 to 318 s; every shot's decoded frames identical (frame MD5) between the two renders; assembly re-rendered
+nothing; a second run took all seven shots from the shared cache in 0.2 s.
+
+Pinned workers run with `tools/farm/keep_affinity.c` preloaded (built by `farm.render`). SwiftShader, Chromium's
+software WebGL, pins its own worker threads to core 0 upwards whatever cores the process may use, so before it every
+worker drew its 3D on core 0: the same film then took 0.609 of one worker's time, each shot 1.8 times slower, with
+frames still identical. (The first run, with other work on the fourth core, took 2,145 s and 756 s; 3 of its 7
+shots then differed frame by frame, which has not recurred in the two runs since.)
 
 **Open:**
-- In that run, 3 of the 7 shots differed frame by frame between the two renders. Repeated one-worker and
-  three-worker renders of a smaller film, and its assembly, came out identical. The test now records which frames
-  differ and whether their markup or only their pixels changed, for the next run on a quiet machine.
 - The 20-minute long-form run (`farm.longform`) is still to be measured.
 
 The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
