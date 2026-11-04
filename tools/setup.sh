@@ -15,6 +15,7 @@
 #   bash tools/setup.sh opentoonz  OpenToonz 1.8.0's renderer (tcomposer) built from source (git tag checked by commit) into
 #                                  /opt/opentoonz, with its stuff folder: export.opentoonz's render check (WP-34; BSD-3-Clause; ~25 min on 4 cores)
 #   bash tools/setup.sh plates     Servier Medical Art anatomy plates (CC BY 4.0) into assets/external/plates, sha256-checked (WP-16)
+#   bash tools/setup.sh live       MediaPipe Tasks Vision for the browser (npm, pinned in tools/live/package.json): the /live page (WP-12)
 #   bash tools/setup.sh maps       d3-geo, topojson-client and world-atlas (npm, pinned in tools/mapboard/package.json) to make and check map board data (WP-16)
 #   bash tools/setup.sh voices [de,uk,...]  Piper voices from voices/registry.json: those films use ("fetched"), or every voice
 #                                  of the languages named (checked by sha256 or the catalogue's md5) (WP-25)
@@ -135,6 +136,12 @@ dotlottie_deps() {
   (cd tools/dotlottie && npm install --no-audit --no-fund)
 }
 
+live_deps() {
+  # @mediapipe/tasks-vision (Apache-2.0): Pose Landmarker in WebAssembly for the /live page, a character following the webcam (WP-12)
+  if [ -d "tools/live/node_modules/@mediapipe/tasks-vision" ]; then echo "live: tasks-vision ok"; return; fi
+  (cd tools/live && npm install --no-audit --no-fund)
+}
+
 godot_dl() {
   # Godot 4.5-stable (MIT), the official Linux build checked against the release's SHA512-SUMS: renders export.godot's projects (WP-30)
   local ver="4.5-stable" sha="b5bd5d8a4dd3f44de1d123361beabaafa4825dd05b5e20fd2bfa540f32594f81d82e7c4e86fae420f4faee77d9def573b570f8b156e9c84a4dc2d5123d09e852"
@@ -195,13 +202,14 @@ case "$what" in
   physics) physics_deps ;;
   dotlottie) dotlottie_deps ;;
   maps) map_deps ;;
+  live) live_deps ;;
   plates) plates_dl ;;
   godot) godot_dl ;;
   opentoonz) opentoonz_build ;;
   voices) voices_dl "$@" ;;
   locales) locales_deps ;;
   provenance) provenance_dl ;;
-  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; map_deps; voices_dl; provenance_dl ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|plates|godot|opentoonz|voices|locales|provenance]"; exit 2 ;;
+  all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; map_deps; live_deps; voices_dl; provenance_dl ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|live|plates|godot|opentoonz|voices|locales|provenance]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

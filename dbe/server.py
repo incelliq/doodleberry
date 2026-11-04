@@ -10,6 +10,8 @@ from pathlib import Path
 
 from . import ROOT, call, describe
 
+mimetypes.add_type("text/javascript", ".mjs"); mimetypes.add_type("application/wasm", ".wasm")   # the live page's MediaPipe module
+
 STUDIO = Path(__file__).parent / "studio" / "index.html"
 JOBS, LOCK = {}, threading.Lock()
 
@@ -50,6 +52,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (STUDIO.parent / "desk.html").read_bytes(), "text/html; charset=utf-8")
         if p == "/actout":     # plan 3.5: a phone or webcam take becomes a character's clip
             return self._send(200, (STUDIO.parent / "actout.html").read_bytes(), "text/html; charset=utf-8")
+        if p == "/live":       # WP-12: a character following the webcam live (MediaPipe in the browser)
+            return self._send(200, (STUDIO.parent / "live.html").read_bytes(), "text/html; charset=utf-8")
+        if p.startswith("/models/"):   # the act-out models the live page loads (only those, from the models folder)
+            from .actout import MODEL_FILES, model_path
+            names = {v[0]: k for k, v in MODEL_FILES.items()}; fn = p.rsplit("/", 1)[1]
+            if fn in names:
+                return self._send(200, model_path(names[fn]).read_bytes(), "application/octet-stream")
         if p == "/api":
             return self._send(200, describe())
         if p.startswith("/api/jobs/"):

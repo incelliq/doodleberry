@@ -1,0 +1,8 @@
+{
+  "name": "doodleberry-live",
+  "private": true,
+  "description": "MediaPipe Tasks Vision (Apache-2.0) in the browser: the pose landmarker for live tracking on /live (WP-12), same version as the Python mediapipe act-out uses",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.2.0"
+  }
+}

@@ -2505,7 +2505,79 @@ def review_fix(name, id=""):
     return {"fixed": [n["id"] for n in out if n["status"] == "verified"], "needs_human": [n["id"] for n in out if n["status"] == "needs_human"], "notes": out}
 
 
+def _live_test():
+    """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
+    clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
+    against actout.detect + retarget on the same frames as a video file."""
+    import shutil, subprocess, tempfile, threading
+    import numpy as np
+    from http.server import ThreadingHTTPServer
+    from . import actout as AO
+    from .server import Handler
+    if not (ROOT / "tools/live/node_modules/@mediapipe/tasks-vision").exists():
+        return [], {"skipped": "bash tools/setup.sh live (npm install in tools/live) first"}
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler); threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}/live?puppet=cast/generated/ravi.puppet.json"
+    tmp = Path(tempfile.mkdtemp(prefix="livetest_")); bad, meas = [], {}
+    pz = _json(ROOT / "cast" / "generated" / "ravi.puppet.json"); lib = _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"]
+
+    def page(*a, timeout=600):
+        r = subprocess.run(["node", str(ROOT / "tools/live/check.mjs"), *a], capture_output=True, text=True, timeout=timeout, cwd=ROOT)
+        try:
+            return json.loads(r.stdout.strip().splitlines()[-1])
+        except Exception:
+            return {"error": (r.stderr or r.stdout)[-600:]}
+    try:
+        for name in ("wave_R", "celebrate", "shrug"):
+            c = lib[name]; kp = AO.synthetic_take(pz, c, seconds=max(c["duration"], 1.0)); (tmp / "take.json").write_text(json.dumps(kp))
+            o = page(base, "solve", str(tmp / "take.json"))
+            if o.get("error"):
+                bad.append(f"{name}: {o['error']}"); continue
+            ts = np.arange(len(kp["frames"])) / 30; ang = AO._sample_tracks(c["tracks"], np.minimum(ts, c["duration"]))
+            err = {k: [abs((a[k] - ang[k][i] + 180) % 360 - 180) for i, a in enumerate(o["angles"]) if k in a] for k in ang}
+            miss = [k for k, v in err.items() if len(v) < 0.9 * len(ts)]
+            m = float(np.mean([np.mean(v) for v in err.values() if v])); mx = float(max(max(v) for v in err.values() if v))
+            meas[name] = {"mean_deg": round(m, 2), "max_deg": round(mx, 2)}
+            if m > 2.0 or mx > 8.0 or miss:
+                bad.append(f"{name}: per-frame angles {m:.2f} deg mean, {mx:.2f} max" + (f", parts missing {miss}" if miss else ""))
+        img = AO.MODELS.parent / "coco-val2017" / "000000368212.jpg"   # fetched by pose.benchmark; any photo of a whole person would do
+        if not img.exists():
+            meas["webcam"] = {"skipped": f"{img.name} not cached (python -m dbe pose.benchmark fetches it)"}
+        else:
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-i", str(img), "-vf", "scale=720:-2,pad=720:1280:0:(oh-ih)/2:color=gray,format=yuv420p",
+                            "-frames:v", "45", "-r", "30", str(tmp / "cam.y4m")], check=True)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(tmp / "cam.y4m"), "-c:v", "libx264", "-qp", "0", "-pix_fmt", "yuv420p", str(tmp / "cam.mp4")], check=True)
+            o = page(base + "&mirror=0&smooth=0", "camera", str(tmp / "cam.y4m"), "20")
+            if o.get("error"):
+                bad.append(f"webcam: {o['error']}")
+            else:
+                lv = o["live"]; kp = AO.detect(str(tmp / "cam.mp4"), face=False); (tmp / "py.json").write_text(json.dumps(kp))
+                ref = page(base, "solve", str(tmp / "py.json"))   # Python MediaPipe's landmarks through the same per-frame solve
+                med = lambda rows, k: float(np.degrees(np.angle(np.mean([np.exp(1j * np.radians(r[k])) for r in rows if k in r]))))
+                parts_ = [k for k in ref.get("angles", [{}])[-1] if any(k in r for r in lv["history"])]
+                d = {k: round(abs((med(lv["history"], k) - med(ref["angles"], k) + 180) % 360 - 180), 1) for k in parts_}
+                W, H = kp["size"]; lp = np.array(kp["frames"][-1]["pose"])[11:29, :2] / [W, H]; lj = np.array(lv["lm"])[11:29, :2] / lv["size"]
+                meas["webcam"] = {"frames": lv["frames"], "with_person": lv["detected"], "pose_ms": round(lv["ms"], 1), "load_s": o["load_s"],
+                                  "parts": len(d), "median_deg_off_python_mediapipe": d, "landmarks_off_frame_share": round(float(np.abs(lp - lj).mean()), 4)}
+                if len(d) < 10 or np.mean(list(d.values())) > 4 or max(d.values()) > 12 or lv["svg"] < 1000:
+                    bad.append(f"webcam: {len(d)} parts, median angles off Python MediaPipe's by {d}")
+    finally:
+        srv.shutdown(); shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
 # ---------------- act it out (plan 3.5) ----------------
+@command("actout.rest", puppet=("string", "character file, cast/.../x.puppet.json"))
+def actout_rest(puppet):
+    """The rest direction (degrees, artboard space) of each bone a take can drive on this character, as actout.clip
+    measures them: the live page (/live, WP-12) uses these so its angles are the same as the recorded clip's."""
+    from . import actout as AO
+    pz = _json(ROOT / puppet)
+    return {"puppet": puppet, "rest": {k: round(v, 4) for k, v in AO.rest_directions(pz).items()},
+            "parents": {k: v.get("parent") for k, v in pz["parts"].items()},
+            "limits": {k: v["limits"] for k, v in pz["parts"].items() if v.get("limits")}}
+
+
 @command("actout.clip", video=("string", "the take: a phone or webcam video (any format ffmpeg reads), path from the project root or absolute"),
          puppet=("string", "character file, cast/.../x.puppet.json"), name=("string", "name of the new clip on that character"),
          start=("number", "seconds into the video where the take starts", 0), duration=("number", "seconds to use (0 = to the end, at most 20)", 0),
@@ -3845,29 +3917,39 @@ SAPIENS = ("sapiens_pose_0.3b.pt2", "https://huggingface.co/facebook/sapiens-pos
            "59ea239bfb217caf76cbeac1836460ef8f9ab5f39aeb22f2577373b62fa25edc")
 
 
-def _sapiens_model():
-    """Sapiens pose 0.3B (Meta, CC BY-NC 4.0, 1.3 GB), fetched once into the models folder and checked by sha256"""
+OPENPOSE = ("openpose_body_pose_model.pth", "https://huggingface.co/lllyasviel/Annotators/resolve/982e7edaec38759d914a963c48c4726685de7d96/body_pose_model.pth",
+            "25a948c16078b0f08e236bda51a385d855ef4c153598947c28c0d47ed94bb746")
+
+
+def _fetched_model(spec):
+    """a model file (name, url, sha256) fetched once into the models folder and checked by sha256"""
     import hashlib
     import urllib.request
     from . import actout as AO
-    p = AO.MODELS / SAPIENS[0]
+    p = AO.MODELS / spec[0]
     if not p.exists():
-        AO.MODELS.mkdir(parents=True, exist_ok=True); urllib.request.urlretrieve(SAPIENS[1], str(p) + ".part"); Path(str(p) + ".part").rename(p)
+        AO.MODELS.mkdir(parents=True, exist_ok=True); urllib.request.urlretrieve(spec[1], str(p) + ".part"); Path(str(p) + ".part").rename(p)
     h = hashlib.sha256()
     with open(p, "rb") as f:
         for b in iter(lambda: f.read(1 << 22), b""):
             h.update(b)
-    if h.hexdigest() != SAPIENS[2]:
+    if h.hexdigest() != spec[2]:
         raise ValueError(f"{p} does not match its sha256")
     return p
 
 
-@command("pose.benchmark", detectors=("array", "mediapipe | rtmpose | yolo11 | sapiens (default: all)", None), limit=("integer", "images (of the 80)", 80))
+def _sapiens_model():
+    """Sapiens pose 0.3B (Meta, CC BY-NC 4.0, 1.3 GB)"""
+    return _fetched_model(SAPIENS)
+
+
+@command("pose.benchmark", detectors=("array", "mediapipe | rtmpose | yolo11 | sapiens | openpose (default: all)", None), limit=("integer", "images (of the 80)", 80))
 def pose_benchmark(detectors=None, limit=80):
     """Pose detectors compared by measured accuracy (WP-12): MediaPipe Pose Landmarker (what act-out uses), RTMPose
     (rtmlib, balanced: YOLOX detector + RTMPose-m, ONNX on the CPU) and Ultralytics YOLO11m-pose, on 80 single-person
-    COCO val2017 photos (tests/posebench) scored by COCO's keypoint similarity (OKS) per image. Writes
-    out/posebench/result.json. OpenPose and Sapiens are not run (a Caffe build; 0.3 to 2 billion parameters)."""
+    COCO val2017 photos (tests/posebench) scored by COCO's keypoint similarity (OKS) per image; Sapiens 0.3B top-down on
+    rtmlib's person boxes; OpenPose (CMU's body model, bottom-up, the PyTorch port in vendor/openpose, four scales).
+    Writes out/posebench/result.json."""
     import urllib.request
     from . import posebench as PB
     spec = _json(ROOT / "tests" / "posebench" / "coco-val2017-80.json"); spec["items"] = spec["items"][:limit]
@@ -3879,11 +3961,10 @@ def pose_benchmark(detectors=None, limit=80):
     od = ROOT / "out" / "posebench"; od.mkdir(parents=True, exist_ok=True); (od / "bench.json").write_text(json.dumps(spec))
     make = {"mediapipe": lambda: PB.mediapipe_detector(AO.model_path("pose")), "rtmpose": lambda: PB.rtmlib_detector("balanced"),
             "yolo11": lambda: PB.yolo_detector(str(AO.MODELS / "yolo11m-pose.pt")),
-            "sapiens": lambda: PB.sapiens_detector(_sapiens_model())}
+            "sapiens": lambda: PB.sapiens_detector(_sapiens_model()), "openpose": lambda: PB.openpose_detector(_fetched_model(OPENPOSE))}
     names = detectors or list(make)
     res = PB.run(od / "bench.json", img, {n: make[n] for n in names})
-    out = {"images": len(spec["items"]), "results": res, "ranking": sorted([n for n in res if "mean_oks" in res[n]], key=lambda n: -res[n]["mean_oks"]),
-           "not_run": {"OpenPose": "a Caffe build (CMU, non-commercial licence)"}}
+    out = {"images": len(spec["items"]), "results": res, "ranking": sorted([n for n in res if "mean_oks" in res[n]], key=lambda n: -res[n]["mean_oks"])}
     (od / "result.json").write_text(json.dumps(out, indent=1))
     return out
 
@@ -5934,6 +6015,10 @@ def test_golden(update=False, film=""):
                                    _json(ROOT / "puppet" / "clips" / "humanoid.json")["clips"], ROOT / "out" / "actout2_test")
         failed += 1 if bad else 0
         results.append({"actout2": "a synthetic take with a head turn becomes a turn control track that the bake plays; a camera pan over a drawn background is found and taken out so the root does not drift; two people in one take become two clips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "live":   # WP-12: the live page follows a webcam with the same angles as a recorded take
+        bad, meas = _live_test()
+        failed += 1 if bad else 0
+        results.append({"live": "the live page's per-frame retarget recovers synthetic takes' angles, and on a fake webcam (a COCO photo) MediaPipe in the page gives the same angles, median over the frames, as Python MediaPipe on that video", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0
@@ -6016,7 +6101,7 @@ def test_golden(update=False, film=""):
         if not bad and (res[r["ranking"][0]]["mean_oks"] < 0.6 or len(r["ranking"]) < 3):
             bad.append({"ranking": r["ranking"], "why": "the best detector should reach a mean OKS of 0.6 on single-person photos"})
         failed += 1 if bad else 0
-        results.append({"posebench": "MediaPipe, RTMPose and YOLO11-pose each run on the 80 COCO photos and are ranked by OKS", "status": "FAIL" if bad else "ok", "measured": r, **({"cases": bad} if bad else {})})
+        results.append({"posebench": "MediaPipe, RTMPose, YOLO11-pose, Sapiens and OpenPose each run on the 80 COCO photos and are ranked by OKS", "status": "FAIL" if bad else "ok", "measured": r, **({"cases": bad} if bad else {})})
     if not film or film == "cmu":   # WP-12: CMU motion capture to 2D
         bad, meas = _cmu_test()
         failed += 1 if bad else 0
@@ -7443,11 +7528,15 @@ def _describe_pass(name, voice="", extend=True, tag=""):
     total = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(final)])[-1])
     shot_end = {sh["id"]: (_warp(k, sh["end"], inverse=True) if k else sh["end"]) for sh in s["shots"]}
     lang = (s.get("lang") or _json(d / "script.json", {}).get("lang") or "en").split("-")[0]; untranslated = []
+    # WP-24: the standard cut (no holds) may also say each part tersely, made from the English and translated with it
+    terse = {x: AD.terse_of(x) for e in evs for _, x in e[4]} if not extend else None
     if lang != "en":   # WP-24/25: the describer writes English; the film's language gets a machine translation of it
         from . import translate as TR
-        texts = sorted({e[2] for e in evs} | {x for e in evs for _, x in e[4]})
+        texts = sorted({e[2] for e in evs} | {x for e in evs for _, x in e[4]} | set((terse or {}).values()))
         tr = dict(zip(texts, [t for t, _ in TR.translate(texts, lang)]))
         untranslated = [t for t in texts if not tr.get(t)]
+        if terse is not None:
+            terse = {tr[k]: tr[v] for k, v in terse.items() if tr.get(k) and tr.get(v)}
         evs = [(e[0], e[1], tr[e[2]], e[3], [(w, tr[x]) for w, x in e[4] if tr.get(x)]) for e in evs if tr.get(e[2])]
         pv = _json(d / "provenance.json", {}) or {}
         pv["models"] = [m for m in pv.get("models", []) if m.get("name") != TR.NAME] + [{"name": TR.NAME, "license": TR.LICENSE, "output": f"audio description translated to {lang}"}]
@@ -7464,10 +7553,11 @@ def _describe_pass(name, voice="", extend=True, tag=""):
     main, sr = sf.read(d / "build" / "mix.wav", dtype="float32")
     # each description (and its shorter forms) as this voice reads it, so the pauses are filled by what is heard,
     # not by a guess from the words (a guess that cannot count Sinhala or Chinese words the way English ones are)
-    opts = sorted({o for e in evs for o in AD.options_of(e[2], e[4])})
+    opts = sorted({o for e in evs for o in AD.options_of(e[2], e[4], terse)})
     pre = dict(zip(opts, AD.voice_all(opts, voice, VOICES, sr))); voiced = {t: len(a) / sr for t, a in pre.items()}
-    cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend, voiced=voiced)
-    cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues], ready=pre)
+    cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend, voiced=voiced, terse=terse)
+    cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues], ready=pre,
+                             max_speed=AD.TERSE_SPEED if terse is not None else None)
     hold_clips = AD.voice_all([h["text"] for h in holds], voice, VOICES, sr, ready=pre)
     for c, a in zip(cues, cue_clips):
         c["voiced_s"] = round(len(a) / sr, 3)

@@ -165,6 +165,20 @@
    "use": "colour raster to vector tracing (WP-18); built on request by vendor.build; built by vendor.build (4 Nov) and used by puppet.vectorize to trace raster parts"
   },
   {
+   "path": "vendor/openpose/",
+   "kind": "code",
+   "name": "OpenPose body, PyTorch port (controlnet_aux 0.0.10 open_pose: body.py, model.py, util.py; from Hzzone/pytorch-openpose)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "license_file": "vendor/openpose/LICENSE.txt",
+   "source": "https://github.com/huggingface/controlnet_aux",
+   "attribution": "controlnet_aux 0.0.10 open_pose (Apache-2.0), after Hzzone/pytorch-openpose",
+   "used_by": [
+    "dbe/posebench.py"
+   ],
+   "use": "pose.benchmark's OpenPose entry (WP-12); three small patches listed in vendor/openpose/UPSTREAM.json"
+  },
+  {
    "path": "dbe/studio/vendor/wavesurfer/",
    "kind": "code",
    "name": "wavesurfer.js 8.0.5 (minified builds)",
@@ -568,6 +582,18 @@
    "license": "CC-BY-NC-4.0",
    "class": "non-commercial: fine in-house; flagged if anything it makes goes into a posted film",
    "use": "pose.benchmark (WP-12): one of the detectors compared; fetched once into DBE_MODELS (1.3 GB, sha256 pinned in dbe/commands.py); not in git"
+  },
+  {
+   "name": "OpenPose body model weights (CMU, COCO 18 points; lllyasviel/Annotators body_pose_model.pth)",
+   "license": "OpenPose licence: academic or non-profit, non-commercial use",
+   "class": "non-commercial: fine in-house; flagged if anything it makes goes into a posted film",
+   "use": "pose.benchmark (WP-12): fetched once into DBE_MODELS (200 MB, sha256 pinned in dbe/commands.py); not in git"
+  },
+  {
+   "name": "@mediapipe/tasks-vision 1.2.0 (npm, tools/live/package.json)",
+   "license": "Apache-2.0",
+   "class": "permissive",
+   "use": "the /live page (WP-12): Pose Landmarker in WebAssembly, a character following the webcam; bash tools/setup.sh live; node_modules not in git"
   },
   {
    "name": "COCO val2017 person keypoint annotations (80 images listed in tests/posebench)",

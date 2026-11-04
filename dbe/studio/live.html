@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Puppet</title>
+<style>
+  :root { --bg: #f4f1ea; --panel: #fff; --ink: #24160e; --muted: #7a6a5c; --line: #e2dccf; --accent: #e8743a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; } }
+  :root[data-theme="dark"] { --bg: #1c1916; --panel: #26221e; --ink: #f2ebe2; --muted: #a8998a; --line: #3a342e; }
+  * { box-sizing: border-box; } body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 10px; align-items: center; padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  h1 { font-size: 16px; margin: 0; } a { color: var(--accent); }
+  button, select { font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { cursor: pointer; } button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  main { display: grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap: 16px; padding: 16px; max-width: 1100px; }
+  .stage { position: relative; aspect-ratio: 9 / 16; max-height: 72vh; background: #000; border-radius: 10px; overflow: hidden; }
+  .stage video, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .mirror { transform: scaleX(-1); }
+  #char { aspect-ratio: 9 / 16; max-height: 72vh; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; width: 100%; }
+  .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 8px 0; } label, #msg, #stats { color: var(--muted); }
+  @media (max-width: 700px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><h1>🫐 Live</h1><span id="msg">Start the camera and step back so your body is in the picture: the character follows you.</span><span style="flex:1"></span><a href="/actout">Act It Out ↗</a><a href="/">Studio ↗</a></header>
+<main>
+  <section>
+    <div class="stage"><video id="cam" playsinline muted></video><canvas id="dots"></canvas></div>
+    <div class="row"><button class="primary" id="start">Start camera</button><label><input type="checkbox" id="mirror" checked> mirror</label>
+      <label><input type="checkbox" id="show" checked> landmarks</label><label for="smooth">smoothing</label>
+      <select id="smooth"><option value="0">none</option><option value="1" selected>some</option><option value="2">lots</option></select></div>
+    <div id="stats"></div>
+  </section>
+  <section>
+    <svg id="char" viewBox="0 0 450 800" role="img" aria-label="the character following the camera"></svg>
+    <div class="row"><label for="who">Character</label><select id="who"></select></div>
+  </section>
+</main>
+<script src="/puppet/loader/puppet.js"></script>
+<script type="module">
+// WP-12: the same retarget as actout.clip (dbe/actout.py retarget), one frame at a time: MediaPipe Pose Landmarker
+// runs in the page (WebAssembly, CPU), each bone's direction minus its rest direction gives its world angle, a part's
+// angle is its world angle minus its parent's. Live is in place (no root travel) and the face follows only the head's
+// roll; record a take in Act It Out for the full clip.
+import { FilesetResolver, PoseLandmarker } from '/tools/live/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs';
+const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+const LM = { eye: { L: 2, R: 5 }, ear: { L: 7, R: 8 }, sh: { L: 11, R: 12 }, el: { L: 13, R: 14 }, wr: { L: 15, R: 16 }, pinky: { L: 17, R: 18 },
+  index: { L: 19, R: 20 }, hp: { L: 23, R: 24 }, kn: { L: 25, R: 26 }, an: { L: 27, R: 28 } };
+const deg = r => r * 180 / Math.PI, wrap = a => ((a + 180) % 360 + 360) % 360 - 180, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const msg = m => { $('msg').textContent = m; };
+const LIVE = window.LIVE = { ready: false, frames: 0, detected: 0, angles: {}, raw: {}, history: [], ms: [], side: null, len: {} };
+let puppet = null, rig = null;
+
+// one frame: landmarks [[x, y, visibility]] in pixels -> {angles (raw, unsmoothed), seen}
+function solve(lm, W, H, rig, state) {
+  const vis = j => lm[j] && lm[j][2] > 0.5 && lm[j][0] > -0.02 * W && lm[j][0] < 1.02 * W && lm[j][1] > -0.02 * H && lm[j][1] < 1.02 * H;
+  if (vis(11) && vis(12)) {   // which anatomical side is on the picture's left (facing the camera: the person's right), with hysteresis
+    const shx = lm[11][0] - lm[12][0];
+    if (state.side === null || Math.abs(shx) > 0.05 * W) state.side = shx > 0 ? 'facing' : 'away';
+  }
+  const img = state.side === 'away' ? { L: 'L', R: 'R' } : { L: 'R', R: 'L' };
+  const pt = (n, s) => { const j = LM[n][img[s]]; return [lm[j], vis(j)]; };
+  const mid = ([a, oa], [b, ob]) => [oa && ob ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] : null, oa && ob];
+  const shm = mid(pt('sh', 'L'), pt('sh', 'R')), hpm = mid(pt('hp', 'L'), pt('hp', 'R'));
+  const segs = {};
+  for (const s of 'LR') {
+    const [ix, oi] = pt('index', s), [pk, op] = pt('pinky', s);
+    const hand = [oi && op ? [(ix[0] + pk[0]) / 2, (ix[1] + pk[1]) / 2] : null, oi && op];
+    segs['upperarm_' + s] = [pt('sh', s), pt('el', s)]; segs['forearm_' + s] = [pt('el', s), pt('wr', s)];
+    segs['hand_' + s] = [pt('wr', s), hand]; segs['arm_' + s] = [pt('sh', s), pt('wr', s)];
+    segs['thigh_' + s] = [pt('hp', s), pt('kn', s)]; segs['shin_' + s] = [pt('kn', s), pt('an', s)];
+  }
+  const spineSeen = shm[1] && hpm[1];
+  segs.torso = segs.body = [hpm, shm];
+  const world = {}, seen = {};
+  for (const [part, [[a, oa], [b, ob]]] of Object.entries(segs)) {
+    if (!(part in rig.rest) || ((part === 'torso' || part === 'body') && !spineSeen) || !oa || !ob) continue;
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    state.len[part] = Math.max(L, (state.len[part] || 0) * 0.995);   // foreshortened (pointing at the lens): direction unreliable
+    if (L < 0.3 * state.len[part]) continue;
+    world[part] = deg(Math.atan2(dy, dx)) - rig.rest[part]; seen[part] = true;
+  }
+  if (!spineSeen) {   // waist-up: the torso leans with the shoulder line
+    const [ls, ol] = pt('sh', 'L'), [rs, or] = pt('sh', 'R');
+    if (ol && or) for (const sp of ['torso', 'body']) if (sp in rig.parents) { world[sp] = 0.7 * deg(Math.atan2(rs[1] - ls[1], rs[0] - ls[0])); seen[sp] = true; }
+  }
+  if ('head' in rig.parents) {   // head roll from the ear and eye lines
+    const r = [];
+    for (const n of ['ear', 'eye']) { const [l, ol] = pt(n, 'L'), [rr, orr] = pt(n, 'R'); if (ol && orr) r.push(deg(Math.atan2(rr[1] - l[1], rr[0] - l[0]))); }
+    if (r.length) { world.head = clamp(r.reduce((x, y) => x + y) / r.length, -40, 40); seen.head = true; }
+  }
+  const W_ = {}, wrot = p => { if (!p || !(p in rig.parents)) return 0; if (!(p in W_)) W_[p] = p in world ? world[p] : wrot(rig.parents[p]); return W_[p]; };
+  const angles = {};
+  for (const part of Object.keys(rig.parents)) {
+    if (!(part in world)) continue;
+    let a = wrap(world[part] - wrot(rig.parents[part]));
+    if (part.startsWith('hand')) a = clamp(a, -45, 45);
+    if (rig.limits[part]) a = clamp(a, rig.limits[part][0], rig.limits[part][1]);
+    angles[part] = a;
+  }
+  return { angles, seen };
+}
+LIVE.solve = (lm, W, H) => solve(lm, W, H, rig, LIVE);
+LIVE.reset = () => { LIVE.side = null; LIVE.len = {}; LIVE.angles = {}; LIVE.raw = {}; LIVE.last = {}; LIVE.filt = {}; };
+
+// One Euro filter per angle (Casiez et al. 2012): steady when still, quick when moving
+const ALPHA = (cut, dt) => { const r = 2 * Math.PI * cut * dt; return r / (r + 1); };
+function smoothInto(raw, seen, dt, level, t) {
+  const minCut = [Infinity, 1.2, 0.5][level], beta = [0, 0.02, 0.01][level];
+  LIVE.filt = LIVE.filt || {}; LIVE.last = LIVE.last || {};
+  for (const [k, v] of Object.entries(raw)) {
+    const f = LIVE.filt[k];
+    if (!f || level === 0) { LIVE.filt[k] = { x: v, dx: 0 }; LIVE.angles[k] = v; LIVE.last[k] = t; continue; }
+    const x = f.x + wrap(v - f.x), dx = (x - f.x) / dt, ad = ALPHA(1.0, dt); f.dx = f.dx + ad * (dx - f.dx);
+    const a = ALPHA(minCut + beta * Math.abs(f.dx), dt); f.x = f.x + a * (x - f.x); LIVE.angles[k] = wrap(f.x); LIVE.last[k] = t;
+  }
+  for (const k of Object.keys(LIVE.angles)) if (!seen[k] && t - (LIVE.last[k] || 0) > 1) { LIVE.angles[k] *= 0.9; if (LIVE.filt[k]) LIVE.filt[k].x = LIVE.angles[k]; }   // out of sight a while: ease back to rest
+}
+
+async function loadPuppet(path) {
+  puppet = await (await fetch('/' + path)).json();
+  const r = await (await fetch('/api/actout.rest', { method: 'POST', body: JSON.stringify({ puppet: path }) })).json();
+  if (r.error) { msg(r.error); throw new Error(r.error); }
+  rig = r.result; LIVE.reset(); LIVE.puppet = path;
+}
+
+let landmarker = null;
+async function loadModel() {
+  const fs = await FilesetResolver.forVisionTasks('/tools/live/node_modules/@mediapipe/tasks-vision/wasm');
+  landmarker = await PoseLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: '/models/pose_landmarker_full.task', delegate: 'CPU' },
+    runningMode: 'VIDEO', numPoses: 1 });
+}
+
+const v = $('cam'), dots = $('dots'), ctx = dots.getContext('2d');
+let lastT = 0, lastVideoTime = -1;
+function drawChar() {
+  if (!puppet) return;
+  const ar = puppet.artboard || [600, 1000], s = Math.min(420 / ar[0], 760 / ar[1]);
+  $('char').innerHTML = Puppet.render(puppet, 225, 790, { s, angles: { ...LIVE.angles } });
+}
+function tick() {
+  if (landmarker && v.readyState >= 2 && v.currentTime !== lastVideoTime) {
+    lastVideoTime = v.currentTime; const now = performance.now(), W = v.videoWidth, H = v.videoHeight;
+    const t0 = performance.now(), res = landmarker.detectForVideo(v, now), ms = performance.now() - t0;
+    LIVE.frames++; LIVE.ms.push(ms); if (LIVE.ms.length > 60) LIVE.ms.shift();
+    const mirror = $('mirror').checked;
+    if (res.landmarks && res.landmarks.length) {
+      const lm = res.landmarks[0].map(p => [(mirror ? 1 - p.x : p.x) * W, p.y * H, p.visibility ?? 1]);
+      LIVE.lm = lm; LIVE.size = [W, H]; LIVE.detected++;
+      const { angles, seen } = LIVE.solve(lm, W, H); LIVE.raw = angles; LIVE.history.push(angles); if (LIVE.history.length > 300) LIVE.history.shift();
+      smoothInto(angles, seen, lastT ? Math.max(1 / 120, (now - lastT) / 1000) : 1 / 30, +$('smooth').value, now / 1000); lastT = now;
+      if ($('show').checked) {
+        dots.width = W; dots.height = H; ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#e8743a';
+        for (const p of lm) if (p[2] > 0.5) { ctx.beginPath(); ctx.arc(mirror ? W - p[0] : p[0], p[1], Math.max(3, W / 160), 0, 7); ctx.fill(); }
+      } else ctx.clearRect(0, 0, dots.width, dots.height);
+    }
+    drawChar();
+    const mean = LIVE.ms.reduce((a, b) => a + b, 0) / LIVE.ms.length;
+    $('stats').textContent = `${W}×${H} · pose ${mean.toFixed(0)} ms a frame · ${LIVE.detected} of ${LIVE.frames} frames with a person`;
+  }
+  requestAnimationFrame(tick);
+}
+async function startCamera() {
+  try {
+    if (q.get('video')) { v.src = q.get('video'); v.loop = true; }
+    else v.srcObject = await navigator.mediaDevices.getUserMedia({ video: { width: 720, height: 1280, facingMode: 'user' }, audio: false });
+  } catch (e) { msg('no camera: ' + e.message); return; }
+  v.classList.toggle('mirror', $('mirror').checked); await v.play(); $('start').disabled = true; msg('tracking');
+}
+$('mirror').onchange = () => { v.classList.toggle('mirror', $('mirror').checked); LIVE.reset(); };
+$('start').onclick = startCamera;
+$('who').onchange = () => loadPuppet($('who').value).then(drawChar);
+(async () => {
+  try {
+    const cast = await (await fetch('/api/cast.list', { method: 'POST', body: '{}' })).json();
+    const ok = (cast.result.puppets || []).filter(p => p.path.startsWith('cast/') && p.template !== 'quadruped');
+    $('who').innerHTML = ok.map(p => `<option value="${p.path}">${p.name || p.id}</option>`).join('');
+    const want = q.get('puppet'); if (want) { if (!ok.some(p => p.path === want)) $('who').innerHTML += `<option value="${want}">${want}</option>`; $('who').value = want; }
+    await loadPuppet($('who').value); drawChar(); msg('loading the pose model…');
+    await loadModel(); msg('ready: start the camera'); LIVE.ready = true;
+    if (q.has('mirror')) { $('mirror').checked = q.get('mirror') !== '0'; }
+    if (q.has('smooth')) $('smooth').value = q.get('smooth');
+    if (q.get('autostart')) await startCamera();
+    requestAnimationFrame(tick);
+  } catch (e) { msg('could not start: ' + e.message); LIVE.error = String(e); }
+})();
+</script>
+</body>
+</html>

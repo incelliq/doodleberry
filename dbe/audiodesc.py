@@ -39,6 +39,7 @@ EMOTIONS = {"happy": "smiles", "sad": "looks sad", "surprised": "looks surprised
 PAD = 0.15        # seconds kept clear around spoken lines
 WPS = 2.9         # describer pace, words a second (about 175 wpm)
 MAX_SPEED = 1.2   # a cue may be read up to this much faster to fit its pause
+TERSE_SPEED = 1.35   # the standard cut beside an extended one: terse forms, read a little faster still (WP-24)
 DUCK_DB = -10.0
 HOLD_PAD = (0.3, 0.45)   # silence before and after a description read in a hold
 
@@ -199,19 +200,58 @@ def _hold_point(t, timing, total):
     return round(min(t, max(0.0, total - 0.05)), 3)
 
 
-def options_of(text, parts):
-    """the whole description, then shorter ones losing its minor parts"""
-    return [text] + [" ".join(x for _, x in sorted(parts, key=lambda x: -x[0])[:n]) for n in range(len(parts) - 1, 0, -1)]
+_WHERE = re.compile(r"^(?:.+ (?:is|are) )?(?:in|on|at|under|by|inside|beside|near) (?:a |an |the )?(?:sheet of |cutaway of the )?(.+?)\.$", re.I)
 
 
-def place(evs, gaps, shot_end, timing, total, extend=True, voiced=None):
+def terse_of(text):
+    """a part said in as few words as it can be (WP-24: for the standard cut of a film with only short pauses):
+    "Ravi is in a classroom." -> "Classroom."; a chart -> "Chart: March highest, 9."; a sign -> "Sign: OPEN."; on-screen
+    text -> the text; a number -> the number; anything else as it is"""
+    t = text.strip()
+    m = re.match(r"^A bar chart, .*?highest for (.+?) at ([^.]+)\.$", t)
+    if m:
+        return f"Chart: {m.group(1)} highest, {m.group(2)}."
+    if t.startswith("A bar chart: "):
+        return "Chart: " + t[len("A bar chart: "):]
+    m = re.match(r'^A sign reads "(.+)"\.$', t) or re.match(r'^On screen: "(.+)"\.$', t)
+    if m:
+        return ("Sign: " if t.startswith("A sign") else "") + m.group(1).rstrip(".") + "."
+    m = re.match(r'^A card: "([^:"]+)', t)
+    if m:
+        return f"Card: {m.group(1).strip()}."
+    m = re.match(r"^A number appears: (.+)$", t)
+    if m:
+        return m.group(1)
+    m = re.match(r"^A drawing: ([^,.]+)", t)
+    if m:
+        return f"Drawing: {m.group(1)}."
+    m = _WHERE.match(t)
+    if m and len(t.split()) > 2:
+        w = m.group(1); return w[0].upper() + w[1:] + "."
+    return t
+
+
+def options_of(text, parts, terse=None):
+    """the whole description, then shorter ones losing its minor parts; with `terse` ({part: its terse form}) also
+    the important parts tersely, then the most important one alone"""
+    out = [text] + [" ".join(x for _, x in sorted(parts, key=lambda x: -x[0])[:n]) for n in range(len(parts) - 1, 0, -1)]
+    if terse is not None and parts:
+        top = sorted(parts, key=lambda x: -x[0]); keep = [x for p_, x in top if p_ >= 2] or [top[0][1]]
+        for o in (" ".join(terse.get(x, x) for x in keep), terse.get(top[0][1], top[0][1])):
+            if o not in out:
+                out.append(o)
+    return out
+
+
+def place(evs, gaps, shot_end, timing, total, extend=True, voiced=None, terse=None):
     """-> (cues in pauses, holds, dropped). Each event goes in the first pause after it (before its shot ends) with
     room, losing minor parts and then reading faster if it must; else into a hold (extended description).
     voiced: {text: seconds} as the voice actually reads it; otherwise the time is guessed from the words (WPS)."""
     cues, holds, dropped = [], {}, []; used = []
     for t, pr, text, sid, parts in evs:
         end_by = shot_end[sid]
-        options = options_of(text, parts)
+        options = options_of(text, parts, terse)
+        min_room, speed = (0.4, TERSE_SPEED) if terse is not None else (0.6, MAX_SPEED)
         done = False
         for txt in options:
             need = voiced[txt] + 0.1 if voiced and txt in voiced else len(_words(txt)) / WPS + 0.2
@@ -221,9 +261,9 @@ def place(evs, gaps, shot_end, timing, total, extend=True, voiced=None):
                     if u0 < b and u1 > a2:
                         a2 = max(a2, u1 + 0.25)
                 b2 = min(b, end_by + 0.5); room = b2 - a2
-                if room <= 0.6 or a2 > t + 6:
+                if room <= min_room or a2 > t + 6:
                     continue
-                if need / MAX_SPEED <= room:
+                if need / speed <= room:
                     dur = min(need, room)
                     cues.append({"start": round(a2, 3), "end": round(a2 + dur, 3), "text": txt, "shot": sid, "event_t": round(t, 3), "speed": round(max(1.0, need / room), 3),
                                  **({"shortened": True} if txt != text else {})})
@@ -262,7 +302,7 @@ def retime_vtt(text, shift):
     return re.sub(r"(\d{2}):(\d{2}):(\d{2}\.\d{3})", ts, text)
 
 
-def voice_all(texts, voice_id, voices_dir, sr_out, slots=None, ready=None):
+def voice_all(texts, voice_id, voices_dir, sr_out, slots=None, ready=None, max_speed=None):
     """each text voiced (a slot, if given, is the most time it may take: read faster up to MAX_SPEED); ready: {text:
     audio at sr_out} already voiced, used as it is when it fits its slot (so what was measured is what is heard)"""
     ready = ready or {}
@@ -291,7 +331,7 @@ def voice_all(texts, voice_id, voices_dir, sr_out, slots=None, ready=None):
         a, sr = synth(txt, length_scale=1.0)
         slot = (slots or [None] * len(texts))[i]
         if slot and len(a) / sr > slot:
-            a, sr = synth(txt, length_scale=max(1 / MAX_SPEED, slot / (len(a) / sr)))
+            a, sr = synth(txt, length_scale=max(1 / (max_speed or MAX_SPEED), slot / (len(a) / sr)))
         a = resample_poly(a, sr_out, sr) if sr != sr_out else a
         nz = np.nonzero(np.abs(a) > 0.01)[0]
         a = a[max(0, nz[0] - int(0.03 * sr_out)): nz[-1] + int(0.05 * sr_out)] if len(nz) else a

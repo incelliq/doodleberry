@@ -457,7 +457,11 @@ When the extended cut needed holds, a **standard cut** is made beside it (`build
 `ad_std.json`): only what fits the pauses, at the film's own length and timing, with the film's sound and the
 described one as two tracks, so a platform or viewer can take the one they want. It reports its coverage (the share of
 shots with something to describe that it reaches) instead of requiring it: dialogue-demo's standard cut reaches every
-described shot at 12.8 s; data-demo's has no pause long enough (coverage 0), so only its extended cut describes it.
+described shot at 12.8 s. In the standard cut each description may also be said tersely, the important parts in as
+few words as they go ("Ravi is in a classroom." -> "Classroom."; a chart -> "Chart: March highest, 9."; a sign ->
+"Sign: OPEN."), into pauses from 0.4 s, read up to 1.35 times as fast; the terse forms are made from the English and
+machine-translated with it. data-demo's standard cut, with nothing before, now says "Night sky." in its last pause
+(coverage 0.33); its other two shots have no pause long enough even tersely, which is what its extended cut is for.
 The held picture is made piece by piece (each stretch from its own seek, each hold from one frame, joined without
 re-encoding): one filter graph reading the film several times buffered the whole film and was killed for memory on
 a 23-minute film.
@@ -897,6 +901,26 @@ The `actout2` test uses synthetic takes:
 A real take of a performer filling the frame in front of a plain wall gives a turn range of -0.74 to 0.06. Its camera
 estimate is refused (0% of frames trusted) rather than guessed: the earlier phase-correlation version had read 433 px
 of motion that was not there.
+
+**Live** (http://127.0.0.1:8770/live, `bash tools/setup.sh live` once). A character follows the webcam in real time.
+MediaPipe Pose Landmarker runs in the page (`@mediapipe/tasks-vision` 1.2.0, WebAssembly on the CPU, the same
+`pose_landmarker_full.task` act-out uses, served from the models folder at `/models/`). Each frame goes through the
+act-out retarget, one frame at a time: the bone directions minus the rest directions `actout.rest` reports for that
+character give world angles, and each part's angle is its world angle minus its parent's. The same clamps apply
+(hands within 45 degrees, the part's limits, the head's roll within 40). A One Euro filter smooths each angle (none,
+some or lots). A part out of sight for a second eases back to rest. Live stays in place and only the head's roll
+reaches the face; record a take in Act It Out for travel, contacts and face drawings. `?video=` plays a file instead
+of the camera, `?puppet=` picks the character.
+
+The `live` test checks it two ways. First, synthetic takes (forward kinematics through Ravi, 1.5 px noise) go through
+the page's per-frame solve, unsmoothed. The angles come back within 1.33, 1.10 and 1.01 degrees mean (wave_R,
+celebrate, shrug; worst frame 4.3). Second, Chromium's fake webcam plays a COCO photo of a whole person (padded to
+720 x 1280). MediaPipe in the page and Python MediaPipe on the same frames, both through the page's solve, agree to
+within 0 to 1.6 degrees per part, median over the frames. Their landmarks differ by 0.2% of the frame. A pose takes
+120 to 260 ms per frame here (software, 4 cores, two runs). That is 4 to 8 frames a second, so the page drops frames
+rather than falling behind; a laptop's GPU delegate is faster. Per frame, the detector itself wavers on an ambiguous
+wrist (one forearm read from 25 to 3 degrees over 20 frames of a still photo), which is why the comparison is per
+part, over the frames.
 
 ## Acting intelligence 2 (WP-10, part 1)
 **Personality profiles** (cast/profiles.json, E13) shape the gesture planner (`acting.plan`):

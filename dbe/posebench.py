@@ -4,8 +4,8 @@ rtmlib, and Ultralytics YOLO11-pose, on single-person photos from COCO val2017 w
 Score: COCO's Object Keypoint Similarity (OKS, its per-keypoint sigmas, over the annotated keypoints, the person's
 area as scale) per image, the share of images with OKS >= 0.5 and >= 0.75 (as COCO's AP thresholds, here per image:
 one person each), the mean OKS, and the CPU time per image. MediaPipe's 33 landmarks map onto COCO's 17.
-Sapiens (Meta, 0.3B, CC BY-NC 4.0) runs top-down on the same YOLOX person boxes rtmlib gives RTMPose; OpenPose (a Caffe
-build) is not run here: noted as such.
+Sapiens (Meta, 0.3B, CC BY-NC 4.0) runs top-down on the same YOLOX person boxes rtmlib gives RTMPose. OpenPose runs
+bottom-up (part affinity fields) as CMU's body model in the PyTorch port vendored in vendor/openpose.
 """
 import json
 import time
@@ -62,6 +62,33 @@ def yolo_detector(weights="yolo11m-pose.pt"):
             return None
         conf = r.boxes.conf.cpu().numpy(); best = int(np.argmax(conf))
         return r.keypoints.xy.cpu().numpy()[best][:17]
+    return run
+
+
+OP_TO_COCO = [0, 15, 14, 17, 16, 5, 2, 6, 3, 7, 4, 11, 8, 12, 9, 13, 10]   # OpenPose's 18 (with a neck) -> COCO's 17
+
+
+def openpose_detector(weights, scales=(0.5, 1.0, 1.5, 2.0)):
+    """OpenPose body (CMU's COCO model, PyTorch, CPU), the four scales OpenPose's own evaluation searches; the person
+    with the highest total score; a point it does not find counts as missed (scores 0 in OKS)"""
+    import sys
+    import torch
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "vendor"))
+    from openpose.body import Body
+    torch.set_num_threads(max(1, torch.get_num_threads()))
+    body = Body(str(weights))
+    def run(img):
+        with torch.inference_mode():
+            cand, subset = body(img[:, :, ::-1].copy(), scale_search=list(scales))   # OpenPose reads BGR
+        if subset is None or len(subset) == 0:
+            return None
+        best = subset[int(np.argmax(subset[:, 18]))]
+        out = np.full((17, 2), 1e6)
+        for c, o in enumerate(OP_TO_COCO):
+            i = int(best[o])
+            if i >= 0:
+                out[c] = cand[i][:2]
+        return out
     return run
 
 

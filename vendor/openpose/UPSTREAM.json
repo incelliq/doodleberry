@@ -1,0 +1,27 @@
+{
+ "name": "openpose (PyTorch body model)",
+ "repository": "https://github.com/huggingface/controlnet_aux",
+ "version": "controlnet_aux 0.0.10 (open_pose/body.py, model.py, util.py)",
+ "archive": "https://pypi.org/project/controlnet-aux/0.0.10/",
+ "license": "Apache-2.0",
+ "class": "permissive",
+ "license_files": [
+  "LICENSE.txt"
+ ],
+ "files": "body.py, model.py, util.py",
+ "patches": [
+  "body.py: scipy.ndimage import (scipy.ndimage.filters is removed)",
+  "body.py: torch.load on the CPU with weights_only",
+  "body.py: scale_search is a parameter (was fixed at [0.5])",
+  "util.py: BodyResult and Keypoint (type hints only) no longer imported from body.py, which imported util first"
+ ],
+ "weights": {
+  "file": "body_pose_model.pth",
+  "url": "https://huggingface.co/lllyasviel/Annotators/resolve/982e7edaec38759d914a963c48c4726685de7d96/body_pose_model.pth",
+  "sha256": "25a948c16078b0f08e236bda51a385d855ef4c153598947c28c0d47ed94bb746",
+  "bytes": 209267595
+ },
+ "use": "pose.benchmark's OpenPose entry (WP-12)",
+ "weights_license": "CMU OpenPose licence: academic or non-profit, non-commercial use (class non-commercial; recorded in assets/manifest.json tools_not_bundled)",
+ "note": "code derived from Hzzone/pytorch-openpose; the weights are not vendored"
+}
