@@ -1031,6 +1031,12 @@ Both critics named the same gaps:
 - there is no reaction beat after the punchline (the hand-keyed versions have a sheepish head-scratch);
 - the character denying stands neutral through the denial.
 With the earlier single win on clips-demo, the planner stands at one blind win in six. Not met on these scenes.
+Then the first gap was fixed: a point now rises with the clause, up to 1.5 s before the pointing word (never before
+the line or a gesture still playing), and is held to the line's end. In a question it stays a quick point on the word.
+A third fresh critic on review-demo still preferred hand-keyed, but 27 to 22 (was 27 to 17). It called the planner's
+held point on "behind your back" more direct than the hand-keyed one. It faulted the ending: Momo points flatly on
+"That telescope" with no sheepish head-scratch. That critic saw a version where Ravi also held a point through his
+opening question; that is what made questions keep the quick point. One blind win in seven.
 
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:
@@ -1284,6 +1290,7 @@ asked by name: minutes of CPU).
 | RTMPose-m (rtmlib) | 0.944 | 0.988 | 0.975 | 0 | 284 |
 | Sapiens pose 0.3B (top-down on the same YOLOX boxes) | 0.930 | 0.988 | 0.963 | 0 | about 13,400 |
 | YOLO11m-pose | 0.919 | 0.988 | 0.963 | 0 | 245 |
+| OpenPose (CMU's COCO body model, PyTorch, 4 scales) | 0.916 | 0.975 | 0.925 | 0 | about 12,500 |
 | MediaPipe Pose (full) | 0.836 | 0.963 | 0.825 | 1 | 40 |
 
 What this does and does not say: RTMPose and YOLO11 learnt COCO's own keypoint definitions (where a hip or an ear is
@@ -1291,8 +1298,10 @@ marked) from COCO train2017, which these val2017 images are not part of; MediaPi
 definition, so part of its gap is a different idea of where a joint is, not only error. These are still photos, not
 takes: act-out also needs MediaPipe's heels, toes and hand points, which COCO's 17 do not have, and runs seven times
 faster. Act-out keeps MediaPipe; RTMPose is the one to try first where body accuracy matters more than speed (rtmlib's
-whole-body model, DWPose's 133 points, has the feet and hands; not yet tried). OpenPose
-(a Caffe build, CMU's non-commercial licence) was not run. Sapiens (Meta's 0.3B model, CC BY-NC 4.0, 1.3 GB, sha256
+whole-body model, DWPose's 133 points, has the feet and hands; not yet tried). OpenPose runs as CMU's own body
+model (non-commercial licence, sha256 pinned) in the PyTorch port vendored in vendor/openpose (controlnet_aux 0.0.10,
+Apache-2.0), bottom-up, searching the four scales OpenPose's own evaluation uses. It is fourth (0.916), level with
+YOLO11, and about 45 times slower; its time was measured beside other jobs. Sapiens (Meta's 0.3B model, CC BY-NC 4.0, 1.3 GB, sha256
 pinned) runs top-down on rtmlib's YOLOX person boxes, its 308 Goliath points mapped to COCO's 17: second on accuracy
 (0.930), about fifty times slower than the rest on this CPU (13.4 s an image alone; the 80-image run, 16.7 s, shared the
 machine with other tests, as did the others' times in it, which the table gives as measured alone).

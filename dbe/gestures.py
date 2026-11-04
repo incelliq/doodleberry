@@ -4,7 +4,8 @@
 
 For each shot and each cast member with a speaker:
 - while speaking: beat gestures on emphasised words (loudness, pitch and length above the line's median), at most one
-  every 0.9 s; a pointing word ("you", "this", "that", "look", "here", "there") gets a point; an exclamation gets open
+  every 0.9 s; a pointing word ("you", "this", "that", "look", "here", "there") gets a point, raised with the clause (up to
+  1.5 s before the word) and held to the end of the line (in a question, a quick point on the word); an exclamation gets open
   palms on its strongest word; a question ends with a shrug (humanoid) or a head tilt (doodle), brows raised;
 - while listening: gaze on the speaker, a nod just after each of their lines, an occasional blink on their pauses;
 - every line returns to idle, and nothing overlaps another gesture.
@@ -135,9 +136,16 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
             for i in range(len(words)):  # one point per line, towards the listener (a shy character only glances)
                 wtxt = re.sub(r"\W", "", words[i]["text"].lower())
                 if wtxt in POINT_WORDS and humanoid and P["point"] != "none" and all(abs(words[i]["start"] - u) > gap for u in used) and words[i]["start"] > busy_until:
-                    t0 = max(ln["start"], words[i]["start"] - 0.25); pc = "point_R" if towards >= my_x else "point_L"
+                    # the point comes up with the clause, not on the word: as early as 1.5 s before it (never before the
+                    # line or a gesture still playing), and is held to the end of the line (blind critics, WP-10: late
+                    # points read as an afterthought)
+                    # A question keeps the quick point on the word: held through "have you seen ...?" it read as
+                    # pointing at someone for no reason (a blind critic, WP-10)
+                    asks = ln.get("text", "").strip().endswith("?")
+                    t0 = max(ln["start"], words[i]["start"] - (0.25 if asks else 1.5), busy_until); pc = "point_R" if towards >= my_x else "point_L"
+                    t1 = t0 + 0.9 if asks else max(t0 + 0.9, min(ln["end"] + 0.2, words[i]["start"] + 1.6))
                     if P["point"] == "point" and can(pc):
-                        clips.append(style({"clip": pc, "start": round(t0, 3), "end": round(t0 + 0.9, 3), "weight": 3, "auto": True})); used.append(words[i]["start"]); busy_until = t0 + 1.0
+                        clips.append(style({"clip": pc, "start": round(t0, 3), "end": round(t1, 3), "weight": 3, "auto": True})); used.append(words[i]["start"]); busy_until = t1 + 0.1
                     elif P["point"] == "glance" and others_x:
                         look.append([round(t0, 3), [1.0 if towards > my_x else -1.0, 0.2]]); look.append([round(t0 + 0.6, 3), [0.0, 0.3]])
                     break

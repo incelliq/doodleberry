@@ -143,7 +143,7 @@ This list leaves out what Doodleberry already does.
 | DiffuseStyleGesture | github.com/YoungSeng/DiffuseStyleGesture | MIT code [V]; trained on ZEGGS (Ubisoft) data, licence [U], likely NC | Research | GPU-oriented | Avoid the weights | — |
 | Gesticulator | github.com/Svito-zar/gesticulator | **GPL-3.0** [V] | Dormant | — | — | — |
 | audio2photoreal | github.com/facebookresearch/audio2photoreal | **CC BY-NC 4.0** [V] NC | — | GPU | Avoid | — |
-| OpenPose | github.com/CMU-Perceptual-Computing-Lab/openpose | **Academic or non-profit, non-commercial only** [V] NC | — | — | Avoid; use MediaPipe or rtmlib | — |
+| OpenPose | github.com/CMU-Perceptual-Computing-Lab/openpose | **Academic or non-profit, non-commercial only** [V] NC (weights); the PyTorch port in controlnet_aux is Apache-2.0 | CMU body model via controlnet_aux 0.0.10 [V] | Yes, slowly (torch CPU, 12.5 s an image at 4 scales) | In-house only (NC allowed for R&D). Measured (`pose.benchmark`): mean OKS 0.916, fourth, level with YOLO11 | — |
 | Ultralytics YOLO-pose | github.com/ultralytics/ultralytics | **AGPL-3.0** [V] AGPL | 8.4.202 [V] | Yes (torch CPU) | In-house only (AGPL allowed for R&D since 2 Nov 2026). Measured (`pose.benchmark`): YOLO11m-pose mean OKS 0.919, 245 ms per image | — |
 | Sapiens (Meta) | github.com/facebookresearch/sapiens | **CC BY-NC 4.0** [V] NC | 0.3B TorchScript [V] | Yes, slowly (torch CPU, 13 s an image) | In-house only (NC allowed for R&D since 2 Nov 2026). Measured (`pose.benchmark`): mean OKS 0.930, second to RTMPose; too slow for takes on this CPU | — |
 
