@@ -961,6 +961,21 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Raster parts to vector (WP-14, WP-33)
+`puppet.vectorize {"path"}` traces a puppet's raster parts (and swap drawings and views) into filled vector shapes,
+written beside it as `<name>.vector.puppet.json`. Flat art (its opaque pixels fit within six colours, mean error under
+14 levels: line art and cartoon fills) is traced one colour at a time with potrace, the largest colour first;
+painted art goes through vtracer in colour mode, stacked, with colours merged to 5 bits a channel. Each colour
+becomes a palette slot (`vec0`, ...), so palette variants recolour it. Both tracers are the vendored sources built
+with their own recipes (`vendor.build`: potrace 1.16's configure and make, vtracer 0.6.5's cargo build), built on
+first use.
+
+Test `vectorize`: Nib (raster line art, 263 KB) becomes one ink colour in 76 KB; in the player the vector Nib covers
+the raster Nib's pixels (filled-silhouette IoU 0.994 to 0.999 through a walk-in, hop and talk); Grease Pencil, which
+refuses the raster Nib, draws the vector one, and Synfig, Lottie and Grease Pencil pass renderer parity (0.889 to
+0.992). A painted disc (hue round the circle, light to the edge, brush noise) goes through vtracer as 167 shapes and
+covers the same pixels (IoU 0.984).
+
 ## Anatomy plates (WP-16)
 `{"type": "plate", "plate": "heart" | "brain" | "lungs", "x", "y", "w", "labels": [{"at": [u, v], "text", "side",
 "start"}]}` shows an anatomy plate from Servier Medical Art (CC BY 4.0) on a card. Each label is joined by a leader

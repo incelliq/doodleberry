@@ -148,7 +148,7 @@
    "used_by": [
     "tools"
    ],
-   "use": "bitmap to vector tracing (WP-18); built on request by vendor.build"
+   "use": "bitmap to vector tracing (WP-18); built on request by vendor.build; built by vendor.build (4 Nov) and used by puppet.vectorize to trace raster parts"
   },
   {
    "path": "vendor/vtracer/",
@@ -162,7 +162,7 @@
    "used_by": [
     "tools"
    ],
-   "use": "colour raster to vector tracing (WP-18); built on request by vendor.build"
+   "use": "colour raster to vector tracing (WP-18); built on request by vendor.build; built by vendor.build (4 Nov) and used by puppet.vectorize to trace raster parts"
   },
   {
    "path": "dbe/studio/vendor/wavesurfer/",

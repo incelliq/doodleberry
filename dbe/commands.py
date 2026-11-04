@@ -494,6 +494,21 @@ def vendor_check():
     return V.check()
 
 
+@command("puppet.vectorize", path=("string", "a puppet with raster (image) parts"), out=("string", "where to write the vector puppet (default: <name>.vector.puppet.json beside it)", ""))
+def puppet_vectorize(path, out=""):
+    """Trace a puppet's raster parts into vector shapes (WP-14): flat art one colour at a time with potrace, painted art
+    with vtracer (both vendored and built by vendor.build); each colour a palette slot. Renderers that cannot draw
+    images (Grease Pencil) then draw the character, and it scales without blur."""
+    from . import vectorize as VZ
+    for tool, b in (("potrace", VZ.POTRACE), ("vtracer", VZ.VTRACER)):
+        if not b.exists():
+            vendor_build(tool)
+    pz = _json(ROOT / path); q, rep = VZ.vectorize(pz)
+    o = ROOT / (out or re.sub(r"(\.puppet)?\.json$", "", path) + ".vector.puppet.json"); o.write_text(json.dumps(q))
+    return {"puppet": str(o.relative_to(ROOT)), "parts": rep, "palette": {k: v for k, v in q["palette"].items() if k.startswith("vec")},
+            "bytes": {"raster": (ROOT / path).stat().st_size, "vector": o.stat().st_size}}
+
+
 @command("vendor.build", name=("string", "vendored component (vendor/<name>/UPSTREAM.json)"))
 def vendor_build(name):
     """Build a vendored component with its upstream recipe, in a copy, into out/vendor-build/<name>/ (WP-33). This
@@ -5578,6 +5593,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "vectorize":   # WP-14/33: raster parts traced with the vendored potrace and vtracer
+        bad, meas = _vectorize_test()
+        failed += 1 if bad else 0
+        results.append({"vectorize": "Nib's raster line art traced to vector draws like the raster original in the player and alike in Synfig, Lottie and Grease Pencil (which refuses the raster Nib); a painted image goes through vtracer and keeps its shape", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "prosody":   # WP-13: prosody direction
         bad, meas = _prosody_test()
         failed += 1 if bad else 0
@@ -9734,6 +9753,70 @@ def _templates_test():
 
 
 
+
+
+def _vectorize_test():
+    """WP-14/33 vectorize. puppet.vectorize on Nib (raster line art): every part and swap traced (flat, potrace).
+    A scratch copy of nib-hello's first shot (walk-in, hop, talk) in three versions: raster Nib in the player against
+    vector Nib in the player (the characters alone, filled-silhouette IoU >= 0.9 at three moments: the trace is
+    faithful); vector Nib through renderer parity against Synfig, Lottie and Grease Pencil (all ok; Grease Pencil
+    refuses the raster one). A painted image (a shaded ball, hundreds of colours) goes through vtracer and, drawn back,
+    covers the same pixels (IoU >= 0.9)."""
+    import base64, io
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from . import rparity as RP, vectorize as VZ
+    bad, meas = [], {}
+    d_ = FILMS / "zz-vector"
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        r = puppet_vectorize("puppet/examples/nib.puppet.json", out="films/zz-vector/nib.vector.puppet.json")
+        meas["traced"] = sorted({x["how"] for x in r["parts"]}); meas["bytes"] = r["bytes"]
+        sh = _shots("nib-hello")["shots"][0]   # resolved: every time in seconds
+        raw = json.loads(json.dumps(sh)); raw.update(start=0, end=3.0); raw.pop("start_line", None); raw.pop("end_line", None); raw.pop("overlays", None); raw["bubbles"] = False
+        for c in raw["cast"]:
+            c.get("timeline", {}).pop("visemes_from", None)
+        vec = json.loads(json.dumps(raw))
+        for c in vec["cast"]:
+            c["puppet"] = "films/zz-vector/nib.vector.puppet.json"
+        d2 = FILMS / "zz-vector2"; shutil.rmtree(d2, ignore_errors=True); d2.mkdir(parents=True)   # the vector Nib at the same film times
+        for dd, shot in ((d_, raw), (d2, vec)):
+            (dd / "shots.json").write_text(json.dumps({"title": "vector", "size": [1080, 1920], "fps": 30, "shots": [shot]}))
+            (dd / "script.json").write_text('{"lines": []}'); (dd / "timing.json").write_text('{"lines": []}')
+        ious = []
+        for t in (0.5, 1.5, 2.5):
+            for dd, tag in ((d_, "r"), (d2, "v")):
+                _run(["node", "tools/stills.mjs", str(_player_page(dd.name)), "shot=s1&castonly=1&captions=0", str(d_ / tag), f"{t:.3f}"], timeout=300)
+            ious.append(round(float(RP.iou(RP.silhouette(d_ / f"r_{t:.3f}.png"), RP.silhouette(d_ / f"v_{t:.3f}.png"))), 3))
+        meas["raster_vs_vector_iou"] = ious
+        if min(ious) < 0.9:
+            bad.append(f"the trace is not faithful: {ious}")
+        rp = RP.run("zz-vector2", "s1", times=[0.5, 1.5, 2.5])
+        meas["parity"] = {k: (v.get("min"), max(v.get("colour_diff") or [0])) for k, v in rp["renderers"].items()}; meas["refusals"] = rp["refusals"]
+        if not rp["ok"] or "grease-pencil" not in rp["renderers"]:
+            bad.append(f"vector parity: {meas['parity']} {rp['refusals']}")
+        meas["raster_refused_by"] = sorted(RP.run("zz-vector", "s1", times=[0.5], renderers=("grease-pencil",))["refusals"])
+        # a painted image: a shaded ball, many colours -> vtracer
+        import colorsys   # a painted disc: hue round the circle, light to the edge, a brush texture: hundreds of colours
+        yy, xx = np.mgrid[0:240, 0:240]; r_ = np.hypot(xx - 120, yy - 120); ang = (np.arctan2(yy - 120, xx - 120) / (2 * np.pi)) % 1
+        tex = np.random.default_rng(3).normal(0, 0.06, (240, 240))
+        rgb = np.array([colorsys.hsv_to_rgb(h, 0.75, 0.55 + 0.4 * (1 - min(1, rr / 100)) + t_) for h, rr, t_ in zip(ang.ravel(), r_.ravel(), tex.ravel())]).reshape(240, 240, 3)
+        alpha = (r_ < 100).astype(np.uint8) * 255
+        im = Image.fromarray(np.dstack([np.clip(rgb * 255, 0, 255).astype(np.uint8), alpha]), "RGBA")
+        b = io.BytesIO(); im.save(b, "PNG")
+        st = {"image": "data:image/png;base64," + base64.b64encode(b.getvalue()).decode(), "x": 0, "y": 0, "w": 240, "h": 240}
+        shapes, how = VZ.trace_image(st)
+        meas["painted"] = {"how": how, "colours": len(set(c for _, c in shapes))}
+        svg = d_ / "ball.html"
+        svg.write_text('<html><body style="margin:0;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">' + "".join(f'<path d="{d}" fill="{c}"/>' for d, c in shapes) + "</svg></body></html>")
+        _run(["node", "-e", "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:240,height:240}});await p.goto('file://'+process.argv[1]);await p.screenshot({path:process.argv[2],omitBackground:true});await b.close();})()", str(svg), str(d_ / "ball.png")], timeout=120)
+        a0 = np.asarray(im)[..., 3] > 128; a1 = np.asarray(Image.open(d_ / "ball.png").convert("RGBA"))[..., 3] > 128
+        meas["painted"]["iou"] = round(float((a0 & a1).sum() / max(1, (a0 | a1).sum())), 3)
+        if not how.startswith("painted") or meas["painted"]["iou"] < 0.9:
+            bad.append(f"painted: {meas['painted']}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _prosody_test():
     """WP-13 prosody direction. A scratch film voices "The river rose all night, and by morning the bridge was gone."

@@ -102,6 +102,8 @@ def check(deep=True):
     from . import provenance as _PV   # WP-26: the C2PA reference tool reads back every signed final
     add("c2patool (C2PA reference tool)", "tools", _PV.C2PATOOL.exists(), False, str(_PV.C2PATOOL) if _PV.C2PATOOL.exists() else "not installed", "bash tools/setup.sh provenance")
     # WP-29: handwriting fonts trace with the vendored potrace (fontTools and typst are in requirements-tools.txt)
+    vtr = ROOT / "out" / "vendor-build" / "vtracer" / "release" / "vtracer"   # WP-33: colour tracing for puppet.vectorize
+    add("vtracer (vendored 0.6.5, built)", "tools", vtr.exists(), False, str(vtr) if vtr.exists() else "not built", 'python -m dbe vendor.build \'{"name": "vtracer"}\'   (puppet.vectorize)')
     pot = ROOT / "out" / "vendor-build" / "potrace" / "bin" / "potrace"
     add("potrace (vendored 1.16, built)", "tools", pot.exists(), False, str(pot) if pot.exists() else "not built", 'python -m dbe vendor.build \'{"name": "potrace"}\'   (font.from_samples)')
     import shutil as _sh   # WP-25: world languages: OCR read-back and voices beyond Kokoro's
