@@ -7229,7 +7229,6 @@ def film_describe(name, voice="", extend=True):
         pv = _json(d / "provenance.json", {}) or {}
         pv["models"] = [m for m in pv.get("models", []) if m.get("name") != TR.NAME] + [{"name": TR.NAME, "license": TR.LICENSE, "output": f"audio description translated to {lang}"}]
         (d / "provenance.json").write_text(json.dumps(pv, indent=1))
-    cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend)
     if not voice and lang != "en":   # a voice that speaks the language, one the speakers do not use if there is one
         from . import i18n as I
         used = {v.get("voice") for v in (_json(d / "script.json", {}).get("speakers") or {}).values()}
@@ -7240,6 +7239,11 @@ def film_describe(name, voice="", extend=True):
         ensure_voice(voice)
     voice = voice or _ad_voice(name)
     main, sr = sf.read(d / "build" / "mix.wav", dtype="float32")
+    # each description (and its shorter forms) as this voice reads it, so the pauses are filled by what is heard,
+    # not by a guess from the words (a guess that cannot count Sinhala or Chinese words the way English ones are)
+    opts = sorted({o for e in evs for o in AD.options_of(e[2], e[4])})
+    voiced = {t: len(a) / sr for t, a in zip(opts, AD.voice_all(opts, voice, VOICES, sr))}
+    cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend, voiced=voiced)
     cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues])
     hold_clips = AD.voice_all([h["text"] for h in holds], voice, VOICES, sr)
     for c, a in zip(cues, cue_clips):

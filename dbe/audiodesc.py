@@ -44,7 +44,9 @@ HOLD_PAD = (0.3, 0.45)   # silence before and after a description read in a hold
 
 
 def _words(t):
-    return re.findall(r"[a-z0-9']+", t.lower())
+    """words in any script: split on spaces and punctuation (the Latin-only pattern counted a Sinhala or Arabic
+    sentence as no words at all); English counts are as before"""
+    return [w for w in re.split(r"[\s.,;:!?\"()\[\]{}<>/\\|*&^%$#@+=~`\-\u2010-\u2027\u00ab\u00bb\u060c\u061b\u061f\u06d4\u0964\u0965\u3000-\u303f\uff01-\uff0f]+", t.lower()) if w.strip("'")]
 
 
 def _and(names):
@@ -197,16 +199,22 @@ def _hold_point(t, timing, total):
     return round(min(t, max(0.0, total - 0.05)), 3)
 
 
-def place(evs, gaps, shot_end, timing, total, extend=True):
+def options_of(text, parts):
+    """the whole description, then shorter ones losing its minor parts"""
+    return [text] + [" ".join(x for _, x in sorted(parts, key=lambda x: -x[0])[:n]) for n in range(len(parts) - 1, 0, -1)]
+
+
+def place(evs, gaps, shot_end, timing, total, extend=True, voiced=None):
     """-> (cues in pauses, holds, dropped). Each event goes in the first pause after it (before its shot ends) with
-    room, losing minor parts and then reading faster if it must; else into a hold (extended description)."""
+    room, losing minor parts and then reading faster if it must; else into a hold (extended description).
+    voiced: {text: seconds} as the voice actually reads it; otherwise the time is guessed from the words (WPS)."""
     cues, holds, dropped = [], {}, []; used = []
     for t, pr, text, sid, parts in evs:
         end_by = shot_end[sid]
-        options = [text] + [" ".join(x for _, x in sorted(parts, key=lambda x: -x[0])[:n]) for n in range(len(parts) - 1, 0, -1)]
+        options = options_of(text, parts)
         done = False
         for txt in options:
-            need = len(_words(txt)) / WPS + 0.2
+            need = voiced[txt] + 0.1 if voiced and txt in voiced else len(_words(txt)) / WPS + 0.2
             for a, b in gaps:
                 a2 = max(a, t - 0.3)
                 for u0, u1 in used:

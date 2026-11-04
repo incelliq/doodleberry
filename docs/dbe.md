@@ -423,6 +423,8 @@ classroom." "Ravi points." "A bar chart, Telescope nights per month: 4 bars, hig
 text the narration already says is not read again; a shot's own `"describe": "..."` replaces the generated words
 (`false` leaves it out). Sentences go in the **pauses** between lines first (0.15 s clear of speech, before the shot
 ends, minor parts dropped and then read up to 20% faster if needed) with the film's sound 10 dB lower under them.
+How long a sentence takes is measured: every sentence and its shorter forms are first read by the description voice
+(a guess from the words could not count Sinhala or Chinese words, and placed 4.5 s of Sinhala in a 1 s pause).
 Our films leave about 0.4 s between lines, so most descriptions do not fit: what matters (the setting, who comes in,
 text, numbers and charts) is then **extended** (WCAG 1.2.7): the picture holds on the frame at the end of the line
 being spoken (a hold never splits a line), the description is read in silence, and the film carries on; gestures
@@ -512,11 +514,13 @@ flagged), the board, chart title, month labels, source line and titles in Arabic
 every QA check passes (lip-sync included) and all 9 on-screen strings and caption chunks read back. `nib-hello` in
 Sinhala (`films/nib-hello-si`): Sinhala voice (restricted, flagged), sign and bubbles in Sinhala (the shout keeps the
 original's short line), Sinhala subtitles (.srt, .vtt); every QA check passes and its 3 strings read back. The
-`l10n` test makes both from scratch copies. **Open:** audio description stays English-only (its sentences are
-written in English), so language versions are made without it; long bubbles in wide scripts wrap into tall, narrow
-bubbles (the row limit was tuned for English); bar charts keep a left-to-right axis in right-to-left films; titles
-and posting text are translated but covers are not re-made per language; there is no machine translation (every
-string comes from a translator's file).
+`l10n` test makes both from scratch copies. Language versions carry audio description: its English sentences are
+machine-translated (NLLB, recorded in provenance.json and flagged for review) and read by a voice of the language;
+in Sinhala the opening description becomes a 5.8 s hold, since the Sinhala voice reads it more slowly than the
+pauses allow. Bar charts run right to left in right-to-left films. **Open:** long bubbles in wide scripts wrap into
+tall, narrow bubbles (the row limit was tuned for English); titles and posting text are translated but covers are
+not re-made per language; NLLB transliterates some names and verbs ("Nib hops" comes out as its sound in Sinhala
+letters), so its description drafts need a reader of the language.
 
 ## Analytics and a plan that re-ranks itself (WP-31)
 What each post did lives with the plan, in `plan/channels/<id>/analytics.json`: one record per post (a calendar row
