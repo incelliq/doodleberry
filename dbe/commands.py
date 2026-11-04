@@ -2393,6 +2393,54 @@ def review_add(name, frame, text, who="director"):
     return note
 
 
+@command("review.otio_export", name=("string", "film"))
+def review_otio_export(name):
+    """Review notes for OpenRV, xSTUDIO or any OpenTimelineIO tool (WP-19): build/review/<name>_review.otio holds the
+    finished film as one clip with a marker per note at its frame (the note's text as the marker name, its status as
+    the colour: open red, verified green, needs_human yellow; id, reviewer and status in the marker's metadata).
+    Markers a reviewer adds there come back with review.otio_import."""
+    import opentimelineio as otio
+    d = _film(name); s = _shots(name); fps = s.get("fps", 30); rv = _review(name)
+    src = d / "build" / "final.mp4"
+    dur = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(src)])[-1]) if src.exists() else max([n["t"] for n in rv["notes"]] + [1.0]) + 1
+    tl = otio.schema.Timeline(name=f"{name} review"); tr = otio.schema.Track(name="picture", kind=otio.schema.TrackKind.Video); tl.tracks.append(tr)
+    clip = otio.schema.Clip(name=name, media_reference=otio.schema.ExternalReference(target_url=src.resolve().as_uri(),
+                            available_range=otio.opentime.TimeRange(otio.opentime.RationalTime(0, fps), otio.opentime.RationalTime(round(dur * fps), fps))),
+                            source_range=otio.opentime.TimeRange(otio.opentime.RationalTime(0, fps), otio.opentime.RationalTime(round(dur * fps), fps)))
+    colour = {"open": otio.schema.MarkerColor.RED, "verified": otio.schema.MarkerColor.GREEN, "needs_human": otio.schema.MarkerColor.YELLOW}
+    for n in rv["notes"]:
+        m = otio.schema.Marker(name=n["text"], marked_range=otio.opentime.TimeRange(otio.opentime.RationalTime(n["frame"], fps), otio.opentime.RationalTime(1, fps)),
+                               color=colour.get(n["status"], otio.schema.MarkerColor.PURPLE),
+                               metadata={"doodleberry": {"id": n["id"], "who": n.get("who"), "status": n["status"], "check": n.get("check") or n.get("reason")}})
+        clip.markers.append(m)
+    tr.append(clip)
+    od = d / "build" / "review"; od.mkdir(parents=True, exist_ok=True); out = od / f"{name}_review.otio"
+    otio.adapters.write_to_file(tl, str(out))
+    return {"otio": str(out.relative_to(ROOT)), "markers": len(clip.markers), "fps": fps}
+
+
+@command("review.otio_import", name=("string", "film"), file=("string", "an .otio file a review tool saved (from review.otio_export)"), who=("string", "reviewer", "reviewer"))
+def review_otio_import(name, file, who="reviewer"):
+    """Markers added in OpenRV, xSTUDIO or another OpenTimelineIO tool become review notes (WP-19): every marker without
+    a doodleberry id is a new note at its frame, its name the note's text. Markers that came from notes are matched by id,
+    and a marker already imported (same frame and text) is not added twice."""
+    import opentimelineio as otio
+    f = Path(file) if Path(file).is_absolute() else ROOT / file
+    tl = otio.adapters.read_from_file(str(f)); fps = _shots(name).get("fps", 30); added = []
+    notes = _review(name)["notes"]; known = {n["id"] for n in notes}; seen = {(n["frame"], n["text"].strip()) for n in notes}
+    for clip in tl.find_clips():
+        start = clip.source_range.start_time if clip.source_range else otio.opentime.RationalTime(0, fps)
+        for m in clip.markers:
+            mid = (m.metadata.get("doodleberry") or {}).get("id")
+            if mid in known or not (m.name or "").strip():
+                continue
+            fr = int(round((m.marked_range.start_time - start).rescaled_to(fps).value))
+            if (fr, m.name.strip()) in seen:   # imported before (the review tool's file has no id for it)
+                continue
+            added.append(review_add(name, fr, m.name.strip(), who)); seen.add((fr, m.name.strip()))
+    return {"added": added, "kept": len(known)}
+
+
 @command("review.list", name=("string", "film"))
 def review_list(name):
     """All review notes with their status (open, verified, needs_human) and what was done."""
@@ -3070,6 +3118,33 @@ def _comp3_test():
             bad.append(f"growth purity or seed: {meas}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _review_otio_test():
+    import opentimelineio as otio
+    bad, meas = [], {}
+    name = "zz-reviewotio"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True)
+    shutil.copytree(FILMS / "review-demo", d, ignore=shutil.ignore_patterns("package", "master", "qa", "handoff", "versions", "diff", "review", "shots", "frames", "godot", "storybook"))
+    try:
+        (d / "review.json").write_text(json.dumps({"notes": []}))
+        review_add(name, 60, "Ravi should stand a little further left"); review_add(name, 102, "Ravi should look at Momo when she answers")
+        r = review_otio_export(name); f = ROOT / r["otio"]
+        tl = otio.adapters.read_from_file(str(f)); clip = next(iter(tl.find_clips()))
+        frames = sorted(int(m.marked_range.start_time.value) for m in clip.markers); meas["exported"] = {"markers": len(clip.markers), "frames": frames}
+        if frames != [60, 102]:
+            bad.append(f"exported markers: {meas['exported']}")
+        fps = r["fps"]   # a reviewer adds a marker at 4.5 s, as a review tool would save it
+        clip.markers.append(otio.schema.Marker(name="Momo's shrug should be bigger", marked_range=otio.opentime.TimeRange(otio.opentime.RationalTime(round(4.5 * fps), fps), otio.opentime.RationalTime(1, fps))))
+        otio.adapters.write_to_file(tl, str(f))
+        imp = review_otio_import(name, str(f), "reviewer"); notes = _review(name)["notes"]
+        meas["imported"] = [{"frame": n["frame"], "text": n["text"]} for n in imp["added"]]; meas["notes_after"] = len(notes)
+        if len(imp["added"]) != 1 or imp["added"][0]["frame"] != round(4.5 * fps) or len(notes) != 3:
+            bad.append(f"import: {meas}")
+        if review_otio_import(name, str(f))["added"]:
+            bad.append("a second import duplicated notes")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 
@@ -6619,6 +6694,10 @@ def test_golden(update=False, film=""):
         bad, meas = _comp3_test()
         failed += 1 if bad else 0
         results.append({"comp3": "a keyed circle has the area its radius says, a star gains points as its expression asks, and a seeded plant grows monotonically, stops when grown, renders identically twice and differs by seed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "reviewotio":   # WP-19: review notes to and from OpenTimelineIO (OpenRV, xSTUDIO)
+        bad, meas = _review_otio_test()
+        failed += 1 if bad else 0
+        results.append({"reviewotio": "review notes go out as OTIO markers at their frames and a marker added in a review tool comes back as a note, without duplicating the old ones", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0

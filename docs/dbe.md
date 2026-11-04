@@ -1020,6 +1020,18 @@ against the planner, with an excitable Momo, a calm Ravi and three agent tags.
 
 The verdicts are in out/critic/blind_keys/.
 
+**Blind comparisons repeated** (4 Nov 2026). The same procedure (`critic.blind_pair`, a fresh critic per packet, the
+packet copied to a neutral folder so its path does not tell which is which, the key read only after the verdict) on
+two more scenes. In each, the planner's version is the scene with its hand-keyed gestures removed and `acting.plan`
+run on it:
+- direct-demo: hand-keyed preferred, 27 to 21 (acting 7 against 5, timing 6 against 6);
+- review-demo: hand-keyed preferred, 27 to 17 (acting 7 against 5, timing 7 against 4).
+Both critics named the same gaps:
+- the planner's point lands on the pointing words, late in the line;
+- there is no reaction beat after the punchline (the hand-keyed versions have a sheepish head-scratch);
+- the character denying stands neutral through the denial.
+With the earlier single win on clips-demo, the planner stands at one blind win in six. Not met on these scenes.
+
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:
 - grass: a soft-onset brush of noise and almost no thump;
@@ -2138,6 +2150,15 @@ hold. Test `layoutnotes` on a copy of `review-demo`:
 - "push in on this": verified, Ravi 818 -> 1759 px tall, full shot -> medium long shot. The shot had no automatic
   camera, so the note turned it on one step closer than its defaults: a large first step;
 - "Priya should stand further right" (nobody of that name in the shot): left to a human.
+
+**Review in OpenRV or xSTUDIO** (WP-19, through OpenTimelineIO). `review.otio_export` writes
+`build/review/<film>_review.otio`: the finished film as one clip with a marker per note at its frame. The note's text
+is the marker's name and its status the colour (open red, verified green, needs a human yellow); id, reviewer and
+status go in the marker's metadata. A reviewer opens it in a tool that reads OTIO and adds markers. `review.otio_import`
+turns each new marker into a note at its frame, and leaves alone the markers that came from notes, or were imported
+already. Test `reviewotio`: two notes go out at frames 60 and 102; a marker added at 4.5 s comes back as a note at
+frame 135; a second import adds nothing. Neither OpenRV nor xSTUDIO is installed here, so the round trip is checked
+with the OpenTimelineIO library they use, not in the players themselves.
 
 **Continuity** (`film.continuity {name}`, `dbe/continuity.py`, WP-19), measured on the baked frames (screen positions
 with the shot camera folded in), written to `build/continuity.json`:
