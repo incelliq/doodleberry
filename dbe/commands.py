@@ -5542,6 +5542,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "prosody":   # WP-13: prosody direction
+        bad, meas = _prosody_test()
+        failed += 1 if bad else 0
+        results.append({"prosody": "one sentence voiced plain and as whisper, shout, excited, calm and sad: a whisper has no voicing left, a shout is higher and brighter, excited has the widest intonation and is quicker, calm and sad are narrower and slower, sad is the lowest and darkest; Whisper still understands every one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "branching":   # WP-30: branching interactive films
         bad, meas = _branching_test()
         failed += 1 if bad else 0
@@ -9690,6 +9694,75 @@ def _templates_test():
 
 
 
+
+
+def _prosody_test():
+    """WP-13 prosody direction. A scratch film voices "The river rose all night, and by morning the bridge was gone."
+    six times as Ravi (Kokoro am_michael): plain, then each delivery. From build/voice.wav and timing.json, per line:
+    voiced share (WORLD harvest), median pitch, intonation spread (std of log pitch), spectral centroid, length; and
+    faster-whisper's word error rate against the text. Expected: whisper voiced share < 0.1 (plain > 0.4); shout
+    pitch >= 1.15x plain and centroid above plain (voicing: loud frames whose autocorrelation peaks above 0.6 at a
+    pitch lag; harvest's own voicing is recorded too, but it finds pitch in noise); excited spread > 1.3x plain and shorter; calm and sad spread
+    < 0.8x plain and longer; sad pitch and centroid the lowest; every word error rate <= 0.2."""
+    import re as _re
+    import numpy as np
+    import soundfile as sf
+    import pyworld as pw
+    from faster_whisper import WhisperModel
+    bad, meas = [], {}
+    text = "The river rose all night, and by morning the bridge was gone."
+    kinds = [None, "whisper", "shout", "excited", "calm", "sad"]
+    d_ = FILMS / "zz-prosody"
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        lines = [{"id": f"l{i}", "speaker": "ravi", "fact": None, "text": text, **({"delivery": k} if k else {})} for i, k in enumerate(kinds)]
+        (d_ / "script.json").write_text(json.dumps({"speakers": {"ravi": {"voice": "kokoro:am_michael"}}, "gap_s": 0.6, "lines": lines}))
+        (d_ / "shots.json").write_text(json.dumps({"title": "prosody", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "set": "plain", "start": 0, "end": "l5.end+0.5", "cast": []}]}))
+        voice_build("zz-prosody")
+        x, fs = sf.read(d_ / "build" / "voice.wav", dtype="float64")
+        x = x.mean(1) if x.ndim > 1 else x
+        tm = _json(d_ / "timing.json")["lines"]
+        wm = WhisperModel("small.en", device="cpu", compute_type="int8")
+        norm = lambda s: _re.sub(r"[^a-z ]", "", s.lower()).split()
+        def wer(ref, hyp):
+            r, h = norm(ref), norm(hyp); D = np.zeros((len(r) + 1, len(h) + 1)); D[:, 0] = range(len(r) + 1); D[0, :] = range(len(h) + 1)
+            for i in range(1, len(r) + 1):
+                for j in range(1, len(h) + 1):
+                    D[i, j] = min(D[i - 1, j] + 1, D[i, j - 1] + 1, D[i - 1, j - 1] + (r[i - 1] != h[j - 1]))
+            return D[-1, -1] / max(1, len(r))
+        for k, l in zip(kinds, tm):
+            seg = x[int(l["start"] * fs):int(l["end"] * fs)]
+            f0, _ = pw.harvest(seg, fs, f0_floor=60, f0_ceil=500, frame_period=5.0)
+            loud = np.convolve(seg ** 2, np.ones(int(fs * 0.005)) / int(fs * 0.005), "same")[::int(fs * 0.005)][:len(f0)] > 1e-5
+            v = f0 > 0
+            S = np.abs(np.fft.rfft(seg * np.hanning(len(seg)))); fr = np.fft.rfftfreq(len(seg), 1 / fs)
+            segs, _ = wm.transcribe(seg.astype(np.float32) if fs == 16000 else __import__("scipy.signal", fromlist=["resample_poly"]).resample_poly(seg, 16000, fs).astype(np.float32), language="en", beam_size=5)
+            hyp = " ".join(sg.text for sg in segs)
+            # voicing: the share of loud 40 ms frames whose normalized autocorrelation peaks above 0.6 at a pitch lag
+            # (62-400 Hz); WORLD's harvest finds a "pitch" in plain noise too, so it is not the judge of a whisper
+            n, h = int(0.04 * fs), int(0.01 * fs); lo_, hi_ = int(fs / 400), int(fs / 62)
+            frames = [seg[i:i + n] for i in range(0, len(seg) - n, h)]
+            en = np.array([float((fr_ ** 2).sum()) for fr_ in frames]); keep = en > en.max() * 10 ** (-35 / 10)
+            def periodic(fr_):
+                fr_ = fr_ - fr_.mean(); ac = np.correlate(fr_, fr_, "full")[n - 1:]
+                return ac[lo_:hi_].max() / (ac[0] + 1e-12)
+            voiced = float(np.mean([periodic(fr_) > 0.6 for fr_, k_ in zip(frames, keep) if k_]))
+            meas[k or "plain"] = {"voiced": round(voiced, 3), "harvest_voiced": round(float(v[loud[:len(v)]].mean() if loud.any() else v.mean()), 3), "pitch": round(float(np.median(f0[v])), 1) if v.any() else 0.0,
+                                  "spread": round(float(np.std(np.log(f0[v]))), 3) if v.sum() > 5 else 0.0, "centroid": round(float((S * fr).sum() / S.sum()), 0),
+                                  "length": round(l["end"] - l["start"], 2), "wer": round(wer(text, hyp), 2), "heard": hyp.strip()}
+        m = meas; P = m["plain"]
+        checks = {"whisper unvoiced": m["whisper"]["voiced"] < 0.1 and P["voiced"] > 0.4,
+                  "shout higher and brighter": m["shout"]["pitch"] >= 1.15 * P["pitch"] and m["shout"]["centroid"] > P["centroid"],
+                  "excited wider and quicker": m["excited"]["spread"] > 1.3 * P["spread"] and m["excited"]["length"] < P["length"],
+                  "calm narrower and slower": m["calm"]["spread"] < 0.8 * P["spread"] and m["calm"]["length"] > P["length"],
+                  "sad narrower, slower, lowest, darkest": m["sad"]["spread"] < 0.8 * P["spread"] and m["sad"]["length"] > P["length"]
+                      and m["sad"]["pitch"] == min(v["pitch"] for kk, v in m.items() if kk != "whisper") and m["sad"]["centroid"] == min(v["centroid"] for v in m.values()),
+                  "all understood": all(v["wer"] <= 0.2 for v in m.values())}
+        meas["checks"] = checks
+        bad += [k for k, ok in checks.items() if not ok]
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _branching_test():
     """WP-30 branching. A scratch copy of closest-to-the-sun-in-january (ten shots) gets "branches": after s2, the

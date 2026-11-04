@@ -1006,6 +1006,19 @@ family's factors (bold-round 1.5, 1.456, 1.12; fine 0.7, 0.816, 0.96; each withi
 family; every member lints clean; a shot with one member of each family draws alike in Synfig, Lottie and Grease
 Pencil (1.0).
 
+## Prosody direction (WP-13)
+A script line's `"delivery"`: `whisper`, `shout`, `excited`, `calm` or `sad`. Kokoro and Piper take no SSML, so the
+delivery is made from the voice itself, in the same WORLD resynthesis as the speaker's own fx (engine/voicefx.py
+DELIVERY): pitch and intonation range, spectral tilt above 1 kHz (brighter for a shout, darker for sad), speaking
+rate (the TTS length scale) and level; a whisper is resynthesised with no voicing at all, noise through the same
+vocal tract. Words are aligned after, so lip-sync and captions follow.
+
+Measured (test `prosody`: one sentence as Ravi, plain and in each delivery): voiced share 0.51 plain against 0.04
+whispered (loud frames with a periodic autocorrelation peak; WORLD's own pitch tracker reports 0.32 for the whisper,
+because it finds "pitch" in noise); shout 136 Hz against 107 and a spectral centroid of 3.9 kHz against 2.2;
+excited the widest intonation (0.31 against 0.23) and 10% quicker; calm and sad narrower (0.15, 0.14) and slower;
+sad the lowest (100 Hz) and darkest (1.5 kHz). faster-whisper transcribes all six without an error.
+
 ## Branching interactive films (WP-30)
 shots.json `"branches": [{"after": "s2", "prompt": "What do you want to know?", "choices": [{"label": "How far is
 it?", "shots": ["s3"]}, {"label": "Why is it warm, then?", "shots": ["s4"]}], "then": "s5"}]` makes the interactive

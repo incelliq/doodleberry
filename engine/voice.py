@@ -145,7 +145,7 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
     speakers = script.get("speakers") or {"narrator": {"voice": voice_name or script["voice"]}}
     default = next(iter(speakers))
     voices = {}
-    fxmod = load_fx() if any(sp.get("fx") for sp in speakers.values()) else None
+    fxmod = load_fx() if any(sp.get("fx") for sp in speakers.values()) or any(ln.get("delivery") for ln in script["lines"]) else None
     from faster_whisper import WhisperModel
     # language: script["lang"], else the first voice's prefix (es_ES-carlfm-x_low -> es)
     v0 = next(iter(speakers.values()))["voice"]
@@ -173,16 +173,21 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                 al = lang != "en"
                 voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"), include_alignments=al)
                 voices[cfg["voice"]].dbe_align = al
+        dl = (fxmod.DELIVERY.get(ln.get("delivery")) if fxmod and ln.get("delivery") else None)   # WP-13 prosody direction
+        if ln.get("delivery") and not dl:
+            raise ValueError(f"line {ln['id']}: unknown delivery {ln['delivery']!r} (have {', '.join(fxmod.DELIVERY) if fxmod else 'none: pyworld missing'})")
         def make(text, ls):
-            """synthesize, trim, phone timings on the trimmed clock (plan 2.1), voice fx"""
-            a_, cut0 = trim(synth_line(voices[cfg["voice"]], text, ls), offset=True)
+            """synthesize, trim, phone timings on the trimmed clock (plan 2.1), voice fx and the line's delivery"""
+            a_, cut0 = trim(synth_line(voices[cfg["voice"]], text, ls * (dl["rate"] if dl else 1.0)), offset=True)
             ph_ = [(ph, s0 - cut0, s1 - cut0) for ph, s0, s1 in (getattr(voices[cfg["voice"]], "last_phones", None) or [])]
-            if cfg.get("fx") and fxmod:
-                fx = cfg["fx"] if isinstance(cfg["fx"], dict) else {"preset": cfg["fx"]}
+            if (cfg.get("fx") or dl) and fxmod:
+                fx = (cfg.get("fx") if isinstance(cfg.get("fx"), dict) else {"preset": cfg["fx"]}) if cfg.get("fx") else {}
                 p = {**fxmod.PRESETS.get(fx.get("preset"), {"pitch": 1.0, "formant": 1.0, "range": 1.0}),
                      **{k: v for k, v in fx.items() if k != "preset"}}
-                y, _, _ = fxmod.revoice(a_.astype(np.float64), SR_OUT, p["pitch"], p["formant"], p["range"])
-                a_ = (y * (0.9 / (np.max(np.abs(y)) + 1e-9))).astype(np.float32)
+                d_ = dl or {}
+                y, _, _ = fxmod.revoice(a_.astype(np.float64), SR_OUT, p["pitch"] * d_.get("pitch", 1.0), p["formant"], p["range"] * d_.get("range", 1.0),
+                                        d_.get("tilt", 0.0), d_.get("whisper", False))
+                a_ = (y * (0.9 / (np.max(np.abs(y)) + 1e-9)) * 10 ** (d_.get("gain_db", 0.0) / 20)).astype(np.float32)
             return a_, ph_
         ls0 = ln.get("length_scale", script.get("length_scale", 1.0)); spoken = ln["text"]
         a, phones = make(spoken, ls0)

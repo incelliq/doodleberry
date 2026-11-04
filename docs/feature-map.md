@@ -164,7 +164,7 @@ covered, now added to their packages' scopes.
 | Multi-speaker TTS with voice effects | NEW | ✅ | – | Piper plus WORLD |
 | Voice licence gate | NEW | ✅ | – | |
 | More clean voices, including emotion and other languages | NEW | 🟡 | P0 | 54 Kokoro voices (0.5); 115 Piper voices of forty languages classified by licence, clean ones in 17 languages (WP-25); expressive voices WP-43 |
-| Prosody direction (whisper, shout, excited, sad) | NEW | ⬜ | P1 | whisper, shout, excited: WP-13 |
+| Prosody direction (whisper, shout, excited, sad) | NEW | ✅ | – | line `delivery` (whisper, shout, excited, calm, sad) made from the voice by WORLD, measured and transcribed (WP-13) |
 | Human voice-over import with alignment | PRO | 🟡 | P0 | aligner and slots exist; recorded takes into slots: WP-13 |
 | Consented voice cloning with consent records | IDEA | 🟡 | P2 | consent records and the gate that refuses a person's voice without one (`consent.add`, WP-26); own-voice cloning: WP-43 |
 | Procedural score, stingers, ducking | NEW | ✅ | – | |
