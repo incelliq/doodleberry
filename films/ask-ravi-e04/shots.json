@@ -114,7 +114,7 @@
      "place": {
       "x": 300,
       "y": 1540,
-      "s": 1.05
+      "s": 1.349
      },
      "timeline": {
       "clips": [
@@ -179,7 +179,7 @@
      "place": {
       "x": 780,
       "y": 1540,
-      "s": 1.05
+      "s": 1.349
      },
      "timeline": {
       "clips": [
@@ -266,7 +266,9 @@
    "end_line": "button",
    "bubbles": false,
    "camera_auto": {
-    "handheld": 0.3
+    "handheld": 0.3,
+    "zoom_single": 1.55,
+    "zoom": 1.2
    },
    "cast": [
     {
@@ -275,7 +277,7 @@
      "place": {
       "x": 300,
       "y": 1540,
-      "s": 1.05
+      "s": 1.338
      },
      "timeline": {
       "clips": [
@@ -354,7 +356,7 @@
      "place": {
       "x": 780,
       "y": 1540,
-      "s": 1.05
+      "s": 1.338
      },
      "timeline": {
       "clips": [

@@ -18,7 +18,7 @@
     ]
    },
    "start": 0,
-   "end": "q1.start-0.3",
+   "end": 4.656,
    "start_line": "hook",
    "end_line": "hook",
    "bubbles": false,
@@ -37,10 +37,38 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 0.859,
+        "end": 1.759,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 2.059,
+        "weight": 3,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "momo"
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        0.4,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        0.6,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
      }
     }
    ],
@@ -54,11 +82,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -75,8 +99,8 @@
      "shooting star?"
     ]
    },
-   "start": "q1.start-0.3",
-   "end": "q2.start-0.3",
+   "start": 4.656,
+   "end": 18.945,
    "start_line": "q1",
    "end_line": "a1",
    "bubbles": false,
@@ -90,7 +114,7 @@
      "place": {
       "x": 300,
       "y": 1540,
-      "s": 1.05
+      "s": 1.346
      },
      "timeline": {
       "clips": [
@@ -98,10 +122,55 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 4.951,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 6.121,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 18.745,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "momo"
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        4.656,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        4.856,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        8.517,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       19.045
+      ]
      }
     },
     {
@@ -110,7 +179,7 @@
      "place": {
       "x": 780,
       "y": 1540,
-      "s": 1.05
+      "s": 1.346
      },
      "timeline": {
       "clips": [
@@ -118,10 +187,70 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 8.267,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 8.667,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 12.09,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 13.14,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 9.89,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "ravi"
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        8.467,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        4.706,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        8.667,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       8.567
+      ]
      }
     }
    ],
@@ -135,11 +264,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -153,11 +278,7 @@
        0,
        {
         "cast": 1,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -174,8 +295,8 @@
      "shooting star?"
     ]
    },
-   "start": "q2.start-0.3",
-   "end": "button.end+1.2",
+   "start": 18.945,
+   "end": 30.739,
    "start_line": "q2",
    "end_line": "button",
    "bubbles": false,
@@ -189,7 +310,7 @@
      "place": {
       "x": 300,
       "y": 1540,
-      "s": 1.05
+      "s": 1.348
      },
      "timeline": {
       "clips": [
@@ -197,10 +318,69 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 19.192,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 19.587,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 26.367,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_open_palms",
+        "start": 26.767,
+        "end": 28.167,
+        "weight": 3,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "momo"
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        18.945,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        19.145,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        21.473,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        26.767,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       26.667
+      ]
      }
     },
     {
@@ -209,7 +389,7 @@
      "place": {
       "x": 780,
       "y": 1540,
-      "s": 1.05
+      "s": 1.348
      },
      "timeline": {
       "clips": [
@@ -217,10 +397,64 @@
         "clip": "idle",
         "start": 0,
         "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 21.223,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_L",
+        "start": 23.089,
+        "end": 23.989,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 29.289,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
        }
       ],
       "springs": true,
-      "visemes_from": "ravi"
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        21.423,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        18.995,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        21.623,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        26.617,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       21.523,
+       29.589
+      ]
      }
     }
    ],
@@ -234,11 +468,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -252,11 +482,7 @@
        0,
        {
         "cast": 1,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
