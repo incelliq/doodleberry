@@ -3862,6 +3862,27 @@ def puppet_auto_weights(puppet, part, chain, out="", step=12):
     return {"puppet": str(dst.relative_to(ROOT)), "meshes": rep}
 
 
+@command("film.continuity", name=("string", "film"))
+def film_continuity(name):
+    """Continuity checks and shot sizes (WP-19) on the baked frames: the 180-degree rule (two characters keep their
+    left-right order across a cut), screen direction (a travelling character keeps going the same way), eyelines in
+    shot / reverse-shot pairs (each looks towards where the other stands), and each shot's size (ELS, LS, FS, MLS, MS,
+    MCU, CU, ECU) from how much of its main character the frame shows. A shot with "cross_line": true crosses on
+    purpose. Writes build/continuity.json."""
+    from . import continuity as CT
+    s = _shots(name); W, H = s.get("size", [1080, 1920]); sums = []
+    puppets = {c["puppet"]: _json(ROOT / c["puppet"]) for sh in s["shots"] for c in sh.get("cast", [])}
+    for sh in s["shots"]:
+        if not sh.get("cast"):
+            sums.append({}); continue
+        _, _, _, baked = _bake(name, sh["id"])
+        sums.append(CT.summary(sh, baked, puppets, (W, H)))
+    issues, rows = CT.check(s["shots"], sums, (W, H))
+    out = {"film": name, "ok": not issues, "issues": issues, "shots": rows, "sizes": dict(CT.SIZES)}
+    (FILMS / name / "build").mkdir(exist_ok=True); (FILMS / name / "build" / "continuity.json").write_text(json.dumps(out, indent=1))
+    return out
+
+
 @command("export.sprites", puppet=("string", "puppet file"), clips=("array", "clip names (default: every clip in its library)", None),
          fps=("integer", "frames per second of the sheet", 12), scale=("number", "character scale in the frame", 1.0))
 def export_sprites(puppet, clips=None, fps=12, scale=1.0):
@@ -5850,6 +5871,10 @@ def test_golden(update=False, film=""):
         bad, meas = _covers_l10n_test()
         failed += 1 if bad else 0
         results.append({"covers_l10n": "Sinhala and Arabic covers lettered in their own scripts, read back by OCR, Arabic right to left", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "continuity":   # WP-19: 180-degree rule, screen direction, eyelines, shot sizes
+        bad, meas = _continuity_test()
+        failed += 1 if bad else 0
+        results.append({"continuity": "a cut-up dialogue with none of the faults has no issues; each fault (sides swapped, eyeline away, direction reversed) is found by its rule; a marked line cross is accepted", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -7251,6 +7276,26 @@ def film_describe(name, voice="", extend=True):
     build/captions_ad.vtt, build/ad_mix.wav and build/final_ad.mp4: the described cut, with the film's own sound as a
     second track when nothing was extended (else the described track alone, marked). Checks, read back from the
     file: no description over speech, every described shot reached, -14 LUFS and true peak below -1 dBTP, the track
+    marked as description, and the length the holds account for. A shot's own words: "describe": "..." (or false).
+    When the extended cut needed holds, a standard cut is made too (WP-24): only what fits the pauses, the film's own
+    length and timing, with the film's sound and the described one as two tracks (build/final_ad_std.mp4, ad_std.vtt,
+    ad_std.json), so a platform or a viewer can choose; the result reports both."""
+    r = _describe_pass(name, voice, extend, "")
+    if extend and r.get("holds"):
+        std = _describe_pass(name, r.get("voice") or voice, False, "_std")
+        r["standard"] = {k: std.get(k) for k in ("ok", "checks", "coverage", "in_pauses", "length_s", "tracks", "dropped", "files")}
+        r["ok"] = r["ok"] and std["ok"]
+    return r
+
+
+def _describe_pass(name, voice="", extend=True, tag=""):
+    """Audio description (WP-24): what the picture shows that the words do not (the set, who comes in and what they
+    do, faces held, text, numbers and charts on screen), written from shots.json, read in the pauses between lines
+    with the film's sound lowered, and, where the pauses are too short, in holds of the picture (extended
+    description). Writes build/ad.json, build/ad.vtt (WebVTT descriptions on the described cut's clock),
+    build/captions_ad.vtt, build/ad_mix.wav and build/final_ad.mp4: the described cut, with the film's own sound as a
+    second track when nothing was extended (else the described track alone, marked). Checks, read back from the
+    file: no description over speech, every described shot reached, -14 LUFS and true peak below -1 dBTP, the track
     marked as description, and the length the holds account for. A shot's own words: "describe": "..." (or false)."""
     import soundfile as sf
     from . import audiodesc as AD
@@ -7299,18 +7344,18 @@ def film_describe(name, voice="", extend=True):
         h["voiced_s"] = round(len(a) / sr, 3); h["dur"] = round(round((h["voiced_s"] + sum(AD.HOLD_PAD)) * fps) / fps, 4)
     shift = AD.shift_of(holds)
     y = AD.build_audio(main, sr, cues, cue_clips, holds, hold_clips)
-    sf.write(d / "build" / "ad_mix.wav", y, sr)
+    sf.write(d / "build" / f"ad_mix{tag}.wav", y, sr)
     desc = [{**c, "start": round(shift(c["start"]), 3), "end": round(shift(c["start"]) + c["voiced_s"], 3)} for c in cues] + \
            [{"start": round(shift(h["at"]) - h["dur"] + AD.HOLD_PAD[0], 3), "end": round(shift(h["at"]) - h["dur"] + AD.HOLD_PAD[0] + h["voiced_s"], 3), "text": h["text"], "hold": True}
             for h in holds]
     desc.sort(key=lambda c: c["start"])
-    (d / "build" / "ad.vtt").write_text(AD.vtt(desc))
+    (d / "build" / f"ad{tag}.vtt").write_text(AD.vtt(desc))
     if (d / "build" / "captions.vtt").exists():
-        (d / "build" / "captions_ad.vtt").write_text(AD.retime_vtt((d / "build" / "captions.vtt").read_text(), shift))
-    pic = d / "build" / "ad_picture.mp4"; AD.build_video(final, holds, fps, pic)
-    out = d / "build" / "final_ad.mp4"; length = total + sum(h["dur"] for h in holds)
+        (d / "build" / f"captions_ad{tag}.vtt").write_text(AD.retime_vtt((d / "build" / "captions.vtt").read_text(), shift))
+    pic = d / "build" / f"ad_picture{tag}.mp4"; AD.build_video(final, holds, fps, pic)
+    out = d / "build" / f"final_ad{tag}.mp4"; length = total + sum(h["dur"] for h in holds)
     two = not holds   # with holds the film's own sound no longer lines up with the picture: the described track alone
-    _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(d / "build" / "ad_mix.wav"), *(["-i", str(final)] if two else []),
+    _run(["ffmpeg", "-v", "error", "-y", "-i", str(pic), "-i", str(d / "build" / f"ad_mix{tag}.wav"), *(["-i", str(final)] if two else []),
           "-map", "0:v", *(["-map", "2:a"] if two else []), "-map", "1:a", "-c:v", "copy", *(["-c:a:0", "copy"] if two else []),
           f"-c:a:{1 if two else 0}", "aac", f"-b:a:{1 if two else 0}", "192k", f"-ar:a:{1 if two else 0}", "48000", "-t", f"{length:.3f}",
           *(["-disposition:a:0", "default", "-metadata:s:a:0", "title=Main"] if two else []),
@@ -7327,10 +7372,13 @@ def film_describe(name, voice="", extend=True):
     checks = {"no description over speech": not over, "every described shot reached": want <= reached, "described track -14 ±1 LUFS": I is not None and abs(I + 14) <= 1,
               "described track true peak <= -1": tp is not None and tp <= -1.0, "track marked as description": bool(dispo.get("visual_impaired")) and bool(dispo.get("descriptions")),
               "length as held": abs(got - length) <= 0.1}
-    rep = {"voice": voice, "language": lang, **({"translated_by": "NLLB-200 distilled 600M (machine)", "untranslated": untranslated} if lang != "en" else {}), "cues": cues, "holds": holds, "dropped": dropped, "length_s": {"film": round(total, 3), "described": round(got, 3)},
+    coverage = round(len(want & reached) / len(want), 2) if want else 1.0
+    if tag and not extend:   # the standard cut beside an extended one: what fits the pauses only, so its coverage is reported, not required
+        checks.pop("every described shot reached")
+    rep = {"voice": voice, "language": lang, "coverage": coverage, **({"translated_by": "NLLB-200 distilled 600M (machine)", "untranslated": untranslated} if lang != "en" else {}), "cues": cues, "holds": holds, "dropped": dropped, "length_s": {"film": round(total, 3), "described": round(got, 3)},
            "loudness": {"lufs": I, "true_peak": tp}, "tracks": ["main", "audio description"] if two else ["audio description"], "checks": checks, "ok": all(checks.values()),
-           "files": {"video": "build/final_ad.mp4", "descriptions": "build/ad.vtt", "captions": "build/captions_ad.vtt", "mix": "build/ad_mix.wav"}, **({"over_speech": over} if over else {})}
-    (d / "build" / "ad.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
+           "files": {"video": f"build/final_ad{tag}.mp4", "descriptions": f"build/ad{tag}.vtt", "captions": f"build/captions_ad{tag}.vtt", "mix": f"build/ad_mix{tag}.wav"}, **({"over_speech": over} if over else {})}
+    (d / "build" / f"ad{tag}.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
     return {k_: v for k_, v in rep.items() if k_ not in ("cues", "holds")} | {"in_pauses": len(cues), "holds": len(holds), "held_s": round(sum(h["dur"] for h in holds), 2),
                                                                          "descriptions": [c["text"] for c in desc]}
 
@@ -9205,6 +9253,13 @@ def _access_test():
             row["heard"] = heard
             if min(heard) < 0.8:
                 bad.append(f"{f}: descriptions not heard: {heard}")
+        if r["holds"]:   # WP-24: beside the extended cut, a standard one at the film's own length with both tracks
+            st = r.get("standard") or {}
+            row["standard"] = {"in_pauses": st.get("in_pauses"), "length_s": st.get("length_s"), "tracks": st.get("tracks"), "dropped": len(st.get("dropped") or [])}
+            stf = FILMS / f / "build" / "final_ad_std.mp4"
+            n_aud = len([x for x in _streams(stf) if x.get("codec_type") == "audio"]) if stf.exists() else 0
+            if not st.get("ok") or n_aud != 2 or abs((st.get("length_s") or {}).get("described", 0) - (st.get("length_s") or {}).get("film", -1)) > 0.1:
+                bad.append(f"{f}: standard description cut: {row['standard']}, audio tracks {n_aud}")
         meas["audio_description"][f] = row
     # reduced motion
     if (FILMS / "dialogue-demo" / "build" / "voice.wav").exists():
@@ -10280,6 +10335,49 @@ def _covers_l10n_test():
             bad.append({film: "the wide English cover's text moved off the left"})
         if lang != "en" and any(r["family"] == "Fredoka" for p_ in row.values() for r in p_["rows"]):
             bad.append({film: "lettered in the brand font, which has no letters for this script"})
+    return bad, meas
+
+
+def _continuity_test():
+    """WP-19 continuity. A scratch copy of dialogue-demo cut into six shots: both (establishing), Ravi alone (the camera
+    on him) looking right, Priya alone looking left, both again, then Ravi walking right twice. That film has no issues
+    and its shots are sized (the lone close shots tighter than the two-shots). Then one fault at a time, each found
+    and named by its rule and shots: the two swap sides in shot 4 against the establishing shot 1 (180-degree), Priya looks right in her single
+    (eyeline), Ravi walks left in the last shot (screen direction); the swap marked "cross_line" is accepted."""
+    bad, meas = [], {}
+    base = _json(FILMS / "dialogue-demo" / "shots.json"); c0 = base["shots"][0]["cast"]
+    R, P = json.loads(json.dumps(c0[0])), json.loads(json.dumps(c0[1]))
+    def cast(c, place, look=None):
+        c = json.loads(json.dumps(c)); c["place"] = place
+        if look is not None:
+            c.setdefault("timeline", {})["look"] = [[0, [look, 0]]]
+        return c
+    rp, pp = {"x": 250, "y": 1536, "s": 1.1}, {"x": 830, "y": 1536, "s": 1.1}
+    def film(swap4=False, priya_look=-0.8, walk6=1, cross4=False):
+        sh = [{"id": "s1", "start": 0, "end": 2, "cast": [cast(R, rp, 0.6), cast(P, pp, -0.6)]},
+              {"id": "s2", "start": 2, "end": 4, "camera": [[2, [250, 900, 2.5]]], "cast": [cast(R, rp, 0.8), cast(P, pp, -0.8)]},
+              {"id": "s3", "start": 4, "end": 6, "camera": [[4, [830, 900, 2.5]]], "cast": [cast(R, rp, 0.8), cast(P, pp, priya_look)]},
+              {"id": "s4", "start": 6, "end": 8, "cast": [cast(R, pp if swap4 else rp), cast(P, rp if swap4 else pp)], **({"cross_line": True} if cross4 else {})},
+              {"id": "s5", "start": 8, "end": 10, "cast": [cast(R, [[8, {"x": 150, "y": 1536, "s": 1.1}], [10, {"x": 700, "y": 1536, "s": 1.1}]])]},
+              {"id": "s6", "start": 10, "end": 12, "cast": [cast(R, [[10, {"x": 380 if walk6 > 0 else 930, "y": 1536, "s": 1.1}], [12, {"x": 930 if walk6 > 0 else 380, "y": 1536, "s": 1.1}]])]}]
+        return {**base, "shots": sh}
+    cases = {"clean": film(), "swap": film(swap4=True), "eyeline": film(priya_look=0.8), "direction": film(walk6=-1), "crossed": film(swap4=True, cross4=True)}
+    want = {"clean": [], "swap": [("180-degree", ["s1", "s4"])], "eyeline": [("eyeline", ["s2", "s3"])], "direction": [("screen direction", ["s5", "s6"])], "crossed": []}
+    zz = FILMS / "zz-continuity"
+    try:
+        for k, shots in cases.items():
+            shutil.rmtree(zz, ignore_errors=True); shutil.copytree(FILMS / "dialogue-demo", zz, ignore=shutil.ignore_patterns("build"))
+            (zz / "shots.json").write_text(json.dumps(shots, indent=1))
+            r = film_continuity("zz-continuity")
+            got = sorted((i["rule"], i["shots"]) for i in r["issues"])
+            meas[k] = {"issues": [f"{i['rule']} {i['shots']}: {i['what']}" for i in r["issues"]], "sizes": {x["shot"]: x["size"] for x in r["shots"]}}
+            if got != sorted(want[k]):
+                bad.append({k: {"want": want[k], "got": got}})
+        sz = meas["clean"]["sizes"]; order = [x for x, _ in __import__("dbe.continuity", fromlist=["SIZES"]).SIZES]
+        if not (order.index(sz["s2"]) < order.index(sz["s1"]) and order.index(sz["s3"]) < order.index(sz["s4"])):
+            bad.append({"sizes": sz, "why": "the lone close shots should be tighter than the two-shots"})
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
     return bad, meas
 
 

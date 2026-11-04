@@ -441,6 +441,14 @@ Kokoro voice no speaker of the film uses. Checks from the file: no description o
 something to describe reached, -14 LUFS and true peak below -1 dBTP, the track marked, the length the holds account
 for. dialogue-demo: 1 description in a pause and 1 hold (12.8 s to 15.5 s); data-demo: 3 holds (9.6 s to 20.8 s,
 the chart is read out); Whisper hears every held description (100% of their words).
+When the extended cut needed holds, a **standard cut** is made beside it (`build/final_ad_std.mp4`, `ad_std.vtt`,
+`ad_std.json`): only what fits the pauses, at the film's own length and timing, with the film's sound and the
+described one as two tracks, so a platform or viewer can take the one they want. It reports its coverage (the share of
+shots with something to describe that it reaches) instead of requiring it: dialogue-demo's standard cut reaches every
+described shot at 12.8 s; data-demo's has no pause long enough (coverage 0), so only its extended cut describes it.
+The held picture is made piece by piece (each stretch from its own seek, each hold from one frame, joined without
+re-encoding): one filter graph reading the film several times buffered the whole film and was killed for memory on
+a 23-minute film.
 
 **Reduced motion** (`film.reduced_motion`): the film without what can trouble viewers whom movement unsettles: no
 handheld drift, punch-ins or automatic reframing, camera moves held at their widest framing, no line boil, slides,
@@ -1858,6 +1866,21 @@ Studio page http://127.0.0.1:8770/diff?film=FILM ("What changed" in the review r
 bar, steps from change to change and shows both versions side by side at that frame. The `gaze` test does all of
 this on a copy of `review-demo` (Ravi's look put back to camera first): verified at 97% from 0%, no changed frame
 outside the line's window, and the page shows the same spans.
+
+**Continuity** (`film.continuity {name}`, `dbe/continuity.py`, WP-19), measured on the baked frames (screen positions
+with the shot camera folded in), written to `build/continuity.json`:
+- *180-degree rule*: each pair of characters keeps the left-right order of the last shot that showed them both (a
+  scene, not only neighbouring shots: singles in between do not reset it). A shot with `"cross_line": true` crosses
+  on purpose and draws the line anew.
+- *Screen direction*: a character travelling more than a tenth of the frame in consecutive shots keeps going the
+  same way.
+- *Eyeline*: in a shot / reverse-shot pair (two singles of characters last seen together), each looks (pupils) towards
+  where the other stood.
+- *Shot size* per shot from its largest character: ELS, LS, FS (whole figure under 15%, under a third, more), then by
+  how much of the figure from the head down is in frame: MLS (72%), MS (half), MCU (a third), CU (18%), ECU.
+The `continuity` test cuts dialogue-demo into six shots (two-shot, two singles with the camera at 2.5x, two-shot,
+two walks): no issues and the singles sized MS against the two-shots' FS; then sides swapped against the establishing
+shot, an eyeline turned away and a walk reversed are each found by their rule and shots, and the marked cross passes.
 
 ## Act it out (plan 3.5)
 http://127.0.0.1:8770/actout (linked from Studio): **Use camera** and **Record 5 s** (a 3-2-1 count, then five seconds
