@@ -5897,6 +5897,10 @@ def test_golden(update=False, film=""):
         bad, meas = _svgexport_test()
         failed += 1 if bad else 0
         results.append({"svgexport": "a frame as a standalone SVG and an animated SVG both draw as the player does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "correctives":   # WP-11: angle-driven correctives (format v0.12)
+        bad, meas = _correctives_test()
+        failed += 1 if bad else 0
+        results.append({"correctives": "a forearm's angle drives the bicep's scale and the hand's angle exactly, and every renderer draws it", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10433,6 +10437,53 @@ def _svgexport_test():
     if r2["shared_images"] < 1:
         bad.append("the static layer image was not shared between frames")
     shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _correctives_test():
+    """WP-11 correctives (format v0.12): a copy of Pip whose right forearm's angle drives its upper arm's scale (the
+    bicep swells across, to 1.2 at -120 degrees) and its hand's angle (-25 at -120). Through a thinking pose (the elbow bends to -130), at every sampled
+    time the evaluated pose carries exactly the scale and the extra hand angle the key curves give for the forearm's
+    final angle (against the same pose without correctives), and nothing at rest; a shot of it thinking draws alike in
+    Synfig, Lottie and Grease Pencil (renderer parity)."""
+    from . import rparity as RPY
+    bad, meas = [], {}
+    pz = _json(ROOT / "puppet/examples/pip.puppet.json")
+    pz["correctives"] = [{"part": "forearm_R", "drives": [{"target": "scale.upperarm_R", "keys": [[-120, [1.2, 1]], [0, [1, 1]]]},
+                                                          {"target": "angles.hand_R", "keys": [[-120, -25], [0, 0]]}]}]
+    tmp = ROOT / "out" / "correctives_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    pf = tmp / "pip_corr.puppet.json"; pf.write_text(json.dumps(pz))
+    js = r"""
+const fs = require('fs'), vm = require('vm'); const ctx = { console, Math, JSON, Object, Array, Number, String, Set, Map, isFinite };
+ctx.window = ctx; ctx.globalThis = ctx; vm.createContext(ctx);
+for (const f of ['puppet/loader/puppet.js', 'puppet/loader/acting.js']) vm.runInContext(fs.readFileSync(f, 'utf8'), ctx);
+const L = JSON.parse(fs.readFileSync('puppet/clips/humanoid.json', 'utf8')), pc = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')), p0 = { ...pc }; delete p0.correctives;
+const rows = []; for (let k = 0; k <= 20; k++) { const t = k * 0.1, tl = { clips: [{ clip: 'think', start: 0 }], springs: false, blink: false };
+  const a = ctx.Acting.evaluate(pc, tl, t, L.clips, L.presets), b = ctx.Acting.evaluate(p0, tl, t, L.clips, L.presets);
+  rows.push({ t, fore: b.angles.forearm_R || 0, scale: (a.scales || {}).upperarm_R || null, hand: (a.angles.hand_R || 0) - (b.angles.hand_R || 0) }); }
+console.log(JSON.stringify(rows));"""
+    r = subprocess.run(["node", "-e", js, str(pf)], cwd=ROOT, capture_output=True, text=True, timeout=120)
+    rows = json.loads(r.stdout or "[]")
+    curve = lambda a, k0, k1: k0 + (k1 - k0) * (min(0.0, max(-120.0, a)) - 0) / -120   # the key curves, clamped at their ends
+    worst = 0.0
+    for x in rows:
+        ws, wh = [curve(x["fore"], 1, 1.2), 1.0], curve(x["fore"], 0, -25)
+        got = x["scale"] or [1, 1]
+        worst = max(worst, abs(got[0] - ws[0]), abs(got[1] - ws[1]), abs(x["hand"] - wh) / 25)
+    meas["evaluate"] = {"samples": len(rows), "forearm_range": [round(min(x["fore"] for x in rows), 1), round(max(x["fore"] for x in rows), 1)], "worst_error": round(worst, 6)}
+    if not rows or worst > 1e-6 or min(x["fore"] for x in rows) > -30:
+        bad.append({"evaluate": meas["evaluate"], "stderr": r.stderr[-300:]})
+    zz = FILMS / "zz-corrective"; shutil.rmtree(zz, ignore_errors=True); zz.mkdir()
+    try:
+        (zz / "shots.json").write_text(json.dumps({"title": "corrective", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "renderer": "svg", "set": "plain", "start": 0, "end": 2, "bubbles": False,
+            "cast": [{"puppet": str(pf.relative_to(ROOT)), "place": {"x": 540, "y": 1500, "s": 1.1}, "timeline": {"blink": False, "clips": [{"clip": "think", "start": 0, "fadeIn": 0}]}}]}]}))
+        (zz / "script.json").write_text('{"lines": []}'); (zz / "timing.json").write_text('{"lines": []}')
+        pr = RPY.run("zz-corrective", "s1", times=[0.4, 0.9, 1.4])
+        meas["parity"] = {k: {"min": v.get("min"), "colour": max(v.get("colour_diff") or [0]), "error": v.get("error")} for k, v in pr["renderers"].items()}
+        if not pr["ok"] or pr["refusals"]:
+            bad.append({"parity": meas["parity"], "refusals": pr["refusals"]})
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
     return bad, meas
 
 

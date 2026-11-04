@@ -342,9 +342,10 @@ master frames 0.940 to 0.964. Making them pass fixed three things in the Lottie 
 exports gain too): Lottie draws the first item on top, so strokes are now listed last-drawn first and each outline
 before its fill (the nose, blush, collar and hem had been hidden under fills and ears drawn over the head); every
 keyframe now carries its end value and position keys their spatial tangents; and the last keyframe carries no
-easing, which had stopped rlottie drawing the layers after frame 0. **Open:** the SVG renderer draws the legs a few
-pixels (up to 4 at artboard scale) from where Lottie, following the baked angles exactly, draws them while the root
-sways; the cause is not found yet. The `stickers` test makes Pip's pack and checks all of it.
+easing, which had stopped rlottie drawing the layers after frame 0. The SVG renderer had drawn the legs a few pixels
+(up to 4) from where Lottie draws them: it wrote each part's matrix to 2 decimals, and its rotation terms multiply
+artboard coordinates of up to 1000 units; at 5 decimals Pip's celebrate and jump match Lottie exactly (IoU 1.0, was
+0.965). The `stickers` test makes Pip's pack and checks all of it.
 
 **Emoji.** `sticker.pack` with platforms `telegram_emoji` (WebM VP9 with alpha, 100 x 100, at most 3 s, 30 fps and
 256 KB), `discord` (GIF, 128 x 128, 256 KB) and `slack` (GIF, 128 x 128, 128 KB) makes the same moves as custom emoji,
@@ -1274,8 +1275,19 @@ worker drew its 3D on core 0: the same film then took 0.609 of one worker's time
 frames still identical. (The first run, with other work on the fourth core, took 2,145 s and 756 s; 3 of its 7
 shots then differed frame by frame, which has not recurred in the two runs since.)
 
+**Long form** (`farm.longform`, measured 4 Nov 2026): a synthetic counting episode of 23.5 minutes (1,409 s, 136
+shots, 42,283 frames), voiced and acted in 762 s. The farm rendered it in two sessions: the first stopped at a 2-hour
+limit after 42 shots (with tests running beside it: 13,275 s of one core's work in 6,407 s); the second rendered the
+other 94 alone, 20,868 s of work in 6,969 s, 0.334 of one core's time (0.392 over both). The shared cache holds
+608 MB. Assembly (join, captions, mix, mux, QA, audio description, signing) took 7,343 s, with the largest single
+process at 12.0 GB; every QA check passes, the audio description included (1 description in a pause and 2 holds,
+4.2 s added). The run found three limits, now fixed: the mix was killed for memory at 13.9 GB (the limiter and the
+true-peak check upsampled the whole film 4x at once, reverb ran one FFT over it: now chunked and overlap-add, the same
+output, 11.0 GB, then buffers freed as soon as used), the described picture's single filter graph buffered the
+whole film and was killed (now built piece by piece), and the mix alone took 60 minutes.
+
 **Open:**
-- The 20-minute long-form run (`farm.longform`) is still to be measured.
+- The mix of a 23-minute film still takes about an hour and 11 GB: a streaming mixer (block by block) would bound it.
 
 The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
 shots over three workers (from the one worker's own shot times), or under 0.4.
@@ -1446,6 +1458,13 @@ effects and the Node solvers.
   below it uniformly about its pivot (a bigger hand on a bigger arm), where `scales` stretches the part alone; controls
   drive it (`grow.<part>`) and IK reaches with the grown bones. Every renderer follows it (Lottie as the part layer's
   scale, which its parenting carries down). Test `grow`.
+- Part 4 (format v0.12): `correctives` on the puppet ("smart bones"): a part's final angle drives angles, shifts,
+  scales, grow, swaps or layer order through key curves, as a control's value does (scales and grow multiply what the
+  pose has). Resolved in acting.js after IK, limits and springs, so every renderer follows. Test `correctives`: Pip's
+  forearm, bent to -130 by the thinking clip, drives its bicep's scale and its hand's angle exactly (21 samples), and
+  Synfig (0.996), Lottie and Grease Pencil (1.0) draw it as the player does.
+- The player writes each part's rotation-and-scale terms to 5 decimals (2 put far parts up to 4 px from where Lottie
+  and the bake place them: the stickers' legs, WP-23); golden frames updated for it.
 
 ## Procedural and 3D layer (WP-42, part 1)
 A shot's `"proc": {"floor": 1500, "nodes": {...}}` is a graph cooked into the shot by `proc.cook {name, shot, force}`

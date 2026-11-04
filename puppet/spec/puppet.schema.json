@@ -276,6 +276,44 @@
      }
     }
    }
+  },
+  "correctives": {
+   "type": "array",
+   "description": "v0.12: correctives (smart bones): a part's final angle drives angles, shifts, scales, grow, swaps or layer order, as a control would",
+   "items": {
+    "type": "object",
+    "required": [
+     "part",
+     "drives"
+    ],
+    "properties": {
+     "part": {
+      "type": "string"
+     },
+     "world": {
+      "type": "boolean"
+     },
+     "drives": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "required": [
+        "target",
+        "keys"
+       ],
+       "properties": {
+        "target": {
+         "type": "string",
+         "pattern": "^(angles|shift|scale|grow|swap|z)\\."
+        },
+        "keys": {
+         "type": "array"
+        }
+       }
+      }
+     }
+    }
+   }
   }
  },
  "$defs": {

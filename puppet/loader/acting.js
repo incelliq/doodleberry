@@ -358,6 +358,18 @@
   const OWN = new WeakMap();
   function ownClips(puppet, CLIPS) { let m = OWN.get(puppet); if (!m || m.lib !== CLIPS) { m = { lib: CLIPS, all: { ...CLIPS, ...puppet.clips } }; OWN.set(puppet, m); } return m.all; }
 
+  // a control's (or a corrective's) drive: angles and shifts add, scale and grow multiply, swaps and layer order set
+  function applyDrive(puppet, pose, dr, val, combine = false) {
+    if (val == null) return;
+    const [kind, id] = dr.target.split('.');
+    if (kind === 'angles') pose.angles[id] = (pose.angles[id] || 0) + val;
+    else if (kind === 'shift') { pose.shifts = pose.shifts || {}; const o = pose.shifts[id] || [0, 0]; pose.shifts[id] = [o[0] + val[0], o[1] + val[1]]; }
+    else if (kind === 'swap') pose[id] = val;
+    else if (kind === 'z') { pose.z = pose.z || {}; pose.z[id] = val; }
+    else if (kind === 'scale') { pose.scales = pose.scales || {}; const n = stretchOf(puppet, id, val), o = combine ? stretchOf(puppet, id, pose.scales[id] ?? 1) : [1, 1]; pose.scales[id] = [o[0] * n[0], o[1] * n[1]]; }   // a control sets it, a corrective multiplies
+    else if (kind === 'grow') { pose.grow = { ...(pose.grow || {}), [id]: (pose.grow?.[id] ?? 1) * val }; }
+  }
+
   // ---------- evaluate everything at t ----------
   function evaluate(puppet, tl, t, CLIPS = {}, PRESETS = {}) {
     if (puppet.clips) CLIPS = ownClips(puppet, CLIPS);   // v0.7: a character's own clips (Rig Canvas recordings) win over the library
@@ -387,16 +399,7 @@
     for (const [name, keys] of Object.entries(tl.controls || {})) { const v = sampleKeys(keys, t); if (v != null) cvals[name] = (cvals[name] || 0) + v; }
     for (const [name, v] of Object.entries(cvals)) {
       const ctl = (puppet.controls || {})[name]; if (!ctl) continue;
-      for (const dr of ctl.drives || []) {
-        const val = driveAt(dr.keys, v); if (val == null) continue;
-        const [kind, id] = dr.target.split('.');
-        if (kind === 'angles') pose.angles[id] = (pose.angles[id] || 0) + val;
-        else if (kind === 'shift') { pose.shifts = pose.shifts || {}; const o = pose.shifts[id] || [0, 0]; pose.shifts[id] = [o[0] + val[0], o[1] + val[1]]; }
-        else if (kind === 'swap') pose[id] = val;
-        else if (kind === 'z') { pose.z = pose.z || {}; pose.z[id] = val; }
-        else if (kind === 'scale') { pose.scales = pose.scales || {}; pose.scales[id] = stretchOf(puppet, id, val); }
-        else if (kind === 'grow') { pose.grow = { ...(pose.grow || {}), [id]: (pose.grow?.[id] ?? 1) * val }; }
-      }
+      for (const dr of ctl.drives || []) applyDrive(puppet, pose, dr, driveAt(dr.keys, v));
     }
     // v0.11: recursive scale keys (the part and everything below it)
     for (const [id, keys] of Object.entries(tl.grow || {})) { const v = sampleKeys(keys, t); if (v == null) continue; pose.grow = { ...(pose.grow || {}), [id]: (pose.grow?.[id] ?? 1) * v }; }
@@ -487,6 +490,14 @@
       pose.angles[part] = (pose.angles[part] || 0) + clamp((lag - now) * (sp.gain ?? 1), -(sp.limit || 35), sp.limit || 35);
     }
     if (tl.springs !== false && puppet.springs) limit();
+    // v0.12 correctives (smart bones): puppet.correctives = [{part, world: false, drives: [{target, keys}]}] read a
+    // part's final angle (local, or in the frame with world) and drive shapes from it as a control would: a bicep that
+    // swells as the elbow bends, a knee pad that slides, a sleeve that shortens, all as angles, shifts, scales and swaps
+    for (const cr of [].concat(puppet.correctives || [])) {
+      if (!puppet.parts[cr.part]) continue;
+      const a = cr.world ? angOf(P.matrices(puppet, pose)[cr.part]) * 57.2958 : (pose.angles[cr.part] || 0);
+      for (const dr of cr.drives || []) applyDrive(puppet, pose, dr, driveAt(dr.keys, a), true);
+    }
     swapByAngle(P.inView(puppet, pose.view), pose);   // v0.9: drawings chosen by a part's final angle
     return pose;
   }

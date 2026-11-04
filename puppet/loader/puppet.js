@@ -67,7 +67,9 @@
   }
   function strokesSVG(strokes, pal, m, extra = '', toon = null) {
     if (!strokes || !strokes.length) return '';
-    let s = `<g transform="matrix(${m.map(f2).join(' ')})" ${extra}>`;
+    // the rotation-and-scale terms to 5 decimals: they multiply artboard coordinates of up to ~1000 units, so 2 decimals
+    // put far parts (feet, hands) up to 4 px from where Lottie and the bake place them (WP-23); offsets stay at 2
+    let s = `<g transform="matrix(${m.map((v, i) => i < 4 ? (+v).toFixed(5) : f2(v)).join(' ')})" ${extra}>`;
     for (const st of strokes) {
       if (toon && st.d && !st.image && st.fill && st.fill !== 'none' && (st.opacity == null || st.opacity > 0.9)) { s += toonSVG(st, colourOf(st.fill, pal), colourOf(st.stroke, pal), m, toon); continue; }
       // v0.3 raster part: original ink or paint as an image placed in artboard units
@@ -287,7 +289,7 @@
     const s = pose.s ?? 1, flip = pose.flip ?? 1, [ox, oy] = pose.offset || [0, 0];
     const hip = (p.parts.hip && p.parts.hip.pivot) || [p.artboard[0] / 2, p.ground];
     const sq = pose.squash ?? 1;
-    const base = `translate(${f2(x)} ${f2(y)}) scale(${f2(s * flip * sq)} ${f2(s)}) translate(${f2(-hip[0] + ox)} ${f2(-(p.ground ?? p.artboard[1]) + oy)})`;
+    const base = `translate(${f2(x)} ${f2(y)}) scale(${(s * flip * sq).toFixed(5)} ${(+s).toFixed(5)}) translate(${f2(-hip[0] + ox)} ${f2(-(p.ground ?? p.artboard[1]) + oy)})`;
     return `<g transform="${base}">${items.map(i => i.svg).join('')}</g>`;
   }
 

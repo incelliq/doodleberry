@@ -1,4 +1,4 @@
-# Puppet format v0.11 (`.puppet.json`)
+# Puppet format v0.12 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -250,3 +250,13 @@ Synfig, Lottie, Grease Pencil and Godot exporters and the interaction measuremen
   shear, so every renderer reproduces it (Lottie as the part layer's own scale, which its parenting passes on).
   Timelines key it (`"grow": {"head": [[0, 1], [1.5, 1.4]]}`), controls drive it (`"target": "grow.head"`,
   multiplying), and two-bone IK reaches with the grown bone lengths.
+
+## v0.12 additions: correctives (WP-11)
+All optional; v0.11 files stay valid. Resolved in `acting.js` (after IK, constraints, limits and springs), so the bake
+and every renderer follow them as angles, shifts, scales and swaps.
+
+- **Correctives** ("smart bones"): `"correctives": [{"part": "forearm_R", "world": false, "drives": [{"target":
+  "scale.upperarm_R", "keys": [[0, 1], [-120, [1, 1.18]]]}, {"target": "shift.@sleeve", "keys": [[0, [0, 0]], [-120, [6, 0]]]}]}]`.
+  A part's final angle (local, or in the frame with `world`) is read through each drive's key curve, as a control's
+  value is: angles and shifts add, scales and grow multiply what the pose already has, swaps and layer order are set.
+  A bicep swells as the elbow bends, a knee pad slides, a sleeve shortens, a drawing changes past an angle.
