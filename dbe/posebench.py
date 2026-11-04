@@ -4,7 +4,8 @@ rtmlib, and Ultralytics YOLO11-pose, on single-person photos from COCO val2017 w
 Score: COCO's Object Keypoint Similarity (OKS, its per-keypoint sigmas, over the annotated keypoints, the person's
 area as scale) per image, the share of images with OKS >= 0.5 and >= 0.75 (as COCO's AP thresholds, here per image:
 one person each), the mean OKS, and the CPU time per image. MediaPipe's 33 landmarks map onto COCO's 17.
-OpenPose (a Caffe build) and Sapiens (0.3 to 2 billion parameters) are not run here: noted as such.
+Sapiens (Meta, 0.3B, CC BY-NC 4.0) runs top-down on the same YOLOX person boxes rtmlib gives RTMPose; OpenPose (a Caffe
+build) is not run here: noted as such.
 """
 import json
 import time
@@ -61,6 +62,44 @@ def yolo_detector(weights="yolo11m-pose.pt"):
             return None
         conf = r.boxes.conf.cpu().numpy(); best = int(np.argmax(conf))
         return r.keypoints.xy.cpu().numpy()[best][:17]
+    return run
+
+
+# Goliath's 308 keypoints -> COCO's 17 (from Sapiens' classes_and_palettes.py): the body points keep COCO's order,
+# the wrists sit among the hand points
+GOLIATH_TO_COCO = [0, 1, 2, 3, 4, 5, 6, 7, 8, 62, 41, 9, 10, 11, 12, 13, 14]
+
+
+def sapiens_detector(model_path, box_model=None):
+    """Sapiens pose 0.3B (TorchScript, CPU), top-down: the most confident person box from rtmlib's YOLOX (as RTMPose
+    gets), padded 1.25x to the model's 3:4 crop (768 x 1024), each COCO point the peak of its heatmap (256 x 192)"""
+    import cv2
+    import torch
+    from rtmlib import Body
+    model = torch.jit.load(str(model_path), map_location="cpu").eval()
+    det = (box_model or Body(mode="balanced", backend="onnxruntime", device="cpu")).det_model
+    mean, std = np.array([123.675, 116.28, 103.53]), np.array([58.395, 57.12, 57.375])
+    def run(img):
+        boxes = det(img[:, :, ::-1].copy())
+        if boxes is None or len(boxes) == 0:
+            return None
+        x0, y0, x1, y1 = [float(v) for v in boxes[0][:4]]
+        cx, cy, w, h = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0) * 1.25, (y1 - y0) * 1.25
+        if w / h > 0.75:
+            h = w / 0.75
+        else:
+            w = h * 0.75
+        M = np.array([[768 / w, 0, 384 - cx * 768 / w], [0, 1024 / h, 512 - cy * 1024 / h]])
+        crop = cv2.warpAffine(img, M, (768, 1024), flags=cv2.INTER_LINEAR)
+        x = torch.from_numpy(((crop - mean) / std).transpose(2, 0, 1)[None].astype(np.float32))
+        with torch.inference_mode():
+            hm = model(x)[0].numpy()
+        out = []
+        for k in GOLIATH_TO_COCO:
+            iy, ix = np.unravel_index(np.argmax(hm[k]), hm[k].shape)
+            px, py = (ix + 0.5) * 4, (iy + 0.5) * 4   # heatmap cell centre in the crop
+            out.append([(px - M[0, 2]) / M[0, 0], (py - M[1, 2]) / M[1, 1]])
+        return np.array(out)
     return run
 
 

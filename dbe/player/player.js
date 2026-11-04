@@ -115,6 +115,29 @@
     for (let j = k; j > k - 2 * fps; j--) if (castMotion(sh, (j - 1) / fps, j / fps) > (b.still ?? 0.5)) return j % n;
     return 0;
   }
+  // WP-15 media: a shot style's "medium": "pencil" | "crayon" | "marker" | "watercolour" draws the characters' ink as if
+  // made with it, as one fixed SVG filter (fixed seeds: the same drawing comes out the same on every frame):
+  // pencil: greyer, grainy coverage of fine paper tooth; crayon: waxy, coarser grain that breaks fills; marker: slightly
+  // see-through flat colour, darker where strokes end and overlap; watercolour: edges bled by noise, a soft wash,
+  // pigment pooled darker at the edges, paper texture through it
+  const MEDIA = {
+    pencil: `<feColorMatrix in="SourceGraphic" type="saturate" values="0.35" result="g"/><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="n"/>` +
+      `<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -3.4 2.2" result="tooth"/><feComposite in="g" in2="tooth" operator="in" result="gr"/>` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.05" seed="3" result="w"/><feDisplacementMap in="gr" in2="w" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>`,
+    crayon: `<feTurbulence type="fractalNoise" baseFrequency="0.55 0.9" numOctaves="2" seed="11" result="n"/>` +
+      `<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -9 5.6" result="wax"/><feComposite in="SourceGraphic" in2="wax" operator="in" result="c"/>` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.04" seed="5" result="w"/><feDisplacementMap in="c" in2="w" scale="3" xChannelSelector="R" yChannelSelector="G"/>`,
+    marker: `<feComponentTransfer in="SourceGraphic" result="m"><feFuncA type="linear" slope="0.86"/></feComponentTransfer>` +
+      `<feMorphology in="SourceAlpha" operator="erode" radius="2.5" result="core"/><feComposite in="SourceAlpha" in2="core" operator="out" result="rim"/>` +
+      `<feFlood flood-color="#000" flood-opacity="0.22"/><feComposite in2="rim" operator="in" result="dark"/><feMerge><feMergeNode in="m"/><feMergeNode in="dark"/></feMerge>`,
+    watercolour: `<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="9" result="w"/><feDisplacementMap in="SourceGraphic" in2="w" scale="9" xChannelSelector="R" yChannelSelector="G" result="bled"/>` +
+      `<feGaussianBlur in="bled" stdDeviation="2.2" result="wash"/><feMorphology in="SourceAlpha" operator="erode" radius="3" result="core"/>` +
+      `<feComposite in="SourceAlpha" in2="core" operator="out" result="rim"/><feGaussianBlur in="rim" stdDeviation="1.4" result="rim2"/>` +
+      `<feFlood flood-color="#000" flood-opacity="0.28"/><feComposite in2="rim2" operator="in" result="pool"/>` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4" result="p"/><feColorMatrix in="p" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -0.6 0.5" result="paper"/>` +
+      `<feMerge result="wc"><feMergeNode in="wash"/><feMergeNode in="pool"/></feMerge><feComposite in="paper" in2="wc" operator="in" result="tex"/><feBlend in="tex" in2="wc" mode="multiply"/>`,
+  };
+  const mediumDefs = st => st.medium && MEDIA[st.medium] ? `<defs><filter id="medium-${st.medium}" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">${MEDIA[st.medium]}</filter></defs>` : '';
   const boilId = (st, t) => `boil-${BOILK != null ? BOILK : boilStep(st, t) % ((st.boil || {}).frames || 8)}`;
   function boilDefs(st, t) {
     const b = st.boil; if (!b) return '';
@@ -469,6 +492,7 @@
       ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt, info) => PROPS.pos(pr, tt, pctx, info), pctx });
     }
     if (!bgOnly && !castOnly) { ink += (sh.overlays || []).filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join(''); }
+    if (st.medium && MEDIA[st.medium] && !castOnly) ink = mediumDefs(st) + `<g filter="url(#medium-${st.medium})">${ink}</g>`;   // WP-15 media (parity frames compare geometry, without it)
     world += st.boil && !castOnly ? `<g filter="url(#${boilId(st, t)})">${ink}</g>` : ink;   // parity frames compare geometry, without the boil
     let svg = boilDefs(st, t) + world;
     if (st.float && !sh.camera) { const a = tq * 2 * Math.PI / 20, z = 1.012 + 0.008 * Math.sin(a * 0.7);   // slow orbit and breath (no dead frames)

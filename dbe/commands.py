@@ -3841,7 +3841,28 @@ def export_opentoonz(name, shot, render=True):
     return out
 
 
-@command("pose.benchmark", detectors=("array", "mediapipe | rtmpose | yolo11 (default: all)", None), limit=("integer", "images (of the 80)", 80))
+SAPIENS = ("sapiens_pose_0.3b.pt2", "https://huggingface.co/facebook/sapiens-pose-0.3b-torchscript/resolve/main/sapiens_0.3b_goliath_best_goliath_AP_573_torchscript.pt2",
+           "59ea239bfb217caf76cbeac1836460ef8f9ab5f39aeb22f2577373b62fa25edc")
+
+
+def _sapiens_model():
+    """Sapiens pose 0.3B (Meta, CC BY-NC 4.0, 1.3 GB), fetched once into the models folder and checked by sha256"""
+    import hashlib
+    import urllib.request
+    from . import actout as AO
+    p = AO.MODELS / SAPIENS[0]
+    if not p.exists():
+        AO.MODELS.mkdir(parents=True, exist_ok=True); urllib.request.urlretrieve(SAPIENS[1], str(p) + ".part"); Path(str(p) + ".part").rename(p)
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(1 << 22), b""):
+            h.update(b)
+    if h.hexdigest() != SAPIENS[2]:
+        raise ValueError(f"{p} does not match its sha256")
+    return p
+
+
+@command("pose.benchmark", detectors=("array", "mediapipe | rtmpose | yolo11 | sapiens (default: all)", None), limit=("integer", "images (of the 80)", 80))
 def pose_benchmark(detectors=None, limit=80):
     """Pose detectors compared by measured accuracy (WP-12): MediaPipe Pose Landmarker (what act-out uses), RTMPose
     (rtmlib, balanced: YOLOX detector + RTMPose-m, ONNX on the CPU) and Ultralytics YOLO11m-pose, on 80 single-person
@@ -3857,11 +3878,12 @@ def pose_benchmark(detectors=None, limit=80):
             urllib.request.urlretrieve(it["url"], img / it["file"])
     od = ROOT / "out" / "posebench"; od.mkdir(parents=True, exist_ok=True); (od / "bench.json").write_text(json.dumps(spec))
     make = {"mediapipe": lambda: PB.mediapipe_detector(AO.model_path("pose")), "rtmpose": lambda: PB.rtmlib_detector("balanced"),
-            "yolo11": lambda: PB.yolo_detector(str(AO.MODELS / "yolo11m-pose.pt"))}
+            "yolo11": lambda: PB.yolo_detector(str(AO.MODELS / "yolo11m-pose.pt")),
+            "sapiens": lambda: PB.sapiens_detector(_sapiens_model())}
     names = detectors or list(make)
     res = PB.run(od / "bench.json", img, {n: make[n] for n in names})
     out = {"images": len(spec["items"]), "results": res, "ranking": sorted([n for n in res if "mean_oks" in res[n]], key=lambda n: -res[n]["mean_oks"]),
-           "not_run": {"OpenPose": "a Caffe build (CMU, non-commercial licence)", "Sapiens": "0.3 to 2 billion parameters: hours on this CPU"}}
+           "not_run": {"OpenPose": "a Caffe build (CMU, non-commercial licence)"}}
     (od / "result.json").write_text(json.dumps(out, indent=1))
     return out
 
@@ -3918,6 +3940,50 @@ def export_svg(name, time=None, start=None, end=None, fps=12):
     else:
         raise ValueError("give time, or start and end")
     return {**json.loads(r[-1]), "file": str(o.relative_to(ROOT))}
+
+
+@command("film.match_cut", name=("string", "film"), shot=("string", "the incoming shot (the cut into it is matched)"))
+def film_match_cut(name, shot):
+    """A match cut (WP-15): the incoming shot's camera set so its main character lands where the outgoing shot's main
+    character was at the cut, at the same size (the box from the head to the feet): zoom = the outgoing height over the
+    incoming one, centre and feet aligned. Written as a held camera key at the incoming shot's start in shots.json; a
+    zoom under 1 (framing wider than the set) is applied but reported."""
+    from . import continuity as CT
+    raw = _json(FILMS / name / "shots.json"); s = _shots(name); W, H = s.get("size", [1080, 1920])
+    ids = [x["id"] for x in s["shots"]]; i = ids.index(shot)
+    if i == 0:
+        raise ValueError("the first shot has no cut into it")
+    a, b = s["shots"][i - 1], s["shots"][i]
+    _, _, _, ba = _bake(name, a["id"])
+    def box_a():
+        best = None
+        for c, k in zip(a["cast"], ba["cast"]):
+            fr = k["frames"][-1]; pz = _json(ROOT / c["puppet"]); h = (pz.get("ground", pz["artboard"][1]) - CT.rest_top(pz)) * fr["s"]
+            if best is None or h > best[2]:
+                best = (fr["x"], fr["y"], h, c.get("name") or pz.get("name"))
+        return best
+    def place_at(pl, t):
+        if isinstance(pl, dict):
+            return pl.get("x", W / 2), pl.get("y", H * 0.8), pl.get("s", 1)
+        keys = sorted(pl, key=lambda k: k[0]); k0 = keys[0]
+        for (t0, v0), (t1, v1) in zip(keys, keys[1:]):
+            if t0 <= t <= t1:
+                u = (t - t0) / max(1e-9, t1 - t0); return tuple(v0.get(q, 1 if q == "s" else 0) + (v1.get(q, 1 if q == "s" else 0) - v0.get(q, 1 if q == "s" else 0)) * u for q in ("x", "y", "s"))
+        v = (k0 if t < k0[0] else keys[-1])[1]; return v.get("x", W / 2), v.get("y", H * 0.8), v.get("s", 1)
+    xa, ya, ha, who_a = box_a()
+    cands = []
+    for c in b.get("cast", []):
+        pz = _json(ROOT / c["puppet"]); x, y, sc = place_at(c.get("place") or {}, b["start"]); h = (pz.get("ground", pz["artboard"][1]) - CT.rest_top(pz)) * sc
+        cands.append((h, x, y, c.get("name") or pz.get("name")))
+    if not cands:
+        raise ValueError(f"shot {shot} has no character to match")
+    hb, xb, yb, who_b = max(cands)
+    z = ha / hb; cx = xb - (xa - W / 2) / z; cy = yb - (ya - H / 2) / z
+    rs = next(x for x in raw["shots"] if x["id"] == shot); rs["camera"] = [[rs["start"], [round(cx, 2), round(cy, 2), round(z, 4)]]]; rs.pop("camera_auto", None)
+    (FILMS / name / "shots.json").write_text(json.dumps(raw, indent=1))
+    return {"shot": shot, "from": a["id"], "outgoing": {"who": who_a, "x": round(xa, 1), "feet": round(ya, 1), "height": round(ha, 1)},
+            "incoming": {"who": who_b, "x": round(xb, 1), "feet": round(yb, 1), "height": round(hb, 1)}, "camera": [round(cx, 2), round(cy, 2), round(z, 4)],
+            **({"warning": "zoom under 1: the frame shows more than the set was drawn for"} if z < 1 else {})}
 
 
 @command("export.sprites", puppet=("string", "puppet file"), clips=("array", "clip names (default: every clip in its library)", None),
@@ -5932,6 +5998,14 @@ def test_golden(update=False, film=""):
         bad, meas = _motionblur_test()
         failed += 1 if bad else 0
         results.append({"motionblur": "a fast move rendered with sub-frame motion blur: same frames, each the mean of its samples, visibly smeared", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "media":   # WP-15: pencil, crayon, marker, watercolour
+        bad, meas = _media_test()
+        failed += 1 if bad else 0
+        results.append({"media": "each medium changes the drawing the way the medium would: pencil grey and grainy, crayon broken, marker see-through, watercolour bled", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "matchcut":   # WP-15: match cuts
+        bad, meas = _matchcut_test()
+        failed += 1 if bad else 0
+        results.append({"matchcut": "after film.match_cut the main character's silhouette lands where it was across the cut", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10524,7 +10598,8 @@ def _kinetic_test():
     nothing shows before the line, exactly the words already spoken show mid-line (the first five at 1.7 s, none of
     the rest), and every word by its end. Strokes drawing off (kit draw "off"): a line drawn left to right clears from
     its start (half way: its left half gone, its right half still drawn), or with "off_from": "end" retracts the way it
-    came (its right half gone first), and is gone when the undrawing ends."""
+    came (its right half gone first), and is gone when the undrawing ends. A width profile and a colour ramp along a line:
+    4 px near its ends and 40 in its middle, red at its start and blue at its end."""
     import re as _re
     from PIL import Image
     bad, meas = [], {}
@@ -10567,6 +10642,20 @@ def _kinetic_test():
             a = np.asarray(Image.open(png).convert("L"))[880:920] < 80
             halves[t] = [round(float(a[:, 100:540].mean()), 3), round(float(a[:, 540:980].mean()), 3)]
         meas["draw_off"] = {"drawn": halves[1.3], "clearing_from_start": halves[2.0], "gone": halves[2.6], "retracting_from_end": halves[5.0], "drawn_2": halves[4.3]}
+        # a width profile and a colour ramp along the line (s3): 4 px at the ends, 40 in the middle, red to blue
+        shots.append({"id": "s3", "set": "plain", "start": 6, "end": 8, "bubbles": False, "cast": [], "overlays": [{"type": "draw", "paths": ["M100 900 L980 900"], "start": 6.0, "duration": 0.5, "sound": False,
+                      "profile": [[0, 4], [0.5, 40], [1, 4]], "colors": [[0, "#ff0000"], [1, "#0000ff"]]}]})
+        (zz / "shots.json").write_text(json.dumps({"title": "drawoff", "size": [1080, 1920], "fps": 30, "captions": False, "shots": shots}))
+        pp = _player_page("zz-drawoff"); png = zz / "grad.png"
+        _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", "7.5", "1", str(png)], timeout=600)
+        rgb = np.asarray(Image.open(png).convert("RGB")).astype(int)
+        ink = (np.abs(rgb - rgb[100, 100]).sum(-1) > 60)
+        thick = lambda x: int(ink[:, x].sum()); colour = lambda x: [int(v) for v in rgb[900, x]]
+        meas["graded"] = {"width_px": {"near_start": thick(130), "middle": thick(540), "near_end": thick(950)}, "colour": {"start": colour(130), "end": colour(950)}}
+        g = meas["graded"]
+        if not (g["width_px"]["middle"] > 30 and g["width_px"]["near_start"] < 12 and g["width_px"]["near_end"] < 12
+                and g["colour"]["start"][0] > 180 and g["colour"]["start"][2] < 90 and g["colour"]["end"][2] > 180 and g["colour"]["end"][0] < 90):
+            bad.append({"graded": g})
         L_, R_ = 0, 1
         ok = (min(halves[1.3]) > 0.2 and halves[2.0][L_] < 0.05 and halves[2.0][R_] > 0.2 and max(halves[2.6]) < 0.01
               and min(halves[4.3]) > 0.2 and halves[5.0][L_] > 0.2 and halves[5.0][R_] < 0.05)
@@ -10640,6 +10729,79 @@ def _motionblur_test():
         meas["blur_vs_sharp"] = {"moving_frame_6": round(float(np.abs(blur[6] - sharp[6]).mean()), 3), "still_frame_25": round(float(np.abs(blur[25] - sharp[25]).mean()), 3)}
         if meas["frames"][0] != meas["frames"][1] or meas["vs_mean_of_samples"] > 2.5 or meas["blur_vs_sharp"]["moving_frame_6"] < 5 * max(0.05, meas["blur_vs_sharp"]["still_frame_25"]):
             bad.append(meas)
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
+    return bad, meas
+
+
+def _media_test():
+    """WP-15 media. Pip standing, drawn plain and in each medium, measured against the plain drawing's ink: pencil drains
+    the colour (saturation down by half or more) and lets paper tooth through (30-90% coverage); crayon keeps the
+    colour (60% of it or more) but its grain breaks the fills (under 90% coverage); marker covers everything (97%+)
+    and is lighter inside; watercolour keeps its coverage (90%+) and bleeds past the plain edges."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    zz = FILMS / "zz-media"; shutil.rmtree(zz, ignore_errors=True); zz.mkdir()
+    try:
+        media = [None, "pencil", "crayon", "marker", "watercolour"]; shots = []
+        for i, m in enumerate(media):
+            sh_ = {"id": f"s{i + 1}", "set": "plain", "start": i, "end": i + 1, "bubbles": False,
+                   "cast": [{"puppet": "puppet/examples/pip.puppet.json", "place": {"x": 540, "y": 1500, "s": 1.1}, "timeline": {"blink": False, "clips": []}}]}
+            if m:
+                sh_["style"] = {"medium": m}
+            shots.append(sh_)
+        (zz / "shots.json").write_text(json.dumps({"title": "media", "size": [1080, 1920], "fps": 30, "captions": False, "shots": shots}))
+        (zz / "script.json").write_text('{"lines": []}'); (zz / "timing.json").write_text('{"lines": []}')
+        pp = _player_page("zz-media"); ims = {}
+        for i, m in enumerate(media):
+            png = zz / f"m{i}.png"; _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", f"{i + 0.5}", "1", str(png)], timeout=600)
+            ims[m] = np.asarray(Image.open(png).convert("RGB")).astype(float)[200:1560, 150:930]
+        bgc = ims[None][5, 5]
+        ink = lambda im: np.abs(im - bgc).sum(-1) > 40
+        sat = lambda im, msk: float(((im.max(-1) - im.min(-1)) / (im.max(-1) + 1e-6))[msk].mean())
+        lum = lambda im, msk: float(im.mean(-1)[msk].mean())
+        base = ink(ims[None]); from scipy import ndimage
+        grown = ndimage.binary_dilation(base, iterations=2)
+        for m in media[1:]:
+            mk = ink(ims[m])
+            meas[m] = {"coverage": round(float((mk & base).sum() / base.sum()), 3), "saturation": round(sat(ims[m], base & mk) / sat(ims[None], base), 3),
+                       "lighter_inside": round(lum(ims[m], ndimage.binary_erosion(base, iterations=6)) - lum(ims[None], ndimage.binary_erosion(base, iterations=6)), 2),
+                       "bleed": round(float((mk & ~grown).sum() / base.sum()), 4)}
+        P, C_, M_, Wc = meas["pencil"], meas["crayon"], meas["marker"], meas["watercolour"]
+        rules = {"pencil": P["saturation"] <= 0.5 and 0.3 <= P["coverage"] <= 0.9, "crayon": C_["saturation"] >= 0.6 and C_["coverage"] < 0.9,
+                 "marker": M_["coverage"] >= 0.97 and M_["lighter_inside"] > 3, "watercolour": Wc["coverage"] >= 0.9 and Wc["bleed"] > 0.01}
+        meas["rules"] = rules
+        for k, ok in rules.items():
+            if not ok:
+                bad.append({k: meas[k]})
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
+    return bad, meas
+
+
+def _matchcut_test():
+    """WP-15 match cut. Shot 1 ends on Pip large on the left; shot 2 opens on Pip small on the right. Their silhouettes
+    at the cut (the last frame of one, the first of the other, drawn by the player without the set) overlap little;
+    after film.match_cut on shot 2 they overlap at IoU 0.8 or more."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    zz = FILMS / "zz-matchcut"; shutil.rmtree(zz, ignore_errors=True); zz.mkdir()
+    try:
+        mk = lambda sid, a, b_, pl: {"id": sid, "set": "plain", "start": a, "end": b_, "bubbles": False, "cast": [{"puppet": "puppet/examples/pip.puppet.json", "place": pl, "timeline": {"blink": False, "clips": []}}]}
+        shots = [mk("s1", 0, 1, {"x": 330, "y": 1600, "s": 1.25}), mk("s2", 1, 2, {"x": 780, "y": 1300, "s": 0.6})]
+        (zz / "shots.json").write_text(json.dumps({"title": "matchcut", "size": [1080, 1920], "fps": 30, "captions": False, "shots": shots}))
+        (zz / "script.json").write_text('{"lines": [{"id": "l1", "text": "Hi."}]}'); (zz / "timing.json").write_text('{"lines": []}')
+        def iou_at_cut():
+            pp = _player_page("zz-matchcut"); m = []
+            for t in (1 - 1 / 30, 1.0):
+                png = zz / f"c_{t:.3f}.png"; _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0&castonly=1", f"{t:.4f}", "0.5", str(png), "transparent"], timeout=600)
+                m.append(np.asarray(Image.open(png).convert("RGBA"))[..., 3] > 127)
+            return round(float((m[0] & m[1]).sum() / max(1, (m[0] | m[1]).sum())), 3)
+        meas["before"] = iou_at_cut(); meas["match"] = film_match_cut("zz-matchcut", "s2"); meas["after"] = iou_at_cut()
+        if not (meas["after"] >= 0.8 and meas["before"] < 0.4):
+            bad.append({"before": meas["before"], "after": meas["after"]})
     finally:
         shutil.rmtree(zz, ignore_errors=True)
     return bad, meas

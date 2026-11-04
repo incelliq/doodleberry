@@ -1302,6 +1302,11 @@ time, like every overlay. Test `kinetic`: on a copy of dialogue-demo, OCR reads 
 five words already spoken at 1.7 s ("did you know the library", none of the rest) and all eight by its end.
 The same test draws a line off both ways (kit `draw` with `off`): half way through, the half it clears first is
 empty (ink 0.004 against 0.35) and the other still drawn; after it, nothing is left.
+Kit `draw` also takes a **width profile** and a **colour ramp** along its paths (`"profile": [[0, 4], [0.5, 40], [1,
+4]]`, position 0..1 to width; `"colors": [[0, "#ff0000"], [1, "#0000ff"]]`): the path is sampled in the page and drawn
+as `segments` (48) round-capped pieces, each with its width and colour, revealed and cleared in order as the line
+draws on and off. In the test the line measures 8 px near its ends and 40 in its middle, red (247, 0, 8) at its start
+and blue (8, 0, 247) at its end.
 
 **Sub-frame motion blur**: a shot style's `"motion_blur": {"samples": 8, "shutter": 0.5}` renders `samples` moments
 per frame, spread over `shutter` of the frame interval and centred on the frame's time (0.5 is a 180-degree shutter),
@@ -1310,6 +1315,21 @@ is its samples' keys together, so film.diff still sees what changed. It costs `s
 `motionblur`: Pip carried 700 px in 0.5 s with 8 samples and a full shutter: 30 frames as without; a blurred frame
 equals the mean of its eight samples drawn as stills (0.12 on 0-255, encoding included); blur changes a moving frame
 (3.0 against the sharp render) and leaves a still one alone (0.04).
+
+**Match cuts** (`film.match_cut {name, shot}`): the incoming shot's camera is set so its main character lands where the
+outgoing shot's main character was at the cut, at the same size (the box from the head to the feet: zoom is the
+outgoing height over the incoming one, centre and feet aligned), as a held camera key at its start; a zoom under 1
+(wider than the set) is applied but reported. Test `matchcut`: Pip large on the left at the end of one shot and small
+on the right at the start of the next overlap at IoU 0.0 across the cut, and at 1.0 after the match (zoom 2.08).
+
+**Media** (`"style": {"medium": "pencil" | "crayon" | "marker" | "watercolour"}`): the characters' ink drawn as if made
+with that medium, by one fixed SVG filter per medium (fixed seeds, so a drawing comes out the same on every frame):
+pencil greys the colour and lets fine paper tooth through, crayon keeps its colour but a coarse waxy grain breaks the
+fills, marker is slightly see-through with darker rims where strokes end and overlap, watercolour bleeds its edges by
+noise into a soft wash with pigment pooled at the rims and paper texture through it. Test `media` (Pip standing,
+against his plain drawing's ink): pencil keeps 23% of the saturation and 83% coverage, crayon 81% and 86%, marker all
+of it and 11 levels lighter inside, watercolour all of it and 2% of the ink bled past the plain edges. Parity frames
+compare geometry without it; the other renderers draw plain lines.
 
 **Boil only while moving**: a shot style's `"boil": {"while_moving": true, "still": 0.5}` advances the line boil on a
 boil step only if a character moved during it (its root, or any part beyond `still` degrees or px), so a held drawing
@@ -1406,7 +1426,7 @@ have a little idle life once settled (no dead frames).
 
 | Type | Does | Key fields |
 |---|---|---|
-| `draw` | paths draw themselves, then optionally fill; and draw off again (WP-15) | `paths`, `duration` or `until`, `stagger`, `stroke`, `width`, `fill`; `off` (a time, line-relative allowed), `off_duration`, `off_from`: `start` (clears from where it began) or `end` (retracts the way it came) |
+| `draw` | paths draw themselves, then optionally fill; and draw off again; widths and colours along them (WP-15) | `paths`, `duration` or `until`, `stagger`, `stroke`, `width`, `fill`; `off` (a time, line-relative allowed), `off_duration`, `off_from`: `start` or `end`; `profile` [[pos, width]], `colors` [[pos, "#hex"]], `segments` |
 | `title` | bold outlined words pop in one by one | `text`, `y`, `size`, `per_word`, `color`, `outline` |
 | `paper` | torn-paper sign with tape; `[bracketed]` words in the accent colour | `text` (lines), `y`, `size`, `accent`, `rotate` |
 | `roots` | a root system grows from a point (red taproot optional) | `x`, `y`, `depth`, `levels`, `branches`, `spread`, `seed`, `until`, `main` |

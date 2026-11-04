@@ -37,6 +37,7 @@
     // `off_duration` (default its draw time), staggered as it drew; "off_from": "start" (default: the line clears from
     // where it began, like a pen's tail catching up) or "end" (it retracts the way it came); a fill fades first
     const offT = o.off != null ? +o.off : null, odur = o.off_duration ?? dur;
+    if (o.profile || o.colors) return drawGraded(o, t, paths, dur, stag, s, offT, odur);
     paths.forEach((d, i) => {
       const u = ease((s - i * stag) / dur); if (u <= 0) return;
       const uo = offT == null ? 0 : ease((t - offT - i * stag) / odur); if (uo >= 1) return;
@@ -45,6 +46,38 @@
         : (o.off_from === 'end' ? ` stroke-dasharray="${f3(u * (1 - uo))} 2" stroke-dashoffset="0"` : ` stroke-dasharray="${f3(u - uo * u)} 2" stroke-dashoffset="${f3(-uo * u)}"`);
       out += `<path d="${d}" pathLength="1" fill="${o.fill || 'none'}" fill-opacity="${f3(fillOp)}" stroke="${o.stroke || INK}" stroke-width="${o.width || 5}"` +
         ` stroke-linecap="round" stroke-linejoin="round"${dash}${o.dash ? ` stroke-dasharray="${o.dash}"` : ''}/>`;
+    });
+    return out;
+  }
+
+  // WP-15 width profiles and colour along a shape: "profile": [[0, 2], [0.5, 12], [1, 2]] (position along the path 0..1
+  // -> width) and "colors": [[0, "#e8590c"], [1, "#1c7ed6"]] (position -> colour), drawn as `segments` short round-capped
+  // pieces (default 48) sampled from the path in the page, so the line swells and changes colour along its length;
+  // drawing on and off reveal and clear whole pieces in order
+  const _gp = {};
+  function samplePath(d, n) {
+    const k = d + '|' + n; if (_gp[k]) return _gp[k];
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'path'); el.setAttribute('d', d);
+    const L = el.getTotalLength(), pts = [];
+    for (let i = 0; i <= n; i++) { const p = el.getPointAtLength(L * i / n); pts.push([p.x, p.y]); }
+    return (_gp[k] = pts);
+  }
+  const lerpKeys = (keys, u) => { if (u <= keys[0][0]) return keys[0][1]; for (let i = 0; i < keys.length - 1; i++) { const [a, va] = keys[i], [b, vb] = keys[i + 1]; if (u <= b) return [a, va, b, vb]; } return keys[keys.length - 1][1]; };
+  const numAt = (keys, u) => { const r = lerpKeys(keys, u); if (!Array.isArray(r)) return r; const [a, va, b, vb] = r; return va + (vb - va) * (u - a) / Math.max(1e-9, b - a); };
+  const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const colAt = (keys, u) => { const r = lerpKeys(keys, u); if (!Array.isArray(r)) return r; const [a, va, b, vb] = r, k = (u - a) / Math.max(1e-9, b - a), A = hexRgb(va), B = hexRgb(vb);
+    return '#' + A.map((x, i) => Math.round(x + (B[i] - x) * k).toString(16).padStart(2, '0')).join(''); };
+  function drawGraded(o, t, paths, dur, stag, s, offT, odur) {
+    const n = o.segments || 48; let out = '';
+    paths.forEach((d, i) => {
+      const u = ease((s - i * stag) / dur); if (u <= 0) return;
+      const uo = offT == null ? 0 : ease((t - offT - i * stag) / odur); if (uo >= 1) return;
+      const pts = samplePath(d, n), lo = o.off_from === 'end' ? 0 : uo * u, hi = o.off_from === 'end' ? u * (1 - uo) : u;
+      for (let j = 0; j < n; j++) {
+        const a = j / n, b = (j + 1) / n; if (b <= lo || a >= hi) continue;
+        const m = (a + b) / 2, w = o.profile ? numAt(o.profile, m) : (o.width || 5), c = o.colors ? colAt(o.colors, m) : (o.stroke || INK);
+        out += `<line x1="${f1(pts[j][0])}" y1="${f1(pts[j][1])}" x2="${f1(pts[j + 1][0])}" y2="${f1(pts[j + 1][1])}" stroke="${c}" stroke-width="${f1(w)}" stroke-linecap="round"/>`;
+      }
     });
     return out;
   }
