@@ -4897,7 +4897,23 @@ def _interactive_data(name):
     for f in facts.values():
         if f and f["url"] not in seen:
             seen.add(f["url"]); sources.append(f)
-    return {"title": s.get("title") or name, "chapters": chapters, "lines": lines, "pauses": pauses, "sources": sources}
+    # WP-30 branching: shots.json "branches": [{"after": shot, "prompt", "choices": [{"label", "shots": [ids]}], "then": shot}];
+    # the film is rendered whole (every branch, in order); the page plays one path through it
+    sid = {sh["id"]: sh for sh in s["shots"]}; branches = []
+    for bi, br in enumerate(s.get("branches") or []):
+        for k in ("after", "then"):
+            if br.get(k) not in sid:
+                raise ValueError(f"branch {bi + 1}: no shot {br.get(k)!r} for {k!r}")
+        chs = []
+        for c in br.get("choices", []):
+            ids = c.get("shots") or []
+            if not ids or any(i not in sid for i in ids):
+                raise ValueError(f"branch {bi + 1}: choice {c.get('label')!r} names unknown shots {ids}")
+            chs.append({"label": c.get("label") or ids[0], "start": sid[ids[0]]["start"], "end": sid[ids[-1]]["end"]})
+        if len(chs) < 2:
+            raise ValueError(f"branch {bi + 1}: a branch needs at least two choices")
+        branches.append({"at": sid[br["after"]]["end"], "prompt": br.get("prompt") or "What next?", "choices": chs, "then": sid[br["then"]]["start"]})
+    return {"title": s.get("title") or name, "chapters": chapters, "lines": lines, "pauses": pauses, "sources": sources, "branches": branches}
 
 
 @command("export.interactive", name=("string", "film"))
@@ -4912,7 +4928,7 @@ def export_interactive(name):
     r = subprocess.run(["node", "tools/interactive_check.mjs", "file://" + str(out_dir / "index.html")], cwd=ROOT, capture_output=True, text=True, timeout=300)
     chk = json.loads(r.stdout.strip().splitlines()[-1]) if r.returncode == 0 and r.stdout.strip() else {"error": r.stderr[-400:]}
     return {"path": str((out_dir / "index.html").relative_to(ROOT)), "bytes": len(html), "audio": aud, "chapters": len(D["chapters"]), "lines": len(D["lines"]),
-            "questions": len(D["pauses"]), "sources": len(D["sources"]), "check": chk}
+            "questions": len(D["pauses"]), "sources": len(D["sources"]), "branches": len(D["branches"]), "check": chk}
 
 
 def ensure_voice(vid):
@@ -5526,6 +5542,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "branching":   # WP-30: branching interactive films
+        bad, meas = _branching_test()
+        failed += 1 if bad else 0
+        results.append({"branching": "a film with a branch after shot 2 (choose shot 3 or shot 4, then shot 5) exports as an interactive page that stops at the branch, offers both choices, plays the chosen shot and goes on to shot 5 without the other; a branch naming an unknown shot is refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "bvh":   # WP-12: BVH motion out and in
         bad, meas = _bvh_test()
         failed += 1 if bad else 0
@@ -9669,6 +9689,34 @@ def _templates_test():
 
 
 
+
+
+def _branching_test():
+    """WP-30 branching. A scratch copy of closest-to-the-sun-in-january (ten shots) gets "branches": after s2, the
+    viewer chooses s3 ("How far is it?") or s4 ("Why is it warm, then?"), then both go on to s5. export.interactive's
+    page, driven in Chromium: playing into the branch stops exactly at s2's end with two choices; the second choice
+    seeks to s4's start; played to s4's end it jumps to s5's start, never showing s3; the path records the choice. A
+    branch naming a missing shot is refused."""
+    bad, meas = [], {}
+    src, d_ = FILMS / "closest-to-the-sun-in-january", FILMS / "zz-branch"
+    try:
+        shutil.rmtree(d_, ignore_errors=True)
+        shutil.copytree(src, d_, ignore=shutil.ignore_patterns("build"))
+        s = _json(d_ / "shots.json")
+        s["branches"] = [{"after": "s2", "prompt": "What do you want to know?", "choices": [{"label": "How far is it?", "shots": ["s3"]}, {"label": "Why is it warm, then?", "shots": ["s4"]}], "then": "s5"}]
+        (d_ / "shots.json").write_text(json.dumps(s, indent=1, ensure_ascii=False))
+        r = export_interactive("zz-branch"); ck = r.get("check", {})
+        meas = {"branches": r.get("branches"), "branch": ck.get("branch"), "errors": ck.get("errors")}
+        if not (ck.get("branch") or {}).get("ok") or ck.get("errors"):
+            bad.append(f"branch: {meas}")
+        s["branches"][0]["then"] = "s99"; (d_ / "shots.json").write_text(json.dumps(s))
+        try:
+            _interactive_data("zz-branch"); bad.append("a branch to a missing shot was accepted")
+        except ValueError as e:
+            meas["refused"] = str(e)
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _bvh_test():
     """WP-12 BVH. For four humanoid library clips on Ravi (talk_beat, wave_R, shrug, celebrate with a moving root):

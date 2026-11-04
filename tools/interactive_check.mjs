@@ -25,6 +25,25 @@ if (D.pauses.length) {
   out.resume = { t: +st.t.toFixed(2), playing: st.playing, ok: !st.asking && st.t > q.t };
   await p.evaluate(() => window.IFILM.pause());
 }
+if ((D.branches || []).length) {   // a branch: it stops and asks; the second choice plays its shots, then on to where they meet
+  const br = D.branches[0], c = br.choices[1];
+  await p.evaluate(t => { window.IFILM.seek(t - 0.4); window.IFILM.play(); }, br.at);
+  await p.waitForFunction(() => window.IFILM.state().choosing, null, { timeout: 5000 }).catch(() => {});
+  st = await p.evaluate(() => window.IFILM.state());
+  const asked = { t: +st.t.toFixed(2), choosing: st.choosing, buttons: await p.locator('#cho button').count() };
+  await p.locator('#cho button').nth(1).click(); await p.waitForTimeout(100);
+  st = await p.evaluate(() => window.IFILM.state());
+  const jumped = { t: +st.t.toFixed(2), ok: st.t >= c.start - 0.01 && st.t < c.start + 0.3 };
+  await p.evaluate(t => { window.IFILM.pause(); }, 0);
+  await p.evaluate(e => { const s = window.IFILM.state(); window.IFILM.seek(e - 0.3); }, c.end);
+  // seeking inside the chosen branch keeps it chosen; play on to its end
+  await p.evaluate(() => window.IFILM.play());
+  await p.waitForFunction(th => window.IFILM.state().t >= th, br.then, { timeout: 5000 }).catch(() => {});
+  st = await p.evaluate(() => window.IFILM.state());
+  const met = { t: +st.t.toFixed(2), then: br.then, ok: st.t >= br.then - 0.01 && st.t < br.then + 0.5 && !(st.t >= br.choices[0].start && st.t < br.choices[0].end) };
+  out.branch = { at: br.at, asked, jumped, met, path: st.path, ok: Math.abs(asked.t - br.at) < 0.01 && asked.choosing && asked.buttons === br.choices.length && jumped.ok && met.ok && st.path.length === 1 && st.path[0].choice === c.label };
+  await p.evaluate(() => window.IFILM.pause());
+}
 await p.screenshot({ path: url.replace('file://', '').replace('index.html', 'screenshot.png') });
 await b.close();
 console.log(JSON.stringify(out));

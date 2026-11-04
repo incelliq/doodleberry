@@ -1006,6 +1006,17 @@ family's factors (bold-round 1.5, 1.456, 1.12; fine 0.7, 0.816, 0.96; each withi
 family; every member lints clean; a shot with one member of each family draws alike in Synfig, Lottie and Grease
 Pencil (1.0).
 
+## Branching interactive films (WP-30)
+shots.json `"branches": [{"after": "s2", "prompt": "What do you want to know?", "choices": [{"label": "How far is
+it?", "shots": ["s3"]}, {"label": "Why is it warm, then?", "shots": ["s4"]}], "then": "s5"}]` makes the interactive
+page (`export.interactive`) a branching film. The film is still rendered whole, every branch in order (so the video
+and every other format stay linear); the page plays one path through it: at the end of `after` it stops and offers
+the choices, plays the chosen shots, and at their end jumps to `then`. Scrubbing back before a branch asks again;
+`IFILM.choose(i)` and `IFILM.state().path` are there for scripts. A branch naming a missing shot, or with fewer than
+two choices, is refused. Test `branching` (a scratch copy of closest-to-the-sun-in-january): the page stops at
+11.55 s with both choices, the second plays from 19.1 s, and at its end the page is at s5 (21.25 s) without having
+shown s3.
+
 ## BVH motion out and in (WP-12)
 `clip.bvh_export {"puppet", "clip"}` writes a clip as BVH: the puppet's part tree is the skeleton (each joint named
 after its part, offset from its parent's pivot, y up) and the clip is sampled per frame the way the player plays it

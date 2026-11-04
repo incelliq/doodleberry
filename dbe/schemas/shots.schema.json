@@ -1025,6 +1025,51 @@
   "sign": {
    "type": "boolean",
    "description": "WP-26: sign the finals with C2PA content credentials (default true)"
+  },
+  "branches": {
+   "type": "array",
+   "description": "WP-30 branching for the interactive page: after a shot the viewer chooses; each choice is a run of shots; all meet at 'then'. The rendered film holds every branch in order.",
+   "items": {
+    "type": "object",
+    "required": [
+     "after",
+     "choices",
+     "then"
+    ],
+    "properties": {
+     "after": {
+      "type": "string"
+     },
+     "prompt": {
+      "type": "string"
+     },
+     "then": {
+      "type": "string"
+     },
+     "choices": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+       "type": "object",
+       "required": [
+        "shots"
+       ],
+       "properties": {
+        "label": {
+         "type": "string"
+        },
+        "shots": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         },
+         "minItems": 1
+        }
+       }
+      }
+     }
+    }
+   }
   }
  }
 }
