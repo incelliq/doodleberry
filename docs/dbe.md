@@ -1810,7 +1810,7 @@ What happens (`dbe/actout.py`):
   `all` adds the mouth (wide, mid, small, O, smile, frown), which overrides lip-sync while the clip plays, so it is
   for silent reactions. Only drawings the character has are used (with fallbacks), and short flickers are held.
 - **Layer order**: when the take's wrist is clearly nearer the lens than the shoulders, a forearm and hand drawn
-  behind the body come in front (clip `swaps.z`, the existing `pose.z` override; Lottie and Synfig keep their fixed
+  behind the body come in front (clip `swaps.z`, the existing pose `z` override; Lottie and Synfig keep their fixed
   order, as with control-driven z).
 - **Keys** are reduced against the curve `Acting.evaluate` actually plays (smoothstep between keys), seeded with the
   clear turning points and split where the played curve strays most, to `tolerance` degrees (default 1.5).

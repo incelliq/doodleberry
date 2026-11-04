@@ -3746,6 +3746,45 @@ def _godot_render_check(name, od, sid, n, size):
 
 
 TCOMPOSER = os.environ.get("DBE_TCOMPOSER") or next((p for p in ("/opt/opentoonz/bin/tcomposer", shutil.which("tcomposer") or "") if p and Path(p).exists()), None)
+TOONZ_STUFF = Path(os.environ.get("DBE_TOONZ_STUFF") or "/opt/opentoonz/stuff")
+
+
+def _tcomposer_check(name, sh, od, n, size, skipped):
+    """OpenToonz's renderer (tcomposer, under Xvfb: it is a Qt program) renders the scene; three frames are compared
+    with the player's drawing of the same characters alone (a scratch copy of the shot without the cut-out cast,
+    castonly=1 on a transparent page): coverage IoU of the alpha, and the mean colour difference where both draw"""
+    import numpy as np
+    from PIL import Image
+    W, H = size; rd = od / "render"; shutil.rmtree(rd, ignore_errors=True); rd.mkdir()
+    cmd = ["xvfb-run", "-a", TCOMPOSER, str(od / "scene.tnz"), "-o", str(rd / "f.png"), "-range", "1", str(n)]
+    if TOONZ_STUFF.exists():
+        cmd += ["-TOONZROOT", str(TOONZ_STUFF)]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+    got = sorted(rd.glob("f*.png"))
+    if len(got) < n:
+        return {"ok": False, "frames": len(got), "error": (r.stdout + r.stderr)[-600:]}
+    # the player's own drawing of the exported characters alone
+    zz = f"zz-toonz-{name}"; zd = FILMS / zz; shutil.rmtree(zd, ignore_errors=True)
+    shutil.copytree(FILMS / name, zd, ignore=shutil.ignore_patterns("build"))
+    try:
+        s = _json(zd / "shots.json"); drop = {x["cast"] for x in skipped}
+        for x in s["shots"]:
+            if x["id"] == sh["id"]:
+                x["cast"] = [c for c in x["cast"] if (c.get("name") or Path(c["puppet"]).name) not in drop and _json(ROOT / c["puppet"]).get("template") == "level"]
+        (zd / "shots.json").write_text(json.dumps(s, indent=1))
+        pp = _player_page(zz); res = []
+        for f in (0, n // 2, n - 1):
+            ref = od / "render" / f"player_{f}.png"
+            _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0&castonly=1", str(sh["start"] + f / 30), "1", str(ref), "transparent"], timeout=600)
+            a = np.asarray(Image.open(ref).convert("RGBA")).astype(float)
+            b = np.asarray(Image.open(got[f]).convert("RGBA").resize((a.shape[1], a.shape[0]), Image.LANCZOS)).astype(float)
+            ma, mb = a[..., 3] > 127, b[..., 3] > 127; both = ma & mb
+            iou = float(both.sum() / max(1, (ma | mb).sum()))
+            col = float(np.abs(a[..., :3] - b[..., :3])[both].mean()) if both.any() else 255.0
+            res.append({"frame": f, "iou": round(iou, 4), "colour": round(col, 2), "player_px": int(ma.sum()), "tcomposer_px": int(mb.sum())})
+    finally:
+        shutil.rmtree(zd, ignore_errors=True)
+    return {"frames": len(got), "size": list(Image.open(got[0]).size), "compare": res, "ok": all(x["iou"] >= 0.95 and x["colour"] <= 12 for x in res)}
 
 
 @command("export.opentoonz", name=("string", "film"), shot=("string", "shot id"), render=("boolean", "render the scene with OpenToonz's tcomposer, if installed, and compare it with the player", True))
@@ -3777,6 +3816,31 @@ def export_opentoonz(name, shot, render=True):
         out["tcomposer"] = _tcomposer_check(name, sh, od, n, (W, H), skipped)
     elif render:
         out["tcomposer"] = "not installed (bash tools/setup.sh opentoonz)"
+    return out
+
+
+@command("pose.benchmark", detectors=("array", "mediapipe | rtmpose | yolo11 (default: all)", None), limit=("integer", "images (of the 80)", 80))
+def pose_benchmark(detectors=None, limit=80):
+    """Pose detectors compared by measured accuracy (WP-12): MediaPipe Pose Landmarker (what act-out uses), RTMPose
+    (rtmlib, balanced: YOLOX detector + RTMPose-m, ONNX on the CPU) and Ultralytics YOLO11m-pose, on 80 single-person
+    COCO val2017 photos (tests/posebench) scored by COCO's keypoint similarity (OKS) per image. Writes
+    out/posebench/result.json. OpenPose and Sapiens are not run (a Caffe build; 0.3 to 2 billion parameters)."""
+    import urllib.request
+    from . import posebench as PB
+    spec = _json(ROOT / "tests" / "posebench" / "coco-val2017-80.json"); spec["items"] = spec["items"][:limit]
+    from . import actout as AO
+    img = AO.MODELS.parent / "coco-val2017"; img.mkdir(parents=True, exist_ok=True)
+    for it in spec["items"]:
+        if not (img / it["file"]).exists():
+            urllib.request.urlretrieve(it["url"], img / it["file"])
+    od = ROOT / "out" / "posebench"; od.mkdir(parents=True, exist_ok=True); (od / "bench.json").write_text(json.dumps(spec))
+    make = {"mediapipe": lambda: PB.mediapipe_detector(AO.model_path("pose")), "rtmpose": lambda: PB.rtmlib_detector("balanced"),
+            "yolo11": lambda: PB.yolo_detector(str(AO.MODELS / "yolo11m-pose.pt"))}
+    names = detectors or list(make)
+    res = PB.run(od / "bench.json", img, {n: make[n] for n in names})
+    out = {"images": len(spec["items"]), "results": res, "ranking": sorted([n for n in res if "mean_oks" in res[n]], key=lambda n: -res[n]["mean_oks"]),
+           "not_run": {"OpenPose": "a Caffe build (CMU, non-commercial licence)", "Sapiens": "0.3 to 2 billion parameters: hours on this CPU"}}
+    (od / "result.json").write_text(json.dumps(out, indent=1))
     return out
 
 
@@ -5730,6 +5794,13 @@ def test_golden(update=False, film=""):
         bad, meas = _rtl_chart_test()
         failed += 1 if bad else 0
         results.append({"rtl_chart": "the Arabic data-demo draws its bar chart right to left: the bars' heights read from the left are the English chart's reversed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "posebench":   # WP-12: pose detectors by measured accuracy (minutes on the CPU; only when asked)
+        r = pose_benchmark(); res = r["results"]
+        bad = [{n: v["error"]} for n, v in res.items() if "error" in v]
+        if not bad and (res[r["ranking"][0]]["mean_oks"] < 0.6 or len(r["ranking"]) < 3):
+            bad.append({"ranking": r["ranking"], "why": "the best detector should reach a mean OKS of 0.6 on single-person photos"})
+        failed += 1 if bad else 0
+        results.append({"posebench": "MediaPipe, RTMPose and YOLO11-pose each run on the 80 COCO photos and are ranked by OKS", "status": "FAIL" if bad else "ok", "measured": r, **({"cases": bad} if bad else {})})
     if not film or film == "cmu":   # WP-12: CMU motion capture to 2D
         bad, meas = _cmu_test()
         failed += 1 if bad else 0

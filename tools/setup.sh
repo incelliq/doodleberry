@@ -12,6 +12,8 @@
 #   bash tools/setup.sh physics    deterministic Rapier 2D (npm, pinned in tools/physics/package.json) for physics.solve (WP-09)
 #   bash tools/setup.sh dotlottie  the dotLottie player (npm, pinned in tools/dotlottie/package.json) for lottie.dotlottie's checks (WP-23)
 #   bash tools/setup.sh godot      Godot 4.5 (official build, SHA-512 checked) into /opt/godot: export.godot's real-engine render check (WP-30)
+#   bash tools/setup.sh opentoonz  OpenToonz 1.8.0's renderer (tcomposer) built from source (git tag checked by commit) into
+#                                  /opt/opentoonz, with its stuff folder: export.opentoonz's render check (WP-34; BSD-3-Clause; ~25 min on 4 cores)
 #   bash tools/setup.sh plates     Servier Medical Art anatomy plates (CC BY 4.0) into assets/external/plates, sha256-checked (WP-16)
 #   bash tools/setup.sh maps       d3-geo, topojson-client and world-atlas (npm, pinned in tools/mapboard/package.json) to make and check map board data (WP-16)
 #   bash tools/setup.sh voices [de,uk,...]  Piper voices from voices/registry.json: those films use ("fetched"), or every voice
@@ -144,6 +146,25 @@ godot_dl() {
   chmod +x "/opt/godot/Godot_v${ver}_linux.x86_64" && ln -sf "/opt/godot/Godot_v${ver}_linux.x86_64" /opt/godot/godot
 }
 
+opentoonz_build() {
+  # OpenToonz 1.8.0 (BSD-3-Clause): its bundled libtiff (OpenToonz needs its changes), then only the tcomposer target
+  local tag="v1.8.0" commit="065cc1404ba43019b22a2577d529134c3e01931b" src="/opt/src/opentoonz-1.8.0"
+  if [ -x /opt/opentoonz/bin/tcomposer ] && [ -d /opt/opentoonz/stuff ]; then echo "opentoonz: tcomposer installed"; return; fi
+  DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends build-essential cmake pkg-config libboost-all-dev qtbase5-dev libqt5svg5-dev qtscript5-dev qttools5-dev qttools5-dev-tools \
+    libqt5opengl5-dev qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev libsuperlu-dev liblz4-dev libusb-1.0-0-dev liblzo2-dev \
+    libpng-dev libjpeg-dev libglew-dev freeglut3-dev libfreetype-dev libjson-c-dev libmypaint-dev libopencv-dev libturbojpeg0-dev libopenblas-dev xvfb
+  [ -d "$src/.git" ] || { mkdir -p /opt/src && git clone --depth 1 --branch "$tag" https://github.com/opentoonz/opentoonz "$src"; }
+  [ "$(git -C "$src" rev-parse HEAD)" = "$commit" ] || { echo "opentoonz: $src is not $tag ($commit)"; return 1; }
+  (cd "$src/thirdparty/tiff-4.0.3" && { [ -f libtiff/.libs/libtiff.a ] || { ./configure --with-pic --disable-jbig --disable-lzma && make -j"$(nproc)"; }; })
+  mkdir -p "$src/toonz/build" && (cd "$src/toonz/build" && cmake ../sources -DCMAKE_BUILD_TYPE=Release -DWITH_TRANSLATION=OFF -DCMAKE_INSTALL_PREFIX=/opt/opentoonz \
+    && make -j"$(nproc)" tcomposer)
+  local b="$src/toonz/build"; mkdir -p /opt/opentoonz/bin /opt/opentoonz/lib
+  cp "$b/bin/tcomposer" /opt/opentoonz/bin/ 2>/dev/null || cp "$(find "$b" -name tcomposer -type f -perm -u+x | head -1)" /opt/opentoonz/bin/
+  find "$b" -name '*.so*' -exec cp -P {} /opt/opentoonz/lib/ \;
+  rm -rf /opt/opentoonz/stuff && cp -r "$src/stuff" /opt/opentoonz/stuff
+  /opt/opentoonz/bin/tcomposer 2>&1 | head -2 || true
+}
+
 plates_dl() {
   # Servier Medical Art anatomy plates (CC BY 4.0), listed with their sha256 in assets/plates/plates.json (WP-16)
   python -m dbe plate.fetch '{}' >/dev/null && echo "plates: ok"
@@ -177,10 +198,11 @@ case "$what" in
   maps) map_deps ;;
   plates) plates_dl ;;
   godot) godot_dl ;;
+  opentoonz) opentoonz_build ;;
   voices) voices_dl "$@" ;;
   locales) locales_deps ;;
   provenance) provenance_dl ;;
   all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; map_deps; voices_dl; provenance_dl ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|plates|godot|voices|locales|provenance]"; exit 2 ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|plates|godot|opentoonz|voices|locales|provenance]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"
