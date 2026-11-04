@@ -3031,6 +3031,48 @@ def _looks_test():
     return bad, meas
 
 
+def _comp3_test():
+    import math
+    import tempfile
+    import cv2
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="comp3_"))
+
+    def stills(items, times, tag):
+        spec = {"size": [540, 960], "bg": "#ffffff", "comp": {"planes": [{"id": "p", "depth": 1, "screen": True, "items": items}]}, "times": times}
+        (tmp / f"{tag}.json").write_text(json.dumps(spec))
+        subprocess.run(["node", str(ROOT / "tools" / "comp_still.mjs"), str(tmp / f"{tag}.json"), str(tmp / tag)], check=True, cwd=ROOT, timeout=300)
+        return [np.asarray(Image.open(tmp / tag / f"c_{i}.png").convert("RGB")).astype(int) for i in range(len(times))]
+    try:
+        red = lambda im: (im[..., 0] > 200) & (im[..., 1] < 80) & (im[..., 2] < 80)
+        (c1,) = stills([{"type": "prim", "shape": "circle", "x": 270, "y": 480, "r": [[0, 50], [2, 150]], "fill": "#ff0000"}], [1.0], "circle")
+        area = int(red(c1).sum()); want = math.pi * 100 ** 2; meas["circle_area"] = {"pixels": area, "pi_r2": round(want)}
+        if abs(area - want) / want > 0.02:
+            bad.append(f"keyed circle: {meas['circle_area']}")
+        stars = stills([{"type": "prim", "shape": "star", "x": 270, "y": 480, "points": "=5 + floor(t)", "r": 180, "inner": 80, "fill": "#ff0000"}], [0.0, 2.0], "star")
+        corners = []
+        for im in stars:
+            cs, _ = cv2.findContours(red(im).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE); c = max(cs, key=cv2.contourArea)
+            corners.append(len(cv2.approxPolyDP(c, 0.02 * cv2.arcLength(c, True), True)))
+        meas["star_corners"] = corners
+        if corners != [10, 14]:
+            bad.append(f"star points by expression: corners {corners}, want [10, 14]")
+        plant = lambda seed: [{"type": "growth", "seed": seed, "x": 270, "y": 900, "length": 220, "depth": 5, "start": 0, "duration": 2, "width": 12}]
+        times = [0.2, 0.6, 1.0, 1.4, 1.8, 2.2, 3.0]
+        g = stills(plant(11), times, "grow"); ink = [int((im.sum(2) < 600).sum()) for im in g]; meas["growth_ink"] = dict(zip(times, ink))
+        if any(b_ < a_ for a_, b_ in zip(ink, ink[1:])) or ink[0] >= ink[-1] or ink[-2] != ink[-1]:
+            bad.append(f"growth not monotonic or not finished: {ink}")
+        again = stills(plant(11), [1.0], "again")[0]; other = stills(plant(12), [2.2], "other")[0]
+        meas["rerender_identical"] = bool((again == g[2]).all()); meas["seed_differs_px"] = int((np.abs(other - g[5]).sum(2) > 30).sum())
+        if not meas["rerender_identical"] or meas["seed_differs_px"] < 500:
+            bad.append(f"growth purity or seed: {meas}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -6573,6 +6615,10 @@ def test_golden(update=False, film=""):
         bad, meas = _looks_test()
         failed += 1 if bad else 0
         results.append({"looks": "a CDL look saved as a .cc reads back through OpenColorIO unchanged; OpenColorIO's CDL matches the ASC formula; an identity look leaves the film's colours as they were; a warm look warms a frame of nib-hello", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "comp3":   # WP-42: animated parametric primitives and procedural growth
+        bad, meas = _comp3_test()
+        failed += 1 if bad else 0
+        results.append({"comp3": "a keyed circle has the area its radius says, a star gains points as its expression asks, and a seeded plant grows monotonically, stops when grown, renders identically twice and differs by seed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0

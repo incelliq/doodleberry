@@ -125,6 +125,21 @@ environment variables below).
   - a dot attached to the track lands within 0.7 px of it in the player.
 
   night-planes' golden frames are unchanged.
+- **Animated primitives and procedural growth** (WP-42), compositor items:
+  - `{"type": "prim", "shape": ...}`: circle (`r`), rect (`w`, `h`, `round`), star (`points`, `r`, `inner`),
+    polygon (`sides`, `r`), arc (`r`, `start`, `end` in degrees; a pie, or a ring with `"ring": true`) and wave (`w`,
+    `amp`, `freq`, `phase`), placed by `x`, `y`, `rotate` and `scale`. Every number may be keyed or an expression,
+    so a shape morphs in time ("points": "=5 + floor(t)").
+  - `{"type": "growth", "seed", "x", "y", "length", "depth", "start", "duration", "spread", "lean", "colour",
+    "leaf"}`: a seeded branching plant. Each branch draws along its length once its parent reaches the fork, two or
+    three to a fork, thinner and shorter each level; leaves open at the tips, just as the growth ends. The shape comes
+    only from the seed, so a frame is a pure function of time.
+
+  Test `comp3` (stills by `tools/comp_still.mjs`):
+  - a circle keyed from radius 50 to 150 is 31,287 pixels at radius 100 (pi r^2 = 31,416);
+  - a star whose points are "=5 + floor(t)" has 10 corners at 0 s and 14 at 2 s;
+  - a plant growing over 2 s gains ink at every step and is finished by 2.2 s (1,503 -> 23,470 pixels);
+  - it renders identically twice, and another seed differs in 36,188 pixels.
 - **Drawn levels** (WP-35, puppet format v0.8): hand-drawn animation as a sequence of drawings with an exposure
   sheet. `level.make` builds one from drawings (PNG, transparent) and a timing (on ones, twos, threes, or holds per
   drawing) into `cast/levels/<name>.puppet.json`; `level.xsheet` retimes it or writes the cells; `level.from_pencil2d`

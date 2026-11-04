@@ -32,6 +32,9 @@
 //       track("id", "x" | "y" | "luma") for a tracked region, below): pure functions of time
 //     {"type": "lightwrap", "plane": "stage", "from": ["sky", "hills"], "radius": 14, "strength": 0.7}
 //       the planes behind (or those listed) bleed their light onto the plane's edges (the real background, blurred)
+//     items {"type": "prim", "shape": "circle" | "rect" | "star" | "polygon" | "arc" | "wave", ...} (WP-42): parametric
+//       shapes whose numbers may be keyed or expressions; {"type": "growth", "seed", "x", "y", "length", "depth",
+//       "start", "duration", ...}: a seeded plant growing over time
 //     "tracks": {"sign": [[t, x, y, luma], ...]}   written by comp.track (a region followed through a plate); an item
 //       with "attach": "sign" moves with it ("offset" adds [dx, dy], each keyed or an expression too)
 // Parallax: a plane at depth d follows the camera by 1/d (the stage, d = 1, moves with it; far planes move less, near
@@ -107,6 +110,8 @@
       return `<image href="${src}" x="0" y="0" width="${ctx.W}" height="${ctx.H}" preserveAspectRatio="none"/>`;
     }
     if (it.type === 'particles') return particles(it, t, ctx);
+    if (it.type === 'prim') return prim(it, t, ctx);
+    if (it.type === 'growth') return growth(it, t, ctx);
     return ctx.overlay ? ctx.overlay(it, t) : '';
   }
 
@@ -126,6 +131,58 @@
       const a = (u * (180 + 360 * sw) + ph * 57.3) % 360, k = Math.cos((u * (3 + 4 * sw) + ph));   // tumbling: the piece flips edge-on
       s += `<rect x="-8" y="-5" width="16" height="10" rx="2" fill="${c}" stroke="#181e26" stroke-width="1.5" transform="translate(${f2(x)} ${f2(y)}) rotate(${f2(a)}) scale(1 ${f2(Math.max(0.15, Math.abs(k)))})"/>`;
     }
+    return s;
+  }
+
+  // WP-42: an animated parametric primitive. Every number may be keyed or an expression (V), so shapes morph in time:
+  // circle (r), rect (w, h, round), star (points, r, inner), polygon (sides, r), arc (r, start, end in degrees: a
+  // pie or a ring with "ring"), wave (w, amp, freq, phase: a sine line). x, y, rotate, scale, fill, stroke, width.
+  function prim(it, t, ctx) {
+    const v = (k, d) => V(it[k], t, ctx, d), x = v('x', 540), y = v('y', 960), rot = v('rotate', 0), sc = v('scale', 1);
+    const fill = it.fill || 'none', stroke = it.stroke || 'none', sw = v('width', 4), sh = it.shape || 'circle';
+    let d = '';
+    if (sh === 'circle') { const r = Math.max(0, v('r', 60)); d = `M${f2(-r)} 0 A${f2(r)} ${f2(r)} 0 1 0 ${f2(r)} 0 A${f2(r)} ${f2(r)} 0 1 0 ${f2(-r)} 0 Z`; }
+    else if (sh === 'rect') { const w = v('w', 120), h = v('h', 80), rr = Math.min(Math.abs(v('round', 0)), w / 2, h / 2);
+      d = `M${f2(-w / 2 + rr)} ${f2(-h / 2)} H${f2(w / 2 - rr)} A${f2(rr)} ${f2(rr)} 0 0 1 ${f2(w / 2)} ${f2(-h / 2 + rr)} V${f2(h / 2 - rr)} A${f2(rr)} ${f2(rr)} 0 0 1 ${f2(w / 2 - rr)} ${f2(h / 2)} H${f2(-w / 2 + rr)} A${f2(rr)} ${f2(rr)} 0 0 1 ${f2(-w / 2)} ${f2(h / 2 - rr)} V${f2(-h / 2 + rr)} A${f2(rr)} ${f2(rr)} 0 0 1 ${f2(-w / 2 + rr)} ${f2(-h / 2)} Z`; }
+    else if (sh === 'star' || sh === 'polygon') {
+      const n = Math.max(3, Math.round(v(sh === 'star' ? 'points' : 'sides', 5))), r = v('r', 60), ri = sh === 'star' ? v('inner', r * 0.45) : r, k = sh === 'star' ? 2 * n : n;
+      for (let i = 0; i < k; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / k, rr = sh === 'star' && i % 2 ? ri : r; d += `${i ? 'L' : 'M'}${f2(rr * Math.cos(a))} ${f2(rr * Math.sin(a))} `; }
+      d += 'Z';
+    } else if (sh === 'arc') {
+      const r = v('r', 60), a0 = v('start', 0) * Math.PI / 180, a1 = v('end', 270) * Math.PI / 180, big = Math.abs(a1 - a0) % (2 * Math.PI) > Math.PI ? 1 : 0;
+      const p0 = [r * Math.cos(a0), r * Math.sin(a0)], p1 = [r * Math.cos(a1), r * Math.sin(a1)];
+      d = it.ring ? `M${f2(p0[0])} ${f2(p0[1])} A${f2(r)} ${f2(r)} 0 ${big} 1 ${f2(p1[0])} ${f2(p1[1])}` : `M0 0 L${f2(p0[0])} ${f2(p0[1])} A${f2(r)} ${f2(r)} 0 ${big} 1 ${f2(p1[0])} ${f2(p1[1])} Z`;
+    } else if (sh === 'wave') {
+      const w = v('w', 400), amp = v('amp', 30), fq = v('freq', 2), ph = v('phase', 0), n = 64;
+      for (let i = 0; i <= n; i++) { const u = i / n, xx = -w / 2 + u * w, yy = amp * Math.sin(2 * Math.PI * (fq * u) + ph); d += `${i ? 'L' : 'M'}${f2(xx)} ${f2(yy)} `; }
+    }
+    return `<path transform="translate(${f2(x)} ${f2(y)}) rotate(${f2(rot)}) scale(${(+sc).toFixed(4)})" d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${f2(sw)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  // WP-42: procedural growth, a seeded branching plant that grows over [start, start + duration]: each branch draws
+  // along its length once its parent reaches the fork, thinner and shorter each level; leaves open at the tips. The
+  // whole structure comes from the seed (no randomness at render time), so a frame is a pure function of time.
+  function growth(it, t, ctx) {
+    let seed = it.seed || 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const x0 = V(it.x, t, ctx, 540), y0 = V(it.y, t, ctx, 1700), L0 = V(it.length, t, ctx, 260), depth = Math.min(7, Math.max(1, it.depth || 5));
+    const st = it.start || 0, dur = Math.max(0.05, it.duration || 3), g = Math.max(0, Math.min(1, (t - st) / dur)) * depth;   // the last level's leaves open as t reaches start + duration
+    const col = it.colour || '#3d6b35', leaf = it.leaf || '#6fae4f', w0 = V(it.width, t, ctx, 14), spread = (it.spread ?? 28) * Math.PI / 180;
+    let s = '';
+    const grow = (x, y, ang, len, w, lv) => {   // branch lv draws over growth time [lv, lv + 1]
+      const k = Math.max(0, Math.min(1, g - lv)); if (k <= 0) return;
+      const bend = (rnd() - 0.5) * 0.5, ex = x + Math.cos(ang) * len * k, ey = y + Math.sin(ang) * len * k;
+      const cx = x + Math.cos(ang + bend) * len * k * 0.5, cy = y + Math.sin(ang + bend) * len * k * 0.5;
+      s += `<path d="M${f2(x)} ${f2(y)} Q${f2(cx)} ${f2(cy)} ${f2(ex)} ${f2(ey)}" fill="none" stroke="${col}" stroke-width="${f2(w)}" stroke-linecap="round"/>`;
+      const kids = lv + 1 < depth ? 2 + (rnd() < 0.35 ? 1 : 0) : 0, jit = [rnd(), rnd(), rnd(), rnd(), rnd(), rnd()];
+      if (!kids) { const o = Math.max(0, Math.min(1, (g - lv - 0.6) / 0.4)), r = 10 + 8 * jit[0];
+        if (o > 0) s += `<ellipse cx="${f2(ex)}" cy="${f2(ey)}" rx="${f2(r * o)}" ry="${f2(r * 0.55 * o)}" transform="rotate(${f2(ang * 57.3)} ${f2(ex)} ${f2(ey)})" fill="${leaf}"/>`; return; }
+      if (k < 1) return;
+      for (let c = 0; c < kids; c++) {
+        const a = ang + (kids === 2 ? (c ? 1 : -1) : (c - 1)) * spread * (0.7 + 0.6 * jit[c]);
+        grow(ex, ey, a, len * (0.62 + 0.18 * jit[c + 3]), w * 0.68, lv + 1);
+      }
+    };
+    grow(x0, y0, -Math.PI / 2 + (V(it.lean, t, ctx, 0) * Math.PI / 180), L0, w0, 0);
     return s;
   }
 
