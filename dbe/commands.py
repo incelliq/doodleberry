@@ -3847,6 +3847,21 @@ def pose_benchmark(detectors=None, limit=80):
     return out
 
 
+@command("puppet.auto_weights", puppet=("string", "puppet file"), part=("string", "the part carrying the drawing (an image stroke)"),
+         chain=("array", "the parts it should bend with, starting with that part, e.g. [thigh_L, shin_L, foot_L]"),
+         out=("string", "write the new puppet here (default: beside it, .skinned.puppet.json)", ""), step=("number", "mesh cell size, artboard units", 12))
+def puppet_auto_weights(puppet, part, chain, out="", step=12):
+    """Automatic vertex weights from bone influence (WP-11): a drawing made in one piece over several parts becomes a
+    skinned mesh stroke (format v0.5) that bends at their joints: a grid of triangles over its ink, each vertex weighted
+    by its distance to the parts' bones and the weights diffused over the mesh. Renders in the SVG player like any mesh
+    stroke (the other exporters skip mesh strokes)."""
+    from . import autoweights as AW
+    pz = _json(ROOT / puppet); pz, rep = AW.auto_mesh(pz, part, list(chain), step=float(step))
+    dst = ROOT / (out or str(Path(puppet).with_suffix("")).replace(".puppet", "") + ".skinned.puppet.json")
+    dst.parent.mkdir(parents=True, exist_ok=True); dst.write_text(json.dumps(pz))
+    return {"puppet": str(dst.relative_to(ROOT)), "meshes": rep}
+
+
 @command("export.sprites", puppet=("string", "puppet file"), clips=("array", "clip names (default: every clip in its library)", None),
          fps=("integer", "frames per second of the sheet", 12), scale=("number", "character scale in the frame", 1.0))
 def export_sprites(puppet, clips=None, fps=12, scale=1.0):
@@ -5823,6 +5838,10 @@ def test_golden(update=False, film=""):
         bad, meas = _opentoonz_test()
         failed += 1 if bad else 0
         results.append({"opentoonz": "level-demo's shot as an OpenToonz 1.8 scene: two drawn levels, the cut-out character listed as not exported, the xsheet exposing every frame's drawing; OpenToonz's tcomposer renders it and three frames match the player's drawing of the same characters", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
+        bad, meas = _autoweights_test()
+        failed += 1 if bad else 0
+        results.append({"autoweights": "a leg drawn in one piece becomes a mesh weighted over thigh, shin and foot: unchanged at rest, bent at the knee like the rigid cut of the same drawing, and still one piece", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "posebench":   # WP-12: pose detectors by measured accuracy (minutes on the CPU; only when asked)
         r = pose_benchmark(); res = r["results"]
         bad = [{n: v["error"]} for n, v in res.items() if "error" in v]
@@ -10151,6 +10170,75 @@ def _opentoonz_test():
         bad.append({"tcomposer": tc})
     if not TCOMPOSER:
         meas["tcomposer"] = "skipped: not installed (bash tools/setup.sh opentoonz)"
+    return bad, meas
+
+
+def _autoweights_test():
+    """WP-11 automatic vertex weights. A whole leg drawn as one striped image on Pip's thigh (every other part empty)
+    becomes a skinned mesh over thigh, shin and foot. At rest it draws as the image does (alpha IoU 0.99 or more); with
+    the knee bent 75 degrees it matches the same drawing cut rigidly at the joints and posed alike (IoU 0.85 or more;
+    below the knee within 2 px on average each way: the shin's end follows the shin) and stays one piece, bending in an
+    arc where the rigid cut leaves a notch; the image left unskinned does not bend (IoU against the rigid cut below
+    0.7)."""
+    import base64
+    import io
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from scipy import ndimage
+    from . import autoweights as AW
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "autoweights_test"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    base = _json(ROOT / "puppet" / "examples" / "pip.puppet.json")
+    for q in base["parts"].values():
+        q["strokes"] = []
+    X0, Y0, Wd, Hd = 220, 570, 130, 420
+    leg = Image.new("RGBA", (Wd * 2, Hd * 2), (0, 0, 0, 0)); dr = ImageDraw.Draw(leg)
+    pts = [(270, 590), (268, 760), (266, 945), (318, 968)]; P2 = [((x - X0) * 2, (y - Y0) * 2) for x, y in pts]
+    dr.line(P2, fill=(40, 40, 40, 255), width=88, joint="curve")
+    for x, y in P2:
+        dr.ellipse([x - 44, y - 44, x + 44, y + 44], fill=(40, 40, 40, 255))
+    a = np.asarray(leg).copy(); mask = a[..., 3] > 0; band = (np.arange(a.shape[0]) // 30) % 2 == 0   # stripes across the leg, so a bend shows in the texture; mask = a[..., 3] > 0; band = (np.arange(a.shape[0]) // 30) % 2 == 0
+    a[mask & band[:, None]] = [220, 90, 60, 255]; leg = Image.fromarray(a)
+    def uri(im):
+        b = io.BytesIO(); im.save(b, "PNG"); return "data:image/png;base64," + base64.b64encode(b.getvalue()).decode()
+    def puppet_with(strokes_by_part, name):
+        pz = json.loads(json.dumps(base))
+        for q, sts in strokes_by_part.items():
+            pz["parts"][q]["strokes"] = sts
+        (tmp / f"{name}.puppet.json").write_text(json.dumps(pz)); return pz
+    whole = {"image": uri(leg), "x": X0, "y": Y0, "w": Wd, "h": Hd}
+    plain = puppet_with({"thigh_L": [whole]}, "plain")
+    skinned, rep = AW.auto_mesh(json.loads(json.dumps(plain)), "thigh_L", ["thigh_L", "shin_L", "foot_L"])
+    (tmp / "skinned.puppet.json").write_text(json.dumps(skinned)); meas["mesh"] = rep[0]
+    cuts = {}   # the rigid cut: each part takes the drawing between the joints above and below it
+    for q, (y_a, y_b) in {"thigh_L": (Y0, 760), "shin_L": (760, 945), "foot_L": (945, Y0 + Hd)}.items():
+        c = leg.crop((0, (y_a - Y0) * 2, leg.size[0], (y_b - Y0) * 2)); cuts[q] = [{"image": uri(c), "x": X0, "y": y_a, "w": Wd, "h": y_b - y_a}]
+    puppet_with(cuts, "rigid")
+    def render(name, angles):
+        spec = {"size": [600, 760], "bg": "#ffffff", "items": [{"puppet": str((tmp / f"{name}.puppet.json").relative_to(ROOT)), "x": 300, "y": 740, "s": 0.7, "pose": {"angles": angles}}]}
+        sp = tmp / f"{name}_{len(angles)}.json"; sp.write_text(json.dumps(spec)); png = tmp / f"{name}_{len(angles)}.png"
+        _run(["node", "tools/pose_still.mjs", str(sp), str(png)], timeout=300)
+        return np.asarray(Image.open(png).convert("RGB")).astype(int).min(2) < 235
+    iou = lambda m1, m2: float((m1 & m2).sum() / max(1, (m1 | m2).sum()))
+    rest_s, rest_p = render("skinned", {}), render("plain", {})
+    bend = {"shin_L": 75}
+    bs, br, bp = render("skinned", bend), render("rigid", bend), render("plain", bend)
+    legrows = np.zeros_like(br); legrows[int(740 - (base["ground"] - base["parts"]["hip"]["pivot"][1]) * 0.7) - 20:] = True   # the leg, below the face
+    ys = np.nonzero((br & legrows).any(1))[0]; low = np.zeros_like(br); low[int(np.percentile(ys, 45)):] = True   # below the knee
+    d_r, d_s = ndimage.distance_transform_edt(~br), ndimage.distance_transform_edt(~bs)
+    meas.update({"rest_iou": round(iou(rest_s, rest_p), 4), "bent_iou_vs_rigid": round(iou(bs, br), 4),
+                 "below_knee_px": {"skinned_to_rigid": round(float(d_r[bs & low].mean()), 2), "rigid_to_skinned": round(float(d_s[br & low].mean()), 2)},
+                 "unskinned_iou_vs_rigid": round(iou(bp, br), 4), "pieces": int(ndimage.label(bs & legrows)[1])})
+    if meas["rest_iou"] < 0.99:
+        bad.append(f"at rest the mesh does not draw as the image: IoU {meas['rest_iou']}")
+    if meas["bent_iou_vs_rigid"] < 0.85 or max(meas["below_knee_px"].values()) > 2.0:
+        bad.append(f"the bent mesh does not follow the bones: IoU {meas['bent_iou_vs_rigid']}, below the knee {meas['below_knee_px']}")
+    if meas["pieces"] != 1:
+        bad.append(f"the skinned leg tears into {meas['pieces']} pieces")
+    if meas["unskinned_iou_vs_rigid"] >= 0.7:
+        bad.append(f"the control does not show a bend: the unskinned image matches the bent cut at {meas['unskinned_iou_vs_rigid']}")
+    if set(rep[0]["parts"]) != {"thigh_L", "shin_L", "foot_L"}:
+        bad.append(f"weights on {rep[0]['parts']}")
     return bad, meas
 
 

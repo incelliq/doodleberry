@@ -127,6 +127,9 @@ A stroke can be a texture on a triangle mesh whose vertices follow several parts
 - Every part named in the weights must exist (it may have no strokes of its own).
 - The SVG renderer draws each triangle as the shared texture under its affine map, clipped to the (slightly grown)
   triangle. Ids hash the content, so frames stay pure functions of time and identical frames still dedupe.
+- `puppet.auto_weights {"puppet", "part", "chain"}` (dbe/autoweights.py) makes one from a drawing done in one piece
+  over several parts (a whole leg on the thigh): a grid of triangles over its ink, each vertex weighted by its distance
+  to the chain's bones and the weights diffused over the mesh, so it bends in an arc at each joint.
 - `dbe/cutout_import.py` makes these from skinned meshes in Blender cut-out rigs. Like raster parts, mesh strokes
   render in the SVG renderer only; the other exporters skip them.
 - **acting** (per character): `{"viseme_hold": 0.09, "tempo": 0.8, "fade": 0.35}`. Mouth shapes shorter than `viseme_hold`

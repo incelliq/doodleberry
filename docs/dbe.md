@@ -1051,6 +1051,19 @@ because it finds "pitch" in noise); shout 136 Hz against 107 and a spectral cent
 excited the widest intonation (0.31 against 0.23) and 10% quicker; calm and sad narrower (0.15, 0.14) and slower;
 sad the lowest (100 Hz) and darkest (1.5 kHz). faster-whisper transcribes all six without an error.
 
+## Automatic vertex weights (WP-11)
+`puppet.auto_weights {"puppet", "part", "chain", "out", "step"}` (dbe/autoweights.py) turns a drawing made in one
+piece over several parts, an image stroke on `part`, into a skinned mesh stroke (format v0.5) that bends at the
+joints of `chain` (e.g. `["thigh_L", "shin_L", "foot_L"]`). A grid of triangles (`step` artboard units) covers the
+drawing's ink, cells without ink left out; each part's bone runs from its pivot to the next part's (the last one on
+in the same direction); every vertex is weighted by inverse squared distance to the bones, the weights are diffused
+over the mesh's edges (six passes) so a joint bends in an arc, and each vertex keeps its three strongest parts above
+2%. The result renders wherever mesh strokes do (the SVG player; the other exporters skip them). Test `autoweights`:
+a striped leg drawn in one piece on Pip (217 vertices, 342 triangles, weighted over thigh, shin and foot) draws as
+the image at rest (IoU 0.9998); with the knee bent 75 degrees it matches the same drawing cut rigidly at the joints
+(IoU 0.855, below the knee 0.33 px apart on average) and stays one piece, bending in an arc where the rigid cut
+leaves a notch; left unskinned it does not bend (IoU 0.33 against the bent cut).
+
 ## Sprite sheets (WP-30)
 `export.sprites {"puppet", "clips", "fps", "scale"}` draws each clip of a character alone (the player, transparent) at
 the sheet's frame rate, trims every frame to its ink and packs them into one PNG (shelves, tallest first). Beside it:
