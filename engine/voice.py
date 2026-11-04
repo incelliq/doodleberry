@@ -174,6 +174,9 @@ def build(film, voices_dir, voice_name=None, out_name="voice.wav"):
                 # rather than phonemes spread over Whisper's word times (English films keep their visemes as they were)
                 al = lang != "en"
                 voices[cfg["voice"]] = PiperVoice.load(str(voices_dir / f"{cfg['voice']}.onnx"), include_alignments=al)
+                _ps = __import__("importlib.util").util.spec_from_file_location("piper_seed", Path(__file__).with_name("piper_seed.py"))
+                _pm = __import__("importlib.util").util.module_from_spec(_ps); _ps.loader.exec_module(_pm)
+                _pm.seeded(voices[cfg["voice"]], voices_dir / f"{cfg['voice']}.onnx", include_alignments=al)   # the same script voices the same
                 voices[cfg["voice"]].dbe_align = al
         dl = (fxmod.DELIVERY.get(ln.get("delivery")) if fxmod and ln.get("delivery") else None)   # WP-13 prosody direction
         if ln.get("delivery") and not dl:

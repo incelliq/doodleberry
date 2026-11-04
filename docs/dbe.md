@@ -507,9 +507,12 @@ script, in several views (grey, inverted, coloured lettering alone, the bright f
 layouts; captions and titles cropped to their own band); its words of three letters or more must be found (75% alike
 each, any order: OCR may put a number on either side of right-to-left words), and words that read better backwards
 are reported as reversed. A bubble or caption that does not read in its first frame is read again a little later in
-the same showing (up to three frames, the best kept): Piper voices are not deterministic (the same Sinhala line came
-out 24,832 to 26,368 samples long in three runs), so each voicing moves the lines slightly and one frame could catch a
-bubble on its way in or out. It caught three real faults on the way: the reversed, unjoined Arabic captions, Sinhala
+the same showing (up to three frames, the best kept), so one frame catching a bubble on its way in or out does not
+fail it. Piper voices are seeded (`engine/piper_seed.py`): Piper's model draws its noise from unseeded random nodes,
+so the same Sinhala line came out 24,832 to 26,368 samples long in three runs, and with each voicing the line times,
+Whisper's words, caption chunks and the frames read moved (the l10n test failed on a different string, and once on
+caption type size, in four runs). With the seed, the same script voices identically; a session continues its random
+sequence from line to line, so it is the order of the lines that repeats. It caught three real faults on the way: the reversed, unjoined Arabic captions, Sinhala
 bubbles still in English (a line's `bubble` text was not translated), and Sinhala signs overflowing their boards.
 
 **The done-when.** `data-demo` in Arabic (`films/data-demo-ar`): Arabic voice (Piper kareem, unclear licence,

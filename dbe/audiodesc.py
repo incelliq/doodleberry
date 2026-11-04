@@ -262,8 +262,12 @@ def retime_vtt(text, shift):
     return re.sub(r"(\d{2}):(\d{2}):(\d{2}\.\d{3})", ts, text)
 
 
-def voice_all(texts, voice_id, voices_dir, sr_out, slots=None):
-    """each text voiced (a slot, if given, is the most time it may take: read faster up to MAX_SPEED)"""
+def voice_all(texts, voice_id, voices_dir, sr_out, slots=None, ready=None):
+    """each text voiced (a slot, if given, is the most time it may take: read faster up to MAX_SPEED); ready: {text:
+    audio at sr_out} already voiced, used as it is when it fits its slot (so what was measured is what is heard)"""
+    ready = ready or {}
+    if all(t in ready and not (slots and slots[i] and len(ready[t]) / sr_out > slots[i]) for i, t in enumerate(texts)):
+        return [ready[t] for t in texts]
     import sys
     from pathlib import Path
     from scipy.signal import resample_poly
@@ -274,12 +278,16 @@ def voice_all(texts, voice_id, voices_dir, sr_out, slots=None):
     else:   # WP-24/25: a Piper voice for a language Kokoro does not speak
         from piper import PiperVoice
         from piper.config import SynthesisConfig
-        pv = PiperVoice.load(str(Path(voices_dir) / f"{voice_id}.onnx"))
+        from piper_seed import seeded   # engine/: the same descriptions are read the same way every time
+        pv = seeded(PiperVoice.load(str(Path(voices_dir) / f"{voice_id}.onnx")), Path(voices_dir) / f"{voice_id}.onnx")
         def synth(txt, length_scale=1.0):
             ch = list(pv.synthesize(txt, syn_config=SynthesisConfig(length_scale=length_scale, normalize_audio=True)))
             return np.concatenate([c.audio_float_array for c in ch]), ch[0].sample_rate
     out = []
     for i, txt in enumerate(texts):
+        slot = (slots or [None] * len(texts))[i]
+        if txt in ready and not (slot and len(ready[txt]) / sr_out > slot):
+            out.append(ready[txt]); continue
         a, sr = synth(txt, length_scale=1.0)
         slot = (slots or [None] * len(texts))[i]
         if slot and len(a) / sr > slot:

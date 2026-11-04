@@ -7258,10 +7258,10 @@ def film_describe(name, voice="", extend=True):
     # each description (and its shorter forms) as this voice reads it, so the pauses are filled by what is heard,
     # not by a guess from the words (a guess that cannot count Sinhala or Chinese words the way English ones are)
     opts = sorted({o for e in evs for o in AD.options_of(e[2], e[4])})
-    voiced = {t: len(a) / sr for t, a in zip(opts, AD.voice_all(opts, voice, VOICES, sr))}
+    pre = dict(zip(opts, AD.voice_all(opts, voice, VOICES, sr))); voiced = {t: len(a) / sr for t, a in pre.items()}
     cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend, voiced=voiced)
-    cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues])
-    hold_clips = AD.voice_all([h["text"] for h in holds], voice, VOICES, sr)
+    cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues], ready=pre)
+    hold_clips = AD.voice_all([h["text"] for h in holds], voice, VOICES, sr, ready=pre)
     for c, a in zip(cues, cue_clips):
         c["voiced_s"] = round(len(a) / sr, 3)
     for h, a in zip(holds, hold_clips):
