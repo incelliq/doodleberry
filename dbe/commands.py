@@ -3721,6 +3721,81 @@ def _godot_render_check(name, od, sid, n, size):
     return {"engine": ver[0] if ver else "?", "frames": len(got), "compare": res, "ok": all(x["mean_abs"] < 4 and x["px_over_32"] < 0.03 and x["line_f1"] >= 0.9 for x in res)}
 
 
+TCOMPOSER = os.environ.get("DBE_TCOMPOSER") or next((p for p in ("/opt/opentoonz/bin/tcomposer", shutil.which("tcomposer") or "") if p and Path(p).exists()), None)
+
+
+@command("export.opentoonz", name=("string", "film"), shot=("string", "shot id"), render=("boolean", "render the scene with OpenToonz's tcomposer, if installed, and compare it with the player", True))
+def export_opentoonz(name, shot, render=True):
+    """A shot's drawn levels as an OpenToonz 1.8 scene (WP-34): build/opentoonz/<shot>/scene.tnz, a raster level per
+    drawn character (one PNG per drawing), the xsheet exposing each frame's drawing as the bake has it, and each
+    column's position and scale keyed on every frame. Cut-out characters are not OpenToonz levels and are listed as
+    not exported. With render, OpenToonz's own renderer (tcomposer) renders it, and frames are compared with the
+    player's drawing of the same characters alone."""
+    from . import toonz_export as TZ
+    s, sh, bdir, baked = _bake(name, shot); W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30); n = baked["frames"]
+    od = FILMS / name / "build" / "opentoonz" / shot; shutil.rmtree(od, ignore_errors=True); od.mkdir(parents=True)
+    levels, columns, skipped = [], [], []
+    for ci, c in enumerate(baked["cast"]):
+        pz = _json(c["puppet"]); src = next((x for x in sh["cast"] if (ROOT / x["puppet"]).resolve() == Path(c["puppet"]).resolve()), {})
+        if pz.get("template") != "level":
+            skipped.append({"cast": c.get("name") or Path(c["puppet"]).name, "why": "a cut-out puppet, not an OpenToonz level"}); continue
+        lvl = f"L{len(levels) + 1}_{re.sub(r'[^A-Za-z0-9]', '', pz.get('name') or 'level')[:20]}"
+        (od / lvl).mkdir(); shapes = pz["swaps"]["level"]["shapes"]; idx = {}
+        for k, did in enumerate(sorted(shapes), 1):
+            TZ.drawing_png(pz, shapes[did], ROOT).save(od / lvl / f"{lvl}.{k:04d}.png", dpi=(TZ.DPI, TZ.DPI)); idx[did] = k
+        levels.append({"id": len(levels) + 1, "name": lvl, "path": f"$scenefolder/{lvl}/{lvl}..png"})
+        columns.append({"level": len(levels), **TZ.column_from_bake(c["frames"], pz, (W, H), idx)})
+    if not columns:
+        raise ValueError(f"shot {shot} has no drawn levels to export (OpenToonz scenes carry frame-by-frame levels)")
+    (od / "scene.tnz").write_text(TZ.scene((W, H), n, fps, levels, columns))
+    out = {"scene": str((od / "scene.tnz").relative_to(ROOT)), "levels": [l["name"] for l in levels], "frames": n, "not_exported": skipped}
+    if render and TCOMPOSER:
+        out["tcomposer"] = _tcomposer_check(name, sh, od, n, (W, H), skipped)
+    elif render:
+        out["tcomposer"] = "not installed (bash tools/setup.sh opentoonz)"
+    return out
+
+
+@command("export.sprites", puppet=("string", "puppet file"), clips=("array", "clip names (default: every clip in its library)", None),
+         fps=("integer", "frames per second of the sheet", 12), scale=("number", "character scale in the frame", 1.0))
+def export_sprites(puppet, clips=None, fps=12, scale=1.0):
+    """A character's clips as a packed sprite sheet (WP-30): out/sprites/<id>/<id>.png, the atlas in TexturePacker's
+    JSON hash layout with an animations map (Phaser, PixiJS, Cocos, Defold, Unity through its TexturePacker importer)
+    and a Godot 4 SpriteFrames resource (.tres). Each frame is the character alone, drawn by the player and trimmed;
+    the pivot is its ground point."""
+    from . import sprites as SP
+    from PIL import Image
+    pz = _json(ROOT / puppet); lib = _json(ROOT / "puppet" / "clips" / f"{pz.get('template', 'humanoid')}.json", {"clips": {}})["clips"]
+    lib = {**lib, **(pz.get("clips") or {})}
+    names = clips or list(lib)
+    unknown = [c for c in names if c not in lib]
+    if unknown:
+        raise KeyError(f"no clip {unknown} for this puppet (have {', '.join(lib)})")
+    cid = re.sub(r"[^a-z0-9_-]", "-", Path(puppet).name.split(".")[0].lower())
+    film = f"zz-sprites-{cid}"; d_ = FILMS / film; shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+    out = ROOT / "out" / "sprites" / cid; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+    try:
+        shots, t0 = [], 0.0
+        for i, c in enumerate(names):
+            dur = float(lib[c].get("duration") or 1.0)
+            shots.append({"id": f"s{i + 1}", "renderer": "svg", "set": "plain", "start": round(t0, 3), "end": round(t0 + dur, 3), "bubbles": False,
+                          "cast": [{"puppet": puppet, "place": {"x": 540, "y": 1500, "s": scale}, "timeline": {"blink": False, "clips": [{"clip": c, "start": round(t0, 3), "fadeIn": 0}]}}]})
+            t0 += dur
+        (d_ / "shots.json").write_text(json.dumps({"title": "sprites", "size": [1080, 1920], "fps": 30, "shots": shots}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        pp = _player_page(film); frames = []
+        for i, c in enumerate(names):
+            dur = float(lib[c].get("duration") or 1.0); n = max(1, int(round(dur * fps)))
+            ts = [f"{k / fps:.4f}" for k in range(n)]
+            _run(["node", "tools/stills.mjs", str(pp), f"shot=s{i + 1}&castonly=1&captions=0", str(d_ / f"c{i}")] + ts, timeout=900)
+            frames += [(c, k, Image.open(d_ / f"c{i}_{t}.png").convert("RGBA")) for k, t in enumerate(ts)]
+        atlas = SP.build(frames, out, cid, (1080, 1920), (540, 1500), fps)
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return {"sheet": str((out / f"{cid}.png").relative_to(ROOT)), "atlas": str((out / f"{cid}.json").relative_to(ROOT)), "godot": str((out / f"{cid}.tres").relative_to(ROOT)),
+            "size": atlas["meta"]["size"], "frames": len(atlas["frames"]), "animations": {k: len(v) for k, v in atlas["animations"].items()}}
+
+
 @command("export.godot", name=("string", "film"), shots=("array", "shot ids (default: every shot)", None), check=("boolean", "compose three frames from the exported scene and compare them with the player's", True))
 def export_godot(name, shots=None, check=True):
     """A film as a Godot 4 project (WP-30): build/godot/ with project.godot, main.tscn (plays the shots in order with
@@ -5048,6 +5123,18 @@ def film_strings(name, lang=""):
     return out
 
 
+@command("film.translate", name=("string", "film"), lang=("string", "language tag (es, si, ta, ar, hi, fr, ...)"),
+         refresh=("boolean", "draft again the machine strings nobody has reviewed or edited", False))
+def film_translate(name, lang, refresh=False):
+    """Machine-translation drafts (WP-25): every string of the film without a translation in i18n/<lang>.json is
+    drafted by NLLB-200 (Meta's distilled 600M, converted to CTranslate2 here, CC BY-NC 4.0), its {{...}} bindings
+    kept. Strings a person wrote are never touched. The file records the drafts; film.localize lists those nobody has
+    reviewed and records the model in the version's provenance, so the posting gate flags it."""
+    from . import i18n as I, translate as TR
+    d = _film(name); rows = I.extract(_shots(name, resolve=False), _json(d / "script.json"), _json(d / "titles.json", {}), _json(d / "data.json", {}))
+    return {"film": name, "lang": lang, **TR.draft(d / "i18n" / f"{lang}.json", {r["key"]: r["text"] for r in rows}, lang, refresh)}
+
+
 @command("film.localize", name=("string", "film"), lang=("string", "language tag, e.g. ar, si, es, ja, pt-BR"),
          voice=("string", "one voice for every speaker (default: films/<name>/i18n/<lang>.json \"voices\", else the best voice for the language)", ""),
          lines=("object", "line id -> translated text (older form; strings takes every key)", None), strings=("object", "key -> translation, as film.strings lists them", None),
@@ -5064,6 +5151,8 @@ def film_localize(name, lang, voice="", lines=None, strings=None, renderer="", r
     src = _film(name); dst = FILMS / f"{name}-{lang}"; lang_info = I.language(lang)
     spec = _json(src / "i18n" / f"{lang}.json", {}) if (src / "i18n" / f"{lang}.json").exists() else {}
     tr = {k: v for k, v in (spec.get("strings") or {}).items() if v}
+    from . import translate as _TR   # WP-25: machine drafts nobody has reviewed are listed, and the model recorded
+    machine_unreviewed = _TR.unreviewed(spec) if spec.get("machine") else []
     tr.update({f"line:{k}": v for k, v in (lines or {}).items()}); tr.update(strings or {})
     sh0, sc0 = _shots(name, resolve=False), _json(src / "script.json")
     shots, script, titles, data, missing, bad, auto = I.apply(sh0, sc0, _json(src / "titles.json", {}), _json(src / "data.json", {}), tr, lang)
@@ -5099,8 +5188,7 @@ def film_localize(name, lang, voice="", lines=None, strings=None, renderer="", r
     locale = spec.get("locale") or (lang if spec.get("digits") == "native" else f"{lang}-u-nu-latn")
     script["lang"] = lang; script["locale"] = locale
     shots.update({"lang": lang, "dir": lang_info["dir"], "locale": locale})
-    if lang.split("-")[0] != "en":   # the describer's sentences are written in English (WP-24)
-        shots["audio_description"] = False
+    # the describer writes English and translates it into the version's language (WP-24/25: film.describe)
     # swaps and the locale's rules
     sw = spec.get("swaps") or {}; swapped = []
     for sh in shots["shots"]:
@@ -5125,6 +5213,13 @@ def film_localize(name, lang, voice="", lines=None, strings=None, renderer="", r
     for f, obj in (("script.json", script), ("shots.json", shots), ("titles.json", titles), ("data.json", data)):
         if obj or (src / f).exists():
             (dst / f).write_text(json.dumps(obj, indent=1, ensure_ascii=False))
+    if spec.get("machine") and set(spec["machine"].get("keys") or []) & set(tr):   # machine strings shaped this version: record the model
+        pv = _json(dst / "provenance.json", {}) or {}
+        pv["models"] = [m for m in pv.get("models", []) if m.get("name") != spec["machine"]["model"]] + [
+            {"name": spec["machine"]["model"], "license": spec["machine"]["license"], "output": f"machine-drafted strings ({len(spec['machine']['keys'])}; not yet reviewed: {len(machine_unreviewed)})"}]
+        (dst / "provenance.json").write_text(json.dumps(pv, indent=1))
+    if machine_unreviewed:
+        review = list(review) + [{"rule": "machine_translation", "why": f"{len(machine_unreviewed)} string(s) are machine drafts nobody has reviewed: list them in i18n/{lang}.json \"reviewed\" once checked", "keys": machine_unreviewed[:20]}]
     out = {"film": dst.name, "language": lang_info, "voices": sorted(used), "voice_flags": flags, "auto_translated": auto, "swaps": swapped,
            "rules_applied": rule_changes, "review_flags": review}
     if not render:
@@ -5593,6 +5688,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "sprites":   # WP-30: sprite sheets
+        bad, meas = _sprites_test()
+        failed += 1 if bad else 0
+        results.append({"sprites": "Biscuit's clips as one sprite sheet: every frame rebuilt from the sheet and atlas equals the player's own still, and Godot 4.5 plays a clip from the SpriteFrames resource matching the stills", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "vectorize":   # WP-14/33: raster parts traced with the vendored potrace and vtracer
         bad, meas = _vectorize_test()
         failed += 1 if bad else 0
@@ -6990,7 +7089,25 @@ def film_describe(name, voice="", extend=True):
         evs = [(round(_warp(k, e[0], inverse=True), 3), *e[1:]) for e in evs]
     total = float(_run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(final)])[-1])
     shot_end = {sh["id"]: (_warp(k, sh["end"], inverse=True) if k else sh["end"]) for sh in s["shots"]}
+    lang = (s.get("lang") or _json(d / "script.json", {}).get("lang") or "en").split("-")[0]; untranslated = []
+    if lang != "en":   # WP-24/25: the describer writes English; the film's language gets a machine translation of it
+        from . import translate as TR
+        texts = sorted({e[2] for e in evs} | {x for e in evs for _, x in e[4]})
+        tr = dict(zip(texts, [t for t, _ in TR.translate(texts, lang)]))
+        untranslated = [t for t in texts if not tr.get(t)]
+        evs = [(e[0], e[1], tr[e[2]], e[3], [(w, tr[x]) for w, x in e[4] if tr.get(x)]) for e in evs if tr.get(e[2])]
+        pv = _json(d / "provenance.json", {}) or {}
+        pv["models"] = [m for m in pv.get("models", []) if m.get("name") != TR.NAME] + [{"name": TR.NAME, "license": TR.LICENSE, "output": f"audio description translated to {lang}"}]
+        (d / "provenance.json").write_text(json.dumps(pv, indent=1))
     cues, holds, dropped = AD.place(evs, AD.pauses(tm, total), shot_end, tm, total, extend=extend)
+    if not voice and lang != "en":   # a voice that speaks the language, one the speakers do not use if there is one
+        from . import i18n as I
+        used = {v.get("voice") for v in (_json(d / "script.json", {}).get("speakers") or {}).values()}
+        cands = [v["voice"] for v in I.voices_for(lang, _voice_registry())]
+        if not cands:
+            raise RuntimeError(f"no voice speaks {lang} for the description")
+        voice = next((v for v in cands if v not in used), cands[0])
+        ensure_voice(voice)
     voice = voice or _ad_voice(name)
     main, sr = sf.read(d / "build" / "mix.wav", dtype="float32")
     cue_clips = AD.voice_all([c["text"] for c in cues], voice, VOICES, sr, slots=[c["end"] - c["start"] + 0.35 for c in cues])
@@ -7029,7 +7146,7 @@ def film_describe(name, voice="", extend=True):
     checks = {"no description over speech": not over, "every described shot reached": want <= reached, "described track -14 ±1 LUFS": I is not None and abs(I + 14) <= 1,
               "described track true peak <= -1": tp is not None and tp <= -1.0, "track marked as description": bool(dispo.get("visual_impaired")) and bool(dispo.get("descriptions")),
               "length as held": abs(got - length) <= 0.1}
-    rep = {"voice": voice, "cues": cues, "holds": holds, "dropped": dropped, "length_s": {"film": round(total, 3), "described": round(got, 3)},
+    rep = {"voice": voice, "language": lang, **({"translated_by": "NLLB-200 distilled 600M (machine)", "untranslated": untranslated} if lang != "en" else {}), "cues": cues, "holds": holds, "dropped": dropped, "length_s": {"film": round(total, 3), "described": round(got, 3)},
            "loudness": {"lufs": I, "true_peak": tp}, "tracks": ["main", "audio description"] if two else ["audio description"], "checks": checks, "ok": all(checks.values()),
            "files": {"video": "build/final_ad.mp4", "descriptions": "build/ad.vtt", "captions": "build/captions_ad.vtt", "mix": "build/ad_mix.wav"}, **({"over_speech": over} if over else {})}
     (d / "build" / "ad.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False))
@@ -7518,8 +7635,8 @@ def _interact_into(name, raw, shot):
         for k in ("ik", "ik_weight"):
             if k in add:
                 tl[k] = {**tl.get(k, {}), **add[k]}
-    rs["interact"] = {**{k: v for k, v in rs["interact"].items() if k != "solved"}, "solved": {"walks": out["walks"], "handshakes": out["handshakes"]}}
-    return {"walks": out["walks"], "handshakes": out["handshakes"]}
+    rs["interact"] = {**{k: v for k, v in rs["interact"].items() if k != "solved"}, "solved": {"walks": out["walks"], "handshakes": out["handshakes"], **({"hugs": out["hugs"]} if out.get("hugs") else {})}}
+    return {"walks": out["walks"], "handshakes": out["handshakes"], "hugs": out.get("hugs", [])}
 
 
 @command("interact.solve", name=("string", "film"), shot=("string", "shot id"),
@@ -7550,6 +7667,9 @@ def interact_measure(name, shot, points=None):
     hands = []
     for h in ((sh.get("interact") or {}).get("solved") or {}).get("handshakes", []):
         hands.append({"a": h["a"], "b": h["b"], "start": h["start"], "end": h["end"]})
+    for g in ((sh.get("interact") or {}).get("solved") or {}).get("hugs", []):   # each hand on the partner's back while the hug holds
+        for tg in g.get("targets", []):
+            hands.append({"a": tg["cast"], "b": tg["of"], "part_a": tg["hand"], "part_b": tg["part"], "at_b": tg["at"], "start": g["start"], "end": g["end"], "hug": True})
     with tempfile.TemporaryDirectory(prefix="measure_") as td:
         o, op = Path(td) / "m.json", Path(td) / "opts.json"
         op.write_text(json.dumps({"hands": hands, "points": points or []}))
@@ -7578,6 +7698,28 @@ def _interact_test():
         meas["handshake_demo"] = {"resolve_equal": same, "feet": [{k: f[k] for k in ("cast", "max_slide_px", "mean_slide_px", "planted_frames")} for f in m["feet"]], "hands": m["hands"]}
         if not (same and m["ok"] and m["feet"] and m["hands"]):
             bad.append({"handshake_demo": meas["handshake_demo"]})
+    # hugs: a scratch copy of handshake-demo where the two walk closer and hug after Tam's line; every hand stays on its
+    # target on the partner's back while the hug holds (within 2 px on the baked frames), and the arms reach it
+    if (FILMS / "handshake-demo").exists():
+        dh = FILMS / "zz-hug"; shutil.rmtree(dh, ignore_errors=True)
+        try:
+            shutil.copytree(FILMS / "handshake-demo", dh, ignore=shutil.ignore_patterns("build"))
+            raw = _json(dh / "shots.json"); blk = raw["shots"][0]["interact"]
+            blk["walks"][0]["points"][-1] = [500, 1500]; blk["walks"][1]["points"][-1] = [580, 1500]
+            blk.pop("handshakes", None); blk.pop("solved", None); blk["hugs"] = [{"a": 0, "b": 1, "start": "tam.end+0.1", "hold": 2.0, "reach": 0.6}]
+            raw["shots"][0]["end"] = "tam.end+3.4"
+            for c in raw["shots"][0]["cast"]:
+                for k in ("ik", "ik_weight"):
+                    c.get("timeline", {}).pop(k, None)
+            sol = _interact_into("zz-hug", raw, "s1"); (dh / "shots.json").write_text(json.dumps(raw, indent=1))
+            m = interact_measure("zz-hug", "s1")
+            hug = [h for h in m["hands"]]
+            meas["hug"] = {"reach_used": sol["hugs"][0]["reach_used"], "hands_max_gap_px": [h["max_gap_px"] for h in hug], "frames": [h["frames"] for h in hug],
+                           "feet_max_slide_px": [f["max_slide_px"] for f in m["feet"]]}
+            if len(hug) != 4 or max(h["max_gap_px"] for h in hug) > 2.0 or min(h["frames"] for h in hug) < 30 or max(sol["hugs"][0]["reach_used"]) > 1.0:
+                bad.append({"hug": meas["hug"]})
+        finally:
+            shutil.rmtree(dh, ignore_errors=True)
     # v0.9: dbe/geom.py (Synfig, Grease Pencil) computes the same matrices as puppet.js with stretched parts
     from . import geom as G
     pose = {"angles": {"upperarm_R": 35, "forearm_R": -50, "hand_R": 10, "head": 6}, "shifts": {"head": [3, -2]}, "scales": {"upperarm_R": [0.9, 1.4], "forearm_R": [1, 1.2], "torso": [1.1, 0.95]}}
@@ -9754,6 +9896,79 @@ def _templates_test():
 
 
 
+
+
+def _sprites_test():
+    """WP-30 sprite sheets. export.sprites on Biscuit (the quadruped: six clips) at 12 fps. Every atlas rectangle lies
+    inside the sheet and none overlap; every frame rebuilt from the sheet (pasted at spriteSourceSize into its
+    sourceSize) is pixel-identical to the player's still of that moment; the animations map lists each clip's frames
+    in order. Where Godot is installed: a project with an AnimatedSprite2D using the SpriteFrames resource, placed at
+    the pivot, plays "wag"; Movie Maker frames match the stills (mean difference under 2 levels)."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    r = export_sprites("puppet/examples/biscuit.puppet.json", fps=12)
+    meas["export"] = {k: r[k] for k in ("size", "frames", "animations")}
+    out = ROOT / Path(r["sheet"]).parent; atlas = _json(ROOT / r["atlas"]); sheet = Image.open(ROOT / r["sheet"]).convert("RGBA")
+    rects = [f["frame"] for f in atlas["frames"].values()]
+    inside = all(q["x"] >= 0 and q["y"] >= 0 and q["x"] + q["w"] <= sheet.width and q["y"] + q["h"] <= sheet.height for q in rects)
+    occ = np.zeros((sheet.height, sheet.width), np.int16)
+    for q in rects:
+        occ[q["y"]:q["y"] + q["h"], q["x"]:q["x"] + q["w"]] += 1
+    meas["inside"], meas["overlaps"] = inside, int((occ > 1).sum())
+    if not inside or meas["overlaps"]:
+        bad.append(f"atlas rectangles: inside {inside}, overlapping pixels {meas['overlaps']}")
+    # rebuild frames and compare with fresh stills of the same moments
+    film = "zz-sprite-check"; d_ = FILMS / film; shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+    lib = _json(ROOT / "puppet/clips/quadruped.json")["clips"]; names = list(atlas["animations"])
+    try:
+        shots, t0 = [], 0.0
+        for i, c in enumerate(names):
+            dur = float(lib[c].get("duration") or 1.0)
+            shots.append({"id": f"s{i + 1}", "renderer": "svg", "set": "plain", "start": round(t0, 3), "end": round(t0 + dur, 3), "bubbles": False,
+                          "cast": [{"puppet": "puppet/examples/biscuit.puppet.json", "place": {"x": 540, "y": 1500, "s": 1.0}, "timeline": {"blink": False, "clips": [{"clip": c, "start": round(t0, 3), "fadeIn": 0}]}}]})
+            t0 += dur
+        (d_ / "shots.json").write_text(json.dumps({"title": "x", "size": [1080, 1920], "fps": 30, "shots": shots}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        pp = _player_page(film); worst = 0
+        for i, c in enumerate(names):
+            keys = atlas["animations"][c]; pick = [0, len(keys) // 2, len(keys) - 1]
+            ts = [f"{k / 12:.4f}" for k in pick]
+            _run(["node", "tools/stills.mjs", str(pp), f"shot=s{i + 1}&castonly=1&captions=0", str(d_ / f"c{i}")] + ts, timeout=600)
+            for k, t in zip(pick, ts):
+                f = atlas["frames"][keys[k]]; full = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
+                full.paste(sheet.crop((f["frame"]["x"], f["frame"]["y"], f["frame"]["x"] + f["frame"]["w"], f["frame"]["y"] + f["frame"]["h"])), (f["spriteSourceSize"]["x"], f["spriteSourceSize"]["y"]))
+                ref = np.asarray(Image.open(d_ / f"c{i}_{t}.png").convert("RGBA")).astype(int)
+                worst = max(worst, int(np.abs(np.asarray(full).astype(int) - ref).max()))
+        meas["rebuilt_max_diff"] = worst
+        if worst > 0:
+            bad.append(f"a frame rebuilt from the sheet differs from the still by up to {worst} levels")
+        if GODOT and shutil.which("xvfb-run") and "wag" in atlas["animations"]:   # play it in Godot
+            gp = d_ / "godot"; gp.mkdir()
+            shutil.copy(ROOT / r["sheet"], gp); shutil.copy(ROOT / r["godot"], gp)
+            cid = Path(r["sheet"]).stem
+            (gp / "project.godot").write_text('config_version=5\n\n[application]\n\nconfig/name="sprites"\nrun/main_scene="res://main.tscn"\nconfig/features=PackedStringArray("4.5")\n\n'
+                                             '[display]\n\nwindow/size/viewport_width=1080\nwindow/size/viewport_height=1920\n\n[rendering]\n\nenvironment/defaults/default_clear_color=Color(0, 0, 0, 1)\n')
+            (gp / "main.tscn").write_text(f'[gd_scene load_steps=2 format=3]\n\n[ext_resource type="SpriteFrames" path="res://{cid}.tres" id="sf"]\n\n'
+                                          f'[node name="Dog" type="AnimatedSprite2D"]\nsprite_frames = ExtResource("sf")\nanimation = &"wag"\nautoplay = "wag"\ncentered = false\n')
+            subprocess.run([GODOT, "--headless", "--path", str(gp), "--import"], capture_output=True, timeout=600)
+            n = len(atlas["animations"]["wag"]); mv = gp / "mv"; mv.mkdir()
+            rr = subprocess.run(["xvfb-run", "-a", "-s", "-screen 0 1080x1920x24", GODOT, "--path", str(gp), "--rendering-driver", "opengl3", "--write-movie", str(mv / "f.png"),
+                                 "--fixed-fps", "12", "--quit-after", str(n), "--resolution", "1080x1920"], capture_output=True, text=True, timeout=900)
+            got = sorted(mv.glob("f*.png")); wi = names.index("wag"); diffs = []
+            ts = [f"{k / 12:.4f}" for k in range(n)]
+            _run(["node", "tools/stills.mjs", str(pp), f"shot=s{wi + 1}&castonly=1&captions=0", str(d_ / "w")] + ts, timeout=600)
+            for k in range(min(n, len(got))):
+                ref = Image.open(d_ / f"w_{ts[k]}.png").convert("RGBA"); bg = Image.new("RGBA", ref.size, (0, 0, 0, 255)); bg.alpha_composite(ref)
+                g = np.asarray(Image.open(got[k]).convert("RGB")).astype(float); diffs.append(round(float(np.abs(g - np.asarray(bg.convert("RGB")).astype(float)).mean()), 2))
+            meas["godot"] = {"frames": len(got), "mean_abs": diffs, "error": rr.stderr[-300:] if rr.returncode else None}
+            if len(got) < n or not diffs or max(diffs) > 2.0:
+                bad.append(f"godot: {meas['godot']}")
+        else:
+            meas["godot"] = "Godot not installed: skipped"
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _vectorize_test():
     """WP-14/33 vectorize. puppet.vectorize on Nib (raster line art): every part and swap traced (flat, potrace).

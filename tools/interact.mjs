@@ -4,8 +4,9 @@
 // solve REQ: {fps, start, end, cast: [{puppet, place, timeline}], interact: {walks, handshakes, eye_contact}}
 //   walks:      [{cast, points: [[x, y]...], start, speed: "auto" | px/s, s | s_by_y: [y0, s0, y1, s1], view: "side", clip: "walk"}]
 //   handshakes: [{a, b, start ("arrive" = when both have arrived, + 0.3 s), hold: 1.6, pumps: 3, amp: 10, reach: 0.5, arm: "arm_R"}]
+//   hugs:       [{a, b, start ("arrive" + 0.3 s by default), hold: 2.0, reach: 0.6, back: [x, y] (a point on the partner's torso, its own artboard; default the back at chest height)}]
 //   eye_contact: [{a, b, start, end}]
-// OUT: {cast: [{place?, clips: [...], timeline: {...}}], walks: [{cast, length, speed, clip_speed, arrive, stride_speed}], handshakes: [{meet, start, end}]}
+// OUT: {cast: [{place?, clips: [...], timeline: {...}}], walks: [{cast, length, speed, clip_speed, arrive, stride_speed}], handshakes: [{meet, start, end}], hugs: [{a, b, start, end, reach_used}]}
 import fs from 'fs'; import path from 'path'; import { fileURLToPath } from 'url';
 const here = path.dirname(fileURLToPath(import.meta.url)), root = path.resolve(here, '..');
 globalThis.window = globalThis;
@@ -30,7 +31,7 @@ function strideSpeed(p, clip, view) {
 }
 
 function solve(req) {
-  const ia = req.interact || {}, out = { cast: req.cast.map(() => ({ clips: [], timeline: {} })), walks: [], handshakes: [] };
+  const ia = req.interact || {}, out = { cast: req.cast.map(() => ({ clips: [], timeline: {} })), walks: [], handshakes: [], hugs: [] };
   const casts = req.cast.map(c => ({ ...c, p: pup(c.puppet), tl: { ...(c.timeline || {}) } }));
   const arrive = {};
   for (const w of ia.walks || []) {
@@ -82,6 +83,31 @@ function solve(req) {
     addIk(h.a, [[r3(start - reach), { cast: h.b, part: hand }]]);
     out.handshakes.push({ a: h.a, b: h.b, start: r3(start), end: r3(end), meet: mid.map(r1), reach_used: [r3(fA), r3(fB)] });
   }
+  // hugs (WP-11): both arms of each round the other's back, the heads turned to each other; the arms blend in by IK
+  // over `reach` s and out after `hold`. Each target is a point on the partner's torso (its own artboard, so it follows
+  // the partner's pose, flip and squash). Drawn in cast order: the later character's front arm crosses over the
+  // earlier one's back, the earlier one's arms go behind the later, as a hug looks from the side.
+  for (const g of ia.hugs || []) {
+    const start = g.start === 'arrive' || g.start == null ? Math.max(arrive[g.a] ?? 0, arrive[g.b] ?? 0) + 0.3 : g.start;
+    const hold = g.hold ?? 2.0, reach = g.reach ?? 0.6, end = start + hold, weight = [[r3(start - reach), 0], [r3(start), 1], [r3(end), 1], [r3(end + reach), 0]];
+    const used = [], targets = [];
+    for (const [me, you] of [[g.a, g.b], [g.b, g.a]]) {
+      const P = casts[you].p, tp = P.parts.torso || P.parts.body || P.parts[Object.keys(P.parts)[0]], neck = P.parts.neck || P.parts.head;
+      // the back at chest height: behind the torso's pivot (the artboard faces +x, so the back is towards -x)
+      const hx = tp.pivot[0], top = neck ? neck.pivot[1] : tp.pivot[1] - 200, cy = tp.pivot[1] + (top - tp.pivot[1]) * 0.55;
+      const back = g.back || [r1(hx - 38), r1(cy)], low = [r1(hx - 30), r1(cy + 0.25 * (tp.pivot[1] - top))];
+      const tl = out.cast[me].timeline;
+      tl.ik = { ...(tl.ik || {}), arm_R: [[r3(start - reach), { cast: you, part: tp === P.parts.torso ? 'torso' : Object.keys(P.parts).find(k => P.parts[k] === tp), at: back }]],
+                arm_L: [[r3(start - reach), { cast: you, part: tp === P.parts.torso ? 'torso' : Object.keys(P.parts).find(k => P.parts[k] === tp), at: low }]] };
+      tl.ik_weight = { ...(tl.ik_weight || {}), arm_R: weight, arm_L: weight };
+      const tpart = tl.ik.arm_R[0][1].part; targets.push({ cast: me, hand: 'hand_R', of: you, part: tpart, at: back }, { cast: me, hand: 'hand_L', of: you, part: tpart, at: low });
+      tl.lookat = [...(tl.lookat || []), { part: 'head', target: { cast: you, part: 'head' }, limit: 20, weight: 1, start: r3(start - reach), end: r3(end + reach), solved: 'interact' }];
+      const sh = pt(me, 'upperarm_R', start), tg = (() => { const o = poseAt(you, start); return Puppet.pointOf(P, 'torso', back, o.x, o.y, { ...o.pose, s: o.s, flip: o.flip }); })();
+      const q = casts[me].p, L = Math.hypot(q.parts.forearm_R.pivot[0] - q.parts.upperarm_R.pivot[0], q.parts.forearm_R.pivot[1] - q.parts.upperarm_R.pivot[1]) + Math.hypot(q.parts.hand_R.pivot[0] - q.parts.forearm_R.pivot[0], q.parts.hand_R.pivot[1] - q.parts.forearm_R.pivot[1]);
+      used.push(r3(Math.hypot(tg[0] - sh[0], tg[1] - sh[1]) / (L * poseAt(me, start).s)));
+    }
+    out.hugs.push({ a: g.a, b: g.b, start: r3(start), end: r3(end), reach_used: used, targets });
+  }
   for (const e of ia.eye_contact || []) for (const [me, you] of [[e.a, e.b], [e.b, e.a]]) {
     const tl = out.cast[me].timeline;
     tl.lookat = [...(tl.lookat || []), { part: 'head', target: { cast: you, part: 'head' }, limit: e.limit ?? 18, weight: 1, start: e.start, end: e.end, solved: 'interact' }];
@@ -96,7 +122,7 @@ function measure(spec, baked, opts) {
   const base = path.dirname(path.resolve(args[0]));
   const res = { feet: [], hands: [] };
   const P = spec.cast.map(c => pup(path.resolve(base, c.puppet)));
-  const world = (ci, f, part) => { const fr = baked.cast[ci].frames[f]; return Puppet.pointOf(P[ci], part, null, fr.x, fr.y, { angles: fr.angles, offset: fr.offset, view: fr.view, s: fr.s, flip: fr.flip, squash: fr.squash, shifts: fr.shifts || undefined, scales: fr.scales || undefined }); };
+  const world = (ci, f, part, at) => { const fr = baked.cast[ci].frames[f]; return Puppet.pointOf(P[ci], part, at || null, fr.x, fr.y, { angles: fr.angles, offset: fr.offset, view: fr.view, s: fr.s, flip: fr.flip, squash: fr.squash, shifts: fr.shifts || undefined, scales: fr.scales || undefined }); };
   spec.cast.forEach((c, ci) => {
     const tl = { ...(c.timeline || {}) }; if (!tl.pins) return;
     const L = libOf(P[ci]); let max = 0, sum = 0, n = 0, worst = null;
@@ -117,7 +143,7 @@ function measure(spec, baked, opts) {
     let max = 0, n = 0;
     for (let f = 0; f < baked.cast[h.a].frames.length; f++) {
       const t = spec.start + f / spec.fps; if (t < h.start || t > h.end) continue;
-      const a = world(h.a, f, h.part_a || 'hand_R'), b = world(h.b, f, h.part_b || 'hand_R'), d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      const a = world(h.a, f, h.part_a || 'hand_R', h.at_a), b = world(h.b, f, h.part_b || 'hand_R', h.at_b), d = Math.hypot(a[0] - b[0], a[1] - b[1]);
       max = Math.max(max, d); n++;
     }
     res.hands.push({ a: h.a, b: h.b, max_gap_px: r3(max), frames: n });

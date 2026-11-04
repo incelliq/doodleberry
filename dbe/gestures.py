@@ -75,6 +75,23 @@ def emotion_of(text):
     return next((e for e, rx in EMO_WORDS if re.search(rx, t)), None)
 
 
+REACT_DELAY = 0.25   # a listener takes in a word before the face answers it (human reaction time, ~200-300 ms)
+
+
+def felt_at(ln):
+    """when a listener can first feel the line: just after the word that carries its emotion is heard (the first
+    word the emotion's pattern matches), else after the last word (its tone lands at the end); None if no emotion"""
+    e = emotion_of(ln.get("text", ""))
+    if not e:
+        return None, None
+    rx = dict(EMO_WORDS)[e]; words = ln.get("words") or []
+    for i in range(len(words)):   # the earliest word at which the words so far already carry the emotion
+        so_far = " ".join(w["text"] for w in words[:i + 1]).lower()
+        if re.search(rx, so_far):
+            return e, round(words[i]["end"] + REACT_DELAY, 3)
+    return e, round(ln["end"] + REACT_DELAY, 3)
+
+
 NEUTRAL = {"tempo": 1.0, "energy": 1.0, "beat_gap": 0.9, "beat_words": 4, "point": "point", "exclaim": "talk_open_palms", "question": "shrug",
            "listen_nod": 0.8, "look_away": 0, "never": [], "react": "surprised"}
 
@@ -149,12 +166,13 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
             if sx is not None:   # a shy character's eyes drift down and off the speaker
                 la = P["look_away"]
                 look.append([round(ln["start"] - 0.15, 3), [round((1.0 if sx > my_x else -1.0) * (1 - la), 2), round(0.1 + 0.5 * la, 2)]])
-            e = emotion_of(ln.get("text", ""))
+            e, t_felt = felt_at(ln)
             rc = LISTEN.get(e) if humanoid else None
             if rc in ("present",) and sx is not None:
                 rc = "present_R" if sx > my_x else "present_L"
-            if e:   # a listener feels with the speaker: the face follows, and a reaction answers the line
-                emo.append([round(ln["start"] + 0.3, 3), e if e != "angry" else "worried"])
+            if e:   # a listener feels with the speaker once the feeling word is heard (not before: that reads as knowing the
+                # line), the face first, then a reaction answers the line's end
+                emo.append([t_felt, e if e != "angry" else "worried"])
             if rc and can(rc) and ln["end"] > busy_until:
                 clips.append(style({"clip": rc, "start": round(ln["end"] + 0.1, 3), "end": round(ln["end"] + 1.3, 3), "weight": 2.5, "auto": True})); busy_until = ln["end"] + 1.3
             elif P["listen_nod"] > 0:

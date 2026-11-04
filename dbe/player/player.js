@@ -153,7 +153,7 @@
       const data = dataOf(o), w = o.w || (H > W ? 900 : 1300), h = o.h || (H > W ? 700 : 560), x = o.x ?? (W - w) / 2, y = o.y ?? H * 0.25;
       const max = o.max || Math.max(...data.map(d => d[1]), 1), n = data.length || 1, bw = w / n * 0.62, g = ease(since(o, t) / (o.duration ?? 1.0));
       let svg = `<g opacity="${op}"><path d="M${x} ${y + h} L${x + w} ${y + h}" stroke="${INK}" stroke-width="3"/>`;
-      data.forEach(([lab, v], i) => { const bh = (v / max) * (h - 90) * g, bx = x + (i + 0.19) * (w / n);
+      data.forEach(([lab, v], i) => { const bh = (v / max) * (h - 90) * g, bx = x + ((RTLF ? n - 1 - i : i) + 0.19) * (w / n);   // WP-25: a right-to-left film reads its bars from the right
         svg += `<rect x="${bx}" y="${y + h - bh}" width="${bw}" height="${bh}" fill="${(o.colors || [])[i] || o.color || '#1a62c2'}" stroke="${INK}" stroke-width="2"/>` +
           `<text x="${bx + bw / 2}" y="${y + h + fsB * 1.1}" text-anchor="middle" font-family="${BODY}" font-size="${fsB * 0.8}" fill="${INK}">${esc(lab)}</text>` +
           (g > 0.98 ? `<text x="${bx + bw / 2}" y="${y + h - bh - 14}" text-anchor="middle" font-family="${BODY}" font-weight="700" font-size="${fsB * 0.8}" fill="${INK}">${esc((o.prefix || '') + fmt(v, o.decimals || 0) + (o.unit || ''))}</text>` : ''); });

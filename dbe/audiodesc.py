@@ -260,13 +260,22 @@ def voice_all(texts, voice_id, voices_dir, sr_out, slots=None):
     from pathlib import Path
     from scipy.signal import resample_poly
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
-    import kokoro_voice as K
-    v = K.KokoroVoice(voice_id, voices_dir); out = []
+    if voice_id.startswith("kokoro:"):
+        import kokoro_voice as K
+        v = K.KokoroVoice(voice_id, voices_dir); synth = v.synth
+    else:   # WP-24/25: a Piper voice for a language Kokoro does not speak
+        from piper import PiperVoice
+        from piper.config import SynthesisConfig
+        pv = PiperVoice.load(str(Path(voices_dir) / f"{voice_id}.onnx"))
+        def synth(txt, length_scale=1.0):
+            ch = list(pv.synthesize(txt, syn_config=SynthesisConfig(length_scale=length_scale, normalize_audio=True)))
+            return np.concatenate([c.audio_float_array for c in ch]), ch[0].sample_rate
+    out = []
     for i, txt in enumerate(texts):
-        a, sr = v.synth(txt, length_scale=1.0)
+        a, sr = synth(txt, length_scale=1.0)
         slot = (slots or [None] * len(texts))[i]
         if slot and len(a) / sr > slot:
-            a, sr = v.synth(txt, length_scale=max(1 / MAX_SPEED, slot / (len(a) / sr)))
+            a, sr = synth(txt, length_scale=max(1 / MAX_SPEED, slot / (len(a) / sr)))
         a = resample_poly(a, sr_out, sr) if sr != sr_out else a
         nz = np.nonzero(np.abs(a) > 0.01)[0]
         a = a[max(0, nz[0] - int(0.03 * sr_out)): nz[-1] + int(0.05 * sr_out)] if len(nz) else a
