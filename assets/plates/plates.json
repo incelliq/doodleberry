@@ -1,0 +1,15 @@
+{
+ "note": "WP-16 anatomy plates: Servier Medical Art (https://smart.servier.com), CC BY 4.0. Not committed: python -m dbe plate.fetch (or bash tools/setup.sh plates) downloads each into assets/external/plates/ and checks its sha256. A film that shows one credits it automatically (film.credits). size is the image's pixel size, so the player lays a plate out before the image loads.",
+ "credit": "Servier Medical Art by Servier, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+ "plates": {
+  "heart": {"title": "Heart, opened, with a close-up of heart muscle", "file": "Coeur_A.png", "url": "https://smart.servier.com/wp-content/uploads/2016/10/Coeur_A.png",
+            "page": "https://smart.servier.com/category/anatomy-and-the-human-body/cardiovascular-system/heart/", "size": [396, 801],
+            "sha256": "8c75f266a55a3792f122cbc6ae17d0dd4ce565358acfa9c6e8f3e3e604ece24c", "license": "CC-BY-4.0"},
+  "brain": {"title": "Brain, side view", "file": "Cerveau_beau.png", "url": "https://smart.servier.com/wp-content/uploads/2016/10/Cerveau_beau.png",
+            "page": "https://smart.servier.com/category/anatomy-and-the-human-body/nervous-system/brain/", "size": [580, 592],
+            "sha256": "80906dee37b63b8817d16dffcd870101ed9ca70ed0b49528aa8ddc92fc94db65", "license": "CC-BY-4.0"},
+  "lungs": {"title": "Lungs and windpipe", "file": "poumons_01.png", "url": "https://smart.servier.com/wp-content/uploads/2016/10/poumons_01.png",
+            "page": "https://smart.servier.com/category/anatomy-and-the-human-body/respiratory-system/lungs/", "size": [408, 363],
+            "sha256": "f990937abb5d6b53103ff708842e607b0b1e5ced599a07dcd2b2a6b42136f2c6", "license": "CC-BY-4.0"}
+ }
+}

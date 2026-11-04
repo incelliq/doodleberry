@@ -954,6 +954,17 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Anatomy plates (WP-16)
+`{"type": "plate", "plate": "heart" | "brain" | "lungs", "x", "y", "w", "labels": [{"at": [u, v], "text", "side",
+"start"}]}` shows an anatomy plate from Servier Medical Art (CC BY 4.0) on a card. Each label is joined by a leader
+line to its point on the drawing (`at` is a fraction of the image) and appears at its `start`; a label is kept
+inside the frame. The plate's credit sits under the card, and `film.credits` adds the source, licence and changes
+for every plate a film shows; the audio description names the drawing and its labels. The images are not committed:
+assets/plates/plates.json lists each with its URL, size and sha256, and `plate.fetch` (or `bash tools/setup.sh
+plates`) downloads them into assets/external/plates/ and refuses a file whose hash has changed. Test `plates`: the
+brain plate's image fills half its box in the real player (not an empty card), its labels are absent before their
+time and drawn after, and the credits and audio description name it.
+
 ## Outfits as swap sets (WP-16)
 A generated character can carry outfits: `cast.generate` spec `"outfits": {"coat": {"top": {...}, "bottom": {...}},
 "gown": {...}}`. Each outfit is drawn by the generator like the character's own clothes, and every body part it draws

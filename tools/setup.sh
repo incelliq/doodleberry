@@ -11,6 +11,7 @@
 #                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
 #   bash tools/setup.sh physics    deterministic Rapier 2D (npm, pinned in tools/physics/package.json) for physics.solve (WP-09)
 #   bash tools/setup.sh dotlottie  the dotLottie player (npm, pinned in tools/dotlottie/package.json) for lottie.dotlottie's checks (WP-23)
+#   bash tools/setup.sh plates     Servier Medical Art anatomy plates (CC BY 4.0) into assets/external/plates, sha256-checked (WP-16)
 #   bash tools/setup.sh maps       d3-geo, topojson-client and world-atlas (npm, pinned in tools/mapboard/package.json) to make and check map board data (WP-16)
 #   bash tools/setup.sh voices [de,uk,...]  Piper voices from voices/registry.json: those films use ("fetched"), or every voice
 #                                  of the languages named (checked by sha256 or the catalogue's md5) (WP-25)
@@ -131,6 +132,11 @@ dotlottie_deps() {
   (cd tools/dotlottie && npm install --no-audit --no-fund)
 }
 
+plates_dl() {
+  # Servier Medical Art anatomy plates (CC BY 4.0), listed with their sha256 in assets/plates/plates.json (WP-16)
+  python -m dbe plate.fetch '{}' >/dev/null && echo "plates: ok"
+}
+
 map_deps() {
   # d3-geo and topojson-client (ISC) with world-atlas (Natural Earth, public domain): tools/mapboard/make.mjs and check.mjs (WP-16)
   if [ -d "tools/mapboard/node_modules/d3-geo" ]; then echo "maps: d3-geo ok"; return; fi
@@ -157,10 +163,11 @@ case "$what" in
   physics) physics_deps ;;
   dotlottie) dotlottie_deps ;;
   maps) map_deps ;;
+  plates) plates_dl ;;
   voices) voices_dl "$@" ;;
   locales) locales_deps ;;
   provenance) provenance_dl ;;
   all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; map_deps; voices_dl; provenance_dl ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|voices|locales|provenance]"; exit 2 ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|plates|voices|locales|provenance]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"

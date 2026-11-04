@@ -110,6 +110,14 @@ def _overlay_text(o, data, lines, t):
             top = max(rows, key=lambda r: r[1])
             return f"A bar chart, {title}: {len(rows)} bars, highest for {top[0]} at {top[1]}.", 2
         return f"A bar chart: {title}.", 2
+    if k == "plate" and o.get("plate"):   # WP-16 anatomy plates: what the drawing shows, and its labels
+        try:
+            from .plates import registry
+            what = registry()["plates"].get(o["plate"], {}).get("title", o["plate"])
+        except (OSError, ValueError):
+            what = o["plate"]
+        labs = [L.get("text") for L in o.get("labels") or [] if L.get("text")]
+        return f"A drawing: {what[0].lower() + what[1:]}" + (f", labelled {', '.join(labs)}." if labs else "."), 2
     if k == "icon" and o.get("name"):
         return f"An icon: {o['name'].replace('-', ' ')}.", 0
     if k == "citation" and txt:

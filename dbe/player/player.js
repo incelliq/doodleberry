@@ -159,6 +159,21 @@
           (g > 0.98 ? `<text x="${bx + bw / 2}" y="${y + h - bh - 14}" text-anchor="middle" font-family="${BODY}" font-weight="700" font-size="${fsB * 0.8}" fill="${INK}">${esc((o.prefix || '') + fmt(v, o.decimals || 0) + (o.unit || ''))}</text>` : ''); });
       return svg + (o.title ? `<text ${lead(x, x + w, 12)} y="${y - 20}" font-family="${BODY}" font-weight="700" font-size="${fsB}" fill="${INK}">${esc(o.title)}</text>` : '') + `</g>`;
     }
+    if (o.type === 'plate') { // WP-16: an anatomy plate (Servier Medical Art, CC BY 4.0) on a card, labels with leader lines, its credit below
+      const P = (window.PLATES || {})[o.plate]; if (!P) return '';
+      const w = o.w || (H > W ? 560 : 520), h = w * P.size[1] / P.size[0], x = o.x ?? (W - w) / 2, y = o.y ?? H * 0.2;
+      let svg = `<g opacity="${op}"><rect x="${x - 24}" y="${y - 24}" width="${w + 48}" height="${h + 48}" rx="18" fill="#fffdf6" stroke="${INK}" stroke-width="4"/>` +
+        `<image href="${P.file}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none"/>`;
+      for (const L of o.labels || []) {
+        const a = L.start == null ? 1 : Math.max(0, Math.min(1, (t - L.start) / 0.35)); if (a <= 0) continue;
+        const px = x + L.at[0] * w, py = y + L.at[1] * h, right = (L.side || (L.at[0] > 0.5 ? 'right' : 'left')) === 'right';
+        const fs = L.size || fsB * 0.8, tw = em(L.text) * fs * 0.56 + 10, m = W * 0.04;   // the label stays inside the frame: its leader shortens or crosses the card
+        const lx = right ? Math.min(x + w + 40, W - m - tw) : Math.max(x - 40, m + tw);
+        svg += `<g opacity="${a.toFixed(3)}"><path d="M${px} ${py} L${lx} ${py}" stroke="${INK}" stroke-width="3"/><circle cx="${px}" cy="${py}" r="7" fill="${INK}"/>` +
+          `<text x="${lx + (right ? 10 : -10)}" y="${py + fs * 0.35}" text-anchor="${right ? 'start' : 'end'}" font-family="${BODY}" font-weight="700" font-size="${fs}" fill="${INK}" stroke="#fffdf6" stroke-width="${fs * 0.2}" paint-order="stroke">${esc(L.text)}</text></g>`;
+      }
+      return svg + `<text x="${x + w / 2}" y="${y + h + 48 + 30}" text-anchor="middle" font-family="${MONO}" font-size="${H > W ? 24 : 20}" fill="#4a4e57">${esc(o.credit || 'Servier Medical Art, CC BY 4.0')}</text></g>`;
+    }
     if (o.type === 'quote') {
       const w = o.w || (H > W ? 880 : 1200), lines = wrapText(o.text || '', Math.floor(w / (fsB * 0.5))), x = o.x ?? (W - w) / 2, y = (o.y ?? H * 0.25) + slide, h = lines.length * fsB * 1.3 + (o.by ? fsB * 1.6 : 0) + 60;
       return `<g opacity="${op}">${plate(x, y, w, h, '#fffdf4')}` + lines.map((l, i) => `<text ${lead(x, x + w, 40)} y="${y + 50 + (i + 0.6) * fsB * 1.3}" font-family="${BODY}" font-size="${fsB}" font-style="italic" fill="${INK}">${esc((i ? '' : '“') + l + (i === lines.length - 1 ? '”' : ''))}</text>`).join('') +

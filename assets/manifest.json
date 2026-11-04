@@ -429,6 +429,15 @@
     "player"
    ],
    "script": "hangul"
+  },
+  {
+   "path": "assets/plates/plates.json",
+   "kind": "data",
+   "name": "anatomy plate registry",
+   "license": "CC0-1.0",
+   "class": "permissive",
+   "used_by": [],
+   "note": "lists Servier Medical Art plates (CC BY 4.0), fetched on demand"
   }
  ],
  "generated": [
@@ -769,6 +778,39 @@
    "license": "CC-BY-4.0",
    "credit": "Carrot character rig by Nikolai Mamashev (https://gumroad.com/nikolai), based on the original character from the Pepper&Carrot web-comic by David Revoy (https://www.peppercarrot.com). CC-BY 4.0.",
    "use": "development showcase; rebuilt locally, not committed"
+  },
+  {
+   "id": "plate-heart",
+   "path": "assets/external/plates/Coeur_A.png",
+   "in_git": false,
+   "source_url": "https://smart.servier.com/wp-content/uploads/2016/10/Coeur_A.png",
+   "license": "CC-BY-4.0",
+   "class": "attribution",
+   "credit": "Servier Medical Art by Servier, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+   "sha256": "8c75f266a55a3792f122cbc6ae17d0dd4ce565358acfa9c6e8f3e3e604ece24c",
+   "use": "anatomy plate 'heart' (Heart, opened, with a close-up of heart muscle): the player's plate overlay; fetched by plate.fetch (WP-16); credited by film.credits"
+  },
+  {
+   "id": "plate-brain",
+   "path": "assets/external/plates/Cerveau_beau.png",
+   "in_git": false,
+   "source_url": "https://smart.servier.com/wp-content/uploads/2016/10/Cerveau_beau.png",
+   "license": "CC-BY-4.0",
+   "class": "attribution",
+   "credit": "Servier Medical Art by Servier, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+   "sha256": "80906dee37b63b8817d16dffcd870101ed9ca70ed0b49528aa8ddc92fc94db65",
+   "use": "anatomy plate 'brain' (Brain, side view): the player's plate overlay; fetched by plate.fetch (WP-16); credited by film.credits"
+  },
+  {
+   "id": "plate-lungs",
+   "path": "assets/external/plates/poumons_01.png",
+   "in_git": false,
+   "source_url": "https://smart.servier.com/wp-content/uploads/2016/10/poumons_01.png",
+   "license": "CC-BY-4.0",
+   "class": "attribution",
+   "credit": "Servier Medical Art by Servier, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+   "sha256": "f990937abb5d6b53103ff708842e607b0b1e5ced599a07dcd2b2a6b42136f2c6",
+   "use": "anatomy plate 'lungs' (Lungs and windpipe): the player's plate overlay; fetched by plate.fetch (WP-16); credited by film.credits"
   }
  ]
 }

@@ -378,6 +378,14 @@ def acting_plan(name):
     return {"film": name, "plan": json.loads(r[-1])}
 
 
+@command("plate.fetch", ids=("array", "plate ids (default: every plate in assets/plates/plates.json)", None))
+def plate_fetch(ids=None):
+    """Download anatomy plates (Servier Medical Art, CC BY 4.0) into assets/external/plates/ and check each against its
+    recorded sha256 (WP-16). Films that show a plate need it fetched first."""
+    from . import plates as PL
+    return {"plates": PL.fetch(ids)}
+
+
 @command("film.credits", name=("string", "film"))
 def film_credits(name):
     """Credits for a film from what it actually uses: puppets (author, licence), voices (licence), fonts and engines.
@@ -416,6 +424,11 @@ def film_credits(name):
     assets = [f["attribution"] for f in man["files"] if set(f.get("used_by", [])) & uses]
     lines += ["", "Rendered with " + ", ".join(names.get(r, r) for r in rend) + f"; speech by {', '.join(sorted(engines)) or 'Piper'}; alignment by faster-whisper (MIT); audio by ffmpeg.",
               *(["Assets: " + "; ".join(dict.fromkeys(assets))] if assets else []), "Made with Doodleberry."]
+    from . import plates as PL   # WP-16: anatomy plates shown, with their source and licence
+    pls = PL.used(s)
+    if pls:
+        preg = PL.registry()
+        lines.append(f"Anatomy plates ({', '.join(preg['plates'][p]['title'] for p in pls if p in preg['plates'])}): {preg['credit']}. Source: https://smart.servier.com. Changes: resized and labelled.")
     from . import living as LV   # WP-27: the corrections, dated, and thanks to who reported them
     lines += LV.credits_section(LV.load_log(d))
     out = d / "build" / "credits.txt"; out.parent.mkdir(exist_ok=True); out.write_text("\n".join(lines) + "\n")
@@ -621,7 +634,10 @@ def _player_page(name):
     tags = "".join(f'<script>window.PUPPETS=window.PUPPETS||{{}};window.PUPPETS[{json.dumps(p)}]={(ROOT / p).read_text()};</script>' for p in puppets)
     clip_tags = "".join(f'<script src="../../../puppet/clips/{c.name}"></script>' for c in sorted((ROOT / "puppet" / "clips").glob("*.js")))
     maps = sorted({(sh.get("set_opts") or {}).get("map", "world") for sh in _shots(name)["shots"] if sh.get("set") == "map"})   # WP-16: the map board's data, only the maps used
-    map_tags = "".join(f'<script src="../../../sets/maps/{m}.js"></script>' for m in maps if (ROOT / "sets" / "maps" / f"{m}.js").exists())
+    from . import plates as PL   # WP-16 anatomy plates: their sizes and files, for the plates this film shows
+    _pl = PL.used(_shots(name)); _preg = PL.registry()["plates"] if _pl else {}
+    map_tags_pl = f'<script>window.PLATES={json.dumps({k: {"file": "../../../assets/external/plates/" + _preg[k]["file"], "size": _preg[k]["size"]} for k in _pl if k in _preg})};</script>' if _pl else ""
+    map_tags = map_tags_pl + "".join(f'<script src="../../../sets/maps/{m}.js"></script>' for m in maps if (ROOT / "sets" / "maps" / f"{m}.js").exists())
     fonts_css, fonts_js = _script_fonts()
     page = f"""<!doctype html><html><head><meta charset="utf-8"><style>{fonts_css}@font-face{{font-family:'Fredoka';src:url('../../../engine/fonts/Fredoka.ttf')}}@font-face{{font-family:'Patrick Hand';src:url('../../../engine/fonts/PatrickHand-latin.woff2') format('woff2'),url('../../../engine/fonts/PatrickHand-latin-ext.woff2') format('woff2')}}@font-face{{font-family:'Atkinson Mono';src:url('../../../engine/fonts/AtkinsonMono-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:400;src:url('../../../engine/fonts/NotoSansSinhala-400.woff2') format('woff2')}}@font-face{{font-family:'Noto Sans Sinhala';font-weight:700;src:url('../../../engine/fonts/NotoSansSinhala-700.woff2') format('woff2')}}html,body{{margin:0;background:#000;overflow:hidden}}text{{font-family:'Fredoka',sans-serif}}</style></head>
 <body><svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -5472,6 +5488,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "plates":   # WP-16: anatomy plates
+        bad, meas = _plates_test()
+        failed += 1 if bad else 0
+        results.append({"plates": "anatomy plates fetch and match their recorded hashes; a shot showing the brain plate draws the image itself (not an empty card), its labels appear at their times, and the film's credits name Servier Medical Art and CC BY 4.0", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "outfits":   # WP-16: outfits as swap sets
         bad, meas = _outfits_test()
         failed += 1 if bad else 0
@@ -9605,6 +9625,56 @@ def _templates_test():
 
 
 
+
+
+def _plates_test():
+    """WP-16 anatomy plates. plate.fetch (downloads once; every file must match its recorded sha256). A scratch shot
+    shows the brain plate (w 640 at x 220, y 400) with two labels starting at 1.0 s: drawn by the real player page at
+    0.5 s and 1.6 s, the plate's box holds the image's own colours (brain tones, not the card's cream: at least a
+    quarter of the box), each label's leader-line end is ink at 1.6 s and blank at 0.5 s; film.credits names
+    Servier Medical Art and CC BY 4.0; the audio description names the drawing."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    try:
+        meas["fetched"] = plate_fetch()["plates"]
+    except Exception as e:   # no network: say so
+        return [f"plate.fetch: {e}"], meas
+    d_ = FILMS / "zz-plates"
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        labels = [{"at": [0.3, 0.3], "text": "Frontal lobe", "side": "left", "start": 1.0}, {"at": [0.25, 0.72], "text": "Cerebellum", "side": "left", "start": 1.0}]
+        ov = {"type": "plate", "plate": "brain", "x": 220, "y": 400, "w": 640, "start": 0, "labels": labels}
+        (d_ / "shots.json").write_text(json.dumps({"title": "plates", "size": [1080, 1920], "fps": 30, "shots": [{"id": "s1", "renderer": "svg", "set": "plain", "start": 0, "end": 2.0, "bubbles": False, "cast": [], "overlays": [ov]}]}))
+        (d_ / "script.json").write_text('{"lines": []}'); (d_ / "timing.json").write_text('{"lines": []}')
+        pp = _player_page("zz-plates"); px = {}
+        for t in (0.5, 1.6):
+            png = d_ / f"f{t}.png"
+            _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(t), "1", str(png)], timeout=300)
+            px[t] = np.asarray(Image.open(png).convert("RGB")).astype(int)
+        h = 640 * 592 / 580; box = px[1.6][400:int(400 + h), 220:860]
+        r, g, b = box[..., 0], box[..., 1], box[..., 2]
+        brain = (r > 150) & (r - b > 40) & (g > 100) & (r < 250)   # the plate's tan and pink, not the cream card (#fffdf6) or white
+        meas["plate_image_share"] = round(float(brain.mean()), 3)
+        fs = 42 * 0.8; m = 1080 * 0.04   # the player's label placement: a label is kept inside the frame (portrait body size 42)
+        ends = [(int(400 + L["at"][1] * h), int(max(220 - 40, m + len(L["text"]) * fs * 0.56 + 10))) for L in labels]
+        dark = lambda a, y, x: int((a[y - 3:y + 4, x - 3:x + 4].sum(-1) < 200).sum())
+        meas["label_ends_dark_px"] = {"before": [dark(px[0.5], y, x) for y, x in ends], "after": [dark(px[1.6], y, x) for y, x in ends]}
+        if meas["plate_image_share"] < 0.25:
+            bad.append(f"the plate image is missing or small: {meas['plate_image_share']}")
+        if any(meas["label_ends_dark_px"]["before"]) or not all(v > 5 for v in meas["label_ends_dark_px"]["after"]):
+            bad.append(f"labels: {meas['label_ends_dark_px']}")
+        cr = film_credits("zz-plates")["credits"]
+        meas["credit"] = next((l for l in cr if "Servier" in l), None)
+        if not meas["credit"] or "CC BY 4.0" not in meas["credit"]:
+            bad.append(f"credits: {cr}")
+        from . import audiodesc as AD
+        meas["described"] = AD._overlay_text(ov, {}, [], 0.0)[0]
+        if "brain" not in (meas["described"] or "").lower():
+            bad.append(f"audio description: {meas['described']}")
+    finally:
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _outfits_test():
     """WP-16 outfits. A character generated with outfits coat (jacket and dark trousers) and gown (a dress): it lints
