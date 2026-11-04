@@ -954,6 +954,21 @@ of 0.991 to 1.0, and fills identical. Parity's colour check now looks a pixel in
 thick dark ink (Kettle) had read as 24 to 27 levels off along every outline, though its fills match exactly; a
 deliberately recoloured render still reads 38.
 
+## Character bibles and continuity (WP-16)
+`cast.bible {"id", "set"}` keeps a character's bible in cast/bible/<id>.json: personality, voice (with a voice per
+language, `by_lang`), acting profile, gesture tendencies in words, clips it never plays, look (outfit, what it always
+wears, family), catchphrases, relationships, continuity notes, and films allowed to differ (`exceptions`, with why).
+What the cast registry already knows is filled in, and what is still missing is listed. `cast.continuity {"id"}` (or
+every character with a bible) finds the films whose shots use the character's puppet and reports a voice other than
+the bible's for the film's language, a language with no voice chosen, an acting profile that overrides the bible's,
+a clip the bible rules out, and a puppet file changed since it was registered.
+
+Ravi and Momo have bibles, written from the Ask Ravi series bible and from what their 23 and 21 films actually use
+(Ravi speaks as am_michael in 20, Momo as af_heart with her pitch and formant in 18). The check reports one real
+issue: in data-demo-ar Momo speaks Arabic with the only Arabic voice installed, a low male voice; choosing an Arabic
+voice for her is open. Test `bible`: a scratch film that gives Ravi another voice and a clip his bible rules out,
+and Momo a French line with no French voice chosen, is caught on all three.
+
 ## Character family looks (WP-16)
 A family is a look shared by a set of characters, on top of `cast.generate`: `line` (stroke weight factor), `eye`
 (eye and pupil size factor), `head` (head size factor) and `ink` (line colour), plus palettes the members' tops,

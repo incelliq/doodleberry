@@ -1785,6 +1785,25 @@ def acting_tag(name, tags, replace=True):
     return {"accepted": acc, "refused": ref, "next": "acting.plan places the accepted gestures on their words"}
 
 
+@command("cast.bible", id=("string", "cast id"), set=("object", "fields to change: personality, voice, profile, gestures, never, look, catchphrases, relationships, continuity (null removes one)", None))
+def cast_bible(id, set=None):
+    """A character's bible (WP-16): personality, voice, acting profile, gesture tendencies, clips it never plays,
+    look, catchphrases, relationships and continuity notes, in cast/bible/<id>.json; what the cast registry already
+    knows is filled in. With `set`, changes it."""
+    from . import bible as B
+    return B.write(id, set) if set else B.read(id)
+
+
+@command("cast.continuity", id=("string", "cast id, or empty for every cast member with a bible", ""))
+def cast_continuity(id=""):
+    """Check a character against its bible in every film it appears in (WP-16): voice, acting profile, clips it never
+    plays, and whether its puppet changed since it was registered."""
+    from . import bible as B
+    ids = [id] if id else sorted(p.stem for p in B.BIBLE.glob("*.json"))
+    rs = [B.check(i) for i in ids]
+    return {"checked": rs, "issues": sum(len(r["issues"]) for r in rs)}
+
+
 @command("cast.profile", id=("string", "cast id"), profile=("string", "a personality profile in cast/profiles.json (shy, excitable, calm, grumpy, thoughtful, neutral)"))
 def cast_profile(id, profile):
     """Give a cast member a personality profile (WP-10, E13): the gesture planner then shapes its tempo, energy and
@@ -5446,6 +5465,10 @@ def test_golden(update=False, film=""):
         bad, meas = _palette_test()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "bible":   # WP-16: character bibles and continuity
+        bad, meas = _bible_test()
+        failed += 1 if bad else 0
+        results.append({"bible": "a scratch film that gives Ravi the wrong voice and a clip his bible rules out, and Momo a French line with no French voice chosen, is caught on all three; the real films report only what is known", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "family":   # WP-16: character family looks
         bad, meas = _family_test()
         failed += 1 if bad else 0
@@ -9569,6 +9592,35 @@ def _templates_test():
 
 
 
+
+
+def _bible_test():
+    """WP-16 bibles. A scratch film zz-bible (counted as an appearance for the test) gives Ravi a voice other than his
+    bible's and the celebrate clip his bible rules out, and has Momo speak French with no French voice in her bible:
+    cast.continuity reports exactly those three. The real films' report is recorded as measured."""
+    from . import bible as B
+    bad, meas = [], {}
+    meas["real"] = {r["id"]: [f"{i['film']}: {i['what']}" for i in r["issues"]] for r in cast_continuity("")["checked"]}
+    d_ = FILMS / "zz-bible"; orig = B.appearances
+    try:
+        shutil.rmtree(d_, ignore_errors=True); d_.mkdir(parents=True)
+        cast = [{"puppet": "cast/generated/ravi.puppet.json", "speaker": "ravi", "timeline": {"clips": [{"clip": "celebrate", "start": 0.2}]}},
+                {"puppet": "cast/generated/momo.puppet.json", "speaker": "momo", "timeline": {"clips": []}}]
+        (d_ / "shots.json").write_text(json.dumps({"shots": [{"id": "s1", "set": "plain", "start": 0, "end": 1, "cast": cast}]}))
+        (d_ / "script.json").write_text(json.dumps({"lang": "fr", "speakers": {"ravi": {"voice": "kokoro:am_puck"}, "momo": {"voice": "kokoro:ff_siwis"}}, "lines": []}))
+        def with_scratch(path):   # appearances() skips zz- films; the test adds its own
+            uses = [{"shot": "s1", **c} for c in cast if c["puppet"] == path]
+            return orig(path) + ([("zz-bible", uses)] if uses else [])
+        B.appearances = with_scratch
+        got = {r["id"]: [i for i in r["issues"] if i["film"] == "zz-bible"] for r in cast_continuity("")["checked"]}
+        meas["scratch"] = {k: [i["kind"] + ": " + i["what"] for i in v] for k, v in got.items()}
+        kinds = sorted((k, i["kind"]) for k, v in got.items() for i in v)
+        if kinds != [("momo", "voice"), ("ravi", "never"), ("ravi", "voice")]:
+            bad.append(f"expected momo voice, ravi never and voice; got {kinds}")
+    finally:
+        B.appearances = orig
+        shutil.rmtree(d_, ignore_errors=True)
+    return bad, meas
 
 def _family_test():
     """WP-16 family looks. Three members in each of cast/families.json's families, made with cast.family's specs

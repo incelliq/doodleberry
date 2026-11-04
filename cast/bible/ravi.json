@@ -1,0 +1,32 @@
+{
+ "id": "ravi",
+ "personality": "the expert: calm, warm, unhurried; explains with one clear example and checks the facts out loud",
+ "voice": {
+  "voice": "kokoro:am_michael",
+  "by_lang": {
+   "ar": "ar_JO-kareem-low"
+  }
+ },
+ "profile": "calm",
+ "gestures": "beats on key words, points to the board or chart when a number lands, nods while listening; rarely big gestures",
+ "never": [
+  "celebrate"
+ ],
+ "look": {
+  "outfit": "blue jumper, dark trousers, round glasses",
+  "always": [
+   "glasses"
+  ]
+ },
+ "relationships": {
+  "momo": "answers her questions; never talks down to her"
+ },
+ "continuity": [
+  "the expert in Ask Ravi (series/ask-ravi/bible.json)",
+  "says where a number comes from"
+ ],
+ "exceptions": {
+  "slots-demo": "re-voicing demo: voiced twice with a different cast on purpose",
+  "clips-demo": "clip library demo voiced before the series cast was fixed"
+ }
+}
