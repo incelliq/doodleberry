@@ -1057,7 +1057,7 @@ alternate (correlation -0.89) through 50 degrees, each arm swings against its ow
 1.05 Hz and the root travels forward; from the front the same take has no stride (the legs swing towards the camera:
 +0.81); it plays on Pip in the player.
 
-Hugs (`interact.hugs: [{a, b, start, hold, reach}]`): both arms of each character go round the other's back by IK, to
+Hugs (a shot's interact block, `"hugs": [{a, b, start, hold, reach}]`): both arms of each character go round the other's back by IK, to
 points on the partner's torso, blending in and out; heads turn to each other. In the `interact` test (a copy of
 handshake-demo where the two walk closer and hug) all four hands stay on their targets while the hug holds (0 px on
 the baked frames) at 72% of arm reach.
