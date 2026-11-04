@@ -3680,6 +3680,32 @@ def film_comic(name, kind="comic", dsf=1.0):
             "page_images": sorted(str(p.relative_to(ROOT)) for p in od.glob("page*.png")), "ok": not missing and pics == len(items)}
 
 
+GODOT = os.environ.get("DBE_GODOT") or next((p for p in ("/opt/godot/godot", shutil.which("godot") or "") if p and Path(p).exists()), None)
+
+
+def _godot_render_check(name, od, sid, n, size):
+    """Godot itself (headless import, then Movie Maker under Xvfb with software OpenGL) renders the first shot; three
+    frames are compared with the player's own frames at the same moments (whole frames: set, shadows and characters)"""
+    import numpy as np
+    from PIL import Image
+    from . import rparity as RP
+    W, H = size; mv = od / "movie"; shutil.rmtree(mv, ignore_errors=True); mv.mkdir()
+    r1 = subprocess.run([GODOT, "--headless", "--path", str(od), "--import"], capture_output=True, text=True, timeout=900)
+    r2 = subprocess.run(["xvfb-run", "-a", "-s", f"-screen 0 {W}x{H}x24", GODOT, "--path", str(od), "--rendering-driver", "opengl3", "--write-movie", str(mv / "f.png"),
+                         "--fixed-fps", "30", "--quit-after", str(n), "--resolution", f"{W}x{H}"], capture_output=True, text=True, timeout=1800)
+    got = sorted(mv.glob("f*.png"))
+    if r2.returncode or len(got) < n:
+        return {"ok": False, "error": (r1.stderr + r2.stderr)[-400:], "frames": len(got)}
+    pp = _player_page(name); s = _shots(name); sh = next(x for x in s["shots"] if x["id"] == sid); res = []
+    for f in (0, n // 2, n - 1):
+        ref = od / "check" / f"player_full_{f}.png"; ref.parent.mkdir(exist_ok=True)
+        _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(sh["start"] + f / 30), "1", str(ref)], timeout=600)
+        a = np.asarray(Image.open(ref).convert("RGB")).astype(float); b = np.asarray(Image.open(got[f]).convert("RGB").resize((a.shape[1], a.shape[0]))).astype(float)
+        res.append({"frame": f, "mean_abs": round(float(np.abs(a - b).mean()), 2), "px_over_32": round(float((np.abs(a - b).max(-1) > 32).mean()), 4), "line_f1": round(RP.line_f1(ref, got[f]), 3)})
+    ver = subprocess.run([GODOT, "--version", "--headless"], capture_output=True, text=True).stdout.strip().splitlines()[-1:]
+    return {"engine": ver[0] if ver else "?", "frames": len(got), "compare": res, "ok": all(x["mean_abs"] < 4 and x["px_over_32"] < 0.03 and x["line_f1"] >= 0.9 for x in res)}
+
+
 @command("export.godot", name=("string", "film"), shots=("array", "shot ids (default: every shot)", None), check=("boolean", "compose three frames from the exported scene and compare them with the player's", True))
 def export_godot(name, shots=None, check=True):
     """A film as a Godot 4 project (WP-30): build/godot/ with project.godot, main.tscn (plays the shots in order with
@@ -3693,14 +3719,24 @@ def export_godot(name, shots=None, check=True):
     ids = shots or [sh["id"] for sh in s["shots"]]; rows = []
     for sid in ids:
         _, sh, bdir, baked = _bake(name, sid)
-        _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + f"?bg=1&rastercache=0&captions=0", str(sh["start"]), "1", str(od / "plates" / f"{sid}.png")], timeout=600)
-        path, nd, nt = GX.shot_scene(baked, (W, H), f"{sid}.png", od, sid)
+        # the set as a video (its drifting life and each character's moving ground shadow, drawn by the player per frame),
+        # in Ogg Theora, which Godot plays natively; a still plate only if the video cannot be made
+        try:
+            sv = _set_video(name, sh, bdir)
+            _run(["ffmpeg", "-v", "error", "-y", "-i", str(sv), "-c:v", "libtheora", "-q:v", "9", "-an", str(od / "plates" / f"{sid}.ogv")])
+            plate = f"{sid}.ogv"
+        except Exception:
+            _run(["node", "tools/still.mjs", "file://" + str(_player_page(name)) + f"?bg=1&rastercache=0&captions=0", str(sh["start"]), "1", str(od / "plates" / f"{sid}.png")], timeout=600)
+            plate = f"{sid}.png"
+        path, nd, nt = GX.shot_scene(baked, (W, H), plate, od, sid)
         rows.append({"shot": sid, "scene": str(path.relative_to(ROOT)), "drawings": nd, "tracks": nt, "frames": baked["frames"]})
     mix = d / "build" / "mix.wav"
     if mix.exists():
         _run(["ffmpeg", "-v", "error", "-y", "-i", str(mix), "-c:a", "libvorbis", "-q:a", "5", str(od / "sound.ogg")])
     GX.project(od, s.get("title") or name, (W, H), ids, mix.exists())
-    out = {"project": str(od.relative_to(ROOT)), "shots": rows, "sound": mix.exists(), "opens_in": "Godot 4.5 (not run here: open the folder in the editor)"}
+    out = {"project": str(od.relative_to(ROOT)), "shots": rows, "sound": mix.exists(), "opens_in": "Godot 4.5"}
+    if check and GODOT and shutil.which("xvfb-run"):   # the real engine: import the project, render the first shot with Movie Maker, compare
+        out["godot_render"] = _godot_render_check(name, od, ids[0], next(r["frames"] for r in rows if r["shot"] == ids[0]), (W, H))
     if check:
         sid = ids[0]; sc_ = GX.read_scene(od / "shots" / f"{sid}.tscn"); sh = next(x for x in s["shots"] if x["id"] == sid); n = rows[0]["frames"]
         ious = []
@@ -9250,6 +9286,9 @@ def _mediums_test():
     od = ROOT / g["project"]
     if not g["check"]["ok"] or not all((od / f).exists() for f in ("project.godot", "main.tscn", "main.gd", "shots/s1.tscn")):
         bad.append(f"godot: {meas['godot']}")
+    meas["godot_engine"] = g.get("godot_render") or "Godot not installed (bash tools/setup.sh godot): the engine check was skipped"
+    if g.get("godot_render") and not g["godot_render"].get("ok"):   # rendered by Godot itself, whole frames against the player's
+        bad.append(f"godot engine render: {g['godot_render']}")
     return bad, meas
 
 

@@ -112,6 +112,8 @@ def check(deep=True):
     dlp = ROOT / "tools" / "dotlottie" / "node_modules" / "@lottiefiles" / "dotlottie-web"   # WP-23: draws .lottie themes in lottie.dotlottie's checks
     add("node package @lottiefiles/dotlottie-web", "tools", dlp.exists(), False, str(dlp) if dlp.exists() else "not installed",
         "bash tools/setup.sh dotlottie   (the dotLottie player: lottie.dotlottie and sticker.pack's dotlottie checks, WP-23)")
+    from .commands import GODOT as _GD   # WP-30: export.godot's real-engine render check
+    add("Godot 4.5 (export.godot render check)", "tools", bool(_GD), False, _GD or "not installed", "bash tools/setup.sh godot")
     mbp = ROOT / "tools" / "mapboard" / "node_modules" / "d3-geo"   # WP-16: makes and checks the map board's data
     add("node package d3-geo (map board)", "tools", mbp.exists(), False, str(mbp) if mbp.exists() else "not installed",
         "bash tools/setup.sh maps   (d3-geo, topojson-client, world-atlas: tools/mapboard, WP-16)")

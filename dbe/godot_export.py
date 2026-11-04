@@ -69,13 +69,15 @@ def drawings(baked):
 
 
 def shot_scene(baked, size, plate, outdir, shot_id):
-    """write shots/<id>.tscn and its part SVGs; -> the scene path"""
+    """write shots/<id>.tscn and its part SVGs; -> the scene path. plate: the set as a still (.png) or, better, as a
+    video (.ogv, Ogg Theora, which Godot plays itself), so the set's own life and the characters' ground shadows move"""
     fps, n = baked["fps"], baked["frames"]; L = n / fps
     D = drawings(baked)
     zs = sorted({z for _, _, zt, _, _ in D for z in zt}); zi = {z: i for i, z in enumerate(zs)}   # z values -> ranks (z_index is an int)
     (outdir / "parts").mkdir(parents=True, exist_ok=True)
     ext, subs, nodes, tracks = [], [], [], []
-    ext.append(f'[ext_resource type="Texture2D" path="res://plates/{plate}" id="plate"]')
+    video = plate.endswith(".ogv")
+    ext.append(f'[ext_resource type="{"VideoStreamTheora" if video else "Texture2D"}" path="res://plates/{plate}" id="plate"]')
     times = "PackedFloat32Array(" + ", ".join(_num(f / fps) for f in range(n)) + ")"
     ones = "PackedFloat32Array(" + ", ".join("1" for _ in range(n)) + ")"
     for k, (node, svg, zt, vis, mats) in enumerate(D):
@@ -95,7 +97,10 @@ def shot_scene(baked, size, plate, outdir, shot_id):
                  f'tracks/{i}/keys = {{\n"times": {times},\n"transitions": {ones},\n"update": {update},\n"values": [{", ".join(vals)}]\n}}']
     subs = ["\n".join(anim), '[sub_resource type="AnimationLibrary" id="lib"]\n_data = {\n&"shot": SubResource("shot_anim")\n}']
     head = f"[gd_scene load_steps={len(ext) + len(subs) + 1} format=3]"
-    body = [f'[node name="Shot_{shot_id}" type="Node2D"]', '[node name="Plate" type="Sprite2D" parent="."]\ntexture = ExtResource("plate")\ncentered = false\nz_index = 0',
+    W, H = size
+    plate_node = (f'[node name="Plate" type="VideoStreamPlayer" parent="."]\noffset_right = {W}.0\noffset_bottom = {H}.0\nstream = ExtResource("plate")\nautoplay = true\nexpand = true'
+                  if video else '[node name="Plate" type="Sprite2D" parent="."]\ntexture = ExtResource("plate")\ncentered = false\nz_index = 0')
+    body = [f'[node name="Shot_{shot_id}" type="Node2D"]', plate_node,
             *nodes, '[node name="AnimationPlayer" type="AnimationPlayer" parent="."]\nlibraries = {\n&"": SubResource("lib")\n}\nautoplay = &"shot"']
     path = outdir / "shots" / f"{shot_id}.tscn"; path.parent.mkdir(exist_ok=True)
     path.write_text("\n\n".join([head, *ext, *subs, *body]) + "\n")

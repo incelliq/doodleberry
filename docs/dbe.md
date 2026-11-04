@@ -752,10 +752,17 @@ resolve from build/web/, so the page never became ready. The fonts are now copie
   in), plus visibility and z_index tracks where swaps, views or layer order change;
 - main.tscn with a script that plays the shots in order with the sound (Ogg Vorbis).
 
-The project was not opened in Godot here: running a downloaded engine binary was not permitted in this environment.
-Instead, an independent reader of the .tscn evaluates the tracks and composes three frames, which renderer parity's
-measures compare with the player's frames. pip-park s1 scores a line F-score of 1.0 and a filled-silhouette IoU of
-0.92 to 0.97 (a one or two pixel shift from the player's springs), with colour within 12.
+The set is a video (Ogg Theora, which Godot plays itself) drawn by the player frame by frame, so the set's own life
+and each character's ground shadow move as in the film; a still plate is used only if the video cannot be made (a
+still plate had left a walking character's shadow where the shot began).
+
+Two checks. An independent reader of the .tscn evaluates the tracks and composes three frames, which renderer
+parity's measures compare with the player's (pip-park s1: line F-score 1.0, filled silhouette 0.92 to 0.97). And,
+where Godot is installed (`bash tools/setup.sh godot`: the official 4.5-stable build, SHA-512 checked, in
+/opt/godot), the engine itself imports the project headless and renders the first shot with Movie Maker under Xvfb
+(software OpenGL 4.5, llvmpipe); three whole frames against the player's: pip-park s1 differs by 0.85 to 1.9 levels
+on average, 0.2 to 1.2% of pixels by more than 32 (Theora's compression of the set, and anti-aliasing), line
+F-score 1.0. 171 frames take about 35 s.
 
 The `mediums` test covers dialogue-demo as a comic and an interactive film, and pip-park as a storybook and a Godot
 project.

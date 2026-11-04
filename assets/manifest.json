@@ -736,10 +736,10 @@
    "use": "typesets comics and storybooks from a film's data (film.comic, WP-30); pip-installed"
   },
   {
-   "name": "Godot 4.5 (export target only)",
+   "name": "Godot 4.5-stable (official Linux build, SHA-512 checked)",
    "license": "MIT",
    "class": "permissive",
-   "use": "export.godot writes a Godot 4.5 project (WP-30); the engine is not bundled or run here"
+   "use": "export.godot writes a Godot 4.5 project (WP-30); setup.sh godot installs the engine into /opt/godot, where it imports the project and renders a shot with Movie Maker under Xvfb to check it against the player"
   },
   {
    "name": "d3-geo 3.1.1",

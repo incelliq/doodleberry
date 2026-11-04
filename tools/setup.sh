@@ -11,6 +11,7 @@
 #                                  MyPaint brushes, OpenColorIO and OpenImageIO tools (not part of "all": about 700 MB)
 #   bash tools/setup.sh physics    deterministic Rapier 2D (npm, pinned in tools/physics/package.json) for physics.solve (WP-09)
 #   bash tools/setup.sh dotlottie  the dotLottie player (npm, pinned in tools/dotlottie/package.json) for lottie.dotlottie's checks (WP-23)
+#   bash tools/setup.sh godot      Godot 4.5 (official build, SHA-512 checked) into /opt/godot: export.godot's real-engine render check (WP-30)
 #   bash tools/setup.sh plates     Servier Medical Art anatomy plates (CC BY 4.0) into assets/external/plates, sha256-checked (WP-16)
 #   bash tools/setup.sh maps       d3-geo, topojson-client and world-atlas (npm, pinned in tools/mapboard/package.json) to make and check map board data (WP-16)
 #   bash tools/setup.sh voices [de,uk,...]  Piper voices from voices/registry.json: those films use ("fetched"), or every voice
@@ -132,6 +133,17 @@ dotlottie_deps() {
   (cd tools/dotlottie && npm install --no-audit --no-fund)
 }
 
+godot_dl() {
+  # Godot 4.5-stable (MIT), the official Linux build checked against the release's SHA512-SUMS: renders export.godot's projects (WP-30)
+  local ver="4.5-stable" sha="b5bd5d8a4dd3f44de1d123361beabaafa4825dd05b5e20fd2bfa540f32594f81d82e7c4e86fae420f4faee77d9def573b570f8b156e9c84a4dc2d5123d09e852"
+  if [ -x /opt/godot/godot ] && /opt/godot/godot --version --headless 2>/dev/null | grep -q "4.5.stable"; then echo "godot: $ver installed"; return; fi
+  local tmp; tmp="$(mktemp -d)"
+  curl -fsSL -o "$tmp/g.zip" "https://github.com/godotengine/godot/releases/download/$ver/Godot_v${ver}_linux.x86_64.zip"
+  echo "$sha  $tmp/g.zip" | sha512sum -c - || { echo "godot: checksum mismatch"; rm -rf "$tmp"; return 1; }
+  mkdir -p /opt/godot && python3 -c "import zipfile,sys;zipfile.ZipFile(sys.argv[1]).extractall('/opt/godot')" "$tmp/g.zip" && rm -rf "$tmp"
+  chmod +x "/opt/godot/Godot_v${ver}_linux.x86_64" && ln -sf "/opt/godot/Godot_v${ver}_linux.x86_64" /opt/godot/godot
+}
+
 plates_dl() {
   # Servier Medical Art anatomy plates (CC BY 4.0), listed with their sha256 in assets/plates/plates.json (WP-16)
   python -m dbe plate.fetch '{}' >/dev/null && echo "plates: ok"
@@ -164,10 +176,11 @@ case "$what" in
   dotlottie) dotlottie_deps ;;
   maps) map_deps ;;
   plates) plates_dl ;;
+  godot) godot_dl ;;
   voices) voices_dl "$@" ;;
   locales) locales_deps ;;
   provenance) provenance_dl ;;
   all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; map_deps; voices_dl; provenance_dl ;;
-  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|plates|voices|locales|provenance]"; exit 2 ;;
+  *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|plates|godot|voices|locales|provenance]"; exit 2 ;;
 esac
 "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"
