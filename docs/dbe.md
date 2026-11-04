@@ -506,7 +506,10 @@ and the first chunk of every caption is found in a frame where it is fully shown
 script, in several views (grey, inverted, coloured lettering alone, the bright fill of outlined letters, two page
 layouts; captions and titles cropped to their own band); its words of three letters or more must be found (75% alike
 each, any order: OCR may put a number on either side of right-to-left words), and words that read better backwards
-are reported as reversed. It caught three real faults on the way: the reversed, unjoined Arabic captions, Sinhala
+are reported as reversed. A bubble or caption that does not read in its first frame is read again a little later in
+the same showing (up to three frames, the best kept): Piper voices are not deterministic (the same Sinhala line came
+out 24,832 to 26,368 samples long in three runs), so each voicing moves the lines slightly and one frame could catch a
+bubble on its way in or out. It caught three real faults on the way: the reversed, unjoined Arabic captions, Sinhala
 bubbles still in English (a line's `bubble` text was not translated), and Sinhala signs overflowing their boards.
 
 **The done-when.** `data-demo` in Arabic (`films/data-demo-ar`): Arabic voice (Piper kareem, unclear licence,

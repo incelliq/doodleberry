@@ -5415,20 +5415,22 @@ def film_text_check(name, min_score=0.7):
             bub = {ln["id"]: ln.get("bubble") for ln in _json(d / "script.json", {}).get("lines", [])}
             for l in tm.get("lines", []):
                 if t0 <= l["end"] - 0.05 <= t1:
-                    items.append({"shot": sh["id"], "what": f"bubble {l['id']}", "text": (bub.get(l["id"]) or l["text"]).replace("\n", " "), "t": round(l["end"] - 0.08, 3)})
+                    items.append({"shot": sh["id"], "what": f"bubble {l['id']}", "text": (bub.get(l["id"]) or l["text"]).replace("\n", " "), "t": round(l["end"] - 0.08, 3),
+                                  "alt": [round(x, 3) for x in (l["end"] - 0.3, (l["start"] + l["end"]) / 2) if x > l["start"] + 0.2]})
     if s.get("captions", True):   # burned-in captions: the first chunk of each line, while its second word is spoken
         for l in tm.get("lines", []):
             ws = l.get("words") or []
             if len(ws) >= 2:
-                items.append({"shot": None, "what": f"caption {l['id']}", "text": " ".join(w["text"] for w in ws[:3]), "t": round(ws[1]["start"] + 0.05, 3), "band": "captions"})
+                items.append({"shot": None, "what": f"caption {l['id']}", "text": " ".join(w["text"] for w in ws[:3]), "t": round(ws[1]["start"] + 0.05, 3), "band": "captions",
+                              "alt": [round(w["start"] + 0.05, 3) for w in ws[2:3]] + [round(ws[1]["start"] + 0.25, 3)]})
     import numpy as np
     from PIL import Image, ImageFilter
     tmp = d / "build" / "text_check"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
     rows = []
-    for k, it in enumerate(items):
-        sc = script_of(it["text"]); lang = (sc["ocr"] if sc else "eng") + ("+eng" if sc else "")
+    def read_at(k, it, at, lang):
+        """the best reading of one item in the frame at `at`: (forward score, reversed score, text)"""
         col = tmp / f"t{k:03d}c.png"
-        _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{it['t']:.3f}", "-i", str(final), "-frames:v", "1", "-vf", "scale=iw*2:-1:flags=lanczos", str(col)])
+        _run(["ffmpeg", "-v", "error", "-y", "-ss", f"{at:.3f}", "-i", str(final), "-frames:v", "1", "-vf", "scale=iw*2:-1:flags=lanczos", str(col)])
         im = np.asarray(Image.open(col).convert("RGB")).astype(float)
         if it.get("band") == "captions":   # captions sit in a band above the bottom: read that band alone
             Hh = im.shape[0]; im = im[int(Hh * 0.62):int(Hh * 0.93)]
@@ -5447,6 +5449,20 @@ def film_text_check(name, min_score=0.7):
             f_ = _word_score(it["text"], r.stdout)
             if f_ > best[0]:
                 best = (f_, _word_score(it["text"], r.stdout, reverse=True), r.stdout)
+        return best
+
+    for k, it in enumerate(items):
+        sc = script_of(it["text"]); lang = (sc["ocr"] if sc else "eng") + ("+eng" if sc else "")
+        # a frame or two later in the same showing too: a voice's timing moves a little between renders, and one
+        # frame can catch a bubble or caption on its way in or out
+        best, read_t = (-1.0, 0.0, ""), it["t"]
+        for at in [it["t"]] + list(it.get("alt") or []):
+            got = read_at(k, it, at, lang)
+            if got[0] > best[0]:
+                best, read_t = got, at
+            if best[0] >= min_score and best[0] >= best[1]:
+                break
+        it = {x: v for x, v in it.items() if x != "alt"} | ({"read_at": read_t} if read_t != it["t"] else {})
         fwd, rev = best[0], best[1]
         rows.append({**it, "ocr_lang": lang, "score": round(fwd, 3), "reversed_score": round(rev, 3), "ok": fwd >= min_score and fwd >= rev,
                      **({"problem": "reads reversed"} if rev > fwd and rev >= min_score else {})})
