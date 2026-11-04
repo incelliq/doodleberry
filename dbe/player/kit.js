@@ -33,11 +33,18 @@
   function draw(o, t) {
     const paths = o.paths || [o.path], dur = durOf(o, 1.2), stag = o.stagger ?? dur / Math.max(1, paths.length), s = since(o, t);
     let out = '';
+    // WP-15 drawing off: "off": t (seconds, or a line-relative time resolved before the player) undraws each path over
+    // `off_duration` (default its draw time), staggered as it drew; "off_from": "start" (default: the line clears from
+    // where it began, like a pen's tail catching up) or "end" (it retracts the way it came); a fill fades first
+    const offT = o.off != null ? +o.off : null, odur = o.off_duration ?? dur;
     paths.forEach((d, i) => {
       const u = ease((s - i * stag) / dur); if (u <= 0) return;
-      const fillOp = o.fill ? ease((s - i * stag - dur) / 0.4) * (o.fill_opacity ?? 1) : 0;
+      const uo = offT == null ? 0 : ease((t - offT - i * stag) / odur); if (uo >= 1) return;
+      const fillOp = o.fill ? ease((s - i * stag - dur) / 0.4) * (o.fill_opacity ?? 1) * (1 - ease(uo * 3)) : 0;
+      const dash = offT == null || uo <= 0 ? ` stroke-dasharray="1 1" stroke-dashoffset="${f3(1 - u)}"`   // drawing on: unchanged markup
+        : (o.off_from === 'end' ? ` stroke-dasharray="${f3(u * (1 - uo))} 2" stroke-dashoffset="0"` : ` stroke-dasharray="${f3(u - uo * u)} 2" stroke-dashoffset="${f3(-uo * u)}"`);
       out += `<path d="${d}" pathLength="1" fill="${o.fill || 'none'}" fill-opacity="${f3(fillOp)}" stroke="${o.stroke || INK}" stroke-width="${o.width || 5}"` +
-        ` stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 1" stroke-dashoffset="${f3(1 - u)}"${o.dash ? ` stroke-dasharray="${o.dash}"` : ''}/>`;
+        ` stroke-linecap="round" stroke-linejoin="round"${dash}${o.dash ? ` stroke-dasharray="${o.dash}"` : ''}/>`;
     });
     return out;
   }

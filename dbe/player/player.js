@@ -90,10 +90,35 @@
     if (!RASTER.get(k).failed) PENDING.push(RASTER.get(k).p);
     return m;
   }
-  const boilId = (st, t) => `boil-${Math.floor(t * ((st.boil || {}).fps || 12)) % ((st.boil || {}).frames || 8)}`;
+  // WP-15 boil only while moving ("boil": {"while_moving": true}): the line boil's phase advances on a boil step only if
+  // a character moved during it (root or any part, beyond `still` degrees or px), so still drawings hold still; on a
+  // still step the phase is that of the last moving one (looked for over at most 2 s back). Poses here leave out
+  // springs (cheap, and a spring only follows motion already counted). BOILK: this frame's phase, set by frameAt
+  let BOILK = null;
+  const boilStep = (st, t) => Math.floor(t * ((st.boil || {}).fps || 12) + 1e-6);
+  function castMotion(sh, t0, t1) {
+    let m = 0;
+    for (const c of sh.cast || []) {
+      const p = puppetFor(c.puppet, sh.palette_variant); if (!p) continue;
+      const L = libFor(p), tl = { ...(c.timeline || {}), springs: false, blink: false };
+      if (tl.visemes_from) { tl.visemes = (T.visemes || {})[tl.visemes_from] || []; delete tl.visemes_from; }
+      const pl = c.place || { x: W / 2, y: H * 0.8 }, [x0, y0] = placeAt(pl, t0), [x1, y1] = placeAt(pl, t1);
+      const a0 = Acting.evaluate(p, tl, t0, L.clips, L.presets).angles || {}, a1 = Acting.evaluate(p, tl, t1, L.clips, L.presets).angles || {};
+      m = Math.max(m, Math.hypot(x1 - x0, y1 - y0));
+      for (const k of new Set([...Object.keys(a0), ...Object.keys(a1)])) m = Math.max(m, Math.abs((a1[k] || 0) - (a0[k] || 0)));
+    }
+    return m;
+  }
+  function boilPhase(sh, st, t) {
+    const b = st.boil || {}, fps = b.fps || 12, n = b.frames || 8, k = boilStep(st, t);
+    if (!b.while_moving) return k % n;
+    for (let j = k; j > k - 2 * fps; j--) if (castMotion(sh, (j - 1) / fps, j / fps) > (b.still ?? 0.5)) return j % n;
+    return 0;
+  }
+  const boilId = (st, t) => `boil-${BOILK != null ? BOILK : boilStep(st, t) % ((st.boil || {}).frames || 8)}`;
   function boilDefs(st, t) {
     const b = st.boil; if (!b) return '';
-    const k = Math.floor(t * (b.fps || 12)) % (b.frames || 8);
+    const k = BOILK != null ? BOILK : boilStep(st, t) % (b.frames || 8);
     // the region needs only room for the displacement (scale/2 = 2.5 px at the default 5); a tight region is ~25% less
     // work for the browser (WP-15), and the noise is in user space, so the pixels inside are the same
     const m = Math.max(0.5, Math.min(10, (b.amount ?? 5) * 0.6));
@@ -107,7 +132,40 @@
       return `<g stroke="${INK}" stroke-width="4" stroke-linecap="round" fill="none"><path d="M${x - w * 0.32} ${y - h * 1.1} L${x - w * 0.28} ${y}"/><path d="M${x + w * 0.32} ${y - h * 1.1} L${x + w * 0.28} ${y}"/>` +
         `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" rx="6" fill="#f6f5ef"/></g><text x="${x}" y="${y + h * 0.7}" font-family="${HAND}" font-size="${fs}" text-anchor="middle" fill="${INK}">${esc(o.text)}</text>`; }
     if (o.type === 'text') return `<text x="${o.x}" y="${o.y}" font-family="${HAND}" font-size="${o.size || 58}" text-anchor="middle" fill="${o.color || '#707a84'}">${esc(o.text)}</text>`;
+    if (o.type === 'kinetic') return kinetic(o, t);
     return explainer(o, t);
+  }
+
+  // a word's width in its own font (a canvas measures it as the page will draw it; the fonts are loaded before frames)
+  const _tw = {}, _tctx = document.createElement('canvas').getContext('2d');
+  const textWidth = (str, font) => { const k = font + '|' + str; if (_tw[k] == null) { _tctx.font = font; _tw[k] = _tctx.measureText(str).width; } return _tw[k]; };
+  // WP-15 kinetic typography: {type: "kinetic", text, x, y, size, line: "l2" | start + every, style: "pop" | "rise" |
+  // "slide", width, color, accent: [word indexes]}: each word arrives as it is spoken (the line's own word times, by
+  // position; without a line, every `every` s from start), over 0.25 s; wrapped into centred rows of at most `width`
+  // px; a pure function of t
+  function kinetic(o, t) {
+    const fs = o.size || 72, ws = tokens(o.text), maxW = o.width || W * 0.8, gap = fs * 0.3, wOf = w => textWidth(w, `700 ${fs}px ${BODY}`);
+    const ln = o.line && (T.lines || []).find(l => l.id === o.line), lw = ln ? (ln.words || []) : [];
+    const at = i => lw.length ? (lw[Math.min(i, lw.length - 1)].start + (i >= lw.length ? (i - lw.length + 1) * (o.every || 0.3) : 0)) : (o.start ?? 0) + i * (o.every || 0.3);
+    const rows = []; let cur = [], cw = 0;
+    ws.forEach((w, i) => { const ww = wOf(w); if (cur.length && cw + gap + ww > maxW) { rows.push([cur, cw]); cur = []; cw = 0; } cur.push([w, i, ww]); cw += (cur.length > 1 ? gap : 0) + ww; });
+    if (cur.length) rows.push([cur, cw]);
+    let out = '';
+    rows.forEach(([row, rw], r) => {
+      let x = o.x - rw / 2; const y = o.y + r * fs * 1.25;
+      const order = RTLF ? [...row].reverse() : row;
+      for (const [w, i, ww] of order) {
+        const u = ease((t - at(i)) / 0.25);
+        if (u > 0) {
+          const cx = x + ww / 2, st = o.style || 'pop';
+          const tr = st === 'rise' ? `translate(0 ${((1 - u) * fs * 0.6).toFixed(2)})` : st === 'slide' ? `translate(${((1 - u) * -fs).toFixed(2)} 0)` : `translate(${cx.toFixed(2)} ${y.toFixed(2)}) scale(${(0.6 + 0.4 * u).toFixed(3)}) translate(${(-cx).toFixed(2)} ${(-y).toFixed(2)})`;
+          const col = (o.accent || []).includes(i) ? (o.accent_color || BP.highlight || '#e8590c') : (o.color || INK);
+          out += `<text x="${cx.toFixed(2)}" y="${y.toFixed(2)}" font-family="${BODY}" font-weight="700" font-size="${fs}" text-anchor="middle" fill="${col}" opacity="${u.toFixed(3)}" transform="${tr}">${esc(w)}</text>`;
+        }
+        x += ww + gap;
+      }
+    });
+    return `<g class="kinetic">${out}</g>`;
   }
 
   // ---------- explainer scene library (plan 1.13): every element is a pure function of t ----------
@@ -370,6 +428,7 @@
     const sh = only || shotAt(t), st = sh.style || {};   // a shot render keeps its shot through its handles (WP-15)
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
+    BOILK = st.boil && st.boil.while_moving ? boilPhase(sh, st, t) : null;
     let world = castOnly || PLATE.on ? '' : staticLayer(sh, set.draw(tq, sh.set_opts || {}, W, H)), ink = '';   // plate mode: the set comes from the plate   // castonly=1: the characters alone (WP-14 renderer parity)
     if (sh.underlays && !bgOnly && !castOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
     const heads = {}, casts = []; CASTS = casts;

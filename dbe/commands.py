@@ -608,7 +608,7 @@ def resolve_times(obj, timing):
 
     def walk(o):
         if isinstance(o, dict):
-            return {k: (t_of(v) if k in ("start", "end", "t", "until", "arrive") and isinstance(v, str) and k != "clip" else walk(v)) for k, v in o.items()}
+            return {k: (t_of(v) if k in ("start", "end", "t", "until", "arrive", "off") and isinstance(v, str) and k != "clip" else walk(v)) for k, v in o.items()}
         if isinstance(o, list):
             if len(o) == 2 and isinstance(o[0], str) and _LINE_T.match(o[0]):
                 return [t_of(o[0]), walk(o[1])]
@@ -5901,6 +5901,14 @@ def test_golden(update=False, film=""):
         bad, meas = _correctives_test()
         failed += 1 if bad else 0
         results.append({"correctives": "a forearm's angle drives the bicep's scale and the hand's angle exactly, and every renderer draws it", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "kinetic":   # WP-15: kinetic typography synced to spoken words
+        bad, meas = _kinetic_test()
+        failed += 1 if bad else 0
+        results.append({"kinetic": "a line's words appear on screen as they are spoken", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "boilmove":   # WP-15: line boil only while something moves
+        bad, meas = _boilmove_test()
+        failed += 1 if bad else 0
+        results.append({"boilmove": "the line boil advances while a character moves and holds still when nothing does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10482,6 +10490,95 @@ console.log(JSON.stringify(rows));"""
         meas["parity"] = {k: {"min": v.get("min"), "colour": max(v.get("colour_diff") or [0]), "error": v.get("error")} for k, v in pr["renderers"].items()}
         if not pr["ok"] or pr["refusals"]:
             bad.append({"parity": meas["parity"], "refusals": pr["refusals"]})
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
+    return bad, meas
+
+
+def _kinetic_test():
+    """WP-15 kinetic typography. A scratch copy of dialogue-demo with a kinetic overlay of its first line ("Did you
+    know the library lends telescopes now?") synced to that line's words: read back by OCR from the player's frames,
+    nothing shows before the line, exactly the words already spoken show mid-line (the first five at 1.7 s, none of
+    the rest), and every word by its end. Strokes drawing off (kit draw "off"): a line drawn left to right clears from
+    its start (half way: its left half gone, its right half still drawn), or with "off_from": "end" retracts the way it
+    came (its right half gone first), and is gone when the undrawing ends."""
+    import re as _re
+    from PIL import Image
+    bad, meas = [], {}
+    zz = FILMS / "zz-kinetic"; shutil.rmtree(zz, ignore_errors=True); shutil.copytree(FILMS / "dialogue-demo", zz, ignore=shutil.ignore_patterns("build"))
+    try:
+        raw = _json(zz / "shots.json"); text = "Did you know the library lends telescopes now?"
+        sh0 = raw["shots"][0]; sh0["set"] = "plain"
+        for k_ in ("camera", "camera_auto", "set_opts"):   # no other words on screen, a still camera
+            sh0.pop(k_, None)
+        sh0["overlays"] = [{"type": "kinetic", "text": text, "line": "l1", "x": 540, "y": 430, "size": 76, "style": "pop", "width": 900}]
+        (zz / "shots.json").write_text(json.dumps(raw, indent=1))
+        pp = _player_page("zz-kinetic"); words = [w.lower().strip("?") for w in text.split()]
+        for t, want in ((0.5, []), (1.7, words[:5]), (3.6, words)):
+            png = zz / f"k_{t}.png"
+            _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(t), "1", str(png)], timeout=600)
+            im = Image.open(png).convert("L").crop((40, 300, 1040, 700)); im = im.resize((im.width * 2, im.height * 2)); im.save(png)
+            got = set()
+            for psm in ("6", "11"):
+                txt = subprocess.run(["tesseract", str(png), "stdout", "-l", "eng", "--psm", psm], capture_output=True, text=True).stdout
+                got |= {w.lower() for w in _re.findall(r"[A-Za-z]+", txt)}
+            seen = [w for w in words if w in got]
+            meas[str(t)] = seen
+            missing = [w for w in want if w not in got]; early = [w for w in words if w not in want and w in got]
+            if missing or early:
+                bad.append({str(t): {"missing": missing, "too_early": early}})
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
+    # strokes drawing off (kit draw "off"): a line drawn left to right, then undrawn from its start (default) or its end
+    import numpy as np
+    zz = FILMS / "zz-drawoff"; shutil.rmtree(zz, ignore_errors=True); zz.mkdir()
+    try:
+        line = {"type": "draw", "paths": ["M100 900 L980 900"], "start": 0.2, "duration": 0.8, "width": 14, "stroke": "#000000", "off": 1.6, "off_duration": 0.8, "sound": False}
+        shots = [{"id": "s1", "set": "plain", "start": 0, "end": 3, "bubbles": False, "cast": [], "overlays": [line]},
+                 {"id": "s2", "set": "plain", "start": 3, "end": 6, "bubbles": False, "cast": [], "overlays": [{**line, "start": 3.2, "off": 4.6, "off_from": "end"}]}]
+        (zz / "shots.json").write_text(json.dumps({"title": "drawoff", "size": [1080, 1920], "fps": 30, "captions": False, "shots": shots}))
+        (zz / "script.json").write_text('{"lines": []}'); (zz / "timing.json").write_text('{"lines": []}')
+        pp = _player_page("zz-drawoff"); halves = {}
+        for t in (1.3, 2.0, 2.6, 4.3, 5.0):
+            png = zz / f"d_{t}.png"; _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(t), "1", str(png)], timeout=600)
+            a = np.asarray(Image.open(png).convert("L"))[880:920] < 80
+            halves[t] = [round(float(a[:, 100:540].mean()), 3), round(float(a[:, 540:980].mean()), 3)]
+        meas["draw_off"] = {"drawn": halves[1.3], "clearing_from_start": halves[2.0], "gone": halves[2.6], "retracting_from_end": halves[5.0], "drawn_2": halves[4.3]}
+        L_, R_ = 0, 1
+        ok = (min(halves[1.3]) > 0.2 and halves[2.0][L_] < 0.05 and halves[2.0][R_] > 0.2 and max(halves[2.6]) < 0.01
+              and min(halves[4.3]) > 0.2 and halves[5.0][L_] > 0.2 and halves[5.0][R_] < 0.05)
+        if not ok:
+            bad.append({"draw_off": meas["draw_off"]})
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
+    return bad, meas
+
+
+def _boilmove_test():
+    """WP-15 boil only while moving. Pip waves (wave_R) until 1.2 s, then stands still (no idle); the shot's line boil is set to
+    advance only while something moves. Two frames one boil step apart differ while he waves and stay the same once he
+    is still (under 0.01 mean difference: only a spring settling); with the ordinary boil they keep changing (0.3)."""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    zz = FILMS / "zz-boilmove"; shutil.rmtree(zz, ignore_errors=True); zz.mkdir()
+    try:
+        cast = [{"puppet": "puppet/examples/pip.puppet.json", "place": {"x": 540, "y": 1500, "s": 1.1}, "timeline": {"blink": False, "clips": [{"clip": "wave_R", "start": 0, "end": 1.2, "fadeIn": 0}]}}]
+        mk = lambda sid, a, b, boil: {"id": sid, "set": "plain", "start": a, "end": b, "bubbles": False, "cast": json.loads(json.dumps(cast)), "style": {"boil": boil}}
+        shots = [mk("s1", 0, 3, {"amount": 5, "fps": 12, "while_moving": True}), mk("s2", 3, 6, {"amount": 5, "fps": 12})]
+        shots[1]["cast"][0]["timeline"]["clips"][0].update({"start": 3, "end": 4.2})
+        (zz / "shots.json").write_text(json.dumps({"title": "boil", "size": [1080, 1920], "fps": 30, "captions": False, "shots": shots}))
+        (zz / "script.json").write_text('{"lines": []}'); (zz / "timing.json").write_text('{"lines": []}')
+        pp = _player_page("zz-boilmove")
+        def diff(a, b):
+            ims = []
+            for t in (a, b):
+                png = zz / f"b_{t}.png"; _run(["node", "tools/still.mjs", "file://" + str(pp) + "?rastercache=0&captions=0", str(t), "0.5", str(png)], timeout=600)
+                ims.append(np.asarray(Image.open(png).convert("L")).astype(float))
+            return round(float(np.abs(ims[0] - ims[1]).mean()), 4)
+        meas["moving"] = diff(0.50, 0.59); meas["still"] = diff(2.20, 2.29); meas["ordinary_still"] = diff(5.20, 5.29)
+        if not (meas["moving"] > 0.05 and meas["still"] < 0.01 and meas["ordinary_still"] > 0.05):   # still: only a spring settling, far under a boil step
+            bad.append(meas)
     finally:
         shutil.rmtree(zz, ignore_errors=True)
     return bad, meas

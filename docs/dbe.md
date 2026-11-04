@@ -1292,6 +1292,24 @@ whole film and was killed (now built piece by piece), and the mix alone took 60 
 The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
 shots over three workers (from the one worker's own shot times), or under 0.4.
 
+## Kinetic typography (WP-15)
+An overlay `{"type": "kinetic", "text", "x", "y", "size", "line": "l2", "style": "pop" | "rise" | "slide", "width",
+"color", "accent": [word indexes], "accent_color"}` brings each word on as it is spoken: the line's own word times
+from timing.json, by position (without a `line`, one word every `every` s from `start`), each over 0.25 s, popping
+from 60% size, rising or sliding in. Words wrap into centred rows of at most `width` px, measured in their own font
+(a canvas measures them as the page draws them), and run right to left in right-to-left films. A pure function of
+time, like every overlay. Test `kinetic`: on a copy of dialogue-demo, OCR reads no word before the line, exactly the
+five words already spoken at 1.7 s ("did you know the library", none of the rest) and all eight by its end.
+The same test draws a line off both ways (kit `draw` with `off`): half way through, the half it clears first is
+empty (ink 0.004 against 0.35) and the other still drawn; after it, nothing is left.
+
+**Boil only while moving**: a shot style's `"boil": {"while_moving": true, "still": 0.5}` advances the line boil on a
+boil step only if a character moved during it (its root, or any part beyond `still` degrees or px), so a held drawing
+holds still and the lines live when the acting does; on a still step the boil keeps the phase of the last moving one
+(found within 2 s, from poses without springs: cheap, and a spring only follows motion already counted). Test
+`boilmove`: frames one boil step apart differ by 0.66 while Pip waves and by 0.0003 once he stands still (a spring
+settling), where the ordinary boil keeps changing (0.31).
+
 ## Transitions (WP-15)
 A shot can come in from the one before with `"transition": {"kind": "dissolve" | "wipe" | "slide" | "dip" | "iris",
 "dur": 0.5 | "auto", "dir": "left" | "right" | "up" | "down", "color": "black" | "white"}`. Transitions are made when
@@ -1380,7 +1398,7 @@ have a little idle life once settled (no dead frames).
 
 | Type | Does | Key fields |
 |---|---|---|
-| `draw` | paths draw themselves, then optionally fill | `paths`, `duration` or `until`, `stagger`, `stroke`, `width`, `fill` |
+| `draw` | paths draw themselves, then optionally fill; and draw off again (WP-15) | `paths`, `duration` or `until`, `stagger`, `stroke`, `width`, `fill`; `off` (a time, line-relative allowed), `off_duration`, `off_from`: `start` (clears from where it began) or `end` (retracts the way it came) |
 | `title` | bold outlined words pop in one by one | `text`, `y`, `size`, `per_word`, `color`, `outline` |
 | `paper` | torn-paper sign with tape; `[bracketed]` words in the accent colour | `text` (lines), `y`, `size`, `accent`, `rotate` |
 | `roots` | a root system grows from a point (red taproot optional) | `x`, `y`, `depth`, `levels`, `branches`, `spread`, `seed`, `until`, `main` |
