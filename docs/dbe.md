@@ -54,7 +54,12 @@ environment variables below).
     0.5 s from a cut and 1 s from the ends) with the chosen thumbnail text in the brand kit's headline font and
     colours, placed in the calmest band of the platform-safe area so it never sits on the film's own words. A platform
     in another aspect gets the cut in that aspect when it was rendered, else the frame on the brand's paper (never a
-    stretch). Writes `build/package/covers/<cut>--<platform>.png` and `covers.json`.
+    stretch). Writes `build/package/covers/<cut>--<platform>.png` and `covers.json` (with each lettered row's font,
+    direction and size). A language version gets its own covers (`film.localize` makes them): a row in a script the
+    brand font lacks is lettered in that writing system's caption font (Noto Sans Sinhala, Noto Sans Arabic, found
+    through fontconfig), shaped by Pillow's raqm layout, and right-to-left text is set from the right edge, with the
+    frame on the left of a wide cover. Test `covers_l10n`: every row's font has all its glyphs, and a clean rendering
+    of each row reads back in its script (all words, never better reversed).
   - **titles.status**: the back catalogue: per film, title and thumbnail candidates that pass today's check (facts
     change, so titles are re-checked) and covers missing for rendered cuts.
 - **Posting with a human approval per post** (plan 4.15, WP-08; `dbe/posting.py`): nothing is posted without a
@@ -523,9 +528,9 @@ original's short line), Sinhala subtitles (.srt, .vtt); every QA check passes an
 `l10n` test makes both from scratch copies. Language versions carry audio description: its English sentences are
 machine-translated (NLLB, recorded in provenance.json and flagged for review) and read by a voice of the language;
 in Sinhala the opening description becomes a 5.8 s hold, since the Sinhala voice reads it more slowly than the
-pauses allow. Bar charts run right to left in right-to-left films. **Open:** long bubbles in wide scripts wrap into
-tall, narrow bubbles (the row limit was tuned for English); titles and posting text are translated but covers are
-not re-made per language; NLLB transliterates some names and verbs ("Nib hops" comes out as its sound in Sinhala
+pauses allow. Bar charts run right to left in right-to-left films, and each version gets covers lettered in its own
+script. **Open:** long bubbles in wide scripts wrap into tall, narrow bubbles (the row limit was tuned for English);
+NLLB transliterates some names and verbs ("Nib hops" comes out as its sound in Sinhala
 letters), so its description drafts need a reader of the language.
 
 ## Analytics and a plan that re-ranks itself (WP-31)

@@ -195,10 +195,36 @@ def pick_frame(video, cuts, duration, cast_times=None, step=0.5):
 
 def _font(name, size):
     from PIL import ImageFont
-    for p in (ROOT / "engine" / "fonts" / f"{name}.ttf", ROOT / "engine" / "fonts" / "Fredoka.ttf"):
-        if p.exists():
-            return ImageFont.truetype(str(p), size)
-    return ImageFont.load_default()
+    p = _font_file(name)
+    return ImageFont.truetype(str(p), size) if p else ImageFont.load_default()
+
+
+def _font_file(name, bold=True):
+    """a font family's file: engine/fonts/<name>.ttf, else the system's (fontconfig: the Noto fonts every writing
+    system's captions use, WP-25), else Fredoka"""
+    import subprocess
+    p = ROOT / "engine" / "fonts" / f"{name}.ttf"
+    if p.exists():
+        return p
+    try:
+        out = subprocess.run(["fc-match", "-f", "%{family}\t%{file}", f"{name}:{'bold' if bold else 'regular'}"], capture_output=True, text=True, timeout=10).stdout.strip()
+        fams, _, f = out.partition("\t")
+        if f and name.lower() in [x.strip().lower() for x in fams.split(",")]:   # fontconfig answers with a fallback when it lacks the family
+            return Path(f)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    p = ROOT / "engine" / "fonts" / "Fredoka.ttf"
+    return p if p.exists() else None
+
+
+def _lettering(text, brand_font):
+    """the font and direction for a cover line: the brand's headline font for Latin text, the writing system's own
+    caption font otherwise (the brand font has no Sinhala or Arabic letters), right to left for Arabic and Hebrew"""
+    from . import i18n as I
+    sc = I._script_of(text)
+    if not sc or sc.get("script") == "latin":
+        return brand_font, "ltr"
+    return sc["caption"], ("rtl" if sc.get("rtl") else "ltr")
 
 
 def make_cover(frame_png, out_png, aspect, top, bottom, brand):
@@ -209,37 +235,44 @@ def make_cover(frame_png, out_png, aspect, top, bottom, brand):
     hi = pal.get(((brand or {}).get("captions") or {}).get("highlight", "highlight"), pal.get("highlight", "#ffd23f"))
     W, H = {"9:16": (1080, 1920), "16:9": (1920, 1080), "1:1": (1080, 1080)}[aspect]
     fr = Image.open(frame_png).convert("RGB")
+    hf = ((brand or {}).get("fonts") or {}).get("headline", "Fredoka")
+    rtl = _lettering(str(top) or str(bottom), hf)[1] == "rtl"   # a right-to-left language reads the text first on the right
     if abs(fr.width / fr.height - W / H) < 0.01:
         im = fr.resize((W, H))
     else:
         im = Image.new("RGB", (W, H), paper); k = min(W / fr.width, H / fr.height) * (0.92 if W > H else 1.0)
         f2 = fr.resize((int(fr.width * k), int(fr.height * k)))
-        x = (W - f2.width) // 2 if H >= W else int(W * 0.62 - f2.width / 2)
+        x = (W - f2.width) // 2 if H >= W else int(W * (0.38 if rtl else 0.62) - f2.width / 2)
         x = max(0, min(W - f2.width, x)); im.paste(f2, (x, (H - f2.height) // 2))
     dr = ImageDraw.Draw(im)
-    hf = ((brand or {}).get("fonts") or {}).get("headline", "Fredoka")
     if H > W:
         box = (64, 220, 960, 1500)   # the 9:16 safe area, above the caption block
     elif W > H:
-        box = (int(W * 0.05), int(H * 0.08), int(W * 0.5), int(H * 0.92))   # the left half beside the frame
+        box = (int(W * 0.5), int(H * 0.08), int(W * 0.95), int(H * 0.92)) if rtl else (int(W * 0.05), int(H * 0.08), int(W * 0.5), int(H * 0.92))   # the half beside the frame
     else:
         box = (int(W * 0.06), int(H * 0.06), int(W * 0.94), int(H * 0.94))
     bw = box[2] - box[0]
     rows = []
     for txt, col in ((str(top).upper(), "#ffffff"), (str(bottom).upper(), hi)):
         if txt.strip():
+            fam, dirn = _lettering(txt, hf); kw = {"direction": dirn} if dirn == "rtl" else {}
             fs = 150 if H > W else 120
-            while fs > 34 and _font(hf, fs).getlength(txt) + 24 > bw:
+            while fs > 34 and _font(fam, fs).getlength(txt, **kw) + 24 > bw:
                 fs -= 4
-            rows.append((txt, col, fs))
-    block = sum(fs for _, _, fs in rows) + 18 * max(0, len(rows) - 1)
+            rows.append((txt, col, fs, fam, kw))
+    block = sum(r[2] for r in rows) + 18 * max(0, len(rows) - 1)
     y0 = calm_band(im, box, block)   # where the frame is quietest, so the text never sits on the film's own words
     y = y0
-    for txt, col, fs in rows:
-        dr.text((box[0] + 10, y), txt, font=_font(hf, fs), fill=col, stroke_width=max(6, fs // 12), stroke_fill=ink)
+    lettering = []
+    for txt, col, fs, fam, kw in rows:
+        f = _font(fam, fs)
+        x = box[2] - 10 - f.getlength(txt, **kw) if kw.get("direction") == "rtl" else box[0] + 10   # right to left reads from the right edge
+        dr.text((x, y), txt, font=f, fill=col, stroke_width=max(6, fs // 12), stroke_fill=ink, **kw)
+        ff = _font_file(fam)
+        lettering.append({"text": txt, "font": str(ff.relative_to(ROOT)) if ff and ROOT in ff.parents else str(ff), "family": fam, "direction": kw.get("direction", "ltr"), "size": fs})
         y += fs + 18
     im.save(out_png)
-    return {"size": [W, H], "text_box": [box[0], y0, box[2], y0 + block]}
+    return {"size": [W, H], "text_box": [box[0], y0, box[2], y0 + block], "lettering": lettering}
 
 
 def calm_band(im, box, h, step=20):

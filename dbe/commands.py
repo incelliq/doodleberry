@@ -5350,7 +5350,11 @@ def film_localize(name, lang, voice="", lines=None, strings=None, renderer="", r
     retime(dst.name)   # shot times are written against line ids, so they follow the new words
     r = film_render(dst.name)
     tc = film_text_check(dst.name)
-    return {**out, "duration": v.get("duration"), "qa": r.get("qa"), "final": r.get("final"), "text_check": {k: tc[k] for k in ("ok", "checked", "passed", "worst")}}
+    try:   # WP-25: the version's own covers, lettered in its writing system (right to left where it reads so)
+        cv = cover_make(dst.name); covers = {"made": cv["covers"]}
+    except (ValueError, FileNotFoundError) as e:
+        covers = {"not_made": str(e)[:200]}
+    return {**out, "duration": v.get("duration"), "qa": r.get("qa"), "final": r.get("final"), "text_check": {k: tc[k] for k in ("ok", "checked", "passed", "worst")}, "covers": covers}
 
 
 def _norm_text(t):
@@ -5842,6 +5846,10 @@ def test_golden(update=False, film=""):
         bad, meas = _grow_test()
         failed += 1 if bad else 0
         results.append({"grow": "a grown part carries its children (same matrices in puppet.js and geom.py), IK reaches with grown bones, and every renderer draws it", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "covers_l10n":   # WP-25: covers per language
+        bad, meas = _covers_l10n_test()
+        failed += 1 if bad else 0
+        results.append({"covers_l10n": "Sinhala and Arabic covers lettered in their own scripts, read back by OCR, Arabic right to left", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10181,7 +10189,7 @@ def _grow_test():
     """WP-11 recursive scale (format v0.11). dbe/geom.py computes the same matrices as puppet.js with grown parts
     (and stretched ones). A part grown by k carries its children: the span from the grown part's pivot to a child's
     is k times as long, and the grandchild grows too. IK reaches with grown bones: on stretch-demo without its stretchy
-    IK, Tam's hand falls short of the balloon string; with the arm grown 1.5 it lands within 1 px. Renderer parity: a
+    IK, Tam's hand falls short of the balloon string; with the arm grown 1.8 (the stretch the demo used) it lands within 1 px. Renderer parity: a
     copy of stretch-demo whose head and left arm grow (to 1.35 and 1.5) matches the SVG renderer in Synfig, Lottie and
     Grease Pencil."""
     import math
@@ -10209,7 +10217,7 @@ def _grow_test():
         if edit in ("ik", "short"):
             tl.pop("ik_stretch", None)
             if edit == "ik":
-                tl["grow"] = {"upperarm_R": [[0, 1.5]]}
+                tl["grow"] = {"upperarm_R": [[0, 1.8]]}   # the reach stretch-demo's stretchy IK needed (1.8x)
         else:
             tl["grow"] = {"head": [[0.5, 1], [2.0, 1.35]], "upperarm_L": [[0.5, 1], [2.5, 1.5]]}
         (FILMS / zz / "shots.json").write_text(json.dumps(raw, indent=1))
@@ -10228,6 +10236,50 @@ def _grow_test():
     finally:
         for zz in copies:
             shutil.rmtree(FILMS / zz, ignore_errors=True)
+    return bad, meas
+
+
+def _covers_l10n_test():
+    """WP-25 covers per language. cover.make on the Sinhala and Arabic versions (films/nib-hello-si, data-demo-ar) and
+    the English original: every lettered row uses a font with a glyph for each of its characters (its writing
+    system's own font where the brand font has none), set in its direction; a clean rendering of each row as the cover
+    sets it is read back by Tesseract in its script (at least 70% of its words, and better forwards than reversed: the
+    Arabic is shaped and right to left); the wide Arabic cover puts its text on the right, the English on the left."""
+    from PIL import Image, ImageDraw
+    from fontTools.ttLib import TTFont
+    from . import i18n as I, packaging as PK
+    bad, meas = [], {}
+    for film, lang in (("nib-hello-si", "si"), ("data-demo-ar", "ar"), ("nib-hello", "en")):
+        if not (FILMS / film / "build" / "final.mp4").exists():
+            meas[film] = "skipped: not rendered here"; continue
+        cover_make(film); cj = _json(FILMS / film / "build" / "package" / "covers" / "covers.json"); L = I.language(lang); row = {}
+        for c in cj["covers"]:
+            if c["platform"] not in ("tiktok", "youtube") or c["cut"] != "master":
+                continue
+            rows = []
+            for le in c["lettering"]:
+                fp = Path(le["font"]) if Path(le["font"]).is_absolute() else ROOT / le["font"]
+                tt = TTFont(str(fp), fontNumber=0); cmap = tt.getBestCmap()
+                missing = sorted({ch for ch in le["text"] if not ch.isspace() and ord(ch) not in cmap and ord(ch) not in (0x200C, 0x200D)})
+                f = PK._font(le["family"], 72); kw = {"direction": "rtl"} if le["direction"] == "rtl" else {}   # 72 px: Tesseract reads bold Arabic at this size (not at 96)
+                w = int(f.getlength(le["text"], **kw)) + 80; im = Image.new("L", (w, 150), 255)
+                ImageDraw.Draw(im).text((40, 20), le["text"], font=f, fill=0, **kw)
+                png = ROOT / "out" / f"cover_row_{film}.png"; png.parent.mkdir(exist_ok=True); im.save(png)
+                txt = subprocess.run(["tesseract", str(png), "stdout", "-l", L["ocr"], "--psm", "7"], capture_output=True, text=True).stdout; png.unlink()
+                want = le["text"]
+                fwd = _word_score(want.upper() if lang == "en" else want, txt.upper() if lang == "en" else txt); rev = _word_score(want, txt, reverse=True)
+                rows.append({"text": want, "family": le["family"], "direction": le["direction"], "missing_glyphs": missing, "read": round(fwd, 2), "reversed": round(rev, 2)})
+                if missing or fwd < 0.7 or rev > fwd:
+                    bad.append({film: {c["platform"]: rows[-1]}})
+            row[c["platform"]] = {"rows": rows, "text_x": [c["text_box"][0], c["text_box"][2]], "width": c["size"][0]}
+        meas[film] = row
+        yt = row.get("youtube")
+        if yt and lang == "ar" and yt["text_x"][0] < yt["width"] * 0.4:
+            bad.append({film: "the wide Arabic cover's text is not on the right"})
+        if yt and lang == "en" and yt["text_x"][0] > yt["width"] * 0.2:
+            bad.append({film: "the wide English cover's text moved off the left"})
+        if lang != "en" and any(r["family"] == "Fredoka" for p_ in row.values() for r in p_["rows"]):
+            bad.append({film: "lettered in the brand font, which has no letters for this script"})
     return bad, meas
 
 

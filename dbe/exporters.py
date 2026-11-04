@@ -325,12 +325,19 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
         the XML parser's 10 MB limit only with this)"""
         if len(keys) <= 2:
             return keys
-        out = [keys[0]]
+        # a key is dropped only if the straight line from the last kept key to the next one reproduces it AND every key
+        # dropped since (testing only the neighbours let a slow ramp lose all its keys: a head growing over 1.5 s
+        # jumped straight from its first size to its last, WP-11)
+        out, last = [keys[0]], 0
         for i in range(1, len(keys) - 1):
-            (f0, v0), (f1, v1), (f2, v2) = out[-1], keys[i], keys[i + 1]
-            k = (f1 - f0) / (f2 - f0)
-            if max(abs(a_ + (c_ - a_) * k - b_) for a_, b_, c_ in zip(v0, v1, v2)) > tol:
-                out.append(keys[i])
+            f0, v0 = keys[last]; f2, v2 = keys[i + 1]
+            ok = True
+            for j in range(last + 1, i + 1):
+                fj, vj = keys[j]; k = (fj - f0) / (f2 - f0)
+                if max(abs(a_ + (c_ - a_) * k - b_) for a_, b_, c_ in zip(v0, vj, v2)) > tol:
+                    ok = False; break
+            if not ok:
+                out.append(keys[i]); last = i
         out.append(keys[-1])
         return out
 

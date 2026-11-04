@@ -345,16 +345,33 @@ def build_audio(main, sr, cues, cue_clips, holds, hold_clips):
 
 
 def build_video(final, holds, fps, out, crf=18):
-    """the final's picture with each hold: the frame at that moment held for the hold's length"""
+    """the final's picture with each hold: the frame at that moment held for the hold's length. Made piece by piece
+    (each stretch from its own seek, each hold from one frame) and joined without re-encoding: one filter graph reading
+    the film several times buffered every frame of the rest of the film while it worked on the start, and was killed
+    for memory on a 23-minute film (WP-38 long-form)"""
+    import math
+    import tempfile
+    from pathlib import Path
     if not holds:
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(final), "-map", "0:v", "-c:v", "copy", str(out)], check=True); return
-    parts, prev, k = [], 0.0, 0
-    for h in holds:
-        parts.append(f"[0:v]trim=start={prev:.4f}:end={h['at']:.4f},setpts=PTS-STARTPTS[v{k}]"); k += 1
-        n = max(1, int(round(h["dur"] * fps)))
-        parts.append(f"[0:v]trim=start={h['at']:.4f}:end={h['at'] + 1 / fps:.4f},setpts=PTS-STARTPTS,loop=loop={n - 1}:size=1:start=0,setpts=N/{fps}/TB[v{k}]"); k += 1
-        prev = h["at"]
-    parts.append(f"[0:v]trim=start={prev:.4f},setpts=PTS-STARTPTS[v{k}]"); k += 1
-    fc = ";".join(parts) + ";" + "".join(f"[v{i}]" for i in range(k)) + f"concat=n={k}:v=1:a=0,fps={fps}[v]"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(final), "-filter_complex", fc, "-map", "[v]", "-c:v", "libx264", "-crf", str(crf),
-                    "-preset", "medium", "-pix_fmt", "yuv420p", str(out)], check=True)
+    enc = ["-c:v", "libx264", "-crf", str(crf), "-preset", "medium", "-pix_fmt", "yuv420p", "-r", str(fps), "-an"]
+    idx = lambda t: math.ceil(t * fps - 1e-6)   # the first frame at or after t (frames at k / fps)
+    with tempfile.TemporaryDirectory(dir=str(Path(out).parent)) as td:
+        td = Path(td); segs = []; prev = 0.0
+        def run(a, b):
+            k0 = idx(a); n = None if b is None else idx(b) - k0
+            if n is not None and n <= 0:
+                return
+            p = td / f"s{len(segs):04d}.mp4"
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{k0 / fps:.6f}", "-i", str(final), *(["-frames:v", str(n)] if n else []), *enc, str(p)], check=True)
+            segs.append(p)
+        for h in holds:
+            run(prev, h["at"])
+            png = td / f"h{len(segs):04d}.png"
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{idx(h['at']) / fps:.6f}", "-i", str(final), "-frames:v", "1", str(png)], check=True)
+            p = td / f"s{len(segs):04d}.mp4"
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", str(fps), "-i", str(png), "-frames:v", str(max(1, int(round(h["dur"] * fps)))), *enc, str(p)], check=True)
+            segs.append(p); prev = h["at"]
+        run(prev, None)
+        lst = td / "list.txt"; lst.write_text("".join(f"file '{p}'\n" for p in segs))
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(out)], check=True)
