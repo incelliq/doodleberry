@@ -38,7 +38,7 @@ def drawings(baked):
         p0 = _load(c["puppet"]); frs = c["frames"]; n = len(frs); tag = re.sub(r"\W", "_", c.get("name") or f"cast{ci}")
         for view, on in _view_masks(p0, frs):
             p = G.in_view(p0, view); pal = p.get("palette", {}); vt = f"_{view}" if view else ""
-            Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales")) for fr in frs]
+            Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales"), fr.get("grow")) for fr in frs]
             Rs = [G.root_matrix(p, fr) for fr in frs]
             for pid, part in p["parts"].items():
                 if not part.get("strokes"):

@@ -1,4 +1,4 @@
-# Puppet format v0.10 (`.puppet.json`)
+# Puppet format v0.11 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -239,3 +239,14 @@ performer's head turn (yaw) into the `turn` control of a character that has one.
 shifts, swaps, layer order and scales inside the loader (`acting.js`), so the bake and every renderer and exporter
 follow without change.
 
+
+## v0.11 additions: recursive scale (WP-11)
+All optional; v0.10 files stay valid. The loader, the bake (`tools/bake.mjs` records `grow`), `dbe/geom.py`, the
+Synfig, Lottie, Grease Pencil and Godot exporters and the interaction measurements all follow it.
+
+- **Recursive scale** (a pose quantity, not stored in the file): `pose.grow[part] = k` scales the part *and everything
+  below it* uniformly about its pivot: a bigger hand on a bigger arm, a whole character shrinking from the hip. Unlike
+  `scales` (v0.9, local: children keep their size), it carries down the chain; being uniform, it composes without
+  shear, so every renderer reproduces it (Lottie as the part layer's own scale, which its parenting passes on).
+  Timelines key it (`"grow": {"head": [[0, 1], [1.5, 1.4]]}`), controls drive it (`"target": "grow.head"`,
+  multiplying), and two-bone IK reaches with the grown bone lengths.

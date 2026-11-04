@@ -130,7 +130,8 @@
     const S = [Mp[0] * pu[0] + Mp[2] * pu[1] + Mp[4], Mp[1] * pu[0] + Mp[3] * pu[1] + Mp[5]];
     const sc = id => { const v = pose.scales && pose.scales[id]; return v == null ? [1, 1] : Array.isArray(v) ? v : [v, v]; }, su = sc(upper), sl = sc(lower);
     const vU = [(pl[0] - pu[0]) * su[0], (pl[1] - pu[1]) * su[1]], vL = [(pe[0] - pl[0]) * sl[0], (pe[1] - pl[1]) * sl[1]];   // v0.9: stretched bones
-    const L1 = Math.hypot(vU[0], vU[1]), L2 = Math.hypot(vL[0], vL[1]);
+    const gr = id => { let k = 1; for (let q = id; q && parts[q]; q = parts[q].parent) k *= +((pose.grow || {})[q] ?? 1); return k; };   // v0.11: grown bones reach further
+    const L1 = Math.hypot(vU[0], vU[1]) * gr(upper), L2 = Math.hypot(vL[0], vL[1]) * gr(lower);
     const dx = target[0] - S[0], dy = target[1] - S[1];
     const d = clamp(Math.hypot(dx, dy), Math.abs(L1 - L2) + 1e-3, L1 + L2 - 1e-3);
     const a = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
@@ -394,8 +395,11 @@
         else if (kind === 'swap') pose[id] = val;
         else if (kind === 'z') { pose.z = pose.z || {}; pose.z[id] = val; }
         else if (kind === 'scale') { pose.scales = pose.scales || {}; pose.scales[id] = stretchOf(puppet, id, val); }
+        else if (kind === 'grow') { pose.grow = { ...(pose.grow || {}), [id]: (pose.grow?.[id] ?? 1) * val }; }
       }
     }
+    // v0.11: recursive scale keys (the part and everything below it)
+    for (const [id, keys] of Object.entries(tl.grow || {})) { const v = sampleKeys(keys, t); if (v == null) continue; pose.grow = { ...(pose.grow || {}), [id]: (pose.grow?.[id] ?? 1) * v }; }
     // v0.9: per-part squash and stretch keys, layer order keys, whole-face phoneme poses
     for (const [id, keys] of Object.entries(tl.scales || {})) { const v = sampleKeys(keys, t); if (v == null) continue; pose.scales = { ...(pose.scales || {}), [id]: stretchOf(puppet, id, v) }; }
     if (tl.z) { const zv = sampleKeys(tl.z, t); if (zv) pose.z = { ...(pose.z || {}), ...zv }; }

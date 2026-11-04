@@ -122,7 +122,7 @@ function measure(spec, baked, opts) {
   const base = path.dirname(path.resolve(args[0]));
   const res = { feet: [], hands: [] };
   const P = spec.cast.map(c => pup(path.resolve(base, c.puppet)));
-  const world = (ci, f, part, at) => { const fr = baked.cast[ci].frames[f]; return Puppet.pointOf(P[ci], part, at || null, fr.x, fr.y, { angles: fr.angles, offset: fr.offset, view: fr.view, s: fr.s, flip: fr.flip, squash: fr.squash, shifts: fr.shifts || undefined, scales: fr.scales || undefined }); };
+  const world = (ci, f, part, at) => { const fr = baked.cast[ci].frames[f]; return Puppet.pointOf(P[ci], part, at || null, fr.x, fr.y, { angles: fr.angles, offset: fr.offset, view: fr.view, s: fr.s, flip: fr.flip, squash: fr.squash, shifts: fr.shifts || undefined, scales: fr.scales || undefined, grow: fr.grow || undefined }); };
   spec.cast.forEach((c, ci) => {
     const tl = { ...(c.timeline || {}) }; if (!tl.pins) return;
     const L = libOf(P[ci]); let max = 0, sum = 0, n = 0, worst = null;

@@ -5838,6 +5838,10 @@ def test_golden(update=False, film=""):
         bad, meas = _opentoonz_test()
         failed += 1 if bad else 0
         results.append({"opentoonz": "level-demo's shot as an OpenToonz 1.8 scene: two drawn levels, the cut-out character listed as not exported, the xsheet exposing every frame's drawing; OpenToonz's tcomposer renders it and three frames match the player's drawing of the same characters", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "grow":   # WP-11: recursive scale (v0.11)
+        bad, meas = _grow_test()
+        failed += 1 if bad else 0
+        results.append({"grow": "a grown part carries its children (same matrices in puppet.js and geom.py), IK reaches with grown bones, and every renderer draws it", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
         bad, meas = _autoweights_test()
         failed += 1 if bad else 0
@@ -10170,6 +10174,60 @@ def _opentoonz_test():
         bad.append({"tcomposer": tc})
     if not TCOMPOSER:
         meas["tcomposer"] = "skipped: not installed (bash tools/setup.sh opentoonz)"
+    return bad, meas
+
+
+def _grow_test():
+    """WP-11 recursive scale (format v0.11). dbe/geom.py computes the same matrices as puppet.js with grown parts
+    (and stretched ones). A part grown by k carries its children: the span from the grown part's pivot to a child's
+    is k times as long, and the grandchild grows too. IK reaches with grown bones: on stretch-demo without its stretchy
+    IK, Tam's hand falls short of the balloon string; with the arm grown 1.5 it lands within 1 px. Renderer parity: a
+    copy of stretch-demo whose head and left arm grow (to 1.35 and 1.5) matches the SVG renderer in Synfig, Lottie and
+    Grease Pencil."""
+    import math
+    from . import geom as G, rparity as RPY
+    bad, meas = [], {}
+    pip = _json(ROOT / "puppet/examples/pip.puppet.json")
+    pose = {"angles": {"upperarm_R": 35, "forearm_R": -50, "hand_R": 10, "head": 6}, "shifts": {"head": [3, -2]}, "scales": {"forearm_R": [1, 1.2], "torso": [1.1, 0.95]},
+            "grow": {"upperarm_R": 1.4, "hip": 0.9, "head": 1.2}}
+    r = subprocess.run(["node", "tools/interact.mjs", "matrices", json.dumps(pose)], cwd=ROOT, capture_output=True, text=True, timeout=120)
+    js = json.loads(r.stdout or "{}"); py = G.part_matrices(pip, pose["angles"], pose["shifts"], pose["scales"], pose["grow"])
+    meas["geom_vs_loader"] = round(max((abs(a - b) for k in py for a, b in zip(py[k], js.get(k, [0] * 6))), default=1), 9)
+    if meas["geom_vs_loader"] > 1e-6:
+        bad.append({"geom_vs_loader": meas["geom_vs_loader"]})
+    ap = lambda M, pt: (M[0] * pt[0] + M[2] * pt[1] + M[4], M[1] * pt[0] + M[3] * pt[1] + M[5])
+    P_ = pip["parts"]; base = G.part_matrices(pip, {"upperarm_R": 30}); grown = G.part_matrices(pip, {"upperarm_R": 30}, grow={"upperarm_R": 1.5})
+    span = lambda M: math.dist(ap(M["upperarm_R"], P_["upperarm_R"]["pivot"]), ap(M["hand_R"], P_["hand_R"]["pivot"]))
+    hand_w = lambda M: math.dist(ap(M["hand_R"], P_["hand_R"]["pivot"]), ap(M["hand_R"], [P_["hand_R"]["pivot"][0] + 10, P_["hand_R"]["pivot"][1]]))
+    meas["span_ratio"] = round(span(grown) / span(base), 6); meas["hand_scale"] = round(hand_w(grown) / hand_w(base), 6)
+    if abs(meas["span_ratio"] - 1.5) > 1e-6 or abs(meas["hand_scale"] - 1.5) > 1e-6:
+        bad.append({"span_ratio": meas["span_ratio"], "hand_scale": meas["hand_scale"]})
+    copies = {}
+    for zz, edit in (("zz-grow-ik", "ik"), ("zz-grow-noik", "short"), ("zz-grow", "parity")):
+        shutil.rmtree(FILMS / zz, ignore_errors=True); shutil.copytree(FILMS / "stretch-demo", FILMS / zz, ignore=shutil.ignore_patterns("build")); copies[zz] = edit
+        raw = _json(FILMS / zz / "shots.json"); tl = raw["shots"][0]["cast"][0]["timeline"]
+        if edit in ("ik", "short"):
+            tl.pop("ik_stretch", None)
+            if edit == "ik":
+                tl["grow"] = {"upperarm_R": [[0, 1.5]]}
+        else:
+            tl["grow"] = {"head": [[0.5, 1], [2.0, 1.35]], "upperarm_L": [[0.5, 1], [2.5, 1.5]]}
+        (FILMS / zz / "shots.json").write_text(json.dumps(raw, indent=1))
+    try:
+        want = [722, 640]
+        for zz, key in (("zz-grow-noik", "without_grow_px"), ("zz-grow-ik", "with_grow_px")):
+            m = interact_measure(zz, "s1", points=[{"cast": 0, "part": "hand_R", "t": 3.0, "want": want}])
+            meas.setdefault("ik", {})[key] = m["points"][0].get("gap_px")
+        if not (meas["ik"]["with_grow_px"] is not None and meas["ik"]["with_grow_px"] <= 1.0 and (meas["ik"]["without_grow_px"] or 0) > 10):
+            bad.append({"ik": meas["ik"]})
+        pr = RPY.run("zz-grow", "s1")
+        meas["parity"] = {k: {"min": v.get("min"), "colour": max(v.get("colour_diff") or [0]), "error": v.get("error")} for k, v in pr["renderers"].items()}
+        meas["refusals"] = pr["refusals"]
+        if not pr["ok"] or pr["refusals"]:
+            bad.append({"parity": meas["parity"], "refusals": pr["refusals"]})
+    finally:
+        for zz in copies:
+            shutil.rmtree(FILMS / zz, ignore_errors=True)
     return bad, meas
 
 

@@ -142,10 +142,11 @@ def _scale_of(scales, pid):
     return None if v is None else (list(v) if isinstance(v, (list, tuple)) else [v, v])
 
 
-def part_matrices(puppet, angles, shifts=None, scales=None):
+def part_matrices(puppet, angles, shifts=None, scales=None, grow=None):
     """world matrices per part; shifts[part] = [dx, dy] moves a part in its parent's space before it rotates (v0.4);
     scales[part] = [sx, sy] stretches the part's own drawing about its pivot and carries its children's pivots, without
-    shearing them (v0.9, same maths as puppet.js)"""
+    shearing them (v0.9); grow[part] = k scales the part and everything below it about its pivot (v0.11); same maths
+    as puppet.js"""
     parts, M, B = puppet["parts"], {}, {}
     shifts = shifts or {}
 
@@ -165,6 +166,10 @@ def part_matrices(puppet, angles, shifts=None, scales=None):
         if dx or dy:
             local = mul([1, 0, 0, 1, dx, dy], local)
         B[pid] = mul(B[par] if par else I, local)
+        g = (grow or {}).get(pid)
+        if g is not None and float(g) != 1.0:
+            px, py = parts[pid]["pivot"]; g = float(g)
+            B[pid] = mul(B[pid], [g, 0, 0, g, px - g * px, py - g * py])
         own = _scale_of(scales, pid)
         if own:
             px, py = parts[pid]["pivot"]

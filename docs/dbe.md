@@ -1418,6 +1418,10 @@ effects and the Node solvers.
   a path: `"path": {"points", "start", "end" | "speed", "ease", "orient": true}`. `interact.measure` also takes
   `points` (how far a part is from a frame point at a time). `films/stretch-demo` is the demo. `render.parity` compares
   the characters even in shots with props or effects, and lists those as `not_compared` (planes still refuse).
+- Part 3 (puppet format v0.11): timeline `grow` (`{"head": [[0, 1], [1.5, 1.4]]}`) scales a part and everything
+  below it uniformly about its pivot (a bigger hand on a bigger arm), where `scales` stretches the part alone; controls
+  drive it (`grow.<part>`) and IK reaches with the grown bones. Every renderer follows it (Lottie as the part layer's
+  scale, which its parenting carries down). Test `grow`.
 
 ## Procedural and 3D layer (WP-42, part 1)
 A shot's `"proc": {"floor": 1500, "nodes": {...}}` is a graph cooked into the shot by `proc.cook {name, shot, force}`

@@ -207,6 +207,9 @@
   // own proportions (no shear from a stretched parent), so every exporter can reproduce it exactly.
   const scaleAbout = (sc, [px, py]) => [sc[0], 0, 0, sc[1], px - sc[0] * px, py - sc[1] * py];
   function scaleOf(pose, id) { const v = pose.scales && pose.scales[id]; return v == null ? null : Array.isArray(v) ? v : [v, v]; }
+  // v0.11 recursive scale: pose.grow[part] = k scales the part and everything below it, uniformly about its pivot (a
+  // bigger hand on a bigger arm); uniform, so it composes down the chain without shear
+  function growOf(pose, id) { const v = pose.grow && pose.grow[id]; return v == null || +v === 1 ? null : +v; }
   function matrices(p, pose) {
     const parts = p.parts, M = {}, B = {};   // B: the part's bone frame (no own scale), for its children
     const order = Object.keys(parts);
@@ -220,6 +223,7 @@
       if (ps) { const pp = parts[par].pivot; dx += (ps[0] - 1) * (part.pivot[0] - pp[0]); dy += (ps[1] - 1) * (part.pivot[1] - pp[1]); }   // the parent's stretch moves this pivot
       const local = rotAbout((pose.angles && pose.angles[id]) || 0, part.pivot);
       B[id] = mul(par ? B[par] : I, dx || dy ? mul([1, 0, 0, 1, dx, dy], local) : local);
+      const g = growOf(pose, id); if (g) B[id] = mul(B[id], scaleAbout([g, g], part.pivot));
       const own = scaleOf(pose, id);
       M[id] = own ? mul(B[id], scaleAbout(own, part.pivot)) : B[id];
     };

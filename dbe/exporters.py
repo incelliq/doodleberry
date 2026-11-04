@@ -115,6 +115,11 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
         return [{"ty": "gr", "it": items + [{"ty": "tr", "p": {"a": 0, "k": list(pivot)}, "a": {"a": 0, "k": list(pivot)}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100},
                                              "s": kf([[round(100 * v[0], 3), round(100 * v[1], 3)] for v in sc])}]}]
 
+    def grow_track(frs, pid):
+        """v0.11 recursive scale as the layer's own scale (about its anchor, the pivot)"""
+        gs = [float((fr.get("grow") or {}).get(pid, 1)) for fr in frs]
+        return kf([[round(100 * g, 3), round(100 * g, 3), 100] for g in gs]) if any(g != 1 for g in gs) else {"a": 0, "k": [100, 100, 100]}
+
     def stretch_offset(p, pid, fr):
         """where a part's pivot moves because its parent is stretched (v0.9)"""
         par = p["parts"][pid].get("parent")
@@ -182,7 +187,9 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
                    "ks": {"o": kf([100 * o for o in on], hold=True), "r": kf([round(fr["angles"].get(pid, 0) or 0, 2) for fr in frs]),
                           "p": pos([[round(part["pivot"][0] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[0] + stretch_offset(p, pid, fr)[0], 2),
                                      round(part["pivot"][1] + ((fr.get("shifts") or {}).get(pid) or [0, 0])[1] + stretch_offset(p, pid, fr)[1], 2), 0] for fr in frs]),
-                          "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]}, "s": {"a": 0, "k": [100, 100, 100]}},
+                          "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]},
+                          # v0.11 recursive scale: the layer's own scale about its pivot, which Lottie's parenting carries to every child
+                          "s": grow_track(frs, pid)},
                    "shapes": scaled(shape_group(part["strokes"], pal), part["pivot"], frs, pid), "_z": part.get("z", 0)}
             # hidden while a replacing swap shows
             repl = [(sid, sw) for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
@@ -363,7 +370,7 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
       items = []
       for view, on in _view_masks(p0, frs):
         p = G.in_view(p0, view); pal = p["palette"]
-        Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales")) for fr in frs]
+        Ms = [G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales"), fr.get("grow")) for fr in frs]
         Rs = [G.root_matrix(p, fr) for fr in frs]
         for pid, part in p["parts"].items():
             if not part["strokes"]:
@@ -427,7 +434,7 @@ def to_gp_frames(baked, size, per=6):
         strokes = []
         for c in baked["cast"]:
             p = pals.setdefault(c["puppet"], _load(c["puppet"])); fr = c["frames"][f]; p = G.in_view(p, fr.get("view")); pal = p["palette"]
-            M = G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales")); R = G.root_matrix(p, fr)
+            M = G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales"), fr.get("grow")); R = G.root_matrix(p, fr)
             sw = G.chosen_swaps(p, fr)
             items = []
             for pid, part in p["parts"].items():

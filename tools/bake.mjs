@@ -42,7 +42,7 @@ for (let f = 0; f < spec.frames; f++) {
       x = W / 2 + (x - cx) * z; y = H / 2 + (y - cy) * z; s *= z;
     }
     o.k.frames.push({ x, y, s, flip, angles: pose.angles, offset: pose.offset || [0, 0], mouth: pose.mouth || null, eyes: pose.eyes || null, blink: pose.blink || 0,
-      look: pose.look || null, brows: pose.brows || null, hand_R_pose: pose.hand_R_pose || null, view: pose.view || null, squash: pose.squash || 1, shifts: pose.shifts || null, scales: pose.scales || null, z: pose.z || null,
+      look: pose.look || null, brows: pose.brows || null, hand_R_pose: pose.hand_R_pose || null, view: pose.view || null, squash: pose.squash || 1, shifts: pose.shifts || null, scales: pose.scales || null, grow: pose.grow || null, z: pose.z || null,
       // every other swap set's drawing (drawn levels, control-driven swaps), so all renderers show the same one (WP-14)
       ...Object.fromEntries(Object.keys(puppet.swaps || {}).filter(k => !['mouth', 'eyes', 'brows', 'pupils', 'hand_R_pose'].includes(k) && pose[k] != null).map(k => [k, pose[k]])) });
   });
