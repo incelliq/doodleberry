@@ -229,6 +229,18 @@ def plan_film(film_dir, spans=None):
             clips, look, blinks, emo, poses = plan_cast(pz.get("template", "humanoid"), in_shot, me, {k: v for k, v in xs.items() if k != me}, my_x, pro_of,
                                                         (pz.get("acting") or {}).get("energy", 1.0), prof, library(pz))
             tl["clips"] += clips
+            # the same auto gesture twice within half a second (a listener's reaction and a beat) reads as a stutter: keep the first
+            seen, kept = [], []
+            for k in sorted(tl["clips"], key=lambda k: (k.get("start", 0) if isinstance(k.get("start"), (int, float)) else 0)):
+                st = k.get("start") if isinstance(k.get("start"), (int, float)) else None
+                if k.get("auto") and st is not None and any(n == k["clip"] and abs(st - t) < 0.5 for n, t in seen):
+                    continue
+                if k.get("auto") and st is not None:
+                    seen.append((k["clip"], st))
+                kept.append(k)
+            tl["clips"] = kept
+            if not tl.get("poses_manual"):   # body presets are no longer planned: clear any an earlier plan left behind
+                tl.pop("poses", None)
             if emo and not tl.get("emotion_manual"):   # how it feels, held between lines (WP-10)
                 emo = sorted(emo, key=lambda k: k[0]); tl["emotion"] = [k for i, k in enumerate(emo) if i == 0 or k[1] != emo[i - 1][1]]
             # (body presets per emotion were tried and dropped: a blind critic read a held preset as a stiff pose and a
