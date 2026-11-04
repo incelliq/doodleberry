@@ -54,11 +54,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -135,11 +131,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -153,11 +145,7 @@
        0,
        {
         "cast": 1,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -234,11 +222,7 @@
        0,
        {
         "cast": 0,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
@@ -252,11 +236,7 @@
        0,
        {
         "cast": 1,
-        "part": "hand_L",
-        "at": [
-         0,
-         0
-        ]
+        "part": "hand_L"
        }
       ]
      ]
