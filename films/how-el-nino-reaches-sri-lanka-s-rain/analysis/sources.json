@@ -1,0 +1,29 @@
+{
+ "sources": [
+  {
+   "id": "chirps-lk",
+   "file": "chirps_lk_daily.json",
+   "url": null,
+   "fetch": "tools/fetch_chirps.py (ClimateSERV API, NASA/USAID SERVIR: CHIRPS v2 daily, average over a box 79.5-82.0 E, 5.9-9.9 N)",
+   "terms": "CHIRPS: public domain (CC0 waiver by the UCSB Climate Hazards Center: https://www.chc.ucsb.edu/data/chirps); ClimateSERV is a public US government service",
+   "version": "CHIRPS v2.0, fetched 2026-11-03",
+   "sha256": "3da59389f887a18552a37110e859c1abbeb6373e95183d5e701984b72934bc23"
+  },
+  {
+   "id": "roni",
+   "file": "RONI.ascii.txt",
+   "url": "https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt",
+   "terms": "NOAA/NWS information, public domain (weather.gov disclaimer)",
+   "version": "as published",
+   "sha256": "1297887f581b6190e459cbbf8bdec9a703ff65c1a229e2de4dd94285254f35c8"
+  },
+  {
+   "id": "oni",
+   "file": "oni.ascii.txt",
+   "url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
+   "terms": "NOAA/NWS information, public domain (weather.gov disclaimer)",
+   "version": "as published",
+   "sha256": "118c563331335c8649cdc2677e6be7ae89d1259d901345fcddbc2857af280f7f"
+  }
+ ]
+}

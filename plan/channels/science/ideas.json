@@ -3591,10 +3591,11 @@
     "terms": "CHIRPS: public domain ('Pete Peterson has waived all copyright and related or neighboring rights to CHIRPS'; 'in the public domain as registered with Creative Commons'). ONI: NOAA/NWS information in the public domain (weather.gov disclaimer)",
     "check": "De Silva & Hornberger 2019: during El Niño events rainfall increases in October-December and decreases in January-March in Sri Lanka's Mahaweli and Kelani basins. CPC: ONI JAS 2026 = +2.16; Niño-3.4 +2.1°C in September 2026."
    },
-   "status": "planned",
+   "status": "briefed",
    "added": "2026-11-02",
    "by": "research agent (analysis sweep, 2026-11-02)",
-   "quarter": "2027-Q1"
+   "quarter": "2027-Q1",
+   "film": "how-el-nino-reaches-sri-lanka-s-rain"
   },
   {
    "id": "I098",

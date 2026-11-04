@@ -1,0 +1,70 @@
+{
+ "facts": [
+  {
+   "id": "F01",
+   "kind": "status",
+   "claim": "In its 8 October 2026 discussion NOAA's Climate Prediction Center was under an El Niño Advisory, with the Niño-3.4 sea surface temperature index of the equatorial Pacific at +2.1 °C in September 2026. CPC now quotes relative indices: +2.1 °C is the relative Niño-3.4 (the traditional OISST September value was +2.84 °C); ONI JAS 2026 +2.16 and RONI ASO 2026 +1.97 agree that the region ran about two degrees warm in late 2026.",
+   "src": "cpc_ensodisc",
+   "source_sentence": "ENSO Alert System Status: El Niño Advisory ... Most Niño indices increased in the past month, reaching +2.1°C in Niño-3.4, +3.0°C in Niño-3, and +3.9°C in Niño-1+2",
+   "single_source_reason": "CPC is the official US source for ENSO status; the ONI file (ASO 2026 +2.46) agrees that the region is about two degrees or more above normal"
+  },
+  {
+   "id": "F02",
+   "kind": "analysis",
+   "claim": "The film's analysis uses CHIRPS v2 daily rainfall averaged over the land in a box around Sri Lanka (79.5-82.0 E, 5.9-9.9 N) for 1981 to 2025: 45 October-December seasons and the 45 January-March seasons after them. Years are sorted by NOAA's relative ONI for their October-December season (episode rule: inside a run of at least five 3-month seasons at +0.5 or more, or -0.5 or less): 13 El Niño, 13 neutral, 19 La Niña.",
+   "src": "analysis",
+   "srcs": [
+    "chirps",
+    "roni"
+   ],
+   "source_sentence": "analysis.md: 'CHIRPS v2 over Sri Lanka (box 79.5-82.0 E, 5.9-9.9 N, land cells), 1981 to 2025; El Niño by RONI (OND season inside a 5-season run at +0.5 or more)'; 'El Niño years (13)'; 'Against neutral years (13)'; data.json n_years 45, n_nina 19",
+   "label": "re-analysis"
+  },
+  {
+   "id": "F03",
+   "kind": "analysis",
+   "claim": "In 10 of the 13 El Niño years, October-December rain over Sri Lanka was above the median of the 13 neutral years (730 mm); in 3 it was not. Mean October-December rain: El Niño years 915 mm, neutral years 815 mm (+12 percent; one-sided permutation p 0.14), La Niña years 779 mm. By the traditional ONI instead of RONI (same rule), 12 of 15 El Niño years were above the neutral median, with the same three exceptions (1986, 1987, 1991).",
+   "src": "analysis",
+   "srcs": [
+    "chirps",
+    "roni"
+   ],
+   "source_sentence": "analysis.md: 'Against neutral years (13): OND mean El Niño 915 / neutral 815 / La Niña 779 mm (+12% El Niño vs neutral, permutation p 0.139); 10 of 13 El Niño years above the neutral median (730 mm)'; analysis.md: 'By the traditional ONI instead (same rule): 15 El Niño years ... OND 12 of 15 above the neutral median (means 949 / 761 mm, p 0.014)'",
+   "label": "re-analysis"
+  },
+  {
+   "id": "F04",
+   "kind": "analysis",
+   "claim": "In the January-March after El Niño years, rain over Sri Lanka was lower on average than after neutral years under both indices, but how reliably depends on the index: by RONI 207 against 248 mm (7 of 13 below the neutral median, one-sided permutation p 0.24), and 426 mm after La Niña years; by the traditional ONI 199 against 301 mm (12 of 15 below, p 0.028).",
+   "src": "analysis",
+   "srcs": [
+    "chirps",
+    "roni"
+   ],
+   "source_sentence": "analysis.md: 'Against neutral years: following JFM mean El Niño 207 / neutral 248 / La Niña 426 mm (-17%, p 0.239); 7 of 13 below the neutral median'; 'By the traditional ONI instead (same rule): ... following JFM 12 of 15 below the neutral median (means 199 / 301 mm, p 0.028)'",
+   "label": "re-analysis"
+  }
+ ],
+ "sources": {
+  "cpc_ensodisc": {
+   "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml",
+   "title": "ENSO Diagnostic Discussion, NOAA Climate Prediction Center, issued 8 October 2026",
+   "accessed": "2026-11-03"
+  },
+  "chirps": {
+   "url": "https://www.chc.ucsb.edu/data/chirps",
+   "title": "CHIRPS v2.0 rainfall (UCSB Climate Hazards Center), daily, via ClimateSERV (NASA/USAID SERVIR) area averages",
+   "accessed": "2026-11-03"
+  },
+  "roni": {
+   "url": "https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt",
+   "title": "Relative Oceanic Niño Index (RONI), NOAA CPC",
+   "accessed": "2026-11-03"
+  },
+  "analysis": {
+   "url": "films/how-el-nino-reaches-sri-lanka-s-rain/analysis.md",
+   "title": "This film's analysis (analysis/summarise.py on the cached sources; data.json)",
+   "accessed": "2026-11-03"
+  }
+ }
+}

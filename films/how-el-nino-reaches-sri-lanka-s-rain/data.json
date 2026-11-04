@@ -1,0 +1,566 @@
+{
+ "years": "1981 to 2025",
+ "n_years": 45,
+ "n_nino": 13,
+ "nino_years": [
+  1982,
+  1986,
+  1987,
+  1991,
+  1994,
+  1997,
+  2002,
+  2004,
+  2006,
+  2009,
+  2015,
+  2018,
+  2023
+ ],
+ "ond_mean_nino": 915,
+ "ond_mean_other": 793,
+ "ond_pct": 15,
+ "ond_median_pct": 31,
+ "ond_wet_n": 9,
+ "jfm_n_nino": 13,
+ "jfm_mean_nino": 207,
+ "jfm_mean_other": 354,
+ "jfm_pct": -41,
+ "jfm_median_pct": -46,
+ "jfm_dry_n": 10,
+ "ond_bars": [
+  [
+   "El Niño",
+   915
+  ],
+  [
+   "Neither",
+   815
+  ],
+  [
+   "La Niña",
+   779
+  ]
+ ],
+ "jfm_bars": [
+  [
+   "El Niño",
+   207
+  ],
+  [
+   "Neither",
+   248
+  ],
+  [
+   "La Niña",
+   426
+  ]
+ ],
+ "roni_latest": {
+  "season": "ASO",
+  "year": 2026,
+  "value": 1.97
+ },
+ "oni_latest": {
+  "season": "ASO",
+  "year": 2026,
+  "value": 2.46
+ },
+ "rows": [
+  {
+   "year": 1981,
+   "ond_mm": 619.5,
+   "ond_days": 92,
+   "jfm_mm": 62.0,
+   "jfm_days": 90,
+   "roni_ond": -0.21,
+   "phase": "neutral"
+  },
+  {
+   "year": 1982,
+   "ond_mm": 938.8,
+   "ond_days": 92,
+   "jfm_mm": 54.9,
+   "jfm_days": 90,
+   "roni_ond": 2.24,
+   "phase": "el_nino"
+  },
+  {
+   "year": 1983,
+   "ond_mm": 723.4,
+   "ond_days": 92,
+   "jfm_mm": 890.3,
+   "jfm_days": 91,
+   "roni_ond": -1.1,
+   "phase": "la_nina"
+  },
+  {
+   "year": 1984,
+   "ond_mm": 635.6,
+   "ond_days": 92,
+   "jfm_mm": 385.3,
+   "jfm_days": 90,
+   "roni_ond": -0.88,
+   "phase": "la_nina"
+  },
+  {
+   "year": 1985,
+   "ond_mm": 588.6,
+   "ond_days": 92,
+   "jfm_mm": 367.7,
+   "jfm_days": 90,
+   "roni_ond": -0.14,
+   "phase": "neutral"
+  },
+  {
+   "year": 1986,
+   "ond_mm": 517.0,
+   "ond_days": 92,
+   "jfm_mm": 155.2,
+   "jfm_days": 90,
+   "roni_ond": 1.22,
+   "phase": "el_nino"
+  },
+  {
+   "year": 1987,
+   "ond_mm": 700.8,
+   "ond_days": 92,
+   "jfm_mm": 156.0,
+   "jfm_days": 91,
+   "roni_ond": 0.98,
+   "phase": "el_nino"
+  },
+  {
+   "year": 1988,
+   "ond_mm": 455.6,
+   "ond_days": 92,
+   "jfm_mm": 228.7,
+   "jfm_days": 90,
+   "roni_ond": -1.95,
+   "phase": "la_nina"
+  },
+  {
+   "year": 1989,
+   "ond_mm": 565.2,
+   "ond_days": 92,
+   "jfm_mm": 344.0,
+   "jfm_days": 90,
+   "roni_ond": -0.08,
+   "phase": "neutral"
+  },
+  {
+   "year": 1990,
+   "ond_mm": 813.9,
+   "ond_days": 92,
+   "jfm_mm": 265.6,
+   "jfm_days": 90,
+   "roni_ond": 0.3,
+   "phase": "neutral"
+  },
+  {
+   "year": 1991,
+   "ond_mm": 638.7,
+   "ond_days": 92,
+   "jfm_mm": 49.6,
+   "jfm_days": 91,
+   "roni_ond": 1.66,
+   "phase": "el_nino"
+  },
+  {
+   "year": 1992,
+   "ond_mm": 786.8,
+   "ond_days": 92,
+   "jfm_mm": 194.8,
+   "jfm_days": 90,
+   "roni_ond": 0.12,
+   "phase": "neutral"
+  },
+  {
+   "year": 1993,
+   "ond_mm": 1116.1,
+   "ond_days": 92,
+   "jfm_mm": 333.1,
+   "jfm_days": 90,
+   "roni_ond": 0.44,
+   "phase": "neutral"
+  },
+  {
+   "year": 1994,
+   "ond_mm": 966.9,
+   "ond_days": 92,
+   "jfm_mm": 259.1,
+   "jfm_days": 90,
+   "roni_ond": 1.23,
+   "phase": "el_nino"
+  },
+  {
+   "year": 1995,
+   "ond_mm": 522.2,
+   "ond_days": 92,
+   "jfm_mm": 282.1,
+   "jfm_days": 91,
+   "roni_ond": -1.02,
+   "phase": "la_nina"
+  },
+  {
+   "year": 1996,
+   "ond_mm": 730.3,
+   "ond_days": 92,
+   "jfm_mm": 116.5,
+   "jfm_days": 90,
+   "roni_ond": -0.3,
+   "phase": "neutral"
+  },
+  {
+   "year": 1997,
+   "ond_mm": 1058.8,
+   "ond_days": 92,
+   "jfm_mm": 138.9,
+   "jfm_days": 90,
+   "roni_ond": 2.25,
+   "phase": "el_nino"
+  },
+  {
+   "year": 1998,
+   "ond_mm": 749.5,
+   "ond_days": 92,
+   "jfm_mm": 462.7,
+   "jfm_days": 90,
+   "roni_ond": -1.51,
+   "phase": "la_nina"
+  },
+  {
+   "year": 1999,
+   "ond_mm": 837.7,
+   "ond_days": 92,
+   "jfm_mm": 529.6,
+   "jfm_days": 91,
+   "roni_ond": -1.33,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2000,
+   "ond_mm": 725.8,
+   "ond_days": 92,
+   "jfm_mm": 353.4,
+   "jfm_days": 90,
+   "roni_ond": -0.79,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2001,
+   "ond_mm": 692.5,
+   "ond_days": 92,
+   "jfm_mm": 228.8,
+   "jfm_days": 90,
+   "roni_ond": -0.27,
+   "phase": "neutral"
+  },
+  {
+   "year": 2002,
+   "ond_mm": 983.7,
+   "ond_days": 92,
+   "jfm_mm": 441.4,
+   "jfm_days": 90,
+   "roni_ond": 1.33,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2003,
+   "ond_mm": 635.0,
+   "ond_days": 92,
+   "jfm_mm": 156.1,
+   "jfm_days": 91,
+   "roni_ond": 0.25,
+   "phase": "neutral"
+  },
+  {
+   "year": 2004,
+   "ond_mm": 1034.2,
+   "ond_days": 92,
+   "jfm_mm": 313.5,
+   "jfm_days": 90,
+   "roni_ond": 0.7,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2005,
+   "ond_mm": 1040.2,
+   "ond_days": 92,
+   "jfm_mm": 428.2,
+   "jfm_days": 90,
+   "roni_ond": -0.5,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2006,
+   "ond_mm": 1051.1,
+   "ond_days": 92,
+   "jfm_mm": 261.6,
+   "jfm_days": 90,
+   "roni_ond": 0.91,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2007,
+   "ond_mm": 815.3,
+   "ond_days": 92,
+   "jfm_mm": 574.7,
+   "jfm_days": 91,
+   "roni_ond": -1.49,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2008,
+   "ond_mm": 694.4,
+   "ond_days": 92,
+   "jfm_mm": 344.6,
+   "jfm_days": 90,
+   "roni_ond": -0.6,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2009,
+   "ond_mm": 933.4,
+   "ond_days": 92,
+   "jfm_mm": 223.8,
+   "jfm_days": 90,
+   "roni_ond": 1.29,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2010,
+   "ond_mm": 1096.3,
+   "ond_days": 92,
+   "jfm_mm": 777.7,
+   "jfm_days": 90,
+   "roni_ond": -1.63,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2011,
+   "ond_mm": 875.1,
+   "ond_days": 92,
+   "jfm_mm": 239.8,
+   "jfm_days": 91,
+   "roni_ond": -1.02,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2012,
+   "ond_mm": 1208.4,
+   "ond_days": 92,
+   "jfm_mm": 657.1,
+   "jfm_days": 90,
+   "roni_ond": -0.03,
+   "phase": "neutral"
+  },
+  {
+   "year": 2013,
+   "ond_mm": 500.8,
+   "ond_days": 92,
+   "jfm_mm": 207.5,
+   "jfm_days": 90,
+   "roni_ond": -0.23,
+   "phase": "neutral"
+  },
+  {
+   "year": 2014,
+   "ond_mm": 1310.6,
+   "ond_days": 92,
+   "jfm_mm": 200.6,
+   "jfm_days": 90,
+   "roni_ond": 0.54,
+   "phase": "neutral"
+  },
+  {
+   "year": 2015,
+   "ond_mm": 1064.1,
+   "ond_days": 92,
+   "jfm_mm": 157.8,
+   "jfm_days": 91,
+   "roni_ond": 2.18,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2016,
+   "ond_mm": 469.4,
+   "ond_days": 92,
+   "jfm_mm": 405.0,
+   "jfm_days": 90,
+   "roni_ond": -0.96,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2017,
+   "ond_mm": 725.3,
+   "ond_days": 92,
+   "jfm_mm": 232.1,
+   "jfm_days": 90,
+   "roni_ond": -0.97,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2018,
+   "ond_mm": 807.8,
+   "ond_days": 92,
+   "jfm_mm": 184.4,
+   "jfm_days": 90,
+   "roni_ond": 0.82,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2019,
+   "ond_mm": 1028.3,
+   "ond_days": 92,
+   "jfm_mm": 86.9,
+   "jfm_days": 91,
+   "roni_ond": 0.29,
+   "phase": "neutral"
+  },
+  {
+   "year": 2020,
+   "ond_mm": 711.5,
+   "ond_days": 92,
+   "jfm_mm": 422.7,
+   "jfm_days": 90,
+   "roni_ond": -1.46,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2021,
+   "ond_mm": 920.9,
+   "ond_days": 92,
+   "jfm_mm": 269.2,
+   "jfm_days": 90,
+   "roni_ond": -1.24,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2022,
+   "ond_mm": 871.9,
+   "ond_days": 92,
+   "jfm_mm": 395.2,
+   "jfm_days": 90,
+   "roni_ond": -1.05,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2023,
+   "ond_mm": 1204.5,
+   "ond_days": 92,
+   "jfm_mm": 297.7,
+   "jfm_days": 91,
+   "roni_ond": 1.42,
+   "phase": "el_nino"
+  },
+  {
+   "year": 2024,
+   "ond_mm": 938.3,
+   "ond_days": 92,
+   "jfm_mm": 586.1,
+   "jfm_days": 90,
+   "roni_ond": -0.88,
+   "phase": "la_nina"
+  },
+  {
+   "year": 2025,
+   "ond_mm": 985.7,
+   "ond_days": 92,
+   "jfm_mm": 284.0,
+   "jfm_days": 90,
+   "roni_ond": -0.98,
+   "phase": "la_nina"
+  }
+ ],
+ "jfm_drier_pct": 41,
+ "_provenance": {
+  "scripts": {
+   "summarise.py": "5c0f3da699112fff"
+  },
+  "sources": [
+   {
+    "id": "chirps-lk",
+    "file": "chirps_lk_daily.json",
+    "url": null,
+    "terms": "CHIRPS: public domain (CC0 waiver by the UCSB Climate Hazards Center: https://www.chc.ucsb.edu/data/chirps); ClimateSERV is a public US government service",
+    "version": "CHIRPS v2.0, fetched 2026-11-03",
+    "sha256": "3da59389f887a18552a37110e859c1abbeb6373e95183d5e701984b72934bc23"
+   },
+   {
+    "id": "roni",
+    "file": "RONI.ascii.txt",
+    "url": "https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt",
+    "terms": "NOAA/NWS information, public domain (weather.gov disclaimer)",
+    "version": "as published",
+    "sha256": "1297887f581b6190e459cbbf8bdec9a703ff65c1a229e2de4dd94285254f35c8"
+   },
+   {
+    "id": "oni",
+    "file": "oni.ascii.txt",
+    "url": "https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt",
+    "terms": "NOAA/NWS information, public domain (weather.gov disclaimer)",
+    "version": "as published",
+    "sha256": "118c563331335c8649cdc2677e6be7ae89d1259d901345fcddbc2857af280f7f"
+   }
+  ]
+ },
+ "n_neutral": 13,
+ "n_nina": 19,
+ "phase_means": {
+  "ond": {
+   "el_nino": 915,
+   "neutral": 815,
+   "la_nina": 779
+  },
+  "jfm": {
+   "el_nino": 207,
+   "neutral": 248,
+   "la_nina": 426
+  }
+ },
+ "ond_vs_neutral_pct": 12,
+ "jfm_vs_neutral_pct": -17,
+ "ond_wet_vs_neutral_n": 10,
+ "ond_dry_vs_neutral_n": 3,
+ "jfm_dry_vs_neutral_n": 7,
+ "neutral_median_ond": 730,
+ "neutral_median_jfm": 208,
+ "p_ond_vs_neutral": 0.139,
+ "p_jfm_vs_neutral": 0.239,
+ "p_ond_vs_other": 0.044,
+ "p_jfm_vs_other": 0.003,
+ "oni_split": {
+  "n_nino": 15,
+  "n_neutral": 14,
+  "nino_years": [
+   1982,
+   1986,
+   1987,
+   1991,
+   1994,
+   1997,
+   2002,
+   2004,
+   2006,
+   2009,
+   2014,
+   2015,
+   2018,
+   2019,
+   2023
+  ],
+  "ond_mean": {
+   "el_nino": 949,
+   "neutral": 761
+  },
+  "jfm_mean": {
+   "el_nino": 199,
+   "neutral": 301
+  },
+  "ond_wet_n": 12,
+  "jfm_dry_n": 12,
+  "p_ond": 0.014,
+  "p_jfm": 0.028
+ }
+}

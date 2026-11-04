@@ -1,0 +1,81 @@
+{
+ "title": "How El Niño reaches Sri Lanka's rain",
+ "format": "explainer",
+ "speakers": {
+  "momo": {
+   "voice": "kokoro:af_heart",
+   "fx": {
+    "pitch": 1.2,
+    "formant": 1.08,
+    "range": 1.25
+   }
+  },
+  "ravi": {
+   "voice": "kokoro:am_michael"
+  }
+ },
+ "lead_in_s": 0.3,
+ "gap_s": 0.35,
+ "lines": [
+  {
+   "id": "hook",
+   "speaker": "ravi",
+   "fact": [
+    "F01"
+   ],
+   "text": "In late 2026, the sea along the equator in the Pacific ran about two degrees warmer than normal. That's El Niño."
+  },
+  {
+   "id": "ask",
+   "speaker": "momo",
+   "fact": null,
+   "text": "That's the other side of the world. Does Sri Lanka even feel it?"
+  },
+  {
+   "id": "data",
+   "speaker": "ravi",
+   "fact": [
+    "F02"
+   ],
+   "text": "We checked {{n_years|word}} years of satellite rain records for Sri Lanka."
+  },
+  {
+   "id": "wet",
+   "speaker": "ravi",
+   "fact": [
+    "F02",
+    "F03"
+   ],
+   "text": "In {{ond_wet_vs_neutral_n}} of {{n_nino}} El Niño years, October to December was wetter than a typical year with no El Niño or La Niña."
+  },
+  {
+   "id": "dry",
+   "speaker": "ravi",
+   "fact": [
+    "F02",
+    "F04"
+   ],
+   "text": "The January to March after? Drier on average, but less reliably."
+  },
+  {
+   "id": "q2",
+   "speaker": "momo",
+   "fact": null,
+   "text": "So an El Niño year means a wet end of the year?"
+  },
+  {
+   "id": "answer",
+   "speaker": "ravi",
+   "fact": [
+    "F03"
+   ],
+   "text": "It has leaned that way, but in {{ond_dry_vs_neutral_n|word}} El Niño years it didn't. For your area, follow the Department of Meteorology."
+  },
+  {
+   "id": "button",
+   "speaker": "momo",
+   "fact": null,
+   "text": "Warm water far away, a nudge to the rain right here."
+  }
+ ]
+}

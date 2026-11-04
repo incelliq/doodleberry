@@ -1,0 +1,997 @@
+{
+ "title": "How El Niño reaches Sri Lanka's rain",
+ "size": [
+  1080,
+  1920
+ ],
+ "fps": 30,
+ "captions": true,
+ "brand": "brand",
+ "shots": [
+  {
+   "id": "s1",
+   "renderer": "svg",
+   "set": "map",
+   "start": 0,
+   "end": "ask.end+0.4",
+   "start_line": "hook",
+   "end_line": "ask",
+   "bubbles": false,
+   "set_opts": {
+    "map": "indo-pacific",
+    "title": "El Niño, late 2026",
+    "view": [
+     {
+      "t": 0,
+      "view": [
+       150,
+       -30,
+       280,
+       30
+      ]
+     },
+     {
+      "t": "ask.start",
+      "view": [
+       150,
+       -30,
+       280,
+       30
+      ]
+     },
+     {
+      "t": "ask.start+2.0",
+      "view": [
+       55,
+       -25,
+       200,
+       32
+      ]
+     }
+    ],
+    "boxes": [
+     {
+      "lon0": -170,
+      "lat0": -5,
+      "lon1": -120,
+      "lat1": 5,
+      "label": "Niño 3.4 (relative), Sept: +2.1 °C",
+      "start": "hook.start+1.2",
+      "colour": "#e05a4f"
+     }
+    ],
+    "routes": [
+     {
+      "from": [
+       -150,
+       0
+      ],
+      "to": [
+       81.5,
+       7.5
+      ],
+      "start": "ask.start+0.3",
+      "dur": 1.8,
+      "colour": "#5a3fc0",
+      "bend": -0.12
+     }
+    ],
+    "pins": [
+     {
+      "lon": 80.8,
+      "lat": 7.6,
+      "label": "Sri Lanka",
+      "start": "ask.start+1.9"
+     }
+    ]
+   },
+   "camera_auto": {
+    "handheld": 0.3,
+    "zoom": 1.0,
+    "zoom_single": 1.0
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 190,
+      "y": 1560,
+      "s": 0.85
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 0.329,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 2.629,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 7.879,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 5.604,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 12.671,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 12.975,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 15.25,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        0.1,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        0.3,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        9.236,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        12.971,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       11.103,
+       11.423,
+       12.971
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 890,
+      "y": 1560,
+      "s": 0.85
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 9.086,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 11.212,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 9.662,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 12.307,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 17.092,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        9.186,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        0.15,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        9.386,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        12.821,
+        [
+         -1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       7.517,
+       7.838,
+       9.386,
+       15.523,
+       15.843,
+       17.392
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "renderer": "svg",
+   "set": "map",
+   "start": "ask.end+0.4",
+   "end": "data.end+0.5",
+   "start_line": "data",
+   "end_line": "data",
+   "bubbles": false,
+   "set_opts": {
+    "map": "south-asia",
+    "view": [
+     74,
+     3.5,
+     88,
+     13
+    ],
+    "title": "Rain records, 1981–2025",
+    "highlight": [
+     {
+      "country": "Sri Lanka",
+      "colour": "#9bd23c",
+      "start": "data.start+0.2"
+     }
+    ],
+    "boxes": [
+     {
+      "lon0": 79.5,
+      "lat0": 5.9,
+      "lon1": 82.0,
+      "lat1": 9.9,
+      "label": "satellite + gauges",
+      "start": "data.start+1.0",
+      "colour": "#1a62c2"
+     }
+    ]
+   },
+   "camera_auto": {
+    "handheld": 0.3,
+    "zoom": 1.0,
+    "zoom_single": 1.0
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 880,
+      "y": 1560,
+      "s": 0.85
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 12.975,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 15.25,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 20.095,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 17.445,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 23.07,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 18.545,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 21.47,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 24.745,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        12.771,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        12.971,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        17.392,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "renderer": "svg",
+   "set": "paper",
+   "start": "data.end+0.5",
+   "end": "wet.end+0.6",
+   "start_line": "wet",
+   "end_line": "wet",
+   "bubbles": false,
+   "overlays": [
+    {
+     "type": "title",
+     "text": "{{ond_wet_vs_neutral_n}} OF {{n_nino}}",
+     "y": 330,
+     "size": 120,
+     "start": "wet.start+0.2"
+    },
+    {
+     "type": "bars",
+     "data_from": "ond_bars",
+     "title": "October–December rain (mm, average)",
+     "y": 540,
+     "h": 560,
+     "start": "wet.start+0.8",
+     "duration": 1.2,
+     "colors": [
+      "#e0703c",
+      "#9aa3ad",
+      "#1a62c2"
+     ],
+     "w": 760,
+     "x": 60
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 900,
+      "y": 1560,
+      "s": 0.62
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 20.095,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 17.445,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 23.07,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 18.545,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 21.47,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 24.745,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 27.884,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 25.851,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        17.192,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        17.392,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        25.851,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "renderer": "svg",
+   "set": "paper",
+   "start": "wet.end+0.6",
+   "end": "dry.end+0.7",
+   "start_line": "dry",
+   "end_line": "dry",
+   "bubbles": false,
+   "overlays": [
+    {
+     "type": "bars",
+     "data_from": "jfm_bars",
+     "title": "The January–March after (mm, average)",
+     "y": 540,
+     "h": 560,
+     "start": "dry.start",
+     "duration": 1.0,
+     "colors": [
+      "#e0703c",
+      "#9aa3ad",
+      "#1a62c2"
+     ],
+     "w": 760,
+     "x": 60
+    },
+    {
+     "type": "title",
+     "text": "DRIER ON AVERAGE",
+     "y": 330,
+     "size": 78,
+     "start": "dry.start+1.2"
+    },
+    {
+     "type": "citation",
+     "text": "Not as reliable: depends on the El Niño index",
+     "y": 1240,
+     "start": "dry.start+2.0"
+    }
+   ],
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 900,
+      "y": 1560,
+      "s": 0.62
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 27.884,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 25.851,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 33.547,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        25.651,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        25.851,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       29.783,
+       32.299,
+       33.847
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "renderer": "svg",
+   "set": "classroom",
+   "set_opts": {
+    "board": [
+     "Oct–Dec: leaned wet",
+     "{{ond_wet_vs_neutral_n}} of {{n_nino}} years",
+     "Not a forecast"
+    ]
+   },
+   "start": "dry.end+0.7",
+   "end": "answer.end+0.5",
+   "start_line": "q2",
+   "end_line": "answer",
+   "bubbles": false,
+   "camera_auto": {
+    "handheld": 0.3,
+    "zoom": 1.0,
+    "zoom_single": 1.0
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/ravi.puppet.json",
+     "speaker": "ravi",
+     "place": {
+      "x": 300,
+      "y": 1560,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "nod",
+        "start": 33.547,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_R",
+        "start": 34.205,
+        "end": 35.105,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 39.125,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 38.2,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 35.6,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 37.175,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 44.971,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "ravi",
+      "emotion": [
+       [
+        33.647,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        30.591,
+        [
+         1.0,
+         0.1
+        ]
+       ],
+       [
+        33.847,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        41.783,
+        [
+         1.0,
+         0.1
+        ]
+       ]
+      ],
+      "blinks": [
+       29.783,
+       32.299,
+       33.847,
+       40.263,
+       43.723,
+       45.271
+      ]
+     }
+    },
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 780,
+      "y": 1560,
+      "s": 1.0
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "talk_beat",
+        "start": 31.05,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "talk_beat",
+        "start": 32.35,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "shrug",
+        "start": 33.02,
+        "weight": 3,
+        "auto": true
+       },
+       {
+        "clip": "nod",
+        "start": 41.633,
+        "additive": true,
+        "weight": 0.8,
+        "auto": true
+       },
+       {
+        "clip": "point_L",
+        "start": 44.383,
+        "end": 45.283,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        30.541,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        30.741,
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        33.697,
+        [
+         -1.0,
+         0.1
+        ]
+       ],
+       [
+        41.933,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ],
+      "blinks": [
+       37.67,
+       40.385,
+       41.933
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s6",
+   "renderer": "svg",
+   "set": "map",
+   "start": "answer.end+0.5",
+   "end": "button.end+1.4",
+   "start_line": "button",
+   "end_line": "button",
+   "bubbles": false,
+   "set_opts": {
+    "map": "indo-pacific",
+    "view": [
+     55,
+     -25,
+     200,
+     32
+    ],
+    "boxes": [
+     {
+      "lon0": -170,
+      "lat0": -5,
+      "lon1": -120,
+      "lat1": 5,
+      "colour": "#e05a4f"
+     }
+    ],
+    "routes": [
+     {
+      "from": [
+       -150,
+       0
+      ],
+      "to": [
+       81.5,
+       7.5
+      ],
+      "colour": "#5a3fc0",
+      "bend": -0.12
+     }
+    ],
+    "highlight": [
+     {
+      "country": "Sri Lanka",
+      "colour": "#9bd23c"
+     }
+    ]
+   },
+   "overlays": [
+    {
+     "type": "citation",
+     "text": "Sources: NOAA CPC, relative ONI; CHIRPS v2; our analysis",
+     "y": 1290,
+     "start": "button.start",
+     "end": "button.end+1.2"
+    }
+   ],
+   "camera_auto": {
+    "handheld": 0.3,
+    "zoom": 1.0,
+    "zoom_single": 1.0
+   },
+   "cast": [
+    {
+     "puppet": "cast/generated/momo.puppet.json",
+     "speaker": "momo",
+     "place": {
+      "x": 860,
+      "y": 1560,
+      "s": 0.9
+     },
+     "timeline": {
+      "clips": [
+       {
+        "clip": "idle",
+        "start": 0,
+        "fadeIn": 0
+       },
+       {
+        "clip": "point_R",
+        "start": 44.383,
+        "end": 45.283,
+        "weight": 3,
+        "auto": true
+       }
+      ],
+      "springs": true,
+      "visemes_from": "momo",
+      "emotion": [
+       [
+        41.733,
+        "neutral"
+       ]
+      ],
+      "look": [
+       [
+        41.933,
+        [
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
