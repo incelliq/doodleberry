@@ -92,7 +92,7 @@ def check(deep=True):
                                        ("blender", "tools", False, "bash tools/setup.sh blender   (Blender 5.2 LTS: the Grease Pencil renderer needs 4.3 or newer)"),
                                        ("pencil2d", "tools", False, "bash tools/setup.sh oss   (Pencil2D: drawn levels, WP-34)"),
                                        ("inkscape", "tools", False, "bash tools/setup.sh oss   (Inkscape: path booleans, WP-34)"),
-                                       ("melt", "tools", False, _pkg("melt", "mlt") + "   (editor round trips)"),
+                                       
                                        ("krita", "tools", False, "bash tools/setup.sh oss   (Krita: .kra round-trip test, WP-18; .kra files are read without it)")):
         p = shutil.which(tool)
         add(f"program {tool}", group, p, required, p or "not on PATH", fix)
@@ -137,6 +137,8 @@ def check(deep=True):
         mp = ASM.MODELS / ASM.REGISTRY[name]["file"]
         add(f"assist model {name}", "tools", mp.exists(), False, str(mp) if mp.exists() else "not downloaded",
             "bash tools/setup.sh models   (or let level.inbetween / depth.planes fetch it on first use)")
+    from .handoff import MELT as _MELT   # melt, or melt-7 / mlt-melt on Fedora
+    add("program melt", "tools", _MELT, False, _MELT or "not on PATH", _pkg("melt", "mlt") + "   (editor round trips)")
     egl = ctypes.util.find_library("EGL")
     add("system library libEGL", "tools", egl, False, egl or "missing (MediaPipe's native library needs it)", _pkg("libegl1 libgles2", "mesa-libEGL libglvnd-gles"))
     from . import oss as _OSS   # WP-34: MyPaint brushes for drawn levels and the in-between benchmark

@@ -7614,10 +7614,10 @@ def test_golden(update=False, film=""):
         results.append({"master": "multi-pass ACEScg EXR read by oiiotool and ffmpeg; the colour round trip is exact", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "handoff":   # editor hand-off (WP-22): every interchange format reads back; melt renders the cut byte for byte
         from . import handoff as HOF
-        if HOF.shutil.which("melt"):   # (this function imports shutil locally further down)
+        if HOF.MELT:
             bad, meas = HOF.self_test(ROOT / "out" / "handofftest")
         else:
-            bad, meas = [], {"skipped": "melt not installed (apt-get install melt)"}
+            bad, meas = [], {"skipped": "melt not installed (apt-get install melt, or dnf install mlt)"}
         failed += 1 if bad else 0
         results.append({"handoff": "OTIO, Kdenlive, FCP7 XML, FCPXML and EDL read back; melt renders the cut identically", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "sound":   # sound editing (WP-40): edits and music swaps; the Studio page moves a foley hit and swaps music
@@ -11744,7 +11744,8 @@ def film_handoff(name, melt=True):
     # melt plays the Kdenlive project (MLT XML underneath) and renders the MLT one
     # (a Kdenlive timeline has an endless black track under the cut, so melt plays it to the cut's last frame)
     total = sum(x[2] for x in shots)
-    kd = subprocess.run(["melt", "timeline.kdenlive", "in=0", f"out={total - 1}", "-consumer", "null", "real_time=0", "terminate_on_pause=1"],
+    from . import handoff as _HO2
+    kd = subprocess.run([_HO2.MELT or "melt", "timeline.kdenlive", "in=0", f"out={total - 1}", "-consumer", "null", "real_time=0", "terminate_on_pause=1"],
                         cwd=out, capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL)
     res["melt_plays_kdenlive"] = kd.returncode == 0
     if melt:

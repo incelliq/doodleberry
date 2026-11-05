@@ -26,6 +26,9 @@ from pathlib import Path
 
 from . import ROOT
 
+# MLT's player: `melt` (Debian), `melt-7` or `mlt-melt` (Fedora's mlt 7)
+MELT = shutil.which("melt") or shutil.which("melt-7") or shutil.which("mlt-melt")
+
 
 def _frames(mp4):
     r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", str(mp4)],
@@ -174,7 +177,7 @@ def melt_round_trip(out, fps, W, H, shots):
     total = sum(n for _, _, n in shots)
     lst = out / "melt_concat.txt"
     lst.write_text("".join(f"file '{(out / p).resolve()}'\n" for _, p, _ in shots))
-    m = subprocess.Popen(["melt", str(out / "timeline.mlt"), "in=0", f"out={total - 1}", "-consumer", "avformat:pipe:1", "f=yuv4mpegpipe", "vcodec=rawvideo",
+    m = subprocess.Popen([MELT or "melt", str(out / "timeline.mlt"), "in=0", f"out={total - 1}", "-consumer", "avformat:pipe:1", "f=yuv4mpegpipe", "vcodec=rawvideo",
                           "pix_fmt=yuv420p", "mlt_image_format=yuv420p", "rescale=none", "progressive=1", "color_range=mpeg", "an=1", "real_time=0", "terminate_on_pause=1"],
                          stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, cwd=str(out))
     o = subprocess.Popen(["ffmpeg", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-f", "yuv4mpegpipe", "-pix_fmt", "yuv420p", "-"],
