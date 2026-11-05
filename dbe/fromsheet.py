@@ -15,7 +15,7 @@ import io
 import math
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy import ndimage as ND
 
 ARTBOARD = (600, 1000)
@@ -159,8 +159,7 @@ def part_masks(fig, lm, rgb=None):
         hc = _mode_colour(rgb[top_rows]); hair = np.abs(rgb - hc).sum(-1) < 45
     tl, tr = lm["torso"]; a0, a1 = lm["band"]
     yy, xx = np.mgrid[: shp[0], : shp[1]]
-    hair_near = ND.binary_dilation(hair, iterations=4)   # the hair with its outline
-    arm_any = np.zeros(shp, bool)
+    arm_any = np.zeros(shp, bool); caps = {}
     for side, A in lm["arms"].items():
         s, e, w, t = A["shoulder"], A["elbow"], A["wrist"], A["tip"]
         out = (xx <= tl) if side == "L" else (xx >= tr)
@@ -180,12 +179,29 @@ def part_masks(fig, lm, rgb=None):
         k = lab[yl, x_w] if (beyond | arm)[yl, x_w] else 0
         arm = arm | ((lab == k) & beyond) if k else arm | beyond
         arm_any |= arm
-        r_up, r_fo = A["thick"] * 0.55, A["fore"] * 0.6
-        up = arm & ~_halfplane(shp, e, t, +1) | (fig & ~hair_near & _disc(shp, s, r_up) & band)
+        # the shoulder: the sleeve's run at the torso side gives its thickness; the joint sits inside the torso by
+        # 0.6 of its radius, and the upper arm gets a drawn round end there (fill and outline of the sleeve), so a
+        # hanging or raised arm has a round shoulder instead of the straight edge it was cut along
+        x0 = int(tl if side == "L" else tr); inward = 1 if side == "L" else -1
+        xs_ = x0 - inward * 2
+        run = next(((r0, r1) for r0, r1 in _runs(arm[:, xs_]) if r0 <= yl < r1), (yl - 10, yl + 10))
+        T = run[1] - run[0]; rr = T / 2; yc = (run[0] + run[1]) / 2
+        P = (x0 + inward * 0.6 * rr, yc)
+        lw = 2
+        if rgb is not None:
+            col = rgb[run[0]:run[1], xs_].sum(-1)
+            lw = int(np.clip(next((i for i, v in enumerate(col) if v > 330), 3), 2, 0.2 * T))
+            near = arm & (np.abs(xx - x0) < 0.4 * T) & (rgb.sum(-1) > 330)
+            fillc = _mode_colour(rgb[near])
+        else:
+            fillc = np.array([200, 200, 200])
+        caps[side] = {"P": P, "r": rr, "lw": lw, "fill": fillc, "seam": (x0, run[0], run[1], inward)}
+        r_fo = A["fore"] * 0.6
+        up = arm & ~_halfplane(shp, e, t, +1)
         fo = arm & _halfplane(shp, e, t, +1) & ~_halfplane(shp, w, t, +1) | (arm & _disc(shp, e, r_fo))
         ha = arm & _halfplane(shp, w, t, +1) | (arm & _disc(shp, w, r_fo * 0.8))
         masks[f"upperarm_{side}"], masks[f"forearm_{side}"], masks[f"hand_{side}"] = up, fo, ha
-        piv[f"upperarm_{side}"], piv[f"forearm_{side}"], piv[f"hand_{side}"] = s, e, w
+        piv[f"upperarm_{side}"], piv[f"forearm_{side}"], piv[f"hand_{side}"] = P, e, w
     body = fig & ~arm_any
     neck_y, crotch = lm["neck_y"], lm["crotch"]
     head = body & (yy < neck_y + 0.03 * lm["H"])
@@ -214,7 +230,7 @@ def part_masks(fig, lm, rgb=None):
     masks["hip"] = trunk & (yy >= hip_top - 0.02 * lm["H"])
     mid_hip = (lm["cx"], hip_top)
     piv["torso"], piv["hip"] = mid_hip, mid_hip
-    return masks, piv
+    return masks, piv, caps
 
 
 # ------------------------------------------------------------------ face features
@@ -301,7 +317,7 @@ def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
     rgb = _load(sheet)
     fig = figure_mask(rgb)
     lm = landmarks(fig)
-    masks, piv = part_masks(fig, lm, rgb)
+    masks, piv, caps = part_masks(fig, lm, rgb)
     ff = face_features(rgb, masks["head"])
     rgba = np.dstack([rgb, np.full(rgb.shape[:2], 255)]).astype(np.uint8)
     # lift the eyes and the mouth off the face: paint them over with the skin colour (only inside the face)
@@ -317,12 +333,28 @@ def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
     # the arms hang down: swing each arm's parts and pivots about its shoulder
     swing = {"L": 90.0, "R": -90.0}
 
+    inkc = tuple(int(v) for v in ff["ink"])
+
     def layer(part):
         src = head_rgb if part == "head" else rgb
         a = np.dstack([src, masks[part] * 255]).astype(np.uint8)
+        if part == "torso":   # close the torso's sides where the sleeves joined it, with the drawing's outline
+            for c in caps.values():
+                x0, y0_, y1_, inward = c["seam"]; xa, xb = sorted((x0, x0 + inward * c["lw"]))
+                a[y0_:y1_, xa:xb + 1, :3] = inkc; a[y0_:y1_, xa:xb + 1, 3] = 255
         im = Image.fromarray(a, "RGBA"); p = piv[part]; side = part[-1]
+        if part.startswith("upperarm"):   # the drawn round shoulder under the sleeve
+            c = caps[side]; cap = Image.new("RGBA", im.size, (0, 0, 0, 0)); d = ImageDraw.Draw(cap)
+            (px, py), r = c["P"], c["r"]
+            fillc = tuple(int(v) for v in c["fill"]) + (255,)
+            if side == "L":   # the back arm, behind the torso: only its outer edge shows, so it has the outline
+                d.ellipse([px - r, py - r, px + r, py + r], fill=inkc + (255,)); r2 = r - c["lw"]
+            else:             # the front arm lies over the torso: fill only, so no circle is drawn on the shirt
+                r2 = r - c["lw"] * 0.5
+            d.ellipse([px - r2, py - r2, px + r2, py + r2], fill=fillc)
+            cap.alpha_composite(im); im = cap
         if part.split("_")[0] in ("upperarm", "forearm", "hand"):
-            sh = lm["arms"][side]["shoulder"]
+            sh = piv[f"upperarm_{side}"]
             im = im.rotate(swing[side], resample=Image.BICUBIC, center=sh, expand=False)
             p = _rot_point(p, sh, swing[side])
         return im, p

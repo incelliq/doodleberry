@@ -1346,6 +1346,11 @@ these steps:
   the shoe.
 - **The parts:** each part is the figure's own pixels in its region plus a round cap over its joint, so the parts
   overlap where they turn. The arms are swung down about the shoulders to the template's rest pose (arms hanging).
+- **The shoulders:** the shoulder joint sits inside the torso, by 0.6 of the sleeve's half-thickness. The upper arm
+  gets a drawn round end there, in the sleeve's own colour, so a hanging or raised arm has a round shoulder rather
+  than the straight edge it was cut along. The back arm's end has the drawing's outline; the front arm, drawn over
+  the shirt, has fill only. The torso's sides are closed with an outline where the sleeves joined it. (Copying the
+  torso's pixels as the cap, as at first, swung a piece of shirt and its outline around with the arm.)
 - **The face:** the eyes are the two darkest marks in the face's upper middle. The mouth is the first mark below them
   that is wider than a nose. Both are painted over with the skin colour and become the eyes swap (open as drawn,
   closed as a lid line) and the mouth swap.
@@ -1363,8 +1368,8 @@ the feet. The command then stops with "no gap between the legs found".
 
 - **Nila:** every part found. At rest the arms hang clear of the body and the hair stays with the head. Posed, she
   waves, steps, blinks and says O, FV, mid and wide with her own mouths.
-- **Artefacts:** a large thigh turn shows a notch where the shorts were cut, and the T-pose's shoulder line stays a
-  short horizontal edge beside the neck.
+- **Artefacts:** a large thigh turn shows a notch where the shorts were cut. A faint ring can show where the drawn
+  shoulder's fill is a shade off the shirt's own colour.
 
 Test `fromsheet` draws its own T-pose figure (shapes with dark outlines, so the joints are known):
 
