@@ -2340,7 +2340,13 @@ Momo for the second line" (`dbe/review.py ots_intent`): the line named, or that 
 one under it; whom we look at named, else the line's speaker; past whom named, else the other character. The critic
 measures the baked frames (`ots_measure`): `on` at a medium shot or closer, its head in frame and at most 15% under
 the near head, `over` cut by the frame, in front and on its wide-shot side; then continuity and QA, or the shots are
-put back. Test `ots` (only when asked) is being measured.
+put back. Test `ots` (only when asked) on a copy of review-demo: "Make Momo's answer an over-the-shoulder", pinned
+during Ravi's first line, framed line l2 over Ravi's shoulder; "over Momo's shoulder on Ravi for the third line" framed
+the reverse on l3. Both verified: the on character at MS with 6% (5.5%) of its head under the near one, the near
+one cut by the frame on its wide-shot side (left, then right) and seen from behind; continuity has no issue, the
+left-right order Ravi, Momo in all four shots (FS, MS, MS, FS, the over-the-shoulder ones named from Momo and Ravi);
+QA holds; the over-the-shoulder shot from Synfig, Lottie and Grease Pencil matches the SVG renderer's (parity 1.0,
+1.0, 0.999).
 
 **Curve editor** (WP-19). A key may carry the easing of the move that leaves it, as a third element: `[t, value,
 ease]` with `smooth` (the default, smoothstep, as before), `linear`, `hold` (the value stays until the next key) or a
