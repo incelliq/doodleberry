@@ -382,8 +382,11 @@ def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
         report["mouth_sheet"] = len(sheet_m)
         if len(sheet_m) >= 6:
             k = mw / sheet_m[0].size[0]   # the sheet's closed smile is drawn the face's mouth's width
-            pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[5],
-                    "mid": (extra[1] if len(extra) >= 2 else sheet_m[5])}
+            if len(sheet_m) >= 8:   # smile, slightly open, ah, oh, oo, ee, m, l
+                pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[5],
+                        "mid": (extra[1] if len(extra) >= 2 else sheet_m[5])}
+            else:                   # smile, slightly open, ah, oh, ee, l
+                pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[4], "mid": sheet_m[5]}
             for sh, im in pick.items():
                 shapes[sh] = place(im, k)
             report["mouth_scale"] = round(k, 3)
