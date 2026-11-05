@@ -1784,7 +1784,11 @@ active bodies, a fixed number of substeps), bakes the simulation, then renders i
 node's output also records where each body is on every rendered frame (`bodies`). Test `rigid` (Blender renders
 twice, so only when asked): three boxes dropped into a stack and a ball come to rest with their centres at 0.5, 1.5
 and 2.5 m and 0.4 m above the ground (exactly the sizes), move under a millimetre over the last second, and a second
-cook gives the same positions and the same pixels.
+cook gives the same positions and the same pixels. **Cloth strips**: a body `{"shape": "cloth", "size": [w, h], "at": [x
+px, depth m, height of its top edge m], "res"}` is a strip pinned along its top edge (a banner, a flag, a cape on a
+3D set) under Blender's cloth simulation, with the node's `"wind"` (a wind over the scene; a few hundred moves a
+banner). In the same test a 2 m banner hangs 2.004 m below its pinned edge when still, and in a wind of 800 its free
+end swings over 1.04 m while the pinned edge does not move.
 
 ## ML assists, in-house (WP-43, part 1)
 Models used as assistants whose output is data a person accepts, on CPU (onnxruntime), pinned by sha256

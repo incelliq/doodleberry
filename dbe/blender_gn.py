@@ -7,8 +7,9 @@ REQ: {size: [W, H], fps, start, frames: [frame numbers to render] | count, camer
       kind: "city", seed, blocks: {count, min_dist, depth: [near, far], width, height: [lo, hi]}, palette: [...],
       sky: "#..", ground: "#..", ink: "#..", line: 1.4, samples: 1, ink_lines: true, zpass: false (EXR with depth)}
      kind: "props" (WP-42): bodies: [{shape: box | ball, size (m), at: [x px, depth m, height m above the ground], rot,
-      colour, mass, friction, bounce, velocity: [vx, vy, vz] m/s}], substeps, iterations: rigid bodies under Bullet,
-      baked, then rendered; bodies.json records where each is on every rendered frame
+      colour, mass, friction, bounce, velocity: [vx, vy, vz] m/s} | {shape: cloth, size: [w, h] m, at: [x px, depth, top
+      edge height], res}], wind (strength over the scene), substeps, iterations: rigid bodies under Bullet and cloth strips (Blender cloth, pinned
+      along the top), baked, then rendered; bodies.json records where each is on every rendered frame
 
 The camera maps the 2D stage exactly: 1 px = 1 cm on the stage plane (y = 0), the camera stands D0 = 12 m in front,
 pans with the 2D camera centre and dollies in by its zoom, so a point on the stage plane lands where the 2D renderer
@@ -119,9 +120,30 @@ def build_props():
     bpy.context.view_layer.objects.active = ground; ground.select_set(True)
     bpy.ops.rigidbody.object_add(); ground.rigid_body.type = "PASSIVE"; ground.rigid_body.collision_shape = "BOX"
     ground.rigid_body.friction = R.get("friction", 0.6); ground.select_set(False)
+    if R.get("wind"):   # a wind over the whole scene (Blender wind strength: a few hundred moves a banner)
+        # it blows left to right and a little away from the camera: wind pushes on a cloth's face, and a banner faces the camera
+        bpy.ops.object.effector_add(type="WIND", location=(-6, 6, floor_z + 3), rotation=(0, math.radians(90), math.radians(30)))   # blows along (0.87, 0.5, 0)
+        wf = bpy.context.active_object; wf.field.strength = float(R["wind"]); wf.field.flow = 0
+        wf.field.noise = 0; wf.field.seed = int(R.get("seed", 1))
     for i, b in enumerate(R.get("bodies", [])):
-        sz = float(b.get("size", 1.0)); x, depth, hgt = b.get("at", [W / 2, 6, 3])
+        sz = b.get("size", 1.0); x, depth, hgt = b.get("at", [W / 2, 6, 3])
         loc = ((x - W / 2) * K, depth, floor_z + hgt)
+        if b.get("shape") == "cloth":   # a strip pinned along its top edge (a banner, a flag): Blender cloth, baked
+            w_, h_ = (sz, sz) if not isinstance(sz, list) else sz
+            bpy.ops.mesh.primitive_grid_add(x_subdivisions=int(b.get("res", 12)), y_subdivisions=int(b.get("res", 12) * h_ / w_) + 2, size=1, location=(0, 0, 0))
+            o = bpy.context.active_object; o.name = b.get("name", f"cloth{i}")
+            o.rotation_euler = (math.radians(90), 0, 0); o.scale = (w_, h_, 1)
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+            o.location = (loc[0], loc[1], loc[2] - h_ / 2)   # `at` is the top edge
+            top = max(v.co.z for v in o.data.vertices)
+            vg = o.vertex_groups.new(name="pin"); vg.add([v.index for v in o.data.vertices if v.co.z > top - 1e-4], 1.0, "REPLACE")
+            o.data.materials.append(toon_material(f"m{i}", [b.get("colour", "#e86a5a")]))
+            cl = o.modifiers.new("cloth", "CLOTH"); cs = cl.settings
+            cs.vertex_group_mass = "pin"; cs.quality = int(R.get("substeps", 10)); cs.mass = b.get("mass", 0.3)
+            cl.point_cache.frame_start = 1; cl.point_cache.frame_end = last
+            o.select_set(False)
+            continue
+        sz = float(sz)
         if b.get("shape", "box") == "ball":
             bpy.ops.mesh.primitive_uv_sphere_add(radius=sz / 2, segments=24, ring_count=12, location=loc)
         else:
@@ -221,6 +243,12 @@ for f in frames:
     sc.frame_set(f + 1 if R.get("kind") == "props" else 1)
     if R.get("kind") == "props":   # where each body is (m, the stage's axes: x right, y away, z up), for checks and the record
         track[f] = {o.name: [round(v, 5) for v in (*o.matrix_world.translation, *o.matrix_world.to_euler())] for o in sc.objects if o.rigid_body and o.rigid_body.type == "ACTIVE"}
+        for o in sc.objects:   # cloth: the evaluated mesh's top (pinned) and lowest points, and its free bottom edge's mean x
+            if any(m.type == "CLOTH" for m in o.modifiers):
+                ev = o.evaluated_get(bpy.context.evaluated_depsgraph_get()); vs = [ev.matrix_world @ v.co for v in ev.data.vertices]
+                zs = [v.z for v in vs]; lo = min(zs); bot = [v for v in vs if v.z < lo + 0.05]
+                track[f][o.name] = {"top": round(max(zs), 5), "low": round(lo, 5), "bottom_x": round(sum(v.x for v in bot) / len(bot), 5),
+                                    "pinned_x": round(sum(v.x for v in vs if v.z > max(zs) - 1e-3) / max(1, sum(1 for v in vs if v.z > max(zs) - 1e-3)), 5)}
     sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.{'exr' if R.get('zpass') else 'png'}")
     bpy.ops.render.render(write_still=True)
 if track:

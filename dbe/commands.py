@@ -7348,7 +7348,7 @@ def test_golden(update=False, film=""):
     if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
         bad, meas = _rigid_test()
         failed += 1 if bad else 0
-        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels; a cloth banner hangs from its pinned edge and swings in a wind", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "usd":   # WP-42: OpenUSD export
         bad, meas = _usd_test()
         failed += 1 if bad else 0
@@ -10528,6 +10528,18 @@ def _rigid_test():
         meas["rerun_same_positions"] = outs2["crates"]["bodies"] == B; meas["rerun_same_pixels"] = outs2["crates"]["frames"] == o["frames"]
         if any(abs(meas["rest_height_m"][k] - v) > 0.02 * max(v, 1) for k, v in want.items()) or meas["settled_mm"] > 1 or not meas["rerun_same_positions"] or not meas["rerun_same_pixels"]:
             bad.append(f"rigid: {meas}")
+        # cloth strips: a banner 2 m long hangs from its pinned top edge; in a wind its free end swings while the top stays
+        cloth = {"op": "rigid", "plane": "set3d", "every": 15, "bodies": [{"shape": "cloth", "size": [1.2, 2.0], "at": [270, 6, 5.0]}]}
+        cl = {}
+        for tag, extra in (("still", {}), ("wind", {"wind": 800})):
+            o_, _ = PR.cook({f"banner_{tag}": {**cloth, **extra}}, ctx, tmp / "cache")
+            fr_ = o_[f"banner_{tag}"]["bodies"]["frames"]; seq = [fr_[k]["cloth0"] for k in sorted(fr_, key=int)]
+            cl[tag] = {"hang_m": round(seq[-1]["top"] - seq[-1]["low"], 3), "top_moved_mm": round(1000 * max(abs(q["top"] - seq[0]["top"]) + abs(q["pinned_x"] - seq[0]["pinned_x"]) for q in seq), 2),
+                       "free_end_swing_m": round(max(q["bottom_x"] for q in seq) - min(q["bottom_x"] for q in seq), 3)}
+        meas["cloth"] = cl
+        if abs(cl["still"]["hang_m"] - 2.0) > 0.05 or cl["still"]["free_end_swing_m"] > 0.01 or cl["still"]["top_moved_mm"] > 0.5 \
+                or cl["wind"]["free_end_swing_m"] < 0.2 or cl["wind"]["top_moved_mm"] > 0.5:
+            bad.append(f"cloth: {cl}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
