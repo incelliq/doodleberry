@@ -1973,6 +1973,18 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   50%); depth against "lower is nearer" on Geometry Nodes renders with their true depth (pixel pairs ordered right:
   99.7% against 88.6%).
 
+**Sound sketches** (WP-43, `sound.sketch`, `dbe/sketch.py`). A sound effect from a few words, for a cue nothing
+synthesised or recorded covers: AudioLDM-S (CC BY-NC-SA 4.0, in-house) on the CPU, about 10 s for a 2.5 s clip,
+seeded (the same prompt and seed give the same samples), resampled to 48 kHz and faded; `candidates` seeds are tried
+and CLAP keeps the one nearest the prompt. The sketch goes to `films/<name>/sketches/`, its model into the film's
+`provenance.json` (so the posting gate flags it), and a shot cue `{"t", "type": "sketch", "file"}` plays it, levelled
+like any effect. An independent AudioSet tagger (AST) says what a sketch sounds like. Test `sketch` (only when asked):
+of six prompts (a creaking door, a cartoon boing, rain on a window, a dog barking, a bottle shattering, a bicycle bell)
+the tagger hears the expected sound in 3 with the best of four seeds (2 with one seed): the boing, the bark and the
+bell; the door, the rain and the shattering are not heard as such. So a sketch is a starting point to audition, not
+finished foley. Cued in a copy of review-demo, the sketch's waveform is in the effects stem at its cue (correlation
+0.90, against 0.04 without it), and the posting gate flags AudioLDM as non-commercial.
+
 **Turns between views** (WP-43: morphs between views; puppet format v0.14, `dbe/turns.py`). A view switch on a
 timeline (front to side) used to cut with a 0.09 s squash. `puppet.turns {puppet, a, b, steps}` draws the in-betweens
 as ordinary views, `turn:<a>><b>:<k>`, so the bake, every renderer and every exporter already play them. Per part,

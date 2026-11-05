@@ -463,7 +463,7 @@ SFX_LEVEL = {'scratch': -19, 'step': -16, 'thud': -10, 'swish': -15, 'pop': -7, 
              'lens_open': -8, 'lens_close': -11, 'chomp': -7, 'sparkle': -8, 'grow': -9, 'grow_big': -7,
              'wilt': -9, 'sink': -9, 'shimmer': -10, 'chime': -7, 'rain': -13, 'flip': -11,
              'buzz': -12, 'swarm': -13, 'squirm': -12, 'stamp': -8, 'crack': -10, 'drill': -13, 'plane': -13,
-             'drone': -12, 'ping': -9, 'tick': -14, 'zap': -11}
+             'drone': -12, 'ping': -9, 'tick': -14, 'zap': -11, 'sketch': -11}
 
 
 def presence(voice, n, attack=0.04, release=0.35):
@@ -725,7 +725,7 @@ def main_whole():
         hit = sample_for(c, lib, None if want is True else want, turns) if want else None
         if hit:
             used.append({'t': c['t'], 'type': c['type'], **({'surface': c['surface']} if c.get('surface') else {}), 'sample': hit[1]})
-        x = declick(hp(load_sample(hit[0]) if hit else sfx(c['type'], c.get('dur'), c.get('surface')), 250))
+        x = declick(hp(load_sample(hit[0]) if hit else load_sample(film / c['file']) if c['type'] == 'sketch' else sfx(c['type'], c.get('dur'), c.get('surface')), 250))
         L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
                  for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
         g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)
@@ -1008,7 +1008,7 @@ def main():
             hit = sample_for(c, lib, None if want is True else want, turns) if want else None
             if hit:
                 used.append({'t': c['t'], 'type': c['type'], **({'surface': c['surface']} if c.get('surface') else {}), 'sample': hit[1]})
-            x = declick(hp(load_sample(hit[0]) if hit else sfx(c['type'], c.get('dur'), c.get('surface')), 250))
+            x = declick(hp(load_sample(hit[0]) if hit else load_sample(film / c['file']) if c['type'] == 'sketch' else sfx(c['type'], c.get('dur'), c.get('surface')), 250))
             L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
                      for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
             g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)

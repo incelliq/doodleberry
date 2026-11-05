@@ -647,6 +647,28 @@ def puppet_turns(puppet, a="base", b="side", steps=3, out=""):
 KENNEY_ITEMS = ROOT / "assets" / "props" / "kenney-generic-items.json"
 
 
+@command("sound.sketch", name=("string", "film"), prompt=("string", "the sound in a few words: 'a wooden door creaking open slowly'"),
+         seconds=("number", "length", 2.5), seed=("integer", "the seed (the same prompt and seed give the same sound)", 0),
+         candidates=("integer", "seeds tried; the one CLAP finds nearest the prompt is kept", 4))
+def sound_sketch(name, prompt, seconds=2.5, seed=0, candidates=4):
+    """A sound sketch (WP-43): a sound effect from a few words by AudioLDM (CC BY-NC-SA 4.0, in-house: the film's
+    provenance.json records it, so the posting gate flags it), the best of `candidates` seeds by CLAP, written to
+    films/<name>/sketches/<slug>-<seed>.wav (48 kHz). Use it as a shot cue {"t", "type": "sketch", "file"}: the mixer
+    levels it like any effect. The AudioSet labels an independent tagger (AST) hears in it come back, to check it."""
+    import soundfile as sf
+    from . import sketch as SK
+    d = _film(name); out = d / "sketches"; out.mkdir(exist_ok=True)
+    slug = re.sub(r"[^a-z0-9]+", "-", prompt.lower()).strip("-")[:40]
+    y = SK.sketch(prompt, seconds, seed, candidates=max(1, int(candidates)))
+    f = out / f"{slug}-{seed}.wav"; sf.write(f, y, 48000, subtype="PCM_24")
+    pv = _json(d / "provenance.json", {}) or {}; ms = pv.setdefault("models", [])
+    entry = {"name": f"AudioLDM ({SK.AUDIOLDM['repo']})", "license": SK.AUDIOLDM["license"], "class": SK.AUDIOLDM["class"], "output": str(f.relative_to(d))}
+    if entry not in ms:
+        ms.append(entry)
+    (d / "provenance.json").write_text(json.dumps(pv, indent=1))
+    return {"file": str(f.relative_to(d)), "seconds": round(len(y) / 48000, 3), "heard_as": SK.tags([y])[0], "cue": {"type": "sketch", "file": str(f.relative_to(d))}}
+
+
 @command("props.import_kenney", zip=("string", "the pack's zip as downloaded from kenney.nl on the owner's machine"), pack=("string", "a kenney.nl asset slug", "generic-items"))
 def props_import_kenney(zip, pack="generic-items"):
     """Unpack a Kenney pack (CC0) downloaded on the owner's machine into assets/external/kenney/<pack>/ (not in git)
@@ -1758,7 +1780,7 @@ def _derive_cues(name, s):
     d = FILMS / name
     cues = [{"t": sh["start"], "type": "whoosh", "gain": 0.7} for sh in s["shots"][1:]]
     for sh in s["shots"]:
-        cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1), **({"dur": c["dur"]} if c.get("dur") else {})} for c in sh.get("cues", [])]
+        cues += [{"t": c["t"], "type": c["type"], "gain": c.get("gain", 1), **({"dur": c["dur"]} if c.get("dur") else {}), **({"file": c["file"]} if c.get("file") else {})} for c in sh.get("cues", [])]
     if s.get("foley"):  # automatic foley from the motion (plan 2.7)
         page = _player_page(name)
         r = subprocess.run(["node", "tools/foley.mjs", str(page)], cwd=ROOT, capture_output=True, text=True, timeout=1800)
@@ -7719,6 +7741,10 @@ def test_golden(update=False, film=""):
         bad, meas = _kenneyprops_test()
         failed += 1 if bad else 0
         results.append({"kenneyprops": "Kenney's Generic Items labelled one by one into a prop library: every file matching its sha256, and props.make drawing one (a teapot) where the prop stands", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "sketch":   # WP-43: sound sketches (runs AudioLDM, CLAP and AST on the CPU, mixes a film twice; only when asked)
+        bad, meas = _sketch_test()
+        failed += 1 if bad else 0
+        results.append({"sketch": "sound sketches from a few words (AudioLDM, best of four seeds by CLAP): an independent tagger hears the expected sound in at least half of six; repeatable; cued in a film, the sketch is in its effects and its model flagged at posting", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "mixstream":   # WP-38: the streaming mixer against the whole-array one (mixes two films twice, so only when asked)
         bad, meas = _mixstream_test()
         failed += 1 if bad else 0
@@ -10937,6 +10963,68 @@ def _mixstream_test(films=("review-demo", "how-el-nino-reaches-sri-lanka-s-rain"
         finally:
             for d in dirs.values():
                 shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+SKETCH_CHECKS = {"a wooden door creaking open slowly": ["Creak", "Door"], "a cartoon boing spring sound": ["Boing"],
+                 "heavy rain on a window": ["Rain", "Rain on surface", "Raindrop"], "a dog barking twice": ["Bark", "Dog"],
+                 "a glass bottle shattering on a stone floor": ["Shatter", "Glass", "Breaking"], "a bicycle bell ringing": ["Bicycle bell", "Bell", "Ding"]}
+
+
+def _sketch_test():
+    """WP-43 sound sketches: six prompts, each the best of four seeds by CLAP, heard by an independent AudioSet tagger
+    (AST): how many carry the expected label in its top five (one seed alone: 2 of 6); the same prompt and seed give
+    the same samples; a sketch made by sound.sketch and cued in a copy of review-demo lands in the effects stem at its
+    cue (against the same mix without it), and the posting gate flags its model"""
+    import numpy as np
+    import soundfile as sf
+    from . import sketch as SK
+    bad, meas = [], {}
+    try:
+        A = [SK.sketch(p, 2.5, seed=1, candidates=4) for p in SKETCH_CHECKS]
+    except Exception as e:
+        return [], {"skipped": f"the sketch models are not here ({e!r})"}
+    T = SK.tags(A); hits = [any(l in want for l, _ in tg) for tg, want in zip(T, SKETCH_CHECKS.values())]
+    meas["heard_as_expected"] = f"{sum(hits)} of {len(hits)}"; meas["top_labels"] = {p: [l for l, _ in tg][:3] for p, tg in zip(SKETCH_CHECKS, T)}
+    if sum(hits) < 3:
+        bad.append(f"independent tagger: {meas['heard_as_expected']}")
+    meas["repeatable"] = bool(np.array_equal(SK.sketch("a cartoon boing spring sound", 2.5, seed=1), SK.sketch("a cartoon boing spring sound", 2.5, seed=1)))
+    if not meas["repeatable"]:
+        bad.append("not repeatable")
+    src = FILMS / "review-demo"
+    if not (src / "build" / "voice.wav").exists():
+        meas["mix"] = "review-demo not voiced here"; return bad, meas
+    name = "zz-sketch"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True)
+    shutil.copytree(src, d, ignore=shutil.ignore_patterns("master*", "package", "versions", "*.mp4", "diff"))
+    try:
+        r = sound_sketch(name, "a cartoon boing spring sound", seconds=1.5, seed=1, candidates=2)
+        meas["sketch"] = {"file": r["file"], "heard_as": [l for l, _ in r["heard_as"]][:3]}
+        T0 = 6.0; rms = {}; ncc = {}
+        sk, _ = sf.read(d / r["file"]); sk = sk if sk.ndim == 1 else sk.mean(1)
+        sys.path.insert(0, str(ROOT / "engine")); import audio as AU
+        ref = AU.declick(AU.hp(AU.load_sample(d / r["file"]), 250))[:int(1.0 * 48000)]
+        for with_cue in (False, True):
+            sj = _json(d / "shots.json"); sh = sj["shots"][0]
+            sh["cues"] = [c_ for c_ in sh.get("cues", []) if c_.get("type") != "sketch"] + ([{"t": T0, **r["cue"]}] if with_cue else [])
+            (d / "shots.json").write_text(json.dumps(sj, indent=1))
+            _mix_inputs(name, _shots(name)); _run([PY, "engine/audio.py", f"films/{name}"], timeout=1200)
+            x, sr = sf.read(d / "build" / "sfx.wav"); w = x[int((T0 - 0.05) * sr):int((T0 + 1.3) * sr)].mean(1)
+            rms[with_cue] = float(np.sqrt((w ** 2).mean()))
+            # the sketch's own waveform in the effects at its cue: the best normalised correlation over 50 ms of lag
+            best = 0.0
+            for lag in range(0, int(0.1 * sr), 24):
+                seg = w[lag:lag + len(ref)]
+                if len(seg) == len(ref):
+                    best = max(best, float(abs(np.dot(seg, ref)) / (np.linalg.norm(seg) * np.linalg.norm(ref) + 1e-12)))
+            ncc[with_cue] = round(best, 3)
+        meas["sfx_at_cue"] = {"rms_without": round(rms[False], 5), "rms_with": round(rms[True], 5), "correlation_without": ncc[False], "correlation_with": ncc[True]}
+        pv = film_provenance(name); meas["posting_flags"] = [f_ for f_ in pv.get("flags", []) if "AudioLDM" in f_]
+        if not (ncc[True] > 0.5 and ncc[True] > 2 * ncc[False]):
+            bad.append(f"the sketch is not in the effects: {meas['sfx_at_cue']}")
+        if not meas["posting_flags"]:
+            bad.append("the posting gate does not flag the sketch's model")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 

@@ -384,3 +384,8 @@ Kitsu in the service (**AGPL**, unverified).
 - **Where**: https://kenney.nl/assets/generic-items, downloaded once through the page's own flow (not repeated: the other packs wait for the owner's downloads; `props.import_kenney` takes the zip); zip sha256 in assets/props/kenney-generic-items.json; files in assets/external/kenney/ (not in git).
 - **Use**: a labelled prop library (`props.library`, `props.make`); labels made by eye, nine marked unsure.
 
+## Sound sketches (WP-43, 5 Nov 2026)
+- **AudioLDM-S full v2** (cvssp/audioldm-s-full-v2): text to audio, CC BY-NC-SA 4.0 (non-commercial, share-alike: in-house; flagged at posting through the film's provenance.json). Runs on the CPU through diffusers 0.35.2 (Apache-2.0): a 2.5 s clip in about 8-11 s.
+- **CLAP** (laion/clap-htsat-unfused, Apache-2.0): audio-text similarity; keeps the best of several seeds.
+- **AST** (MIT/ast-finetuned-audioset-10-10-0.4593, BSD-3-Clause): AudioSet tagging, trained apart from both; the independent check. Measured: the expected label in its top five for 2 of 6 prompts with one seed, 3 of 6 with the best of four by CLAP. Larger text-to-audio models (AudioLDM 2, Stable Audio Open) may do better; not tried here (disk).
+
