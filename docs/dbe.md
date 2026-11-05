@@ -1864,6 +1864,18 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   the halo at 40 and 60 px at 103 and 54 levels, against 56 and 26 in sRGB. Blending between planes (`blend` nodes,
   plane opacity) stays the browser's, which composites in sRGB; CSS has no linear-light compositing.
 
+**OpenUSD** (WP-42). `export.usd {name, shot, ascii}` writes the shot as a USD stage (`build/shots/<shot>.usda`, with
+its textures beside it; `dbe/usdexport.py`, on usd-core 26.11) from the bake every renderer draws: each part an Xform
+whose transform is sampled every frame (the camera folded in), its drawing as meshes (ear-clipped fills) and curves
+(outlines with their width), raster drawings as textured quads (UsdPreviewSurface), swap drawings shown only on their
+frames, each view a character uses as its own parts shown on that view's frames, bendy limbs with their points
+sampled per frame as the player bends them, layer order as depth, and an orthographic camera framing the shot. Open
+it in usdview, Blender, Houdini, Maya or Omniverse. It is checked with OpenUSD's own validation framework (30
+validators; no errors). Test `usd` on handshake-demo's walk (side views, 270 frames, 36 parts and 36 swap drawings):
+read back through OpenUSD, every part's pivot sits exactly where the bake puts it (0.0 px) on three frames, the mouth
+shown is the bake's on all six cast-frames, and the stage's own fill meshes, drawn flat, cover the characters as the
+player draws them at IoU 0.958 to 0.966 (the rest is the outlines, left out of that check).
+
 ## Editor hand-off (WP-22)
 `film.handoff {name}` (after `film.render`) writes `films/<name>/build/handoff/`: the shots as rendered (`media/`), the
 stems at their mixed level (`audio/voice.wav`, `music.wav`, `sfx.wav`), the captions (SRT, VTT; also markers in the

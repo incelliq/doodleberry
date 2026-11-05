@@ -358,6 +358,7 @@ probe results). Only the tools now named in `docs/build-plan.md` are listed here
 | GeneralUser GS 2.0.1 | permissive [R] | 2.14 | sample provenance not guaranteed by its author: review before published films |
 | Tone.js 15.1 | MIT [R] | 2.14 | |
 | React Flow (`@xyflow/react` 12.12) | MIT [R] | 3.10 | |
+| OpenUSD (`usd-core` 26.11, PyPI) | TOST-1.0 (Apache-2.0 based, permissive) [R] | WP-42 | in use: `export.usd` writes a shot as a USD stage; the compliance checker of older releases is gone, its `UsdValidation` framework (30 validators) checks the file |
 | OpenRV | Apache-2.0 [R] | 3.4 | licensed codecs excluded |
 | xSTUDIO | Apache-2.0 [V] | 3.4 | |
 | Typst (core; Python binding 0.15) | Apache-2.0 [R] | 4.8 | |

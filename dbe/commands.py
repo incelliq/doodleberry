@@ -5189,6 +5189,25 @@ def film_continuity(name):
     return out
 
 
+@command("export.usd", name=("string", "film"), shot=("string", "shot id"), ascii=("boolean", "write .usda (text) rather than .usdc", True))
+def export_usd(name, shot, ascii=True):
+    """A shot as an OpenUSD stage (WP-42, dbe/usdexport.py): the baked animation every renderer draws, each part an Xform
+    sampled every frame (the camera folded in), its drawing as meshes and curves (raster drawings as textured quads),
+    swap drawings shown only on their frames, an orthographic camera framing the shot. Written to
+    build/shots/<shot>.usda (or .usdc) beside its textures; opens in usdview, Blender, Houdini, Maya or Omniverse.
+    Checked with OpenUSD's own compliance checker."""
+    from pxr import Usd, UsdValidation
+    from . import usdexport as UX
+    s, sh, bdir, baked = _bake(name, shot); W, H = s.get("size", [1080, 1920])
+    out = bdir / f"{shot}.{'usda' if ascii else 'usdc'}"; out.unlink(missing_ok=True)
+    summ = UX.to_usd(baked, (W, H), out)
+    # OpenUSD's validation framework, every validator it ships (stage metadata, schema types, shading, ...)
+    reg = UsdValidation.ValidationRegistry(); vals = reg.GetOrLoadAllValidators()
+    errs = UsdValidation.ValidationContext(vals).Validate(Usd.Stage.Open(str(out)))
+    issues = [{"validator": e.GetValidator().GetMetadata().name if e.GetValidator() else "", "type": str(e.GetType()).split(".")[-1], "message": e.GetMessage()[:200]} for e in errs]
+    return {"usd": str(out.relative_to(ROOT)), **summ, "validation": {"validators": len(vals), "errors": [i for i in issues if i["type"] == "Error"], "warnings": [i for i in issues if i["type"] != "Error"][:10]}}
+
+
 @command("export.blend", name=("string", "film"), shot=("string", "shot id"), background=("boolean", "the set's first frame as a background plane", True))
 def export_blend(name, shot, background=True):
     """A shot as a Blender project (WP-14): the Grease Pencil scene the grease-pencil renderer builds (every frame a
@@ -7326,6 +7345,10 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "usd":   # WP-42: OpenUSD export
+        bad, meas = _usd_test()
+        failed += 1 if bad else 0
+        results.append({"usd": "a shot exported to OpenUSD passes OpenUSD's validators; read back, every part's pivot sits where the bake puts it, the mouth shown is the bake's, and the stage's fills cover the characters as the player draws them", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "exrin":   # WP-37: EXR plates into the compositor
         bad, meas = _exrin_test()
         failed += 1 if bad else 0
@@ -10411,6 +10434,69 @@ def _exrin_test():
                 bad.append(f"{nm}: {m}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _usd_test(name="handshake-demo", shot="s1", frames=(60, 120, 200)):
+    """WP-42 OpenUSD: a shot exported, validated by OpenUSD, then read back: every part's pivot sits where the bake puts
+    it on sampled frames, the mouth shown is the one the bake chose, and the stage's own fill meshes, drawn flat,
+    cover the characters as the player draws them"""
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from pxr import Usd, UsdGeom
+    from . import exporters as X, geom as G, rparity as RP
+    bad, meas = [], {}
+    r = export_usd(name, shot)
+    meas["export"] = {k: r.get(k) for k in ("frames", "parts", "swap_shapes", "views")} | {"validation_errors": len(r["validation"]["errors"]), "validators": r["validation"]["validators"]}
+    if r["validation"]["errors"]:
+        bad.append(f"validation: {r['validation']['errors'][:3]}")
+    stage = Usd.Stage.Open(str(ROOT / r["usd"]))
+    s, sh, bdir, baked = _bake(name, shot); W, H = s.get("size", [1080, 1920]); fps = baked["fps"]
+    err, mouth_ok, mouth_n = 0.0, 0, 0
+    for c, nm in zip(baked["cast"], r["cast"]):
+        p00 = X._load(c["puppet"])
+        for f in frames:
+            fr = c["frames"][f]; vw = fr.get("view") if fr.get("view") in (p00.get("views") or {}) else None
+            p0 = G.in_view(p00, vw); base = f"/Film/{nm}" + (f"/view_{vw}" if vw else "")
+            M = G.part_matrices(p0, fr["angles"], fr.get("shifts"), fr.get("scales"), fr.get("grow")); R = G.root_matrix(p0, fr)
+            for pid, part in p0["parts"].items():
+                prim = stage.GetPrimAtPath(f"{base}/{pid}")
+                if not prim:
+                    continue
+                w = UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(Usd.TimeCode(f)).Transform(__import__("pxr").Gf.Vec3d(*part["pivot"], 0))
+                want = G.apply(G.mul(R, M[pid]), part["pivot"])
+                err = max(err, abs(w[0] - want[0]), abs((H - w[1]) - want[1]))
+            sw = G.chosen_swaps(p0, fr).get("mouth")
+            if sw:
+                shown = [ch.GetName() for ch in stage.GetPrimAtPath(f"{base}/at_mouth").GetChildren() if UsdGeom.Imageable(ch).ComputeVisibility(Usd.TimeCode(f)) != UsdGeom.Tokens.invisible]
+                mouth_n += 1; mouth_ok += shown == [sw]
+    meas["pivot_max_error_px"] = round(err, 6); meas["mouth_frames_right"] = f"{mouth_ok}/{mouth_n}"
+    if err > 1e-3 or mouth_ok != mouth_n or not mouth_n:
+        bad.append(f"read back: pivots {err}, mouths {mouth_ok}/{mouth_n}")
+    tmp = ROOT / "out" / "usdtest"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    try:
+        stills = RP.stills_svg(sys.modules[__name__], name, shot, [f / fps for f in frames], tmp)
+        ious = []
+        for f, still in zip(frames, stills):
+            ref = np.asarray(Image.open(still).convert("RGBA"))[..., 3] > 127
+            im = Image.new("L", (W, H), 0); dr = ImageDraw.Draw(im); t = Usd.TimeCode(f)
+            for prim in stage.Traverse():
+                if prim.GetTypeName() != "Mesh" or "image_" in prim.GetName() or UsdGeom.Imageable(prim).ComputeVisibility(t) == UsdGeom.Tokens.invisible:
+                    continue
+                m = UsdGeom.Mesh(prim); P = m.GetPointsAttr().Get(t); idx = m.GetFaceVertexIndicesAttr().Get(t)
+                xf = UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(t)
+                Q = [xf.Transform(__import__("pxr").Gf.Vec3d(*p)) for p in P]
+                for k in range(0, len(idx), 3):
+                    dr.polygon([(Q[j][0], H - Q[j][1]) for j in idx[k:k + 3]], fill=255)
+            got = np.asarray(im) > 127
+            if ref.shape != got.shape:
+                got = np.asarray(im.resize(ref.shape[::-1], Image.NEAREST)) > 127
+            ious.append(round(float((ref & got).sum() / max(1, (ref | got).sum())), 4))
+        meas["fill_silhouette_iou"] = ious
+        if min(ious) < 0.9:
+            bad.append(f"silhouette IoU {ious}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
 
 
