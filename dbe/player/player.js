@@ -452,7 +452,9 @@
     const tq = st.step ? Math.floor(t * st.step + 1e-6) / st.step : t;   // animate on 12s/24s like hand-drawn work
     const set = (window.SETS || {})[sh.set || 'plain'] || window.SETS.plain;
     BOILK = st.boil && st.boil.while_moving ? boilPhase(sh, st, t) : null;
-    let world = castOnly || PLATE.on ? '' : staticLayer(sh, set.draw(tq, sh.set_opts || {}, W, H)), ink = '';   // plate mode: the set comes from the plate   // castonly=1: the characters alone (WP-14 renderer parity)
+    // WP-15: a set drawn as depth layers moves with a moving camera by 1/depth (placed once the camera is known, below)
+    const layered = !castOnly && !PLATE.on && !sh.comp && set.layers && (sh.camera || sh.camera_auto || st.float);
+    let world = castOnly || PLATE.on ? '' : layered ? '<!--SETLAYERS-->' : staticLayer(sh, set.draw(tq, sh.set_opts || {}, W, H)), ink = '';   // plate mode: the set comes from the plate   // castonly=1: the characters alone (WP-14 renderer parity)
     if (sh.underlays && !bgOnly && !castOnly) world += sh.underlays.filter(o => (o.start == null || tq >= o.start) && (o.end == null || tq <= o.end)).map(o => overlay(o, tq)).join('');
     const heads = {}, casts = []; CASTS = casts;
     const planeInk = {}, onPlane = c => sh.comp && c.plane && c.plane !== 'stage' && !bgOnly;   // WP-36: cast members on depth planes
@@ -485,8 +487,8 @@
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
     }
     const pctx = PCTX = propCtx(sh, casts, tq, set);
-    if (!bgOnly && !castOnly) ink += (sh.props || []).map(pr => PROPS.svg(pr, tq, pctx)).join('');
-    if (!bgOnly && !castOnly && sh.fx && window.FX) {  // motion effects from the motion itself (dbe/player/fx.js)
+    if (!bgOnly && (!castOnly || withProps)) ink += (sh.props || []).map(pr => PROPS.svg(pr, tq, pctx)).join('');   // props=1: with the cast alone too (WP-14 parity)
+    if (!bgOnly && (!castOnly || withProps) && sh.fx && window.FX) {  // motion effects from the motion itself (dbe/player/fx.js); props=1 draws them with the cast alone (parity)
       const pointAt = (ci, part, tt) => { if (tt < (sh.start || 0)) return null; const c = pctx.poseAt(ci, tt); if (!c) return null;
         return Puppet.pointOf(c.p, part, null, c.x, c.y, { ...c.pose, s: c.s, flip: c.flip }); };
       ink += FX.render(sh, tq, { casts, pointAt, propPos: (pr, tt, info) => PROPS.pos(pr, tt, pctx, info), pctx });
@@ -502,11 +504,18 @@
     if (sh.camera_auto && !sh.camera && !bgOnly) { const [cx, cy, z] = autoCam(sh, tq, casts); VIEW = [cx, cy, z];   // camera grammar (plan 2.6)
       svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z.toFixed(4)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})">${world}</g>`; }
     if (sh.camera) { const [cx, cy, z] = Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]; VIEW = [cx, cy, z]; svg = boilDefs(st, t) + `<g transform="translate(${W / 2} ${H / 2}) scale(${z}) translate(${-cx} ${-cy})">${world}</g>`; }
-    if (sh.comp && window.COMP && !bgOnly) {   // WP-36: depth planes with parallax and depth of field, per-plane nodes
+    if (sh.comp && window.COMP && (!bgOnly || compSplit) && !castOnly) {   // WP-36: depth planes with parallax and depth of field, per-plane nodes (castonly: the characters alone, for parity)
       const view = sh.camera ? (Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]) : sh.camera_auto ? autoCam(sh, tq, casts) : [W / 2, H / 2, 1];
       VIEW = view;
-      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS),
+      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS), split: compSplit,
         drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
+    if (layered) {   // inside the camera's own transform, layer d gets the compositor's parallax: by 1/d, zooming by 1 + (z - 1)/d
+      const [cx, cy, z] = VIEW || [W / 2, H / 2, 1];
+      svg = svg.replace('<!--SETLAYERS-->', set.layers(tq, sh.set_opts || {}, W, H).map(l => { const d = Math.max(0.05, l.depth || 1);
+        if (Math.abs(d - 1) < 1e-9) return `<g data-depth="1">${l.svg}</g>`;
+        const k = (1 + (z - 1) / d) / z, px = W / 2 + (cx - W / 2) / d, py = H / 2 + (cy - H / 2) / d;
+        return `<g data-depth="${d}" transform="translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${k.toFixed(5)}) translate(${(-px).toFixed(2)} ${(-py).toFixed(2)})">${l.svg}</g>`; }).join(''));
+    }
     { const [vx, vy, vz] = VIEW || [W / 2, H / 2, 1]; window.HEADS = Object.fromEntries(Object.entries(heads).map(([k, a]) => [k, [W / 2 + (a[0] - vx) * vz, H / 2 + (a[1] - vy) * vz]])); }   // where each speaker's head is on screen (comics, WP-30)
     if (!bgOnly && !castOnly && q.get('bubbles') !== '0') { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
@@ -514,9 +523,9 @@
     return svg;
   }
   const only = q.get('shot') ? S.shots.find(s => s.id === q.get('shot')) : null;
-  const bgOnly = q.get('bg') === '1';
-  const castOnly = q.get('castonly') === '1';
-  if (castOnly) { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
+  const compSplit = q.get('comp') || null, bgOnly = q.get('bg') === '1' || !!compSplit;   // comp=back|front: a compositor shot's planes behind or in front of the characters (WP-14)
+  const castOnly = q.get('castonly') === '1', withProps = q.get('props') === '1';
+  if (castOnly || compSplit === 'front') { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
   // ?pre=&post= (seconds): handles before and after a shot, rendered for transitions made at assembly (WP-15)
   const t0 = only ? only.start - (+q.get('pre') || 0) : 0, t1 = only ? only.end + (+q.get('post') || 0) : S.shots[S.shots.length - 1].end;
   window.FILMTIME = { start: t0, end: t1, fps: FPS };

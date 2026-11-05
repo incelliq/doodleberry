@@ -32,10 +32,12 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
     "clip-driven layer order": {"svg", "synfig", "lottie"},
     "mesh parts": {"svg"},
     "drawn levels (raster)": {"svg", "synfig", "lottie"},
-    "props": {"svg"},
-    "motion effects (fx)": {"svg"},
+    "props": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: baked as small puppets (tools/bake.mjs)
+    "props with their own drawing": {"svg"},
+    "motion effects (fx)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: each frame's drawing as a swap (dbe/fxbake.py)
     "toon shading": {"svg"},
-    "compositor planes (comp)": {"svg"},
+    "compositor planes (comp)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: back and front planes by the player around the renderer's characters
+    "characters on compositor planes": {"svg"},
     "even-odd fills (holes)": {"svg", "synfig", "lottie", "grease-pencil"},   # v0.9 (Grease Pencil: keyhole polygons)
     "overlays and kit": {"svg"},
 }
@@ -43,15 +45,17 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
 
 DEGRADES = {   # styles a renderer draws the shot without (a known difference, not a refusal)
     "line boil": {"svg"},
+    "prop squash, stretch and smears": {"svg"},
 }
 
 
 def degrades(renderer, shot):
     st = shot.get("style") or {}
-    return sorted(k for k, ok in DEGRADES.items() if renderer not in ok and (k != "line boil" or st.get("boil")))
+    used = {"line boil": bool(st.get("boil")), "prop squash, stretch and smears": any(p.get(k) for p in shot.get("props") or [] for k in ("squash", "stretch", "smear"))}
+    return sorted(k for k, ok in DEGRADES.items() if renderer not in ok and used.get(k))
 
 
-SHOT_EXTRAS = ("props", "fx")   # drawn by the SVG renderer around the characters, not by them (compositor planes move
+SHOT_EXTRAS = ()   # drawn by the SVG renderer around the characters, not by them (compositor planes move
                                 # the characters themselves, with parallax, so they still refuse the comparison)
 
 
@@ -77,12 +81,16 @@ def needs(shot, puppets):
         f.add("clip-driven layer order")   # v0.9 layer order keys and per-pose z
     if shot.get("props"):
         f.add("props")
+        if any(p.get("svg") for p in shot["props"]):
+            f.add("props with their own drawing")
     if shot.get("fx"):
         f.add("motion effects (fx)")
     if (shot.get("style") or {}).get("toon"):
         f.add("toon shading")
     if shot.get("comp"):
         f.add("compositor planes (comp)")
+        if any(c.get("plane") not in (None, "stage") for c in shot.get("cast", [])):
+            f.add("characters on compositor planes")
     return f
 
 
@@ -133,8 +141,22 @@ def iou(a, b):
 
 
 def stills_svg(C, name, shot, times, out):
+    s = C._shots(name); k = s.get("timewarp")
+    if k:   # a time-warped cut: `times` are on the cut's clock; the player is asked for the film at the warped time
+        sh = next(x for x in s["shots"] if x["id"] == shot); c0 = C._warp(k, sh["start"], inverse=True)
+        shown = [round(C._warp(k, c0 + t) - sh["start"], 4) for t in times]
+        paths = stills_svg_at(C, name, shot, shown, out)
+        for t, p in zip(times, paths):
+            p.rename(out / f"svg_{t:.3f}.png.tmp")
+        for t in times:
+            (out / f"svg_{t:.3f}.png.tmp").rename(out / f"svg_{t:.3f}.png")
+        return [out / f"svg_{t:.3f}.png" for t in times]
+    return stills_svg_at(C, name, shot, times, out)
+
+
+def stills_svg_at(C, name, shot, times, out):
     page = C._player_page(name)
-    r = subprocess.run(["node", "tools/stills.mjs", str(page), f"shot={shot}&castonly=1&captions=0", str(out / "svg")] + [f"{t:.3f}" for t in times],
+    r = subprocess.run(["node", "tools/stills.mjs", str(page), f"shot={shot}&castonly=1&props=1&captions=0", str(out / "svg")] + [f"{t:.3f}" for t in times],
                        cwd=ROOT, capture_output=True, text=True, timeout=600)
     if r.returncode:
         raise RuntimeError(r.stderr[-400:])
@@ -199,7 +221,8 @@ def run(name, shot, times=None, renderers=("synfig", "lottie", "grease-pencil"),
     from . import commands as C
     s = C._shots(name); sh = next(x for x in s["shots"] if x["id"] == shot)
     puppets = [json.loads((ROOT / c["puppet"]).read_text()) for c in sh.get("cast", [])]
-    dur = sh["end"] - sh["start"]
+    k = s.get("timewarp")   # a time-warped cut is compared on its own clock (WP-14)
+    dur = (C._warp(k, sh["end"], inverse=True) - C._warp(k, sh["start"], inverse=True)) if k else sh["end"] - sh["start"]
     times = times or [round(dur * k, 3) for k in (0.2, 0.5, 0.8)]
     out = ROOT / "out" / "rparity" / name / shot; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
     refp = stills_svg(C, name, shot, times, out); ref = [silhouette(p) for p in refp]; refc = [rgba(p) for p in refp]
@@ -253,16 +276,16 @@ def bench(shots=None):
 
 
 def self_test(tmp):
-    """three benchmark shots (vector, raster line art, drawn levels) match across renderers; shots that need what a
+    """four benchmark shots (vector, raster line art, drawn levels, props) match across renderers; shots that need what a
     renderer cannot draw are refused with the reason"""
     fails, got = [], {}
     from . import commands as C
-    r = bench([("pip-park", "s1"), ("nib-hello", "s1"), ("level-demo", "s1")])
+    r = bench([("pip-park", "s1"), ("nib-hello", "s1"), ("level-demo", "s1"), ("juggle-demo", "s1")])   # juggle: props on every renderer (WP-14)
     got["bench"] = [{"shot": f"{x['film']}/{x['shot']}", "ok": x["ok"], "scores": {k: v["min"] for k, v in x.get("scores", {}).items()}} for x in r["shots"]]
     bad = [x for x in r["shots"] if not x["ok"]]
     if bad:
         fails.append(f"renderer parity: {bad}")
-    for film, want in (("night-planes", "compositor planes"), ("fx-demo", "props")):
+    for film, want in (("fx-demo", "toon shading"),):
         sh = C._shots(film)["shots"][0]
         why = refusal("synfig", sh, [json.loads((ROOT / c["puppet"]).read_text()) for c in sh.get("cast", [])])
         got.setdefault("refusals", {})[film] = why

@@ -745,8 +745,11 @@ def _bake(name, shot_id, probe_frames=None):
             vp = vdir / f"{shot_id}.cast{ci}.{sh['palette_variant']}.puppet.json"; vp.write_text(json.dumps(G.recolour(_json(pp), variant)))
             pp = vp
         cast.append({"puppet": str(pp), "place": c.get("place", {"x": 540, "y": 1500, "s": 1}), "timeline": tl})
-    spec = {"fps": fps, "frames": probe_frames or round((sh["end"] - sh["start"]) * fps), "start": sh["start"], "cast": cast, "step": (sh.get("style") or {}).get("step"),
-            "size": s.get("size", [1080, 1920]), **({"camera": sh["camera"]} if sh.get("camera") else {})}
+    k = s.get("timewarp")   # WP-14: a time-warped cut (the sound-off cut) is baked on the cut's clock, as the player renders it
+    c0, c1 = (_warp(k, sh["start"], inverse=True), _warp(k, sh["end"], inverse=True)) if k else (sh["start"], sh["end"])
+    spec = {"fps": fps, "frames": probe_frames or round((c1 - c0) * fps), "start": sh["start"], "cast": cast, "step": (sh.get("style") or {}).get("step"),
+            **({"timewarp": k, "cut_start": c0} if k else {}),
+            "size": s.get("size", [1080, 1920]), **({"camera": sh["camera"]} if sh.get("camera") else {}), **({"props": sh["props"]} if sh.get("props") else {}), **({"fx": sh["fx"]} if sh.get("fx") else {})}
     if not sh.get("camera") and (sh.get("camera_auto") or (sh.get("style") or {}).get("float")):
         # the SVG player's own camera (auto framing, float drift), frame by frame, so every renderer frames the shot alike (WP-14)
         vk = subprocess.run(["node", "tools/view_keys.mjs", str(_player_page(name)), shot_id, str(sh["start"]), str(fps), str(spec["frames"])],
@@ -757,7 +760,12 @@ def _bake(name, shot_id, probe_frames=None):
     tag = ".probe" if probe_frames else ""
     (bdir / f"{shot_id}{tag}.spec.json").write_text(json.dumps(spec))
     _run(["node", "tools/bake.mjs", str(bdir / f"{shot_id}{tag}.spec.json"), str(bdir / f"{shot_id}{tag}.baked.json")])
-    return s, sh, bdir, _json(bdir / f"{shot_id}{tag}.baked.json")
+    baked = _json(bdir / f"{shot_id}{tag}.baked.json")
+    if "fx" in baked:   # WP-14: the motion effects as a swap-set puppet, so every renderer draws them
+        from . import fxbake as FXB
+        baked = FXB.add_fx_puppet(baked, spec["size"], bdir / f"{shot_id}{tag}.fx.puppet.json")
+        (bdir / f"{shot_id}{tag}.baked.json").write_text(json.dumps(baked))
+    return s, sh, bdir, baked
 
 
 def _player_page(name):
@@ -835,14 +843,35 @@ def _render_svg(name, sh, query, out, fps, log=None):
 
 
 def _set_video(name, sh, bdir):
-    """the shot's set (with drifting clouds, ground shadows) rendered as video by the player, for compositing"""
+    """the shot's set (with drifting clouds, ground shadows) rendered as video by the player, for compositing; for a
+    compositor shot, every plane behind the characters (WP-14)"""
     v = bdir / f"{sh['id']}.set.mp4"
-    _render_page(_player_page(name), f"shot={sh['id']}&bg=1", v)
+    _render_page(_player_page(name), f"shot={sh['id']}&" + ("comp=back" if sh.get("comp") else "bg=1"), v)
     return v
 
 
-def _composite(set_video, layer_input, W, H, out):
-    """alpha character frames (any size; scaled to W×H) over the set video"""
+def _front_frames(name, sh, bdir):
+    """a compositor shot's planes nearer than the characters, as RGBA frames (WP-14), or None"""
+    if not sh.get("comp"):
+        return None
+    fr = bdir / f"{sh['id']}_front"; shutil.rmtree(fr, ignore_errors=True)
+    env_keep = {"DBE_ALPHA": "1", "DBE_KEEP_FRAMES": str(fr)}; old = {k: os.environ.get(k) for k in env_keep}; os.environ.update(env_keep)
+    try:
+        _render_page(_player_page(name), f"shot={sh['id']}&comp=front", bdir / f"{sh['id']}.front.mp4")
+    finally:
+        for k, v in old.items():
+            os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
+    return fr
+
+
+def _composite(set_video, layer_input, W, H, out, front=None, fps=30):
+    """alpha character frames (any size; scaled to W×H) over the set video, and a compositor shot's front planes over
+    them (WP-14)"""
+    if front:
+        _run(["ffmpeg", "-v", "error", "-y", "-i", str(set_video), *layer_input, "-framerate", str(fps), "-i", str(Path(front) / "f%05d.png"), "-filter_complex",
+              f"[1:v]scale={W}:{H}:flags=lanczos,format=rgba[c];[0:v][c]overlay=0:0:shortest=1[m];[2:v]format=rgba[f];[m][f]overlay=0:0:shortest=1,format=yuv420p[v]", "-map", "[v]",
+              "-c:v", "libx264", "-crf", "16", str(out)])
+        return
     _run(["ffmpeg", "-v", "error", "-y", "-i", str(set_video), *layer_input, "-filter_complex",
           f"[1:v]scale={W}:{H}:flags=lanczos,format=rgba[c];[0:v][c]overlay=0:0:shortest=1,format=yuv420p[v]", "-map", "[v]",
           "-c:v", "libx264", "-crf", "16", str(out)])
@@ -894,7 +923,7 @@ def shot_render(name, shot, renderer=""):
         fr = bdir / f"{shot}_syn"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run(["synfig", str(sif), "-t", "png", "-o", str(fr / "f.png"), "-q"])
         frames = sorted(fr.glob("f.*.png"))
-        _composite(setv, ["-framerate", str(fps), "-start_number", frames[0].stem.split(".")[-1], "-i", str(fr / "f.%04d.png")], W, H, out)
+        _composite(setv, ["-framerate", str(fps), "-start_number", frames[0].stem.split(".")[-1], "-i", str(fr / "f.%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
     elif renderer == "grease-pencil":
         if not BLENDER:
             raise RuntimeError("Blender not found; set DBE_BLENDER")
@@ -902,14 +931,25 @@ def shot_render(name, shot, renderer=""):
         gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H))))
         fr = bdir / f"{shot}_gp"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run([BLENDER, "-b", "--factory-startup", "--gpu-backend", "vulkan", "--python", "dbe/blender_gp.py", "--", str(gpj), str(fr / "f_"), "-", "0.5"], timeout=14400)
-        _composite(setv, ["-framerate", str(fps), "-start_number", "1", "-i", str(fr / "f_%04d.png")], W, H, out)
+        _composite(setv, ["-framerate", str(fps), "-start_number", "1", "-i", str(fr / "f_%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
     elif renderer == "lottie":
-        lj = export_lottie(name, shot)["path"]
+        lj = export_lottie(name, shot, **({"background": "none"} if sh.get("comp") else {}))["path"]
         page = bdir / f"{shot}.lottie.html"
         page.write_text(f"""<!doctype html><html><head><meta charset="utf-8"><style>html,body{{margin:0;background:{sh.get('lottie_bg', '#ffffff')}}}#a{{width:{W}px;height:{H}px}}</style></head><body><div id="a"></div>
 <script src="{ROOT}/engine/vendor/lottie/lottie.min.js"></script><script>const anim=lottie.loadAnimation({{container:document.getElementById('a'),renderer:'svg',loop:false,autoplay:false,animationData:{(ROOT / lj).read_text()}}});
 window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);anim.addEventListener('DOMLoaded',()=>{{window.ready=true;}});</script></body></html>""")
-        _render_page(page, "", out)
+        if sh.get("comp"):   # a compositor shot (WP-14): Lottie's characters on transparency, between the back and front planes
+            page.write_text(page.read_text().replace(f"background:{sh.get('lottie_bg', '#ffffff')}", "background:transparent"))
+            lf = bdir / f"{shot}_lottie"; shutil.rmtree(lf, ignore_errors=True)
+            env_keep = {"DBE_ALPHA": "1", "DBE_KEEP_FRAMES": str(lf)}; old_env = {k: os.environ.get(k) for k in env_keep}; os.environ.update(env_keep)
+            try:
+                _render_page(page, "", bdir / f"{shot}.lottie_alpha.mp4")
+            finally:
+                for k, v in old_env.items():
+                    os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
+            _composite(_set_video(name, sh, bdir), ["-framerate", str(fps), "-i", str(lf / "f%05d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
+        else:
+            _render_page(page, "", out)
     else:
         raise ValueError(f"unknown renderer {renderer}")
     if renderer != "svg" and (pre or post):   # other renderers: the first and last frames held as handles
@@ -3148,6 +3188,76 @@ def _review_otio_test():
     return bad, meas
 
 
+def _blend_test():
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    if not BLENDER:
+        return [], {"skipped": "Blender is not installed"}
+    bad, meas = [], {}
+    r = export_blend("pip-park", "s1"); meas["export"] = r
+    tmp = Path(tempfile.mkdtemp(prefix="blend_")); bdir = FILMS / "pip-park" / "build" / "shots"
+    try:
+        subprocess.run([BLENDER, "-b", str(ROOT / r["blend"]), "-o", str(tmp / "re_####"), "-F", "PNG", "-f", "85"], capture_output=True, timeout=900)
+        subprocess.run([BLENDER, "-b", "--factory-startup", "--gpu-backend", "vulkan", "--python", "dbe/blender_gp.py", "--", str(bdir / "s1.gp.json"), str(tmp / "dir_"), str(bdir / "s1.bg.png"), "0.5"],
+                       cwd=ROOT, env={**os.environ, "DBE_GP_FRAMES": "85"}, capture_output=True, timeout=900)
+        a, b = (np.asarray(Image.open(tmp / f).convert("RGB")).astype(int) for f in ("re_0085.png", "dir_0085.png"))
+        meas["frame_85_max_diff"] = int(np.abs(a - b).max()); meas["size"] = list(a.shape[:2])
+        if meas["frame_85_max_diff"] > 2 or a.std() < 5:
+            bad.append(f"the reopened project draws differently: {meas}")
+    except FileNotFoundError as e:
+        bad.append(f"a render is missing: {e}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _parallax_test():
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    name = "zz-parallax"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True)
+    shutil.copytree(FILMS / "pip-park", d, ignore=shutil.ignore_patterns("build"))
+    try:
+        sj = _json(d / "shots.json"); sh = sj["shots"][0]; sh["set"] = "forest"; sh["camera"] = [[0, [540, 960, 1.0]], [2.0, [840, 960, 1.0]]]; sh.pop("camera_auto", None)
+        (d / "shots.json").write_text(json.dumps(sj, indent=1)); (d / "build").mkdir(exist_ok=True)
+        page = _player_page(name)
+        r = subprocess.run(["node", "tools/layer_shift.mjs", str(page), sh["id"], "0", "2.0"], cwd=ROOT, capture_output=True, text=True, timeout=300)
+        pos = json.loads(r.stdout.strip().splitlines()[-1])
+        meas["shift_px"] = {dp: round(v[1][0] - v[0][0], 2) for dp, v in pos.items()}; meas["want_px"] = {dp: round(-300 / float(dp), 2) for dp in pos}
+        if len(pos) < 5 or any(abs(meas["shift_px"][dp] - meas["want_px"][dp]) > 0.5 for dp in pos):
+            bad.append(f"layer shifts: {meas}")
+        _run(["node", "tools/stills.mjs", str(page), f"shot={sh['id']}&captions=0", str(d / "build" / "still"), "2.0"], timeout=300)
+        im = np.asarray(Image.open(d / "build" / "still_2.0.png").convert("RGB")).astype(int)
+        edge = np.concatenate([im[:, :6].reshape(-1, 3), im[:, -6:].reshape(-1, 3)]); meas["dark_edge_share"] = round(float((edge.sum(1) < 40).mean()), 4)
+        if meas["dark_edge_share"] > 0.01:
+            bad.append(f"uncovered edges after the pan: {meas['dark_edge_share']}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _compplanes_test():
+    import math
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    r = shot_render("night-planes", "s1", "lottie"); v = ROOT / r["path"]; fps = _shots("night-planes").get("fps", 30)
+    d = FILMS / "night-planes" / "build"; frames = [20, 70, 120]
+    _run(["node", "tools/stills.mjs", str(_player_page("night-planes")), "shot=s1&bubbles=0&captions=0", str(d / "cp_svg"), *[f"{f / fps:.4f}" for f in frames]], timeout=600)
+    psnr = []
+    for f in frames:
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(v), "-vf", f"select=eq(n\\,{f})", "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
+        b = np.frombuffer(raw, np.uint8).reshape(1920, 1080, 3).astype(float)
+        a = np.asarray(Image.open(d / f"cp_svg_{f / fps:.4f}.png").convert("RGB")).astype(float)
+        psnr.append(round(10 * math.log10(255 ** 2 / max(((a - b) ** 2).mean(), 1e-9)), 2))
+        (d / f"cp_svg_{f / fps:.4f}.png").unlink(missing_ok=True)
+    meas["psnr_db_vs_svg"] = dict(zip(frames, psnr))
+    if min(psnr) < 26:
+        bad.append(f"Lottie with compositor planes differs from SVG: {meas}")
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -4646,6 +4756,31 @@ def film_continuity(name):
     out = {"film": name, "ok": not issues, "issues": issues, "shots": rows, "sizes": dict(CT.SIZES)}
     (FILMS / name / "build").mkdir(exist_ok=True); (FILMS / name / "build" / "continuity.json").write_text(json.dumps(out, indent=1))
     return out
+
+
+@command("export.blend", name=("string", "film"), shot=("string", "shot id"), background=("boolean", "the set's first frame as a background plane", True))
+def export_blend(name, shot, background=True):
+    """A shot as a Blender project (WP-14): the Grease Pencil scene the grease-pencil renderer builds (every frame a
+    keyframe, strokes in z order with their fills and ink, the orthographic camera, EEVEE settings), saved as
+    build/shots/<shot>.blend before rendering, with the set's first frame as a background plane. Checked by opening it
+    again in Blender and rendering one frame, which must match the renderer's own frame."""
+    from . import exporters as X, rparity as RP
+    if not BLENDER:
+        raise RuntimeError("Blender not found; set DBE_BLENDER (bash tools/setup.sh blender)")
+    _require_valid(name)
+    s, sh, bdir, baked = _bake(name, shot); W, H = s.get("size", [1080, 1920])
+    why = RP.refusal("grease-pencil", sh, [_json(c["puppet"]) for c in baked["cast"]])
+    if why:
+        raise ValueError(f"shot {shot}: {why}")
+    gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H))))
+    bg = str(_bg_png(name, sh, bdir)) if background else "-"
+    out = bdir / f"{shot}.blend"; out.unlink(missing_ok=True)
+    env = {**os.environ, "DBE_GP_SAVE": str(out), "DBE_GP_SAVE_ONLY": "1"}
+    r = subprocess.run([BLENDER, "-b", "--factory-startup", "--gpu-backend", "vulkan", "--python", "dbe/blender_gp.py", "--", str(gpj), str(bdir / f"{shot}_blend_"), bg, "0.5"],
+                       cwd=ROOT, env=env, capture_output=True, text=True, timeout=7200)
+    if r.returncode or not out.exists():
+        raise RuntimeError(f"blender: {(r.stderr or r.stdout)[-400:]}")
+    return {"blend": str(out.relative_to(ROOT)), "bytes": out.stat().st_size, "frames": len(baked["cast"][0]["frames"]), "background": bg != "-"}
 
 
 @command("export.svg", name=("string", "film"), time=("number", "a frame at this film time (seconds)", None),
@@ -6698,6 +6833,18 @@ def test_golden(update=False, film=""):
         bad, meas = _review_otio_test()
         failed += 1 if bad else 0
         results.append({"reviewotio": "review notes go out as OTIO markers at their frames and a marker added in a review tool comes back as a note, without duplicating the old ones", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "blend":   # WP-14: a shot as a saved .blend project (Blender; minutes, only when asked)
+        bad, meas = _blend_test()
+        failed += 1 if bad else 0
+        results.append({"blend": "pip-park's shot saved as a .blend, opened again in Blender, renders a frame identical to the Grease Pencil renderer's own", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "parallax":   # WP-15: set depth layers move with a moving camera by 1/depth
+        bad, meas = _parallax_test()
+        failed += 1 if bad else 0
+        results.append({"parallax": "the forest set's depth layers move under a 300 px camera pan by 300/depth on screen, and the panned frame has no uncovered edge", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "compplanes":   # WP-14: a compositor shot from another renderer (minutes; only when asked)
+        bad, meas = _compplanes_test()
+        failed += 1 if bad else 0
+        results.append({"compplanes": "night-planes rendered with Lottie (its character between the player's back and front planes) matches the SVG render (speech bubbles aside)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0

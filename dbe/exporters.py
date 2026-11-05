@@ -400,6 +400,8 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
                 vis = [1 if G.chosen_swaps(p, fr).get(sid) == shape and o else 0 for fr, o in zip(frs, on)]
                 if not any(vis):
                     continue
+                if assets_dir and (sw.get("raster_shapes") or {}).get(shape):
+                    strokes = sw["raster_shapes"][shape]   # WP-14: motion effects as images in Synfig (its XML parser stops at 10 MB)
                 anchor = sw["anchor"]
                 mats = []
                 for i, fr in enumerate(frs):

@@ -253,7 +253,10 @@
     const focus = V(c.focus, t, ctx, 1), dof = V(c.dof, t, ctx, 0);
     const allNodes = (c.nodes || []).map(n => at(n, t, ctx));
     let defs = '', body = ''; const drawn = {};
-    for (const p of order) {
+    // WP-14: ctx.split "back" draws only what is behind the characters (the planes farther than the stage, and the
+    // stage's own set), "front" only the planes nearer; another renderer draws the characters between the two passes
+    const si = order.findIndex(p => p.id === 'stage');
+    for (const p of order.filter((_, i) => !ctx.split || (ctx.split === 'back' ? i <= si : i > si))) {
       const d = Math.max(0.05, p.depth ?? 1), pid = `comp-${p.id}-${tag}`;
       let content = '';
       if (p.id === 'stage') content = ctx.stage;

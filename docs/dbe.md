@@ -88,6 +88,34 @@ environment variables below).
   longer smeared back across it) and drawn levels without a hip, Synfig keyframes are reduced (long shots stayed
   over the XML parser's 10 MB limit), and single Synfig frames are asked for in seconds (a bare number is frames).
   Blender 5.2.3 LTS (`bash tools/setup.sh blender`) runs the Grease Pencil renderer.
+- **Props, motion effects, the time warp and .blend projects in the other renderers** (WP-14, part 2):
+  - **Props**: `tools/bake.mjs` evaluates each prop as the player does (`dbe/player/props.js`: attach keys, flights,
+    drops, paths, baked physics; characters evaluated at any time for their hands). Each ball or box becomes a small
+    generated puppet drawn as `props.js` draws it, with its position, spin and the camera per frame. It is appended to
+    the baked cast, so Synfig, Lottie and Grease Pencil draw it as they draw characters. Squash, stretch and smear
+    frames stay SVG-only and are listed as drawn without; props with their own SVG drawing stay SVG-only. Parity:
+    props-demo 0.999 to 1.0 (Synfig, Lottie); juggle-demo's five props 0.997 to 1.0 on all three.
+  - **Motion effects** (speed lines, dust, impact stars, motion arcs): the bake records each frame's effect markup,
+    and `dbe/fxbake.py` turns every distinct frame into a drawing of a swap set on a generated puppet. Synfig gets
+    each drawing as a PNG cropped to its ink, drawn by Chromium from the player's own markup, because juggle-demo's
+    254 effect drawings as Synfig vectors made a 23 MB file its XML parser refused; as images it is 1.4 MB. Parity at
+    moments with effects on screen: fx-demo (without its toon shading) Synfig 0.993 to 0.999, Lottie 1.0;
+    juggle-demo Synfig 0.999 to 1.0.
+  - **The time warp**: in a time-warped cut (the sound-off cut) the bake runs on the cut's clock, each frame showing
+    the film at the warped time, as the player renders it; `render.parity` compares such a cut on its own clock.
+    dialogue-demo's sound-off cut: Lottie 1.0, Synfig 0.98 to 0.99.
+  - **A saved .blend**: `export.blend {name, shot}` saves the Grease Pencil scene (every frame a keyframe, the
+    camera, EEVEE settings, the set's first frame as a background plane) as `build/shots/<shot>.blend`. Test `blend`
+    (only when asked): pip-park's shot reopened in Blender renders frame 85 identical to the renderer's own (max
+    difference 0).
+  - **Compositor planes**: the player renders a compositor shot in two passes, the planes behind the characters
+    (`comp=back`, with the stage's set and shadows) and the planes in front (`comp=front`, on transparency). The other
+    renderer's characters go between them (Lottie on transparency too). Characters placed on other planes stay
+    SVG-only. Parity on night-planes: Synfig 0.98 to 1.0, Lottie 1.0, Grease Pencil 1.0. Test `compplanes` (only when
+    asked): night-planes from Lottie against the SVG render, 41.3 to 41.7 dB PSNR. Speech bubbles are drawn only by
+    the SVG renderer, in every shot as before, so the comparison is made without them.
+  - Still SVG-only: toon shading (it clips each shape against itself shifted toward the light, which each renderer
+    would need its own way to do), and the media filters (pencil, crayon, marker, watercolour).
 - **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
   far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
   overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,
@@ -99,6 +127,13 @@ environment variables below).
   planes paint the world. Ids start with `comp-`, which the AI-look lint treats as deliberate. `films/night-planes`
   (golden frames): a sky with a glowing moon, hills, a masked and screen-blended mist band, the stage and foreground
   grass under a slow camera push.
+- **Parallax set layers** (WP-15): a set may draw itself as depth layers (`layers(t, opts, W, H)` beside `draw`). In a
+  shot whose camera moves (keys, automatic camera or float), the player gives each layer the compositor's parallax
+  inside the camera's own transform: it follows the camera by 1/depth and zooms by 1 + (zoom - 1)/depth. A still
+  camera draws the set flat, exactly as before. The forest set is drawn this way: sky (depth 6), three rows of trees
+  (3.5, 2.2, 1.4, with extra trees beyond both edges for pans) and the ground (1). Test `parallax`: under a 300 px pan
+  each layer's first shape moves 300/depth px on screen (-50.0, -85.71, -136.36, -214.29, -300 against the same
+  wanted), and the panned frame has no uncovered edge.
 - **Compositor, part 2** (WP-36):
   - **Camera roll**: `"roll"` in degrees, turning the whole composite about the frame centre.
   - **Keyed values and expressions**: any number in a plane or node, and `roll`, `focus` and `dof`, may be keys

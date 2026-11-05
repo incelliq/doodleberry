@@ -4,6 +4,7 @@
 
 Each frame becomes a Grease Pencil keyframe; strokes keep their z order, fills and ink colours. An orthographic
 camera frames the scene in screen pixels (0.01 m per px). Optional background image as a camera-facing plane.
+DBE_GP_SAVE=path.blend saves the scene as a project before rendering (DBE_GP_SAVE_ONLY=1: save and stop).
 """
 import json
 import sys
@@ -110,6 +111,13 @@ for fi, strokes in enumerate(data["data"]):
     if hasattr(dr, 'tag_positions_changed'):
         dr.tag_positions_changed()
 
+save = os.environ.get("DBE_GP_SAVE")   # WP-14: keep the scene as a .blend project an artist can open and edit
+if save:
+    bpy.context.preferences.filepaths.use_relative_paths = True
+    bpy.ops.wm.save_as_mainfile(filepath=save, compress=True)
+    print("GP_SAVED", save)
+    if os.environ.get("DBE_GP_SAVE_ONLY"):
+        sys.exit(0)
 only = os.environ.get("DBE_GP_FRAMES")   # e.g. "10,25,40": render just these frames (renderer parity stills, WP-14)
 if only:
     for f in [int(x) for x in only.split(",") if x.strip()]:

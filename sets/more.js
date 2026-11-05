@@ -93,13 +93,22 @@
       s += floorBand(W, H, fl, night ? '#5a4a3f' : '#c9a98a') + `<ellipse cx="${f1(W / 2)}" cy="${f1(fl + (H - fl) * 0.4)}" rx="${f1(W * 0.3)}" ry="${f1((H - fl) * 0.22)}" fill="${night ? '#7b5f8f' : '#d98e73'}" stroke="${INK}" stroke-width="4"/>`;
       return s; } },
 
-    forest: { frac: 0.8, draw: (t, o, W, H, fl) => {
-      let s = sky(W, H, '#cfe8e0', '#eef6ee');
-      for (const [depth, col, n] of [[0.55, '#9cc8a6', 9], [0.7, '#6fae7f', 7], [0.85, '#4f8f5f', 6]]) { const r = rng(depth * 100);
-        for (let i = 0; i < n; i++) { const x = r() * W, h = fl * depth * (0.5 + r() * 0.4), w = h * 0.38, base = fl - (1 - depth) * 120;
-          s += `<path d="M${f1(x)} ${f1(base - h)} L${f1(x + w / 2)} ${f1(base)} L${f1(x - w / 2)} ${f1(base)} Z" fill="${col}" stroke="${INK}" stroke-width="${depth > 0.8 ? 4 : 0}"/>` + R(x - 8, base, 16, 30, '#7a5236'); } }
-      s += floorBand(W, H, fl, '#8fbf6a') + `<path d="M${f1(W * 0.45)} ${f1(fl)} C${f1(W * 0.4)} ${f1(fl + (H - fl) * 0.5)} ${f1(W * 0.2)} ${f1(H * 0.98)} ${f1(W * 0.1)} ${f1(H)} L${f1(W * 0.9)} ${f1(H)} C${f1(W * 0.75)} ${f1(H * 0.98)} ${f1(W * 0.6)} ${f1(fl + (H - fl) * 0.5)} ${f1(W * 0.55)} ${f1(fl)} Z" fill="#d9c59a"/>`;
-      return s; } },
+    // forest (WP-15): drawn as depth layers; a shot with a moving camera sees them move by 1/depth (the player's
+    // parallax for set layers), a still camera sees exactly the flat drawing. Extra trees beyond both edges and a sky
+    // wider than the frame only show when the camera moves.
+    forest: { frac: 0.8, draw: (t, o, W, H, fl) => MORE.forest.layers(t, o, W, H, fl).map(l => l.svg).join(''),
+      layers: (t, o, W, H, fl) => {
+        const L = [{ depth: 6, svg: sky(W, H, '#cfe8e0', '#eef6ee').replace(`<rect x="0.0" y="0.0" width="${f1(W)}" height="${f1(H)}"`, `<rect x="${f1(-W)}" y="${f1(-H)}" width="${f1(3 * W)}" height="${f1(3 * H)}"`) }];
+        for (const [depth, col, n, pd] of [[0.55, '#9cc8a6', 9, 3.5], [0.7, '#6fae7f', 7, 2.2], [0.85, '#4f8f5f', 6, 1.4]]) {
+          const r = rng(depth * 100), r2 = rng(depth * 100 + 7); let s = '';
+          const tree = (x, rr) => { const h = fl * depth * (0.5 + rr() * 0.4), w = h * 0.38, base = fl - (1 - depth) * 120;
+            return `<path d="M${f1(x)} ${f1(base - h)} L${f1(x + w / 2)} ${f1(base)} L${f1(x - w / 2)} ${f1(base)} Z" fill="${col}" stroke="${INK}" stroke-width="${depth > 0.8 ? 4 : 0}"/>` + R(x - 8, base, 16, 30, '#7a5236'); };
+          for (let i = 0; i < n; i++) s += tree(r() * W, r);
+          for (let i = 0; i < n; i++) { const u = r2(); s = tree(u < 0.5 ? -W * 0.6 * r2() - 60 : W + W * 0.6 * r2() + 60, r2) + s; }   // off-frame, behind
+          L.push({ depth: pd, svg: s });
+        }
+        L.push({ depth: 1, svg: floorBand(W, H, fl, '#8fbf6a').replace(`<rect x="0.0" y="${f1(fl)}" width="${f1(W)}"`, `<rect x="${f1(-W)}" y="${f1(fl)}" width="${f1(3 * W)}"`) + `<path d="M${f1(W * 0.45)} ${f1(fl)} C${f1(W * 0.4)} ${f1(fl + (H - fl) * 0.5)} ${f1(W * 0.2)} ${f1(H * 0.98)} ${f1(W * 0.1)} ${f1(H)} L${f1(W * 0.9)} ${f1(H)} C${f1(W * 0.75)} ${f1(H * 0.98)} ${f1(W * 0.6)} ${f1(fl + (H - fl) * 0.5)} ${f1(W * 0.55)} ${f1(fl)} Z" fill="#d9c59a"/>` });
+        return L; } },
 
     lab: { frac: 0.8, draw: (t, o, W, H, fl) => {
       let s = R(0, 0, W, fl, o.wall || '#dbe8ee');
@@ -147,6 +156,7 @@
   for (const [k, v] of Object.entries(MORE)) {
     SETS[k] = { floor: Math.round(1920 * v.frac), frac: v.frac,
       draw: (t, o = {}, W = 1080, H = 1920) => v.draw(t, o || {}, W, H, Math.round(H * v.frac)),
+      ...(v.layers ? { layers: (t, o = {}, W = 1080, H = 1920) => v.layers(t, o || {}, W, H, Math.round(H * v.frac)) } : {}),
       floorAt: (W = 1080, H = 1920) => Math.round(H * v.frac) };
   }
 })(typeof window !== 'undefined' ? window : globalThis);
