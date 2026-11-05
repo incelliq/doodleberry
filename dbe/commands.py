@@ -851,13 +851,15 @@ def _set_video(name, sh, bdir):
 
 
 def _front_frames(name, sh, bdir):
-    """a compositor shot's planes nearer than the characters, as RGBA frames (WP-14), or None"""
-    if not sh.get("comp"):
+    """what goes over another renderer's characters, as RGBA frames, or None: a compositor shot's planes nearer than
+    the characters (WP-14) and the speech bubbles (the player's overlay=1 pass draws both, posing the cast for where
+    the bubbles point)"""
+    if not sh.get("comp") and not sh.get("bubbles"):   # (the player draws bubbles where the shot asks for them)
         return None
     fr = bdir / f"{sh['id']}_front"; shutil.rmtree(fr, ignore_errors=True)
     env_keep = {"DBE_ALPHA": "1", "DBE_KEEP_FRAMES": str(fr)}; old = {k: os.environ.get(k) for k in env_keep}; os.environ.update(env_keep)
     try:
-        _render_page(_player_page(name), f"shot={sh['id']}&comp=front", bdir / f"{sh['id']}.front.mp4")
+        _render_page(_player_page(name), f"shot={sh['id']}&overlay=1", bdir / f"{sh['id']}.front.mp4")
     finally:
         for k, v in old.items():
             os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
@@ -919,7 +921,7 @@ def shot_render(name, shot, renderer=""):
         # characters by Synfig (alpha), over the animated set from the player
         setv = _set_video(name, sh, bdir)
         (bdir / f"{shot}_assets").mkdir(exist_ok=True)
-        sif = bdir / f"{shot}.sif"; sif.write_text(X.to_synfig(baked, (W, H), transparent=True, assets_dir=bdir / f"{shot}_assets"))
+        sif = bdir / f"{shot}.sif"; sif.write_text(X.to_synfig(baked, (W, H), transparent=True, assets_dir=bdir / f"{shot}_assets", toon=(sh.get("style") or {}).get("toon")))
         fr = bdir / f"{shot}_syn"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run(["synfig", str(sif), "-t", "png", "-o", str(fr / "f.png"), "-q"])
         frames = sorted(fr.glob("f.*.png"))
@@ -950,6 +952,12 @@ window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);a
             _composite(_set_video(name, sh, bdir), ["-framerate", str(fps), "-i", str(lf / "f%05d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
         else:
             _render_page(page, "", out)
+            front = _front_frames(name, sh, bdir)
+            if front:   # the speech bubbles over Lottie's frames (WP-14): the player's overlay pass
+                tmpv = out.with_suffix(".nobubbles.mp4"); out.rename(tmpv)
+                _run(["ffmpeg", "-v", "error", "-y", "-i", str(tmpv), "-framerate", str(fps), "-i", str(Path(front) / "f%05d.png"), "-filter_complex",
+                      f"[1:v]format=rgba,scale={W}:{H}[f];[0:v][f]overlay=0:0:shortest=1,format=yuv420p[v]", "-map", "[v]", "-c:v", "libx264", "-crf", "16", str(out)])
+                tmpv.unlink()
     else:
         raise ValueError(f"unknown renderer {renderer}")
     if renderer != "svg" and (pre or post):   # other renderers: the first and last frames held as handles
@@ -3389,7 +3397,7 @@ def _compplanes_test():
     bad, meas = [], {}
     r = shot_render("night-planes", "s1", "lottie"); v = ROOT / r["path"]; fps = _shots("night-planes").get("fps", 30)
     d = FILMS / "night-planes" / "build"; frames = [20, 70, 120]
-    _run(["node", "tools/stills.mjs", str(_player_page("night-planes")), "shot=s1&bubbles=0&captions=0", str(d / "cp_svg"), *[f"{f / fps:.4f}" for f in frames]], timeout=600)
+    _run(["node", "tools/stills.mjs", str(_player_page("night-planes")), "shot=s1&captions=0", str(d / "cp_svg"), *[f"{f / fps:.4f}" for f in frames]], timeout=600)
     psnr = []
     for f in frames:
         raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(v), "-vf", f"select=eq(n\\,{f})", "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True).stdout
@@ -7332,7 +7340,7 @@ def test_golden(update=False, film=""):
     if film == "compplanes":   # WP-14: a compositor shot from another renderer (minutes; only when asked)
         bad, meas = _compplanes_test()
         failed += 1 if bad else 0
-        results.append({"compplanes": "night-planes rendered with Lottie (its character between the player's back and front planes) matches the SVG render (speech bubbles aside)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"compplanes": "night-planes rendered with Lottie (its character between the player's back and front planes, the bubbles over it) matches the SVG render", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "pagesort":   # WP-18: sums and hands or pens on a doodle page are not characters
         bad, meas = _pagesort_test()
         failed += 1 if bad else 0
@@ -7349,6 +7357,10 @@ def test_golden(update=False, film=""):
         bad, meas = _engine_test()
         failed += 1 if bad else 0
         results.append({"engine": "a Godot project rendered in Movie Maker mode as a proc node: the same pixels twice, every frame different, drawn by the player in front of a shot", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "bubbles":   # WP-14: speech bubbles in non-SVG renders (renders a shot with Lottie, so only when asked)
+        bad, meas = _bubbles_test()
+        failed += 1 if bad else 0
+        results.append({"bubbles": "a shot rendered by Lottie carries the speech bubbles where the SVG renderer draws them (the player's overlay pass)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
         bad, meas = _rigid_test()
         failed += 1 if bad else 0
@@ -10635,6 +10647,31 @@ def _rigid_test():
     return bad, meas
 
 
+def _bubbles_test():
+    """WP-14: speech bubbles from non-SVG renderers. juggle-demo's shot rendered by Lottie carries the player's bubbles
+    (its overlay pass) where the SVG renderer draws them"""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "bubbletest"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    try:
+        r = shot_render("juggle-demo", "s1", "lottie")
+        lot = tmp / "lottie.png"; _run(["ffmpeg", "-v", "error", "-y", "-ss", "2.0", "-i", str(ROOT / r["path"]), "-frames:v", "1", str(lot)])
+        _run(["node", "tools/stills.mjs", str(_player_page("juggle-demo")), "shot=s1&captions=0", str(tmp / "svg"), "2.0"], timeout=300)
+        _run(["node", "tools/stills.mjs", str(_player_page("juggle-demo")), "shot=s1&captions=0&bubbles=0", str(tmp / "nob"), "2.0"], timeout=300)
+        a = np.asarray(Image.open(lot).convert("RGB")).astype(int); size = a.shape[1::-1]
+        b = np.asarray(Image.open(tmp / "svg_2.0.png").convert("RGB").resize(size)).astype(int)
+        nb = np.asarray(Image.open(tmp / "nob_2.0.png").convert("RGB").resize(size)).astype(int)
+        bubble = np.abs(b - nb).max(-1) > 40   # where the SVG frame's bubble is
+        meas = {"bubble_px": int(bubble.sum()), "lottie_vs_svg_in_bubble": round(float(np.abs(a - b).max(-1)[bubble].mean()), 2),
+                "lottie_vs_no_bubble_in_bubble": round(float(np.abs(a - nb).max(-1)[bubble].mean()), 2)}
+        if meas["bubble_px"] < 5000 or meas["lottie_vs_svg_in_bubble"] > 12 or meas["lottie_vs_no_bubble_in_bubble"] < 60:
+            bad.append(f"bubbles: {meas}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
 def _master_test():
     """WP-37 checks on a short span of stretch-demo at 1x: the four passes become one ACEScg EXR (layers, AP1
     chromaticities) that oiiotool and ffmpeg read, the beauty layer converts back to exactly the rendered pixels, the
@@ -12384,6 +12421,25 @@ def _acting2_test():
     finally:
         for n in names:
             shutil.rmtree(FILMS / n, ignore_errors=True)
+    # denial and punchline (WP-10, blind critics): a scripted exchange with flat prosody
+    from . import gestures as GS
+    def wl(text, t0):
+        ws = text.split(); return [{"text": w, "start": round(t0 + 0.3 * i, 3), "end": round(t0 + 0.3 * i + 0.25, 3)} for i, w in enumerate(ws)]
+    ex = [{"speaker": "ravi", "text": "Momo, have you seen my telescope?", "start": 0.5}, {"speaker": "momo", "text": "Telescope? What telescope?", "start": 3.0},
+          {"speaker": "ravi", "text": "No, you did not take it, of course.", "start": 5.5}, {"speaker": "momo", "text": "Oh. That telescope.", "start": 9.0}]
+    for l in ex:
+        l["words"] = wl(l["text"], l["start"]); l["end"] = l["words"][-1]["end"]
+    flat = lambda words: [{"db": 0.0, "dur": 0.25, "f0": 0.0} for _ in words]
+    pm = GS.plan_cast("humanoid", ex, "momo", {"ravi": 300}, 700, flat)[0]
+    pr, _, _, _, _ = GS.plan_cast("humanoid", ex, "ravi", {"momo": 700}, 300, flat)
+    lk = GS.plan_cast("humanoid", ex, "ravi", {"momo": 700}, 300, flat)[1]
+    why = lambda plan: {(k["clip"], k.get("why")) for k in plan}
+    meas["denial_punchline"] = {"momo": sorted(f"{c}:{w}" for c, w in why(pm) if w), "ravi": sorted(f"{c}:{w}" for c, w in why(pr) if w),
+                                "ravi_stares_after_punchline": any(abs(t - (ex[3]["end"] + 0.1)) < 1e-6 and v[0] > 0 for t, v in lk),
+                                "ravi_nods_after_punchline": any(k["clip"] == "nod" and k["start"] >= ex[3]["end"] for k in pr)}
+    dp = meas["denial_punchline"]
+    if dp["momo"] != ["present_L:owning up", "scratch_head:punchline", "shrug:denial"] or dp["ravi"] != ["head_shake:denial"] or not dp["ravi_stares_after_punchline"] or dp["ravi_nods_after_punchline"]:
+        bad.append(f"denial and punchline: {dp}")
     return bad, meas
 
 

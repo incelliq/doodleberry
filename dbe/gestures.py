@@ -7,6 +7,9 @@ For each shot and each cast member with a speaker:
   every 0.9 s; a pointing word ("you", "this", "that", "look", "here", "there") gets a point, raised with the clause (up to
   1.5 s before the word) and held to the end of the line (in a question, a quick point on the word); an exclamation gets open
   palms on its strongest word; a question ends with a shrug (humanoid) or a head tilt (doodle), brows raised;
+- a denial gets a shrug from its first word (pretended ignorance: the other's word echoed back as a question) or a head
+  shake on its "no" (WP-10); the scene's last line said as an admission ("Oh. That...") is the punchline: the speaker
+  scratches their head after it and the listeners hold a stare instead of nodding;
 - while listening: gaze on the speaker, a nod just after each of their lines, an occasional blink on their pauses;
 - every line returns to idle, and nothing overlaps another gesture.
 Generated clips are tagged "auto": true and replace earlier auto clips on each run, so hand-placed clips always survive.
@@ -20,6 +23,21 @@ from pathlib import Path
 import numpy as np
 
 POINT_WORDS = {"you", "your", "this", "that", "these", "those", "look", "here", "there"}
+NEGATION = re.compile(r"\b(no|nope|not|never|nothing|nobody|didn'?t|wasn'?t|isn'?t|aren'?t|don'?t|doesn'?t|won'?t|can'?t)\b")
+ADMIT = re.compile(r"^\W*(oh|uh|um|ah|er|erm|well|oops|whoops|heh)\b", re.I)
+
+
+def denial_of(text, prev):
+    """'negate' (a no, not, never...), 'feign' (the other's word echoed back as a question: "Telescope? What
+    telescope?", a pretended ignorance) or None. prev: the line before, by someone else"""
+    t = text.lower()
+    if NEGATION.search(t):
+        return "negate"
+    if prev and t.strip().endswith("?"):
+        theirs = {w for w in re.findall(r"[a-z']{4,}", prev.lower())}
+        if any(w in theirs for w in re.findall(r"[a-z']{4,}", t)):
+            return "feign"
+    return None
 
 
 def prosody(wav_path, words):
@@ -107,11 +125,16 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
     can = lambda c: c and c != "none" and c not in never and (lib is None or c in lib)
     style = lambda k: {**k, **({"speed": round(P["tempo"], 2)} if P["tempo"] != 1 and not k.get("additive") else {}),
                        **({"gain": round(min(1.6, P["energy"]), 2)} if P["energy"] != 1 and not k.get("additive") else {})}
-    for ln in lines:
+    for li, ln in enumerate(lines):
         words = ln.get("words") or []
         if not words:
             continue
         text = ln.get("text", "")
+        prev = next((x.get("text", "") for x in reversed(lines[:li]) if x["speaker"] != ln["speaker"]), "")
+        last = li == len(lines) - 1
+        # the punchline (WP-10): the scene's last line, said as an admission ("Oh. That telescope."): the speaker is
+        # caught out, so a sheepish reaction follows it, and whoever hears it holds a stare instead of nodding
+        caught = last and bool(ADMIT.search(text))
         if ln["speaker"] == me:
             pro = pro_of(words); em = emphasis(words, pro)
             excl, ques = text.strip().endswith("!"), text.strip().endswith("?")
@@ -128,6 +151,18 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                     continue
                 t0 = max(ln["start"], words[k]["start"] - 0.2)
                 clips.append(style({"clip": c, "start": round(t0, 3), "end": round(t0 + 1.0, 3), "weight": 3, "auto": True, "tagged": True})); used.append(words[k]["start"]); busy_until = max(busy_until, t0 + 1.0)
+            # a denial (WP-10): a blind critic saw the denier stand neutral. Pretended ignorance shrugs from the first
+            # word through the line; a plain no shakes the head on the word
+            den = denial_of(text, prev) if humanoid else None
+            if den == "feign" and can("shrug") and not used:
+                t0 = max(ln["start"] - 0.1, busy_until)
+                clips.append(style({"clip": "shrug", "start": round(t0, 3), "end": round(ln["end"] + 0.4, 3), "weight": 3, "auto": True, "why": "denial"}))
+                used.append(t0); busy_until = ln["end"] + 0.4
+            elif den == "negate" and can("head_shake"):
+                k = next((i for i, w in enumerate(words) if NEGATION.search(w["text"].lower())), 0)
+                t0 = max(ln["start"], words[k]["start"] - 0.1)
+                clips.append({"clip": "head_shake", "start": round(t0, 3), "end": round(t0 + 1.0, 3), "weight": 2.5, "auto": True, "why": "denial"})
+                used.append(words[k]["start"])
             # an exclamation: open palms (or the profile's choice) on its strongest word
             ex_clip = P["exclaim"] if humanoid else None
             if excl and humanoid and order and can(ex_clip) and not used:
@@ -135,6 +170,15 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                 clips.append(style({"clip": ex_clip, "start": round(t0, 3), "end": round(min(ln["end"] + 0.3, t0 + 1.4), 3), "weight": 3, "auto": True})); used.append(t0); busy_until = t0 + 1.2
             for i in range(len(words)):  # one point per line, towards the listener (a shy character only glances)
                 wtxt = re.sub(r"\W", "", words[i]["text"].lower())
+                if caught:   # owning up ("Oh. That telescope."): an open hand toward the listener after the interjection, held
+                    # through the line; blind critics read the hand-keyed arm held out as giving in, a bare idle as flat
+                    pc = "present_R" if towards >= my_x else "present_L"
+                    k = 1 if len(words) > 1 else 0
+                    if can(pc) and words[k]["start"] > busy_until:
+                        t0 = max(ln["start"], words[k]["start"] - 0.15)
+                        clips.append(style({"clip": pc, "start": round(t0, 3), "end": round(ln["end"] + 0.1, 3), "weight": 3, "auto": True, "why": "owning up"}))
+                        used.append(words[k]["start"])
+                    break
                 if wtxt in POINT_WORDS and humanoid and P["point"] != "none" and all(abs(words[i]["start"] - u) > gap for u in used) and words[i]["start"] > busy_until:
                     # the point comes up with the clause, not on the word: as early as 1.5 s before it (never before the
                     # line or a gesture still playing), and is held to the end of the line (blind critics, WP-10: late
@@ -158,7 +202,10 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                                   **({"end": round(ws + 0.7, 3)} if not humanoid else {}), "weight": round(0.8 * energy, 2), "auto": True})
                     used.append(ws)
             q_clip = P["question"] if humanoid else "tilt"
-            if ques and can(q_clip):
+            if caught and humanoid and can("scratch_head"):   # the punchline's sheepish beat, after the words
+                clips.append(style({"clip": "scratch_head", "start": round(ln["end"] + 0.15, 3), "end": round(ln["end"] + 2.0, 3), "weight": 3, "auto": True, "why": "punchline"}))
+                busy_until = ln["end"] + 2.0
+            if ques and can(q_clip) and den != "feign":
                 t0 = words[-1]["start"] - 0.1
                 clips.append(style({"clip": q_clip, "start": round(t0, 3), **({"end": round(t0 + 0.9, 3)} if not humanoid else {}), "weight": 3, "auto": True}))
             look.append([round(ln["start"], 3), [0.0, 0.0]])
@@ -174,6 +221,10 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
             if sx is not None:   # a shy character's eyes drift down and off the speaker
                 la = P["look_away"]
                 look.append([round(ln["start"] - 0.15, 3), [round((1.0 if sx > my_x else -1.0) * (1 - la), 2), round(0.1 + 0.5 * la, 2)]])
+            if caught and sx is not None:   # the punchline lands: hold a long look at the one caught out, no nod
+                look.append([round(ln["end"] + 0.1, 3), [1.0 if sx > my_x else -1.0, 0.0]])
+                blinks.append(round(ln["end"] + 1.6, 3))
+                continue
             e, t_felt = felt_at(ln)
             rc = LISTEN.get(e) if humanoid else None
             if rc in ("present",) and sx is not None:

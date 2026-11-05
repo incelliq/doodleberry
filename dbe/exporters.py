@@ -285,7 +285,28 @@ def _grad_sif(g, pal):
     return f'<layer type="linear_gradient" active="true" version="0.0">{onto}{grad}<param name="p1">{v(g["from"])}</param><param name="p2">{v(g["to"])}</param>{loop}</layer>'
 
 
-def _shapes_sif(strokes, pal, grads=None):
+def _toon_sif(closed_subs, toon, fps):
+    """WP-14 toon shading in Synfig, as puppet.js draws it: over the fill, the shape in the shade colour minus the same
+    shape shifted toward the light (in the part's own axes, so the offset is animated as the part turns), at the toon's
+    opacity. A group: the shade region, then a cut ("alpha over") by the shifted copy, in a nested animated group."""
+    v = lambda p: f"<vector><x>{p[0]:.4f}</x><y>{p[1]:.4f}</y></vector>"
+    reg = lambda segs, col: (f'<layer type="region" active="true" version="0.1"><param name="color">{_sif_color(col)}</param>'
+                             f'<param name="bline">{_bline(segs, True)}</param></layer>')
+    keys, last = [], None
+    for fi, o in enumerate(toon["offsets"]):
+        if last is None or abs(o[0] - last[0]) + abs(o[1] - last[1]) > 0.02 or fi == len(toon["offsets"]) - 1:
+            keys.append((fi, o)); last = o
+    wps = "".join(f'<waypoint time="{fi / fps:.5f}s" before="linear" after="linear">{v(o)}</waypoint>' for fi, o in keys)
+    off = f'<animated type="vector">{wps}</animated>' if len(keys) > 1 else v(keys[0][1])
+    cut = ('<layer type="group" active="true" version="0.3"><param name="blend_method"><integer value="19"/></param>'
+           f'<param name="transformation"><composite type="transformation"><offset>{off}</offset><angle><angle value="0"/></angle>'
+           f'<skew_angle><angle value="0"/></skew_angle><scale>{v((1, 1))}</scale></composite></param>'
+           f'<param name="canvas"><canvas>{"".join(reg(sg, "#000000") for sg in closed_subs)}</canvas></param></layer>')
+    return (f'<layer type="group" active="true" version="0.3"><param name="amount"><real value="{toon.get("opacity", 0.26):.3f}"/></param>'
+            f'<param name="canvas"><canvas>{"".join(reg(sg, toon.get("shade", "#2a1a10")) for sg in closed_subs)}{cut}</canvas></param></layer>')
+
+
+def _shapes_sif(strokes, pal, grads=None, toon=None, fps=30):
     out = ""
     for st in strokes:
         fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
@@ -305,6 +326,8 @@ def _shapes_sif(strokes, pal, grads=None):
         if fx and st.get("gradient") and (grads or {}).get(st["gradient"]):
             # v0.13: the gradient goes onto what this stroke filled, inside a group so it reaches nothing below
             fx = f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{fx}{_grad_sif(grads[st["gradient"]], pal)}</canvas></param></layer>'
+        if fx and toon and st.get("d") and (st.get("opacity") is None or st["opacity"] > 0.9):
+            fx += _toon_sif(closed_subs, toon, fps)
         out += fx
         if line:
             for segs, closed in subs:
@@ -329,8 +352,18 @@ def _raster_sif(strokes, assets_dir):
     return out
 
 
-def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
+def _toon_offsets(toon, mats):
+    """per frame, the toon's offset toward the light in a part's own axes (puppet.js toonSVG): the world direction
+    through the transpose of the part's matrix (without the placement, as the player computes it)"""
+    lx, ly = toon.get("dir") or [-0.6, -0.8]; n_ = math.hypot(lx, ly) or 1; d = toon.get("d", 11)
+    wx, wy = lx / n_ * d, ly / n_ * d
+    return [(m[0] * wx + m[1] * wy, m[2] * wx + m[3] * wy) for m in mats]
+
+
+def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None, toon=None):
+    """toon: the shot's style.toon (WP-14), drawn as puppet.js draws it"""
     W, H = size
+    toon = ({} if toon is True else dict(toon)) if toon else None
     fps, n = baked["fps"], baked["frames"]
     U = 60.0  # pixels per synfig unit
     F = [1 / U, 0, 0, -1 / U, -W / 2 / U, H / 2 / U]  # screen px -> synfig units (y up)
@@ -426,7 +459,8 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
             for zv in sorted(set(zs), key=zs.index):   # a part whose layer order changes: one layer per order (WP-14)
                 vz = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
                 if any(vz):
-                    items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(part["strokes"], assets_dir)}{_shapes_sif(part["strokes"], pal, p.get("gradients"))}</canvas></param></layer>'))
+                    tz = {**toon, "offsets": _toon_offsets(toon, [Ms[i][pid] for i in range(n)])} if toon and not part.get("bend") else None   # (bendy parts: as puppet.js, unshaded)
+                    items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(part["strokes"], assets_dir)}{_shapes_sif(part["strokes"], pal, p.get("gradients"), tz, fps)}</canvas></param></layer>'))
         for sid, sw in (p.get("swaps") or {}).items():
             for shape, strokes in sw["shapes"].items():
                 if not strokes:
@@ -449,7 +483,8 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
                 for zv in sorted(set(zs), key=zs.index):
                     vz = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
                     if any(vz):
-                        items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(strokes, assets_dir)}{_shapes_sif(strokes, pal, p.get("gradients"))}</canvas></param></layer>'))
+                        tz = None   # (puppet.js shades parts only, not swap drawings)
+                        items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(strokes, assets_dir)}{_shapes_sif(strokes, pal, p.get("gradients"), tz, fps)}</canvas></param></layer>'))
       items.sort(key=lambda x: x[0])  # synfig: later layers draw on top
       body += "".join(s for _, s in items)
     return head + body + "</canvas>\n"

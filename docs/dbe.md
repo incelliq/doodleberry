@@ -112,10 +112,19 @@ environment variables below).
     (`comp=back`, with the stage's set and shadows) and the planes in front (`comp=front`, on transparency). The other
     renderer's characters go between them (Lottie on transparency too). Characters placed on other planes stay
     SVG-only. Parity on night-planes: Synfig 0.98 to 1.0, Lottie 1.0, Grease Pencil 1.0. Test `compplanes` (only when
-    asked): night-planes from Lottie against the SVG render, 41.3 to 41.7 dB PSNR. Speech bubbles are drawn only by
-    the SVG renderer, in every shot as before, so the comparison is made without them.
-  - Still SVG-only: toon shading (it clips each shape against itself shifted toward the light, which each renderer
-    would need its own way to do), and the media filters (pencil, crayon, marker, watercolour).
+    asked): night-planes from Lottie against the SVG render, 41.3 to 41.7 dB PSNR.
+  - **Speech bubbles** in every renderer: the player's `overlay=1` pass poses the cast (for where the bubbles point)
+    but draws only the bubbles and a compositor shot's near planes, on transparency, and it goes over Synfig's,
+    Lottie's and Grease Pencil's frames (it replaced the `comp=front` pass). Test `bubbles` (only when asked):
+    juggle-demo's shot from Lottie carries the bubble where the SVG renderer draws it, 6.3 levels apart on its 14,051
+    pixels against 185 without it.
+  - **Toon shading in Synfig**: each filled stroke of a (non-bendy) part gets a group at the toon's opacity holding the
+    shape in the shade colour, cut ("alpha over") by the same shape shifted toward the light. The shift is in the
+    part's own axes and animated per frame as the part turns, as puppet.js computes it. On fx-demo, Synfig's parity
+    stays 0.999 to 1.0. In the band the SVG renderer shades (8,054 px of a mid-shot frame), Synfig is 18.6 levels from
+    the shaded SVG and 33.3 from an unshaded copy; the rest is edge antialiasing.
+  - Still SVG-only: toon shading in Lottie and Grease Pencil (Lottie would need a track matte per stroke, Grease Pencil
+    a polygon difference per frame), and the media filters (pencil, crayon, marker, watercolour).
 - **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
   far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
   overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,
@@ -1095,6 +1104,24 @@ A third fresh critic on review-demo still preferred hand-keyed, but 27 to 22 (wa
 held point on "behind your back" more direct than the hand-keyed one. It faulted the ending: Momo points flatly on
 "That telescope" with no sheepish head-scratch. That critic saw a version where Ravi also held a point through his
 opening question; that is what made questions keep the quick point. One blind win in seven.
+
+**Denials and punchlines** (5 Nov 2026). The planner now acts the other two gaps (`dbe/gestures.py`):
+- a denial: a plain no ("no", "not", "never", "didn't"...) shakes the head on the word; pretended ignorance, the other
+  speaker's word echoed back as a question ("Telescope? What telescope?"), shrugs from the first word through the
+  line (and drops the question's end shrug);
+- the punchline: the scene's last line said as an admission ("Oh. That telescope.", an opening interjection) gets an
+  open hand toward the listener after the interjection, held through the line, then a sheepish head-scratch after it;
+  the listener holds a long look at the one caught out instead of nodding.
+`acting2` checks both on a scripted exchange. Blind rounds 3 and 4, fresh critics, packets in neutral folders, keys
+read after (out/critic/blind_keys/):
+- round 3 (head-scratch in, no gesture on the admission; Momo's point on "That" removed): hand-keyed preferred twice,
+  23 to 19 on direct-demo and 26 to 22 on review-demo. Both critics saw the head-scratch land at the same moment as
+  the hand-keyed one and credited the hand-keyed arm held out on "Oh. That telescope." as owning up.
+- round 4 (an open hand on the admission instead): review-demo **won by the planner**, 24 to 23 (its point aims at
+  Momo on the right words; the hand-keyed one swings toward the board first); direct-demo lost narrowly, 27 to 25
+  (the hand-keyed Momo glances back with an open mouth before "Oh"; the planner's stands still through "Oh").
+The planner stands at two blind wins in eleven. What critics still ask for: a reaction before the admission (the
+caught glance), more personality in the accuser, and less static tails after the last line.
 
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:

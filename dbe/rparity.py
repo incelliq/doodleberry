@@ -35,7 +35,7 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
     "props": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: baked as small puppets (tools/bake.mjs)
     "props with their own drawing": {"svg"},
     "motion effects (fx)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: each frame's drawing as a swap (dbe/fxbake.py)
-    "toon shading": {"svg"},
+    "toon shading": {"svg", "synfig"},   # WP-14: Synfig cuts the shade band with an animated shifted copy
     "compositor planes (comp)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: back and front planes by the player around the renderer's characters
     "characters on compositor planes": {"svg"},
     "even-odd fills (holes)": {"svg", "synfig", "lottie", "grease-pencil"},   # v0.9 (Grease Pencil: keyhole polygons)
@@ -173,7 +173,7 @@ def stills_synfig(C, name, shot, times, out):
     s, sh, bdir, baked = C._bake(name, shot)
     W, H = s.get("size", [1080, 1920])
     (out / "assets").mkdir(exist_ok=True)
-    sif = out / "shot.sif"; sif.write_text(X.to_synfig(baked, (W, H), transparent=True, assets_dir=out / "assets"))
+    sif = out / "shot.sif"; sif.write_text(X.to_synfig(baked, (W, H), transparent=True, assets_dir=out / "assets", toon=(sh.get("style") or {}).get("toon")))
     paths = []
     for t in times:
         p = out / f"synfig_{t:.3f}.png"
@@ -292,8 +292,8 @@ def self_test(tmp):
         fails.append(f"renderer parity: {bad}")
     for film, want in (("fx-demo", "toon shading"),):
         sh = C._shots(film)["shots"][0]
-        why = refusal("synfig", sh, [json.loads((ROOT / c["puppet"]).read_text()) for c in sh.get("cast", [])])
+        why = refusal("lottie", sh, [json.loads((ROOT / c["puppet"]).read_text()) for c in sh.get("cast", [])])   # (Synfig draws toon since WP-14)
         got.setdefault("refusals", {})[film] = why
         if not why or want not in why:
-            fails.append(f"{film} should be refused by synfig for {want}: {why}")
+            fails.append(f"{film} should be refused by lottie for {want}: {why}")
     return fails, got
