@@ -174,6 +174,16 @@
   // v0.5 puppet.acting.viseme_hold: mouth shapes shorter than `hold` seconds are folded into the previous one, so a
   // richly drawn mouth does not flicker every frame (animators hold mouths on twos or threes). Pure: same list, same result.
   const HELD = new WeakMap();
+  const _turnCache = new WeakMap();
+  function turnViews(puppet, a, b) {   // the in-between views from view a to view b, in order ([] if none)
+    const V = puppet.views || {}, nm = v => (v && V[v] ? v : 'base'), A = nm(a), B = nm(b);
+    if (A === B) return [];
+    let c = _turnCache.get(puppet); if (!c) { c = {}; _turnCache.set(puppet, c); }
+    const key = A + '>' + B; if (c[key]) return c[key];
+    const run = (x, y) => { const out = []; for (let k = 1; V[`turn:${x}>${y}:${k}`]; k++) out.push(`turn:${x}>${y}:${k}`); return out; };
+    let r = run(A, B); if (!r.length) r = run(B, A).reverse();
+    return (c[key] = r);
+  }
   function heldVisemes(vis, hold) {
     if (!hold) return vis;
     const memo = HELD.get(vis) || {}; if (memo[hold]) return memo[hold];
@@ -402,7 +412,13 @@
     else if (emo && !pose.mouth) pose.mouth = emotionalMouth(puppet, 'closed', emo);
     if (emo && !pose.brows && EMO_BROWS[emo] && ((puppet.swaps || {}).brows || {}).shapes && puppet.swaps.brows.shapes[EMO_BROWS[emo]]) pose.brows = EMO_BROWS[emo];
     if (tl.look) pose.look = sampleKeys(tl.look, t);
-    if (tl.view) { pose.view = sampleKeys(tl.view, t); for (const [ts] of tl.view.slice(1)) { const d = Math.abs(t - ts); if (d < 0.09) pose.squash = Math.min(pose.squash ?? 1, 1 - 0.35 * (1 - d / 0.09)); } }
+    if (tl.view) { pose.view = sampleKeys(tl.view, t);
+      // WP-43 turns: in-between views (views "turn:A>B:k", dbe/turns.py) play one step each around the switch, on twos
+      // by default (acting.turn_step); a switch without them keeps the 0.09 s squash
+      const step = (puppet.acting || {}).turn_step ?? 2 / 30;
+      for (let i = 1; i < tl.view.length; i++) { const ts = tl.view[i][0], tw = turnViews(puppet, tl.view[i - 1][1], tl.view[i][1]);
+        if (tw.length) { const k = Math.floor((t - (ts - tw.length * step / 2)) / step + 1e-9); if (k >= 0 && k < tw.length) pose.view = tw[k]; continue; }
+        const d = Math.abs(t - ts); if (d < 0.09) pose.squash = Math.min(pose.squash ?? 1, 1 - 0.35 * (1 - d / 0.09)); } }
     if (tl.blink !== false) pose.blink = Math.max(pose.blink || 0, blinkAt(t, tl.seed || 0));
     // scripted blinks (timed for comedy): half, closed, closed, half over a third of a second
     for (const b of tl.blinks || []) { const d = t - b; if (d >= 0 && d < 0.34) pose.blink = Math.max(pose.blink || 0, d < 0.085 || d >= 0.25 ? 0.45 : 0.95); }

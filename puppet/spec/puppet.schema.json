@@ -62,7 +62,7 @@
   },
   "views": {
    "type": "object",
-   "description": "v0.2: named views overriding parts (strokes/pivot/z) and swap shapes",
+   "description": "v0.2: named views overriding parts (strokes/pivot/z) and swap shapes; v0.14: views named turn:<from>><to>:<k> are a turn's in-betweens, played around a view switch",
    "additionalProperties": {
     "type": "object",
     "properties": {
@@ -139,6 +139,11 @@
        "type": "number"
       }
      }
+    },
+    "turn_step": {
+     "type": "number",
+     "exclusiveMinimum": 0,
+     "description": "v0.14: seconds each turn in-between is shown (default 2/30)"
     }
    }
   },

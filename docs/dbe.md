@@ -1885,6 +1885,20 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   50%); depth against "lower is nearer" on Geometry Nodes renders with their true depth (pixel pairs ordered right:
   99.7% against 88.6%).
 
+**Turns between views** (WP-43: morphs between views; puppet format v0.14, `dbe/turns.py`). A view switch on a
+timeline (front to side) used to cut with a 0.09 s squash. `puppet.turns {puppet, a, b, steps}` draws the in-betweens
+as ordinary views, `turn:<a>><b>:<k>`, so the bake, every renderer and every exporter already play them. Per part,
+the strokes of the two views are paired by fill, then by how near they are in place and size (an ear with an ear, not
+with the skull beside it); each pair is resampled to 64 points by arc length, lined up in start point and direction,
+and blended; a stroke without a partner shrinks to its centre underneath the others (the far ear goes behind the
+head) or grows from it; pivots blend; layer order and swap drawings (eyes, mouth) come from the nearer end. The loader
+shows in-between k for one step each, centred on the switch (`acting.turn_step`, on twos by default), the other way
+round reversed, and drops the squash there. Test `turns` (only when asked) on pip, front to side in three: at rest
+the silhouette's IoU with the front drawing falls 1.0, 0.863, 0.747, 0.654, 0.601 while with the side one it rises
+0.601, 0.692, 0.798, 0.918, 1.0; in pip-park's third shot (a turn to the side and back) the bake plays the three two
+frames each around both switches, the second time reversed, with no squash; Synfig, Lottie and Grease Pencil draw an
+in-between as the SVG renderer does (parity 1.0, 1.0, 1.0). Golden frames unchanged.
+
 ## Film-grade masters (WP-37, part 1)
 - `film.master {name, scale: 2, fps: 0, passes}` renders the film from the SVG player at `scale` times its size (4K for
   a 1080x1920 film) and any frame rate, in four passes (beauty; line: the visible ink, un-composited from white;

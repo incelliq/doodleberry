@@ -626,6 +626,24 @@ def _puppet_errors(puppet):
             for e in jsonschema.Draft202012Validator(_json(ROOT / "puppet" / "spec" / "puppet.schema.json")).iter_errors(puppet)]
 
 
+@command("puppet.turns", puppet=("string", "puppet file"), a=("string", "the view turned from (base: the drawn default)", "base"),
+         b=("string", "the view turned to", "side"), steps=("integer", "in-between drawings", 3), out=("string", "where to write (default: in place)", ""))
+def puppet_turns(puppet, a="base", b="side", steps=3, out=""):
+    """In-between drawings for a turn between two views (WP-43, dbe/turns.py): views turn:a>b:1..steps, each part's
+    strokes paired by fill and nearest centre, resampled by arc length and blended (a stroke without a partner
+    shrinks to its centre or grows from it), pivots blended, layer order and swap drawings from the nearer end. A
+    timeline switching between the two views (either way) then plays them, one step each on twos, instead of the
+    squash; every renderer draws them, as views."""
+    from . import turns as TU
+    src = ROOT / puppet; p = _json(src)
+    for v in (a, b):
+        if v != "base" and v not in (p.get("views") or {}):
+            raise ValueError(f"no view {v!r} in {puppet} (views: {', '.join(p.get('views') or {}) or 'none'})")
+    q = TU.make_turns(p, a, b, steps); dst = ROOT / out if out else src
+    dst.parent.mkdir(parents=True, exist_ok=True); dst.write_text(json.dumps(q, indent=1, ensure_ascii=False))
+    return {"path": str(dst.relative_to(ROOT)), "views": [k for k in q["views"] if k.startswith(f"turn:{a}>{b}:")]}
+
+
 @command("puppet.lint", path=("string", "path to a .puppet.json"))
 def puppet_lint(path):
     """Check a puppet against its template (missing parts, swaps, raw colours)."""
@@ -7622,6 +7640,10 @@ def test_golden(update=False, film=""):
         bad, meas = _graphcomp_test()
         failed += 1 if bad else 0
         results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "turns":   # WP-43: morphs between views (renders three other renderers, so only when asked)
+        bad, meas = _turns_test()
+        failed += 1 if bad else 0
+        results.append({"turns": "a turn from front to side drawn as three in-betweens: each moves steadily from one drawing to the other; the bake plays them one step each on twos around both switches, no squash; every renderer draws an in-between as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "linearplanes":   # WP-37: compositor planes blended in linear light
         bad, meas = _linearplanes_test()
         failed += 1 if bad else 0
@@ -10565,6 +10587,68 @@ def _masterpasses_test(film="handshake-demo", t0=2.0):
                 bad.append(f"depth: {meas['depth']}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _turns_test():
+    """WP-43 morphs between views: pip's turn from front to side as three in-betweens. At rest, each in-between's
+    filled silhouette moves steadily from the front drawing toward the side one (IoU with the front falls, with the
+    side rises); in pip-park's third shot (a turn to the side and back) the bake shows the in-betweens one step each
+    on twos around both switches, in order and then reversed, with no squash; Synfig, Lottie and Grease Pencil draw
+    an in-between frame as the SVG renderer does (render.parity)."""
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from . import geom as G, turns as TU
+    bad, meas = [], {}
+    pz = _json(ROOT / "puppet/examples/pip.puppet.json"); q = TU.make_turns(pz, "base", "side", 3)
+    W_, H_ = pz["artboard"]
+
+    def sil(view):
+        R = TU.resolved(q, view); im = Image.new("L", (W_, H_), 0); dr = ImageDraw.Draw(im)
+        for part in R["parts"].values():
+            for st in part.get("strokes", []):
+                if st.get("d") and st.get("fill") not in (None, "none"):
+                    for segs, closed in G.parse_path(st["d"]):
+                        pts = G.sample(segs, 8)
+                        if len(pts) > 2:
+                            dr.polygon([tuple(p) for p in pts], fill=255)
+        return np.asarray(im) > 0
+    iou = lambda a, b: float((a & b).sum() / max(1, (a | b).sum()))
+    S = [sil("base")] + [sil(f"turn:base>side:{k}") for k in (1, 2, 3)] + [sil("side")]
+    meas["iou_front"] = [round(iou(S[0], x), 3) for x in S]; meas["iou_side"] = [round(iou(S[-1], x), 3) for x in S]
+    if not all(a > b for a, b in zip(meas["iou_front"], meas["iou_front"][1:])) or not all(a < b for a, b in zip(meas["iou_side"], meas["iou_side"][1:])):
+        bad.append(f"the in-betweens do not move steadily from front to side: {meas}")
+    name = "zz-turns"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    try:
+        for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+            shutil.copy(f, d / f.name)
+        (d / "cast").mkdir(); (d / "cast" / "pip.turns.puppet.json").write_text(json.dumps(q))
+        sj = _json(d / "shots.json")
+        for sh in sj["shots"]:
+            for c_ in sh["cast"]:
+                c_["puppet"] = f"films/{name}/cast/pip.turns.puppet.json"
+        (d / "shots.json").write_text(json.dumps(sj))
+        s, sh, _, baked = _bake(name, "s3"); fps = s.get("fps", 30)
+        frs = baked["cast"][0]["frames"]; views = [f_.get("view") for f_ in frs]
+        seq = []
+        for i, v in enumerate(views):
+            if v and v.startswith("turn:") and (not seq or seq[-1][0] != v or seq[-1][2] != i - 1):
+                seq.append([v, i, i])
+            elif v and v.startswith("turn:"):
+                seq[-1][2] = i
+        meas["turn_frames"] = [(v, round(sh["start"] + a / fps, 3), b - a + 1) for v, a, b in seq]
+        meas["squash_min"] = round(min(f_.get("squash", 1) for f_ in frs), 3)
+        names = [v for v, _, _ in seq]
+        if names != [f"turn:base>side:{k}" for k in (1, 2, 3)] + [f"turn:base>side:{k}" for k in (3, 2, 1)] or any(n_ != 2 for _, _, n_ in meas["turn_frames"]) or meas["squash_min"] < 1:
+            bad.append(f"the turns in the bake: {meas['turn_frames']}, squash {meas['squash_min']}")
+        if seq:
+            t_mid = round((seq[1][1] + 0.5) / fps, 3)   # the second in-between, seconds into the shot
+            pr = render_parity(name, "s3", times=[t_mid]); meas["parity"] = {k: v.get("min") for k, v in pr["renderers"].items()}
+            for k, v in pr["renderers"].items():
+                if not v.get("ok"):
+                    bad.append(f"parity {k} on an in-between: {v.get('min')}, colour {v.get('colour_diff')}, {v.get('error')}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 

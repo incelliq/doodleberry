@@ -281,3 +281,16 @@ All optional; v0.12 files stay valid.
   over the fill and under the outline. A vector stroke's `"texture": "hatch"` uses it. SVG only; the others draw the
   fill under it.
 
+## v0.14 additions: turns between views (WP-43)
+All optional; v0.13 files stay valid.
+
+- **Turn in-betweens**: views named `turn:<from>><to>:<k>` (k = 1, 2, ...; `base` is the drawn default) are the
+  in-between drawings of a turn from view `<from>` to `<to>`. Where a timeline's `view` keys switch between the two
+  (either way; the other way plays them in reverse), `acting.js` shows in-between k for one step each, centred on the
+  switch, instead of the 0.09 s squash. They are ordinary views, so the bake records them and every renderer and
+  exporter draws them. `puppet.turns` (dbe/turns.py) makes them from the two views: strokes paired by fill, place and
+  size, resampled by arc length and blended; a stroke without a partner shrinks to its centre under the others (or
+  grows from it); pivots blend; layer order and swap drawings come from the nearer end. Hand-drawn in-betweens under
+  the same names are played the same way.
+- **acting.turn_step**: seconds each in-between is shown (default 2/30, on twos at 30 fps).
+
