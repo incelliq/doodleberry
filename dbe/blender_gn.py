@@ -10,6 +10,8 @@ REQ: {size: [W, H], fps, start, frames: [frame numbers to render] | count, camer
       colour, mass, friction, bounce, velocity: [vx, vy, vz] m/s} | {shape: cloth, size: [w, h] m, at: [x px, depth, top
       edge height], res}], wind (strength over the scene), substeps, iterations: rigid bodies under Bullet and cloth strips (Blender cloth, pinned
       along the top), baked, then rendered; bodies.json records where each is on every rendered frame
+     passes: ["z", "mist", "normal", "position", "vector", "emit", "cryptomatte_object", ...] (WP-42): EEVEE's separate
+      passes beside the picture, one multilayer EXR per frame
 
 The camera maps the 2D stage exactly: 1 px = 1 cm on the stage plane (y = 0), the camera stands D0 = 12 m in front,
 pans with the 2D camera centre and dollies in by its zoom, so a point on the stage plane lands where the 2D renderer
@@ -227,14 +229,25 @@ cam.rotation_euler = (math.radians(90), 0, 0)
 keys = R.get("camera") or [[0, [W / 2, H / 2, 1]]]
 frames = R.get("frames") or list(range(R.get("count", 1)))
 os.makedirs(OUT, exist_ok=True)
-if R.get("zpass"):   # WP-43: depth ground truth, a multilayer EXR with the picture and the camera distance per pixel
+PASSES = ("z", "mist", "normal", "position", "vector", "emit", "environment", "shadow", "ambient_occlusion", "diffuse_color",
+          "diffuse_direct", "object_index", "cryptomatte_object", "cryptomatte_material")
+if R.get("passes"):   # WP-42: separate EEVEE passes beside the picture (one multilayer EXR per frame, as zpass below)
+    bad = [x for x in R["passes"] if x not in PASSES]
+    if bad:
+        raise SystemExit(f"unknown passes {bad} (known: {', '.join(PASSES)})")
+    for x in R["passes"]:
+        setattr(sc.view_layers[0], f"use_pass_{x}", True)
+    if "mist" in R["passes"]:   # mist from the stage plane to the far lot
+        world.mist_settings.start = R.get("mist_start", 2.0); world.mist_settings.depth = R.get("mist_depth", 150.0)
+if R.get("zpass") or R.get("passes"):   # WP-43: depth ground truth, a multilayer EXR with the picture and the camera distance per pixel
     sc.view_layers[0].use_pass_z = True
     ims = sc.render.image_settings
     if hasattr(ims, "media_type"):   # Blender 5: pick the multilayer media type, then its only format
         ims.media_type = "MULTI_LAYER_IMAGE"
     ims.file_format = "OPEN_EXR_MULTILAYER"
     sc.render.image_settings.color_depth = "32"
-    sc.render.use_freestyle = False
+    if not R.get("passes"):   # depth ground truth wants the bare geometry; separate passes keep the ink of the picture
+        sc.render.use_freestyle = False
 track = {}
 for f in frames:
     t = R.get("start", 0) + f / fps
@@ -249,8 +262,18 @@ for f in frames:
                 zs = [v.z for v in vs]; lo = min(zs); bot = [v for v in vs if v.z < lo + 0.05]
                 track[f][o.name] = {"top": round(max(zs), 5), "low": round(lo, 5), "bottom_x": round(sum(v.x for v in bot) / len(bot), 5),
                                     "pinned_x": round(sum(v.x for v in vs if v.z > max(zs) - 1e-3) / max(1, sum(1 for v in vs if v.z > max(zs) - 1e-3)), 5)}
-    sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.{'exr' if R.get('zpass') else 'png'}")
+    multi = R.get("zpass") or R.get("passes")
+    sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.{'exr' if multi else 'png'}")
     bpy.ops.render.render(write_still=True)
+    if R.get("passes"):   # the picture as the plate too (the passes stay in the EXR)
+        ims = sc.render.image_settings
+        if hasattr(ims, "media_type"):
+            ims.media_type = "IMAGE"
+        ims.file_format = "PNG"; ims.color_depth = "8"
+        bpy.data.images["Render Result"].save_render(filepath=os.path.join(OUT, f"f_{f:04d}.png"), scene=sc)
+        if hasattr(ims, "media_type"):
+            ims.media_type = "MULTI_LAYER_IMAGE"
+        ims.file_format = "OPEN_EXR_MULTILAYER"; ims.color_depth = "32"
 if track:
     json.dump({"floor_z": floor_z, "frames": track}, open(os.path.join(OUT, "bodies.json"), "w"))
 print("rendered", len(frames), "frames to", OUT)

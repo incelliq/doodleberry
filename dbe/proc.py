@@ -165,6 +165,8 @@ def op_gn_set(p, ins, ctx, cache):
     res = {"items": [item], "plane": p.get("plane", "set3d"), "screen": True, "frames": hashes}
     if (out / "bodies.json").exists():   # rigid bodies (WP-42): where each body is on every rendered frame
         res["bodies"] = json.loads((out / "bodies.json").read_text())
+    if p.get("passes"):   # separate EEVEE passes (WP-42): one multilayer EXR per rendered frame beside the plate
+        res["passes"] = {"files": [f"proc/{ctx['key']}/f_{f:04d}.exr" for f in frames], "layers": p["passes"]}
     return res
 
 

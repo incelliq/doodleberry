@@ -7348,7 +7348,7 @@ def test_golden(update=False, film=""):
     if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
         bad, meas = _rigid_test()
         failed += 1 if bad else 0
-        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels; a cloth banner hangs from its pinned edge and swings in a wind", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels; a cloth banner hangs from its pinned edge and swings in a wind; the separate EEVEE passes (position, normal, mist, Cryptomatte, emission) agree with the scene", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "usd":   # WP-42: OpenUSD export
         bad, meas = _usd_test()
         failed += 1 if bad else 0
@@ -10537,6 +10537,30 @@ def _rigid_test():
             cl[tag] = {"hang_m": round(seq[-1]["top"] - seq[-1]["low"], 3), "top_moved_mm": round(1000 * max(abs(q["top"] - seq[0]["top"]) + abs(q["pinned_x"] - seq[0]["pinned_x"]) for q in seq), 2),
                        "free_end_swing_m": round(max(q["bottom_x"] for q in seq) - min(q["bottom_x"] for q in seq), 3)}
         meas["cloth"] = cl
+        # separate EEVEE passes of the same scene (one frame): the ground's position and normal, mist growing with
+        # distance, Cryptomatte naming the bodies, emission (the cel shading is emissive) equal to the picture
+        import OpenEXR
+        import numpy as np
+        pn = {**node, "every": 90, "passes": ["z", "mist", "normal", "position", "vector", "emit", "cryptomatte_object"]}
+        o3, _ = PR.cook({"crates_passes": pn}, {**ctx, "frames": 1}, tmp / "cache")
+        ex = tmp / "cache" / o3["crates_passes"]["passes"]["files"][0].split("/", 1)[1]
+        with OpenEXR.File(str(ex), separate_channels=True) as fi:
+            L_ = {pt.name().split(".", 1)[1]: {c.split(".")[-1]: v.pixels.astype(np.float64) for c, v in pt.channels.items()} for pt in fi.parts}
+        with OpenEXR.File(str(ex), separate_channels=True) as fi:
+            hdr = dict(fi.header())
+        man = json.loads(next(v for k, v in hdr.items() if str(k).endswith("/manifest")))
+        Hh = L_["Position"]["Z"].shape[0]; band = slice(int(Hh * 0.93), int(Hh * 0.99))   # ground near the bottom of the frame
+        floor = o3["crates_passes"]["bodies"]["floor_z"]
+        mist_bottom, mist_horizon = float(np.median(L_["Mist"]["Z"][band])), float(np.median(L_["Mist"]["Z"][int(Hh * 0.52):int(Hh * 0.55)]))
+        from scipy import ndimage as _nd   # objects (finite depth; the sky is opaque too), away from the ink lines at their edges
+        obj = _nd.binary_erosion(L_["Depth"]["Z"] < 1e6, iterations=3)
+        meas["passes"] = {"layers": sorted(L_), "ground_z_error": round(float(np.abs(L_["Position"]["Z"][band] - floor).max()), 5),
+                          "ground_normal_z": round(float(np.median(L_["Normal"]["Z"][band])), 4), "mist_bottom_vs_horizon": [round(mist_bottom, 4), round(mist_horizon, 4)],
+                          "crypto_names": sorted(man), "emission_vs_picture": round(float(np.abs(np.dstack([L_["Emission"][c] for c in "RGB"]) - np.dstack([L_["Combined"][c] for c in "RGB"]))[obj].mean()), 4)}
+        pm = meas["passes"]
+        if pm["ground_z_error"] > 1e-3 or pm["ground_normal_z"] < 0.999 or not mist_horizon > mist_bottom or not {"body0", "body1", "body2", "body3"} <= set(man) \
+                or pm["emission_vs_picture"] > 0.02:
+            bad.append(f"passes: {pm}")
         if abs(cl["still"]["hang_m"] - 2.0) > 0.05 or cl["still"]["free_end_swing_m"] > 0.01 or cl["still"]["top_moved_mm"] > 0.5 \
                 or cl["wind"]["free_end_swing_m"] < 0.2 or cl["wind"]["top_moved_mm"] > 0.5:
             bad.append(f"cloth: {cl}")

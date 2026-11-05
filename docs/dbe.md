@@ -1788,7 +1788,13 @@ cook gives the same positions and the same pixels. **Cloth strips**: a body `{"s
 px, depth m, height of its top edge m], "res"}` is a strip pinned along its top edge (a banner, a flag, a cape on a
 3D set) under Blender's cloth simulation, with the node's `"wind"` (a wind over the scene; a few hundred moves a
 banner). In the same test a 2 m banner hangs 2.004 m below its pinned edge when still, and in a wind of 800 its free
-end swings over 1.04 m while the pinned edge does not move.
+end swings over 1.04 m while the pinned edge does not move. **Separate EEVEE passes**: a `gn_set` or `rigid` node's
+`"passes": ["z", "mist", "normal", "position", "vector", "emit", "cryptomatte_object", ...]` writes them beside the
+plate, one multilayer EXR per rendered frame (Blender 5 writes each pass as its own part: read `parts`, not only the
+first; and with the OpenEXR binding read the header and the channels through separate opens, as each empties the
+other). In `rigid` they agree with the scene: the ground's position within 0.8 mm of its height and its normal
+straight up, mist rising from 0.002 by the camera to 0.51 at the horizon, Cryptomatte naming every body, and emission
+(the cel shading is emissive) within 0.005 of the picture on the objects.
 
 ## ML assists, in-house (WP-43, part 1)
 Models used as assistants whose output is data a person accepts, on CPU (onnxruntime), pinned by sha256
@@ -2224,6 +2230,18 @@ to the line it sits by; drag re-times it (`move_camkey`), selecting it shows its
 pip-park twice) drives the page in Chromium: the cut moved 0.39 s for a 0.40 s drag (to the frame), a camera key
 added as `mid.start+2.03` at [540, 960, 1], moved 0.3 s, set to zoom 1.2 and deleted, and the last line moved 0.38 s
 for a 0.36 s drag (to the frame, after re-voicing) with the line before unmoved, then undone.
+
+**Notes about the timing of lines** (WP-19). `review.fix` reads a note about when a line comes in ("give the last line
+a beat before it", "the pause before the first line is too long", "the answer comes in too late", "less of a gap
+before the second line by 0.3 s"; `dbe/review.py timing_intent`; notes that name a gesture, a body part or the camera
+are left to the other readers) and finds the line: named (an id in quotes, first, second, last), else the one under
+the note's frame, else the next. It changes the silence before it by the amount (a beat 0.5 s, a bit 0.25, a lot 0.8,
+or "by 0.3 s" or "by 10 frames") through `timeline.move_line`, re-voicing, and the critic listens: in the voice track,
+the line's speech must start later or earlier by at least 60% of the asked amount, measured from the end of the line
+before, and no earlier line may move. Then the film is rendered and QA must not get worse; otherwise script.json is
+restored and the film re-voiced. Test `reviewtiming` (only when asked: it re-voices and renders a scratch copy of
+pip-park): "give the last line a beat before it" moved the speech onset +0.50 s (+0.50 asked) and "the pause before
+the first line is too long" -0.40 s (-0.40 asked), both verified; "this line feels somehow wrong" went to a person.
 
 **Curve editor** (WP-19). A key may carry the easing of the move that leaves it, as a third element: `[t, value,
 ease]` with `smooth` (the default, smoothstep, as before), `linear`, `hold` (the value stays until the next key) or a
