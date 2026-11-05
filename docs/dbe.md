@@ -122,7 +122,7 @@ environment variables below).
     the toon's opacity: the shape in the shade colour, cut ("alpha over") by the same shape shifted toward the light.
     The shift is in the part's own axes, animated per frame as the part turns, as puppet.js computes it. Grease
     Pencil gets the band as geometry, per frame: the shape minus itself shifted, by polygon difference (shapely),
-    drawn as a fill between the stroke's fill and its outline. Test `toon` (only when asked), on a copy of pip-park
+    drawn as a fill between the stroke's fill and its outline (Lottie: below). Test `toon` (only when asked), on a copy of pip-park
     with `style.toon`. Parity is 1.0 (Synfig) and 0.993 (Grease Pencil). In the band the SVG renderer shades (8,274
     px), Synfig is 4.4 levels from the shaded picture and 44.8 from an unshaded copy. Grease Pencil is 19.6 against
     31.1; it renders at half size, so its edges are softer. (A first measurement on fx-demo had read Synfig as nearer
@@ -138,9 +138,9 @@ environment variables below).
     of pip-park in crayon and checks each renderer's frame is nearer the crayon SVG render than the plain one, where
     the medium changes it (46,993 px): Synfig 24.4 levels from the crayon render against 92.1 from the plain one,
     Lottie 24.2 against 92.0, Grease Pencil 26.9 against 95.7.
-  - Toon shading in Lottie (being measured): per shaded part, a track matte of its fills over a layer with the shade colour
-    and the fills shifted toward the light, at the toon's opacity; clipped per part, not per stroke. A first look shows the
-    bands (13,595 px of a pip-park frame change).
+  - **Toon shading in Lottie**: per shaded part, a track matte of its fills over a layer with the shade colour and the
+    fills shifted toward the light, at the toon's opacity; clipped per part, not per stroke. In test `toon` (same band)
+    Lottie is 2.2 levels from the shaded picture and 41.5 from the unshaded copy, parity 0.994.
 - **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
   far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
   overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,

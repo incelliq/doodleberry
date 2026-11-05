@@ -135,6 +135,10 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
         # the punchline (WP-10): the scene's last line, said as an admission ("Oh. That telescope."): the speaker is
         # caught out, so a sheepish reaction follows it, and whoever hears it holds a stare instead of nodding
         caught = last and bool(ADMIT.search(text))
+        # the line that catches someone out (WP-10, blind critics: "a caught reaction before the admission, more
+        # personality in the accuser"): the line just before an admission, said by someone else
+        nxt = lines[li + 1] if li + 1 < len(lines) else None
+        accuses = bool(nxt) and li + 1 == len(lines) - 1 and nxt["speaker"] != ln["speaker"] and bool(ADMIT.search(nxt.get("text", "")))
         if ln["speaker"] == me:
             pro = pro_of(words); em = emphasis(words, pro)
             excl, ques = text.strip().endswith("!"), text.strip().endswith("?")
@@ -201,10 +205,24 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                     clips.append({"clip": "talk_beat" if humanoid else "talk", "start": round(max(ln["start"], ws - 0.12), 3), "additive": True,
                                   **({"end": round(ws + 0.7, 3)} if not humanoid else {}), "weight": round(0.8 * energy, 2), "auto": True})
                     used.append(ws)
+            if accuses and humanoid:   # the accuser: sure of it, then folds the arms and waits for the admission
+                poses.append([round(ln["start"] - 0.2, 3), "confident"])
+                t0 = max(ln["end"] + 0.1, busy_until)   # after a point held to the line's end
+                if can("cross_arms") and t0 < nxt["start"]:
+                    clips.append(style({"clip": "cross_arms", "start": round(t0, 3), "end": round(nxt["end"] + 1.2, 3), "weight": 3, "auto": True, "why": "accuser waits"}))
+                    busy_until = nxt["end"] + 1.2
             q_clip = P["question"] if humanoid else "tilt"
             if caught and humanoid and can("scratch_head"):   # the punchline's sheepish beat, after the words
                 clips.append(style({"clip": "scratch_head", "start": round(ln["end"] + 0.15, 3), "end": round(ln["end"] + 2.0, 3), "weight": 3, "auto": True, "why": "punchline"}))
                 busy_until = ln["end"] + 2.0
+            if caught and humanoid:   # the tail after it (blind critics: "livelier tails"): a sheepish grin, a glance
+                # away and back, then a small shrug, as if to say "well, you got me"
+                emo.append([round(ln["end"] + 0.6, 3), "happy"])
+                sx_ = next(iter(others_x.values()), my_x + 1)
+                look.append([round(ln["end"] + 0.5, 3), [-1.0 if sx_ > my_x else 1.0, 0.35]]); look.append([round(ln["end"] + 1.3, 3), [1.0 if sx_ > my_x else -1.0, 0.1]])
+                if can("shrug"):
+                    clips.append(style({"clip": "shrug", "start": round(ln["end"] + 2.1, 3), "end": round(ln["end"] + 3.3, 3), "weight": 2.5, "auto": True, "why": "tail"}))
+                blinks.append(round(ln["end"] + 2.0, 3))
             if ques and can(q_clip) and den != "feign":
                 t0 = words[-1]["start"] - 0.1
                 clips.append(style({"clip": q_clip, "start": round(t0, 3), **({"end": round(t0 + 0.9, 3)} if not humanoid else {}), "weight": 3, "auto": True}))
@@ -213,7 +231,7 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
             emo.append([round(ln["start"] - 0.2, 3), e or "neutral"])
             if humanoid and EMO_POSE.get(e):
                 poses.append([round(ln["start"] - 0.2, 3), EMO_POSE[e]])
-            elif humanoid and poses:
+            elif humanoid and poses and not accuses:
                 poses.append([round(ln["start"] - 0.2, 3), "neutral"])
         else:
             # listening: look towards the speaker, nod after the line, blink on its end
@@ -224,6 +242,24 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
             if caught and sx is not None:   # the punchline lands: hold a long look at the one caught out, no nod
                 look.append([round(ln["end"] + 0.1, 3), [1.0 if sx > my_x else -1.0, 0.0]])
                 blinks.append(round(ln["end"] + 1.6, 3))
+                if humanoid:   # then the tail (blind critics: "livelier tails"): a slow head shake, and a smile breaks
+                    emo.append([round(ln["end"] + 1.8, 3), "happy"])
+                    if can("head_shake"):
+                        clips.append({"clip": "head_shake", "start": round(ln["end"] + 1.7, 3), "end": round(ln["end"] + 2.9, 3), "weight": 2.0, "speed": 0.7, "auto": True, "why": "tail"})
+                continue
+            if accuses and nxt["speaker"] == me and sx is not None and humanoid:
+                # caught out (blind critics: "a caught reaction before the admission"): it lands as the line ends: a start,
+                # the face falls open, the eyes dart away and come back before owning up; no nod
+                t_hit = round(max(ln["start"], ln["end"] - 0.25), 3)
+                emo.append([t_hit, "surprised"])
+                if can("surprised") and t_hit > busy_until - 0.1:
+                    clips.append({"clip": "surprised", "start": t_hit, "end": round(min(nxt["start"] + 0.1, t_hit + 1.2), 3), "weight": 3, "auto": True, "why": "caught"})
+                    busy_until = min(nxt["start"] + 0.1, t_hit + 1.2)
+                gap_ = max(0.3, nxt["start"] - ln["end"])
+                look.append([round(ln["end"] + 0.1, 3), [-1.0 if sx > my_x else 1.0, 0.3]])
+                look.append([round(ln["end"] + 0.1 + min(0.5, gap_ * 0.6), 3), [1.0 if sx > my_x else -1.0, 0.05]])
+                blinks.append(round(ln["end"] + 0.05, 3))
+                emo.append([round(nxt["start"] - 0.15, 3), "worried"])
                 continue
             e, t_felt = felt_at(ln)
             rc = LISTEN.get(e) if humanoid else None

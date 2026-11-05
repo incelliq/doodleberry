@@ -12806,15 +12806,30 @@ def _acting2_test():
         l["words"] = wl(l["text"], l["start"]); l["end"] = l["words"][-1]["end"]
     flat = lambda words: [{"db": 0.0, "dur": 0.25, "f0": 0.0} for _ in words]
     pm = GS.plan_cast("humanoid", ex, "momo", {"ravi": 300}, 700, flat)[0]
-    pr, _, _, _, _ = GS.plan_cast("humanoid", ex, "ravi", {"momo": 700}, 300, flat)
-    lk = GS.plan_cast("humanoid", ex, "ravi", {"momo": 700}, 300, flat)[1]
+    pr, lk, _, _, rposes = GS.plan_cast("humanoid", ex, "ravi", {"momo": 700}, 300, flat)
+    _, mlk, _, memo, _ = GS.plan_cast("humanoid", ex, "momo", {"ravi": 300}, 700, flat)
     why = lambda plan: {(k["clip"], k.get("why")) for k in plan}
+    at = lambda plan, c, w: next((k for k in plan if k["clip"] == c and k.get("why") == w), None)
     meas["denial_punchline"] = {"momo": sorted(f"{c}:{w}" for c, w in why(pm) if w), "ravi": sorted(f"{c}:{w}" for c, w in why(pr) if w),
                                 "ravi_stares_after_punchline": any(abs(t - (ex[3]["end"] + 0.1)) < 1e-6 and v[0] > 0 for t, v in lk),
                                 "ravi_nods_after_punchline": any(k["clip"] == "nod" and k["start"] >= ex[3]["end"] for k in pr)}
     dp = meas["denial_punchline"]
-    if dp["momo"] != ["present_L:owning up", "scratch_head:punchline", "shrug:denial"] or dp["ravi"] != ["head_shake:denial"] or not dp["ravi_stares_after_punchline"] or dp["ravi_nods_after_punchline"]:
+    if dp["momo"] != ["present_L:owning up", "scratch_head:punchline", "shrug:denial", "shrug:tail", "surprised:caught"] or dp["ravi"] != ["cross_arms:accuser waits", "head_shake:denial", "head_shake:tail"] \
+            or not dp["ravi_stares_after_punchline"] or dp["ravi_nods_after_punchline"]:
         bad.append(f"denial and punchline: {dp}")
+    # the critics' three notes (WP-10): caught before the admission, the accuser's personality, livelier tails
+    cg, xa, mt, rt = at(pm, "surprised", "caught"), at(pr, "cross_arms", "accuser waits"), at(pm, "shrug", "tail"), at(pr, "head_shake", "tail")
+    dart = [t for t, v in mlk if ex[2]["end"] < t < ex[3]["start"]]
+    meas["caught_accuser_tails"] = {"caught": [cg["start"], cg["end"]] if cg else None, "momo_glances_in_gap": len(dart), "momo_emotions": [e for t, e in memo if ex[2]["end"] - 0.5 < t < ex[3]["start"]],
+                                    "accuser": [xa["start"], xa["end"]] if xa else None, "accuser_pose": [p for t, p in rposes if abs(t - (ex[2]["start"] - 0.2)) < 1e-6],
+                                    "tails": {"momo": [mt["start"], mt["end"]] if mt else None, "ravi": [rt["start"], rt["end"]] if rt else None}}
+    ca = meas["caught_accuser_tails"]
+    if not (cg and ex[2]["end"] - 0.5 <= cg["start"] < ex[3]["start"] and len(dart) >= 2 and "surprised" in ca["momo_emotions"]):
+        bad.append(f"caught reaction before the admission: {ca}")
+    if not (xa and ex[2]["end"] <= xa["start"] < ex[3]["start"] and xa["end"] > ex[3]["end"] and ca["accuser_pose"] == ["confident"]):
+        bad.append(f"accuser: {ca}")
+    if not (mt and rt and min(mt["start"], rt["start"]) > ex[3]["end"] + 1.0):
+        bad.append(f"tails: {ca}")
     return bad, meas
 
 
