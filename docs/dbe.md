@@ -1160,6 +1160,17 @@ again, review-demo 28 to 22 and direct-demo 28 to 21 ("pulls the telescope round
 hand-keyed arm held out "points away from the prop"). The planner stands at six blind wins in fifteen, and has won
 the last five of six.
 
+**Other scenes** (round 7, three fresh critics, scenes the planner had not been tuned on; planner copies keep each
+scene's walks, handshake and interaction and drop only its hand-keyed gestures): handshake-demo **won by the
+planner** 25 to 18 (smiles, the clasp landing on the name, Tam's accent on "you!", Pip's pleased hold after);
+explainer-demo won narrowly 15 to 12 (both stiff; small beats through the lines read as talking, though its point
+aims away from the card); nib-hello **lost** 8 to 17: Nib, a doodle-template puppet, stood "close to a frozen idle",
+since every gesture rule but talk was for humanoids. So a puppet of another template now gets what its own clips can
+say: a greeting waves from its first word, an exclamation hops on the word it ends on, a statement leans in, a plain
+no shakes (`acting2` checks the first two). Round 8 on Nib: still lost, but 16 to 25: the wave on "Hi!" now matches,
+while the hand-keyed hop on "purpose!" lands in a held, wide-armed ta-da that the doodle template has no clip for.
+Eight blind wins in nineteen.
+
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:
 - grass: a soft-onset brush of noise and almost no thump;

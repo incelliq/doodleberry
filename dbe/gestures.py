@@ -24,6 +24,7 @@ import numpy as np
 
 POINT_WORDS = {"you", "your", "this", "that", "these", "those", "look", "here", "there"}
 NEGATION = re.compile(r"\b(no|nope|not|never|nothing|nobody|didn'?t|wasn'?t|isn'?t|aren'?t|don'?t|doesn'?t|won'?t|can'?t)\b")
+GREETINGS = {"hi", "hello", "hey", "hiya", "howdy", "greetings", "morning", "evening", "welcome"}
 ADMIT = re.compile(r"^\W*(oh|uh|um|ah|er|erm|well|oops|whoops|heh)\b", re.I)
 # where the accusing line puts the thing on the accused ("sticking out behind your back", "in your pocket"): the
 # admission then indicates it there, not the listener (WP-10, blind critics: the open hand toward the listener on
@@ -171,6 +172,27 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                 t0 = max(ln["start"], words[k]["start"] - 0.1)
                 clips.append({"clip": "head_shake", "start": round(t0, 3), "end": round(t0 + 1.0, 3), "weight": 2.5, "auto": True, "why": "denial"})
                 used.append(words[k]["start"])
+            if not humanoid:   # a puppet of another template (a doodle): what its own clips can say (WP-10, round 7:
+                # a blind critic saw Nib "close to a frozen idle" through both lines with only talk planned)
+                w0 = re.sub(r"\W", "", words[0]["text"].lower())
+                if w0 in GREETINGS and (can("wave_R") or can("wave_L")):   # a greeting waves from the first word
+                    wc = ("wave_R" if towards >= my_x else "wave_L") if can("wave_R") and can("wave_L") else ("wave_R" if can("wave_R") else "wave_L")
+                    t0 = max(ln["start"] - 0.15, busy_until)
+                    clips.append(style({"clip": wc, "start": round(t0, 3), "end": round(min(ln["end"], t0 + 1.4), 3), "weight": 3, "auto": True, "why": "greeting"}))
+                    used.append(words[0]["start"]); busy_until = t0 + 1.4
+                if NEGATION.search(text.lower()) and can("shake") and not used:   # a plain no
+                    k = next((i for i, w in enumerate(words) if NEGATION.search(w["text"].lower())), 0)
+                    t0 = max(ln["start"], words[k]["start"] - 0.1)
+                    clips.append({"clip": "shake", "start": round(t0, 3), "end": round(t0 + 0.9, 3), "weight": 2.5, "auto": True, "why": "denial"}); used.append(words[k]["start"])
+                if excl and order and can("hop"):   # an exclamation: a hop on the word it ends on ("on purpose!")
+                    i = len(words) - 1 if words[-1]["start"] > busy_until else None
+                    if i is not None:
+                        t0 = max(ln["start"], words[i]["start"] - 0.12)
+                        clips.append(style({"clip": "hop", "start": round(t0, 3), "weight": 3, "auto": True, "why": "exclamation"})); used.append(words[i]["start"]); busy_until = t0 + 0.7
+                elif not ques and order and can("lean_in") and not used:   # a statement: lean in on its strongest word
+                    i = order[0]; t0 = max(ln["start"], words[i]["start"] - 0.2)
+                    clips.append(style({"clip": "lean_in", "start": round(t0, 3), "end": round(min(ln["end"] + 0.2, t0 + 1.4), 3), "weight": 2.5, "auto": True, "why": "statement"}))
+                    used.append(words[i]["start"]); busy_until = t0 + 1.2
             # an exclamation: open palms (or the profile's choice) on its strongest word
             ex_clip = P["exclaim"] if humanoid else None
             if excl and humanoid and order and can(ex_clip) and not used:

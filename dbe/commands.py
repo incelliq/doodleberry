@@ -13337,6 +13337,17 @@ def _acting2_test():
     # the thing is on the one caught ("sticking out behind your back"): the admission indicates it there, away from the
     # listener, with a look round at it (blind critics: an open hand toward the listener read as pointing away)
     ex2 = [dict(l) for l in ex]; ex2[2] = {**ex2[2], "text": "The one sticking out behind your back."}; ex2[2]["words"] = wl(ex2[2]["text"], ex2[2]["start"]); ex2[2]["end"] = ex2[2]["words"][-1]["end"]
+    # a doodle-template speaker (WP-10 round 7: Nib "close to a frozen idle"): a greeting waves from its first word, an
+    # exclamation hops on the word it ends on
+    dl = [{"speaker": "nib", "text": "Hi! I'm Nib.", "start": 0.5}, {"speaker": "nib", "text": "It's on purpose!", "start": 3.0}]
+    for l in dl:
+        l["words"] = wl(l["text"], l["start"]); l["end"] = l["words"][-1]["end"]
+    dlib = set(_json(ROOT / "puppet" / "clips" / "doodle.json")["clips"])
+    dp = GS.plan_cast("doodle", dl, "nib", {}, 540, flat, lib=dlib)[0]
+    wv = next((k for k in dp if k["clip"].startswith("wave")), None); hp_ = next((k for k in dp if k["clip"] == "hop"), None)
+    meas["doodle"] = {"wave": [wv["clip"], wv["start"]] if wv else None, "hop": hp_["start"] if hp_ else None, "last_word": dl[1]["words"][-1]["start"]}
+    if not (wv and wv["start"] <= dl[0]["words"][0]["start"] and hp_ and abs(hp_["start"] - (dl[1]["words"][-1]["start"] - 0.12)) < 1e-6):
+        bad.append(f"doodle gestures: {meas['doodle']}")
     pm2, mlk2, *_ = GS.plan_cast("humanoid", ex2, "momo", {"ravi": 300}, 700, flat)
     own = at(pm2, "present_R", "owning up (at it)"); back = [v for t, v in mlk2 if ex2[3]["start"] <= t <= ex2[3]["end"] and v[0] > 0]
     meas["owning_up_at_it"] = {"clip": [own["clip"], own["start"]] if own else None, "looks_round": len(back)}
