@@ -67,7 +67,8 @@ def check(deep=True):
     def add(name, group, ok, required, detail="", fix=""):
         checks.append({"name": name, "group": group, "ok": bool(ok), "required": required, "detail": detail, **({"fix": fix} if not ok and fix else {})})
 
-    add("python >= 3.11", "core", sys.version_info >= (3, 11), True, sys.version.split()[0], "install Python 3.11 or newer")
+    add("python 3.11 to 3.13", "core", (3, 11) <= sys.version_info[:2] <= (3, 13), True, sys.version.split()[0],
+        "use Python 3.11 to 3.13 (kokoro-onnx and some wheels are not out for 3.14): e.g. sudo dnf install python3.13, then python3.13 -m venv ~/.venvs/doodleberry")
     for group, fname, required in (("core", "requirements-core.txt", True), ("audio", "requirements-audio.txt", True), ("tools", "requirements-tools.txt", False)):
         for name, op, ver in requirements(fname):
             try:

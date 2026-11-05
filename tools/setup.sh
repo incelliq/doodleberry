@@ -62,6 +62,13 @@ system() {
 }
 
 python_deps() {
+  # kokoro-onnx 0.6.1 (the narrator) is for Python 3.10 to 3.13; Fedora 43 and newer default to 3.14
+  if ! "$PY" -c "import sys; sys.exit(0 if (3, 11) <= sys.version_info[:2] <= (3, 13) else 1)"; then
+    echo "python: $("$PY" -c 'import sys; print(sys.version.split()[0])') is not supported; use Python 3.11 to 3.13 in its own virtual environment, e.g.:"
+    echo "  sudo dnf install python3.13 && python3.13 -m venv ~/.venvs/doodleberry && source ~/.venvs/doodleberry/bin/activate"
+    echo "  then: DBE_PY=python bash tools/setup.sh python"
+    exit 1
+  fi
   "$PY" -m pip --version >/dev/null
   "$PY" -c "import packaging" 2>/dev/null || "$PY" -m pip install -q packaging
   "$PY" tools/fetch_wheels.py "$WHEELS" requirements-audio.txt requirements-tools.txt
