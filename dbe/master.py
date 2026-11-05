@@ -426,13 +426,33 @@ BLENDS = {
 }
 
 
-def composite_linear(layers, bg=(1.0, 1.0, 1.0)):
-    """layers: far to near [(rgba uint8 straight alpha, {"mode", "opacity"})] -> sRGB uint8 RGB, over `bg` (sRGB)"""
+def _gblur(a, sigma):
+    """a Gaussian blur over the first two axes (separable, edges extended), as feGaussianBlur's stdDeviation"""
+    if sigma <= 0:
+        return a
+    r = int(3 * sigma + 0.5); k = np.exp(-0.5 * (np.arange(-r, r + 1) / sigma) ** 2); k /= k.sum()
+    for ax in (0, 1):
+        pad = [(0, 0)] * a.ndim; pad[ax] = (r, r); p = np.pad(a, pad, mode="edge")
+        a = sum(k[i] * np.take(p, range(i, i + a.shape[ax]), axis=ax) for i in range(2 * r + 1))
+    return a
+
+
+def composite_linear(layers, bg=(1.0, 1.0, 1.0), scale=1.0):
+    """layers: far to near [(rgba uint8 straight alpha, {"mode", "opacity", "lightwrap"})] -> sRGB uint8 RGB, over
+    `bg` (sRGB). A plane's light wrap (radius, strength, in film px) screens a blur of what lies behind it onto its
+    inner edges, as the player's does, here in linear light; `from` is read as everything behind it."""
     H, W = layers[0][0].shape[:2]
     Cb = np.broadcast_to(srgb_to_linear(np.asarray(bg, np.float64)), (H, W, 3)).copy(); ab = np.ones((H, W, 1))
     for px, info in layers:
         info = info or {}; f = BLENDS.get(info.get("mode") or "normal", BLENDS["normal"])
         Cs = srgb_to_linear(px[..., :3].astype(np.float64) / 255); a_s = px[..., 3:4].astype(np.float64) / 255 * float(info.get("opacity", 1) if info.get("opacity") is not None else 1)
+        behind = Cb
         mixed = (1 - ab) * Cs + ab * np.clip(f(Cb, Cs), 0, None)   # the blended colour where the backdrop is
         Cb = a_s * mixed + (1 - a_s) * Cb   # source-over (the backdrop is opaque: over the background)
+        lw = info.get("lightwrap")
+        if lw:   # the plane's alpha less its blur is its inner edge; there, the blurred backdrop is screened on
+            sg = lw.get("radius", 14) / 2 * scale; a0 = px[..., 3:4].astype(np.float64) / 255
+            edge = np.clip(a0 * (1 - _gblur(a0, sg)), 0, 1)   # SourceAlpha out its blur
+            m = np.clip(edge * 2 * lw.get("strength", 0.7), 0, 1)
+            Bl = _gblur(behind, sg); Cb = Cb + m * (BLENDS["screen"](Cb, Bl) - Cb)
     return np.clip(np.round(linear_to_srgb(np.clip(Cb, 0, 1)) * 255), 0, 255).astype(np.uint8)

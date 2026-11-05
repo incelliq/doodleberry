@@ -10325,7 +10325,7 @@ def film_from_master(name, size=None, view="texture", look=""):
 def comp_linear(name, shot, out="", scale=1, fps=0, start=None, end=None):
     """A compositor shot's planes blended in linear light (WP-37): each plane rendered alone on transparency
     (tools/comp_planes.mjs, the player's ?compplane=), then composited far to near in float linear light with its
-    blend mode and opacity (dbe/master.py composite_linear), the bubbles over all. The browser composites in sRGB, where
+    blend mode, opacity and light wrap (dbe/master.py composite_linear), the bubbles over all. The browser composites in sRGB, where
     a half-transparent plane or a soft edge mixes encoded values and comes out darker. PNG frames named by film frame."""
     from PIL import Image
     import numpy as np
@@ -10343,9 +10343,9 @@ def comp_linear(name, shot, out="", scale=1, fps=0, start=None, end=None):
     frames = sorted(int(f.stem[2:]) for f in (tmp / planes[0]).glob("f_*.png"))
     for f in frames:
         lay = [(np.asarray(Image.open(tmp / p / f"f_{f:05d}.png").convert("RGBA")), infos[p].get(str(f))) for p in planes + ["@top"]]
-        Image.fromarray(MA.composite_linear(lay)).save(od / f"f_{f:05d}.png")
+        Image.fromarray(MA.composite_linear(lay, scale=scale)).save(od / f"f_{f:05d}.png")
     return {"frames": len(frames), "planes": planes, "dir": str(od.relative_to(ROOT)) if od.is_relative_to(ROOT) else str(od),
-            "light_wrap_not_redone": [p for p in planes if any((v or {}).get("lightwrap") for v in infos[p].values())]}
+            "light_wrap": [p for p in planes if any((v or {}).get("lightwrap") for v in infos[p].values())]}
 
 
 @command("comp.ingest_exr", name=("string", "film"), src=("string", "EXR frames: a glob (plates/sky.*.exr) or a printf pattern (sky.%04d.exr), from the film folder or the repo"),
@@ -10592,7 +10592,8 @@ def _linearplanes_test():
             {"id": "stage", "depth": 1},
             {"id": "veil", "depth": 1, "opacity": 0.5, "items": [{"type": "shape", "svg": f"<rect x='0' y='0' width='300' height='1920' fill='{R}'/>"}]},
             {"id": "glow", "depth": 1, "items": [{"type": "shape", "svg": "<circle cx='800' cy='300' r='120' fill='#ffffff'/>"}]}],
-            "nodes": [{"plane": "glow", "type": "blur", "radius": 40}, {"plane": "glow", "type": "blend", "mode": "screen"}]}
+            "nodes": [{"plane": "glow", "type": "blur", "radius": 40}, {"plane": "glow", "type": "blend", "mode": "screen"},
+                      {"plane": "stage", "type": "lightwrap", "radius": 16, "strength": 0.8}]}
         (d / "shots.json").write_text(json.dumps(sj, indent=1))
         s = _shots(name); fps = s.get("fps", 30); shr = s["shots"][0]; f = round((shr["start"] + 1.0) * fps); t = f / fps
         tmp = d / "build" / "lt"; tmp.mkdir(parents=True)
@@ -10616,6 +10617,19 @@ def _linearplanes_test():
             bad.append(f"no translucency, yet they differ: {meas['opaque_green']}")
         if not ring(li) > ring(br) + 3:
             bad.append(f"the glow's falloff is not brighter in linear light: {meas['glow_falloff']}")
+        # light wrap on the stage: the same planes composited without it; only the characters' inner edges change, brighter
+        pd = d / "build" / "shots" / f"{shr['id']}_planes"; L = lambda p: np.asarray(Image.open(pd / p / f"f_{f:05d}.png").convert("RGBA"))
+        infos = {p: _json(pd / p / "info.json", {}).get(str(f)) for p in r["planes"] + ["@top"]}
+        nowrap = MA.composite_linear([(L(p), {**(infos[p] or {}), "lightwrap": None}) for p in r["planes"] + ["@top"]]).astype(float)
+        a_st = L("stage")[..., 3].astype(float) / 255; inside = a_st > 0.99
+        from scipy import ndimage
+        edge_in = inside & ~ndimage.binary_erosion(inside, iterations=4); deep = ndimage.binary_erosion(inside, iterations=30)
+        lift = (li - nowrap).mean(-1)
+        meas["light_wrap"] = {"stage_reports": bool((infos["stage"] or {}).get("lightwrap")), "edge_lift": round(float(lift[edge_in].mean()), 2), "deep_inside_lift": round(float(np.abs(lift[deep]).mean()), 3),
+                              "outside_lift": round(float(np.abs(lift[a_st < 0.01]).mean()), 3)}
+        lwm = meas["light_wrap"]
+        if not (lwm["stage_reports"] and lwm["edge_lift"] > 3 and lwm["deep_inside_lift"] < 0.5 and lwm["outside_lift"] < 0.5):
+            bad.append(f"light wrap: {lwm}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
     return bad, meas

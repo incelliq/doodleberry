@@ -1954,10 +1954,12 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   so `comp.linear` does it outside the browser: each plane rendered alone on transparency (the player's
   `?compplane=<id>`, `@top` for the bubbles; `tools/comp_planes.mjs`, which also reads each plane's blend mode and
   opacity per frame), then composited far to near in float linear light (`dbe/master.py composite_linear`: normal,
-  multiply, screen, lighten, darken, overlay, plus-lighter, difference; light wrap is not redone). `film.master`
+  multiply, screen, lighten, darken, overlay, plus-lighter, difference; a light wrap screens a blur of what lies behind
+  the plane onto its inner edges, as the player's, its `from` read as everything behind). `film.master`
   with `linear: true` takes compositor shots' beauty frames from it. Test `linearplanes`: a red veil at half opacity
   over green comes out at [167, 120, 59], the linear mix exactly (the browser gives the sRGB mix, [135, 104, 59]);
-  where nothing is translucent the two agree to the level; a screened soft glow's falloff reads 117 against 103.
+  where nothing is translucent the two agree to the level; a screened soft glow's falloff reads 117 against 103; a
+  light wrap on the stage lifts the characters' inner edges by 43 levels and changes nothing deep inside or outside them.
 
 **OpenUSD** (WP-42). `export.usd {name, shot, ascii}` writes the shot as a USD stage (`build/shots/<shot>.usda`, with
 its textures beside it; `dbe/usdexport.py`, on usd-core 26.11) from the bake every renderer draws: each part an Xform

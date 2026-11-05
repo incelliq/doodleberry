@@ -349,7 +349,8 @@
       if (ctx.depthpass) {   // WP-37 depth pass: the plane's coverage in one flat colour that encodes its depth (no blends, no wrap)
         const dp = depthFill(d, W, H); defs += dp.def; g = `<g filter="url(#${dp.id})">${g}</g>`; drawn[p.id] = g; body += g; continue;
       }
-      if (ctx.info) (ctx.info.blends = ctx.info.blends || {})[p.id] = { mode: bl ? (bl.mode || 'normal') : 'normal', opacity: bl ? (bl.opacity ?? 1) : (p.opacity ?? 1), depth: d, lightwrap: !!nodes.find(n => n.type === 'lightwrap') };
+      if (ctx.info) (ctx.info.blends = ctx.info.blends || {})[p.id] = { mode: bl ? (bl.mode || 'normal') : 'normal', opacity: bl ? (bl.opacity ?? 1) : (p.opacity ?? 1), depth: d,
+        lightwrap: (lw0 => lw0 ? { radius: lw0.radius ?? 14, strength: Math.max(0, lw0.strength ?? 0.7), from: lw0.from || null } : null)(nodes.find(n => n.type === 'lightwrap')) };
       if (ctx.only) { drawn[p.id] = g; body += g; continue; }
       const lw = nodes.find(n => n.type === 'lightwrap');
       let wrap = '';
