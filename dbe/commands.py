@@ -7719,6 +7719,10 @@ def test_golden(update=False, film=""):
         bad, meas = _kenneyprops_test()
         failed += 1 if bad else 0
         results.append({"kenneyprops": "Kenney's Generic Items labelled one by one into a prop library: every file matching its sha256, and props.make drawing one (a teapot) where the prop stands", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "mixstream":   # WP-38: the streaming mixer against the whole-array one (mixes two films twice, so only when asked)
+        bad, meas = _mixstream_test()
+        failed += 1 if bad else 0
+        results.append({"mixstream": "the streaming mixer (disk-backed buffers, block by block) writes the same bytes as the whole-array mixer for every file, rooms included, and its limiter matches across block boundaries", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "lufsstream":   # WP-38: integrated loudness block by block
         bad, meas = _lufsstream_test()
         failed += 1 if bad else 0
@@ -10889,6 +10893,50 @@ def _kenneyprops_test():
             bad.append(f"the teapot prop: {meas['teapot_px']}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _mixstream_test(films=("review-demo", "how-el-nino-reaches-sri-lanka-s-rain")):
+    """WP-38 the streaming mixer (engine/audio.py main: disk-backed buffers, block by block) against the whole-array
+    mixer (main_whole) on voiced films, one with a room per set: every file (mix, music, effects, three stems) the
+    same bytes; and the streamed limiter against limit() on a loud signal spanning many blocks (a block's look-back
+    must read the block before unscaled)"""
+    import numpy as np
+    import soundfile as sf
+    sys.path.insert(0, str(ROOT / "engine")); import audio as A
+    bad, meas = [], {}
+    rng = np.random.default_rng(3); n = 5 * A.BLK + 12345
+    x = rng.standard_normal((n, 2)) * np.repeat(rng.random(n // 2400 + 1) * 1.5, 2400)[:n, None]
+    S = A._Scratch(ROOT / "out" / "mixstream_test")
+    try:
+        ref = A.limit(x.copy()); y = S.zeros(x.shape); y[:] = x; A._limit_stream(y)
+        meas["limiter_max_diff"] = float(np.abs(ref - np.asarray(y)).max())
+        if meas["limiter_max_diff"] > 1e-12:
+            bad.append(f"limiter: {meas['limiter_max_diff']}")
+    finally:
+        S.close()
+    files = ["mix.wav", "music.wav", "sfx.wav", "stems/voice.wav", "stems/music.wav", "stems/sfx.wav"]
+    for f in films:
+        if not (FILMS / f / "build" / "voice.wav").exists():
+            meas[f] = "not voiced here"; continue
+        dirs = {}
+        for mode in ("whole", "stream"):
+            d = FILMS / f"zz-mixstream-{mode}"; shutil.rmtree(d, ignore_errors=True); shutil.copytree(FILMS / f, d, ignore=shutil.ignore_patterns("master*", "package", "versions", "*.mp4"))
+            r = subprocess.run([sys.executable, str(ROOT / "engine" / "audio.py"), str(d)], env={**os.environ, **({"DBE_MIX_WHOLE": "1"} if mode == "whole" else {})}, capture_output=True, text=True, timeout=1200)
+            if r.returncode:
+                bad.append(f"{f} {mode}: {r.stderr[-400:]}")
+            dirs[mode] = d
+        try:
+            diff = {}
+            for fl in files:
+                a, _ = sf.read(dirs["whole"] / "build" / fl, dtype="int32"); b2, _ = sf.read(dirs["stream"] / "build" / fl, dtype="int32")
+                diff[fl] = int((a != b2).sum())
+            meas[f] = {"samples_differing": diff, "rooms": (FILMS / f / "build" / "rooms.json").exists()}
+            if any(diff.values()):
+                bad.append(f"{f}: {diff}")
+        finally:
+            for d in dirs.values():
+                shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 

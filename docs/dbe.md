@@ -1658,9 +1658,21 @@ within 4e-15 LU; on 5 minutes of stereo it needs 59 MB of working memory against
 1,382 MB, and 5.2 s against 7.4 s). A film's mix, music and effects come out byte-identical (ask-ravi-e01, rendered by
 the engine before and after). The reverbs already run in chunks with overlap-add.
 
-**Open:**
-- A mixer bounded in memory whatever the length would also have to synthesise the music and lay the effects into
-  the mix block by block (today they are full-length buffers).
+**The streaming mixer** (5 Nov 2026, `engine/audio.py` main; the whole-array mixer stays as `main_whole`, the
+reference, `DBE_MIX_WHOLE=1`). Every full-length signal (voice, score, effects, stems, mix) is a disk-backed array
+(numpy memmap in `build/mixtmp/`, each file removed as soon as it is no longer needed) and every pass runs block by
+block (2^18 samples): the causal filters carry their state from block to block (the same recursion), the moving
+averages (line levelling, compressor, presence) and the limiter's 4x peaks, 5 ms minimum and 4 ms smoothing read a
+margin of real neighbours, the limiter applies each block's gain one block late (the next block's look-back reads the
+one before unscaled: applying it at once was the first version's bug, found at a block boundary at 32.768 s), the
+score's notes are laid straight into its buffer, the reverbs overlap-add block by block, and the loudness passes use
+`lufs`. Test `mixstream` (only when asked): on review-demo and on the El Nino film (a room per set) every file (mix,
+music, effects and the three stems) is the same bytes as the whole-array mixer's; the streamed limiter matches
+`limit` within 5e-16 across five block boundaries. Measured (the process's anonymous memory, polled; the buffers'
+file pages are the system's to drop): a 2-minute cut of the long-form film 145 MB against 762 MB, a 10-minute cut
+(1,300 effects) 299 MB against 3,081 MB and 184 s against 201 s, all six files byte-identical. The heap still grows
+with length, about 19 MB a minute (the per-frame envelopes and the effects), against the whole-array mixer's 290; disk
+use is a few buffers (about 0.46 GB each per 10 minutes, stereo float64).
 
 The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
 shots over three workers (from the one worker's own shot times), or under 0.4.

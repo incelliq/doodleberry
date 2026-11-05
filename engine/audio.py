@@ -9,6 +9,7 @@ the scene by `render.mjs --dump-cues`). Writes build/music.wav (music only),
 build/sfx.wav, build/mix.wav and adds the beat grid to timing.json.
 """
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -140,9 +141,16 @@ MELODY = [0, 2, 1, 2, 0, 1, 2, 1]  # index into chord tones, one per 8th
 def music(score, total, speaking=lambda t: False):
     """Stereo score. The melody sits an octave above the narrator's pitch band and
     drops to quarter notes while the narrator speaks, eighths between lines."""
+    out = np.zeros((int(total * SR) + SR * 4, 2))
+    beats = _score_into(out, score, total, speaking)
+    out = hp(out.T, 40).T
+    return out[: int(total * SR)], beats
+
+
+def _score_into(out, score, total, speaking):
+    """the score's notes laid into out (stereo, at least total + 4 s long) -> beat times"""
     bpm, off = score['bpm'], score['offset_s']
     beat = 60 / bpm
-    out = np.zeros((int(total * SR) + SR * 4, 2))
     beats = []
     for sec in score['sections']:
         b0, b1 = sec['from_beat'], sec['to_beat']
@@ -197,8 +205,7 @@ def music(score, total, speaking=lambda t: False):
             for i, nn in enumerate(tri + [tri[0] + 12]):
                 add_st(out, marimba(note_hz(nn + 12), 1.2), t + i * 0.07, 0.11, -0.4 + i * 0.27)
             beats.append(round(t, 3))
-    out = hp(out.T, 40).T
-    return out[: int(total * SR)], beats
+    return beats
 
 
 # ---------------- effects ----------------
@@ -664,7 +671,8 @@ def _write(path, x, gain=None, block=1 << 20):
             f.write((y * gain if gain is not None else y).astype(np.float32))
 
 
-def main():
+def main_whole():
+    """the mixer on whole arrays (the reference the streaming mixer, main, is checked against: test mixstream)"""
     film = Path(sys.argv[1])
     b = film / 'build'
     # the score with a sound designer's music swaps (sound.json, WP-40), when film.render or sound.remix wrote it
@@ -766,5 +774,299 @@ def main():
     }))
 
 
+# ---------------- the streaming mixer (WP-38): memory bounded whatever the film's length ----------------
+# Every full-length signal lives in a disk-backed array (numpy memmap in build/mixtmp/, removed at the end) and every
+# pass runs block by block: the causal filters carry their state across blocks (the same recursion), the moving
+# averages and the limiter's look-ahead read a margin of real neighbours, the reverbs overlap-add block by block, and
+# the loudness is measured by lufs (block by block). The per-sample arithmetic is the whole-array mixer's (main_whole);
+# only the reverbs' FFT blocks differ, in the last bits of float64, which the 24-bit files do not keep.
+BLK = 1 << 18
+
+
+class _Scratch:
+    def __init__(self, d):
+        import shutil
+        self.d = Path(d); shutil.rmtree(self.d, ignore_errors=True); self.d.mkdir(parents=True); self.k = 0
+
+    def zeros(self, shape):
+        self.k += 1
+        return np.lib.format.open_memmap(self.d / f'b{self.k}.npy', mode='w+', dtype=np.float64, shape=shape)
+
+    def free(self, *arrs):
+        """drop buffers no longer needed (their files go; the disk a long film needs stays a few buffers)"""
+        for a in arrs:
+            f = getattr(a, 'filename', None)
+            if f:
+                Path(f).unlink(missing_ok=True)
+
+    def close(self):
+        import shutil
+        shutil.rmtree(self.d, ignore_errors=True)
+
+
+def _blocks(n, block=BLK):
+    for a in range(0, n, block):
+        yield a, min(n, a + block)
+
+
+def _sos_stream(sos, src, dst):
+    """a causal SOS filter along axis 0 of src into dst (dst may be src), block by block, state carried"""
+    zi = None
+    for a, b in _blocks(len(src)):
+        y = np.asarray(src[a:b], dtype=np.float64)
+        if zi is None:
+            zi = np.zeros((sos.shape[0], 2) + y.shape[1:])
+        out, zi = sosfilt(sos, y, axis=0, zi=zi)
+        dst[a:b] = out
+
+
+def _window(get, n, lo, hi):
+    """samples lo..hi of a signal of length n (get(a, b) reads them), zeros outside it"""
+    a, b = max(0, lo), min(n, hi)
+    seg = get(a, b) if b > a else np.zeros(0)
+    return np.concatenate([np.zeros(a - lo), seg, np.zeros(hi - b)]) if (a > lo or b < hi) else seg
+
+
+def _conv_same(get, n, w, a, b):
+    """np.convolve(x, w, 'same')[a:b] of the whole signal, from a window of it"""
+    k = len(w)
+    return np.convolve(_window(get, n, a - k // 2, b + (k - 1) // 2), w, 'valid')
+
+
+def _frames(get, n, win, hop, f):
+    """f(np.convolve(x ** 2, ones(win) / win, 'same')[::hop]) of the whole signal, block by block"""
+    w = np.ones(win) / win; out = []
+    for a, b in _blocks(n):
+        first = a + (-a) % hop
+        if first >= b:
+            continue
+        sq = lambda u, v: np.asarray(get(u, v)) ** 2
+        c = _conv_same(sq, n, w, first, b)
+        out.append(f(c[::hop]))
+    return np.concatenate(out) if out else np.zeros(0)
+
+
+def _reverb_stream(src_send, n, ir, dst, wet, mask=None, scratch=None):
+    """dst[:, c] += conv(send * mask, ir[:, c])[:n] * wet, the convolution overlap-added block by block"""
+    from scipy.signal import fftconvolve
+    L = len(ir); acc = scratch.zeros((n, 2))
+    for a, b in _blocks(n):
+        s = src_send(a, b)
+        if mask is not None:
+            s = s * mask(a, b)
+        if not np.any(s):
+            continue
+        e = min(n, b + L - 1)
+        for c in range(2):
+            acc[a:e, c] += fftconvolve(s, ir[:, c])[: e - a]
+    for a, b in _blocks(n):
+        dst[a:b] += acc[a:b] * wet
+    scratch.free(acc); del acc
+
+
+def _room_reverb_stream(get_send, n, rooms, key, default_wet, default_ir, dst, scratch):
+    if not rooms:
+        _reverb_stream(get_send, n, default_ir, dst, default_wet, scratch=scratch); return
+    groups = {}
+    for r in rooms:
+        groups.setdefault((r['rt60'], r[key]), []).append((r['t0'], r['t1']))
+    for (rt60, wet), spans in groups.items():
+        def mask(a, b, spans=spans):
+            tt = np.arange(a, b) / SR; m = np.zeros(b - a)
+            for t0, t1 in spans:
+                m = np.maximum(m, np.clip(np.minimum((tt - t0) / 0.05 + 0.5, (t1 - tt) / 0.05 + 0.5), 0, 1))
+            return m
+        ir = default_ir if rt60 == 1.1 else reverb_ir(rt60, length=max(0.4, min(2.4, rt60 * 1.4)))
+        _reverb_stream(get_send, n, ir, dst, wet, mask=mask, scratch=scratch)
+
+
+def _duck_stream(x, pres_at, dst, low_db=-5, mid_db=-12, high_db=-6):
+    sl, sh = butter(4, 200, 'low', fs=SR, output='sos'), butter(4, 5000, 'high', fs=SR, output='sos')
+    zl = zh = None
+    for a, b in _blocks(len(x)):
+        xb = np.asarray(x[a:b])
+        if zl is None:
+            zl = np.zeros((sl.shape[0], 2, xb.shape[1])); zh = np.zeros((sh.shape[0], 2, xb.shape[1]))
+        low, zl = sosfilt(sl, xb, axis=0, zi=zl); high, zh = sosfilt(sh, xb, axis=0, zi=zh)
+        pr = pres_at(a, b)
+        g = lambda d: (10 ** (d * pr / 20))[:, None]
+        mid = xb - low - high
+        dst[a:b] = low * g(low_db) + mid * g(mid_db) + high * g(high_db)
+
+
+def _scale(x, g):
+    for a, b in _blocks(len(x)):
+        x[a:b] *= g
+
+
+def _limit_stream(x, ceiling_db=-1.6):
+    """limit() in place, block by block: the 4x peaks, the 5 ms minimum and the 4 ms smoothing from a margin of real
+    neighbours around each block"""
+    from scipy.ndimage import minimum_filter1d
+    c = 10 ** (ceiling_db / 20); n = len(x); r = int(0.005 * SR); k = int(0.004 * SR); M = r + k + 64
+    w = np.ones(k) / k; pending = None
+    for a, b in _blocks(n):
+        lo, hi = max(0, a - M), min(n, b + M)
+        x2 = np.asarray(x[lo:hi]); x2 = x2 if x2.ndim == 2 else x2[:, None]
+        pk = _peak4(x2)
+        g0 = minimum_filter1d(np.minimum(1, c / (pk + 1e-12)), size=2 * r + 1)
+        # np.convolve(g, w, 'same') over the whole film: zeros beyond its ends
+        get = lambda u, v, g0=g0, lo=lo: g0[u - lo:v - lo]
+        g = np.convolve(_window(get, n, a - k // 2, b + (k - 1) // 2), w, 'valid')
+        # the gain is applied one block late: this block's margin reads the block before, which must not be scaled yet
+        if pending is not None:
+            pa, pb, pg = pending; x[pa:pb] *= (pg[:, None] if x.ndim == 2 else pg)
+        pending = (a, b, g)
+    if pending is not None:
+        pa, pb, pg = pending; x[pa:pb] *= (pg[:, None] if x.ndim == 2 else pg)
+
+
+def main():
+    film = Path(sys.argv[1])
+    b = film / 'build'
+    score = json.loads(((b / 'score_mix.json') if (b / 'score_mix.json').exists() else (film / 'score.json')).read_text())
+    timing = json.loads((film / 'timing.json').read_text())
+    cues = json.loads((b / 'cues.json').read_text())
+    total = score['length_s']; n = int(total * SR); meter = pyln.Meter(SR)
+    S = _Scratch(b / 'mixtmp')
+    try:
+        fx_on = json.loads((film / 'script.json').read_text()).get('voice_fx')
+        V = -16.0
+        voice = S.zeros((n,))
+        if score.get('voice', True) is not False:
+            with sf.SoundFile(b / ('voice_fx.wav' if fx_on else 'voice.wav')) as f:
+                assert f.samplerate == SR
+                for a, b_ in _blocks(n):
+                    y = f.read(b_ - a, dtype='float64')
+                    voice[a:a + len(y)] = y if y.ndim == 1 else y[:, 0]
+            _sos_stream(butter(2, 90, 'high', fs=SR, output='sos'), voice, voice)
+            _sos_stream(butter(2, 11000, 'low', fs=SR, output='sos'), voice, voice)
+            # level_lines, block by block
+            lines = timing['lines']
+            Ls = [meter.integrated_loudness(np.asarray(voice[int(l['start'] * SR):int(l['end'] * SR)])) if l['end'] - l['start'] > 0.45 else None for l in lines]
+            if any(L is not None for L in Ls):
+                ref = np.median([L for L in Ls if L is not None])
+                segs = [(max(0, int((l['start'] - 0.08) * SR)), int((l['end'] + 0.08) * SR), 10 ** (np.clip(ref - L, -5, 5) / 20)) for l, L in zip(lines, Ls) if L is not None]
+                def gcurve(u, v):
+                    g = np.ones(v - u)
+                    for s0, s1, val in segs:
+                        if s1 > u and s0 < v:
+                            g[max(s0, u) - u:min(s1, v) - u] = val
+                    return g
+                kk = int(0.04 * SR); w = np.ones(kk) / kk
+                gl = S.zeros((n,))
+                for a, b_ in _blocks(n):
+                    gl[a:b_] = _conv_same(gcurve, n, w, a, b_)
+                for a, b_ in _blocks(n):
+                    voice[a:b_] *= gl[a:b_]
+                S.free(gl); del gl
+            # compress, block by block
+            hop = int(0.001 * SR)
+            lvl = 20 * np.log10(np.sqrt(_frames(lambda u, v: voice[u:v], n, hop * 5, hop, lambda c: c)) + 1e-9)
+            thr = lvl.max() + (-14); target = np.where(lvl > thr, (thr - lvl) * (1 - 1 / 2.5), 0.0)
+            gg, out = 0.0, np.zeros(len(target)); ka, kr = 1 - np.exp(-0.001 / 0.006), 1 - np.exp(-0.001 / 0.09)
+            for i, dd in enumerate(target):
+                gg += (dd - gg) * (ka if dd < gg else kr); out[i] = gg
+            xs = np.arange(len(out)) * hop
+            for a, b_ in _blocks(n):
+                voice[a:b_] *= 10 ** (np.interp(np.arange(a, b_), xs, out) / 20)
+            _scale(voice, 10 ** ((-16 - lufs(voice, meter)) / 20))
+        # presence (10 ms frames), sampled where needed
+        hop = int(0.01 * SR)
+        if any(np.any(voice[a:b_]) for a, b_ in _blocks(n)):
+            fr = np.sqrt(_frames(lambda u, v: voice[u:v], n, hop, hop, lambda c: c) + 1e-12)
+            db = 20 * np.log10(fr); on = (db > db.max() - 35).astype(float)
+            pp, pout = 0.0, np.zeros(len(on)); ka, kr = 1 - np.exp(-0.01 / 0.04), 1 - np.exp(-0.01 / 0.35)
+            for i, xx in enumerate(on):
+                pp += (xx - pp) * (ka if xx > pp else kr); pout[i] = pp
+            pxs = np.arange(len(pout)) * hop
+            pres_at = lambda a, b_: np.interp(np.arange(a, b_), pxs, pout)
+        else:
+            pres_at = lambda a, b_: np.zeros(b_ - a)
+        speaking = lambda t: pres_at(min(n - 1, int(t * SR)), min(n - 1, int(t * SR)) + 1)[0] > 0.5
+
+        # ---- score
+        mus_full, beats = music_stream(score, total, speaking, S)
+        mus = mus_full[:n]
+        _scale(mus, 10 ** ((V - 9 - lufs(mus, meter)) / 20))
+        ir = reverb_ir()
+        _reverb_stream(lambda a, b_: np.asarray(mus[a:b_]).mean(axis=1), n, ir, mus, 0.22, scratch=S)
+        mus_d = S.zeros((n, 2)); _duck_stream(mus, pres_at, mus_d)
+        fade = int(score.get('fade_out_s', 0.6) * SR)
+        mo = mus
+        mo[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
+        for _ in range(3):
+            _scale(mo, 10 ** ((-14 - lufs(mo, meter)) / 20)); _limit_stream(mo)
+        _write(b / 'music.wav', mo)
+        music_lufs = round(lufs(mo, meter), 2)
+        S.free(mus_full); del mo, mus, mus_full
+
+        # ---- effects
+        fxb = S.zeros((n + SR * 2, 2))
+        want = score.get('samples'); lib = sample_library() if want else None; used = []; turns = {}
+        for c in cues:
+            hit = sample_for(c, lib, None if want is True else want, turns) if want else None
+            if hit:
+                used.append({'t': c['t'], 'type': c['type'], **({'surface': c['surface']} if c.get('surface') else {}), 'sample': hit[1]})
+            x = declick(hp(load_sample(hit[0]) if hit else sfx(c['type'], c.get('dur'), c.get('surface')), 250))
+            L = max((meter.integrated_loudness(np.pad(x[i:i + int(0.4 * SR)], (0, max(0, int(0.4 * SR) - len(x[i:i + int(0.4 * SR)])))))
+                     for i in range(0, max(1, len(x) - int(0.2 * SR)), int(0.05 * SR))), default=-70)
+            g = 10 ** ((V + SFX_LEVEL[c['type']] + 20 * np.log10(c.get('gain', 1.0)) - L) / 20)
+            if c['type'] == 'whoosh':
+                pz = np.linspace(-0.6, 0.6, len(x))
+                i = int(round(c['t'] * SR)); j = min(len(fxb), i + len(x))
+                fxb[i:j, 0] += (x * g * np.cos((pz + 1) * np.pi / 4))[: j - i]
+                fxb[i:j, 1] += (x * g * np.sin((pz + 1) * np.pi / 4))[: j - i]
+            else:
+                add_st(fxb, x, c['t'], g, c['pan'] if 'pan' in c else 0.12 * np.sin(c['t'] * 2.3))
+        fxr = fxb[:n]
+        if want:
+            (b / 'samples_used.json').write_text(json.dumps(used, indent=1))
+        rooms = json.loads((b / 'rooms.json').read_text()) if (b / 'rooms.json').exists() else []
+        fx2 = S.zeros((n, 2))
+        for a, b_ in _blocks(n):
+            fx2[a:b_] = fxr[a:b_]
+        _room_reverb_stream(lambda a, b_: np.asarray(fxr[a:b_]).mean(axis=1), n, rooms, 'fx_wet', 0.16, ir, fx2, S)
+        S.free(fxb); del fxr, fxb
+        fx = S.zeros((n, 2)); _duck_stream(fx2, pres_at, fx, low_db=-2, mid_db=-8, high_db=-3)
+        S.free(fx2); del fx2
+
+        # ---- voice in stereo with its room, then the mix
+        vo = S.zeros((n, 2)); lr = pan_gains(0.0)
+        for a, b_ in _blocks(n):
+            vv = np.asarray(voice[a:b_]); vo[a:b_, 0] = vv * lr[0]; vo[a:b_, 1] = vv * lr[1]
+        _room_reverb_stream(lambda a, b_: np.asarray(voice[a:b_]), n, rooms, 'voice_wet', 0.035, ir, vo, S)
+        S.free(voice); del voice
+        mix = S.zeros((n, 2))
+        for a, b_ in _blocks(n):
+            m = vo[a:b_] + mus_d[a:b_]; m += fx[a:b_]; mix[a:b_] = m
+        mix[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
+        gain = 1.0
+        for _ in range(4):
+            g = 10 ** ((-14 - lufs(mix, meter)) / 20); gain *= g
+            _scale(mix, g); _limit_stream(mix)
+        _write(b / 'mix.wav', mix)
+        (b / 'stems').mkdir(exist_ok=True)
+        for name, x in (('voice', vo), ('music', mus_d), ('sfx', fx)):
+            _write(b / 'stems' / f'{name}.wav', x, gain)
+        _write(b / 'sfx.wav', fx, gain)
+        timing['beats'] = beats; timing['bpm'] = score['bpm']
+        timing['sections'] = [{'kind': s_['kind'], 'start': round(score['offset_s'] + s_['from_beat'] * 60 / score['bpm'], 3)} for s_ in score['sections']]
+        (film / 'timing.json').write_text(json.dumps(timing, indent=1))
+        peak = max(float(_peak4(np.asarray(mix[max(0, a - 64):min(n, b_ + 64)]))[a - max(0, a - 64):a - max(0, a - 64) + (b_ - a)].max()) for a, b_ in _blocks(n))
+        print(json.dumps({'mix_lufs': round(lufs(mix, meter), 2), 'mix_true_peak_db': round(20 * np.log10(peak + 1e-12), 2),
+                          'music_lufs': music_lufs, 'beats': len(beats), 'cues': len(cues)}))
+    finally:
+        S.close()
+
+
+def music_stream(score, total, speaking, scratch):
+    """music() into a disk-backed buffer, its 40 Hz high-pass block by block -> (array of int(total*SR) frames, beats)"""
+    out = scratch.zeros((int(total * SR) + SR * 4, 2))
+    beats = _score_into(out, score, total, speaking)
+    _sos_stream(butter(2, 40, 'high', fs=SR, output='sos'), out, out)
+    return out[: int(total * SR)], beats
+
+
 if __name__ == '__main__':
-    main()
+    main_whole() if os.environ.get('DBE_MIX_WHOLE') else main()
