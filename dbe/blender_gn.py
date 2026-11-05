@@ -6,6 +6,9 @@ camera so it sits behind the 2D puppets exactly.
 REQ: {size: [W, H], fps, start, frames: [frame numbers to render] | count, camera: [[t, [cx, cy, zoom]]], floor: y px,
       kind: "city", seed, blocks: {count, min_dist, depth: [near, far], width, height: [lo, hi]}, palette: [...],
       sky: "#..", ground: "#..", ink: "#..", line: 1.4, samples: 1, ink_lines: true, zpass: false (EXR with depth)}
+     kind: "props" (WP-42): bodies: [{shape: box | ball, size (m), at: [x px, depth m, height m above the ground], rot,
+      colour, mass, friction, bounce, velocity: [vx, vy, vz] m/s}], substeps, iterations: rigid bodies under Bullet,
+      baked, then rendered; bodies.json records where each is on every rendered frame
 
 The camera maps the 2D stage exactly: 1 px = 1 cm on the stage plane (y = 0), the camera stands D0 = 12 m in front,
 pans with the 2D camera centre and dollies in by its zoom, so a point on the stage plane lands where the 2D renderer
@@ -101,49 +104,88 @@ bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 190, floor_z))
 ground = bpy.context.active_object; ground.scale = (900, 420, 1)   # from well in front of the camera to the far lot
 ground.data.materials.append(toon_material("ground", [R.get("ground", "#cfd8a8")]))
 
-# the Geometry Nodes set: points scattered on a lot behind the stage, an instance per point with a random size and shade
-B = R.get("blocks", {})
-near, far = B.get("depth", [14, 120])
-width = B.get("width", 140)
-lo, hi = B.get("height", [4, 26])
-bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
-host = bpy.context.active_object; host.name = "set"
-mod = host.modifiers.new("set", "NODES")
-ng = bpy.data.node_groups.new("city", "GeometryNodeTree")
-ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
-mod.node_group = ng
-N = ng.nodes; L = ng.links.new
-out = N.new("NodeGroupOutput")
-grid = N.new("GeometryNodeMeshGrid")
-grid.inputs["Size X"].default_value = width; grid.inputs["Size Y"].default_value = far - near
-grid.inputs["Vertices X"].default_value = 2; grid.inputs["Vertices Y"].default_value = 2
-move = N.new("GeometryNodeTransform")
-move.inputs["Translation"].default_value = (0, (near + far) / 2, floor_z)
-L(grid.outputs["Mesh"], move.inputs["Geometry"])
-dist = N.new("GeometryNodeDistributePointsOnFaces"); dist.distribute_method = "POISSON"
-dist.inputs["Distance Min"].default_value = B.get("min_dist", 9.0)
-dist.inputs["Density Max"].default_value = B.get("density", 0.05)
-dist.inputs["Seed"].default_value = int(R.get("seed", 1))
-L(move.outputs["Geometry"], dist.inputs["Mesh"])
-cube = N.new("GeometryNodeMeshCube"); cube.inputs["Size"].default_value = (1, 1, 1)
-lift = N.new("GeometryNodeTransform"); lift.inputs["Translation"].default_value = (0, 0, 0.5)   # stand on the ground
-L(cube.outputs["Mesh"], lift.inputs["Geometry"])
-inst = N.new("GeometryNodeInstanceOnPoints")
-L(dist.outputs["Points"], inst.inputs["Points"]); L(lift.outputs["Geometry"], inst.inputs["Instance"])
-rnd = N.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT_VECTOR"
-rnd.inputs["Min"].default_value = (B.get("foot", [5, 8])[0], B.get("foot", [5, 8])[0], lo)
-rnd.inputs["Max"].default_value = (B.get("foot", [5, 8])[1], B.get("foot", [5, 8])[1], hi)
-rnd.inputs["Seed"].default_value = int(R.get("seed", 1)) + 1
-L(rnd.outputs["Value"], inst.inputs["Scale"])
-shade = N.new("FunctionNodeRandomValue"); shade.data_type = "FLOAT"
-shade.inputs["Seed"].default_value = int(R.get("seed", 1)) + 2
-store = N.new("GeometryNodeStoreNamedAttribute"); store.data_type = "FLOAT"; store.domain = "INSTANCE"
-store.inputs["Name"].default_value = "shade"
-L(inst.outputs["Instances"], store.inputs["Geometry"]); L(shade.outputs["Value"], store.inputs["Value"])
-setmat = N.new("GeometryNodeSetMaterial")
-setmat.inputs["Material"].default_value = toon_material("blocks", R.get("palette", ["#e8a87c", "#d27c5a", "#f2d6a2", "#9fc1d6", "#c9b8e8"]), attr="shade")
-L(store.outputs["Geometry"], setmat.inputs["Geometry"])
-L(setmat.outputs["Geometry"], out.inputs["Geometry"])
+
+
+def build_props():
+    """WP-42: rigid bodies under Bullet (Blender's rigid body world): boxes and balls dropped onto the ground (and each
+    other), simulated with a fixed step and baked before rendering, so a frame is a pure function of the request"""
+    rw = sc.rigidbody_world
+    if rw is None:
+        bpy.ops.rigidbody.world_add(); rw = sc.rigidbody_world
+    rw.substeps_per_frame = int(R.get("substeps", 10)); rw.solver_iterations = int(R.get("iterations", 20))
+    last = max(R.get("frames") or list(range(R.get("count", 1)))) + 2
+    rw.point_cache.frame_start = 1; rw.point_cache.frame_end = last
+    sc.frame_start = 1; sc.frame_end = last
+    bpy.context.view_layer.objects.active = ground; ground.select_set(True)
+    bpy.ops.rigidbody.object_add(); ground.rigid_body.type = "PASSIVE"; ground.rigid_body.collision_shape = "BOX"
+    ground.rigid_body.friction = R.get("friction", 0.6); ground.select_set(False)
+    for i, b in enumerate(R.get("bodies", [])):
+        sz = float(b.get("size", 1.0)); x, depth, hgt = b.get("at", [W / 2, 6, 3])
+        loc = ((x - W / 2) * K, depth, floor_z + hgt)
+        if b.get("shape", "box") == "ball":
+            bpy.ops.mesh.primitive_uv_sphere_add(radius=sz / 2, segments=24, ring_count=12, location=loc)
+        else:
+            bpy.ops.mesh.primitive_cube_add(size=sz, location=loc)
+        o = bpy.context.active_object; o.name = b.get("name", f"body{i}")
+        o.rotation_euler = tuple(math.radians(v) for v in b.get("rot", [0, 0, 0]))
+        o.data.materials.append(toon_material(f"m{i}", [b.get("colour", "#e8a87c")]))
+        bpy.ops.rigidbody.object_add(); rb = o.rigid_body
+        rb.type = "ACTIVE"; rb.collision_shape = "SPHERE" if b.get("shape") == "ball" else "BOX"
+        rb.mass = float(b.get("mass", 1.0)); rb.friction = b.get("friction", 0.6); rb.restitution = b.get("bounce", 0.2)
+        if b.get("velocity"):   # an initial push (m/s): keyed as an animated start that hands over to the simulation
+            rb.kinematic = True; o.keyframe_insert("location", frame=1)
+            vx, vy, vz = b["velocity"]; o.location = (loc[0] + vx / fps, loc[1] + vy / fps, loc[2] + vz / fps); o.keyframe_insert("location", frame=2)
+            rb.keyframe_insert("kinematic", frame=1); rb.kinematic = False; rb.keyframe_insert("kinematic", frame=2)
+        o.select_set(False)
+    bpy.ops.ptcache.bake_all(bake=True)
+
+
+if R.get("kind", "city") == "city":
+    # the Geometry Nodes set: points scattered on a lot behind the stage, an instance per point with a random size and shade
+    B = R.get("blocks", {})
+    near, far = B.get("depth", [14, 120])
+    width = B.get("width", 140)
+    lo, hi = B.get("height", [4, 26])
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0))
+    host = bpy.context.active_object; host.name = "set"
+    mod = host.modifiers.new("set", "NODES")
+    ng = bpy.data.node_groups.new("city", "GeometryNodeTree")
+    ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
+    mod.node_group = ng
+    N = ng.nodes; L = ng.links.new
+    out = N.new("NodeGroupOutput")
+    grid = N.new("GeometryNodeMeshGrid")
+    grid.inputs["Size X"].default_value = width; grid.inputs["Size Y"].default_value = far - near
+    grid.inputs["Vertices X"].default_value = 2; grid.inputs["Vertices Y"].default_value = 2
+    move = N.new("GeometryNodeTransform")
+    move.inputs["Translation"].default_value = (0, (near + far) / 2, floor_z)
+    L(grid.outputs["Mesh"], move.inputs["Geometry"])
+    dist = N.new("GeometryNodeDistributePointsOnFaces"); dist.distribute_method = "POISSON"
+    dist.inputs["Distance Min"].default_value = B.get("min_dist", 9.0)
+    dist.inputs["Density Max"].default_value = B.get("density", 0.05)
+    dist.inputs["Seed"].default_value = int(R.get("seed", 1))
+    L(move.outputs["Geometry"], dist.inputs["Mesh"])
+    cube = N.new("GeometryNodeMeshCube"); cube.inputs["Size"].default_value = (1, 1, 1)
+    lift = N.new("GeometryNodeTransform"); lift.inputs["Translation"].default_value = (0, 0, 0.5)   # stand on the ground
+    L(cube.outputs["Mesh"], lift.inputs["Geometry"])
+    inst = N.new("GeometryNodeInstanceOnPoints")
+    L(dist.outputs["Points"], inst.inputs["Points"]); L(lift.outputs["Geometry"], inst.inputs["Instance"])
+    rnd = N.new("FunctionNodeRandomValue"); rnd.data_type = "FLOAT_VECTOR"
+    rnd.inputs["Min"].default_value = (B.get("foot", [5, 8])[0], B.get("foot", [5, 8])[0], lo)
+    rnd.inputs["Max"].default_value = (B.get("foot", [5, 8])[1], B.get("foot", [5, 8])[1], hi)
+    rnd.inputs["Seed"].default_value = int(R.get("seed", 1)) + 1
+    L(rnd.outputs["Value"], inst.inputs["Scale"])
+    shade = N.new("FunctionNodeRandomValue"); shade.data_type = "FLOAT"
+    shade.inputs["Seed"].default_value = int(R.get("seed", 1)) + 2
+    store = N.new("GeometryNodeStoreNamedAttribute"); store.data_type = "FLOAT"; store.domain = "INSTANCE"
+    store.inputs["Name"].default_value = "shade"
+    L(inst.outputs["Instances"], store.inputs["Geometry"]); L(shade.outputs["Value"], store.inputs["Value"])
+    setmat = N.new("GeometryNodeSetMaterial")
+    setmat.inputs["Material"].default_value = toon_material("blocks", R.get("palette", ["#e8a87c", "#d27c5a", "#f2d6a2", "#9fc1d6", "#c9b8e8"]), attr="shade")
+    L(store.outputs["Geometry"], setmat.inputs["Geometry"])
+    L(setmat.outputs["Geometry"], out.inputs["Geometry"])
+else:
+    build_props()
 
 # light (the toon ramp reads it) and ink lines
 sun = bpy.data.lights.new("sun", "SUN"); sun.energy = 3.0
@@ -171,11 +213,16 @@ if R.get("zpass"):   # WP-43: depth ground truth, a multilayer EXR with the pict
     ims.file_format = "OPEN_EXR_MULTILAYER"
     sc.render.image_settings.color_depth = "32"
     sc.render.use_freestyle = False
+track = {}
 for f in frames:
     t = R.get("start", 0) + f / fps
     cx, cy, z = sample_keys(keys, t)
     cam.location = ((cx - W / 2) * K, -D0 / z, -(cy - H / 2) * K)
-    sc.frame_set(1)
+    sc.frame_set(f + 1 if R.get("kind") == "props" else 1)
+    if R.get("kind") == "props":   # where each body is (m, the stage's axes: x right, y away, z up), for checks and the record
+        track[f] = {o.name: [round(v, 5) for v in (*o.matrix_world.translation, *o.matrix_world.to_euler())] for o in sc.objects if o.rigid_body and o.rigid_body.type == "ACTIVE"}
     sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.{'exr' if R.get('zpass') else 'png'}")
     bpy.ops.render.render(write_still=True)
+if track:
+    json.dump({"floor_z": floor_z, "frames": track}, open(os.path.join(OUT, "bodies.json"), "w"))
 print("rendered", len(frames), "frames to", OUT)

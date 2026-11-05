@@ -7345,6 +7345,10 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
+        bad, meas = _rigid_test()
+        failed += 1 if bad else 0
+        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "usd":   # WP-42: OpenUSD export
         bad, meas = _usd_test()
         failed += 1 if bad else 0
@@ -10495,6 +10499,35 @@ def _usd_test(name="handshake-demo", shot="s1", frames=(60, 120, 200)):
         meas["fill_silhouette_iou"] = ious
         if min(ious) < 0.9:
             bad.append(f"silhouette IoU {ious}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _rigid_test():
+    """WP-42 rigid bodies under Bullet (Blender's rigid body world) as a proc node: three boxes dropped into a stack and
+    a ball come to rest where the sizes say (box centres at 0.5, 1.5, 2.5 sizes above the ground, the ball at its
+    radius), stay put, and a second cook gives the same positions and the same pixels"""
+    import tempfile
+    from . import proc as PR
+    bad, meas = [], {}
+    if not BLENDER:
+        return ["Blender not found"], meas
+    tmp = Path(tempfile.mkdtemp(prefix="rigid_", dir=ROOT / "out"))
+    try:
+        node = {"op": "rigid", "plane": "set3d", "bodies": [{"shape": "box", "size": 1.0, "at": [270, 6, 1.0]}, {"shape": "box", "size": 1.0, "at": [275, 6, 2.6], "colour": "#9fc1d6"},
+                                                              {"shape": "box", "size": 1.0, "at": [265, 6, 4.2], "colour": "#c9b8e8"}, {"shape": "ball", "size": 0.8, "at": [120, 6, 5.0], "bounce": 0.5}]}
+        ctx = {"size": [540, 960], "fps": 30, "start": 0.0, "frames": 90, "camera": [[0, [270, 480, 1]]], "floor": 800}
+        node["every"] = 30
+        outs, rep = PR.cook({"crates": node}, ctx, tmp / "cache")
+        o = outs["crates"]; B = o["bodies"]; fl = B["floor_z"]; fr = B["frames"]; last, prev = fr[max(fr, key=int)], fr[sorted(fr, key=int)[-2]]
+        want = {"body0": 0.5, "body1": 1.5, "body2": 2.5, "body3": 0.4}
+        meas["rest_height_m"] = {k: round(last[k][2] - fl, 4) for k in want}
+        meas["settled_mm"] = round(1000 * max(max(abs(a - b) for a, b in zip(last[k][:3], prev[k][:3])) for k in want), 3)
+        outs2, _ = PR.cook({"crates": node}, ctx, tmp / "cache", force=("crates",))
+        meas["rerun_same_positions"] = outs2["crates"]["bodies"] == B; meas["rerun_same_pixels"] = outs2["crates"]["frames"] == o["frames"]
+        if any(abs(meas["rest_height_m"][k] - v) > 0.02 * max(v, 1) for k, v in want.items()) or meas["settled_mm"] > 1 or not meas["rerun_same_positions"] or not meas["rerun_same_pixels"]:
+            bad.append(f"rigid: {meas}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas

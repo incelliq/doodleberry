@@ -8,7 +8,8 @@ nodes downstream of it and nothing else. Everything is seeded: a cook is a pure 
       "crowd": {"op": "crowd", "in": "spots", "puppets": ["cast/generated/*.puppet.json"], "s_by_y": [y0, s0, y1, s1],
                 "face": "center", "plane": "crowd", "seed": 7, "cheer": {"clips": ["clap", "celebrate"], "start": t, "end": t, "share": 0.6}},
       "confetti": {"op": "particles", "kind": "confetti" | "snow" | "rain", "count": 90, "rect": [...], "start": t, "seed": 3, "plane": "front"},
-      "city": {"op": "gn_set", "kind": "city", "seed": 11, "blocks": {...}, "palette": [...], "plane": "set3d"}}}
+      "city": {"op": "gn_set", "kind": "city", "seed": 11, "blocks": {...}, "palette": [...], "plane": "set3d"},
+      "crates": {"op": "rigid", "bodies": [{"shape": "box", "size": 1, "at": [540, 6, 4]}, ...], "plane": "set3d"}}}
 
 Outputs land in the shot: crowd members are appended to its cast (tagged "solved": "proc") on their compositor plane;
 particles and plates become items on compositor planes (a gn_set plane is screen-locked: its render already has the
@@ -24,7 +25,7 @@ from pathlib import Path
 
 from . import ROOT
 
-VERSION = {"scatter": 1, "crowd": 1, "particles": 1, "gn_set": 1}
+VERSION = {"scatter": 1, "crowd": 1, "particles": 1, "gn_set": 1, "rigid": 1}
 GN_SCRIPT = ROOT / "dbe" / "blender_gn.py"
 
 
@@ -161,7 +162,10 @@ def op_gn_set(p, ins, ctx, cache):
         raise RuntimeError(f"blender gn_set failed: {(r.stderr or r.stdout)[-1500:]}")
     hashes = {f"f_{f:04d}.png": pixel_hash(out / f"f_{f:04d}.png") for f in frames}
     item = {"type": "plate", "src": f"proc/{ctx['key']}/f_%04d.png", "start": ctx["start"], "fps": ctx["fps"], "count": n, "every": step, "proc": ctx["node"]}
-    return {"items": [item], "plane": p.get("plane", "set3d"), "screen": True, "frames": hashes}
+    res = {"items": [item], "plane": p.get("plane", "set3d"), "screen": True, "frames": hashes}
+    if (out / "bodies.json").exists():   # rigid bodies (WP-42): where each body is on every rendered frame
+        res["bodies"] = json.loads((out / "bodies.json").read_text())
+    return res
 
 
 OPS = {"scatter": op_scatter, "crowd": op_crowd, "particles": op_particles}
@@ -181,7 +185,7 @@ def cook(nodes, ctx, cache, force=(), dry=False):
         dep = {"op": op, "v": VERSION[op], "params": {k: v for k, v in node.items() if k != "in"}, "in": [keys[i] for i in inputs(node)]}
         if op == "crowd":
             dep["ctx"] = {"size": ctx["size"], "floor": ctx["floor"]}
-        if op == "gn_set":   # the render depends on the camera, the span and the script too
+        if op in ("gn_set", "rigid"):   # the render depends on the camera, the span and the script too
             dep.update(ctx={k: ctx[k] for k in ("size", "fps", "start", "frames", "camera", "floor")}, script=script)
         key = f"{op}-{_h(dep)}"
         keys[n] = key
@@ -194,7 +198,8 @@ def cook(nodes, ctx, cache, force=(), dry=False):
             cooked.append(n); continue
         t0 = time.time()
         c = {**ctx, "node": n, "key": key}
-        res = op_gn_set(node, [outs[i] for i in inputs(node)], c, cache) if op == "gn_set" else OPS[op](node, [outs[i] for i in inputs(node)], c)
+        res = op_gn_set({**node, "kind": "props"} if op == "rigid" else node, [outs[i] for i in inputs(node)], c, cache) if op in ("gn_set", "rigid") \
+            else OPS[op](node, [outs[i] for i in inputs(node)], c)
         f.write_text(json.dumps(res))
         outs[n] = res; cooked.append(n); secs[n] = round(time.time() - t0, 2)
     return outs, {"cooked": cooked, "cached": cached, "keys": keys, "seconds": secs}

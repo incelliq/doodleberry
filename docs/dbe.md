@@ -1777,6 +1777,15 @@ change re-cooks that node and what reads it: a crowd edit does not render the ci
 zooms its planes in true perspective (`"zoom": "dolly"`), so the 2D planes and the 3D render share one camera exactly.
 Frames with images wait until they have decoded. `films/city-parade` is the demo.
 
+**Rigid bodies** (WP-42). A `rigid` node, `{"op": "rigid", "bodies": [{"shape": "box" | "ball", "size", "at": [x px,
+depth m, height m], "rot", "colour", "mass", "friction", "bounce", "velocity"}], "substeps", "iterations"}`, drops
+props into the same Blender scene and camera as `gn_set` under Bullet (Blender's rigid body world: a passive ground,
+active bodies, a fixed number of substeps), bakes the simulation, then renders it into a screen-locked plate; the
+node's output also records where each body is on every rendered frame (`bodies`). Test `rigid` (Blender renders
+twice, so only when asked): three boxes dropped into a stack and a ball come to rest with their centres at 0.5, 1.5
+and 2.5 m and 0.4 m above the ground (exactly the sizes), move under a millimetre over the last second, and a second
+cook gives the same positions and the same pixels.
+
 ## ML assists, in-house (WP-43, part 1)
 Models used as assistants whose output is data a person accepts, on CPU (onnxruntime), pinned by sha256
 (`dbe/assists.py`, fetched by `bash tools/setup.sh models` or on first use):
