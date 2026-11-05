@@ -3286,6 +3286,47 @@ def _pagesort_test():
     return bad, meas
 
 
+def _mirror_test():
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="mirror_", dir=ROOT / "out"))
+    try:
+        for name, src, dst, chain, pose_l in (("nib", "puppet/examples/nib.puppet.json", "arm_L", ["arm_L", "arm_R"], {"arm_L": 30, "arm_R": -30}),
+                                               ("ravi", "cast/generated/ravi.puppet.json", "upperarm_R", ["upperarm_L", "forearm_L", "hand_L", "upperarm_R", "forearm_R", "hand_R"],
+                                                {"upperarm_L": 25, "forearm_L": 20, "upperarm_R": -25, "forearm_R": -20})):
+            pz = _json(ROOT / src); (tmp / f"{name}.puppet.json").write_text(json.dumps(pz))
+            r = puppet_mirror(str((tmp / f"{name}.puppet.json").relative_to(ROOT)), dst, replace=True)
+            m = _json(tmp / f"{name}.puppet.json"); a = r["axis"]
+            # only the arms, so the drawing should be symmetric about the axis
+            keep = {k for k in m["parts"] if k in chain}; anc = set()
+            for k in keep:
+                q = m["parts"][k].get("parent")
+                while q:
+                    anc.add(q); q = m["parts"][q].get("parent")
+            for k in list(m["parts"]):
+                if k not in keep and k not in anc:
+                    del m["parts"][k]
+                elif k in anc:
+                    m["parts"][k]["strokes"] = []
+            m["swaps"] = {}; (tmp / f"{name}.arms.puppet.json").write_text(json.dumps(m))
+            W, H = m["artboard"]; hip = (m["parts"].get("hip") or {}).get("pivot") or [W / 2, m.get("ground", H)]
+            spec = {"size": [int(W) + 16, int(H) + 16], "bg": "#ffffff", "items": [{"puppet": str((tmp / f"{name}.arms.puppet.json").relative_to(ROOT)), "x": hip[0], "y": m.get("ground", H), "s": 1, "pose": {"angles": pose_l}}]}
+            (tmp / "spec.json").write_text(json.dumps(spec))
+            subprocess.run(["node", str(ROOT / "tools" / "pose_still.mjs"), str(tmp / "spec.json"), str(tmp / f"{name}.png")], check=True, cwd=ROOT, timeout=120)
+            im = np.asarray(Image.open(tmp / f"{name}.png").convert("L"))[8:8 + int(H), 8:8 + int(W)] < 200
+            ax = int(round(a)); w = min(ax, im.shape[1] - ax)
+            left, right = im[:, ax - w:ax], im[:, ax:ax + w][:, ::-1]
+            iou = float((left & right).sum() / max(1, (left | right).sum()))
+            meas[name] = {"axis": a, "made": r["parts"], "symmetry_iou": round(iou, 3), "lint": r["lint"]}
+            if iou < 0.9 or r["lint"]:
+                bad.append(f"{name}: {meas[name]}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -4748,6 +4789,18 @@ def pose_benchmark(detectors=None, limit=80):
     out = {"images": len(spec["items"]), "results": res, "ranking": sorted([n for n in res if "mean_oks" in res[n]], key=lambda n: -res[n]["mean_oks"])}
     (od / "result.json").write_text(json.dumps(out, indent=1))
     return out
+
+
+@command("puppet.mirror", puppet=("string", "puppet file"), part=("string", "the part drawn, e.g. arm_L"), to=("string", "the part to make (default: the other side's name)", ""),
+         axis=("number", "x of the centre line (default: the middle of the parent's drawing)", None), replace=("boolean", "redraw an existing part from the mirror", False),
+         out=("string", "write the puppet here (default: in place)", ""))
+def puppet_mirror(puppet, part, to="", axis=None, replace=False, out=""):
+    """Mirror tool (WP-18): a part drawn on one side, with what hangs from it, copied to the other side across the
+    body's centre line (raster drawings flipped, vector paths reflected, pivots reflected, joint limits swapped)."""
+    from . import mirror as MI
+    pz, rep = MI.mirror_part(_json(ROOT / puppet), part, to or None, axis, replace)
+    dst = ROOT / (out or puppet); dst.parent.mkdir(parents=True, exist_ok=True); dst.write_text(json.dumps(pz))
+    return {"puppet": str(dst.relative_to(ROOT)), **rep, "lint": puppet_lint(str(dst.relative_to(ROOT)))["issues"]}
 
 
 @command("puppet.auto_weights", puppet=("string", "puppet file"), part=("string", "the part carrying the drawing (an image stroke)"),
@@ -6877,6 +6930,10 @@ def test_golden(update=False, film=""):
         bad, meas = _pagesort_test()
         failed += 1 if bad else 0
         results.append({"pagesort": "a page with two doodles, a written sum and a hand holding a pen gives two doodles; the sum is left out as writing and the hand and pen as not a drawing", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "mirror":   # WP-18: the mirror tool
+        bad, meas = _mirror_test()
+        failed += 1 if bad else 0
+        results.append({"mirror": "Nib's left arm mirrored to the right (raster) and Ravi's right arm chain mirrored to the left (vector): arms posed at +-30 degrees draw as mirror images of each other", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0

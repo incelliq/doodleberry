@@ -2335,6 +2335,14 @@ deeper than 3 px, not line work) that reaches the photo's edge is a hand or a pe
 pen from the corner gives the two doodles, the sum as writing and the hand and pen as not a drawing; the same two
 doodles alone still give two.
 
+**Mirror tool** (WP-18). `puppet.mirror {puppet, part, to, axis, replace, out}` copies a part drawn on one side, and
+everything hanging from it, to the other side across the body's centre line (by default the middle of the parent's
+drawing). Raster drawings are flipped and moved across, vector paths reflected, pivots reflected, and joint limits
+[lo, hi] become [-hi, -lo]. Names swap sides (`arm_L` -> `arm_R`, `forearm_R` -> `forearm_L`), and an existing
+part is only redrawn with `replace`. Test `mirror`: Nib's left arm (raster) mirrored to the right, and Ravi's right
+arm chain (upper arm, forearm, hand; vector) mirrored to the left. With the arms posed at +-angles, each puppet's
+arms draw as mirror images of each other (symmetry IoU 1.0 and 0.998), and both lint clean.
+
 **Tap to cut (WP-18, plan 1.8b).** When a cut is wrong or missing, `doodle.click` takes taps on the photo
 (`[x, y]` inside the piece, `[x, y, 0]` outside) and cuts that piece with SAM 2.1 tiny (Apache-2.0; onnx-community's
 ONNX export, two graphs with external weights, pinned by sha256 in `dbe/assists.py` and downloaded on first use):
