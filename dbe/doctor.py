@@ -117,7 +117,7 @@ def check(deep=True):
     import shutil as _sh   # WP-25: world languages: OCR read-back and voices beyond Kokoro's
     add("tesseract (OCR, film.text_check)", "tools", bool(_sh.which("tesseract")), False, _sh.which("tesseract") or "not installed", "bash tools/setup.sh locales")
     for vid, r in json.loads((ROOT / "voices" / "registry.json").read_text())["voices"].items():
-        if r.get("url"):
+        if r.get("url") and r.get("fetched"):   # the default set setup.sh voices fetches; the rest on request (Piper voices installed, below)
             add(f"voice {vid} ({r.get('language')}, {r['status']})", "tools", (VOICES / f"{vid}.onnx").exists(), False, str(VOICES / f"{vid}.onnx"), "bash tools/setup.sh voices")
     dlp = ROOT / "tools" / "dotlottie" / "node_modules" / "@lottiefiles" / "dotlottie-web"   # WP-23: draws .lottie themes in lottie.dotlottie's checks
     add("node package @lottiefiles/dotlottie-web", "tools", dlp.exists(), False, str(dlp) if dlp.exists() else "not installed",
@@ -165,7 +165,8 @@ def check(deep=True):
         add("MediaPipe models", "tools", False, False, str(e)[:120])
     reg = json.loads((ROOT / "voices" / "registry.json").read_text()).get("voices", {}) if (ROOT / "voices" / "registry.json").exists() else {}
     piper = [v for v in reg if not v.startswith("kokoro:") and (VOICES / f"{v}.onnx").exists()]
-    add("Piper voices installed", "audio", True, False, f"{len(piper)} of {sum(1 for v in reg if not v.startswith('kokoro:'))} registry voices (films use Kokoro)")
+    add("Piper voices installed", "audio", True, False, f"{len(piper)} of {sum(1 for v in reg if not v.startswith('kokoro:'))} registry voices (films use Kokoro; "
+        "more by language code: bash tools/setup.sh voices de,fr)")
     du = shutil.disk_usage(ROOT)
     add("free disk >= 5 GB", "core", du.free >= 5e9, True, f"{du.free / 1e9:.1f} GB free", "delete renders under films/*/build and out/")
     add("CPU cores", "core", True, False, f"{os.cpu_count()} (renders use one browser per core)")

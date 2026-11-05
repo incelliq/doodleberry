@@ -227,6 +227,13 @@ opentoonz_build() {
   # OpenToonz 1.8.0 (BSD-3-Clause): its bundled libtiff (OpenToonz needs its changes), then only the tcomposer target
   local tag="v1.8.0" commit="065cc1404ba43019b22a2577d529134c3e01931b" src="$OPT/src/opentoonz-1.8.0"
   if [ -x "$OPT"/opentoonz/bin/tcomposer ] && [ -d "$OPT"/opentoonz/stuff ]; then echo "opentoonz: tcomposer installed"; return; fi
+  if command -v dnf >/dev/null; then   # Fedora packages the same 1.8.0: tcomposer in /usr/bin, its stuff in opentoonz-data
+    if rpm -q opentoonz opentoonz-data >/dev/null 2>&1; then echo "opentoonz: $(command -v tcomposer) (Fedora's package)"
+    elif [ "$(id -u)" = 0 ]; then dnf install -y opentoonz opentoonz-data
+    else echo "opentoonz: missing. Run:  sudo dnf install opentoonz opentoonz-data"; fi
+    return
+  fi
+  command -v apt-get >/dev/null || { echo "opentoonz: the source build needs apt-get for its build dependencies; install OpenToonz 1.8 with your package manager"; return 1; }
   DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends build-essential cmake pkg-config libboost-all-dev qtbase5-dev libqt5svg5-dev qtscript5-dev qttools5-dev qttools5-dev-tools \
     libqt5opengl5-dev qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev libsuperlu-dev liblz4-dev libusb-1.0-0-dev liblzo2-dev \
     libpng-dev libjpeg-dev libglew-dev freeglut3-dev libfreetype-dev libjson-c-dev libmypaint-dev libopencv-dev libturbojpeg0-dev libopenblas-dev xvfb

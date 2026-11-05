@@ -5392,7 +5392,8 @@ def _godot_render_check(name, od, sid, n, size):
 
 
 TCOMPOSER = os.environ.get("DBE_TCOMPOSER") or next((p for p in [f"{d}/opentoonz/bin/tcomposer" for d in OPTS] + [shutil.which("tcomposer") or ""] if p and Path(p).exists()), None)
-TOONZ_STUFF = Path(os.environ.get("DBE_TOONZ_STUFF") or next((f"{d}/opentoonz/stuff" for d in OPTS if Path(f"{d}/opentoonz/stuff").is_dir()), "/opt/opentoonz/stuff"))
+TOONZ_STUFF = Path(os.environ.get("DBE_TOONZ_STUFF") or next((p for p in [f"{d}/opentoonz/stuff" for d in OPTS] + ["/usr/share/opentoonz/stuff"]   # the last: Fedora's opentoonz-data
+                                                                if Path(p).is_dir()), "/opt/opentoonz/stuff"))
 
 
 def _tcomposer_check(name, sh, od, n, size, skipped):

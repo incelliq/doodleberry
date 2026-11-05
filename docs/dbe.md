@@ -3035,6 +3035,10 @@ what is missing. Fedora's names were checked against its package index (Fedora 4
   https://dl.flathub.org/repo/flathub.flatpakrepo`, then `flatpak install --user flathub org.pencil2d.Pencil2D`), `setup.sh oss` writes a `pencil2d` wrapper in `~/.local/bin`, run with host file
   access, which dbe finds on PATH. Not yet tried on a real Fedora machine; the logic was tested with stand-in
   dnf, rpm and flatpak.
+- **opentoonz**: Fedora packages OpenToonz 1.8.0 (`opentoonz`, with tcomposer in /usr/bin, and `opentoonz-data`
+  for its stuff folder at /usr/share/opentoonz/stuff, which dbe looks in). So `setup.sh opentoonz` asks for those
+  two packages on Fedora instead of building from source.
+- **melt**: Fedora's mlt names the player `melt-7` (and `mlt-melt`); dbe finds any of the three names.
 - **locales**: google-noto-fonts-all and google-noto-sans-cjk-fonts (for fonts-noto-core and fonts-noto-cjk),
   espeak-ng, tesseract and tesseract-langpack-<code> for the same 15 languages (chi_sim with an underscore).
 
