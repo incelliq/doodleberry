@@ -1357,8 +1357,9 @@ these steps:
 - **Provenance:** the model and its licence go into the puppet's `meta` for the posting gate. Check every result
   for resemblance to existing characters, as for any character.
 
-Tried on two characters generated on the owner's machine (Nila, a girl in a t-shirt and shorts, and Aunty Kamala, in
-a sari). Their images and puppets stay out of git until the model's licence is recorded.
+Tried on Nila, a girl in a t-shirt and shorts generated on the owner's machine. Her images and puppet stay out of git
+until the model's licence is recorded. Not handled yet: an ankle-length skirt or sari, where the legs only part at
+the feet. The command then stops with "no gap between the legs found".
 
 - **Nila:** every part found. At rest the arms hang clear of the body and the hair stays with the head. Posed, she
   waves, steps, blinks and says O, FV, mid and wide with her own mouths.
