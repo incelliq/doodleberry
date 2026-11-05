@@ -3609,6 +3609,50 @@ def _reviewtiming_test():
     return bad, meas
 
 
+def _reviewphone_test():
+    """WP-19 review on a phone: the Studio served beyond this machine needs its key (checked over HTTP from another
+    loopback address, so nothing leaves the machine), and the review room works at phone size (an emulated iPhone 13)"""
+    import http.client, socket, time
+    bad, meas = [], {}
+    port, key, film = 8794, "phonecheck-" + os.urandom(4).hex(), "review-demo"
+    rv = FILMS / film / "review.json"; keep = rv.read_text() if rv.exists() else None
+    srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port), "127.0.0.2"], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           env={**os.environ, "DBE_KEY": key})
+    try:
+        for _ in range(50):
+            with socket.socket() as s_:
+                if s_.connect_ex(("127.0.0.2", port)) == 0:
+                    break
+            time.sleep(0.2)
+
+        def get(path, method="GET", cookie=None):   # from 127.0.0.3: another machine, as far as the server can tell
+            c = http.client.HTTPConnection("127.0.0.2", port, timeout=30, source_address=("127.0.0.3", 0))
+            c.request(method, path, body=b"{}" if method == "POST" else None, headers={"Cookie": cookie} if cookie else {})
+            r = c.getresponse(); r.read(); return r.status, r.getheader("Set-Cookie") or ""
+        gate = {"page_no_key": get(f"/review?film={film}")[0], "api_no_key": get("/api/engine.info", "POST")[0], "wrong_key": get(f"/review?film={film}&key=nope")[0]}
+        st, ck = get(f"/review?film={film}&key={key}"); gate["with_key"] = st; gate["sets_cookie"] = ck.startswith(f"dbe_key={key}") and "HttpOnly" in ck
+        gate["api_with_cookie"] = get("/api/engine.info", "POST", cookie=f"dbe_key={key}")[0]
+        meas["gate"] = gate
+        if (gate["page_no_key"], gate["api_no_key"], gate["wrong_key"], gate["with_key"], gate["api_with_cookie"]) != (403, 403, 403, 200, 200) or not gate["sets_cookie"]:
+            bad.append(f"key gate: {gate}")
+        r = subprocess.run(["node", "tools/review_phone_check.mjs", f"http://127.0.0.2:{port}", key, film], cwd=ROOT, capture_output=True, text=True, timeout=600)
+        out = json.loads(r.stdout.strip().splitlines()[-1]) if r.stdout.strip() else {"error": r.stderr[-400:]}
+    finally:
+        srv.terminate(); srv.wait(timeout=20)
+        if keep is not None:
+            rv.write_text(keep)
+    meas["phone"] = out
+    if out.get("error") or out.get("errs"):
+        return bad + [f"phone page: {out}"], meas
+    L = out["layout"]
+    if L["h_scroll"] or L["picture_h_share"] > 0.6 or L["composer"]["bottom"] > L["viewport"][1] or L["bar_h"] < 36 or L["text_font_px"] < 16:
+        bad.append(f"phone layout: {L}")
+    if abs(out["tap"]["frame"] - out["tap"]["want"]) > 2 or abs(out["drag"]["frame"] - out["drag"]["want"]) > 2 or out["step"]["frame"] != out["drag"]["frame"] + 1 \
+            or out["pinned"]["frame"] != out["step"]["frame"]:
+        bad.append(f"phone scrub and pin: {out}")
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -7259,6 +7303,10 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "reviewphone":   # WP-19: review on a phone
+        bad, meas = _reviewphone_test()
+        failed += 1 if bad else 0
+        results.append({"reviewphone": "the Studio served to the network asks for its key (page and API refused without it, a cookie after it), and the review room at phone size (iPhone 13): no sideways scroll, the picture under 60% of the screen, the note box on screen, a tap and a drag on the bar land on their frames, a note pinned at the frame", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "reviewtiming":   # WP-19 (re-voices and renders a scratch film several times, so only when asked)
         bad, meas = _reviewtiming_test()
         failed += 1 if bad else 0

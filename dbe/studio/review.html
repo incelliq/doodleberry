@@ -22,7 +22,17 @@
   .note.verified { border-left-color: var(--ok); } .note.needs_human { border-left-color: var(--warn); } .note.open { border-left-color: var(--accent); }
   .note .meta { color: var(--muted); font-size: 12px; } .note img { width: 120px; border-radius: 6px; float: right; margin-left: 10px; }
   #text { flex: 1; min-width: 180px; } #msg { color: var(--muted); }
-  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) {   /* review on a phone (WP-19): the frame, a bar to scrub with a thumb, the note box always in reach */
+    main { grid-template-columns: 1fr; padding: 8px; gap: 8px; }
+    header { padding: 6px 10px; gap: 6px; } header a { font-size: 13px; }
+    video { max-height: 56vh; width: auto; max-width: 100%; margin: 0 auto; }
+    #pv { width: min(100%, calc(56vh * 9 / 16)) !important; margin: 0 auto; }
+    #bar { height: 40px; touch-action: none; } #bar .pin { top: 4px; width: 12px; height: 32px; transform: translateX(-6px); }
+    button { min-height: 40px; } #back, #fwd { flex: 1; }
+    #composer { position: sticky; bottom: 0; z-index: 5; background: var(--bg); padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); margin: 0; border-top: 1px solid var(--line); }
+    #text { min-width: 0; font-size: 16px; }   /* 16 px: iOS does not zoom the page into the box */
+    .note img { width: 88px; }
+  }
 </style>
 </head>
 <body>
@@ -32,7 +42,7 @@
     <div id="pv" hidden style="width:100%;aspect-ratio:9/16;overflow:hidden;border-radius:10px;background:#000;position:relative"><iframe id="frame" title="preview" style="width:1080px;height:1920px;border:0;transform-origin:0 0;pointer-events:none"></iframe></div>
     <div id="bar" title="click to jump; pins are notes"></div>
     <div class="row"><button id="back" title="one frame back (,)">◀ frame</button><span id="fr">frame 0</span><button id="fwd" title="one frame on (.)">frame ▶</button></div>
-    <div class="row"><input id="text" placeholder="Note at this frame, e.g. raise the arm earlier" aria-label="Note"><button id="add" class="primary">Pin note</button></div></div>
+    <div class="row" id="composer"><input id="text" placeholder="Note at this frame, e.g. raise the arm earlier" aria-label="Note"><button id="add" class="primary">Pin note</button></div></div>
   <div><div class="row"><b>Notes</b><span style="flex:1"></span><button id="fixall" class="primary" title="Each open note becomes an edit; the critic measures the motion before and after and re-runs QA">Fix open notes with the critic</button></div><div id="notes"></div></div>
 </main>
 <script>
@@ -64,7 +74,10 @@ async function load() { R = await api('review.list', { name: film }); const tl =
   $('vid').onerror = () => useLive(page); $('vid').src = `/films/${film}/build/final.mp4?t=${Date.now()}`;
   setTimeout(() => { if ($('vid').readyState < 1) useLive(page); }, 3000); $('tl').href = '/timeline?film=' + film; list(); }
 $('vid').ontimeupdate = () => { if (!live && !$('vid').paused) { cur = $('vid').currentTime; bar(); } };   // paused: the page's own time stands $('vid').onloadedmetadata = bar;
-$('bar').onclick = e => { const r = $('bar').getBoundingClientRect(); seek((e.clientX - r.left) / r.width * length); };
+// tap or drag along the bar to scrub (a thumb on a phone, a mouse elsewhere)
+$('bar').onpointerdown = e => { const at = ev => { const r = $('bar').getBoundingClientRect(); seek(Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)) * length); };
+  e.preventDefault(); $('vid').pause(); $('bar').setPointerCapture(e.pointerId); at(e);
+  $('bar').onpointermove = ev => at(ev); $('bar').onpointerup = $('bar').onpointercancel = () => { $('bar').onpointermove = null; }; };
 const step = k => { $('vid').pause(); seek((frame() + k) / fps + 0.001); };
 $('back').onclick = () => step(-1); $('fwd').onclick = () => step(1);
 document.onkeydown = e => { if (e.target.tagName === 'INPUT') return; if (e.key === ',') step(-1); if (e.key === '.') step(1); };

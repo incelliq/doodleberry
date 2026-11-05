@@ -2171,6 +2171,16 @@ the arm earlier" on frame 120 moved Momo's shrug 0.33 s earlier (measured 0.33 s
 frame 180 (379 px, was 300), "hold the scratch head longer" (held 1.65 s, was 1.16 s); "this bit feels off somehow"
 went to a person.
 
+**Review on a phone** (WP-19). `python -m dbe serve 8770 0.0.0.0` (or `DBE_HOST`) serves the Studio to other
+machines on the network and prints a link with a key (`DBE_KEY`, else a new random one each start): the API runs any
+command, so a request from anywhere but this machine is refused (403) unless it brings the key, once in the link and
+then as an HttpOnly cookie. The review room fits a phone: the picture takes at most 56% of the screen height, the
+bar is 40 px tall and scrubs under a thumb (tap or drag), the frame buttons are full-width, and the note box stays at
+the bottom of the screen (16 px text, so iOS does not zoom). Test `reviewphone`: the key gate checked over HTTP from
+another loopback address (page, API and a wrong key refused; the key lets in and sets the cookie, which then works
+for the API); on an emulated iPhone 13 (390 x 664) nothing scrolls sideways, a tap at 30% of the bar lands on frame
+130 and a drag to 60% on frame 260 (both exact), a step goes to 261 and a note pinned from the box lands on 261.
+
 **Gaze notes (WP-19).** A note about where someone looks ("Ravi should look at Momo when she answers", "Momo should
 look at Ravi during l3", "make Ravi glance at Momo while she talks", "look away from ...") is read for who looks, at
 whom, and when: the target's line at or next after the note's frame, a line by id, or while they talk. The look keys

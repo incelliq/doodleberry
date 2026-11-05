@@ -14,17 +14,38 @@ mimetypes.add_type("text/javascript", ".mjs"); mimetypes.add_type("application/w
 
 STUDIO = Path(__file__).parent / "studio" / "index.html"
 JOBS, LOCK = {}, threading.Lock()
+KEY = {"value": None}   # WP-19: set when the Studio is served beyond this machine (a phone on the same network)
 
 
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, body, ctype="application/json"):
         data = body if isinstance(body, bytes) else json.dumps(body, default=str).encode()
-        self.send_response(code); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+        self.send_response(code); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(data)))
+        if getattr(self, "_cookie", None):
+            self.send_header("Set-Cookie", f"dbe_key={self._cookie}; Path=/; SameSite=Strict; HttpOnly")
+        self.end_headers(); self.wfile.write(data)
 
     def log_message(self, *a):
         pass
 
+    def _allowed(self):
+        """this machine is always let in; another (a phone) only with the key: ?key=... once, then its cookie"""
+        import hmac
+        from urllib.parse import parse_qs, urlparse
+        if self.client_address[0] in ("127.0.0.1", "::1") or not KEY["value"]:
+            return True
+        q = (parse_qs(urlparse(self.path).query).get("key") or [""])[0]
+        if q and hmac.compare_digest(q, KEY["value"]):
+            self._cookie = KEY["value"]; return True
+        ck = dict(c.strip().split("=", 1) for c in (self.headers.get("Cookie") or "").split(";") if "=" in c).get("dbe_key", "")
+        return bool(ck) and hmac.compare_digest(ck, KEY["value"])
+
+    def _refuse(self):
+        self._send(403, b"Doodleberry Studio: open the link with its key (printed where the Studio was started).", "text/plain; charset=utf-8")
+
     def do_GET(self):
+        if not self._allowed():
+            return self._refuse()
         p = self.path.split("?")[0]
         if p in ("/", "/studio"):
             return self._send(200, STUDIO.read_bytes(), "text/html; charset=utf-8")
@@ -71,6 +92,8 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
+        if not self._allowed():
+            return self._refuse()
         if self.path.startswith("/upload"):   # raw body: Act it out takes and doodle photos, into out/ (git-ignored)
             n = int(self.headers.get("Content-Length", 0) or 0)
             if not 0 < n <= 300 * 1024 * 1024:
@@ -127,9 +150,25 @@ class Handler(BaseHTTPRequestHandler):
             self._send(400, {"error": str(e), "trace": traceback.format_exc()[-1500:]})
 
 
-def serve(port=8770):
+def serve(port=8770, host=None):
+    """host: 127.0.0.1 (default; DBE_HOST overrides). Any other address (0.0.0.0 for every network) serves the Studio
+    to other machines, a phone for the review room, and then every request from elsewhere needs the key (DBE_KEY, or
+    a new random one), given once in the link: the API can run any command, so nothing is open without it."""
+    import os
+    import secrets
+    import socket
+    host = host or os.environ.get("DBE_HOST") or "127.0.0.1"
     print(f"Doodleberry Studio on http://127.0.0.1:{port}  (API: POST /api/<command>)")
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        KEY["value"] = os.environ.get("DBE_KEY") or secrets.token_urlsafe(16)
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s_:
+                s_.connect(("10.255.255.255", 1)); ip = s_.getsockname()[0]
+        except OSError:
+            ip = host
+        print(f"  from a phone on this network: http://{ip if host == '0.0.0.0' else host}:{port}/review?key={KEY['value']}")
+        print("  (anyone with that link can run Studio commands; stop the server to close it)")
+    ThreadingHTTPServer((host, port), Handler).serve_forever()
 
 
 def mcp_stdio():

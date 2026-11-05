@@ -1,4 +1,4 @@
-"""CLI:  python -m dbe <command> ['{"json": "args"}']   |   python -m dbe serve [port]   |   python -m dbe mcp"""
+"""CLI:  python -m dbe <command> ['{"json": "args"}']   |   python -m dbe serve [port] [host]   |   python -m dbe mcp"""
 import json
 import sys
 
@@ -14,7 +14,7 @@ def main():
         return
     if a[0] == "serve":
         from .server import serve
-        return serve(int(a[1]) if len(a) > 1 else 8770)
+        return serve(int(a[1]) if len(a) > 1 else 8770, a[2] if len(a) > 2 else None)
     if a[0] == "mcp":
         from .server import mcp_stdio
         return mcp_stdio()
