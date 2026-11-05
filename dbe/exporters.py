@@ -83,7 +83,21 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
             ks[-1] = {k: v for k, v in ks[-1].items() if k in ("t", "s", "h")}
         return {"a": 1, "k": ks} if len(ks) > 1 else {"a": 0, "k": values[0] if isinstance(values[0], list) else values[0]}
 
-    def shape_group(strokes, pal):
+    def grad_fill(g, st, pal):
+        """v0.13 gradient fill as Lottie's gradient fill (linear or radial), in the part's rest units as the paths"""
+        stops = g.get("stops") or []
+        k = [v for o, c, *_ in stops for v in [o] + G.hex_rgb(G.colour(c, pal) or "#000000")]
+        if any(len(x) > 2 and x[2] is not None for x in stops):
+            k += [v for x in stops for v in (x[0], x[2] if len(x) > 2 and x[2] is not None else 1)]
+        radial = g.get("type") == "radial"
+        s0 = g["center"] if radial else g["from"]; e0 = [g["center"][0] + g["radius"], g["center"][1]] if radial else g["to"]
+        it = {"ty": "gf", "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 2 if st.get("rule") == "evenodd" else 1, "t": 2 if radial else 1,
+              "s": {"a": 0, "k": list(s0)}, "e": {"a": 0, "k": list(e0)}, "g": {"p": len(stops), "k": {"a": 0, "k": k}}}
+        if radial:
+            it["h"] = {"a": 0, "k": 0}; it["a"] = {"a": 0, "k": 0}
+        return it
+
+    def shape_group(strokes, pal, grads=None):
         """one group per stroke: its subpaths share one fill, so an even-odd stroke (v0.9 fill rule) cuts holes"""
         items = []
         for st in strokes:
@@ -101,7 +115,9 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
             # Lottie draws the first item on top: the outline goes before the fill, as SVG paints it over the fill
             if line:
                 it.append({"ty": "st", "c": colour_prop(st.get("stroke"), pal), "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "w": {"a": 0, "k": st.get("width", 3)}, "lc": 2, "lj": 2})
-            if fill:
+            if fill and st.get("gradient") and (grads or {}).get(st["gradient"]):
+                it.append(grad_fill(grads[st["gradient"]], st, pal))
+            elif fill:
                 it.append({"ty": "fl", "c": colour_prop(st.get("fill"), pal), "o": {"a": 0, "k": 100 * st.get("opacity", 1)}, "r": 2 if st.get("rule") == "evenodd" else 1})
             it.append({"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}})
             items.append({"ty": "gr", "it": it})
@@ -190,7 +206,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
                           "a": {"a": 0, "k": [part["pivot"][0], part["pivot"][1], 0]},
                           # v0.11 recursive scale: the layer's own scale about its pivot, which Lottie's parenting carries to every child
                           "s": grow_track(frs, pid)},
-                   "shapes": scaled(shape_group(part["strokes"], pal), part["pivot"], frs, pid), "_z": part.get("z", 0)}
+                   "shapes": scaled(shape_group(part["strokes"], pal, p.get("gradients")), part["pivot"], frs, pid), "_z": part.get("z", 0)}
             # hidden while a replacing swap shows
             repl = [(sid, sw) for sid, sw in (p.get("swaps") or {}).items() if sw.get("replaces") == pid]
             vis = [0 if (repl and any(G.chosen_swaps(p, fr).get(sid) for sid, _ in repl)) or not o else 100 for fr, o in zip(frs, on)]
@@ -214,7 +230,7 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
                               "a": kf([[round(apiv[0] - o_[0], 2), round(apiv[1] - o_[1], 2), 0] for o_ in offs]) if anch else {"a": 0, "k": [0, 0, 0]},
                               "s": kf([[round(100 * v[0], 3), round(100 * v[1], 3), 100] for v in asc]) if anch else {"a": 0, "k": [100, 100, 100]},
                               "p": {"a": 0, "k": [apiv[0], apiv[1], 0]} if anch else kf([[round(o_[0], 2), round(o_[1], 2), 0] for o_ in offs])},
-                       "shapes": shape_group(strokes, pal), "_z": sw.get("z", 40)}
+                       "shapes": shape_group(strokes, pal, p.get("gradients")), "_z": sw.get("z", 40)}
                 part_layers += with_z(lay, vis, z_track(frs, "@" + sid, sw.get("z", 40)), raster_strokes(strokes))
         part_layers.sort(key=lambda l: -l["_z"])  # Lottie draws the first layer on top
         for l in part_layers:
@@ -256,7 +272,20 @@ def _bline(segs, closed):
     return out + "</bline>"
 
 
-def _shapes_sif(strokes, pal):
+def _grad_sif(g, pal):
+    """v0.13 gradient as a Synfig gradient layer (linear or radial), in the same units as the regions"""
+    v = lambda p: f"<vector><x>{p[0]:.4f}</x><y>{p[1]:.4f}</y></vector>"
+    cols = "".join(f'<color pos="{x[0]:.6f}"><r>{c[0]:.6f}</r><g>{c[1]:.6f}</g><b>{c[2]:.6f}</b><a>{(x[2] if len(x) > 2 and x[2] is not None else 1):.6f}</a></color>'
+                   for x in g.get("stops") or [] for c in [G.hex_rgb(G.colour(x[1], pal) or "#000000")])
+    grad = f'<param name="gradient"><gradient>{cols}</gradient></param>'
+    loop = f'<param name="loop"><bool value="{"true" if g.get("spread") == "repeat" else "false"}"/></param><param name="zigzag"><bool value="false"/></param>'
+    onto = '<param name="blend_method"><integer value="13"/></param>'   # "onto": only where the region below is drawn
+    if g.get("type") == "radial":
+        return f'<layer type="radial_gradient" active="true" version="0.1">{onto}{grad}<param name="center">{v(g["center"])}</param><param name="radius"><real value="{g["radius"]:.4f}"/></param>{loop}</layer>'
+    return f'<layer type="linear_gradient" active="true" version="0.0">{onto}{grad}<param name="p1">{v(g["from"])}</param><param name="p2">{v(g["to"])}</param>{loop}</layer>'
+
+
+def _shapes_sif(strokes, pal, grads=None):
     out = ""
     for st in strokes:
         fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
@@ -264,14 +293,19 @@ def _shapes_sif(strokes, pal):
         region = lambda segs, extra="": (f'<layer type="region" active="true" version="0.1"><param name="amount"><real value="{st.get("opacity", 1):.3f}"/></param>{extra}'
                                          f'<param name="color">{_sif_color(fill)}</param><param name="bline">{_bline(segs, True)}</param></layer>')
         closed_subs = [segs for segs, closed in subs if closed]
+        fx = ""
         if fill and st.get("rule") == "evenodd" and len(closed_subs) > 1:
             # v0.9 even-odd fill: the first contour fills, the others cut holes ("alpha over"), inside a group so the
             # cuts only reach this stroke
             cut = '<param name="blend_method"><integer value="19"/></param>'
             inner = region(closed_subs[0]) + "".join(region(sg, cut) for sg in closed_subs[1:])
-            out += f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{inner}</canvas></param></layer>'
+            fx = f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{inner}</canvas></param></layer>'
         elif fill:
-            out += "".join(region(sg) for sg in closed_subs)
+            fx = "".join(region(sg) for sg in closed_subs)
+        if fx and st.get("gradient") and (grads or {}).get(st["gradient"]):
+            # v0.13: the gradient goes onto what this stroke filled, inside a group so it reaches nothing below
+            fx = f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{fx}{_grad_sif(grads[st["gradient"]], pal)}</canvas></param></layer>'
+        out += fx
         if line:
             for segs, closed in subs:
                 out += f'<layer type="outline" active="true" version="0.2"><param name="color">{_sif_color(line)}</param><param name="width"><real value="{st.get("width", 3):.3f}"/></param><param name="sharp_cusps"><bool value="false"/></param><param name="round_tip[0]"><bool value="true"/></param><param name="round_tip[1]"><bool value="true"/></param><param name="bline">{_bline(segs, closed)}</param></layer>'
@@ -392,7 +426,7 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
             for zv in sorted(set(zs), key=zs.index):   # a part whose layer order changes: one layer per order (WP-14)
                 vz = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
                 if any(vz):
-                    items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(part["strokes"], assets_dir)}{_shapes_sif(part["strokes"], pal)}</canvas></param></layer>'))
+                    items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{pid}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(part["strokes"], assets_dir)}{_shapes_sif(part["strokes"], pal, p.get("gradients"))}</canvas></param></layer>'))
         for sid, sw in (p.get("swaps") or {}).items():
             for shape, strokes in sw["shapes"].items():
                 if not strokes:
@@ -415,7 +449,7 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None):
                 for zv in sorted(set(zs), key=zs.index):
                     vz = [v if z_ == zv else 0 for v, z_ in zip(vis, zs)]
                     if any(vz):
-                        items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(strokes, assets_dir)}{_shapes_sif(strokes, pal)}</canvas></param></layer>'))
+                        items.append((zv, f'<layer type="group" active="true" version="0.3" desc="{sid}:{shape}">{amount(vz)}<param name="origin"><vector><x>0</x><y>0</y></vector></param>{anim_transform(mats, vz)}<param name="canvas"><canvas>{_raster_sif(strokes, assets_dir)}{_shapes_sif(strokes, pal, p.get("gradients"))}</canvas></param></layer>'))
       items.sort(key=lambda x: x[0])  # synfig: later layers draw on top
       body += "".join(s for _, s in items)
     return head + body + "</canvas>\n"

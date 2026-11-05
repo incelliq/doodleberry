@@ -9,14 +9,14 @@ Match: **command** (an existing command does it), **data** (a field of the film 
 measure), **partial** (partly there; the WP that finishes it), **gap** (missing; the WP that closes it), **n/a**
 (not relevant to an agent-run studio).
 
-Overall: 1396 capabilities; covered 38%, covered or partial 70% (of those that apply).
+Overall: 1396 capabilities; covered 39%, covered or partial 70% (of those that apply).
 
 | Tool | Chapters | Capabilities | Command | Data | Metric | Partial | Gap | n/a | Covered | Covered or partial |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Adobe After Effects | 19 | 161 | 33 | 33 | 1 | 40 | 41 | 13 | 45% | 72% |
 | Blender Grease Pencil | 26 | 150 | 9 | 23 | 1 | 52 | 56 | 9 | 23% | 60% |
 | Toon Boom Harmony | 25 | 182 | 28 | 47 | 0 | 52 | 47 | 8 | 43% | 73% |
-| Moho Pro | 34 | 186 | 25 | 42 | 1 | 62 | 38 | 18 | 40% | 77% |
+| Moho Pro | 34 | 186 | 25 | 43 | 1 | 62 | 37 | 18 | 41% | 78% |
 | Foundry Nuke | 32 | 189 | 29 | 25 | 2 | 39 | 54 | 40 | 38% | 64% |
 | OpenToonz | 26 | 191 | 34 | 33 | 1 | 48 | 65 | 10 | 38% | 64% |
 | Synfig Studio | 26 | 169 | 38 | 38 | 2 | 40 | 38 | 13 | 50% | 76% |
@@ -24,7 +24,7 @@ Overall: 1396 capabilities; covered 38%, covered or partial 70% (of those that a
 
 Gaps and partial matches by the work package that closes them:
 
-WP-36 161, WP-35 107, WP-18 96, WP-42 66, WP-19 61, WP-15 60, WP-37 40, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-23 8, WP-30 8, WP-29 4, WP-17 3, WP-33 2, WP-27 1, WP-28 1
+WP-36 161, WP-35 107, WP-18 95, WP-42 66, WP-19 61, WP-15 60, WP-37 40, WP-16 23, WP-20 20, WP-34 19, WP-43 18, WP-38 13, WP-40 13, WP-11 12, WP-39 11, WP-14 11, WP-22 10, WP-12 9, WP-21 8, WP-13 8, WP-23 8, WP-30 8, WP-29 4, WP-17 3, WP-33 2, WP-27 1, WP-28 1
 
 ## Adobe After Effects (After Effects 2025 (25.x line: 25.0 Oct 2024 to 25.6 late 2025); a few 26.x additions noted where marked)
 
@@ -314,7 +314,7 @@ Sources: [Blender Manual: Grease Pencil (table of contents)](https://docs.blende
 |---|---|---|
 | Per-object (and per-layer) switch for whether strokes react to scene lights. | Keep flat colour for cel style, or let lights shade drawings placed in a lit 3D set. | **partial**: `shot.render`, WP-14 (style.toon gives cel shadows and rims from a fixed light in the SVG renderer; the grease-pencil renderer turns GP lights off. Toon shading in other renderers is WP-14.) |
 | Drawing data can be linked so several objects share one drawing. | Instancing the same character or prop many times; one fix updates them all. | **data**: `shots.shots[].cast[].puppet` (Cast entries reference one puppet file; any number of shots and cast members reuse it.) |
-| Stroke depth order chosen between the 2D layer list and real 3D position. | 2D order for flat cut-out work; 3D order when drawings live inside a 3D scene. | **data**: `puppet.parts[].z`, `pose: z`, `puppet.controls (z.<part>)`, `clip swaps.z` (2D draw order only, but it can be animated by controls and clips; no 3D depth ordering.) |
+| Stroke depth order chosen between the 2D layer list and real 3D position. | 2D order for flat cut-out work; 3D order when drawings live inside a 3D scene. | **data**: `puppet.parts[].z`, `pose.z`, `puppet.controls (z.<part>)`, `clip swaps.z` (2D draw order only, but it can be animated by controls and clips; no 3D depth ordering.) |
 | Custom attributes on layers and custom properties on the drawing data. | Pipelines tag layers and drawings with data their scripts read (status, pass names, variants). | **data**: `puppet format v0.9 attrs` (Parts carry free attributes (attrs: any JSON), kept by every tool and ignored by the renderers.) |
 | Vertex groups: named, weighted sets of points used by deformers and filters. | Bind parts of a drawing to bones or limit an effect to an area. | **data**: `puppet strokes mesh.weights`, `puppet.parts[].parent` (Mesh strokes (v0.5) store per-vertex part weights; ordinary strokes follow their single part.) |
 | Per-curve render settings: fill opacity, start and end caps, edge softness, texture scale and aspect. | Fine-tuning line ends and soft fills for a painterly look. | **partial**: `shot.render`, WP-15 (Stroke opacity exists; caps are fixed round and softness/texture scale are missing (medium simulation, WP-15).) |
@@ -784,7 +784,7 @@ Sources: [Harmony 25 Premium documentation](https://docs.toonboom.com/help/harmo
 |---|---|---|
 | Slider controllers that drive many parameters from one value | Animators dial a smile or a hand pose | **data**: puppet controls (driven keys) (One control drives angles, shifts, swaps and z through key curves) |
 | Grid controllers for two-axis poses (head turn left/right and up/down) | Fast head turns on complex rigs | **partial**: puppet controls, WP-11 (The turn control is one axis; a two-axis grid is not built) |
-| Stack controllers that toggle groups of layers | Switch costumes or accessories | **data**: puppet controls swap targets (Controls can drive swaps; outfits as swap sets are WP-16) |
+| Stack controllers that toggle groups of layers | Switch costumes or accessories | **data**: `puppet.layer_sets`, pose and timeline layer_set, puppet controls swap targets (v0.13 named layer sets pick several swap sets' drawings together, keyed on the timeline; controls can drive swaps too; test dressup) |
 | Deformer-on-deformer setups | Layered deformation for squash on top of bones | **gap**: WP-11 (Not supported) |
 | Scripted custom on-screen widgets | TDs build bespoke controls | **n/a** (Agents set control values in data; no on-canvas widgets needed) |
 
@@ -942,7 +942,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 |---|---|---|
 | Build a bone hierarchy: add, select, reparent and offset bones, set pivots and pose with forward kinematics. | This is the base of every cut-out rig. | **data**: `puppet parts[].parent`, `puppet parts[].pivot` (Each part is a bone with a parent and a pivot, posed by angles relative to the drawn pose. The Rig Canvas sets pivots, and doodle.cut confirms them for doodles.) |
 | Inverse kinematics while posing: drag a hand or foot and the chain follows, with bone locks and targets. | Gives fast posing and planted feet for walks. | **data**: acting timeline ik, acting timeline pins, puppet chains (There is two-bone IK with foot pins, and N-bone FABRIK chains. The Rig Canvas Pose tool drags hands and feet by IK.) |
-| Bone strength and region binding: each bone's falloff weights nearby points for smooth deformation. | Gives smooth elbows, knees and torsos without visible hinges. | **partial**: `puppet.from_blend`, `puppet.auto_weights`, WP-14 (Mesh strokes with per-vertex weights (puppet v0.5) and bendy limbs exist, but only in the SVG renderer (bendy limbs also in Grease Pencil). `puppet.auto_weights` weights a one-piece drawing by distance to its chain's bones, with smoothing; there is no per-bone strength setting or painting tool. Other renderers are in WP-14.) |
+| Bone strength and region binding: each bone's falloff weights nearby points for smooth deformation. | Gives smooth elbows, knees and torsos without visible hinges. | **partial**: `puppet.from_blend`, WP-14 (Mesh strokes with per-vertex weights (puppet v0.5) and bendy limbs exist, but only in the SVG renderer (bendy limbs also in Grease Pencil). Other renderers are in WP-14. There is no strength-painting tool.) |
 | Sketch bones: draw a whole chain of bones in one gesture. | Gives quick rigging of tails, hair and props. | **partial**: `puppet.import`, `doodle.snap`, `cast.generate`, WP-18 (Rigs are made automatically (pivots estimated on import, suggested for doodles, generated for cast.generate). Interactive chain drawing in the Rig Canvas is WP-18.) |
 | Bind layers and bind points: attach whole drawings or individual points to chosen bones. | Controls exactly which art follows which bone. | **data**: `puppet parts[].strokes`, `puppet swaps[].anchor`, mesh strokes weights (A part's strokes move with its bone, and swap sets anchor to a part. Per-vertex binding exists only for mesh strokes.) |
 | Bone physics: pill-shaped collision regions, motors (speed and torque), and lock tip, inside a physics group. | Used for ragdolls, machines and objects that tumble. | **partial**: `physics.solve`, WP-42 (Rigid bodies (balls, boxes, props) collide with each other and with static colliders in physics.solve (deterministic Rapier). Physical bones (ragdolls, motors) are WP-42.) |
@@ -1039,7 +1039,7 @@ Sources: [Lost Marble FAQ: where to find the Moho manuals](https://lostmarble.co
 | Capability | How professionals use it | Doodleberry |
 |---|---|---|
 | Shared named styles applied to many shapes, so one change updates all of them, including bulk edits of a character's line width, brush and boil (14.4). | Keeps colour and line consistent across a character and an episode. | **partial**: puppet palette, WP-15 (Palette slots share colour across all shapes. Shared line styles (width, brush) across a character belong with line styles in WP-15.) |
-| Gradient and texture fills. | Gives soft shading and patterned clothing. | **gap**: WP-18 (Puppet strokes take flat palette colours only (sets drawn in code may use gradients). It should join WP-18 for authoring, with WP-14 for renderer parity.) |
+| Gradient and texture fills. | Gives soft shading and patterned clothing. | **data**: `puppet.gradients`, `puppet.textures`, `strokes[].gradient`, `strokes[].texture` (v0.13 (WP-18): linear and radial gradients drawn by the SVG loader, Lottie and Synfig (Grease Pencil draws the flat fill); tiling textures over the fill, SVG only; test dressup) |
 | Brushes and freehand styles (wet ink, charcoal, gouache, watercolour, pencil), with brush folders. | Gives natural-media looks on vector rigs. | **gap**: WP-15 (Medium simulation for vector lines (pencil, marker, crayon) and a watercolour pass are in WP-15. Brush engines are WP-34.) |
 | Swatches and a colour palette library. | Holds show palettes and colour models. | **data**: puppet palette, `brand/<id>.json palette` (Named palette slots per puppet. The brand kit palette is measured by brand.check.) |
 
@@ -2083,7 +2083,7 @@ Sources: [Synfig User Manual: contents](https://synfig.readthedocs.io/en/latest/
 | Blend methods per layer: composite, straight, onto, behind, screen, overlay, hard light, multiply, divide, add, subtract, difference, brighten, darken, colour, hue, saturation, luminance, alpha over, and alpha intersection (1.5.4). | Shading, lighting passes, glows and graphic colour effects. | **gap**: WP-36 (Everything composites normally; blend modes are in the compositor scope.) |
 | Masking through blends: draw a layer only onto what is below, or use one layer's alpha to cut another. | Clothing patterns inside a shape, shading clipped to a body part. | **gap**: WP-36 (Only internal self-clipping (toon shading) exists.) |
 | Opacity (amount) per layer, animatable. | Fades, ghosts and dissolving effects. | **partial**: `shot.render`, WP-36 (Strokes have a static opacity and swaps/views switch by visibility; animated opacity on parts and layers is not in data (would sit with WP-36; dissolves between shots are WP-15).) |
-| Z-depth parameter: moves a layer within its group's order, animatable. | An arm passing in front of then behind the body. | **partial**: `shot.render`, `export.synfig`, WP-14 (a pose's z, clip swaps.z and controls drive order in SVG and Grease Pencil; Synfig and Lottie exports keep a static order (WP-14).) |
+| Z-depth parameter: moves a layer within its group's order, animatable. | An arm passing in front of then behind the body. | **partial**: `shot.render`, `export.synfig`, WP-14 (pose.z, clip swaps.z and controls drive order in SVG and Grease Pencil; Synfig and Lottie exports keep a static order (WP-14).) |
 | Origin and focus point parameters: the pivot for transforms and the centre for effects. | Rotating parts about joints. | **data**: `puppet.json parts[].pivot` (Pivots per part, estimated on import and checked by puppet.coach.) |
 | Invert parameter: a shape becomes a hole that shows everything outside it. | Iris wipes, spotlights and cut-through windows. | **gap**: WP-36 (No inverted shapes or mattes; an iris between shots is a transition (WP-15).) |
 | Antialias switch and feather per shape. | Crisp pixel-art edges, or softened edges. | **n/a** (Antialiasing is always on in the browser rasteriser; soft edges are covered under geometry feathering (WP-36).) |

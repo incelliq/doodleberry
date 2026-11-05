@@ -48,6 +48,32 @@
     }
     return p;
   }
+  // v0.13 gradient and texture fills (WP-18): p.gradients = {id: {type: 'linear', from, to | type: 'radial', center,
+  // radius, focus?, stops: [[offset, colour or slot, opacity?], ...]}} and p.textures = {id: {image, w, h, opacity,
+  // blend}} in the part's rest (artboard) units, so they move with it. A stroke's `gradient` paints its fill (`fill`
+  // stays the flat colour for renderers without gradients); its `texture` is laid over the fill (multiply by default).
+  // Ids hash the content, so a frame stays a pure function and identical defs never clash.
+  function paintDefs(st, pal, gm) {
+    const fx = pal._fx || {}, gt = gm ? ` gradientTransform="matrix(${gm.map(v => (+v).toFixed(5)).join(' ')})"` : '', pt = gm ? ` patternTransform="matrix(${gm.map(v => (+v).toFixed(5)).join(' ')})"` : '';
+    let defs = '', fill = null, over = '';
+    const g = st.gradient && (fx.gradients || {})[st.gradient];
+    if (g) {
+      const stops = (g.stops || []).map(([o, c, a]) => `<stop offset="${o}" stop-color="${colourOf(c, pal)}"${a != null ? ` stop-opacity="${a}"` : ''}/>`).join('');
+      const tag = g.type === 'radial' ? 'radialGradient' : 'linearGradient';
+      const at = g.type === 'radial' ? `cx="${g.center[0]}" cy="${g.center[1]}" r="${g.radius}"${g.focus ? ` fx="${g.focus[0]}" fy="${g.focus[1]}"` : ''}`
+        : `x1="${g.from[0]}" y1="${g.from[1]}" x2="${g.to[0]}" y2="${g.to[1]}"`;
+      const body = `gradientUnits="userSpaceOnUse" ${at}${gt}${g.spread ? ` spreadMethod="${g.spread}"` : ''}>${stops}`, id = 'gr' + hashStr(tag + body);
+      defs += `<${tag} id="${id}" ${body}</${tag}>`; fill = `url(#${id})`;
+    }
+    const t = st.texture && (fx.textures || {})[st.texture];
+    if (t && t.image) {
+      if (!t._id) t._id = hashStr(t.image.length + ':' + t.image.slice(22, 300) + t.image.slice(-300) + t.w + 'x' + t.h);
+      const id = 'tx' + t._id + (gm ? hashStr(gt) : '');
+      defs += `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${t.w}" height="${t.h}"${pt}><image href="${t.image}" width="${t.w}" height="${t.h}" preserveAspectRatio="none"/></pattern>`;
+      over = ` fill="url(#${id})"${st.rule ? ` fill-rule="${st.rule}"` : ''} opacity="${(t.opacity ?? 1) * (st.opacity ?? 1)}" style="mix-blend-mode:${t.blend || 'multiply'}"`;
+    }
+    return { defs: defs ? `<defs>${defs}</defs>` : '', fill, over };
+  }
   function colourOf(v, pal) { if (!v) return 'none'; return v[0] === '#' || v === 'none' ? v : pal[v] || '#ff00ff'; }
   // v0.5 toon shading (render option toon: {dir: [x, y] towards the light, d: 7, shade: '#2a1a10', opacity: 0.22, rim: 0}):
   // within each filled vector shape, the band facing away from the light is shaded: the shape is clipped to itself,
@@ -74,7 +100,14 @@
       if (toon && st.d && !st.image && st.fill && st.fill !== 'none' && (st.opacity == null || st.opacity > 0.9)) { s += toonSVG(st, colourOf(st.fill, pal), colourOf(st.stroke, pal), m, toon); continue; }
       // v0.3 raster part: original ink or paint as an image placed in artboard units
       if (st.image) { s += `<image href="${st.image}" x="${st.x}" y="${st.y}" width="${st.w}" height="${st.h}" preserveAspectRatio="none"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`; continue; }
-      const fill = colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
+      const pd = (st.gradient || st.texture) ? paintDefs(st, pal, null) : null;
+      const fill = (pd && pd.fill) || colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
+      if (pd && pd.over && fill !== 'none') {   // the texture goes between the fill and the outline
+        s += pd.defs + `<path d="${st.d}" fill="${fill}"${st.rule ? ` fill-rule="${st.rule}"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/><path d="${st.d}"${pd.over}/>`;
+        if (line !== 'none') s += `<path d="${st.d}" fill="none" stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
+        continue;
+      }
+      if (pd) s += pd.defs;
       s += `<path d="${st.d}" fill="${fill}"${st.rule ? ` fill-rule="${st.rule}"` : ''}${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
     }
     return s + '</g>';
@@ -235,6 +268,13 @@
 
   // v0.2 views: p.views[name] = { parts: {id: {strokes, pivot, z}}, swaps: {id: {shapes: {...}}} } overriding the default view
   const _viewCache = new WeakMap();
+  // v0.13 named layer sets (WP-18): p.layer_sets = {name: {swap id: shape}}; pose.layer_set = name picks those
+  // drawings together (a costume, a season, a prop kit). Picks the pose makes itself win over the set's.
+  function layerSet(p, pose) {
+    const set = pose && pose.layer_set && (p.layer_sets || {})[pose.layer_set]; if (!set) return pose;
+    const out = { ...pose }; for (const [sid, shape] of Object.entries(set)) if (out[sid] == null && (p.swaps || {})[sid]) out[sid] = shape;
+    return out;
+  }
   function inView(p, view) {
     if (!view || !p.views || !p.views[view]) return p;
     let c = _viewCache.get(p); if (!c) { c = {}; _viewCache.set(p, c); }
@@ -249,15 +289,19 @@
     for (const st of strokes) {
       const d2 = st.d && bentD(st.d, J, M);
       if (!d2) { s += strokesSVG([st], pal, M); continue; }
-      const fill = colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
-      s += `<path d="${d2}" fill="${fill}"${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
+      const pd = (st.gradient || st.texture) ? paintDefs(st, pal, M) : null;
+      const fill = (pd && pd.fill) || colourOf(st.fill, pal), line = colourOf(st.stroke, pal);
+      if (pd) s += pd.defs;
+      if (pd && pd.over && fill !== 'none') s += `<path d="${d2}" fill="${fill}"${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/><path d="${d2}"${pd.over}/>`;
+      s += `<path d="${d2}" fill="${pd && pd.over ? 'none' : fill}"${line !== 'none' ? ` stroke="${line}" stroke-width="${st.width || 3}" stroke-linejoin="round" stroke-linecap="round"` : ''}${st.opacity != null ? ` opacity="${st.opacity}"` : ''}/>`;
     }
     return s;
   }
   function render(p, x, y, pose = {}) {
-    p = inView(p, pose.view);
+    pose = layerSet(p, pose); p = inView(p, pose.view);
     if (p._bendy === undefined) p._bendy = Object.values(p.parts).some(pt => pt.bend);
     const pal = { ...(p.palette || {}), ...(pose.palette || {}) };
+    if (p.gradients || p.textures) Object.defineProperty(pal, '_fx', { value: { gradients: p.gradients, textures: p.textures } });
     const M = matrices(p, pose);
     const items = [];
     for (const [id, part] of Object.entries(p.parts)) {
@@ -321,5 +365,5 @@
     return out;
   }
 
-  root.Puppet = { render, pointOf, fromTemplate, lint, matrices, inView, recolour, recolourHex };
+  root.Puppet = { render, pointOf, fromTemplate, lint, matrices, inView, layerSet, recolour, recolourHex };
 })(typeof window !== 'undefined' ? window : globalThis);

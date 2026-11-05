@@ -21,7 +21,8 @@ from PIL import Image, ImageDraw
 from . import ROOT
 from . import geom as G
 
-CANVAS_ONLY = ("chain", "clip for the")   # needs that are drawn and rigged in the Rig Canvas
+CANVAS_ONLY = ("clip for the",)          # needs that are drawn and rigged in the Rig Canvas
+CHAIN_N = 4                               # a tail drawn over a ghost bends in this many places (WP-18)
 TURN_VIEW = "three_quarter"               # the view a turn request draws (the head turned three-quarters, facing right)
 
 
@@ -38,6 +39,9 @@ def parse_need(label):
         return [{"kind": "swap", "swap": "pupils", "shape": "default"}]
     if "three-quarter" in label:                  # WP-18: the head turned, drawn over the head on a ghost
         return [{"kind": "view", "view": TURN_VIEW, "part": "head"}]
+    m = re.match(r"a chain of parts \((\w+)\)", label)
+    if m:                                         # WP-18: a tail drawn over a ghost, split along its length into a chain
+        return [{"kind": "chain", "part": m.group(1)}]
     m = re.match(r"part (\w+)$", label)
     if m:
         return [{"kind": "part", "part": m.group(1)}]
@@ -56,6 +60,8 @@ def missing(p, req):
         return req["part"] not in p.get("parts", {})
     if req["kind"] == "view":
         return "turn" not in (p.get("controls") or {}) and req["part"] not in (((p.get("views") or {}).get(req["view"]) or {}).get("parts") or {})
+    if req["kind"] == "chain":
+        return not p.get("chains")
     return True
 
 
@@ -105,7 +111,10 @@ def box_for(p, req):
             hw, hh = head[2] - head[0], head[3] - head[1]
             return [head[0] + 0.3 * hw, head[1] + 0.6 * hh, head[2] - 0.3 * hw, head[1] + 0.9 * hh]
         return grow(head or [W * 0.3, H * 0.1, W * 0.7, H * 0.4], 0.0)
-    if req["kind"] == "part" and req["part"] == "tail":
+    if req["kind"] == "chain" and _part_box(p, req["part"]):   # over the tail it has, with room to draw it longer
+        tb = _part_box(p, req["part"]); tw, th = tb[2] - tb[0], tb[3] - tb[1]; pad = 0.35 * max(tw, th)
+        return [max(0, tb[0] - pad), max(0, tb[1] - pad), min(W, tb[2] + pad), min(H, tb[3] + pad)]
+    if req["kind"] in ("part", "chain") and req["part"] == "tail":
         body = _part_box(p, "body") or [W * 0.3, H * 0.4, W * 0.7, H * 0.9]
         bw, bh = body[2] - body[0], body[3] - body[1]
         return [body[2] - 0.15 * bw, body[1] + 0.35 * bh, min(W, body[2] + 0.45 * bw), body[1] + 0.85 * bh]
@@ -129,7 +138,7 @@ def make_requests(p, needs):
 def ghost_spec(p, puppet_rel):
     """pose_still spec that draws the character at rest exactly on its artboard (1 unit = 1 pixel)"""
     W, H = p["artboard"]; hip = p["parts"].get("hip", {}).get("pivot", [W / 2, p["ground"]])
-    return {"size": [int(W), int(H)], "bg": "#ffffff", "items": [{"puppet": puppet_rel, "x": hip[0], "y": p["ground"], "s": 1,
+    return {"size": [int(W), int(H)], "bg": "#ffffff", "flush": True, "items": [{"puppet": puppet_rel, "x": hip[0], "y": p["ground"], "s": 1,
                                                                    "pose": {"blink": 0}}]}
 
 
@@ -139,7 +148,7 @@ def compose_ghost(rest_png, p, req, out_png):
     faint = Image.blend(im, Image.new("RGB", im.size, "white"), 0.78)
     d = ImageDraw.Draw(faint)
     x0, y0, x1, y1 = req["box"]
-    related = req["kind"] == "view" or (req["kind"] == "swap" and (_swap_box(p, req["swap"]) or (req["swap"] == "pupils" and _swap_box(p, "eyes"))))
+    related = req["kind"] in ("view", "chain") or (req["kind"] == "swap" and (_swap_box(p, req["swap"]) or (req["swap"] == "pupils" and _swap_box(p, "eyes"))))
     if related:   # the related drawing it has (the shape it varies, the eyes for pupils, the head for a turn), at 45%
         crop = (int(max(0, x0)), int(max(0, y0)), int(min(im.width, x1)), int(min(im.height, y1)))
         if crop[2] > crop[0] and crop[3] > crop[1]:
@@ -151,7 +160,8 @@ def compose_ghost(rest_png, p, req, out_png):
             t0, t1 = i / n, min(1, (i + 1) / n)
             d.line([(ax + (bx - ax) * t0, ay + (by - ay) * t0), (ax + (bx - ax) * t1, ay + (by - ay) * t1)], fill=(232, 116, 58), width=3)
     what = ("pupils inside the eyes" if req.get("swap") == "pupils" else f"{req['swap']}: {req['shape']}") if req["kind"] == "swap" else \
-        f"the {req['part']} turned 3/4 to the right (no face)" if req["kind"] == "view" else f"{req['part']}"
+        f"the {req['part']} turned 3/4 to the right (no face)" if req["kind"] == "view" else \
+        f"the {req['part']}, from the body out (it bends in {CHAIN_N} places)" if req["kind"] == "chain" else f"{req['part']}"
     from PIL import ImageFont
     try:
         font = ImageFont.load_default(size=max(14, int(im.width / 30)))
@@ -208,7 +218,66 @@ def slot(p, req, st, A):
         return f"parts.{req['part']}"
     if req["kind"] == "view":
         return _slot_view(p, req, st, A)
+    if req["kind"] == "chain":
+        return _slot_chain(p, req, A)
     raise ValueError("this request is drawn in the Rig Canvas")
+
+
+def _slot_chain(p, req, A, n=CHAIN_N, overlap=4):
+    """a tail drawn over the ghost -> a chain of n parts: the ink's geodesic distance from where it meets the body
+    (the end nearest the owner's middle) cut into n equal bands, each a raster part pivoting where the band before it
+    ends; bands overlap by `overlap` px so bent joints show no gaps. Replaces the part it was drawn over. The chain
+    waves gently (a living tail) and its joints are limited to +-40 degrees, as generated characters' tails are."""
+    import heapq
+    from scipy import ndimage
+    import importlib.util
+    sp = importlib.util.spec_from_file_location("ink", ROOT / "dbe" / "ink.py"); ink = importlib.util.module_from_spec(sp); sp.loader.exec_module(ink)
+    name = req["part"]; old = p["parts"].get(name) or {}
+    owner = old.get("parent") or ("body" if "body" in p["parts"] else "head")
+    m = A > 0.35
+    lab, k = ndimage.label(m, np.ones((3, 3)))
+    if k > 1:   # the stroke itself (specks left out)
+        m = lab == (1 + int(np.argmax(ndimage.sum(m, lab, range(1, k + 1)))))
+    ys, xs = np.nonzero(m)
+    ob = _part_box(p, owner) or [0, 0, *p["artboard"]]
+    cx, cy = (ob[0] + ob[2]) / 2, (ob[1] + ob[3]) / 2
+    r0 = int(np.argmin((xs - cx) ** 2 + (ys - cy) ** 2)); root = (int(ys[r0]), int(xs[r0]))
+    D = np.full(m.shape, np.inf); D[root] = 0; h = [(0.0, root)]   # Dijkstra over the ink, 8-neighbour
+    steps = [(dy, dx, (dy * dy + dx * dx) ** 0.5) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx]
+    while h:
+        d, (y, x) = heapq.heappop(h)
+        if d > D[y, x]:
+            continue
+        for dy, dx, w in steps:
+            yy, xx = y + dy, x + dx
+            if 0 <= yy < m.shape[0] and 0 <= xx < m.shape[1] and m[yy, xx] and d + w < D[yy, xx]:
+                D[yy, xx] = d + w; heapq.heappush(h, (d + w, (yy, xx)))
+    L = float(D[m].max())
+    if L < 8 * n:
+        raise ValueError(f"the {name} drawn is too short to bend in {n} places")
+    near = ndimage.distance_transform_edt(~m, return_indices=True)[1]   # every inked pixel (soft edges too) takes its nearest stroke pixel's distance
+    Dall = D[near[0], near[1]]
+    tip = np.unravel_index(int(np.argmax(np.where(m, D, -1))), m.shape)
+    col = (p.get("palette") or {}).get("ink") or "#1c1e24"; rgb = tuple(int(col[i:i + 2], 16) for i in (1, 3, 5))
+    for k_ in [k_ for k_, v in p["parts"].items() if v.get("parent") == name]:
+        p["parts"][k_]["parent"] = owner   # (anything hanging from the old part hangs from its owner)
+    names = [name] + [f"{name}_{i + 1}" for i in range(1, n)]
+    parent = owner; z = old.get("z", 8)
+    for i, nm in enumerate(names):
+        a0, a1 = i * L / n, (i + 1) * L / n
+        band = A * ((Dall >= (a0 - overlap if i else -1)) & (Dall <= (a1 + overlap if i < n - 1 else np.inf)))
+        if i == 0:
+            piv = [root[1], root[0]]
+        else:
+            ring = m & (np.abs(D - a0) <= 1.5)
+            ry, rx = np.nonzero(ring)
+            piv = [round(float(rx.mean()), 1), round(float(ry.mean()), 1)]
+        part = {"parent": parent, "pivot": piv, "z": z, "strokes": [ink.raster(band, rgb)]}
+        if i:
+            part["limits"] = [-40, 40]
+        p["parts"][nm] = part; parent = nm
+    p.setdefault("chains", {})[name] = {"parts": names, "tip": [int(tip[1]), int(tip[0])], "wave": {"amp": 7, "freq": 0.6, "lag": 0.7}}
+    return f"chains.{name} ({', '.join(names)})"
 
 
 # ---------- WP-18: pupils and a turned view from drawings on the ghost ----------

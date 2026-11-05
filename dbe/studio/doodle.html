@@ -37,7 +37,7 @@
   <section id="s2" hidden><h2>2 · Check the cuts</h2>
     <div class="row" id="pick" hidden></div>
     <div class="muted">Each coloured shape moves on its own. Drag a dot to move where it bends. Tap a name to leave that piece on the body.</div>
-    <div class="stage" id="cutstage"><img id="pimg" alt="your doodle"><svg class="over" id="over"></svg></div>
+    <div class="stage" id="cutstage"><img id="pimg" alt="your doodle" draggable="false"><svg class="over" id="over"></svg></div>
     <div class="row" id="chips"></div><div id="notes"></div>
     <div class="row"><button id="tapcut" title="tap a piece on the photo and it is cut for you (SAM 2.1, on this computer)">✂ Tap to cut</button>
       <select id="tappart" aria-label="which piece"><option value="arm_L">left arm</option><option value="arm_R">right arm</option><option value="tail">tail</option><option value="head">head</option></select>
@@ -87,29 +87,47 @@ function pick(i) {
 }
 function drawCuts() {
   const [W, H] = D.size; $('pimg').src = '/' + D.photo + '?t=' + Date.now(); const o = $('over'); o.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const polys = Object.entries(spec.parts).filter(([, p]) => p.poly).map(([k, p]) => `<polygon points="${p.poly.map(q => q.join(',')).join(' ')}" fill="${COL[k] || '#888'}" fill-opacity=".18" stroke="${COL[k] || '#888'}" stroke-width="3"/>`)
+  const polys = Object.entries(spec.parts).filter(([, p]) => p.poly).map(([k, p]) => `<polygon data-pk="${k}" points="${p.poly.map(q => q.join(',')).join(' ')}" fill="${COL[k] || '#888'}" fill-opacity=".18" stroke="${COL[k] || '#888'}" stroke-width="3"/>`)
     .concat(Object.entries(spec.swaps).filter(([, s]) => s.open).map(([k, s]) => `<polygon points="${s.open.poly.map(q => q.join(',')).join(' ')}" fill="none" stroke="${COL[k]}" stroke-width="3" stroke-dasharray="8 6"/>`));
   const r = Math.max(W, H) / 40;
   const dots = Object.entries(spec.parts).map(([k, p]) => `<circle data-part="${k}" cx="${p.pivot[0]}" cy="${p.pivot[1]}" r="${r}" fill="${COL[k] || '#888'}" stroke="#fff" stroke-width="4" style="cursor:grab"/>`);
   const m = spec.swaps.mouth && spec.swaps.mouth.talk ? [`<circle data-mouth="1" cx="${spec.swaps.mouth.talk.center[0]}" cy="${spec.swaps.mouth.talk.center[1]}" r="${r * 0.8}" fill="none" stroke="${COL.mouth}" stroke-width="5"/>`] : [];
-  o.innerHTML = polys.join('') + dots.join('') + m.join('');
+  const hs = r * 0.5;   // vertex handles (WP-18): drag to move, double-tap to remove; double-tap an outline to add one
+  const vs = Object.entries(spec.parts).filter(([, p]) => p.poly).flatMap(([k, p]) => p.poly.map((q, i) => `<rect data-pk="${k}" data-vi="${i}" x="${q[0] - hs / 2}" y="${q[1] - hs / 2}" width="${hs}" height="${hs}" fill="#fff" stroke="${COL[k] || '#888'}" stroke-width="3" style="cursor:move"/>`));
+  o.innerHTML = polys.join('') + vs.join('') + dots.join('') + m.join('');
   $('chips').innerHTML = Object.keys(spec.parts).map(k => `<button class="chip" data-chip="${k}"><i style="background:${COL[k]}"></i>${k.replace('_L', ' (left)').replace('_R', ' (right)')}</button>`).join('')
     + Object.keys(spec.swaps).map(k => `<span class="chip"><i style="background:${COL[k]}"></i>${k}</span>`).join('');
   $('notes').innerHTML = (D.found.notes || []).map(n => `<div class="note">${n}</div>`).join('');
   document.querySelectorAll('[data-chip]').forEach(b => b.onclick = () => { delete spec.parts[b.dataset.chip]; spec._edited = true; drawCuts(); });
 }
-// drag pivots (and the mouth centre) in photo pixels
-(() => { let drag = null; const o = $('over');
+// drag pivots (and the mouth centre) and cut outlines' vertices, in photo pixels
+(() => { let drag = null, moved = false; const o = $('over');
   const at = e => { const pt = o.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(o.getScreenCTM().inverse()); };
-  o.addEventListener('pointerdown', async e => { const c = e.target.closest('circle');
+  const handle = e => e.target.closest('circle, rect[data-vi]');
+  o.addEventListener('pointerdown', async e => { const c = handle(e);
     if (!c && window.TAPCUT) {   // click-to-mask (WP-18): the tapped piece is cut by SAM 2.1 on the server
       const p = at(e), part = $('tappart').value; $('tapmsg').textContent = 'cutting…';
       const r = await api('doodle.click', { id: D.id, part, points: [[Math.round(p.x), Math.round(p.y)]], spec });
       spec = r.spec; spec._edited = true; delete spec.photo; window.TAP_RESULT = r; $('tapmsg').textContent = `${part}: ${Math.round(r.iou * 100)}% sure`; drawCuts(); return; }
-    if (!c) return; drag = c; o.setPointerCapture(e.pointerId); });
-  o.addEventListener('pointermove', e => { if (!drag) return; const p = at(e); drag.setAttribute('cx', p.x); drag.setAttribute('cy', p.y); });
-  o.addEventListener('pointerup', e => { if (!drag) return; const p = at(e), q = [Math.round(p.x), Math.round(p.y)];
-    if (drag.dataset.part) spec.parts[drag.dataset.part].pivot = q; else spec.swaps.mouth.talk.center = q; spec._edited = true; drag = null; drawCuts(); });
+    if (!c) return; e.preventDefault(); drag = c; moved = false; o.setPointerCapture(e.pointerId); });   // (no native drag: it cancels the pointer)
+  o.addEventListener('dragstart', e => e.preventDefault());
+  o.addEventListener('pointermove', e => { if (!drag) return; const p = at(e); moved = true;
+    if (drag.dataset.vi === undefined) { drag.setAttribute('cx', p.x); drag.setAttribute('cy', p.y); return; }
+    const hs = +drag.getAttribute('width'), k = drag.dataset.pk, i = +drag.dataset.vi; drag.setAttribute('x', p.x - hs / 2); drag.setAttribute('y', p.y - hs / 2);
+    const pts = spec.parts[k].poly.map((q, j) => j === i ? [p.x, p.y] : q); o.querySelector(`polygon[data-pk="${k}"]`).setAttribute('points', pts.map(q => q.join(',')).join(' ')); });
+  o.addEventListener('pointerup', e => { if (!drag) return; const c = drag; drag = null; if (!moved) return;
+    const p = at(e), q = [Math.round(p.x), Math.round(p.y)];
+    if (c.dataset.vi !== undefined) spec.parts[c.dataset.pk].poly[+c.dataset.vi] = q;
+    else if (c.dataset.part) spec.parts[c.dataset.part].pivot = q; else spec.swaps.mouth.talk.center = q;
+    spec._edited = true; drawCuts(); });
+  o.addEventListener('dblclick', e => {   // a vertex: remove it (a cut keeps 3); an outline: a new vertex on its nearest edge
+    const el = document.elementFromPoint(e.clientX, e.clientY) || e.target;   // (the drag's pointer capture retargets the event to the overlay)
+    const v = el.closest('rect[data-vi]'), g = el.closest('polygon[data-pk]');
+    if (v) { const P = spec.parts[v.dataset.pk].poly; if (P.length <= 3) return; P.splice(+v.dataset.vi, 1); spec._edited = true; drawCuts(); return; }
+    if (!g || window.TAPCUT) return; const P = spec.parts[g.dataset.pk].poly, p = at(e); let best = 0, bd = Infinity;
+    P.forEach((a, i) => { const b = P[(i + 1) % P.length], dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1;
+      const t = Math.max(0, Math.min(1, ((p.x - a[0]) * dx + (p.y - a[1]) * dy) / L)), d = Math.hypot(a[0] + t * dx - p.x, a[1] + t * dy - p.y); if (d < bd) { bd = d; best = i; } });
+    P.splice(best + 1, 0, [Math.round(p.x), Math.round(p.y)]); spec._edited = true; drawCuts(); });
 })();
 $('tapcut').onclick = () => { window.TAPCUT = !window.TAPCUT; $('tapcut').classList.toggle('primary', window.TAPCUT); $('tapmsg').textContent = window.TAPCUT ? 'tap the piece on the photo' : ''; };
 $('ok').onclick = async () => {

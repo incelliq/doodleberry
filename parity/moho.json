@@ -1371,12 +1371,14 @@
      "capability": "Gradient and texture fills.",
      "pro_use": "Gives soft shading and patterned clothing.",
      "match": {
-      "kind": "gap",
+      "kind": "data",
       "ref": [
-       "WP-18"
+       "puppet.gradients",
+       "puppet.textures",
+       "strokes[].gradient",
+       "strokes[].texture"
       ],
-      "note": "Puppet strokes take flat palette colours only (sets drawn in code may use gradients). It should join WP-18 for authoring, with WP-14 for renderer parity.",
-      "added_to_scope": true
+      "note": "v0.13 (WP-18): linear and radial gradients drawn by the SVG loader, Lottie and Synfig (Grease Pencil draws the flat fill); tiling textures over the fill, SVG only; test dressup"
      }
     },
     {

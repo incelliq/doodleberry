@@ -245,3 +245,66 @@ def layout_intent(text, cast_names):
     if re.search(r"\b(pull back|pull out|go wider|wider|zoom out|too tight|too close|wide shot)\b", t):
         return {"kind": "camera", "step": -1}
     return None
+
+
+# ---------- WP-19: notes about the timing of lines ----------
+LINE_WORDS = re.compile(r"\b(line|pause|beat|gap|silence|breath|answer|reply|cue|dialogue|rushed|rush)\b")
+MOTION_WORDS = re.compile(r"\b(arm|hand|head|leg|foot|body|wave|point|nod|shrug|gesture|jump|hop|walk|turn|look|glance|blink|camera|shot|cut)\w*\b")
+ORDINAL = {"first": 0, "second": 1, "third": 2, "fourth": 3, "fifth": 4, "last": -1}
+
+
+def timing_intent(text):
+    """-> {"kind": "line_timing", "dir": +1 later | -1 earlier, "s": seconds, "which": None | index | line id} or None.
+    'give the last line a beat before it', 'the answer comes in too late', 'pause longer before "mid"', 'less of a gap
+    before the second line by 0.3 s', 'it feels rushed'"""
+    t = text.lower()
+    if not LINE_WORDS.search(t) or MOTION_WORDS.search(t):
+        return None
+    later = re.search(r"\b(later|too (soon|early|quick|fast)|rushed|rush|longer pause|pause longer|longer before|more time before|more (of a )?(pause|beat|gap|silence)|a beat (before|after)|give .* (a )?(beat|pause|breath)|wait (a|longer)|hold (a beat|on))\b", t)
+    earlier = re.search(r"\b(pause|gap|silence|wait)\b.*\btoo long\b", t) or re.search(r"\b(earlier|sooner|too late|too slow|shorter pause|less (of a )?(pause|beat|gap|silence)|(pause|gap|silence|wait) is too long|tighten|pick up the cue|drags?)\b", t)
+    if bool(later) == bool(earlier):
+        return None
+    s = 0.4
+    m = re.search(r"by\s+(\d+(?:\.\d+)?)\s*(s|sec|seconds?|ms|frames?)\b", t)
+    if m:
+        v = float(m.group(1)); s = v / 1000 if m.group(2) == "ms" else v / 30 if m.group(2).startswith("frame") else v
+    elif re.search(r"\b(a beat|a breath)\b", t):
+        s = 0.5
+    elif re.search(r"\b(a (little|bit|touch)|slightly)\b", t):
+        s = 0.25
+    elif re.search(r"\b(much|a lot|way|long pause)\b", t):
+        s = 0.8
+    which = None
+    m = re.search(r"\b(first|second|third|fourth|fifth|last)\s+line\b", t)
+    if m:
+        which = ORDINAL[m.group(1)]
+    m = re.search(r"[\"“']([\w-]+)[\"”']", text)
+    if m:
+        which = m.group(1)
+    return {"kind": "line_timing", "dir": 1 if later else -1, "s": round(s, 3), "which": which}
+
+
+def timing_line(intent, lines, t):
+    """the line a timing note means: named (an id or first/second/last), else the one under the note's frame, else the
+    next one after it -> (line, why)"""
+    w = intent["which"]
+    if isinstance(w, str):
+        ln = next((l for l in lines if l["id"] == w), None)
+        return (ln, f"line {w}") if ln else (None, f"no line {w}")
+    if isinstance(w, int):
+        return (lines[w], f"line {lines[w]['id']}") if -len(lines) <= w < len(lines) else (None, f"no line {w + 1}")
+    ln = next((l for l in lines if l["start"] - 0.3 <= t <= l["end"]), None) or next((l for l in lines if l["start"] >= t), None)
+    return (ln, f"line {ln['id']} at the note") if ln else (None, f"no line at or after {t:.2f} s")
+
+
+def onset_after(wav, t0, t1, sr_hint=None):
+    """when speech starts in a voice track between t0 and t1 (seconds): the first 10 ms frame above -40 dBFS"""
+    import numpy as np
+    import soundfile as sf
+    info = sf.info(str(wav)); sr = info.samplerate
+    a, _ = sf.read(str(wav), start=max(0, int(t0 * sr)), stop=int(t1 * sr), always_2d=True)
+    a = a.mean(1); hop = int(0.01 * sr)
+    for i in range(0, len(a) - hop, hop):
+        if 20 * np.log10(np.sqrt((a[i:i + hop] ** 2).mean()) + 1e-12) > -40:
+            return round(t0 + i / sr, 3)
+    return None

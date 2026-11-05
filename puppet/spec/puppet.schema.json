@@ -314,6 +314,122 @@
      }
     }
    }
+  },
+  "layer_sets": {
+   "type": "object",
+   "description": "v0.13: named layer sets: {name: {swap id: shape}}; a pose's layer_set (or a timeline's layer_set keys) picks those drawings together, the pose's own picks winning",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "gradients": {
+   "type": "object",
+   "description": "v0.13: gradient fills in the part's rest (artboard) units: linear (from, to) or radial (center, radius, focus); stops [[offset, colour or palette slot, opacity?]]",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "stops"
+    ],
+    "properties": {
+     "type": {
+      "enum": [
+       "linear",
+       "radial"
+      ]
+     },
+     "from": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     },
+     "to": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     },
+     "center": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     },
+     "radius": {
+      "type": "number"
+     },
+     "focus": {
+      "type": "array",
+      "items": {
+       "type": "number"
+      }
+     },
+     "spread": {
+      "enum": [
+       "pad",
+       "repeat",
+       "reflect"
+      ]
+     },
+     "stops": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "minItems": 2,
+       "maxItems": 3,
+       "prefixItems": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "string"
+        },
+        {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   }
+  },
+  "textures": {
+   "type": "object",
+   "description": "v0.13: tiling textures laid over a stroke's fill: image (data URI), tile size w x h in artboard units, opacity, blend (CSS mix-blend-mode, default multiply)",
+   "additionalProperties": {
+    "type": "object",
+    "required": [
+     "image",
+     "w",
+     "h"
+    ],
+    "properties": {
+     "image": {
+      "type": "string"
+     },
+     "w": {
+      "type": "number"
+     },
+     "h": {
+      "type": "number"
+     },
+     "opacity": {
+      "type": "number"
+     },
+     "blend": {
+      "type": "string"
+     }
+    }
+   }
   }
  },
  "$defs": {
@@ -529,6 +645,14 @@
       "nonzero",
       "evenodd"
      ]
+    },
+    "gradient": {
+     "type": "string",
+     "description": "v0.13: a gradient id (puppet gradients) painting the fill; fill stays the flat colour for renderers without gradients"
+    },
+    "texture": {
+     "type": "string",
+     "description": "v0.13: a texture id (puppet textures) laid over the fill"
     }
    }
   },

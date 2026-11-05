@@ -2114,6 +2114,19 @@ the clip now sits by when it moves away from its old one, so re-voicing still ca
 is edited by hand loses its `auto` tag, so `acting.plan` keeps it. `timeline.get` returns what the page draws;
 `film.preview` writes the player page. `tools/timeline_check.mjs` drags a gesture in a headless browser.
 
+**Cuts, lines and camera keys on the timeline** (WP-19). The cut between two shots has a handle on the shots lane:
+dragging it moves the first shot's end and the next shot's start together (`timeline.edit` `move_cut`; a cut at
+less than 0.3 s from either shot's other end is refused). A line on a dialogue lane can be dragged:
+`timeline.move_line {name, line, start}` changes the silence before it (the pause after the line before, the lead-in
+for the first, or the slot of a slotted line) and re-voices the film, so the lines after it move with it and
+everything anchored to lines follows; Undo restores script.json and re-voices. The **camera lane** shows each shot's
+camera keys as diamonds: double-click adds one (`add_camkey`) with the framing the shot already has there, anchored
+to the line it sits by; drag re-times it (`move_camkey`), selecting it shows its framing to type (`set_camkey`
+[x, y, zoom]), Delete removes it (`delete_camkey`). Test `timeline2` (only when asked: it re-voices a scratch copy of
+pip-park twice) drives the page in Chromium: the cut moved 0.39 s for a 0.40 s drag (to the frame), a camera key
+added as `mid.start+2.03` at [540, 960, 1], moved 0.3 s, set to zoom 1.2 and deleted, and the last line moved 0.38 s
+for a 0.36 s drag (to the frame, after re-voicing) with the line before unmoved, then undone.
+
 ## Storyboard strip and animatic (plan 3.2)
 `python -m dbe film.storyboard '{"name": "FILM"}'` takes one still per shot from the player (a moment into the
 shot's first line, so the auto camera is on the speaker; the middle of the shot when nobody speaks; drawn without
@@ -2342,6 +2355,37 @@ drawing). Raster drawings are flipped and moved across, vector paths reflected, 
 part is only redrawn with `replace`. Test `mirror`: Nib's left arm (raster) mirrored to the right, and Ravi's right
 arm chain (upper arm, forearm, hand; vector) mirrored to the left. With the arms posed at +-angles, each puppet's
 arms draw as mirror images of each other (symmetry IoU 1.0 and 0.998), and both lint clean.
+
+**Editing a cut's outline** (WP-18). On the phone page each suggested cut shows its polygon's vertices as small
+squares: drag one to move it, double-tap one to remove it (a cut keeps three), double-tap the outline to add a vertex on
+its nearest edge. OK then cuts again from the edited outlines (`doodle.cut`). In the `doodle` test, on the second
+doodle of the synthetic page, a vertex of the tail's cut is removed (19 -> 18), one added on the longest edge (-> 19),
+and the vertex farthest from the pivot dragged 70% of the way to it: it lands where it was let go (0 px off), the saved
+spec holds the edited outline, and the re-cut tail's drawing changes. Two page bugs found on the way: the drag's pointer
+capture sent the double-tap to the overlay, not the vertex (now found by position), and a native drag cancelled the
+pointer after the first move (now prevented).
+
+**Chains over ghosts** (WP-18). A character without a chain gets a drawing request for one ("a chain of parts
+(tail)", once left to the Rig Canvas): its ghost shows the tail it has, with room to draw it longer. The tail drawn
+over the ghost is lifted and split along its length: the ink's distance from where it meets the body (measured along
+the stroke) is cut into four equal bands, each a raster part pivoting where the band before it ends, overlapping by 4
+px so bent joints show no gaps; the chain replaces the old tail part (its first link keeps the name, so clips that
+move `tail` still do), waves gently (`chains.tail.wave`) and its joints are limited to +-40 degrees. Ghost guides are
+now drawn flush with the artboard: `tools/pose_still.mjs` kept the browser's 8 px page margin, so a drawing traced
+over a ghost landed 8 px off (`"flush": true` in a pose_still spec; the golden pose frames keep the margin). In the
+`doodle` test a wavy tail is drawn over the second doodle's ghost: the request closes and frees "tail / chain"; the
+four links pivot along the stroke, the chain at rest covers all of the drawn ink (100%), and bent 28 degrees at each
+joint either way the tail stays one piece (no gaps) while about 1,270 px of the picture change.
+
+**Layer sets, gradient and texture fills** (WP-18, puppet format v0.13). `layer_sets` names several swap picks that go
+together (a costume, a season): a pose's `layer_set`, or a timeline's held `layer_set` keys, pick them all, and a pick
+the pose makes itself wins. `gradients` (linear or radial, in rest units, stops by colour or palette slot) paint a
+stroke's fill through its `gradient`; `textures` (a tile laid over the fill, multiplied by default) through its
+`texture`. Test `dressup` on `tests/poses/dressup.puppet.json` (Pip with a hat and a scarf, two sets, three gradients
+and a hatch): a set and a timeline keying it draw pixel-identically (0 px differ), as do the set and its picks spelled
+out, and an own pick over a set; `dbe/geom.py` resolves sets the same way. Gradients against the SVG loader: Lottie
+46.1 dB PSNR (29.5 with the flat fill), Synfig 38.9 dB (29.1 flat); Grease Pencil draws the flat fill and textures are
+SVG-only, which `render.parity` reports as drawn without. Golden pose case `dressup`.
 
 **Tap to cut (WP-18, plan 1.8b).** When a cut is wrong or missing, `doodle.click` takes taps on the photo
 (`[x, y]` inside the piece, `[x, y, 0]` outside) and cuts that piece with SAM 2.1 tiny (Apache-2.0; onnx-community's

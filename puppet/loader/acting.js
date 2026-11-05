@@ -393,6 +393,9 @@
     // scripted blinks (timed for comedy): half, closed, closed, half over a third of a second
     for (const b of tl.blinks || []) { const d = t - b; if (d >= 0 && d < 0.34) pose.blink = Math.max(pose.blink || 0, d < 0.085 || d >= 0.25 ? 0.45 : 0.95); }
     for (const [k, v] of Object.entries(tl.set || {})) pose[k] = v;
+    // v0.13 named layer sets: a timeline keys `layer_set` (held), and the set's drawings fill the swaps not picked
+    if (tl.layer_set) { const ls = sampleKeys(tl.layer_set, t); if (ls) pose.layer_set = ls; }
+    if (pose.layer_set) Object.assign(pose, P.layerSet(puppet, pose));
     // v0.4 controls (smart bones / driven keys): one value drives angles, shifts, swaps and layer order through key curves;
     // v0.10: the clips' control tracks add to the timeline's own keys
     const cvals = { ...(pose.controls || {}) }; delete pose.controls;

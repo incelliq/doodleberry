@@ -191,6 +191,9 @@ def root_matrix(puppet, fr):
 
 # ---------- swap choice (mirrors puppet.js) ----------
 def chosen_swaps(puppet, fr):
+    ls = (puppet.get("layer_sets") or {}).get(fr.get("layer_set") or "")
+    if ls:   # v0.13 named layer sets: the set's drawings fill the swaps the frame does not pick
+        fr = {**{k: v for k, v in ls.items()}, **{k: v for k, v in fr.items() if v is not None}}
     out = {}
     for sid, sw in (puppet.get("swaps") or {}).items():
         shapes = sw["shapes"]

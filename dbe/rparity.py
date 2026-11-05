@@ -46,12 +46,17 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
 DEGRADES = {   # styles a renderer draws the shot without (a known difference, not a refusal)
     "line boil": {"svg"},
     "prop squash, stretch and smears": {"svg"},
+    "gradient fills": {"svg", "synfig", "lottie"},   # v0.13 (Grease Pencil: the stroke's flat fill)
+    "texture fills": {"svg"},                        # v0.13 (elsewhere: the fill under the texture)
 }
 
 
-def degrades(renderer, shot):
+def degrades(renderer, shot, puppets=()):
     st = shot.get("style") or {}
-    used = {"line boil": bool(st.get("boil")), "prop squash, stretch and smears": any(p.get(k) for p in shot.get("props") or [] for k in ("squash", "stretch", "smear"))}
+    strokes = [x for p in puppets for part in p.get("parts", {}).values() for x in part.get("strokes", [])] + \
+              [x for p in puppets for sw in (p.get("swaps") or {}).values() for sh in sw.get("shapes", {}).values() for x in sh]
+    used = {"line boil": bool(st.get("boil")), "prop squash, stretch and smears": any(p.get(k) for p in shot.get("props") or [] for k in ("squash", "stretch", "smear")),
+            "gradient fills": any(x.get("gradient") for x in strokes), "texture fills": any(x.get("texture") for x in strokes)}
     return sorted(k for k, ok in DEGRADES.items() if renderer not in ok and used.get(k))
 
 
@@ -247,7 +252,7 @@ def run(name, shot, times=None, renderers=("synfig", "lottie", "grease-pencil"),
         lf = [round(line_f1(a, b), 3) for a, b in zip(refp, ps)]
         scores = [max(x, y) for x, y in zip(ious, lf)]   # filled shapes for solid characters, lines for line art
         cd = [round(colour_diff(a, b), 1) for a, b in zip(refc, cols)]
-        res["renderers"][r] = {"iou": ious, "line_f1": lf, "score": scores, "min": min(scores), "colour_diff": cd, "drawn_without": degrades(r, sh), "ok": min(scores) >= min_iou and max(cd) <= max_colour,
+        res["renderers"][r] = {"iou": ious, "line_f1": lf, "score": scores, "min": min(scores), "colour_diff": cd, "drawn_without": degrades(r, sh, puppets), "ok": min(scores) >= min_iou and max(cd) <= max_colour,
                                "ink_ratio": [round(float(b.sum() / max(1, a.sum())), 3) for a, b in zip(ref, sil)]}
     res["ok"] = all(v.get("ok") for v in res["renderers"].values())
     (out / "parity.json").write_text(json.dumps(res, indent=1))

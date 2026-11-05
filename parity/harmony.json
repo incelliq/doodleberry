@@ -1725,9 +1725,11 @@
      "match": {
       "kind": "data",
       "ref": [
+       "puppet.layer_sets",
+       "pose and timeline layer_set",
        "puppet controls swap targets"
       ],
-      "note": "Controls can drive swaps; outfits as swap sets are WP-16"
+      "note": "v0.13 named layer sets pick several swap sets' drawings together, keyed on the timeline; controls can drive swaps too; test dressup"
      }
     },
     {

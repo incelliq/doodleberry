@@ -23,11 +23,16 @@
   .lane { position: relative; height: 34px; border-bottom: 1px solid var(--line); }
   .lane .label { position: sticky; left: 0; z-index: 3; display: inline-block; width: 92px; height: 100%; padding: 8px 8px; background: var(--panel); border-right: 1px solid var(--line); color: var(--muted); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .blk { position: absolute; top: 5px; height: 24px; border-radius: 6px; padding: 3px 7px; font-size: 12px; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: grab; }
-  .blk.shot { background: var(--shot); cursor: default; } .blk.say { background: var(--say); cursor: default; }
+  .blk.shot { background: var(--shot); cursor: default; } .blk.say { background: var(--say); }
   .blk.clip { background: var(--hand); } .blk.clip.auto { background: var(--auto); color: var(--ink); } .blk.clip.directed { background: var(--directed); }
   .blk.clip.loop { opacity: .35; height: 5px; padding: 0; cursor: default; }
   .blk.sel { outline: 3px solid var(--ink); outline-offset: 1px; }
   .blk .grip { position: absolute; right: 0; top: 0; width: 8px; height: 100%; cursor: ew-resize; background: rgba(0,0,0,.18); }
+  .cut { position: absolute; top: 3px; width: 10px; height: 28px; margin-left: -5px; cursor: ew-resize; z-index: 3; border-radius: 3px; background: var(--ink); opacity: .25; }
+  .cut:hover, .cut.drag { opacity: .7; }
+  .cam { position: absolute; top: 9px; width: 14px; height: 14px; margin-left: -7px; transform: rotate(45deg); background: var(--shot); border: 2px solid var(--panel); cursor: grab; z-index: 2; }
+  .cam.sel { outline: 3px solid var(--ink); }
+  .blk.say { cursor: grab; }
   .tick { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,.5); }
   .emo { position: absolute; top: 1px; font-size: 10px; color: var(--muted); pointer-events: none; }
   #ruler { height: 22px; position: relative; border-bottom: 1px solid var(--line); cursor: pointer; }
@@ -45,7 +50,7 @@
   <label><input id="snap" type="checkbox" checked> snap to words</label>
   <button id="undo" title="Ctrl+Z">↶ Undo</button><button id="anim" title="stills held for each shot over the sound">🎬 Animatic</button><span id="msg"></span><span style="flex:1"></span><a href="/sound">Sound ↗</a> <a href="/">Studio ↗</a></header>
 <div id="top"><div id="pv"><iframe id="frame" title="preview"></iframe></div>
-  <div id="inspect"><h3>Select a clip</h3><div class="kv">Drag a gesture to re-time it, drag its right edge to change its length, double-click a character's lane to add a clip, Delete removes the selected one, ← → nudge one frame (Shift: ten). Every edit is written to shots.json; times anchored to a line stay anchored to it.</div>
+  <div id="inspect"><h3>Select a clip</h3><div class="kv">Drag a gesture to re-time it, drag its right edge to change its length, double-click a character's lane to add a clip, Delete removes the selected one, ← → nudge one frame (Shift: ten). Drag a cut between shots to move it; drag a line to change the silence before it (the film is re-voiced, and everything anchored to lines follows); double-click the camera lane to add a key with the framing there, drag a key to re-time it, select it to type its framing. Every edit is written to shots.json (a line's move to script.json); times anchored to a line stay anchored to it.</div>
     <div class="legend" style="margin-top:8px"><span style="background:var(--hand)"></span>hand-placed<span style="background:var(--auto)"></span>planned from the voice<span style="background:var(--directed)"></span>from directions<span style="background:var(--say)"></span>dialogue<span style="background:var(--shot)"></span>shots</div></div></div>
 <div id="tlwrap"><div id="tl"></div></div>
 <audio id="aud" preload="auto"></audio>
@@ -64,9 +69,14 @@ function snapT(t, px) { if (!$('snap').checked) return fr(t); let best = null; f
 function render() {
   const W = X(T.length) + 40, tl = $('tl'); tl.style.width = W + 'px'; let h = '';
   let r = '<div id="ruler">'; const step = pps > 200 ? 0.5 : pps > 80 ? 1 : 2; for (let t = 0; t <= T.length; t += step) r += `<span style="left:${X(t) - 4}px">${t % 1 ? t.toFixed(1) : t}</span>`; h += r + '</div>';
-  h += `<div class="lane"><span class="label">shots</span>` + T.shots.map(s => `<div class="blk shot" style="left:${X(s.start)}px;width:${(s.end - s.start) * pps - 2}px" title="${s.id} · ${s.set}">${s.id} · ${s.set}</div>`).join('') + '</div>';
+  h += `<div class="lane"><span class="label">shots</span>` + T.shots.map(s => `<div class="blk shot" style="left:${X(s.start)}px;width:${(s.end - s.start) * pps - 2}px" title="${s.id} · ${s.set}">${s.id} · ${s.set}</div>`).join('')
+    + T.shots.slice(0, -1).map(s => `<div class="cut" data-cut="${s.id}" style="left:${X(s.end)}px" title="drag to move the cut after ${s.id} (${typeof s.raw_end === 'string' ? 'anchored ' + s.raw_end : s.end.toFixed(2) + ' s'})"></div>`).join('') + '</div>';
+  // camera keys (WP-19): a diamond per key; drag to re-time, double-click the lane to add one (the framing there), Delete removes
+  h += `<div class="lane" id="camlane"><span class="label">🎥 camera</span>` + T.shots.flatMap(s => (s.camera || []).map(k => {
+    const isSel = sel && sel.cam && sel.shot === s.id && sel.index === k.i;
+    return `<div class="cam${isSel ? ' sel' : ''}" data-shot="${s.id}" data-ci="${k.i}" style="left:${X(k.t)}px" title="${s.id} key ${k.i}: x ${k.v[0]}, y ${k.v[1]}, zoom ${k.v[2]} · ${typeof k.raw_t === 'string' ? 'anchored ' + k.raw_t : 'at ' + k.raw_t + ' s'}"></div>`; })).join('') + '</div>';
   const speakers = [...new Set(T.lines.map(l => l.speaker))];
-  for (const sp of speakers) h += `<div class="lane"><span class="label">🗨 ${sp}</span>` + T.lines.filter(l => l.speaker === sp).map(l => `<div class="blk say" style="left:${X(l.start)}px;width:${Math.max(6, (l.end - l.start) * pps - 2)}px" title="${l.id}: ${l.text.replace(/"/g, '&quot;')}">${l.text}` + (l.words || []).map(w => `<span class="tick" style="left:${(w.start - l.start) * pps}px"></span>`).join('') + '</div>').join('') + '</div>';
+  for (const sp of speakers) h += `<div class="lane"><span class="label">🗨 ${sp}</span>` + T.lines.filter(l => l.speaker === sp).map(l => `<div class="blk say" data-line="${l.id}" style="left:${X(l.start)}px;width:${Math.max(6, (l.end - l.start) * pps - 2)}px" title="${l.id}: ${l.text.replace(/"/g, '&quot;')}">${l.text}` + (l.words || []).map(w => `<span class="tick" style="left:${(w.start - l.start) * pps}px"></span>`).join('') + '</div>').join('') + '</div>';
   const who = []; T.shots.forEach(s => s.cast.forEach(c => { if (!who.includes(c.who)) who.push(c.who); }));
   for (const w of who) {
     // overlapping clips stack into rows, so none hides another; looping base layers run as a thin bar underneath
@@ -84,6 +94,10 @@ function render() {
   tl.innerHTML = h + '<div id="head"></div>'; seek(now); wire();
 }
 function inspect() {
+  if (sel && sel.cam) { const s = T.shots.find(x => x.id === sel.shot), k = s && (s.camera || []).find(x => x.i === sel.index); if (!k) return;
+    $('inspect').innerHTML = `<h3>camera key · ${s.id}</h3><div class="kv">at <code>${k.t.toFixed(3)} s</code> (written as <code>${JSON.stringify(k.raw_t)}</code>)</div>
+      <div style="margin-top:6px">x <input id="cx" type="number" value="${k.v[0]}" style="width:70px"> y <input id="cy" type="number" value="${k.v[1]}" style="width:70px"> zoom <input id="cz" type="number" step="0.01" value="${k.v[2]}" style="width:60px"> <button id="camset">Set</button></div>`;
+    $('camset').onclick = () => edit({ op: 'set_camkey', shot: s.id, index: k.i, props: { value: [+$('cx').value, +$('cy').value, +$('cz').value] } }, `camera key ${k.i} of ${s.id} set`); return; }
   if (!sel) return; const s = T.shots.find(x => x.id === sel.shot), c = s.cast.find(x => x.i === sel.cast), k = c.clips.find(x => x.i === sel.index); if (!k) return;
   $('inspect').innerHTML = `<h3>${k.clip} · ${c.who} · ${s.id}</h3><div class="kv">start <code>${k.start.toFixed(3)} s</code> (written as <code>${JSON.stringify(k.raw_start)}</code>) · end <code>${k.end.toFixed(3)} s</code> · weight <code>${k.weight}</code>${k.additive ? ' · additive' : ''}${k.auto ? ' · planned (a hand edit keeps it)' : ''}${k.directed ? ' · from a direction' : ''}</div>`;
 }
@@ -114,6 +128,24 @@ function wire() {
     const line = T.lines.find(x => t >= x.start - 0.5 && t <= x.end + 1.5);
     await edit({ op: 'add_clip', shot: s.id, cast: c.i, clip: name.trim(), start: t, anchor: line ? line.id : '' }, `added ${name} at ${t.toFixed(2)} s`);
   });
+  // a horizontal drag helper: f(dx) live, done(dx) on release (nothing if it did not move)
+  const dragX = (el, e, live, done) => { e.preventDefault(); e.stopPropagation(); const x0 = e.clientX; let moved = false; el.setPointerCapture(e.pointerId);
+    el.onpointermove = ev => { const dx = ev.clientX - x0; if (Math.abs(dx) > 2) moved = true; if (moved) live(dx); };
+    el.onpointerup = ev => { el.onpointermove = el.onpointerup = null; done(moved ? ev.clientX - x0 : null); }; };
+  document.querySelectorAll('.cut').forEach(el => el.onpointerdown = e => { const s = T.shots.find(x => x.id === el.dataset.cut), l0 = parseFloat(el.style.left); el.classList.add('drag');
+    dragX(el, e, dx => { el.style.left = (l0 + dx) + 'px'; seek(TT(l0 + dx)); }, async dx => { el.classList.remove('drag'); if (dx === null) return;
+      const t = snapT(s.end + dx / pps); await edit({ op: 'move_cut', shot: s.id, start: t }, `cut after ${s.id} moved to ${t.toFixed(2)} s`); }); });
+  document.querySelectorAll('.cam').forEach(el => el.onpointerdown = e => { const shot = el.dataset.shot, index = +el.dataset.ci, s = T.shots.find(x => x.id === shot), k = s.camera.find(x => x.i === index), l0 = parseFloat(el.style.left);
+    sel = { cam: true, shot, index }; document.querySelectorAll('.cam.sel, .blk.sel').forEach(b => b.classList.remove('sel')); el.classList.add('sel'); inspect();
+    dragX(el, e, dx => { el.style.left = (l0 + dx) + 'px'; seek(TT(l0 + dx)); }, async dx => { if (dx === null) return seek(k.t);
+      const t = snapT(k.t + dx / pps); await edit({ op: 'move_camkey', shot, index, start: t }, `camera key moved to ${t.toFixed(2)} s`); }); });
+  $('camlane').ondblclick = async e => { if (e.target.closest('.cam')) return; const t = snapT(TT(e.clientX - $('tl').getBoundingClientRect().left));
+    const s = T.shots.find(x => t >= x.start && t < x.end); if (!s) return; await edit({ op: 'add_camkey', shot: s.id, start: t }, `camera key added at ${t.toFixed(2)} s`); };
+  document.querySelectorAll('.blk.say').forEach(el => el.onpointerdown = e => { const l = T.lines.find(x => x.id === el.dataset.line), l0 = parseFloat(el.style.left);
+    dragX(el, e, dx => { el.style.left = (l0 + dx) + 'px'; seek(TT(l0 + dx)); }, async dx => { if (dx === null) return seek(l.start);
+      const t = fr(Math.max(0, l.start + dx / pps)); msg(`moving “${l.id}” to ${t.toFixed(2)} s and re-voicing…`);
+      const before = (await api('film.get', { name: film })).files['script.json']; undo.push({ file: 'script.json', content: before, revoice: true });
+      const r = await api('timeline.move_line', { name: film, line: l.id, start: t }); msg(`“${l.id}” now starts at ${(r.now_starts ?? t).toFixed(2)} s`); await load(); }); });
   $('ruler').onpointerdown = e => { const go = ev => seek(TT(ev.clientX - $('tl').getBoundingClientRect().left)); go(e); $('ruler').onpointermove = ev => ev.buttons && go(ev); };
 }
 async function load(reloadFrame = true) {
@@ -128,11 +160,15 @@ $('play').onclick = () => { playing = !playing; $('play').textContent = playing 
   if (playing) { const a = $('aud'); a.currentTime = now; a.play().catch(() => {}); const t0 = performance.now(), n0 = now;
     const tick = () => { if (!playing) return; const t = a.paused || isNaN(a.duration) ? n0 + (performance.now() - t0) / 1000 : a.currentTime; seek(t); if (t >= T.length) { playing = false; $('play').textContent = '▶ Play'; return; } requestAnimationFrame(tick); }; tick(); }
   else $('aud').pause(); };
-$('undo').onclick = async () => { const prev = undo.pop(); if (!prev) return msg('nothing to undo'); await api('film.write', { name: film, file: 'shots.json', content: prev }); msg('undone'); await load(); };
+$('undo').onclick = async () => { const prev = undo.pop(); if (!prev) return msg('nothing to undo');
+  if (typeof prev === 'object') { await api('film.write', { name: film, file: prev.file, content: prev.content }); if (prev.revoice) { msg('re-voicing…'); await api('voice.build', { name: film }); } }
+  else await api('film.write', { name: film, file: 'shots.json', content: prev });
+  msg('undone'); await load(); };
 document.onkeydown = async e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); return $('undo').onclick(); }
   if (e.key === ' ' && e.target === document.body) { e.preventDefault(); return $('play').onclick(); }
-  if (!sel) return; const s = T.shots.find(x => x.id === sel.shot), k = s && s.cast.find(c => c.i === sel.cast).clips.find(x => x.i === sel.index); if (!k) return;
+  if (sel && sel.cam && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); const sv = sel; sel = null; return edit({ op: 'delete_camkey', shot: sv.shot, index: sv.index }, `camera key deleted`); }
+  if (!sel || sel.cam) return; const s = T.shots.find(x => x.id === sel.shot), k = s && s.cast.find(c => c.i === sel.cast).clips.find(x => x.i === sel.index); if (!k) return;
   if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); const sv = sel; sel = null; return edit({ op: 'delete_clip', ...sv }, `deleted ${k.clip}`); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const n = (e.shiftKey ? 10 : 1) / T.fps * (e.key === 'ArrowLeft' ? -1 : 1);
     return edit({ op: 'move_clip', ...sel, start: Math.max(0, fr(k.start + n)) }, `${k.clip} nudged to ${(k.start + n).toFixed(2)} s`); }

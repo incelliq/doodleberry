@@ -2321,7 +2321,9 @@ def timeline_get(name):
             tl = cc.get("timeline") or {}
             cast.append({"i": ci, "who": cc.get("speaker") or p.get("name") or f"cast {ci}", "puppet": cc["puppet"], "clips": clips,
                          "emotion": tl.get("emotion") or [], "look": tl.get("look") or []})
-        shots.append({"id": rr["id"], "start": rr["start"], "end": rr["end"], "set": rr.get("set", "plain"), "renderer": rr.get("renderer", "svg"), "cast": cast})
+        cam = [{"i": i, "t": rk[0], "raw_t": rw[0], "v": rk[1]} for i, (rw, rk) in enumerate(zip(rs.get("camera") or [], rr.get("camera") or []))]
+        shots.append({"id": rr["id"], "start": rr["start"], "end": rr["end"], "raw_start": rs.get("start"), "raw_end": rs.get("end"), "set": rr.get("set", "plain"),
+                      "renderer": rr.get("renderer", "svg"), "cast": cast, "camera": cam, "size": res.get("size", [1080, 1920])})
     return {"film": name, "length": res["shots"][-1]["end"], "fps": res.get("fps", 30), "shots": shots,
             "lines": [{k: l[k] for k in ("id", "speaker", "text", "start", "end", "words") if k in l} for l in tm.get("lines", [])],
             "clip_names": sorted({n for t in ("humanoid", "doodle") for n in _json(ROOT / "puppet" / "clips" / f"{t}.json", {"clips": {}})["clips"]})}
@@ -2345,19 +2347,26 @@ def _retime(raw_value, new_t, timing):
     return round(max(0.0, new_t), 3)
 
 
-@command("timeline.edit", name=("string", "film"), op=("string", "move_clip | resize_clip | add_clip | delete_clip | set_clip"),
+@command("timeline.edit", name=("string", "film"), op=("string", "move_clip | resize_clip | add_clip | delete_clip | set_clip | move_cut | add_camkey | move_camkey | set_camkey | delete_camkey"),
          shot=("string", "shot id"), cast=("integer", "cast index in the shot"), index=("integer", "clip layer index (move, resize, delete)", -1),
          start=("number", "new start in film seconds (move, add)", None), end=("number", "new end in film seconds (resize; null = the clip's own length)", None),
          clip=("string", "clip name (add)", ""), anchor=("string", "for add: a line id to anchor the start to (line-relative)", ""),
-         props=("object", "set_clip: speed, gain, weight, additive", None))
-def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="", anchor="", props=None):
+         props=("object", "set_clip: speed, gain, weight, additive; add_camkey or set_camkey: value [cx, cy, zoom]", None))
+def timeline_edit(name, op, shot, cast=0, index=-1, start=None, end=None, clip="", anchor="", props=None):
     """One timeline edit from the Studio (plan 3.1), written into shots.json: move a clip layer (its end moves with
     it), resize its end, add a clip at a time (anchored to a line if given, so re-voicing keeps it on the words) or
-    delete one. Line-relative times stay line-relative. Returns the clip as stored."""
+    delete one. WP-19: move_cut moves the cut after `shot` (its end and the next shot's start) to `start`; camera keys
+    ([t, [cx, cy, zoom]] in the shot's `camera`) are added at `start` (the framing there unless props.value gives
+    one), moved, set and deleted by `index`. Line-relative times stay line-relative. Returns what was stored."""
     d = _film(name); raw = _json(d / "shots.json"); tm = _json(d / "timing.json", {}); res = _shots(name)
     si = next((i for i, x in enumerate(raw["shots"]) if x["id"] == shot), None)
     if si is None:
         raise KeyError(f"no shot {shot}")
+    if op in ("move_cut", "add_camkey", "move_camkey", "set_camkey", "delete_camkey"):
+        stored = _timeline_shot_edit(raw, res, tm, si, op, index, start, props)
+        (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+        _player_page(name)
+        return {"stored": stored, "shot": shot, "op": op}
     tl = raw["shots"][si]["cast"][cast].setdefault("timeline", {}); clips = tl.setdefault("clips", [])
     rclips = (res["shots"][si]["cast"][cast].get("timeline") or {}).get("clips", [])
     if op == "add":
@@ -2396,6 +2405,88 @@ def timeline_edit(name, op, shot, cast, index=-1, start=None, end=None, clip="",
     (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
     _player_page(name)
     return {"stored": stored, "shot": shot, "cast": cast, "op": op}
+
+
+def _timeline_shot_edit(raw, res, tm, si, op, index, start, props):
+    rs, rr = raw["shots"][si], res["shots"][si]
+    if op == "move_cut":
+        if si + 1 >= len(raw["shots"]):
+            raise ValueError("the last shot's end is the film's end; move a cut between two shots")
+        nr = res["shots"][si + 1]; t = float(start)
+        if not rr["start"] + 0.3 <= t <= nr["end"] - 0.3:
+            raise ValueError(f"a cut at {t:.2f} s would leave a shot shorter than 0.3 s ({rr['start']:.2f} to {nr['end']:.2f})")
+        rs["end"] = _retime(rs.get("end", rr["end"]), t, tm)
+        raw["shots"][si + 1]["start"] = _retime(raw["shots"][si + 1].get("start", nr["start"]), t, tm)
+        return {"end": rs["end"], "next_start": raw["shots"][si + 1]["start"]}
+    cam = rs.setdefault("camera", []); rcam = rr.get("camera") or []
+    if op == "add_camkey":
+        t = round(float(start), 3)
+        v = (props or {}).get("value")
+        if v is None:   # the framing the shot already has at that time (linear between keys, held past the ends)
+            W, H = res.get("size", [1080, 1920]); v = [W / 2, H / 2, 1]
+            if rcam:
+                ks = sorted(rcam, key=lambda k: k[0])
+                if t <= ks[0][0]:
+                    v = ks[0][1]
+                elif t >= ks[-1][0]:
+                    v = ks[-1][1]
+                else:
+                    a, b = next((a, b) for a, b in zip(ks, ks[1:]) if a[0] <= t <= b[0]); u = (t - a[0]) / ((b[0] - a[0]) or 1)
+                    v = [round(a[1][j] + (b[1][j] - a[1][j]) * u, 3) for j in range(3)]
+        line = next((l for l in tm.get("lines", []) if l["start"] - 0.5 <= t <= l["end"] + 1.0), None)
+        k = [_retime(f"{line['id']}.start", t, tm) if line else t, [float(x) for x in v]]
+        order = [r[0] for r in rcam]
+        cam.insert(sum(1 for x in order if x <= t), k)
+        return k
+    if not 0 <= index < len(cam):
+        raise IndexError(f"no camera key {index}")
+    if op == "move_camkey":
+        cam[index][0] = _retime(cam[index][0], max(rr["start"], min(rr["end"], float(start))), tm)
+        return cam[index]
+    if op == "set_camkey":
+        v = (props or {}).get("value")
+        if not (isinstance(v, list) and len(v) == 3):
+            raise ValueError("set_camkey needs props.value = [cx, cy, zoom]")
+        cam[index][1] = [float(x) for x in v]
+        return cam[index]
+    cam.pop(index)
+    if not cam:
+        rs.pop("camera")
+    return None
+
+
+@command("timeline.move_line", name=("string", "film"), line=("string", "line id"), start=("number", "where the line should start, film seconds"),
+         revoice=("boolean", "rebuild the voice track and timing now", True))
+def timeline_move_line(name, line, start, revoice=True):
+    """Drag a line on the timeline (WP-19): the silence before it changes so it starts at `start` (the pause after the
+    line before, or the lead-in for the first; a slotted line's slot moves), and the lines after it move with it.
+    Everything anchored to lines (clips, cuts, camera keys) follows on the re-voice; the words themselves are not
+    re-spoken (the TTS of unchanged text is the same)."""
+    d = _film(name); sc = _json(d / "script.json"); tm = _json(d / "timing.json", {})
+    ids = [l["id"] for l in sc["lines"]]
+    if line not in ids:
+        raise KeyError(f"no line {line}")
+    i = ids.index(line); now = next((l["start"] for l in tm.get("lines", []) if l["id"] == line), None)
+    if now is None:
+        raise ValueError("voice the film first (timing.json has no such line)")
+    dt = round(float(start) - now, 3)
+    ln = sc["lines"][i]
+    if ln.get("slot"):
+        prev_end = max([l["slot"][0] + l["slot"][1] for l in sc["lines"][:i] if l.get("slot")] + [0])
+        ln["slot"][0] = round(max(prev_end, ln["slot"][0] + dt), 3); stored = {"slot": ln["slot"]}
+    elif i == 0:
+        sc["lead_in_s"] = round(max(0.0, sc.get("lead_in_s", 0.3) + dt), 3); stored = {"lead_in_s": sc["lead_in_s"]}
+    else:
+        pv = sc["lines"][i - 1]; pv["pause"] = round(max(0.0, pv.get("pause", 0.0) + dt), 3); stored = {"pause_after": pv["id"], "pause": pv["pause"]}
+        if not pv["pause"]:
+            pv.pop("pause")
+    (d / "script.json").write_text(json.dumps(sc, indent=1, ensure_ascii=False))
+    out = {"line": line, "moved_s": dt, "stored": stored}
+    if revoice:
+        voice_build(name)
+        out["now_starts"] = next((l["start"] for l in _json(d / "timing.json", {}).get("lines", []) if l["id"] == line), None)
+        _player_page(name)
+    return out
 
 
 @command("puppet.save", path=("string", "cast/.../x.puppet.json, or a bare id for cast/drawn/<id>.puppet.json"), puppet=("object", "the puppet"))
@@ -2608,6 +2699,48 @@ def _review_layout(name, n, lay, shot):
     return n
 
 
+def _review_timing(name, n, ti):
+    """a note about when a line comes in (WP-19): the silence before the line it means changes by the asked amount
+    (timeline.move_line, re-voiced, so everything anchored to lines follows), and the critic listens: in the voice
+    track, the line's speech must start later or earlier by at least 60% of the asked amount, measured from the end
+    of the line before (or the start of the film), and no line before it may move. Then the film is rendered and QA
+    must not get worse; otherwise script.json is restored and the film re-voiced."""
+    from . import review as RV
+    d = _film(name); n["intent"] = ti; tm = _json(d / "timing.json", {}); lines = tm.get("lines", [])
+    ln, why = RV.timing_line(ti, lines, n["t"])
+    if not ln:
+        n.update(status="needs_human", reason=why); return n
+    i = next(k for k, l in enumerate(lines) if l["id"] == ln["id"])
+    prev_end = lines[i - 1]["end"] if i else 0.0
+    if ti["dir"] < 0 and ln["start"] - prev_end < 0.12:
+        n.update(status="needs_human", reason=f"there is no silence before {ln['id']} to take out"); return n
+    want = ti["dir"] * min(ti["s"], (ln["start"] - prev_end - 0.1) if ti["dir"] < 0 else ti["s"])
+    wav = d / "build" / "voice.wav"
+    onset = lambda tl_: RV.onset_after(wav, (tl_[i - 1]["end"] if i else 0.0) + 0.02, next(l for l in tl_ if l["id"] == ln["id"])["end"])
+    before_on = onset(lines) - prev_end
+    script_before = (d / "script.json").read_text(); qa_before = (_json(d / "build" / "qa.json", {}).get("checks") or {})
+    r = timeline_move_line(name, ln["id"], ln["start"] + want)
+    tm2 = _json(d / "timing.json", {}); lines2 = tm2.get("lines", [])
+    after_on = onset(lines2) - (lines2[i - 1]["end"] if i else 0.0)
+    moved = round(after_on - before_on, 3); still = all(abs(a["start"] - b["start"]) < 0.01 for a, b in zip(lines[:i], lines2[:i]))
+    ok = moved * ti["dir"] >= 0.6 * abs(want) and still
+    msg = f"{ln['id']}'s speech starts {after_on:.2f} s after the line before (was {before_on:.2f}): {moved:+.2f} s, asked {want:+.2f}"
+    n.update(target=f"line {ln['id']} ({why})", edit={"line": ln["id"], **r["stored"]}, measured={"gap_before_s": [round(before_on, 3), round(after_on, 3)], "moved_s": moved}, check=msg)
+
+    def revert():
+        (d / "script.json").write_text(script_before); voice_build(name); _player_page(name)
+    if not ok:
+        revert(); n.update(status="needs_human", reason=("a line before it moved" if not still else "the voice did not move as asked: " + msg) + " (reverted)"); return n
+    _keep_version(name)
+    qa_after = film_render(name).get("qa") or {}
+    worse = [k_ for k_, v in qa_after.items() if v is False and qa_before.get(k_) is not False]
+    if worse:
+        revert(); film_render(name)
+        n.update(status="needs_human", reason=f"the edit broke QA ({', '.join(worse)}); reverted"); return n
+    n.update(status="verified", reviewer="critic: speech onset in the voice track + QA")
+    return n
+
+
 def _review_gaze(name, n, gz, shot):
     """a gaze note (WP-19): set the character's look toward the other over the line the note means (line-relative
     keys), re-render, and the critic checks the share of frames looking the asked way before and after, then QA"""
@@ -2749,6 +2882,9 @@ def review_fix(name, id=""):
         lay = RV.layout_intent(n["text"], [c["who"] for c in shot["cast"]])
         if lay:   # WP-19: where a character stands, or how close the camera is
             out.append(_review_layout(name, n, lay, shot)); continue
+        ti = RV.timing_intent(n["text"])
+        if ti:   # WP-19: when a line comes in
+            out.append(_review_timing(name, n, ti)); continue
         intent = RV.interpret(n["text"], [c["who"] for c in shot["cast"]])
         n["intent"] = intent
         if not intent["verb"]:
@@ -3327,6 +3463,152 @@ def _mirror_test():
     return bad, meas
 
 
+def _dressup_test():
+    """v0.13 layer sets and gradient and texture fills (WP-18), on tests/poses/dressup.puppet.json"""
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    from . import exporters as X, geom as G
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="dressup_", dir=ROOT / "out"))
+    try:
+        src = ROOT / "tests" / "poses" / "dressup.puppet.json"; pz = _json(src)
+        # 1. a layer set picks its drawings together; a timeline keys it (held); a pick of the pose's own wins
+        tl = {"layer_set": [[0, "summer"], [1, "winter"]], "blink": False}
+        rel = str(src.relative_to(ROOT))
+        cases = [{"pose": {"layer_set": "summer"}}, {"timeline": tl, "t": 0.5}, {"pose": {"layer_set": "winter"}}, {"timeline": tl, "t": 1.5},
+                 {"pose": {"hat": "beanie", "scarf": "wool"}}, {"pose": {"layer_set": "winter", "hat": "cap"}}, {"pose": {"hat": "cap", "scarf": "wool"}}, {"pose": {}}]
+        tiles = []
+        for i, c in enumerate(cases):
+            spec = {"size": [420, 700], "bg": "#ffffff", "flush": True, "items": [{"puppet": rel, "x": 210, "y": 680, "s": 0.68, **c}]}
+            (tmp / f"c{i}.json").write_text(json.dumps(spec)); _run(["node", "tools/pose_still.mjs", str(tmp / f"c{i}.json"), str(tmp / f"c{i}.png")], timeout=300)
+            tiles.append(np.asarray(Image.open(tmp / f"c{i}.png").convert("RGB")).astype(int))
+        same = lambda a, b: int((np.abs(tiles[a] - tiles[b]).max(-1) > 8).sum())
+        meas["layer_sets"] = {"timeline_summer_vs_set": same(1, 0), "timeline_winter_vs_set": same(3, 2), "set_vs_picks": same(2, 4),
+                              "own_pick_wins": same(5, 6), "set_changes_look": same(2, 7)}
+        m = meas["layer_sets"]
+        if m["timeline_summer_vs_set"] or m["timeline_winter_vs_set"] or m["set_vs_picks"] or m["own_pick_wins"] or m["set_changes_look"] < 2000:
+            bad.append(f"layer sets: {m}")
+        cs = G.chosen_swaps(pz, {"layer_set": "winter", "hat": "cap"})
+        meas["geom_chosen"] = {k: cs.get(k) for k in ("hat", "scarf")}
+        if meas["geom_chosen"] != {"hat": "cap", "scarf": "wool"}:
+            bad.append(f"geom layer set: {meas['geom_chosen']}")
+        # 2. gradients: Lottie's gradient fill matches the SVG loader; textures are SVG-only (the flat fill elsewhere)
+        nt = json.loads(json.dumps(pz)); nt.pop("textures")
+        for part in list(nt["parts"].values()) + [sh for sw in nt["swaps"].values() for sh in sw["shapes"].values()]:
+            for st in (part["strokes"] if isinstance(part, dict) else part):
+                st.pop("texture", None)
+        flat = json.loads(json.dumps(nt)); flat.pop("gradients")
+        (tmp / "nt.puppet.json").write_text(json.dumps(nt)); (tmp / "flat.puppet.json").write_text(json.dumps(flat))
+        W, H = 420, 700
+        from .fxbake import DEFAULT_FRAME
+        frame = {**DEFAULT_FRAME, "x": 210, "y": 680, "s": 0.68, "flip": 1, "layer_set": "winter"}
+        lj = X.to_lottie({"fps": 30, "frames": 2, "cast": [{"puppet": str(tmp / "nt.puppet.json"), "frames": [frame, frame]}]}, (W, H), bg=None)
+        (tmp / "a.json").write_text(json.dumps(lj))
+        _run(["node", "tools/lottie_frames.mjs", str(tmp / "a.json"), str(tmp / "lw"), "0"], timeout=300)
+        lw = Image.open(tmp / "lw" / "lw0000.png").convert("RGBA"); bgw = Image.new("RGBA", lw.size, "#ffffff"); bgw.alpha_composite(lw)
+        lot = np.asarray(bgw.convert("RGB")).astype(float)
+        svg = {}
+        for k, f in (("gradient", "nt"), ("flat", "flat")):
+            spec = {"size": [W, H], "bg": "#ffffff", "flush": True, "items": [{"puppet": str((tmp / f"{f}.puppet.json").relative_to(ROOT)), "x": 210, "y": 680, "s": 0.68, "pose": {"layer_set": "winter", "blink": 0}}]}
+            (tmp / f"{k}.json").write_text(json.dumps(spec)); _run(["node", "tools/pose_still.mjs", str(tmp / f"{k}.json"), str(tmp / f"{k}.png")], timeout=300)
+            svg[k] = np.asarray(Image.open(tmp / f"{k}.png").convert("RGB")).astype(float)
+        baked = {"fps": 30, "frames": 2, "cast": [{"puppet": str(tmp / "nt.puppet.json"), "frames": [frame, frame]}]}
+        (tmp / "a.sif").write_text(X.to_synfig(baked, (W, H), transparent=False))
+        subprocess.run(["synfig", str(tmp / "a.sif"), "-t", "png", "-o", str(tmp / "sy.png"), "--time", "0s", "-q"], capture_output=True, timeout=600, check=True)
+        sy = Image.open(tmp / "sy.png").convert("RGBA"); sbg = Image.new("RGBA", sy.size, "#ffffff"); sbg.alpha_composite(sy)
+        syn = np.asarray(sbg.convert("RGB")).astype(float)
+        psnr = lambda a, b: round(float(10 * np.log10(255 ** 2 / max(1e-9, ((a - b) ** 2).mean()))), 1)
+        meas["lottie_gradient"] = {"psnr_vs_svg_gradient": psnr(lot, svg["gradient"]), "psnr_vs_svg_flat": psnr(lot, svg["flat"]),
+                                   "svg_gradient_vs_flat_px": int((np.abs(svg["gradient"] - svg["flat"]).max(-1) > 24).sum())}
+        meas["synfig_gradient"] = {"psnr_vs_svg_gradient": psnr(syn, svg["gradient"]), "psnr_vs_svg_flat": psnr(syn, svg["flat"])}
+        for k in ("lottie_gradient", "synfig_gradient"):
+            g = meas[k]
+            if g["psnr_vs_svg_gradient"] < 30 or g["psnr_vs_svg_gradient"] < g["psnr_vs_svg_flat"] + 6 or meas["lottie_gradient"]["svg_gradient_vs_flat_px"] < 3000:
+                bad.append(f"{k}: {g}")
+        # the texture is drawn (multiplied over the fill): the torso's hatch darkens some of its pixels in a repeating pattern
+        tex = np.asarray(Image.open(tmp / "c2.png").convert("RGB")).astype(float)
+        diff = np.abs(tex - svg["gradient"]).max(-1) > 10
+        meas["texture_px"] = int(diff.sum())
+        if meas["texture_px"] < 2000:
+            bad.append(f"texture: {meas['texture_px']} px changed")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _timeline2_test():
+    """WP-19 on the Studio timeline page, on a scratch copy of pip-park: cuts, camera keys and lines dragged"""
+    import socket, time
+    bad, meas = [], {}
+    name = "zz-tlcheck"; d = FILMS / name
+    shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    for f in ("brief.md", "facts.json", "score.json", "script.json", "shots.json", "timing.json", "titles.json"):
+        if (FILMS / "pip-park" / f).exists():
+            shutil.copy(FILMS / "pip-park" / f, d / f)
+    port = 8797; srv = None
+    try:
+        voice_build(name); film_preview(name)
+        srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(50):
+            with socket.socket() as s_:
+                if s_.connect_ex(("127.0.0.1", port)) == 0:
+                    break
+            time.sleep(0.2)
+        r = subprocess.run(["node", "tools/timeline_edit_check.mjs", str(port), name], cwd=ROOT, capture_output=True, text=True, timeout=1500)
+        out = json.loads(r.stdout.strip().splitlines()[-1]) if r.stdout.strip() else {"error": r.stderr[-400:]}
+    finally:
+        if srv:
+            srv.terminate(); srv.wait(timeout=20)
+        shutil.rmtree(d, ignore_errors=True)
+    meas.update(out)
+    if out.get("error") or out.get("errs"):
+        return [f"page: {out}"], meas
+    fr = 1 / 30 + 1e-6
+    c = out["cut"]
+    if abs((c["s1_end"][1] - c["s1_end"][0]) - c["want_dt"]) > fr or c["s2_start"][1] != c["s1_end"][1]:
+        bad.append(f"cut: {c}")
+    ca, cm, cs = out["camkey_added"], out["camkey_moved"], out["camkey_set"]
+    if len(ca) != 1 or not isinstance(ca[0][0], str) or ca[0][1] != [540, 960, 1] or len(cm["raw"]) != 1 or cm["raw"][0][0] == ca[0][0] \
+            or cs[0][1] != [540, 960, 1.2] or out["camkey_deleted"] is not None:
+        bad.append(f"camera keys: {ca} {cm} {cs} {out['camkey_deleted']}")
+    L = out["line"]; b0, a0, u0 = dict(L["before"]), dict(L["after"]), dict(L["undone"]); m = L["moved"]
+    if abs((a0[m] - b0[m]) - L["want_dt"]) > 2 * fr or any(abs(a0[k] - b0[k]) > 0.01 for k in b0 if k != m) or any(abs(u0[k] - b0[k]) > 0.01 for k in b0):
+        bad.append(f"line: {L}")
+    return bad, meas
+
+
+def _reviewtiming_test():
+    """WP-19 notes about line timing, on a scratch copy of pip-park: 'give the last line a beat before it' and 'the
+    pause before the first line is too long' fixed by review.fix and verified on the voice track"""
+    bad, meas = [], {}
+    name = "zz-rvtiming"; d = FILMS / name
+    shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    for f in ("brief.md", "facts.json", "score.json", "script.json", "shots.json", "timing.json", "titles.json"):
+        if (FILMS / "pip-park" / f).exists():
+            shutil.copy(FILMS / "pip-park" / f, d / f)
+    try:
+        voice_build(name); film_render(name)
+        tm = _json(d / "timing.json"); L = {l["id"]: l for l in tm["lines"]}; ids = [l["id"] for l in tm["lines"]]
+        fps = _shots(name).get("fps", 30)
+        review_add(name, int(L[ids[-1]]["start"] * fps), "give the last line a beat before it")
+        review_add(name, int(0.5 * fps), "the pause before the first line is too long")
+        review_add(name, int(L[ids[1]]["start"] * fps), "this line feels somehow wrong")   # not a timing note
+        res = review_fix(name)
+        meas["notes"] = [{k: n.get(k) for k in ("text", "status", "target", "measured", "check", "reason")} for n in res]
+        tm2 = _json(d / "timing.json"); L2 = {l["id"]: l for l in tm2["lines"]}
+        meas["starts"] = {k: [round(L[k]["start"], 3), round(L2[k]["start"], 3)] for k in ids}
+        st = [n["status"] for n in res]
+        if st[:2] != ["verified", "verified"] or st[2] == "verified":
+            bad.append(f"statuses {st}")
+        g1 = res[0].get("measured") or {}; g2 = res[1].get("measured") or {}
+        if not (0.3 <= (g1.get("moved_s") or 0) <= 0.7) or not (-0.6 <= (g2.get("moved_s") or 0) <= -0.24):
+            bad.append(f"amounts: last line {g1}, first line {g2}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -3746,8 +4028,9 @@ def _req_puppet(puppet):
 def drawing_requests(puppet, film=""):
     """Drawing request queue (plan 3.6, E20): each drawing this character is missing, for a film's directions or for
     its costly moves, becomes a request with the reason and a ghost guide (out/requests/): the character faintly at
-    rest on its own artboard, the related drawing it has, and a dashed box where the new one goes. Needs that are
-    rigged rather than drawn (pupils, a turn view, chains) are listed for the Rig Canvas. Queue: <puppet>.requests.json."""
+    rest on its own artboard, the related drawing it has, and a dashed box where the new one goes: swap shapes, parts,
+    pupils, a turned view, a tail drawn as a chain (WP-18). Needs that are rigged rather than drawn (new clips) are
+    listed for the Rig Canvas. Queue: <puppet>.requests.json."""
     from . import director as DR, drawreq as RQ
     f = _req_puppet(puppet); p = _json(f); rel = str(f.relative_to(ROOT))
     if film:
@@ -6691,6 +6974,38 @@ def _doodle_page_test(work, meas):
                              "turn_head_dx": round(xs(tiles[3]) - xs(tiles[0]), 1), "turn_changed_px": int((tiles[3] != tiles[0]).sum())}
     if meas["page"]["moves"]["pupils_dx"] < pz["swaps"]["pupils"]["movable"] or meas["page"]["moves"]["turn_head_dx"] < 4 or (tiles[3][int(hb[3]) + 40:] != tiles[0][int(hb[3]) + 40:]).sum() > 50:
         bad.append(f"page poses: {meas['page']['moves']}")   # (below the head nothing changes with the view)
+    # chains over ghosts (WP-18): the tail traced over its ghost becomes a chain of parts that bends without gaps
+    q = drawing_requests(rel)
+    ch = next((r for r in q["requests"] if r.get("kind") == "chain" and r["status"] == "open"), None)
+    if not ch or not (ROOT / ch.get("ghost", "")).is_file():
+        bad.append(f"chain request with a ghost: {[(r.get('need'), r['status']) for r in q['requests']]}")
+    else:
+        pz = _json(ROOT / rel); x0_, y0_ = pz["parts"]["tail"]["pivot"]; bx = ch["box"]
+        reach = 0.8 * (bx[2] - x0_)   # a wavy tail drawn over the ghost, from where the old one meets the body out to the right
+        pts = [(x0_ + reach * t_, y0_ - 0.25 * reach * t_ + 22 * math.sin(2 * math.pi * 1.2 * t_)) for t_ in np.linspace(0, 1, 60)]
+        dr = Image.new("RGBA", (W, H), (0, 0, 0, 0)); ImageDraw.Draw(dr).line(pts, fill=ink, width=5, joint="curve"); dr.save(work / "chain.png")
+        drawn = np.asarray(dr)[..., 3] > 128
+        r = drawing_fulfil(rel, ch["id"], str((work / "chain.png").relative_to(ROOT)))
+        pz = _json(ROOT / rel); chain = (pz.get("chains") or {}).get("tail") or {}
+        poses = [{}, {"angles": {k: 28 for k in chain.get("parts", [])[1:]}}, {"angles": {k: -28 for k in chain.get("parts", [])[1:]}}]
+        spec = {"size": [W * len(poses), H], "bg": "#ffffff", "flush": True, "items": [{"puppet": rel, "x": hip[0] + i * W, "y": pz["ground"], "s": 1, "pose": {"blink": 0, **ps}} for i, ps in enumerate(poses)]}
+        (work / "chain_poses.json").write_text(json.dumps(spec)); _run(["node", "tools/pose_still.mjs", str(work / "chain_poses.json"), str(work / "chain_poses.png")], timeout=300)
+        a = np.asarray(Image.open(work / "chain_poses.png").convert("L")).astype(int) < 128
+        ct = [a[:, i * W:(i + 1) * W] for i in range(len(poses))]
+        only = {**pz, "swaps": {}, "parts": {k: {**v, "strokes": v["strokes"] if k in chain.get("parts", []) else []} for k, v in pz["parts"].items()}}   # the tail alone
+        (work / "chain_only.puppet.json").write_text(json.dumps(only)); spec["items"] = [{**it, "puppet": str((work / "chain_only.puppet.json").relative_to(ROOT))} for it in spec["items"]]
+        (work / "chain_only.json").write_text(json.dumps(spec)); _run(["node", "tools/pose_still.mjs", str(work / "chain_only.json"), str(work / "chain_only.png")], timeout=300)
+        a2 = np.asarray(Image.open(work / "chain_only.png").convert("L")).astype(int) < 128
+        comps = [int(ndimage.label(a2[:, i * W:(i + 1) * W], np.ones((3, 3)))[1]) for i in range(len(poses))]
+        iou = float((ct[0] & drawn).sum() / max(1, drawn.sum()))   # the chain at rest draws what was drawn
+        pivs = [pz["parts"][k]["pivot"] for k in chain.get("parts", [])]
+        meas["page"]["chain"] = {"verified": r["verified"], "now_free": r["now_free"], "parts": chain.get("parts"), "pivots": pivs, "tip": chain.get("tip"),
+                                 "rest_covers_drawn": round(iou, 3), "tail_pieces_rest_bent_up_bent_down": comps,
+                                 "bent_changed_px": [int((ct[i] != ct[0]).sum()) for i in (1, 2)]}
+        c = meas["page"]["chain"]
+        if not c["verified"] or "tail / chain" not in c["now_free"] or len(c["parts"] or []) != RQ.CHAIN_N or c["rest_covers_drawn"] < 0.95 \
+                or comps != [1, 1, 1] or min(c["bent_changed_px"]) < 300 or len({tuple(map(round, q_)) for q_ in pivs}) != RQ.CHAIN_N:
+            bad.append(f"chain: {c}")
     # the phone page: the same photo gives two doodles to pick from, and the picked one's requests to draw
     import socket, subprocess, time
     for d in DOODLES.glob("page-*"):
@@ -6712,6 +7027,12 @@ def _doodle_page_test(work, meas):
     if out.get("errors") or out.get("error") or len(out.get("chips", [])) != 2 or "tail" not in out.get("parts", []) or not out.get("pupils") or not out.get("turn") \
             or "arm_L" in out.get("without_arm", ["arm_L"]) or "arm_L" not in tap.get("parts", []) or tap.get("iou", 0) < 0.5:
         bad.append(f"phone page: {out}")
+    ed = out.get("edited") or {}   # polygon editing: one vertex fewer, one more, the dragged one where it was let go
+    saved = (_json(DOODLES / ed["id"] / "spec.json")["parts"].get("tail") or {}).get("poly") if ed.get("id") and (DOODLES / ed["id"] / "spec.json").exists() else None
+    meas["page"]["poly_edit"] = {k: ed.get(k) for k in ("n0", "n1", "n2", "moved_to", "wanted", "strokes_changed")} | {"saved_matches": saved == ed.get("poly")}
+    if not ed or ed["n1"] != ed["n0"] - 1 or ed["n2"] != ed["n0"] or max(abs(a - b) for a, b in zip(ed["moved_to"], ed["wanted"])) > 2 \
+            or saved != ed.get("poly") or not ed.get("strokes_changed"):
+        bad.append(f"polygon edit: {meas['page']['poly_edit']}")
     return bad
 
 
@@ -6934,6 +7255,18 @@ def test_golden(update=False, film=""):
         bad, meas = _mirror_test()
         failed += 1 if bad else 0
         results.append({"mirror": "Nib's left arm mirrored to the right (raster) and Ravi's right arm chain mirrored to the left (vector): arms posed at +-30 degrees draw as mirror images of each other", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "dressup":   # WP-18: named layer sets, gradient and texture fills (puppet v0.13)
+        bad, meas = _dressup_test()
+        failed += 1 if bad else 0
+        results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "reviewtiming":   # WP-19 (re-voices and renders a scratch film several times, so only when asked)
+        bad, meas = _reviewtiming_test()
+        failed += 1 if bad else 0
+        results.append({"reviewtiming": "review notes about when lines come in ('give the last line a beat before it', 'the pause before the first line is too long') change the silence before the line, re-voice, and are verified on the voice track; a vague note goes to a person", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "timeline2":   # WP-19 (re-voices a scratch film twice, so only when asked)
+        bad, meas = _timeline2_test()
+        failed += 1 if bad else 0
+        results.append({"timeline2": "on the Studio timeline: the cut after a shot dragged (both shots follow), a camera key added on the camera lane with the framing there and anchored to a line, dragged, typed and deleted, and a line dragged later (re-voiced: it moves, the one before stays) then undone", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0

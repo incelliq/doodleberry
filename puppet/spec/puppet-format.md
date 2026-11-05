@@ -1,4 +1,4 @@
-# Puppet format v0.12 (`.puppet.json`)
+# Puppet format v0.13 (`.puppet.json`)
 
 A puppet is one JSON file: the character's parts as SVG path data, its skeleton (parents and pivots), swap sets
 (mouths, eyes, brows, hand poses) and a palette of named colour slots. The drawing canvas writes it; the loader
@@ -260,3 +260,24 @@ and every renderer follow them as angles, shifts, scales and swaps.
   A part's final angle (local, or in the frame with `world`) is read through each drive's key curve, as a control's
   value is: angles and shifts add, scales and grow multiply what the pose already has, swaps and layer order are set.
   A bicep swells as the elbow bends, a knee pad slides, a sleeve shortens, a drawing changes past an angle.
+
+## v0.13 additions: layer sets, gradient and texture fills (WP-18)
+All optional; v0.12 files stay valid.
+
+- **Named layer sets** (switch layers changed together): `"layer_sets": {"winter": {"hat": "beanie", "scarf": "wool"},
+  "summer": {"hat": "cap"}}`. A pose's `"layer_set": "winter"` (a cast entry's pose, a named pose, `tl.set`) or a timeline's
+  held keys `"layer_set": [[0, "summer"], [4, "winter"]]` pick the set's drawings for every swap set it names; a pick the
+  pose makes itself (`"hat": "cap"`) wins over the set's. Resolved in `acting.js` (and in `puppet.js` for a bare pose),
+  so the bake records the chosen drawings and every renderer and exporter follows; `dbe/geom.py` resolves it too.
+- **Gradient fills**: `"gradients": {"shirt": {"type": "linear", "from": [300, 338], "to": [300, 566], "stops": [[0,
+  "cloth1"], [1, "#b8541c"]]}, "face": {"type": "radial", "center": [280, 240], "radius": 130, "focus": [270, 230], "stops": [...]}}`,
+  in the part's rest (artboard) units, so they move, turn and bend with it; stops are `[offset, colour or palette slot,
+  opacity?]` (palette variants recolour them); `"spread": "repeat"` repeats a linear one. A vector stroke's
+  `"gradient": "shirt"` paints its fill; its `fill` stays the flat colour for renderers without gradients. The SVG
+  loader, Lottie (gradient fill) and Synfig (a gradient layer "onto" the region) draw them; Grease Pencil draws the flat
+  fill (rparity lists it as drawn without).
+- **Texture fills**: `"textures": {"hatch": {"image": "data:image/png;base64,...", "w": 18, "h": 18, "opacity": 0.55,
+  "blend": "multiply"}}`: a tile repeated across the stroke's fill in rest units (paper grain, hatching, fabric), laid
+  over the fill and under the outline. A vector stroke's `"texture": "hatch"` uses it. SVG only; the others draw the
+  fill under it.
+
