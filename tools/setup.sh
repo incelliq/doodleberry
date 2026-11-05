@@ -109,8 +109,12 @@ node_deps() {
   else
     # root installs it globally; without root it goes into the checkout's node_modules (git-ignored), where the tools'
     # require('playwright') finds it; the browser itself goes to ~/.cache/ms-playwright either way
-    if [ "$(id -u)" = 0 ]; then npm install -g playwright@1.63.0 && npx playwright install chromium
-    else npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install chromium; fi
+    # --prefix: install into this checkout even when a folder above it has a package.json; retries for slow links
+    local npmo="--no-audit --no-fund --fetch-retries 5 --fetch-retry-mintimeout 20000 --fetch-timeout 300000"
+    if [ "$(id -u)" = 0 ]; then npm install -g $npmo playwright@1.63.0
+    else npm install --prefix "$PWD" --no-save $npmo playwright@1.63.0; fi \
+      || { echo "node: npm could not install playwright; the reason is in the last lines of the newest log:"; ls -t ~/.npm/_logs/*-debug-0.log 2>/dev/null | head -1 | xargs -r tail -n 25; exit 1; }
+    npx playwright install chromium || { echo "node: the Chromium download failed (it is about 170 MB); run  npx playwright install chromium  again"; exit 1; }
   fi
 }
 
