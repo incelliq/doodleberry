@@ -647,22 +647,18 @@ def puppet_turns(puppet, a="base", b="side", steps=3, out=""):
 KENNEY_ITEMS = ROOT / "assets" / "props" / "kenney-generic-items.json"
 
 
-@command("props.import_kenney", pack=("string", "a kenney.nl asset slug", "generic-items"))
-def props_import_kenney(pack="generic-items"):
-    """Download a Kenney pack (CC0) the way the site's own page does (its download-link endpoint, which answers a
-    browser's request with a signed URL) into assets/external/kenney/<pack>/ (not in git), and check the files
-    against the labelled index (assets/props/kenney-<pack>.json, sha256 per item)."""
+@command("props.import_kenney", zip=("string", "the pack's zip as downloaded from kenney.nl on the owner's machine"), pack=("string", "a kenney.nl asset slug", "generic-items"))
+def props_import_kenney(zip, pack="generic-items"):
+    """Unpack a Kenney pack (CC0) downloaded on the owner's machine into assets/external/kenney/<pack>/ (not in git)
+    and check its files against the labelled index (assets/props/kenney-<pack>.json, sha256 per item), when there is
+    one. (kenney.nl hands its downloads to a browser; this does not fetch them.)"""
     import hashlib
-    import http.cookiejar
-    import urllib.request
     import zipfile
     d = ROOT / "assets" / "external" / "kenney"; d.mkdir(parents=True, exist_ok=True)
-    jar = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
-    hdr = {"User-Agent": "Mozilla/5.0", "Referer": f"https://kenney.nl/assets/{pack}"}
-    page = op.open(urllib.request.Request(f"https://kenney.nl/assets/{pack}", headers=hdr), timeout=60).read().decode("utf8", "replace")
-    did = re.search(r"data-download-id=['\"]([^'\"]+)", page).group(1)
-    link = json.loads(op.open(urllib.request.Request(f"https://kenney.nl/download-link/{did}", headers={**hdr, "X-Requested-With": "XMLHttpRequest", "Accept": "application/json"}), timeout=60).read())["url"]
-    z = d / f"{pack}.zip"; z.write_bytes(op.open(urllib.request.Request(link, headers=hdr), timeout=300).read())
+    src = Path(zip) if Path(zip).is_absolute() else ROOT / zip
+    z = d / f"{pack}.zip"
+    if src.resolve() != z.resolve():
+        shutil.copy(src, z)
     shutil.rmtree(d / pack, ignore_errors=True); zipfile.ZipFile(z).extractall(d / pack)
     idx = _json(ROOT / "assets" / "props" / f"kenney-{pack}.json", {}); bad = []
     for it in idx.get("items", []):
@@ -698,7 +694,7 @@ def props_make(item, r=60, x=540, y=1400):
         raise ValueError(f"no prop {item!r} in the library (props.library)")
     f = ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored" / it["file"]
     if not f.exists():
-        raise FileNotFoundError("the Kenney pack is not here: python -m dbe props.import_kenney")
+        raise FileNotFoundError("the Kenney pack is not here: download it from kenney.nl, then python -m dbe props.import_kenney '{\"zip\": \"...\"}'")
     w, h = Image.open(f).size; k = 2 * r / max(w, h); W, H = round(w * k, 1), round(h * k, 1)
     data = "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode()
     return {"prop": {"r": r, "attach": [[0, [x, y]]], "svg": f'<image href="{data}" x="{-W / 2}" y="{-H / 2}" width="{W}" height="{H}"/>',
@@ -10864,7 +10860,7 @@ def _kenneyprops_test():
     bad, meas = [], {}
     lib = props_library()
     if not lib["here"]:
-        return [], {"skipped": "the Kenney pack is not here (python -m dbe props.import_kenney)"}
+        return [], {"skipped": "the Kenney pack is not here (download it from kenney.nl, then props.import_kenney with the zip)"}
     root = ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored"
     wrong = [it["file"] for it in lib["items"] if hashlib.sha256((root / it["file"]).read_bytes()).hexdigest() != it["sha256"]]
     meas["library"] = {"items": lib["count"], "categories": len(lib["categories"]), "unsure": sum(1 for it in lib["items"] if it.get("unsure")), "files_not_matching": len(wrong)}

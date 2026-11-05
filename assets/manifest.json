@@ -965,7 +965,7 @@
    "license": "CC0-1.0",
    "class": "public-domain",
    "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
-   "use": "a prop library: 163 sprites labelled by eye in assets/props/kenney-generic-items.json (label, category, sha256 each); props.make draws one as a prop; fetched by props.import_kenney (zip sha256 in the index)"
+   "use": "a prop library: 163 sprites labelled by eye in assets/props/kenney-generic-items.json (label, category, sha256 each); props.make draws one as a prop; unpacked from the downloaded zip by props.import_kenney (zip sha256 in the index)"
   }
  ]
 }

@@ -381,6 +381,6 @@ Kitsu in the service (**AGPL**, unverified).
 ## Kenney Generic Items (WP-16, 5 Nov 2026)
 - **What**: 163 flat-colour sprites (tools, kitchen, computer, medical, travel...), PNG coloured and white, a spritesheet and an ungrouped vector sheet.
 - **Licence**: CC0-1.0 (public domain; credit welcome).
-- **Where**: https://kenney.nl/assets/generic-items, through the page's own download-link flow (`props.import_kenney`); zip sha256 in assets/props/kenney-generic-items.json; files in assets/external/kenney/ (not in git).
+- **Where**: https://kenney.nl/assets/generic-items, downloaded once through the page's own flow (not repeated: the other packs wait for the owner's downloads; `props.import_kenney` takes the zip); zip sha256 in assets/props/kenney-generic-items.json; files in assets/external/kenney/ (not in git).
 - **Use**: a labelled prop library (`props.library`, `props.make`); labels made by eye, nine marked unsure.
 
