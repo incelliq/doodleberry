@@ -145,7 +145,7 @@ def check(deep=True):
     except OSError:
         mp = False
     add("system library libmypaint (MyPaint brushes)", "tools", mp, False, "found" if mp else "missing (drawn levels, level.inbetween's benchmark)",
-        _pkg("libmypaint-1.5-1 mypaint-brushes", "libmypaint mypaint-brushes"))
+        _pkg("libmypaint-1.5-1 mypaint-brushes", "libmypaint mypaint2-brushes"))
     kd = VOICES / "kokoro"
     for fn, sha in KOKORO_FILES.items():
         p = kd / fn

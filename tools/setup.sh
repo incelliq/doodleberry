@@ -119,11 +119,34 @@ node_deps() {
 }
 
 oss_deps() {
-  local need="" pkgs="pencil2d inkscape synfig libmypaint-1.5-1 mypaint-brushes opencolorio-tools openimageio-tools melt frei0r-plugins krita xvfb"
-  for p in $pkgs; do dpkg -s "$p" >/dev/null 2>&1 || need="$need $p"; done
-  if [ -z "$need" ]; then echo "oss: all installed"; return; fi
-  echo "oss: installing$need"
-  DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need)
+  if command -v apt-get >/dev/null; then
+    local need="" pkgs="pencil2d inkscape synfig libmypaint-1.5-1 mypaint-brushes opencolorio-tools openimageio-tools melt frei0r-plugins krita xvfb"
+    for p in $pkgs; do dpkg -s "$p" >/dev/null 2>&1 || need="$need $p"; done
+    if [ -z "$need" ]; then echo "oss: all installed"; return; fi
+    echo "oss: installing$need"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $need)
+  elif command -v dnf >/dev/null; then
+    # Fedora's names for the same tools (checked against Fedora 44's package index); mypaint2-brushes is the 2.0 set
+    # the apt branch gets. Fedora has no Pencil2D package: it comes from Flathub (below).
+    local need="" pkgs="inkscape synfig libmypaint mypaint2-brushes OpenColorIO-tools OpenImageIO-utils mlt frei0r-plugins krita xorg-x11-server-Xvfb"
+    for p in $pkgs; do rpm -q "$p" >/dev/null 2>&1 || need="$need $p"; done
+    if [ -z "$need" ]; then echo "oss: Fedora packages installed"
+    elif [ "$(id -u)" = 0 ]; then dnf install -y $need
+    else echo "oss: missing$need. Run:  sudo dnf install$need"; fi
+    pencil2d_flatpak
+  else echo "oss: no apt-get or dnf; install Pencil2D, Inkscape, Synfig, libmypaint with the MyPaint 2.0 brushes, OpenColorIO and OpenImageIO tools, melt, frei0r, Krita and Xvfb"; fi
+}
+
+pencil2d_flatpak() {
+  # Pencil2D from Flathub, reached as `pencil2d` through a small wrapper in $BIN (dbe looks the program up on PATH)
+  if command -v pencil2d >/dev/null; then echo "pencil2d: $(command -v pencil2d)"; return; fi
+  if ! command -v flatpak >/dev/null; then echo "pencil2d: not packaged for this system; install flatpak, then: flatpak install --user flathub org.pencil2d.Pencil2D"; return; fi
+  if ! flatpak info org.pencil2d.Pencil2D >/dev/null 2>&1; then
+    echo "pencil2d: not installed. Run:  flatpak install --user flathub org.pencil2d.Pencil2D   then  bash tools/setup.sh oss  again"; return
+  fi
+  printf '%s\n' '#!/bin/sh' '# Pencil2D from Flathub (written by tools/setup.sh oss); host files so dbe can hand it projects and read frames back' \
+    'exec flatpak run --filesystem=host --env=QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-}" org.pencil2d.Pencil2D "$@"' > "$BIN/pencil2d"
+  chmod +x "$BIN/pencil2d"; echo "pencil2d: wrapper for the Flathub app at $BIN/pencil2d"
 }
 
 physics_deps() {
@@ -148,10 +171,20 @@ PYEOF
 
 locales_deps() {
   # fonts libass uses for captions in every script, CJK, phonemes for lip-sync, and OCR for film.text_check (WP-25)
+  local langs="ara sin hin heb tha ben tam jpn chi-sim kor rus spa fra urd fas"
   if command -v apt-get >/dev/null; then
-    pk="fonts-noto-core fonts-noto-cjk espeak-ng tesseract-ocr tesseract-ocr-ara tesseract-ocr-sin tesseract-ocr-hin tesseract-ocr-heb tesseract-ocr-tha tesseract-ocr-ben tesseract-ocr-tam tesseract-ocr-jpn tesseract-ocr-chi-sim tesseract-ocr-kor tesseract-ocr-rus tesseract-ocr-spa tesseract-ocr-fra tesseract-ocr-urd tesseract-ocr-fas"
+    pk="fonts-noto-core fonts-noto-cjk espeak-ng tesseract-ocr"
+    for l in $langs; do pk="$pk tesseract-ocr-$l"; done
     DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $pk || (apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $pk)
-  else echo "locales: no apt-get; install Noto fonts, eSpeak NG and Tesseract with its language data"; fi
+  elif command -v dnf >/dev/null; then
+    # Fedora: google-noto-fonts-all is the counterpart of fonts-noto-core (every Noto family); language packs use _ (chi_sim)
+    local need="" pk="google-noto-fonts-all google-noto-sans-cjk-fonts espeak-ng tesseract"
+    for l in $langs; do pk="$pk tesseract-langpack-${l//-/_}"; done
+    for p in $pk; do rpm -q "$p" >/dev/null 2>&1 || need="$need $p"; done
+    if [ -z "$need" ]; then echo "locales: installed"
+    elif [ "$(id -u)" = 0 ]; then dnf install -y $need
+    else echo "locales: missing$need. Run:  sudo dnf install$need"; fi
+  else echo "locales: no apt-get or dnf; install Noto fonts, eSpeak NG and Tesseract with its language data"; fi
 }
 
 provenance_dl() {

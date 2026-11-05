@@ -74,7 +74,7 @@ def _lib():
                 break
         if not L:
             raise OSError("libmypaint: cannot open shared object file (install it: apt-get install libmypaint-1.5-1 mypaint-brushes, "
-                          "or on Fedora dnf install libmypaint mypaint-brushes)")
+                          "or on Fedora dnf install libmypaint mypaint2-brushes)")
         sig = {"mypaint_brush_new": ([], C.c_void_p), "mypaint_brush_unref": ([C.c_void_p], None),
                "mypaint_brush_from_string": ([C.c_void_p, C.c_char_p], C.c_int), "mypaint_brush_new_stroke": ([C.c_void_p], None),
                "mypaint_brush_stroke_to": ([C.c_void_p, C.c_void_p, C.c_float, C.c_float, C.c_float, C.c_float, C.c_float, C.c_double], C.c_int),

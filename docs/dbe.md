@@ -3025,6 +3025,19 @@ default to 3.14, which kokoro-onnx 0.6.1 (the narrator) does not support yet. `s
     bash tools/setup.sh blender    # optional: the Grease Pencil renderer, into ~/.local/opt
     python -m dbe engine.doctor
 
+`setup.sh oss` and `setup.sh locales` know Fedora too. Without root they print the `sudo dnf install` line for
+what is missing. Fedora's names were checked against its package index (Fedora 44):
+
+- **oss**: inkscape, synfig, libmypaint, mypaint2-brushes (the MyPaint 2.0 brush set the Debian package gives, so
+  brush strokes match), OpenColorIO-tools, OpenImageIO-utils (oiiotool), mlt (melt), frei0r-plugins, krita and
+  xorg-x11-server-Xvfb (xvfb-run).
+- **Pencil2D**: Fedora has no package. With the Flathub app installed (`flatpak install --user flathub
+  org.pencil2d.Pencil2D`), `setup.sh oss` writes a `pencil2d` wrapper in `~/.local/bin`, run with host file
+  access, which dbe finds on PATH. Not yet tried on a real Fedora machine; the logic was tested with stand-in
+  dnf, rpm and flatpak.
+- **locales**: google-noto-fonts-all and google-noto-sans-cjk-fonts (for fonts-noto-core and fonts-noto-cjk),
+  espeak-ng, tesseract and tesseract-langpack-<code> for the same 15 languages (chi_sim with an underscore).
+
 The version checks in setup.sh capture a command's output and match it (`has PATTERN CMD`), not `CMD | grep -q`. Under
 `pipefail`, grep's early exit kills the command with SIGPIPE. On a Fedora desktop with RPM Fusion's ffmpeg, the
 libx264 check failed 4 runs in 5 that way. The doctor summary at the end of setup.sh waits until the Python packages
