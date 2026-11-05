@@ -72,8 +72,10 @@ $('photo').onchange = async e => {
   const base = $('cname').value || 'Doodle';
   P = await api('doodle.page', { photo: up.path, names: [base] });
   window.SNAP_SECONDS = (performance.now() - t) / 1000; window.PAGE = P;
-  $('pick').hidden = P.count < 2;
-  $('pick').innerHTML = P.count < 2 ? '' : `<span class="muted">${P.count} doodles on this page:</span>` + P.doodles.map((d, i) => `<button class="chip" data-pick="${i}">${d.name}</button>`).join('');
+  const lo = (P.left_out || []).map(x => x.kind === 'writing' ? 'some writing' : 'a hand or pen');   // WP-18: not characters
+  $('pick').hidden = P.count < 2 && !lo.length;
+  $('pick').innerHTML = (P.count < 2 ? '' : `<span class="muted">${P.count} doodles on this page:</span>` + P.doodles.map((d, i) => `<button class="chip" data-pick="${i}">${d.name}</button>`).join(''))
+    + (lo.length ? `<div class="muted">Left out (not a character): ${lo.join(', ')}.</div>` : '');
   document.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => pick(+b.dataset.pick));
   pick(0); shown('s2');
 };

@@ -3258,6 +3258,34 @@ def _compplanes_test():
     return bad, meas
 
 
+def _pagesort_test():
+    import tempfile
+    from PIL import Image, ImageDraw, ImageFont, ImageFilter
+    from . import autorig as AR
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="pagesort_"))
+    try:
+        page, truths = AR.synthetic_page(("nib", "cat")); W, H = page.size
+        big = Image.new("RGB", (W, H + 520), (236, 233, 224)); big.paste(page, (0, 0)); d = ImageDraw.Draw(big)
+        d.text((120, H + 40), "2 + 3 = 5", font=ImageFont.truetype(str(ROOT / "engine" / "fonts" / "Fredoka.ttf"), 90), fill=(30, 30, 40))
+        d.polygon([(W - 260, H + 520), (W - 200, H + 330), (W - 90, H + 300), (W, H + 330), (W, H + 520)], fill=(222, 170, 140), outline=(150, 100, 80))
+        d.line([(W - 170, H + 340), (W - 330, H + 180)], fill=(25, 25, 35), width=22)   # the pen, held by the hand
+        big.filter(ImageFilter.GaussianBlur(0.6)).save(tmp / "page.png")
+        out = AR.split_page(tmp / "page.png", tmp / "work"); lo = AR.split_page.left_out
+        meas = {"doodles": [o["box"] for o in out], "left_out": [{k: v for k, v in x.items() if k != "box"} for x in lo]}
+        kinds = sorted(x["kind"] for x in lo)
+        if len(out) != 2 or kinds != ["hand or pen", "writing"]:
+            bad.append(f"page sorting: {meas}")
+        # a doodle alone on its page, touching nothing, is still a doodle
+        page.save(tmp / "plain.png"); n = len(AR.split_page(tmp / "plain.png", tmp / "work2"))
+        meas["plain_page_doodles"] = n
+        if n != 2 or AR.split_page.left_out:
+            bad.append(f"the plain page lost a doodle: {n}, {AR.split_page.left_out}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
 def _live_test():
     """WP-12 live page: (1) LIVE.solve on synthetic takes (forward kinematics through ravi, 1.5 px noise) against the
     clips that made them; (2) the page on Chromium's fake webcam playing a COCO photo, MediaPipe in WebAssembly,
@@ -3514,7 +3542,7 @@ def doodle_page(photo, names=None):
     for i, c in enumerate(crops):
         nm = names[i] if i < len(names) and names[i] else (f"Doodle {i + 1}" if len(crops) > 1 else "Doodle")
         out.append({**doodle_snap(c["photo"], nm), "name": nm, "box": c["box"]})
-    return {"page": pid, "count": len(out), "doodles": out}
+    return {"page": pid, "count": len(out), "doodles": out, "left_out": getattr(AR.split_page, "left_out", [])}
 
 
 @command("doodle.cut", id=("string", "doodle id from doodle.snap"), spec=("object", "the ink spec with confirmed or moved cuts and pivots"))
@@ -6845,6 +6873,10 @@ def test_golden(update=False, film=""):
         bad, meas = _compplanes_test()
         failed += 1 if bad else 0
         results.append({"compplanes": "night-planes rendered with Lottie (its character between the player's back and front planes) matches the SVG render (speech bubbles aside)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "pagesort":   # WP-18: sums and hands or pens on a doodle page are not characters
+        bad, meas = _pagesort_test()
+        failed += 1 if bad else 0
+        results.append({"pagesort": "a page with two doodles, a written sum and a hand holding a pen gives two doodles; the sum is left out as writing and the hand and pen as not a drawing", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
         bad, meas = _acting2_test()
         failed += 1 if bad else 0

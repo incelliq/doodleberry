@@ -69,14 +69,19 @@ def split_page(photo, out_dir, min_share=0.08):
     grown = ndimage.binary_dilation(np.pad(mask, pad), iterations=g)
     grown = ndimage.binary_fill_holes(grown)[pad:-pad, pad:-pad]
     lab, n = ndimage.label(grown, np.ones((3, 3)))
-    total = float(mask.sum()); groups = []
+    total = float(mask.sum()); groups = []; left_out = []
+    H_, W_ = mask.shape
     for i in range(1, n + 1):
         own = mask & (lab == i); share = own.sum() / total
         if share < min_share:
             continue
-        ys, xs = np.nonzero(own); groups.append({"i": i, "share": round(float(share), 3), "box": [int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())]})
+        ys, xs = np.nonzero(own); box = [int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())]
+        kind, why = classify_group(own[box[1]:box[3] + 1, box[0]:box[2] + 1], box, (W_, H_))
+        if kind != "doodle":   # WP-18: writing (a sum) and hands or pens in the photo are not characters
+            left_out.append({"kind": kind, "why": why, "box": [round(v / s) for v in box], "ink_share": round(float(share), 3)}); continue
+        groups.append({"i": i, "share": round(float(share), 3), "box": box})
     if not groups:
-        raise ValueError("no doodle large enough on the page")
+        raise ValueError("no doodle large enough on the page" + (f" (left out: {', '.join(x['kind'] for x in left_out)})" if left_out else ""))
     # reading order: rows (boxes whose vertical spans overlap), then left to right
     groups.sort(key=lambda gr: (gr["box"][1], gr["box"][0]))
     rows = []
@@ -95,7 +100,28 @@ def split_page(photo, out_dir, min_share=0.08):
         box = (max(0, int(x0 - m)), max(0, int(y0 - m)), min(im.width, int(x1 + m)), min(im.height, int(y1 + m)))
         f = out_dir / f"doodle{k + 1}.png"; Image.fromarray(page).crop(box).save(f)
         out.append({"photo": str(f), "box": list(box), "ink_share": gr["share"]})
+    split_page.left_out = left_out   # what was not a doodle, for doodle.page to report
     return out
+
+
+def classify_group(own, box, size):
+    """an ink group on the page -> ("doodle" | "writing" | "hand or pen", why). Writing: several separate marks of a
+    similar height in one short, wide line (a sum like 2 + 3 = 5, a name). A hand or a pen: solid ink (not line work)
+    reaching the edge of the photo. Everything else is a drawing."""
+    W, H = size; x0, y0, x1, y1 = box; h, w = own.shape
+    touches = x0 <= 2 or y0 <= 2 or x1 >= W - 3 or y1 >= H - 3
+    filled = ndimage.binary_fill_holes(own); solidity = own.sum() / max(1, filled.sum())
+    thick = own.sum() / max(1.0, float(ndimage.binary_erosion(own, iterations=1).sum()) + 1e-9)
+    eroded = ndimage.binary_erosion(own, iterations=3).sum() / max(1, own.sum())   # share of ink deeper than 3 px: a mass, not a line
+    if touches and eroded > 0.35:
+        return "hand or pen", f"solid ink ({eroded:.0%} deeper than 3 px) reaching the edge of the photo"
+    lab, n = ndimage.label(own, np.ones((3, 3)))
+    if n >= 3 and w > 2.2 * h:
+        objs = ndimage.find_objects(lab); hs = np.array([sl[0].stop - sl[0].start for sl in objs]); big = hs[hs > 0.25 * hs.max()]
+        cy = np.array([(sl[0].start + sl[0].stop) / 2 for sl in objs])[hs > 0.25 * hs.max()]
+        if len(big) >= 3 and big.std() / big.mean() < 0.45 and cy.std() < 0.35 * h:
+            return "writing", f"{len(big)} separate marks of a similar height in one line ({w}x{h} px)"
+    return "doodle", ""
 
 
 def synthetic_page(kinds=("nib", "cat"), seed=5):

@@ -2328,7 +2328,12 @@ in the cat's eyes and a turned head on their ghosts, checks both requests close 
 head 28 px to the right, nothing below the head changed), and runs the phone page in Chromium
 (`tools/doodle_page_check.mjs`): two chips, the second picked with its tail, pupils and three-quarter requests listed.
 The arm finder no longer drops short arms: a side stroke counts from six square line widths, not 0.15% of the
-drawing's box.
+drawing's box. Writing and objects in the photo are told apart from drawings (WP-18): a group of several separate marks of a
+similar height in one short, wide line is writing (a sum such as 2 + 3 = 5, a name), and solid ink (most of it
+deeper than 3 px, not line work) that reaches the photo's edge is a hand or a pen. Both are left out with the reason
+(`left_out`), and the phone page says so. Test `pagesort`: a page with two doodles, a written sum and a hand holding a
+pen from the corner gives the two doodles, the sum as writing and the hand and pen as not a drawing; the same two
+doodles alone still give two.
 
 **Tap to cut (WP-18, plan 1.8b).** When a cut is wrong or missing, `doodle.click` takes taps on the photo
 (`[x, y]` inside the piece, `[x, y, 0]` outside) and cuts that piece with SAM 2.1 tiny (Apache-2.0; onnx-community's
