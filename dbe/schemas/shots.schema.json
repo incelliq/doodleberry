@@ -279,7 +279,7 @@
      "items": {
       "type": "array",
       "minItems": 2,
-      "maxItems": 2,
+      "maxItems": 3,
       "prefixItems": [
        {
         "$ref": "#/$defs/time"
@@ -291,6 +291,26 @@
         "items": {
          "type": "number"
         }
+       },
+       {
+        "description": "WP-19: the easing of the move to the next key: smooth (default), linear, hold, or a cubic Bezier [x1, y1, x2, y2]",
+        "oneOf": [
+         {
+          "enum": [
+           "smooth",
+           "linear",
+           "hold"
+          ]
+         },
+         {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+           "type": "number"
+          }
+         }
+        ]
        }
       ]
      }

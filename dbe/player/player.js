@@ -481,7 +481,7 @@
     for (const cc of bgOnly ? [] : casts) {
       const { p, x, y, s, flip, pose, c } = cc;
       const shadow = st.shadow !== false && !castOnly ? `<ellipse cx="${x}" cy="${y + 6}" rx="${120 * s}" ry="${14 * s}" fill="#000" opacity="0.12"/>` : '';
-      const drawn = Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}) });
+      const drawn = Puppet.render(p, x, y, { ...pose, s, flip, ...(st.toon ? { toon: st.toon === true ? {} : st.toon } : {}), ...(IDPASS ? { ids: idsFor(cc, casts) } : {}) });
       if (onPlane(c)) planeInk[c.plane] = (planeInk[c.plane] || '') + shadow + drawn;
       else { world += shadow; ink += drawn; }
       if (c.speaker) heads[c.speaker] = Puppet.pointOf(p, 'head', (p.anchors || {}).bubble || null, x, y, { ...pose, s, flip });
@@ -524,7 +524,8 @@
   }
   const only = q.get('shot') ? S.shots.find(s => s.id === q.get('shot')) : null;
   const compSplit = q.get('comp') || null, bgOnly = q.get('bg') === '1' || !!compSplit;   // comp=back|front: a compositor shot's planes behind or in front of the characters (WP-14)
-  const castOnly = q.get('castonly') === '1', withProps = q.get('props') === '1';
+  const IDPASS = q.get('idpass') === '1';   // WP-37 object-ID pass: the cast alone, each part one flat colour (crisp edges)
+  const castOnly = q.get('castonly') === '1' || IDPASS, withProps = q.get('props') === '1';
   if (castOnly || compSplit === 'front') { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
   // ?pre=&post= (seconds): handles before and after a shot, rendered for transitions made at assembly (WP-15)
   const t0 = only ? only.start - (+q.get('pre') || 0) : 0, t1 = only ? only.end + (+q.get('post') || 0) : S.shots[S.shots.length - 1].end;
@@ -678,6 +679,25 @@
   }
   window.LINT = visualLint;
   // motion probe (plan 3.4): a part's position on screen over a span, for the review critic's before/after checks
+  // WP-37: object ids and part motion for the master's ID (Cryptomatte) and motion-vector passes. A name is
+  // "<speaker or puppet name>/<part>" ("/@<swap>" for swap drawings); its colour is the next of a bijection on 24 bits.
+  const IDMAP = window.IDMAP = {};
+  const nameOf = (cc, list) => { const who = cc.c.speaker || cc.p.name || 'cast'; return list.filter(o => (o.c.speaker || o.p.name || 'cast') === who).length > 1 ? `${who}#${list.indexOf(cc)}` : who; };
+  function idsFor(cc, list) { const who = nameOf(cc, list), out = {};
+    for (const k of [...Object.keys(cc.p.parts), ...Object.keys(cc.p.swaps || {}).map(sid => '@' + sid)]) { const nm = `${who}/${k}`;
+      if (!IDMAP[nm]) { const n = ((Object.keys(IDMAP).length + 1) * 2654435761) % 16777216; IDMAP[nm] = '#' + n.toString(16).padStart(6, '0'); }
+      out[k] = IDMAP[nm]; }
+    return out; }
+  // each part's screen matrix at time t ([a, b, c, d, e, f]: x' = a x + c y + e, y' = b x + d y + f, from rest artboard
+  // units to frame pixels at the film's size); a swap drawing moves with its anchor part
+  window.PARTMATS = t => { frameAt(t, false); const out = {};
+    const scr = q => [W / 2 + (q[0] - VIEW[0]) * VIEW[2], H / 2 + (q[1] - VIEW[1]) * VIEW[2]];
+    for (const cc of CASTS) { const who = nameOf(cc, CASTS), po = { ...cc.pose, s: cc.s, flip: cc.flip };
+      const mat = part => { const o = scr(Puppet.pointOf(cc.p, part, [0, 0], cc.x, cc.y, po)), ex = scr(Puppet.pointOf(cc.p, part, [1, 0], cc.x, cc.y, po)), ey = scr(Puppet.pointOf(cc.p, part, [0, 1], cc.x, cc.y, po));
+        return [ex[0] - o[0], ex[1] - o[1], ey[0] - o[0], ey[1] - o[1], o[0], o[1]]; };
+      for (const k of Object.keys(cc.p.parts)) out[`${who}/${k}`] = mat(k);
+      for (const [sid, sw] of Object.entries(cc.p.swaps || {})) if (cc.p.parts[sw.anchor]) out[`${who}/@${sid}`] = out[`${who}/${sw.anchor}`]; }
+    return out; };
   window.PROBE = (ci, part, t0, t1, fps = FPS) => { const out = [];
     for (let f = Math.ceil(t0 * fps); f <= t1 * fps; f++) { const t = f / fps; frameAt(t, false); const cc = CASTS[ci];
       if (part === '@look') {   // WP-19: the character's gaze in screen terms ([x, y], x > 0 looks right on screen), and where it stands

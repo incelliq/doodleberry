@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<header><h1>🫐 Film graph</h1><select id="film" aria-label="Film"></select><span id="est" class="muted"></span><span id="msg" class="muted"></span>
+<header><h1>🫐 Film graph</h1><select id="film" aria-label="Film"></select><select id="view" aria-label="View"><option value="film">what the film is made of</option></select><span id="est" class="muted"></span><span id="msg" class="muted"></span>
   <span style="flex:1"></span><a href="/timeline">Timeline ↗</a> <a href="/">Studio ↗</a></header>
 <div id="wrap"><div id="flow"></div>
   <aside id="side"><div class="muted">Each box is something the film is made of. Green is up to date; orange has an input that changed since it was
@@ -57,8 +57,9 @@ function layout(g) {
 function edges(g) { return g.edges.map((e, i) => ({ id: 'e' + i, source: e.from, target: e.to, animated: !!(cooking && cooking.has(e.to)), style: { stroke: css('--muted') } })); }
 function App() {
   const [nodes, setNodes] = React.useState([]), [eds, setEds] = React.useState([]);
-  React.useEffect(() => { setRF = g => { setNodes(layout(g)); setEds(edges(g)); }; if (G) setRF(G); }, []);
-  return h(ReactFlow.ReactFlow, { nodes, edges: eds, fitView: true, nodesDraggable: true, onNodeClick: (_, n) => show(n.id), proOptions: { hideAttribution: true } },
+  const [key, setKey] = React.useState(0);
+  React.useEffect(() => { setRF = g => { if (g.rf) { setNodes(g.rf.nodes); setEds(g.rf.edges); } else { setNodes(layout(g)); setEds(edges(g)); } setKey(k => k + 1); }; if (G) setRF(G); }, []);
+  return h(ReactFlow.ReactFlow, { key, nodes, edges: eds, fitView: true, nodesDraggable: true, onNodeClick: (_, n) => (CG ? showComp(n.id) : show(n.id)), proOptions: { hideAttribution: true } },
     h(ReactFlow.Background, { gap: 18, size: 1 }), h(ReactFlow.Controls, { showInteractive: false }));
 }
 function show(id) {
@@ -91,7 +92,59 @@ async function cook(id) {
   if (r.status === 'error') { msg(r.error); } else { msg(`made ${r.result.made.length} node(s) in ${r.result.seconds} s (estimated ${r.result.estimate_s} s)`); }
   await load(); show(id);
 }
+// ---------- the compositor as a graph (WP-36): planes far to near, each through its nodes, into the camera and the frame ----------
+let CG = null, RAW = null, PAGE = null, TQ = null;
+function compGraph(sh) {
+  const c = sh.comp || {}, planes = (c.planes || []).map((p, i) => ({ ...p, i })).sort((a, b) => (b.depth ?? 1) - (a.depth ?? 1) || a.i - b.i);
+  const nodes = (c.nodes || []).map((n, i) => ({ ...n, i })), rf = [], ed = [], box = (id, label, sub, colour, x, y) => rf.push({ id, position: { x, y },
+    data: { label: h('div', { className: 'gnode', style: { borderColor: colour } }, label, h('small', null, sub)) }, style: { padding: 0, border: 0, background: 'transparent', width: 'auto' }, sourcePosition: 'right', targetPosition: 'left' });
+  planes.forEach((p, r) => { box('pl:' + p.id, `plane ${p.id}`, `depth ${JSON.stringify(p.depth ?? 1)}${p.set ? ' · ' + p.set : ''}${p.items ? ` · ${p.items.length} item(s)` : ''}`, css('--source'), 20, 20 + r * 84);
+    let prev = 'pl:' + p.id; nodes.filter(n => n.plane === p.id).forEach((n, j) => { box('nd:' + n.i, n.type, Object.entries(n).filter(([k]) => !['type', 'plane', 'i'].includes(k)).slice(0, 2).map(([k, v]) => `${k} ${typeof v === 'object' ? '…' : v}`).join(' · '), css('--accent'), 230 + j * 190, 20 + r * 84);
+      ed.push({ id: `e${prev}-nd:${n.i}`, source: prev, target: 'nd:' + n.i }); prev = 'nd:' + n.i; });
+    ed.push({ id: `e${prev}-cam`, source: prev, target: 'cam' }); });
+  const cx = 230 + 190 * Math.max(1, ...planes.map(p => nodes.filter(n => n.plane === p.id).length));
+  box('cam', 'camera', ['focus', 'dof', 'roll', 'zoom'].filter(k => c[k] != null).map(k => `${k} ${JSON.stringify(c[k])}`).join(' · ') || 'parallax by depth', css('--cooking'), cx, 20 + 84 * Math.max(0, planes.length - 1) / 2);
+  box('out', 'frame', sh.id, css('--fresh'), cx + 200, 20 + 84 * Math.max(0, planes.length - 1) / 2); ed.push({ id: 'ecam-out', source: 'cam', target: 'out' });
+  ed.forEach(e => { e.style = { stroke: css('--muted') }; });
+  return { rf: { nodes: rf, edges: ed }, planes, nodes, comp: c };
+}
+function fields(obj, skip) {
+  return Object.entries(obj).filter(([k]) => !skip.includes(k)).map(([k, v]) => `<label style="display:block;margin:4px 0"><span class="muted" style="display:inline-block;width:90px">${k}</span>`
+    + `<input data-k="${k}" value='${JSON.stringify(v).replace(/'/g, '&#39;')}' style="width:190px;font:12px ui-monospace,monospace"></label>`).join('');
+}
+function showComp(id) {
+  const sh = RAW.shots.find(x => x.id === CG.shot), c = sh.comp; let target, obj, skip, title;
+  if (id === 'cam' || id === 'out') { target = 'comp'; obj = Object.fromEntries(['focus', 'dof', 'roll', 'zoom'].map(k => [k, c[k] ?? null]).filter(([, v]) => v !== null)); skip = []; title = 'camera'; }
+  else if (id.startsWith('pl:')) { target = 'plane:' + id.slice(3); obj = c.planes.find(p => p.id === id.slice(3)); skip = ['id', 'items']; title = 'plane ' + id.slice(3); }
+  else { target = 'node:' + id.slice(3); obj = c.nodes[+id.slice(3)]; skip = ['type', 'plane']; title = `${obj.type} on ${obj.plane}`; }
+  window.COMP_SELECTED = target;
+  $('info').innerHTML = `<h2>${title}</h2><div class="muted">numbers, keyed values [[t, v], ...] or expressions "=…"; empty removes</div><div id="flds">${fields(obj, skip)}</div>`
+    + (target === 'comp' ? `<label style="display:block;margin:4px 0"><span class="muted" style="display:inline-block;width:90px">add</span><input id="newk" placeholder="roll" style="width:80px"> <input id="newv" placeholder="4" style="width:100px"></label>` : '')
+    + `<button class="primary" id="csave">Save</button>${target.startsWith('node:') ? ' <button id="cdel">Remove node</button>' : ''}`
+    + (target.startsWith('plane:') ? `<p class="muted">add a node: <select id="ntype">${['grade', 'blur', 'glow', 'mask', 'blend', 'lightwrap'].map(t => `<option>${t}</option>`).join('')}</select> <button id="nadd">Add</button></p>` : '')
+    + `<div id="pvw" style="margin-top:10px;width:216px;height:384px;overflow:hidden;border-radius:8px;background:#000"><iframe id="pv" title="preview" style="width:1080px;height:1920px;border:0;transform:scale(0.2);transform-origin:0 0;pointer-events:none"></iframe></div>`
+    + `<input id="pt" type="range" min="${sh._start}" max="${sh._end}" step="0.033" value="${TQ ?? sh._start}" style="width:216px">`;
+  const pv = $('pv'); pv.src = '/' + PAGE + '?captions=0&t=' + Date.now(); pv.onload = () => { const w = pv.contentWindow; const go = () => w.ready ? w.frameAtTime(+$('pt').value) : setTimeout(go, 100); go(); };
+  $('pt').oninput = () => { TQ = +$('pt').value; const w = pv.contentWindow; if (w && w.frameAtTime) w.frameAtTime(TQ); };
+  $('csave').onclick = async () => { const set = {};
+    document.querySelectorAll('#flds input').forEach(i => { const raw = i.value.trim(); let v = null; if (raw) { try { v = JSON.parse(raw); } catch (e) { v = raw; } } set[i.dataset.k] = v; });
+    if ($('newk') && $('newk').value.trim()) { try { set[$('newk').value.trim()] = JSON.parse($('newv').value); } catch (e) { set[$('newk').value.trim()] = $('newv').value; } }
+    await api('comp.edit', { name: film, shot: CG.shot, target, set }); msg(`saved ${title}`); await load(); showComp(id); };
+  if ($('cdel')) $('cdel').onclick = async () => { await api('comp.edit', { name: film, shot: CG.shot, target, set: { remove: true } }); msg('node removed'); await load(); $('info').innerHTML = ''; };
+  if ($('nadd')) $('nadd').onclick = async () => { const r = await api('comp.edit', { name: film, shot: CG.shot, target: 'node:new', set: { type: $('ntype').value, plane: id.slice(3) } }); msg(`added ${r.now.type} on ${id.slice(3)}`); await load(); showComp('nd:' + (RAW.shots.find(x => x.id === CG.shot).comp.nodes.length - 1)); };
+}
 async function load() {
+  const view = $('view').value;
+  RAW = JSON.parse((await api('film.get', { name: film })).files['shots.json']);
+  const shotsWithComp = RAW.shots.filter(x => x.comp);
+  const tl = await api('timeline.get', { name: film }); for (const x of RAW.shots) { const r = tl.shots.find(y => y.id === x.id); if (r) { x._start = r.start; x._end = r.end; } }
+  $('view').innerHTML = '<option value="film">what the film is made of</option>' + shotsWithComp.map(x => `<option value="comp:${x.id}" ${view === 'comp:' + x.id ? 'selected' : ''}>compositor · ${x.id}</option>`).join('');
+  if (view.startsWith('comp:') && shotsWithComp.some(x => 'comp:' + x.id === view)) {
+    PAGE = PAGE || (await api('film.preview', { name: film })).page;
+    const sh = RAW.shots.find(x => 'comp:' + x.id === view); CG = { ...compGraph(sh), shot: sh.id }; window.COMPGRAPH = CG;
+    $('est').textContent = `${CG.planes.length} plane(s), ${CG.nodes.length} node(s)`; if (setRF) setRF(CG); window.GRAPH_READY = true; return;
+  }
+  CG = null;
   G = await api('graph.get', { name: film }); window.GRAPH = G;
   const e = G.estimate || {}; $('est').textContent = G.stale.length ? `${G.stale.length} node(s) to re-make · about ${Math.round(e.seconds || 0)} s` : 'everything up to date';
   if (setRF) setRF(G); window.GRAPH_READY = true;
@@ -101,7 +154,9 @@ async function load() {
   const films = (await api('engine.info')).films || [];
   const want = new URLSearchParams(location.search).get('film');
   $('film').innerHTML = films.map(f => `<option ${f === want ? 'selected' : ''}>${f}</option>`).join('');
-  film = want || $('film').value; $('film').onchange = () => { film = $('film').value; history.replaceState(null, '', '?film=' + film); load(); };
+  film = want || $('film').value; $('film').onchange = () => { film = $('film').value; PAGE = null; history.replaceState(null, '', '?film=' + film); load(); };
+  const v0 = new URLSearchParams(location.search).get('view'); if (v0) $('view').innerHTML = `<option value="${v0}" selected>${v0}</option>`;
+  $('view').onchange = () => { $('info').innerHTML = ''; history.replaceState(null, '', `?film=${film}&view=${$('view').value}`); load(); };
   await load();
 })();
 </script>

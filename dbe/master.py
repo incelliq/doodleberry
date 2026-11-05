@@ -49,7 +49,104 @@ def _png(path):
     return a
 
 
-def layers_for(frame_dir, f):
+# ---------- WP-37: object ids (Cryptomatte) and motion vectors ----------
+def murmur3_32(data, seed=0):
+    """MurmurHash3 x86 32-bit (Austin Appleby's public-domain reference), as Cryptomatte names its objects"""
+    data = data.encode() if isinstance(data, str) else data
+    c1, c2, h, n = 0xcc9e2d51, 0x1b873593, seed & 0xffffffff, len(data)
+    rot = lambda x, r: ((x << r) | (x >> (32 - r))) & 0xffffffff
+    for i in range(0, n - n % 4, 4):
+        k = int.from_bytes(data[i:i + 4], "little")
+        k = rot((k * c1) & 0xffffffff, 15); k = (k * c2) & 0xffffffff
+        h ^= k; h = rot(h, 13); h = (h * 5 + 0xe6546b64) & 0xffffffff
+    tail, k = data[n - n % 4:], 0
+    for j, b in enumerate(tail):
+        k |= b << (8 * j)
+    if tail:
+        k = rot((k * c1) & 0xffffffff, 15); k = (k * c2) & 0xffffffff; h ^= k
+    h ^= n
+    h ^= h >> 16; h = (h * 0x85ebca6b) & 0xffffffff; h ^= h >> 13; h = (h * 0xc2b2ae35) & 0xffffffff; h ^= h >> 16
+    return h
+
+
+def crypto_id(name):
+    """Cryptomatte's uint32_to_float32: the name's hash as a float32 bit pattern (exponents of all 0s or all 1s
+    flipped in their lowest bit, so no id is a denormal, an infinity or a NaN) -> (float32 value, 8-hex manifest entry)"""
+    h = murmur3_32(name)
+    if ((h >> 23) & 255) in (0, 255):
+        h ^= 1 << 23
+    return np.array([h], np.uint32).view(np.float32)[0], f"{h:08x}"
+
+
+CRYPTO_LAYER = "CryptoObject"
+CRYPTO_RANKS = 4   # two RGBA layers: (id, coverage) x 4
+
+
+def crypto_layers(id_png, ids):
+    """the ID pass (2 x 2 samples per output pixel, one flat colour per part) -> Cryptomatte layers and metadata.
+    ids: {name: '#rrggbb'}. Coverage per pixel is the share of its four samples each object holds, ranked."""
+    a = (np.asarray(__import__("PIL.Image", fromlist=["Image"]).open(id_png).convert("RGBA")).astype(np.uint32))
+    code = np.where(a[..., 3] > 127, (a[..., 0] << 16) | (a[..., 1] << 8) | a[..., 2], 0xffffffff)
+    H2, W2 = code.shape; H, W = H2 // 2, W2 // 2
+    samples = np.stack([code[0:2 * H:2, 0:2 * W:2], code[1:2 * H:2, 0:2 * W:2], code[0:2 * H:2, 1:2 * W:2], code[1:2 * H:2, 1:2 * W:2]], -1)
+    by_code = {int(c[1:], 16): crypto_id(nm) for nm, c in ids.items()}
+    idf = np.zeros(samples.shape, np.float32); valid = np.zeros(samples.shape, bool)
+    for c, (fv, _) in by_code.items():
+        m = samples == c; idf[m] = fv; valid |= m
+    # coverage of each sample's object within its pixel, then the distinct objects ranked by coverage
+    cov = np.zeros(samples.shape, np.float32)
+    for j in range(4):
+        cov[..., j] = sum(((samples[..., j] == samples[..., k]) & valid[..., j]).astype(np.float32) for k in range(4)) / 4
+    for j in range(4):   # each object once: later duplicates of an earlier sample drop out
+        for k in range(j):
+            cov[..., j] = np.where(samples[..., j] == samples[..., k], 0, cov[..., j])
+    order = np.argsort(-cov, axis=-1, kind="stable")
+    ids_r = np.take_along_axis(idf, order, -1); cov_r = np.take_along_axis(cov, order, -1)
+    ids_r = np.where(cov_r > 0, ids_r, 0)
+    out = {}
+    for L in range(CRYPTO_RANKS // 2):
+        out[f"{CRYPTO_LAYER}{L:02d}"] = {"R": ids_r[..., 2 * L], "G": cov_r[..., 2 * L], "B": ids_r[..., 2 * L + 1], "A": cov_r[..., 2 * L + 1]}
+    key = f"{murmur3_32(CRYPTO_LAYER):08x}"[:7]
+    meta = {f"cryptomatte/{key}/name": CRYPTO_LAYER, f"cryptomatte/{key}/hash": "MurmurHash3_32", f"cryptomatte/{key}/conversion": "uint32_to_float32",
+            f"cryptomatte/{key}/manifest": json.dumps({nm: crypto_id(nm)[1] for nm in sorted(ids)})}
+    return out, meta, samples, by_code
+
+
+def crypto_matte(layers, name):
+    """an object's matte back out of the Cryptomatte layers (what a compositor's Cryptomatte node does)"""
+    fv = crypto_id(name)[0]; m = None
+    for L in range(CRYPTO_RANKS // 2):
+        ch = layers[f"{CRYPTO_LAYER}{L:02d}"]
+        for i_, c_ in (("R", "G"), ("B", "A")):
+            part = np.where(ch[i_].view(np.uint32) == np.float32(fv).view(np.uint32), ch[c_], 0)
+            m = part if m is None else m + part
+    return m
+
+
+def motion_layer(samples, by_code, ids, mats, scale):
+    """forward motion vectors in master pixels (where each pixel's part will be one frame on), from the parts' screen
+    matrices now and next (film pixels) and the ID samples (the first of each pixel's four picks its part)"""
+    code = samples[..., 0]; H, W = code.shape
+    u = np.zeros((H, W), np.float32); v = np.zeros((H, W), np.float32)
+    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
+    px, py = (xs + 0.5) / scale, (ys + 0.5) / scale
+    inv = {int(c[1:], 16): nm for nm, c in ids.items()}
+    for c in np.unique(code):
+        nm = inv.get(int(c))
+        if nm is None or nm not in mats["now"] or nm not in mats["next"]:
+            continue
+        a0, b0, c0, d0, e0, f0 = mats["now"][nm]; a1, b1, c1_, d1, e1, f1 = mats["next"][nm]
+        det = a0 * d0 - b0 * c0
+        if abs(det) < 1e-9:
+            continue
+        m = code == c; X, Y = px[m] - e0, py[m] - f0
+        rx, ry = (d0 * X - c0 * Y) / det, (-b0 * X + a0 * Y) / det   # back to the part's rest units
+        nx, ny = a1 * rx + c1_ * ry + e1, b1 * rx + d1 * ry + f1
+        u[m] = (nx - px[m]) * scale; v[m] = (ny - py[m]) * scale
+    return {"u": u, "v": v}
+
+
+def layers_for(frame_dir, f, scale=None):
     """the passes of frame f (PNG, sRGB) -> {layer: (channel names, float32 arrays)} in ACEScg, premultiplied"""
     out = {}
     name = f"f_{f:05d}.png"
@@ -67,15 +164,25 @@ def layers_for(frame_dir, f):
             continue
         lin = to_space(a[..., :3], SRC_SPACE, WORK) * a[..., 3:4]   # premultiplied, as EXR expects
         out[p] = {"R": lin[..., 0], "G": lin[..., 1], "B": lin[..., 2], "A": a[..., 3]}
+    idp = Path(frame_dir) / "id" / name
+    if idp.exists():   # WP-37: Cryptomatte from the ID pass; motion vectors from it and the parts' matrices
+        ids = json.loads((Path(frame_dir) / "id" / "ids.json").read_text())
+        crypto, meta, samples, by_code = crypto_layers(idp, ids)
+        out.update(crypto); out["_meta"] = meta
+        mp = Path(frame_dir) / "motion" / f"f_{f:05d}.json"
+        if mp.exists() and scale:
+            out["forward"] = motion_layer(samples, by_code, ids, json.loads(mp.read_text()), scale)
     return out
 
 
 def write_exr(path, layers, meta):
     import OpenEXR
     chans = {}
+    layers = dict(layers); meta = {**meta, **layers.pop("_meta", {})}
     for lay, ch in layers.items():
-        for c, arr in ch.items():
-            chans[f"{lay}.{c}"] = np.ascontiguousarray(arr, dtype=np.float16)
+        for c, arr in ch.items():   # Cryptomatte ids and motion vectors stay full float (a half float would break the ids)
+            full = lay.startswith(CRYPTO_LAYER) or lay == "forward"
+            chans[f"{lay}.{c}"] = np.ascontiguousarray(arr, dtype=np.float32 if full else np.float16)
     header = {"compression": OpenEXR.ZIP_COMPRESSION, "type": OpenEXR.scanlineimage,
               "chromaticities": AP1, **{k: str(v) for k, v in meta.items()}}
     with OpenEXR.File(header, chans) as fo:

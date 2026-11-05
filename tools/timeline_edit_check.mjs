@@ -31,7 +31,21 @@ const camT = await p.evaluate(() => T.shots[1].camera.map(k => k.t));
 out.camkey_moved = { raw: (await shots())[1].camera, t: camT };
 await p.click('.cam[data-shot="s2"]'); await p.fill('#cz', '1.2'); await p.click('#camset'); await waitMsg('camera key 0 of s2 set');
 out.camkey_set = (await shots())[1].camera;
-await p.click('.cam[data-shot="s2"]'); await p.keyboard.press('Delete'); await waitMsg('camera key deleted');
+// the curve editor: a second key later in s2 (zoom 1.4), then the move from the first eased in, then a handle dragged
+const tB = s2.start + 0.85 * (s2.end - s2.start);
+await p.mouse.dblclick(tl.x + 92 + tB * pps, lane.y + lane.height / 2); await waitMsg('camera key added');
+await p.click('.cam[data-ci="1"][data-shot="s2"]'); await p.fill('#cz', '1.4'); await p.click('#camset'); await waitMsg('camera key 1 of s2 set');
+await p.click('.cam[data-ci="0"][data-shot="s2"]'); await p.waitForSelector('#csvg circle');
+await p.click('[data-ease="ease in"]'); await waitMsg('camera move from key 0');
+out.curve_preset = (await shots())[1].camera[0];
+await p.click('.cam[data-ci="0"][data-shot="s2"]'); await p.waitForSelector('#csvg circle');
+const h = await (await p.$('#csvg circle[data-h="1"]')).boundingBox();
+await p.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await p.mouse.down();
+for (let k = 1; k <= 5; k++) await p.mouse.move(h.x + h.width / 2 - 8 * k, h.y + h.height / 2 - 6 * k); await p.mouse.up(); await waitMsg('curve');
+out.curve_dragged = (await shots())[1].camera;
+out.curve_drawn = await p.evaluate(() => document.getElementById('cname') && document.getElementById('cname').textContent);
+await p.click('.cam[data-ci="1"][data-shot="s2"]'); await p.keyboard.press('Delete'); await waitMsg('camera key deleted');
+await p.click('.cam[data-ci="0"][data-shot="s2"]'); await p.keyboard.press('Delete'); await waitMsg('camera key deleted');
 out.camkey_deleted = (await shots())[1].camera || null;
 // 3. drag the last line 40 px later: re-voiced, the line moves and the one before stays
 const L0 = await p.evaluate(() => T.lines.map(l => [l.id, l.start]));

@@ -35,6 +35,8 @@
 //     items {"type": "prim", "shape": "circle" | "rect" | "star" | "polygon" | "arc" | "wave", ...} (WP-42): parametric
 //       shapes whose numbers may be keyed or expressions; {"type": "growth", "seed", "x", "y", "length", "depth",
 //       "start", "duration", ...}: a seeded plant growing over time
+//     items {"type": "group", "items": [...], "pivot", "translate", "rotate", "scale", "opacity", "deform": {...}}: nested
+//       groups whose motion and deformation compose (see group() below)
 //     "tracks": {"sign": [[t, x, y, luma], ...]}   written by comp.track (a region followed through a plate); an item
 //       with "attach": "sign" moves with it ("offset" adds [dx, dy], each keyed or an expression too)
 // Parallax: a plane at depth d follows the camera by 1/d (the stage, d = 1, moves with it; far planes move less, near
@@ -112,7 +114,62 @@
     if (it.type === 'particles') return particles(it, t, ctx);
     if (it.type === 'prim') return prim(it, t, ctx);
     if (it.type === 'growth') return growth(it, t, ctx);
+    if (it.type === 'group') return group(it, t, tag, k, ctx);
     return ctx.overlay ? ctx.overlay(it, t) : '';
+  }
+
+  // WP-36: nested groups. A group's items (any item, groups too) move together: translate, then rotate and scale
+  // about the pivot (each keyed or an expression), so a child group moves inside its parent's motion. A deformer bends
+  // the group's drawing in the group's own space (so a deformed child is deformed again by its parent):
+  //   {"kind": "wave", "axis": "y", "amount": 18, "wavelength": 240, "speed": 0.5, "rect": [x, y, w, h]}  a travelling sine
+  //       (axis y: points move up and down as a sine of x; axis x: left and right as a sine of y)
+  //   {"kind": "bend", "amount": 60, "rect": [...]}   x moves by amount * ((y - top) / h)^2: bends over toward the bottom
+  //   {"kind": "shear", "amount": 40, "rect": [...]}  x moves by amount * (y - top) / h
+  //   {"kind": "noise", "amount": 10, "scale": 0.02, "seed": 3, "speed": 1}  a seeded wobble (heat haze, a boil)
+  // Each is an SVG displacement map (an image of the offsets, drawn as a gradient) over `rect` (default the frame), a
+  // pure function of time. Offsets beyond the rect hold the edge value.
+  function group(it, t, tag, k, ctx) {
+    const gid = `${tag}-g${k}`, [px, py] = (it.pivot || [0, 0]).map(v => V(v, t, ctx, 0));
+    const tr = (it.translate || [0, 0]).map(v => V(v, t, ctx, 0)), rot = V(it.rotate, t, ctx, 0);
+    const sc = Array.isArray(it.scale) && !Array.isArray(it.scale[0]) ? it.scale.map(v => V(v, t, ctx, 1)) : [V(it.scale, t, ctx, 1), V(it.scale, t, ctx, 1)];
+    const inner = (it.items || []).map((c, j) => item(c, t, gid, j, ctx)).join('');
+    let body = inner, defs = '';
+    if (it.deform) { const fd = deformFilter(`comp-${gid}-def`, it.deform, t, ctx); if (fd) { defs += fd; body = `<g filter="url(#comp-${gid}-def)">${inner}</g>`; } }
+    const T = `translate(${f2(tr[0])} ${f2(tr[1])}) translate(${f2(px)} ${f2(py)}) rotate(${(+rot).toFixed(3)}) scale(${(+sc[0]).toFixed(4)} ${(+sc[1]).toFixed(4)}) translate(${f2(-px)} ${f2(-py)})`;
+    const op = V(it.opacity, t, ctx, 1);
+    return `${defs ? `<defs>${defs}</defs>` : ''}<g transform="${T}"${op < 1 ? ` opacity="${op}"` : ''}>${body}</g>`;
+  }
+  function deformFilter(id, d, t, ctx) {
+    const [x, y, w, h] = d.rect || [0, 0, ctx.W, ctx.H], amt = V(d.amount, t, ctx, 0), kind = d.kind || 'wave';
+    if (!amt) return '';
+    const pad = Math.abs(amt) + 4, R = `x="${f2(x - pad)}" y="${f2(y - pad)}" width="${f2(w + 2 * pad)}" height="${f2(h + 2 * pad)}"`;
+    if (kind === 'noise') {
+      const sc = d.scale || 0.02, ph = (d.speed || 1) * t;
+      return `<filter id="${id}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" ${R} color-interpolation-filters="sRGB">`
+        + `<feTurbulence type="fractalNoise" baseFrequency="${sc}" numOctaves="2" seed="${d.seed || 1}" result="n0"/><feOffset in="n0" dx="${f2(ph * 40)}" dy="${f2(ph * 23)}" result="n"/>`
+        + `<feDisplacementMap in="SourceGraphic" in2="n" scale="${f2(2 * amt)}" xChannelSelector="R" yChannelSelector="G"/></filter>`;
+    }
+    // the map: the offset as a fraction of `amt`, stored as 0.5 - 0.5 * u in one channel (the other stays 0.5: no move);
+    // the displacement samples the drawing at the offset, so storing -u moves each point by +amt * u. It is built from
+    // filter primitives alone, so it is there the moment the frame is drawn (an image would load later): strips of
+    // flat colour along the ramp (the outer two reaching into the margin, so offsets hold flat beyond the rect),
+    // smoothed by a blur along the ramp only
+    const N = 64, along = kind === 'wave' && (d.axis || 'y') === 'y' ? 'x' : 'y', L = along === 'x' ? w : h, st = L / N;
+    const u = q => kind === 'wave' ? Math.sin(2 * Math.PI * ((q * L) / (d.wavelength || 240) - (d.speed || 0) * t))
+      : kind === 'bend' ? q * q : kind === 'shear' ? q : 0;
+    const ch = kind === 'wave' && (d.axis || 'y') === 'y' ? 'G' : 'R';
+    let prim = '';
+    for (let i = 0; i < N; i++) {
+      const v = Math.round(255 * (0.5 - 0.5 * Math.max(-1, Math.min(1, u((i + 0.5) / N))))), c = ch === 'R' ? `rgb(${v},128,128)` : `rgb(128,${v},128)`;
+      const a0 = i === 0 ? -pad : i * st, a1 = i === N - 1 ? L + pad : (i + 1) * st;
+      const sub = along === 'x' ? `x="${f2(x + a0)}" y="${f2(y - pad)}" width="${f2(a1 - a0 + 0.5)}" height="${f2(h + 2 * pad)}"`
+        : `x="${f2(x - pad)}" y="${f2(y + a0)}" width="${f2(w + 2 * pad)}" height="${f2(a1 - a0 + 0.5)}"`;
+      prim += `<feFlood flood-color="${c}" ${sub} result="s${i}"/>`;
+    }
+    prim += `<feMerge ${R} result="steps">${Array.from({ length: N }, (_, i) => `<feMergeNode in="s${i}"/>`).join('')}</feMerge>`;
+    prim += `<feGaussianBlur in="steps" ${R} edgeMode="duplicate" stdDeviation="${along === 'x' ? `${f2(st * 0.6)} 0` : `0 ${f2(st * 0.6)}`}" result="map"/>`;
+    return `<filter id="${id}" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" ${R} color-interpolation-filters="sRGB">${prim}`
+      + `<feDisplacementMap in="SourceGraphic" in2="map" scale="${f2(2 * amt)}" xChannelSelector="R" yChannelSelector="G"/></filter>`;
   }
 
   // WP-42: seeded particles, a pure function of time (each particle's path is fixed by the seed; nothing is simulated)

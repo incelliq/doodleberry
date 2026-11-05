@@ -34,16 +34,13 @@ def hex_rgb(h, a=1.0):
     return (*lin, a)
 
 
-def sample_keys(keys, t):
-    """the player's camera keys: smoothstep between keys (Acting.sampleKeys)"""
-    if t <= keys[0][0]:
-        return keys[0][1]
-    for (t0, v0), (t1, v1) in zip(keys, keys[1:]):
-        if t <= t1:
-            k = min(1, max(0, (t - t0) / ((t1 - t0) or 1)))
-            k = k * k * (3 - 2 * k)
-            return [a + (b - a) * k for a, b in zip(v0, v1)]
-    return keys[-1][1]
+def _keys():   # dbe/keys.py, loaded by path (Blender's Python has no dbe package on its path)
+    import importlib.util
+    sp = importlib.util.spec_from_file_location("dbe_keys", os.path.join(os.path.dirname(os.path.abspath(__file__)), "keys.py"))
+    m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m); return m
+
+
+sample_keys = _keys().sample_keys
 
 
 bpy.ops.wm.read_factory_settings(use_empty=True)

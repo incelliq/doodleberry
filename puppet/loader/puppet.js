@@ -309,7 +309,7 @@
       const J = p._bendy ? jointsFor(p, M, id, pose) : [];
       const meshes = part.strokes.filter(st => st.mesh), flat = meshes.length ? part.strokes.filter(st => !st.mesh) : part.strokes;
       const svgPart = (J.length ? bentSVG(flat, pal, M[id], J) : strokesSVG(flat, pal, M[id], '', pose.toon || null)) + meshes.map(st => meshSVG(st, M)).join('');
-      if (!replaced) items.push({ z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: svgPart });
+      if (!replaced) items.push({ id, z: (pose.z && pose.z[id] != null) ? pose.z[id] : (part.z ?? 0), svg: svgPart });
     }
     for (const [sid, sw] of Object.entries(p.swaps || {})) {
       const m = M[sw.anchor] || I;
@@ -327,14 +327,25 @@
       const ssh = pose.shifts && pose.shifts['@' + sid];  // driven offsets for swap sets (e.g. the face moving as the head turns)
       if (ssh) mm = mul(mm, [1, 0, 0, 1, ssh[0], ssh[1]]);
       if (sid === 'pupils' && pose.look) mm = mul(mm, [1, 0, 0, 1, pose.look[0] * (sw.movable || 8), pose.look[1] * (sw.movable || 8) * 0.7]);
-      items.push({ z: (pose.z && pose.z['@' + sid] != null) ? pose.z['@' + sid] : (sw.z ?? 40), svg: strokesSVG(strokes, pal, mm) });
+      items.push({ id: '@' + sid, z: (pose.z && pose.z['@' + sid] != null) ? pose.z['@' + sid] : (sw.z ?? 40), svg: strokesSVG(strokes, pal, mm) });
     }
     items.sort((a, b) => a.z - b.z);
+    if (pose.ids) for (const it of items) { const c = pose.ids[it.id]; if (c) it.svg = idSVG(it.svg, c); }   // WP-37 ID pass
     const s = pose.s ?? 1, flip = pose.flip ?? 1, [ox, oy] = pose.offset || [0, 0];
     const hip = (p.parts.hip && p.parts.hip.pivot) || [p.artboard[0] / 2, p.ground];
     const sq = pose.squash ?? 1;
     const base = `translate(${f2(x)} ${f2(y)}) scale(${(s * flip * sq).toFixed(5)} ${(+s).toFixed(5)}) translate(${f2(-hip[0] + ox)} ${f2(-(p.ground ?? p.artboard[1]) + oy)})`;
     return `<g transform="${base}">${items.map(i => i.svg).join('')}</g>`;
+  }
+
+  // WP-37 object-ID pass: pose.ids = {part id or '@swap': '#rrggbb'} paints each part's drawing flat in its colour
+  // (fills, outlines, raster ink through an alpha-threshold filter), opaque and without blending, so a renderer with
+  // crisp edges (shape-rendering) gives every pixel exactly one id. Gradients, textures and opacity give way.
+  function idSVG(svg, c) {
+    const f = 'idf' + c.slice(1);
+    return `<filter id="${f}" x="0" y="0" width="1" height="1"><feFlood flood-color="${c}"/><feComposite in2="SourceAlpha" operator="in"/><feComponentTransfer><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer></filter>`
+      + svg.replace(/<defs>.*?<\/defs>/g, '').replace(/ fill="(?!none)[^"]*"/g, ` fill="${c}"`).replace(/ stroke="(?!none)[^"]*"/g, ` stroke="${c}"`)
+        .replace(/ (opacity|fill-opacity|stroke-opacity)="[^"]*"/g, '').replace(/ style="mix-blend-mode:[^"]*"/g, '').replace(/<image /g, `<image filter="url(#${f})" `);
   }
 
   // world position of a part's point (e.g. a hand for props), in the same space render() draws into

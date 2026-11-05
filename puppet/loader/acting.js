@@ -28,14 +28,28 @@
   const angOf = m => Math.atan2(m[1], m[0]);
 
   // ---------- keyframes ----------
+  // A key may carry an easing for the segment that leaves it (WP-19 curve editor): [t, value, ease] with ease
+  // 'smooth' (the default: smoothstep), 'linear', 'hold' (the value stays until the next key) or a cubic Bezier
+  // [x1, y1, x2, y2] as in CSS (x1, x2 within 0..1), solved by bisection so a frame stays a pure function of time.
+  function bezier(k, [x1, y1, x2, y2]) {
+    const B = (u, a, b) => 3 * a * u * (1 - u) * (1 - u) + 3 * b * u * u * (1 - u) + u * u * u;
+    let lo = 0, hi = 1; for (let n = 0; n < 40; n++) { const m = (lo + hi) / 2; if (B(m, x1, x2) < k) lo = m; else hi = m; }
+    return B((lo + hi) / 2, y1, y2);
+  }
+  function ease(k, e) {
+    if (!e || e === 'smooth') return smooth(k);
+    if (e === 'linear') return k;
+    if (e === 'hold') return k >= 1 ? 1 : 0;
+    return Array.isArray(e) && e.length === 4 ? bezier(k, e) : smooth(k);
+  }
   function sampleKeys(keys, t, loopDur) {
     if (!keys || !keys.length) return undefined;
     if (loopDur) t = ((t % loopDur) + loopDur) % loopDur;
     if (t <= keys[0][0]) return keys[0][1];
     for (let i = 1; i < keys.length; i++) {
       if (t <= keys[i][0]) {
-        const [t0, v0] = keys[i - 1], [t1, v1] = keys[i];
-        const k = smooth(clamp((t - t0) / (t1 - t0 || 1)));
+        const [t0, v0, e0] = keys[i - 1], [t1, v1] = keys[i];
+        const k = ease(clamp((t - t0) / (t1 - t0 || 1)), e0);
         if (typeof v0 === 'number') return v0 + (v1 - v0) * k;
         if (Array.isArray(v0)) return Array.isArray(v1) ? v0.map((x, j) => x + (v1[j] - x) * k) : v0;
         return v0; // discrete values (swap names, contacts) hold until the next key
@@ -505,5 +519,5 @@
     return pose;
   }
 
-  root.Acting = { stretchOf, swapByAngle, lipsyncPose, pathAt, pathDist, pathTable, placeAt, contactStart, resolveTargets, crossRefs, evaluate, evalStack, driveAt, sampleClip, sampleKeys, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
+  root.Acting = { stretchOf, swapByAngle, lipsyncPose, pathAt, pathDist, pathTable, placeAt, contactStart, resolveTargets, crossRefs, evaluate, evalStack, driveAt, sampleClip, sampleKeys, ease, blend, presetAt, ik2, lagged, blinkAt, LIMBS, fabrik, solveChain, chainPoints, emotionalMouth, principled };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -159,6 +159,29 @@ environment variables below).
     frames;
   - a dot attached to the track lands within 0.7 px of it in the player.
 
+  **Nested groups and deformers** (WP-36). A comp item `{"type": "group", "items": [...], "pivot", "translate",
+  "rotate", "scale", "opacity", "deform"}` moves its items together (translate, then rotate and scale about the pivot,
+  each keyed or an expression); groups nest, so a child moves inside its parent's motion. `deform` bends the group's
+  drawing in the group's own space, so a deformed child is deformed again by its parent: `wave` (a travelling sine
+  along an axis: `amount`, `wavelength`, `speed`), `bend` (x moves by amount times the square of the depth into the
+  rect), `shear`, and `noise` (seeded fractal noise, a heat haze or boil). Each is an SVG displacement map built from
+  filter primitives alone, strips of flat colour along the ramp blurred along it: an image (a data URL) loads after the
+  frame is taken, and `feImage` by reference draws nothing from `<defs>` in Chromium, so both made frames that were not
+  pure functions of time. Test `compgroups`: a dot in a scaled, waved child inside a rotating parent lands within
+  0.85 px of where the composed motion puts it (at 0, 0.37 and 1 s), the bar follows the scaled wave within 1.33 px,
+  a shear of 40 over 300 px moves a bar's foot 38 px (38.7 expected), and a frame renders identically twice.
+
+  **The compositor in the graph view** (WP-36). The graph page (`/graph`) has a view per shot with a comp
+  ("compositor · s1"): a box per plane, far to near, each feeding its nodes in order, all into the camera (focus, depth
+  of field, roll, zoom) and the frame. Clicking a box shows its values to edit (numbers, keyed values or
+  expressions), with the player's frame beside them at a chosen time; a plane's box adds a node (grade, blur, glow,
+  mask, blend, light wrap, with defaults), a node's box removes it. Edits go through `comp.edit {name, shot, target,
+  set}` (`comp`, `plane:<id>`, `node:<index>`, `node:new`), which checks expressions with the compositor's own sandbox
+  and the shot against the schema before keeping it. Test `graphcomp`, on a copy of night-planes: 12 boxes for 6
+  planes and 4 nodes, a grade brightened to 1.8 brightens the preview (mean 48.8 to 54.8 levels, 16% of it changed),
+  a blur added to the sky shows as a new box, the camera rolled 5 degrees, and "=constructor" refused with nothing
+  written.
+
   night-planes' golden frames are unchanged.
 - **Animated primitives and procedural growth** (WP-42), compositor items:
   - `{"type": "prim", "shape": ...}`: circle (`r`), rect (`w`, `h`, `round`), star (`points`, `r`, `inner`),
@@ -1790,6 +1813,20 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   - OpenColorIO's CDL matches the ASC v1.2 formula within 1e-5;
   - an identity look leaves a frame of nib-hello's mean colour unchanged;
   - a warm look warms it. In ACEScct a slope of 0.9 on blue is strong: the frame's mean blue fell from 223 to 112.
+- **Object ids and motion vectors** (part 3): `film.master {passes: [..., "id", "motion"]}` adds
+  - **Cryptomatte** layers (`CryptoObject00`, `CryptoObject01`: four ranks of id and coverage, full 32-bit float), with
+    the standard metadata (`cryptomatte/<key>/name`, `hash` MurmurHash3_32, `conversion` uint32_to_float32, and the
+    `manifest` of names and hashes), so Nuke's, Resolve's or Blender's Cryptomatte picker isolates any part. Each
+    object is "<speaker or puppet>/<part>" ("/@<swap>" for a swap drawing). The player's `?idpass=1` draws the cast
+    with every part one flat colour (`Puppet.render`'s `ids`: fills, outlines and raster ink through an alpha-threshold
+    filter) with crisp edges, at twice the master's scale; coverage is the share of each pixel's four samples.
+  - **Forward motion vectors** (`forward.u`, `forward.v`, master pixels): where each pixel's part will be one frame on,
+    from the parts' screen matrices now and next (`window.PARTMATS`) and the ID pass. A swap drawing moves with its
+    anchor part (a pupil's own glance is not in the vector), and squash is not.
+  - The `masterpasses` test, on a span of handshake-demo: all 39 visible objects decode back from the EXR exactly
+    (max error 0.0 against the ID render), the ranks add up to the characters' matte (mean difference 0.002), oiiotool
+    lists the layers, and warping the next frame back along the vectors matches this frame with a mean error of 0.028
+    on the moving pixels, against 0.223 left in place.
 
 ## Editor hand-off (WP-22)
 `film.handoff {name}` (after `film.render`) writes `films/<name>/build/handoff/`: the shots as rendered (`media/`), the
@@ -2126,6 +2163,17 @@ to the line it sits by; drag re-times it (`move_camkey`), selecting it shows its
 pip-park twice) drives the page in Chromium: the cut moved 0.39 s for a 0.40 s drag (to the frame), a camera key
 added as `mid.start+2.03` at [540, 960, 1], moved 0.3 s, set to zoom 1.2 and deleted, and the last line moved 0.38 s
 for a 0.36 s drag (to the frame, after re-voicing) with the line before unmoved, then undone.
+
+**Curve editor** (WP-19). A key may carry the easing of the move that leaves it, as a third element: `[t, value,
+ease]` with `smooth` (the default, smoothstep, as before), `linear`, `hold` (the value stays until the next key) or a
+cubic Bezier `[x1, y1, x2, y2]` as in CSS (y may overshoot). `Acting.sampleKeys` plays it, so the player, the bake
+and every renderer follow, and `dbe/keys.py` (loaded by Blender's camera script) does the same in Python; line-relative
+times resolve on three-element keys too. On the timeline, a selected camera key with a key after it shows the curve
+(time across the move, how far along it is up the side), drawn by `Acting.ease` itself: presets (smooth, linear, ease
+in, ease out, ease in-out, overshoot, hold) or the two handles dragged, saved on release (`set_camkey` `ease`). In
+`timeline2`, "ease in" is stored as [0.42, 0, 1, 1], a dragged handle as [0.42, 0, 0.81, 1.35], a curve that
+overshoots (the zoom, moving from 1.2 to 1.4, peaks at 1.411 before it settles); the JS and Python samplers agree
+exactly on that move (and to 1e-15 on every preset).
 
 ## Storyboard strip and animatic (plan 3.2)
 `python -m dbe film.storyboard '{"name": "FILM"}'` takes one still per shot from the player (a moment into the

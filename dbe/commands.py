@@ -667,8 +667,8 @@ def resolve_times(obj, timing):
         if isinstance(o, dict):
             return {k: (t_of(v) if k in ("start", "end", "t", "until", "arrive", "off") and isinstance(v, str) and k != "clip" else walk(v)) for k, v in o.items()}
         if isinstance(o, list):
-            if len(o) == 2 and isinstance(o[0], str) and _LINE_T.match(o[0]):
-                return [t_of(o[0]), walk(o[1])]
+            if len(o) in (2, 3) and isinstance(o[0], str) and _LINE_T.match(o[0]):   # [t, value] or [t, value, ease] (WP-19)
+                return [t_of(o[0]), walk(o[1]), *o[2:]]
             return [walk(x) for x in o]
         return o
     return walk(obj)
@@ -2321,7 +2321,7 @@ def timeline_get(name):
             tl = cc.get("timeline") or {}
             cast.append({"i": ci, "who": cc.get("speaker") or p.get("name") or f"cast {ci}", "puppet": cc["puppet"], "clips": clips,
                          "emotion": tl.get("emotion") or [], "look": tl.get("look") or []})
-        cam = [{"i": i, "t": rk[0], "raw_t": rw[0], "v": rk[1]} for i, (rw, rk) in enumerate(zip(rs.get("camera") or [], rr.get("camera") or []))]
+        cam = [{"i": i, "t": rk[0], "raw_t": rw[0], "v": rk[1], "ease": rk[2] if len(rk) > 2 else "smooth"} for i, (rw, rk) in enumerate(zip(rs.get("camera") or [], rr.get("camera") or []))]
         shots.append({"id": rr["id"], "start": rr["start"], "end": rr["end"], "raw_start": rs.get("start"), "raw_end": rs.get("end"), "set": rr.get("set", "plain"),
                       "renderer": rr.get("renderer", "svg"), "cast": cast, "camera": cam, "size": res.get("size", [1080, 1920])})
     return {"film": name, "length": res["shots"][-1]["end"], "fps": res.get("fps", 30), "shots": shots,
@@ -2351,7 +2351,7 @@ def _retime(raw_value, new_t, timing):
          shot=("string", "shot id"), cast=("integer", "cast index in the shot"), index=("integer", "clip layer index (move, resize, delete)", -1),
          start=("number", "new start in film seconds (move, add)", None), end=("number", "new end in film seconds (resize; null = the clip's own length)", None),
          clip=("string", "clip name (add)", ""), anchor=("string", "for add: a line id to anchor the start to (line-relative)", ""),
-         props=("object", "set_clip: speed, gain, weight, additive; add_camkey or set_camkey: value [cx, cy, zoom]", None))
+         props=("object", "set_clip: speed, gain, weight, additive; add_camkey or set_camkey: value [cx, cy, zoom]; set_camkey: ease (smooth, linear, hold or [x1, y1, x2, y2])", None))
 def timeline_edit(name, op, shot, cast=0, index=-1, start=None, end=None, clip="", anchor="", props=None):
     """One timeline edit from the Studio (plan 3.1), written into shots.json: move a clip layer (its end moves with
     it), resize its end, add a clip at a time (anchored to a line if given, so re-voicing keeps it on the words) or
@@ -2444,10 +2444,19 @@ def _timeline_shot_edit(raw, res, tm, si, op, index, start, props):
         cam[index][0] = _retime(cam[index][0], max(rr["start"], min(rr["end"], float(start))), tm)
         return cam[index]
     if op == "set_camkey":
-        v = (props or {}).get("value")
-        if not (isinstance(v, list) and len(v) == 3):
-            raise ValueError("set_camkey needs props.value = [cx, cy, zoom]")
-        cam[index][1] = [float(x) for x in v]
+        v, e = (props or {}).get("value"), (props or {}).get("ease")
+        if v is None and e is None:
+            raise ValueError("set_camkey needs props.value = [cx, cy, zoom] and/or props.ease")
+        if v is not None:
+            if not (isinstance(v, list) and len(v) == 3):
+                raise ValueError("props.value is [cx, cy, zoom]")
+            cam[index][1] = [float(x) for x in v]
+        if e is not None:   # the easing of the move from this key to the next (the curve editor)
+            if not (e in ("smooth", "linear", "hold") or (isinstance(e, list) and len(e) == 4 and 0 <= e[0] <= 1 and 0 <= e[2] <= 1)):
+                raise ValueError("props.ease is smooth, linear, hold or a cubic Bezier [x1, y1, x2, y2] with x1 and x2 in 0..1")
+            del cam[index][2:]
+            if e != "smooth":
+                cam[index].append([round(float(x), 3) for x in e] if isinstance(e, list) else e)
         return cam[index]
     cam.pop(index)
     if not cam:
@@ -3572,6 +3581,20 @@ def _timeline2_test():
     if len(ca) != 1 or not isinstance(ca[0][0], str) or ca[0][1] != [540, 960, 1] or len(cm["raw"]) != 1 or cm["raw"][0][0] == ca[0][0] \
             or cs[0][1] != [540, 960, 1.2] or out["camkey_deleted"] is not None:
         bad.append(f"camera keys: {ca} {cm} {cs} {out['camkey_deleted']}")
+    cp, cd_ = out.get("curve_preset") or [], out.get("curve_dragged") or []
+    if len(cp) < 3 or cp[2] != [0.42, 0, 1, 1] or len(cd_) != 2 or len(cd_[0]) < 3 or not isinstance(cd_[0][2], list) or cd_[0][2][:2] != [0.42, 0] \
+            or cd_[0][2][3] <= 1 or cd_[1][1][2] != 1.4:
+        bad.append(f"curve editor: preset {cp}, dragged {cd_}")
+    else:   # the eased move plays the same in the player's sampler (JS) and the Blender sets' (Python)
+        from . import keys as BG
+        keys = [[0.0, cd_[0][1], cd_[0][2]], [1.0, cd_[1][1]]]
+        ts = [i / 20 for i in range(21)]
+        js = json.loads(_run(["node", "-e", "global.window=globalThis;require('./puppet/loader/puppet.js');require('./puppet/loader/acting.js');"
+                              f"const k={json.dumps(keys)};console.log(JSON.stringify({json.dumps(ts)}.map(t=>Acting.sampleKeys(k,t)[2])))"])[-1])
+        py = [BG.sample_keys(keys, t)[2] for t in ts]
+        meas["curve_js_vs_python_max_diff"] = max(abs(a - b) for a, b in zip(js, py)); meas["curve_zoom_peak"] = round(max(js), 3)
+        if meas["curve_js_vs_python_max_diff"] > 1e-6 or max(js) <= 1.4:
+            bad.append(f"curve sampling: js {js} python {py}")
     L = out["line"]; b0, a0, u0 = dict(L["before"]), dict(L["after"]), dict(L["undone"]); m = L["moved"]
     if abs((a0[m] - b0[m]) - L["want_dt"]) > 2 * fr or any(abs(a0[k] - b0[k]) > 0.01 for k in b0 if k != m) or any(abs(u0[k] - b0[k]) > 0.01 for k in b0):
         bad.append(f"line: {L}")
@@ -7303,6 +7326,18 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "graphcomp":   # WP-36: the compositor edited in the graph view
+        bad, meas = _graphcomp_test()
+        failed += 1 if bad else 0
+        results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "compgroups":   # WP-36: nested groups and deformers in the compositor
+        bad, meas = _compgroups_test()
+        failed += 1 if bad else 0
+        results.append({"compgroups": "a dot and a bar in a scaled, waved child group inside a rotating parent land where the composed motion puts them; a shear moves a bar's foot by its amount; a frame renders the same twice", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "masterpasses":   # WP-37: Cryptomatte and motion vectors in the master
+        bad, meas = _masterpasses_test()
+        failed += 1 if bad else 0
+        results.append({"masterpasses": "the master's Cryptomatte layers decode back to every part's coverage and add up to the characters' matte, and its forward motion vectors carry the next frame back onto this one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "reviewphone":   # WP-19: review on a phone
         bad, meas = _reviewphone_test()
         failed += 1 if bad else 0
@@ -9004,7 +9039,7 @@ def restage(s, aspect):
             if "size" in o:
                 o["size"] = round(o["size"] * 0.8)
         if sh.get("camera"):
-            sh["camera"] = [[t, [round(mapx(c[0]), 1), round(c[1] * k, 1), c[2]]] for t, c in sh["camera"]]
+            sh["camera"] = [[t, [round(mapx(c[0]), 1), round(c[1] * k, 1), c[2]], *e] for t, c, *e in sh["camera"]]
     for sid, ov in ((s.get("aspects") or {}).get(aspect, {}).get("shots") or {}).items():
         sh = next((x for x in out["shots"] if x["id"] == sid), None)
         if not sh:
@@ -9507,6 +9542,73 @@ def _proc_into(name, raw, shot, force=(), dry=False):
     return report
 
 
+COMP_NODE_DEFAULTS = {"grade": {"brightness": 1, "contrast": 1, "saturation": 1}, "blur": {"radius": 2}, "glow": {"radius": 12, "strength": 0.8, "colour": "#ffffff"},
+                      "mask": {"shape": {"ellipse": [540, 960, 500, 700]}, "feather": 60}, "blend": {"mode": "screen", "opacity": 0.8}, "lightwrap": {"radius": 14, "strength": 0.7}}
+
+
+@command("comp.edit", name=("string", "film"), shot=("string", "shot id"),
+         target=("string", "comp (focus, dof, roll, zoom) | plane:<id> | node:<index> | node:new (add one: set gives type and plane)"),
+         set=("object", "values to set; a null removes the key (a removed node: {\"remove\": true})"))
+def comp_edit(name, shot, target, set):
+    """Edit a shot's compositor from the graph view (WP-36): set values on the comp itself, a plane or a node; add a
+    node (with its type's defaults) or remove one. Values may be numbers, keyed values or expressions, as the comp
+    takes them. The edit is checked against the shots schema and the expression sandbox before it is kept."""
+    d = _film(name); raw_text = (d / "shots.json").read_text(); raw = json.loads(raw_text)
+    sh = next((x for x in raw["shots"] if x["id"] == shot), None)
+    if sh is None:
+        raise KeyError(f"no shot {shot}")
+    c = sh.setdefault("comp", {"planes": []})
+    if target == "comp":
+        obj = c
+        bad = [k for k in set if k in ("planes", "nodes", "tracks")]
+        if bad:
+            raise ValueError(f"edit {bad} through their own targets")
+    elif target.startswith("plane:"):
+        obj = next((p for p in c.get("planes", []) if p["id"] == target[6:]), None)
+        if obj is None:
+            raise KeyError(f"no plane {target[6:]}")
+        if "id" in set:
+            raise ValueError("a plane keeps its id")
+    elif target == "node:new":
+        ty, pl = set.get("type"), set.get("plane")
+        if ty not in COMP_NODE_DEFAULTS or not any(p["id"] == pl for p in c.get("planes", [])):
+            raise ValueError(f"a new node needs a type ({', '.join(COMP_NODE_DEFAULTS)}) and one of this shot's planes")
+        obj = {"type": ty, "plane": pl, **COMP_NODE_DEFAULTS[ty]}; c.setdefault("nodes", []).append(obj)
+        set = {k: v for k, v in set.items() if k not in ("type", "plane")}
+    elif target.startswith("node:"):
+        k = int(target[5:]); nodes = c.get("nodes", [])
+        if not 0 <= k < len(nodes):
+            raise IndexError(f"no node {k}")
+        if set.get("remove"):
+            gone = nodes.pop(k); (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False)); _player_page(name)
+            return {"removed": gone}
+        obj = nodes[k]
+    else:
+        raise ValueError("target is comp, plane:<id>, node:<index> or node:new")
+    for key, v in set.items():
+        if v is None:
+            obj.pop(key, None)
+        else:
+            if isinstance(v, str) and v.startswith("="):
+                _comp_expr_check(v)
+            obj[key] = v
+    (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
+    try:
+        film_validate(name)
+    except Exception:
+        (d / "shots.json").write_text(raw_text); raise
+    _player_page(name)
+    return {"target": target, "now": obj}
+
+
+def _comp_expr_check(src):
+    """the compositor's expression sandbox, run in node (dbe/player/comp.js compile): refuses anything not allowed"""
+    r = subprocess.run(["node", "-e", "global.window=globalThis;require('./dbe/player/comp.js');try{COMP.compile(process.argv[1]);}catch(e){console.log(e.message);process.exit(1);}", src],
+                       cwd=ROOT, capture_output=True, text=True)
+    if r.returncode:
+        raise ValueError((r.stdout.strip() or "bad expression")[:300])
+
+
 @command("comp.track", name=("string", "film"), shot=("string", "shot id"), id=("string", "track id (items attach to it; expressions read it)"),
          src=("string", "the plate: an image sequence (printf pattern like proc/<key>/f_%04d.png, or a glob) or a video, from the film folder or the project root"),
          region=("array", "[x, y, w, h] on the plate's first frame, in its pixels"), start=("number", "film time of the plate's first frame (s)", 0),
@@ -9711,13 +9813,13 @@ def _assists_test():
 def _master_frame(job):
     from . import master as MA
     frames_dir, f, out, meta = job
-    MA.write_exr(out, MA.layers_for(frames_dir, f), {**meta, "frame": f})
+    MA.write_exr(out, MA.layers_for(frames_dir, f, meta.get("scale")), {**meta, "frame": f})
     return f
 
 
 @command("film.master", name=("string", "film"), scale=("integer", "times the film size (2: 4K for a 1080x1920 film)", 2),
          fps=("integer", "frame rate of the master (0: the film's own; higher works, frames are functions of time)", 0),
-         passes=("array", "beauty, line, fill, matte", None))
+         passes=("array", "beauty, line, fill, matte; also id (Cryptomatte object ids) and motion (forward vectors, needs id)", None))
 def film_master(name, scale=2, fps=0, passes=None):
     """Render a film's master (WP-37): every frame at `scale` times its size as a multi-pass OpenEXR (beauty, line,
     fill, matte layers; half float, premultiplied, ACEScg through OpenColorIO's ACES 2.1 studio config, lossless ZIP),
@@ -9741,7 +9843,7 @@ def film_master(name, scale=2, fps=0, passes=None):
     n, mfps, size = info[0]["frames"], info[0]["fps"], info[0]["size"]
     t_render = time.time() - t0
     (out / "exr").mkdir(parents=True)
-    meta = {"film": name, "colorspace": MA.WORK, "ocio_config": MA.CONFIG, "passes": ",".join(passes), "fps": mfps, "software": "Doodleberry (SVG player, WP-37)"}
+    meta = {"film": name, "colorspace": MA.WORK, "ocio_config": MA.CONFIG, "passes": ",".join(passes), "fps": mfps, "software": "Doodleberry (SVG player, WP-37)", "scale": scale}
     jobs = [(str(tmp), f, str(out / "exr" / f"{name}.{f:05d}.exr"), meta) for f in range(n)]
     with Pool(max(1, (os.cpu_count() or 2))) as pool:
         list(pool.imap_unordered(_master_frame, jobs, chunksize=2))
@@ -9889,6 +9991,153 @@ def image_scopes(image, out="out/scopes.png"):
     Y = 0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2]
     return {"scopes": out, "luma": [int(Y.min()), int(Y.max())], "clipped_white": round(float((a >= 255).all(axis=2).mean()), 4),
             "clipped_black": round(float((a <= 0).all(axis=2).mean()), 4)}
+
+
+def _masterpasses_test(film="handshake-demo", t0=2.0):
+    """WP-37 Cryptomatte and motion vectors on a short moving span: the EXR's object ids decode back to each part's
+    coverage (as a compositor's Cryptomatte node would), the ranks add up to the characters' matte, and warping the
+    next frame back along the forward vectors matches this frame much better than leaving it in place"""
+    import shutil
+    import numpy as np
+    import cv2
+    import OpenEXR
+    from . import master as MA
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "masterpasses"; shutil.rmtree(tmp, ignore_errors=True)
+    fps = _shots(film).get("fps", 30)
+    r = subprocess.run(["node", "tools/master.mjs", str(_player_page(film)), str(tmp), "1", str(fps), "beauty,matte,id,motion", str(t0), str(t0 + 3 / fps)],
+                       cwd=ROOT, capture_output=True, text=True, timeout=900)
+    if r.returncode != 0:
+        return [f"render: {r.stderr[-400:]}"], meas
+    try:
+        ex = tmp / "f0.exr"
+        MA.write_exr(ex, MA.layers_for(tmp, 0, 1), {"film": film, "colorspace": MA.WORK})
+        with OpenEXR.File(str(ex), separate_channels=True) as fi:
+            hdr = dict(fi.header()); ch = fi.channels()   # (the header first: after channels() the binding drops custom attributes)
+            got = {k: v.pixels for k, v in ch.items()}
+        key = next((k for k in hdr if str(k).startswith("cryptomatte/") and str(k).endswith("/manifest")), None)
+        manifest = json.loads(hdr[key]) if key else {}
+        lay = {L: {c: got[f"{L}.{c}"] for c in "RGBA"} for L in (f"{MA.CRYPTO_LAYER}00", f"{MA.CRYPTO_LAYER}01")}
+        meas["exr"] = {"crypto_dtype": str(got[f"{MA.CRYPTO_LAYER}00.R"].dtype), "motion_dtype": str(got["forward.u"].dtype), "objects": len(manifest),
+                       "hash": hdr.get(key.replace("manifest", "hash")) if key else None}
+        # each object's matte from the EXR against its pixels in the ID render (downsampled: the share of its 4 samples)
+        ids = json.loads((tmp / "id" / "ids.json").read_text())
+        idimg = np.asarray(__import__("PIL.Image", fromlist=["Image"]).open(tmp / "id" / "f_00000.png").convert("RGBA")).astype(np.uint32)
+        code = np.where(idimg[..., 3] > 127, (idimg[..., 0] << 16) | (idimg[..., 1] << 8) | idimg[..., 2], 0xffffffff)
+        errs, areas = {}, {}
+        for nm, c in ids.items():
+            want = (code == int(c[1:], 16)).astype(np.float32); want = want.reshape(want.shape[0] // 2, 2, want.shape[1] // 2, 2).mean((1, 3))
+            if want.sum() < 20:
+                continue
+            m = MA.crypto_matte(lay, nm); errs[nm] = float(np.abs(m - want).max()); areas[nm] = float(want.sum())
+        total = sum(lay[L][c] for L in lay for c in "GA")
+        matte = got["matte.A"].astype(np.float32)
+        meas["crypto"] = {"objects_checked": len(errs), "max_abs_error": round(max(errs.values()), 4) if errs else None,
+                          "biggest": max(areas, key=areas.get) if areas else None, "manifest_has_all": all(nm in manifest for nm in errs),
+                          "coverage_vs_matte_mean_abs": round(float(np.abs(np.clip(total, 0, 1) - matte)[matte > 0.5].mean()), 4)}
+        oi = subprocess.run(["oiiotool", "--info", "-v", str(ex)], capture_output=True, text=True).stdout
+        meas["oiiotool_lists_crypto"] = f"{MA.CRYPTO_LAYER}00.R" in oi and "forward.u" in oi
+        c_ = meas["crypto"]
+        if meas["exr"]["crypto_dtype"] != "float32" or meas["exr"]["hash"] != "MurmurHash3_32" or not c_["objects_checked"] or c_["max_abs_error"] > 1e-6 \
+                or not c_["manifest_has_all"] or c_["coverage_vs_matte_mean_abs"] > 0.02 or not meas["oiiotool_lists_crypto"]:
+            bad.append(f"cryptomatte: {meas}")
+        # motion: warp frame 1 back along frame 0's forward vectors onto frame 0
+        b0 = MA._png(tmp / "beauty" / "f_00000.png")[..., :3]; b1 = MA._png(tmp / "beauty" / "f_00001.png")[..., :3]
+        u, v = got["forward.u"].astype(np.float32), got["forward.v"].astype(np.float32)
+        H, W = u.shape; ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
+        warped = cv2.remap(b1, xs + u, ys + v, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        on = (matte > 0.99) & (np.hypot(u, v) > 0.5)
+        e_still = float(np.abs(b1 - b0).max(-1)[on].mean()) if on.any() else 0.0
+        e_warp = float(np.abs(warped - b0).max(-1)[on].mean()) if on.any() else 0.0
+        meas["motion"] = {"moving_px": int(on.sum()), "max_px": round(float(np.hypot(u, v).max()), 2), "error_left_in_place": round(e_still, 4), "error_warped": round(e_warp, 4)}
+        if on.sum() < 500 or e_warp > 0.5 * e_still:
+            bad.append(f"motion vectors: {meas['motion']}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _compgroups_test():
+    """WP-36 nested groups and deformers: a dot and a bar in a child group (scaled, waved) inside a rotating parent land
+    where the composed motion puts them; a shear moves a vertical bar's foot by its amount; frames are repeatable"""
+    import math
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="compgroups_", dir=ROOT / "out"))
+    try:
+        W, H = 540, 960; A = 20; WL = 200; SP = 1.0
+        child = {"type": "group", "pivot": [270, 480], "scale": 1.2, "deform": {"kind": "wave", "axis": "y", "amount": A, "wavelength": WL, "speed": SP, "rect": [70, 400, 400, 160]},
+                 "items": [{"type": "shape", "svg": "<rect x='70' y='478' width='400' height='4' fill='#2050c0'/>"}, {"type": "shape", "svg": "<circle cx='370' cy='480' r='6' fill='#e02020'/>"}]}
+        parent = {"type": "group", "pivot": [270, 480], "rotate": [[0, 0], [1, 30]], "items": [child]}
+        shear = {"type": "group", "deform": {"kind": "shear", "amount": 40, "rect": [100, 600, 60, 300]}, "items": [{"type": "shape", "svg": "<rect x='126' y='600' width='8' height='300' fill='#108040'/>"}]}
+        times = [0, 0.37, 1.0, 0.37]
+        spec = {"size": [W, H], "bg": "#ffffff", "times": times, "comp": {"planes": [{"id": "fg", "depth": 1, "items": [parent, shear]}]}}
+        (tmp / "s.json").write_text(json.dumps(spec)); _run(["node", "tools/comp_still.mjs", str(tmp / "s.json"), str(tmp / "o")], timeout=300)
+        ims = [np.asarray(Image.open(tmp / "o" / f"c_{i}.png").convert("RGB")).astype(int) for i in range(len(times))]
+        u = lambda x, t: math.sin(2 * math.pi * ((x - 70) / WL - SP * t))
+        def where(xl, yl, t):   # the composed motion: wave (in the child), child scale, parent rotation
+            y1 = yl + A * u(xl, t); x2, y2 = 270 + 1.2 * (xl - 270), 480 + 1.2 * (y1 - 480)
+            th = math.radians(30 * min(1, max(0, t))); dx, dy = x2 - 270, y2 - 480
+            return 270 + dx * math.cos(th) - dy * math.sin(th), 480 + dx * math.sin(th) + dy * math.cos(th)
+        dots = []
+        for im, t in zip(ims[:3], times[:3]):
+            red = (im[..., 0] > 180) & (im[..., 1] < 90) & (im[..., 2] < 90); ys, xs = np.nonzero(red)
+            px, py = where(370, 480, t); dots.append(round(math.hypot(xs.mean() - px, ys.mean() - py), 2))
+        blue = (ims[0][..., 2] > 150) & (ims[0][..., 0] < 100)
+        line = []
+        for xl in range(90, 451, 30):   # at t = 0 (no rotation) the bar's middle follows the scaled wave
+            xs_ = 270 + 1.2 * (xl - 270); col = np.nonzero(blue[:, int(round(xs_))])[0]
+            if len(col):
+                line.append(abs(col.mean() - where(xl, 480, 0)[1]))
+        grn = (ims[0][..., 1] > 100) & (ims[0][..., 0] < 60) & (ims[0][..., 2] < 120)
+        top = np.nonzero(grn[605])[0].mean(); foot = np.nonzero(grn[895])[0].mean()
+        meas = {"dot_error_px": dots, "wave_line_max_error_px": round(max(line), 2) if line else None, "wave_samples": len(line),
+                "shear_foot_minus_top_px": round(float(foot - top), 1), "repeatable": bool((ims[1] == ims[3]).all())}
+        if max(dots) > 2.0 or not line or max(line) > 2.0 or abs(meas["shear_foot_minus_top_px"] - 40 * (895 - 605) / 300) > 3 or not meas["repeatable"]:
+            bad.append(f"groups: {meas}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _graphcomp_test():
+    """WP-36: the compositor edited as a graph (on a copy of night-planes): one box per plane and node plus camera and
+    frame; a grade brightened from its box brightens the preview; a node added, the camera rolled, a bad expression
+    refused with nothing written"""
+    import socket, time
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    name = "zz-graphcomp"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    for f in list((FILMS / "night-planes").glob("*.json")) + list((FILMS / "night-planes").glob("*.md")):
+        shutil.copy(f, d / f.name)
+    port = 8793; srv = None; od = ROOT / "out" / "graphcomp"; shutil.rmtree(od, ignore_errors=True); od.mkdir(parents=True)
+    try:
+        srv = subprocess.Popen([sys.executable, "-m", "dbe", "serve", str(port)], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(50):
+            with socket.socket() as s_:
+                if s_.connect_ex(("127.0.0.1", port)) == 0:
+                    break
+            time.sleep(0.2)
+        r = subprocess.run(["node", "tools/graph_comp_check.mjs", str(port), name, "s1"], cwd=ROOT, capture_output=True, text=True, timeout=900, env={**os.environ, "OUT": str(od)})
+        out = json.loads(r.stdout.strip().splitlines()[-1]) if r.stdout.strip() else {"error": r.stderr[-400:]}
+        if not out.get("error"):
+            a = np.asarray(Image.open(od / "before.png").convert("L")).astype(float); b = np.asarray(Image.open(od / "after.png").convert("L")).astype(float)
+            out["preview"] = {"mean_before": round(float(a.mean()), 1), "mean_after": round(float(b.mean()), 1), "changed_share": round(float((np.abs(a - b) > 8).mean()), 3)}
+    finally:
+        if srv:
+            srv.terminate(); srv.wait(timeout=20)
+        shutil.rmtree(d, ignore_errors=True); shutil.rmtree(od, ignore_errors=True)
+    meas.update(out)
+    if out.get("error") or out.get("errs"):
+        return [f"page: {out}"], meas
+    if out["boxes"] != out["want_boxes"] or out["grade"]["stored"] != 1.8 or out["preview"]["mean_after"] <= out["preview"]["mean_before"] + 2 \
+            or out["added"]["last"] != {"type": "blur", "plane": "sky", "radius": 2} or out["added"]["boxes"] != out["boxes"] + 1 or out["roll"] != 5 \
+            or out["refused"]["roll_still"] != 5 or "unknown name" not in out["refused"]["msg"]:
+        bad.append(f"graph comp: {out}")
+    return bad, meas
 
 
 def _master_test():
