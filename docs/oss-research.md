@@ -371,3 +371,10 @@ probe results). Only the tools now named in `docs/build-plan.md` are listed here
 **Add to "explicitly avoid":** ToonCrafter (generative video; licence unclear), Stable Audio Open (Stability Community
 License, revenue-capped, **SRC-AVAIL**), Depth Anything V2 Base/Large/Giant (**NC**), pymeshlab in-process (GPL-3),
 Kitsu in the service (**AGPL**, unverified).
+
+## BEAT motion capture (WP-12, 5 Nov 2026)
+- **What**: BEAT (PantoMatrix), conversational-gesture motion capture with speech; BVH, 120 fps, 75 joints with fingers, T-pose rest.
+- **Licence**: CC BY-NC 4.0 (class non-commercial: in-house use; flagged at the posting gate if a clip from it reached a posted film).
+- **Where**: a public mirror of samples on Hugging Face (juniorrios/beat-samples-bvh); the first 20 s of one take, fetched by byte range into out/bvh_real/ (not in git).
+- **Use**: the fixture of test `bvhreal`, the first real motion-capture BVH through `clip.bvh_import` (bones against the puppet's rest, camera-aimed bones held, joint speed limited).
+

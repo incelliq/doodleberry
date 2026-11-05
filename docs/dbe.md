@@ -1533,9 +1533,22 @@ puppet's own clips. tools/blender/bvh_check.py prints the joint positions Blende
 
 Test `bvh` (four humanoid clips on Ravi, one with a moving root): the BVH's joints sit where the puppet's own
 geometry puts them (within 0.0003 artboard px), Blender reads the same positions (within 0.0003), and the clips
-come back within 0.48 degrees, both as our skeleton and with the joints renamed to motion-capture names. Open: the
-3D path has only been tested on these planar motions: no real motion-capture BVH was reachable from here to test
-the projection of out-of-plane movement.
+come back within 0.48 degrees, both as our skeleton and with the joints renamed to motion-capture names.
+
+**A real take** (BEAT: a man talking with his hands, 120 fps, 74 joints with fingers, T-pose rest; CC BY-NC 4.0,
+in-house; the first 20 s cut from the head of a public 142 MB take by a byte range, `out/bvh_real/`, not committed).
+Read against its own rest, the T-pose put his hanging arms at 74 degrees on the puppet. So a motion-capture bone is now
+read against the puppet's own rest direction along the same bone (from its pivot to the child part the skeleton
+aims at); the root and bones aimed at unmatched joints keep the skeleton's rest; a hand or head keeps its bend
+against its parent as the skeleton has it, within 100 degrees; a bone aimed at the camera (seen shorter than a third
+of its length) holds its last angle; and no joint turns faster than 900 degrees a second, so a released hold or a
+wrist flipping between its two readings swings instead of jumping. Test `bvhreal` (only when asked: it fetches the
+8 MB and runs Blender): our forward kinematics matches Blender's importer within 0.00006 on every joint; the hand
+moves 25 units in depth against 32.5 across (real out-of-plane motion); the upper arms hang at 12.6 and -14.3
+degrees; every arm and leg bone's direction on the picture matches Blender's projected bones within 0.56 degrees
+(median 0.02) where it is not aimed at the camera; forearms are aimed at the camera in 12 to 24% of frames and hold
+there; the fastest joint turns 946 degrees a second. Seen beside Blender's skeleton from the front, Ravi raises the
+same hand to his chin, keeps the other hand at his chest and shifts his weight to the same leg.
 
 ## Map board (WP-16)
 `"set": "map"` puts a framed map on a wall (the characters stand in front of it), or fills the frame with

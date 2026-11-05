@@ -7642,6 +7642,10 @@ def test_golden(update=False, film=""):
         bad, meas = _graphcomp_test()
         failed += 1 if bad else 0
         results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "bvhreal":   # WP-12: a real motion-capture BVH (fetches 8 MB of a public take, runs Blender; only when asked)
+        bad, meas = _bvhreal_test()
+        failed += 1 if bad else 0
+        results.append({"bvhreal": "a real motion-capture BVH (BEAT, 74 joints, T-pose rest) onto Ravi: forward kinematics as Blender reads it, real out-of-plane motion, hanging arms read as hanging, each limb's direction on the picture as Blender projects it, no joint faster than a person's", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "timestamp":   # WP-26: an RFC 3161 timestamp from a public authority (needs the network, so only when asked)
         bad, meas = _timestamp_test()
         failed += 1 if bad else 0
@@ -14189,6 +14193,90 @@ def _branching_test():
     finally:
         shutil.rmtree(d_, ignore_errors=True)
     return bad, meas
+
+BEAT_URL = "https://huggingface.co/datasets/juniorrios/beat-samples-bvh/resolve/main/1_wayne_0_1_8.bvh"
+
+
+def _beat_take(seconds=20):
+    """the first `seconds` of a real motion-capture take (BEAT, speaker "wayne", 120 fps, 74 joints; CC BY-NC 4.0, in-
+    house use) from the head of the file (a byte range: the take is 142 MB), cut to whole frames, in out/bvh_real/"""
+    import urllib.request
+    d = ROOT / "out" / "bvh_real"; d.mkdir(parents=True, exist_ok=True); f = d / f"beat_wayne_{seconds}s.bvh"
+    if f.exists():
+        return f
+    req = urllib.request.Request(BEAT_URL, headers={"Range": "bytes=0-8388607"})
+    lines = urllib.request.urlopen(req, timeout=120).read().decode("ascii", "replace").split("\n")
+    i = lines.index("MOTION"); ft = float(lines[i + 2].split(":")[1]); n = int(round(seconds / ft))
+    body = [l for l in lines[i + 3:] if l.strip()][:-1][:n]   # the last line is cut by the range
+    f.write_text("\n".join(lines[:i + 1] + [f"Frames: {len(body)}", lines[i + 2]] + body) + "\n")
+    return f
+
+
+def _bvhreal_test():
+    """WP-12 a real motion-capture BVH (a BEAT take: a man talking, 20 s, 74 joints, T-pose rest) onto Ravi. Our
+    forward kinematics matches Blender's importer; the take moves out of the picture plane (the hand's depth); the
+    arms, hanging at the speaker's sides, read as hanging (against the puppet's rest, not the skeleton's T-pose);
+    every bone's direction on the picture matches Blender's projected bones where it is not aimed at the camera; no
+    joint turns faster than a person's"""
+    import numpy as np
+    from . import bvh as BV
+    bad, meas = [], {}
+    try:
+        f = _beat_take()
+    except Exception as e:
+        return [], {"skipped": f"the BEAT take is not reachable here ({e!r})"}
+    text = f.read_text(); b = BV.parse(text); J = b["joints"]; idx = {j["name"]: i for i, j in enumerate(J)}
+    pz = _json(ROOT / "cast/generated/ravi.puppet.json"); r = BV.to_clip(text, pz)
+    meas["take"] = {"frames": len(b["frames"]), "fps": round(1 / b["frame_time"]), "joints": len(J), "matched": len(r["matched"]), "held_toward_camera": r.get("held_toward_camera")}
+    frames = [0, 600, 1200, 1800, len(b["frames"]) - 1]
+    if BLENDER:
+        tmp = ROOT / "out" / "bvh_real" / "blender.json"
+        subprocess.run([BLENDER, "-b", "--factory-startup", "--python", "tools/blender/bvh_check.py", "--", str(f), str(tmp), *map(str, frames)], cwd=ROOT, capture_output=True, timeout=900)
+        bl = _json(tmp, {}); errs = []
+        for fr, pos_bl in bl.items():
+            pos, _ = BV._fk(b, b["frames"][int(fr)])
+            errs += [float(np.linalg.norm(np.array([pos[i][0], -pos[i][2], pos[i][1]]) - np.array(pos_bl[j["name"]]))) for i, j in enumerate(J) if j["name"] in pos_bl]
+        meas["fk_vs_blender_max"] = round(max(errs), 5) if errs else None
+        if not errs or max(errs) > 0.01:
+            bad.append(f"forward kinematics against Blender: {meas.get('fk_vs_blender_max')}")
+        # each limb's world angle on the picture (Blender's projected bone against the puppet's rest) against the clip's
+        def clip_at(part, t):
+            tr = r["clip"]["tracks"][part]; tt = np.array([k[0] for k in tr]); vv = np.array([k[1] for k in tr]); return float(np.interp(t, tt, vv))
+        def rest(p, q):
+            dx, dy = pz["parts"][q]["pivot"][0] - pz["parts"][p]["pivot"][0], pz["parts"][q]["pivot"][1] - pz["parts"][p]["pivot"][1]; return np.degrees(np.arctan2(-dy, dx))
+        diffs = []
+        for fr, pos_bl in bl.items():
+            t = int(fr) * b["frame_time"]
+            for p, q, ja, jb in (("upperarm_R", "forearm_R", "LeftArm", "LeftForeArm"), ("upperarm_L", "forearm_L", "RightArm", "RightForeArm"),
+                                 ("thigh_R", "shin_R", "LeftUpLeg", "LeftLeg"), ("thigh_L", "shin_L", "RightUpLeg", "RightLeg")):
+                A, B = np.array(pos_bl[ja]), np.array(pos_bl[jb]); d = B - A
+                if np.hypot(d[0], d[2]) < 0.34 * np.linalg.norm(d):
+                    continue
+                want = np.degrees(np.arctan2(d[2], d[0])) - rest(p, q)
+                # the clip stores local angles; the limb's world angle adds its matched ancestors'
+                chain, x = 0.0, pz["parts"][p]["parent"]
+                while x is not None:
+                    if x in r["clip"]["tracks"]:
+                        chain += -clip_at(x, t)
+                    x = pz["parts"][x].get("parent")
+                got = -clip_at(p, t) + chain
+                diffs.append(abs((got - want + 180) % 360 - 180))
+        meas["limb_angle_vs_blender"] = {"bones": len(diffs), "max_deg": round(max(diffs), 2) if diffs else None, "median_deg": round(float(np.median(diffs)), 2) if diffs else None}
+        if not diffs or max(diffs) > 6:
+            bad.append(f"limb directions against Blender's: {meas['limb_angle_vs_blender']}")
+    zs = [BV._fk(b, b["frames"][k])[0][idx["LeftHand"]][2] for k in range(0, len(b["frames"]), 12)]
+    meas["hand_depth_range"] = round(max(zs) - min(zs), 1)
+    if meas["hand_depth_range"] < 10:
+        bad.append(f"the take hardly leaves the picture plane: {meas['hand_depth_range']}")
+    med = {p: round(float(np.median([k[1] for k in r["clip"]["tracks"][p]])), 1) for p in ("upperarm_L", "upperarm_R")}
+    speed = {p: round(float(np.max(np.abs(np.diff([k[1] for k in tr])) / np.maximum(np.diff([k[0] for k in tr]), b["frame_time"])))) for p, tr in r["clip"]["tracks"].items()}
+    meas["upperarm_median_deg"] = med; meas["fastest_joint_deg_s"] = max(speed.values())
+    if max(abs(v) for v in med.values()) > 30:
+        bad.append(f"hanging arms read as raised: {med}")
+    if meas["fastest_joint_deg_s"] > 1000:
+        bad.append(f"a joint turns faster than a person's: {meas['fastest_joint_deg_s']}")
+    return bad, meas
+
 
 def _bvh_test():
     """WP-12 BVH. For four humanoid library clips on Ravi (talk_beat, wave_R, shrug, celebrate with a moving root):

@@ -946,6 +946,16 @@
    "credit": "Humaaans by Pablo Stanley",
    "provenance": "the 79 SVGs of 'Flat Assets' copied from github.com/Calinou/humaaans, checked against the owner's own download: 13 sha256 compared across every folder, all equal, and 79 files in both (Flat Assets (2).zip, sha256 cd38c5f1cf893a73bf8cddbe3728f244c485514a44a0ccd9c67cf7f7d50a8087)",
    "use": "cast.import_humaaans: the Single Pieces as a puppet with swap sets (WP-16)"
+  },
+  {
+   "id": "beat-mocap",
+   "path": "out/bvh_real/",
+   "in_git": false,
+   "source_url": "https://huggingface.co/datasets/juniorrios/beat-samples-bvh (a mirror of samples of BEAT, PantoMatrix: speaker 1 'wayne', take 0_1_8)",
+   "license": "CC BY-NC 4.0 (BEAT's licence; the mirror's card states none)",
+   "class": "non-commercial",
+   "credit": "BEAT: A Large-Scale Semantic and Emotional Multi-Modal Dataset for Conversational Gestures Synthesis (Liu et al., 2022)",
+   "provenance": "the first 8 MB of 1_wayne_0_1_8.bvh by an HTTP range request, cut to whole frames (20 s at 120 fps) by dbe/commands.py _beat_take; a test fixture for the BVH importer (test bvhreal), not used in films"
   }
  ]
 }

@@ -207,18 +207,72 @@ def to_clip(text, puppet, fps=30, tol=0.5, facing="camera"):
                 return pos[i] + rot[i] @ np.array(J[i]["end"], float)
             return None
         _, rr = _fk(b, rest_rows)
+        # each bone is read against the puppet's own rest direction (from its pivot to its child part's), not the
+        # skeleton's: motion-capture rigs rest in a T-pose, our puppets arms down (a real take, BEAT, read against its
+        # own rest put hanging arms at 74 degrees). A part with no child part (a hand, a head) keeps its bend against
+        # its parent bone as the skeleton has it. A bone aimed at the camera (seen shorter than a third of its length)
+        # keeps its last angle: its direction on the picture is noise.
+        part_of = {i: p for p, i in match.items()}
+
+        def prest(p):   # the puppet's rest direction along the same bone the skeleton aims (to the child it aims at)
+            i = match[p]
+            c = max(kids.get(i, []), key=lambda k: np.linalg.norm(J[k]["offset"]), default=None)
+            q = part_of.get(c)
+            if J[i]["parent"] is None or q is None:   # the root, or a bone aimed at an unmatched joint: the skeleton's rest
+                return None
+            dx, dy = parts[q]["pivot"][0] - parts[p]["pivot"][0], parts[q]["pivot"][1] - parts[p]["pivot"][1]
+            return math.degrees(math.atan2(-dy, dx)) if math.hypot(dx, dy) > 1e-6 else None
+        PR = {p: prest(p) for p in match}
+        wrap = lambda a: (a + 180.0) % 360.0 - 180.0
+        mparent = {}
+        for p in match:
+            q = parts[p].get("parent")
+            while q is not None and q not in match:
+                q = parts[q].get("parent")
+            mparent[p] = q
+        theta0 = {}
+        for p, i in match.items():
+            e0 = tip(i, rp, rr); d0 = rr[i] @ np.array([1.0, 0, 0]) if e0 is None else e0 - rp[i]
+            theta0[p] = math.degrees(math.atan2(d0[1], d0[0]))
+        def depth(p):
+            n = 0
+            while parts[p].get("parent") is not None:
+                p = parts[p]["parent"]; n += 1
+            return n
+        order = sorted(match, key=depth)   # parents before children (a leaf reads its bend against its parent's)
+        prevW, prevL, held = {}, {}, {p: 0 for p in match}
         for fi in range(F):
-            pos, rot = _fk(b, b["frames"][fi])
+            pos, rot = _fk(b, b["frames"][fi]); th, W = {}, {}
             for p, i in match.items():
                 e, e0 = tip(i, pos, rot), tip(i, rp, rr)
                 if e is None:   # no bone to aim along (a head whose children sit on its pivot): the joint's own x axis
-                    d, d0 = rot[i] @ np.array([1.0, 0, 0]), rr[i] @ np.array([1.0, 0, 0])
+                    d = rot[i] @ np.array([1.0, 0, 0]); short = False
                 else:
-                    d = e - pos[i]; d0 = e0 - rp[i]
-                a = math.degrees(math.atan2(d[1], d[0]) - math.atan2(d0[1], d0[0]))
-                world[p][fi] = -a
-        for p in world:
-            world[p] = np.degrees(np.unwrap(np.radians(world[p])))
+                    d = e - pos[i]; short = math.hypot(d[0], d[1]) < 0.34 * max(1e-9, float(np.linalg.norm(d)))
+                th[p] = math.degrees(math.atan2(d[1], d[0])); th[p, "short"] = short
+            for p in order:
+                q = mparent[p]
+                if PR[p] is not None:
+                    w = th[p] - PR[p]
+                elif q is not None:   # its bend against its parent, as the skeleton has it, within reason and speed
+                    loc = max(-100.0, min(100.0, wrap((th[p] - th[q]) - (theta0[p] - theta0[q]))))
+                    if th[p, "short"] and p in prevL:
+                        loc = prevL[p]; held[p] += 1
+                    if p in prevL:
+                        lim = 900.0 * src_ft; loc = prevL[p] + max(-lim, min(lim, loc - prevL[p]))
+                    prevL[p] = loc; W[p] = prevW[p] = W[q] + loc; world[p][fi] = -W[p]
+                    continue
+                else:
+                    w = th[p] - theta0[p]
+                if th[p, "short"] and p in prevW:   # aimed at the camera: hold
+                    w = prevW[p]; held[p] += 1
+                if p in prevW:   # no faster than a person turns a joint (900 degrees a second): a hold released or a
+                    # wrist flipping between its two readings becomes a quick swing, not a jump, and angles stay continuous
+                    lim = 900.0 * src_ft; w = prevW[p] + max(-lim, min(lim, wrap(w - prevW[p])))
+                W[p] = prevW[p] = w
+                world[p][fi] = -w
+        held_frames = {p: n for p, n in held.items() if n}
+        # (the angles are continuous already: each frame moves at most the limit from the last)
         def wrot(p):
             q = parts[p].get("parent")
             while q is not None and q not in world:
@@ -228,7 +282,7 @@ def to_clip(text, puppet, fps=30, tol=0.5, facing="camera"):
             ang[p] = world[p] - wrot(p)
         r0 = J[0]["offset"]; first, _ = _fk(b, b["frames"][0])
         off = np.array([[(_fk(b, b["frames"][fi])[0][0] - first[0])[0], -(_fk(b, b["frames"][fi])[0][0] - first[0])[1]] for fi in range(F)])
-        method = "3D skeleton projected on the picture plane"
+        method = "3D skeleton projected on the picture plane, against the puppet's rest"
     for p, a in ang.items():
         if p not in parts:
             continue
@@ -239,4 +293,5 @@ def to_clip(text, puppet, fps=30, tol=0.5, facing="camera"):
     if np.abs(off).max() > 1e-6:
         keys, _ = reduce_keys(ts, off, max(0.5, tol))
         clip["offset"] = [[round(float(ts[i]), 3), [round(float(off[i, 0]), 2), round(float(off[i, 1]), 2)]] for i in keys]
-    return {"clip": clip, "matched": {p: J[i]["name"] for p, i in match.items()}, "unmatched": [j["name"] for i, j in enumerate(J) if i not in match.values()], "method": method}
+    return {"clip": clip, "matched": {p: J[i]["name"] for p, i in match.items()}, "unmatched": [j["name"] for i, j in enumerate(J) if i not in match.values()], "method": method,
+            **({"held_toward_camera": held_frames} if not own and held_frames else {})}
