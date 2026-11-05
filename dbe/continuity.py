@@ -8,6 +8,9 @@ with the shot camera already folded in).
   to the right does not continue to the left after the cut), unless `"cross_line": true`.
 - **Eyeline**: in a shot / reverse-shot pair (consecutive shots each showing one of two characters seen together in an
   earlier shot), each looks towards where the other stands on screen: A, left of B, looks right; B looks left.
+- **Over the shoulder** (`"ots": {"over", "on"}` from `shot.ots`): the shot's size is the on character's (the near
+  one is bigger, but it is not what the shot shows), and the on character, where it looks sideways, looks toward the
+  side the over character stands on.
 - **Shot size**: from how much of the main character the frame shows: extreme long (a figure under 15% of the frame
   height), long (whole figure, under a third), full (whole figure), medium long (cut around the knees), medium (the
   waist), medium close-up (the chest), close-up (head and shoulders), extreme close-up (less).
@@ -75,9 +78,16 @@ def check(shots, sums, size):
     W, H = size; issues, rows = [], []
     for i, (sh, sm) in enumerate(zip(shots, sums)):
         vis = {k: v for k, v in sm.items() if v["visible"]}
-        main = max(vis.items(), key=lambda kv: kv[1]["ground"] - kv[1]["top"], default=(None, None))
+        ots = sh.get("ots") or {}; on = next((k for k in vis if k.lower() == (ots.get("on") or "").lower()), None)
+        main = (on, vis[on]) if on else max(vis.items(), key=lambda kv: kv[1]["ground"] - kv[1]["top"], default=(None, None))
         rows.append({"shot": sh["id"], "size": size_of(main[1]["top"], main[1]["ground"], H) if main[0] else None, "main": main[0],
-                     "order": [k for k, _ in sorted(vis.items(), key=lambda kv: kv[1]["x"])], "cross_line": bool(sh.get("cross_line"))})
+                     "order": [k for k, _ in sorted(vis.items(), key=lambda kv: kv[1]["x"])], "cross_line": bool(sh.get("cross_line")),
+                     **({"ots": True} if on else {})})
+        over = next((k for k in vis if k.lower() == (ots.get("over") or "").lower()), None)
+        if on and over:   # over the shoulder: the on character looks toward the near one
+            g = vis[on]["gaze"]; want = np.sign(vis[over]["x"] - vis[on]["x"])
+            if g and np.sign(g) != want:
+                issues.append({"rule": "eyeline", "shots": [sh["id"]], "what": f"{on} looks {'right' if g > 0 else 'left'}, away from {over} over whose shoulder we look"})
     seen = {}   # 180-degree rule over the scene: each pair's left-right order where they were last seen together
     for i, (row, sm) in enumerate(zip(rows, sums)):
         if row["cross_line"]:

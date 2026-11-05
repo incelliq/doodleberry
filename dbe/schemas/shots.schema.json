@@ -925,6 +925,29 @@
        "const": false
       }
      ]
+    },
+    "ots": {
+     "type": "object",
+     "description": "WP-19: an over-the-shoulder shot made by shot.ots: whom we look past (seen from behind, near the camera) and whom we look at; film.continuity names the shot's size from `on`",
+     "required": [
+      "over",
+      "on"
+     ],
+     "properties": {
+      "over": {
+       "type": "string"
+      },
+      "on": {
+       "type": "string"
+      },
+      "size": {
+       "enum": [
+        "MS",
+        "MCU",
+        "CU"
+       ]
+      }
+     }
     }
    }
   },

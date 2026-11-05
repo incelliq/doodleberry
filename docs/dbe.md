@@ -132,10 +132,12 @@ environment variables below).
     Lottie and Grease Pencil through the player's own filter. `tools/media_frames.mjs` reads the filter definitions
     from player.js (one definition) and draws each of the renderer's transparent character frames through it before
     they go over the set; Lottie, for such a shot, renders its characters on transparency as it does for a comp. The
-    grain is laid in frame pixels, so under a zoomed camera it is finer or coarser than the player's. Test
-    `mediarenderers` (only when asked) puts a copy of pip-park in crayon and checks each renderer's frame is nearer the
-    crayon SVG render than the plain one, where the medium changes it. A first check, Synfig only: 24.4 levels from the crayon
-    render against 92.1 from the plain one, over 46,993 px; the three-renderer run is still being measured.
+    frames are filtered at the film's size: the grain is laid in film pixels, and Grease Pencil renders at half size
+    (filtered as they came, its frames read nearer the plain render than the crayon one, 75.9 against 64.1). Under a
+    zoomed camera the grain is finer or coarser than the player's. Test `mediarenderers` (only when asked) puts a copy
+    of pip-park in crayon and checks each renderer's frame is nearer the crayon SVG render than the plain one, where
+    the medium changes it (46,993 px): Synfig 24.4 levels from the crayon render against 92.1 from the plain one,
+    Lottie 24.2 against 92.0, Grease Pencil 26.9 against 95.7.
   - Toon shading in Lottie (being measured): per shaded part, a track matte of its fills over a layer with the shade colour
     and the fills shifted toward the light, at the toon's opacity; clipped per part, not per stroke. A first look shows the
     bands (13,595 px of a pip-park frame change).
@@ -2297,6 +2299,27 @@ before, and no earlier line may move. Then the film is rendered and QA must not 
 restored and the film re-voiced. Test `reviewtiming` (only when asked: it re-voices and renders a scratch copy of
 pip-park): "give the last line a beat before it" moved the speech onset +0.50 s (+0.50 asked) and "the pause before
 the first line is too long" -0.40 s (-0.40 asked), both verified; "this line feels somehow wrong" went to a person.
+
+**Over-the-shoulder framing** (WP-19, `shot.ots`, `dbe/framing.py`). Look past one character (`over`) at the other
+(`on`), for a whole shot or, with `line`, only while a line plays: the shot is cut into before / over-the-shoulder /
+after, the cuts written as line-relative times (just before the line starts and just after it ends, within half the
+gap to the lines around it; a piece under 0.8 s joins the over-the-shoulder shot). The camera is held (one key) on
+`on` at the size asked (MS by default, MCU, CU: the share of the figure shown, capped by how wide its head may be in a
+tall frame) with its head on the far third. `over` is drawn 1.45 times its size on screen, its head just reaching the
+other's, at least 30% of the frame width in from the near edge and cut by it, drawn last (in front; cast references
+renumbered), quiet (its big gestures in that shot dropped, since one started earlier can hold into it) and seen from
+behind: a `views.back` made from its puppet (the face swaps and face parts drawn empty, the head's face marks gone and
+its skull filled with the hair colour, the back hair over the head, left and right limbs swapping depth about the
+torso), written beside the film as `cast/<name>.back.puppet.json` unless the puppet draws its own. It keeps the side of
+the frame it has in the wide shot, so the 180-degree line holds. Everything is a camera key, a place and a view key,
+which the shared bake carries to every renderer. `film.continuity` names an over-the-shoulder shot's size from `on`
+(the near character is bigger but is not what the shot shows) and checks that `on`, where it looks sideways, looks
+toward `over`. `review.fix` reads notes such as "make Momo's answer an over-the-shoulder" or "over Ravi's shoulder on
+Momo for the second line" (`dbe/review.py ots_intent`): the line named, or that speaker's line nearest the note, or the
+one under it; whom we look at named, else the line's speaker; past whom named, else the other character. The critic
+measures the baked frames (`ots_measure`): `on` at a medium shot or closer, its head in frame and at most 15% under
+the near head, `over` cut by the frame, in front and on its wide-shot side; then continuity and QA, or the shots are
+put back. Test `ots` (only when asked) is being measured.
 
 **Curve editor** (WP-19). A key may carry the easing of the move that leaves it, as a third element: `[t, value,
 ease]` with `smooth` (the default, smoothstep, as before), `linear`, `hold` (the value stays until the next key) or a

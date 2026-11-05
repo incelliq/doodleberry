@@ -850,12 +850,13 @@ def _set_video(name, sh, bdir):
     return v
 
 
-def _medium_frames(fr, sh, pattern):
+def _medium_frames(fr, sh, pattern, size=None):
     """WP-15: a shot's medium (pencil, crayon, marker, watercolour) on another renderer's character frames, through the
-    player's own filter (tools/media_frames.mjs reads it from player.js)"""
+    player's own filter (tools/media_frames.mjs reads it from player.js); at the film's size when given, since the
+    filter works in film pixels (Grease Pencil renders at half size)"""
     med = (sh.get("style") or {}).get("medium")
     if med:
-        _run(["node", "tools/media_frames.mjs", str(fr), med, pattern], timeout=14400)
+        _run(["node", "tools/media_frames.mjs", str(fr), med, pattern, *([str(size[0]), str(size[1])] if size else [])], timeout=14400)
 
 
 def _front_frames(name, sh, bdir):
@@ -933,7 +934,7 @@ def shot_render(name, shot, renderer=""):
         fr = bdir / f"{shot}_syn"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run(["synfig", str(sif), "-t", "png", "-o", str(fr / "f.png"), "-q"])
         frames = sorted(fr.glob("f.*.png"))
-        _medium_frames(fr, sh, r"^f\..*\.png$")
+        _medium_frames(fr, sh, r"^f\..*\.png$", (W, H))
         _composite(setv, ["-framerate", str(fps), "-start_number", frames[0].stem.split(".")[-1], "-i", str(fr / "f.%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
     elif renderer == "grease-pencil":
         if not BLENDER:
@@ -942,7 +943,7 @@ def shot_render(name, shot, renderer=""):
         gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H), toon=(sh.get("style") or {}).get("toon"))))
         fr = bdir / f"{shot}_gp"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run([BLENDER, "-b", "--factory-startup", "--gpu-backend", "vulkan", "--python", "dbe/blender_gp.py", "--", str(gpj), str(fr / "f_"), "-", "0.5"], timeout=14400)
-        _medium_frames(fr, sh, r"^f_\d+\.png$")
+        _medium_frames(fr, sh, r"^f_\d+\.png$", (W, H))
         _composite(setv, ["-framerate", str(fps), "-start_number", "1", "-i", str(fr / "f_%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
     elif renderer == "lottie":
         alone = bool(sh.get("comp") or (sh.get("style") or {}).get("medium"))   # characters on transparency, over the set (a comp, a medium)
@@ -2484,6 +2485,152 @@ def _timeline_shot_edit(raw, res, tm, si, op, index, start, props):
     return None
 
 
+def _who_index(shot, who):
+    """a cast index by speaker id or puppet name (case-insensitive), or None"""
+    w = (who or "").strip().lower()
+    for i, c in enumerate(shot.get("cast") or []):
+        if (c.get("speaker") or "").lower() == w or (_json(ROOT / c["puppet"]).get("name") or "").lower() == w:
+            return i
+    return None
+
+
+def _place_at(place, t):
+    """a cast entry's place at time t (resolved shots): a dict, the last key at or before t, or a path's start"""
+    if isinstance(place, list):
+        ks = [k for k in place if k[0] <= t] or place[:1]
+        return dict(ks[-1][1])
+    return dict(place or {})
+
+
+def _remap_cast(o, perm):
+    """cast index references ({"cast": i, ...}) renumbered after the cast is reordered"""
+    if isinstance(o, dict):
+        return {k: (perm[v] if k == "cast" and isinstance(v, int) and v in perm else _remap_cast(v, perm)) for k, v in o.items()}
+    if isinstance(o, list):
+        return [_remap_cast(x, perm) for x in o]
+    return o
+
+
+@command("shot.ots", name=("string", "film"), shot=("string", "shot id"), over=("string", "the character we look past (seen from behind, near the camera)"),
+         on=("string", "the character we look at (framed on the far third)"), line=("string", "only while this line plays: the shot is cut around it (default: the whole shot)", ""),
+         size=("string", "how much of the on character: MS (default), MCU or CU", "MS"))
+def shot_ots(name, shot, over, on, line="", size="MS"):
+    """Over-the-shoulder framing (WP-19): look past `over` at `on`. The camera is held on `on` at the size asked, on
+    the far third; `over` is drawn nearer (1.45 times its size on screen), seen from behind (a back view made from
+    the puppet: no face, the back hair over the head, the limbs swapping depth; dbe/framing.py), cut by the near frame
+    edge, its head just reaching the other's, and drawn in front. It keeps the screen side it has in the wide shot,
+    so the 180-degree line holds. With `line`, the shot is cut around that line (from just before it starts to just
+    after it ends, as line-relative times) into before / over-the-shoulder / after; pieces under 0.8 s join the
+    over-the-shoulder shot. Every renderer draws it (a camera key, a place and a view key in the bake)."""
+    from . import framing as FR
+    d = _film(name); raw = _json(d / "shots.json"); res = _shots(name); tm = _json(d / "timing.json", {})
+    si = next((i for i, x in enumerate(raw["shots"]) if x["id"] == shot), None)
+    if si is None:
+        raise KeyError(f"no shot {shot}")
+    rs, rr = raw["shots"][si], res["shots"][si]
+    ia, ib = _who_index(rr, over), _who_index(rr, on)
+    if ia is None or ib is None or ia == ib:
+        raise ValueError(f"over-the-shoulder needs two characters in shot {shot}: {over!r} and {on!r}")
+    if size not in FR.SIZES:
+        raise ValueError(f"size {size!r}: one of {', '.join(FR.SIZES)}")
+    t0, t1 = rr["start"], rr["end"]; a_expr, b_expr, a, b = rs["start"], rs["end"], t0, t1
+    if line:
+        L = {l["id"]: l for l in tm.get("lines", [])}
+        if line not in L:
+            raise ValueError(f"no line {line!r}")
+        ln = L[line]; order = sorted(tm["lines"], key=lambda l: l["start"]); k = [l["id"] for l in order].index(line)
+        gap_b = ln["start"] - (order[k - 1]["end"] if k else t0); gap_a = (order[k + 1]["start"] if k + 1 < len(order) else t1) - ln["end"]
+        lead, tail = round(min(0.25, max(0.0, gap_b) / 2), 2), round(min(0.3, max(0.0, gap_a) / 2), 2)
+        a, b = max(t0, ln["start"] - lead), min(t1, ln["end"] + tail)
+        a_expr, b_expr = f"{line}.start-{lead}", f"{line}.end+{tail}"
+        if a - t0 < 0.8:
+            a, a_expr = t0, rs["start"]
+        if t1 - b < 0.8:
+            b, b_expr = t1, rs["end"]
+    mid = (a + b) / 2; s_all = res; W, H = s_all.get("size", [1080, 1920])
+    pa, pb = _json(ROOT / rr["cast"][ia]["puppet"]), _json(ROOT / rr["cast"][ib]["puppet"])
+    plA, plB = _place_at(rr["cast"][ia].get("place"), mid), _place_at(rr["cast"][ib].get("place"), mid)
+    if "x" not in plA or "x" not in plB:
+        raise ValueError("over-the-shoulder needs both characters standing at a place (not walking a path)")
+    lay = FR.layout({**plB, "s": plB.get("s", 1), "puppet": pb}, {**plA, "s": plA.get("s", 1), "puppet": pa}, (W, H), W, H, size)
+    # the over character's back view: the puppet's own, or one made from it, kept with the film
+    srcp = rs["cast"][ia]["puppet"]; pz = _json(ROOT / srcp)
+    if "back" not in (pz.get("views") or {}):
+        bp = d / "cast" / (Path(srcp).name.replace(".puppet.json", ".back.puppet.json")); bp.parent.mkdir(exist_ok=True)
+        bp.write_text(json.dumps(FR.back_view(pz), indent=1, ensure_ascii=False)); srcp = str(bp.relative_to(ROOT))
+    ots = json.loads(json.dumps(rs)); ots["id"] = f"{shot}-ots-{line}" if line else shot
+    ots.update(start=a_expr, end=b_expr, camera=[[a_expr, lay["camera"]]], ots={"over": over, "on": on, "size": size})
+    ots.pop("camera_auto", None)
+    if line:
+        ots["start_line"] = ots["end_line"] = line
+    cast = ots["cast"]; ca = cast[ia]
+    ca["puppet"] = srcp; ca["place"] = lay["place"]
+    tl = ca.setdefault("timeline", {}); tl["view"] = [[0, "back"]]; tl.pop("travel", None)
+    # the near character keeps still: its big gestures would sweep across the frame, and one started earlier can hold
+    # its pose into the shot, so in this copy every gesture starting before the shot ends goes (idle, base layers and
+    # additive nods stay)
+    rclips = (rr["cast"][ia].get("timeline") or {}).get("clips", []); quiet = []
+    for rk, kk in zip(list(tl.get("clips", [])), rclips):
+        if kk.get("clip") != "idle" and not kk.get("base") and not kk.get("additive") and kk["start"] < b:
+            tl["clips"].remove(rk); quiet.append(kk["clip"])
+    order_i = [i for i in range(len(cast)) if i != ia] + [ia]   # the near character is drawn last, in front
+    perm = {old: new for new, old in enumerate(order_i)}
+    ots["cast"] = [_remap_cast(cast[i], perm) for i in order_i]
+    for k_ in ("props", "interact", "juggle", "physics", "fx"):
+        if k_ in ots:
+            ots[k_] = _remap_cast(ots[k_], perm)
+    pieces = []
+    if a > t0 + 1e-6:
+        pre = json.loads(json.dumps(rs)); pre["end"] = a_expr
+        if line and k:
+            pre["end_line"] = order[k - 1]["id"] if order[k - 1]["end"] <= a + 1e-6 else pre.get("end_line")
+        pieces.append(pre); ots.pop("transition", None); ots.pop("describe", None)
+    pieces.append(ots)
+    if b < t1 - 1e-6:
+        post = json.loads(json.dumps(rs)); post["id"] = f"{shot}-after-{line}"; post["start"] = b_expr
+        post.pop("transition", None); post.pop("describe", None)
+        if line and k + 1 < len(order):
+            post["start_line"] = order[k + 1]["id"]
+        pieces.append(post)
+    cues = rr.get("cues") or []   # shot-level cues go with the piece they fall in
+    if cues and len(pieces) > 1:
+        bounds = [t0] + ([a] if a > t0 + 1e-6 else []) + ([b] if b < t1 - 1e-6 else []) + [t1]
+        for j, pc in enumerate(pieces):
+            pc["cues"] = [rc for rc, cc in zip(rs.get("cues") or [], cues) if bounds[j] <= cc["t"] < bounds[j + 1] or (j == len(pieces) - 1 and cc["t"] >= bounds[-1])]
+            if not pc["cues"]:
+                pc.pop("cues")
+    raw["shots"][si:si + 1] = pieces
+    film_write(name, "shots.json", json.dumps(raw, indent=1, ensure_ascii=False))
+    return {"shots": [p_["id"] for p_ in pieces], "ots": ots["id"], "camera": lay["camera"], "over_place": lay["place"], "side": "left" if lay["side"] < 0 else "right",
+            "back_view": srcp, **({"stilled": quiet} if quiet else {}), **({"notes": lay["notes"]} if lay["notes"] else {})}
+
+
+def ots_measure(name, shot_id):
+    """what an over-the-shoulder shot shows, on its baked mid frame (every renderer's positions): the on character's
+    size, its head box on screen and how much of it the over character's head covers, whether the over character is
+    cut by the frame, on which side, and drawn in front"""
+    from . import continuity as CT, framing as FR
+    s, sh, _, baked = _bake(name, shot_id); W, H = s.get("size", [1080, 1920]); o = sh.get("ots") or {}
+    ia, ib = _who_index(sh, o.get("over")), _who_index(sh, o.get("on"))
+    out = {}
+    for who, i in (("over", ia), ("on", ib)):
+        pz = _json(ROOT / sh["cast"][i]["puppet"]); g, top, ax, hb = FR.dims(pz)
+        frs = baked["cast"][i]["frames"]; m = frs[len(frs) // 2]; f = -1 if m.get("flip") == -1 else 1
+        hx0, hx1 = sorted(((hb[0] - ax) * f, (hb[2] - ax) * f))
+        box = [m["x"] + hx0 * m["s"], m["y"] - (g - hb[1]) * m["s"], m["x"] + hx1 * m["s"], m["y"] - (g - hb[3]) * m["s"]]
+        body = [m["x"] - pz["artboard"][0] / 2 * m["s"], m["y"] - (g - top) * m["s"], m["x"] + pz["artboard"][0] / 2 * m["s"], m["y"]]
+        out[who] = {"head": [round(v, 1) for v in box], "x": round(m["x"], 1), "top": round(body[1], 1), "ground": round(m["y"], 1),
+                    "size": CT.size_of(body[1], m["y"], H), "view": m.get("view") or (m.get("pose") or {}).get("view")}
+    hA, hB = out["over"]["head"], out["on"]["head"]
+    ov = max(0.0, min(hA[2], hB[2]) - max(hA[0], hB[0])) * max(0.0, min(hA[3], hB[3]) - max(hA[1], hB[1]))
+    out["on_head_covered"] = round(ov / max(1e-6, (hB[2] - hB[0]) * (hB[3] - hB[1])), 3)
+    out["on_head_in_frame"] = bool(hB[0] >= 0 and hB[2] <= W and hB[1] >= 0)
+    out["over_cut_by_frame"] = bool(hA[0] < 0 or hA[2] > W or out["over"]["ground"] > H)
+    out["over_side"] = "left" if out["over"]["x"] < out["on"]["x"] else "right"
+    out["over_in_front"] = ia == len(sh["cast"]) - 1
+    return out
+
+
 @command("timeline.move_line", name=("string", "film"), line=("string", "line id"), start=("number", "where the line should start, film seconds"),
          revoice=("boolean", "rebuild the voice track and timing now", True))
 def timeline_move_line(name, line, start, revoice=True):
@@ -2653,6 +2800,69 @@ def _frame_keys(d, s, fps):
         t = i / fps; cap = "\n".join(e[2] for e in ev if e[0] <= t < e[1])
         out.append(hashlib.sha1(f"{k}#{cap}#{post}".encode()).hexdigest()[:16])
     return out
+
+
+def _review_ots(name, n, oi, shot):
+    """an over-the-shoulder note (WP-19): the line it is about (named, the one playing at the note, or the next to
+    start), whom we look at (named, else that line's speaker) and past whom (named, else the other character), then
+    shot.ots cuts the shot around the line. The critic checks on the baked frames: the on character at a medium shot
+    or closer with its head in frame and at most 15% of it under the near character's head, the near character cut by
+    the frame, in front, on the side it stands in the wide shot; film.continuity finds no new issue; QA does not get
+    worse. Otherwise the shots are put back."""
+    d = _film(name); n["intent"] = oi; tm = _json(d / "timing.json", {}); lines = sorted(tm.get("lines", []), key=lambda l: l["start"])
+    lines = [l for l in lines if l["end"] > shot["start"] and l["start"] < shot["end"]]
+    if not lines:
+        n.update(status="needs_human", reason="no spoken line in that shot to frame over the shoulder"); return n
+    t = n["t"]
+    if oi.get("line") is not None and -len(lines) <= oi["line"] < len(lines):
+        ln = lines[oi["line"]]
+    elif oi.get("on") and not any(l["start"] - 0.3 <= t <= l["end"] + 0.3 and l["speaker"].lower() == oi["on"].lower() for l in lines) \
+            and any(l["speaker"].lower() == oi["on"].lower() for l in lines):   # "Momo's answer": that speaker's line nearest the note
+        ln = min((l for l in lines if l["speaker"].lower() == oi["on"].lower()), key=lambda l: abs(l["start"] - t))
+    else:
+        ln = next((l for l in lines if l["start"] - 0.3 <= t <= l["end"] + 0.3), None) or next((l for l in lines if l["start"] >= t), lines[-1])
+    who = [c["who"] for c in shot["cast"]]
+    on = oi.get("on") or ln["speaker"]
+    over = oi.get("over") or next((w for w in who if w.lower() != on.lower()), None)
+    if not over or over.lower() == on.lower():
+        n.update(status="needs_human", reason="an over-the-shoulder needs two characters in the shot"); return n
+    raw_before = (d / "shots.json").read_text(); cont_before = film_continuity(name)["issues"]
+    qa_before = (_json(d / "build" / "qa.json", {}).get("checks") or {})
+    s0 = _shots(name); sh0 = next(x for x in s0["shots"] if x["id"] == shot["id"])
+    ia0, ib0 = _who_index(sh0, over), _who_index(sh0, on)
+    side_wide = "left" if _place_at(sh0["cast"][ia0].get("place"), ln["start"]).get("x", 0) < _place_at(sh0["cast"][ib0].get("place"), ln["start"]).get("x", 0) else "right"
+    try:
+        r = shot_ots(name, shot["id"], over, on, line=ln["id"], size=oi.get("size") or "MS")
+    except (ValueError, KeyError) as e:
+        n.update(status="needs_human", reason=f"could not frame it: {e}"); return n
+    m = ots_measure(name, r["ots"]); cont_after = film_continuity(name)["issues"]
+    new_issues = [i for i in cont_after if i not in cont_before]
+    fails = []
+    if m["on"]["size"] not in ("MS", "MCU", "CU"):
+        fails.append(f"{on} is framed {m['on']['size']}, not a medium shot or closer")
+    if not m["on_head_in_frame"]:
+        fails.append(f"{on}'s head leaves the frame")
+    if m["on_head_covered"] > 0.15:
+        fails.append(f"{over}'s head covers {m['on_head_covered']:.0%} of {on}'s")
+    if not m["over_cut_by_frame"]:
+        fails.append(f"{over} is not cut by the frame (not near the camera)")
+    if not m["over_in_front"]:
+        fails.append(f"{over} is not drawn in front")
+    if m["over_side"] != side_wide:
+        fails.append(f"{over} is on the {m['over_side']}, but stands on the {side_wide} in the wide shot")
+    n.update(target=f"shot {shot['id']}, line {ln['id']}", edit={"shot.ots": {"over": over, "on": on, "line": ln["id"]}, "shots": r["shots"]}, measured=m,
+             check=f"{on} {m['on']['size']}, head {m['on_head_covered']:.0%} covered; {over} cut by the frame on the {m['over_side']}, seen from {m['over']['view'] or 'the front'}" + (f"; continuity: {new_issues}" if new_issues else ""))
+    if fails or new_issues:
+        (d / "shots.json").write_text(raw_before); _player_page(name)
+        n.update(status="needs_human", reason="; ".join(fails + [i["what"] for i in new_issues]) + " (reverted)"); return n
+    _keep_version(name)
+    rr = film_render(name); qa_after = rr.get("qa") or {}
+    worse = [k_ for k_, v in qa_after.items() if v is False and qa_before.get(k_) is not False]
+    if worse:
+        (d / "shots.json").write_text(raw_before); film_render(name)
+        n.update(status="needs_human", reason=f"the edit broke QA ({', '.join(worse)}); reverted"); return n
+    n.update(status="verified", reviewer="critic: baked frames, continuity + QA")
+    return n
 
 
 def _review_layout(name, n, lay, shot):
@@ -2905,6 +3115,9 @@ def review_fix(name, id=""):
     for n in todo:
         tlg = timeline_get(name); t = n["t"]
         shot = next((s_ for s_ in tlg["shots"] if s_["start"] <= t < s_["end"]), tlg["shots"][-1])
+        oi = RV.ots_intent(n["text"], [c["who"] for c in shot["cast"]])
+        if oi:   # WP-19: an over-the-shoulder shot
+            out.append(_review_ots(name, n, oi, shot)); continue
         gz = RV.gaze_intent(n["text"], [c["who"] for c in shot["cast"]])
         if gz:   # WP-19: where a character looks
             out.append(_review_gaze(name, n, gz, shot)); continue
@@ -7317,6 +7530,10 @@ def test_golden(update=False, film=""):
         bad, meas = _outputs_test()
         failed += 1 if bad else 0
         results.append({"outputs": "one render pass of nib-hello's shot gives a PNG sequence, WebM and ProRes with alpha (read back alike), and an MP4 and GIF over white with every frame; the Studio channels view shows that shot's alpha exactly", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "ots":   # WP-19: over-the-shoulder notes (renders review-demo and three other renderers, so only when asked)
+        bad, meas = _ots_test()
+        failed += 1 if bad else 0
+        results.append({"ots": "\"Make Momo's answer an over-the-shoulder\" and \"over Momo's shoulder on Ravi for the third line\" on review-demo: shot.ots cuts the shot around each line; the on character at a medium shot or closer, head in frame and clear, the near one seen from behind, cut by the frame, in front and on its side of the line; continuity, QA and renderer parity hold", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "layoutnotes":   # WP-19: review notes about where a character stands and how close the camera is
         bad, meas = _layout_notes_test()
         failed += 1 if bad else 0
@@ -11141,6 +11358,57 @@ def _layout_notes_test():
         if c["status"] != "needs_human":
             bad.append(f"a note about someone not in the shot was acted on: {meas['Priya should stand further right']}")
         sj = _json(tmp / "shots.json"); meas["shots_json"] = {"ravi_x": sj["shots"][0]["cast"][0]["place"]["x"], "camera_auto": sj["shots"][0].get("camera_auto")}
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _ots_test():
+    """WP-19 on a copy of review-demo (when voiced here): "Make Momo's answer an over-the-shoulder" pinned during
+    Ravi's first line, then "over Momo's shoulder on Ravi for the third line": review.fix cuts the shot around each
+    line, and the critic's checks hold (the on character at a medium shot or closer, its head in frame and at most
+    15% covered, the near one cut by the frame, in front, on its wide-shot side, seen from behind); continuity finds no
+    issue and names both shots by the on character; QA holds. The over-the-shoulder shot drawn by Synfig, Lottie and
+    Grease Pencil matches the SVG renderer's (render.parity: the back view and the framing reach every renderer)."""
+    bad, meas = [], {}
+    src = FILMS / "review-demo"
+    if not (src / "build" / "voice.wav").exists():
+        return [], {"skipped": "review-demo is not voiced here (voice.build)"}
+    name = "zz-otscheck"; tmp = FILMS / name; shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(src, tmp, ignore=shutil.ignore_patterns("package", "master", "qa", "handoff", "versions", "diff", "review"))
+    try:
+        (tmp / "review.json").write_text(json.dumps({"notes": []}))
+        film_render(name); fps = _shots(name).get("fps", 30)
+        L = {l["id"]: l for l in _json(tmp / "timing.json")["lines"]}
+        notes = (("Make Momo's answer an over-the-shoulder", round((L["l1"]["start"] + 0.5) * fps)),
+                 ("over Momo's shoulder on Ravi for the third line", round((L["l3"]["start"] + 0.5) * fps)))
+        for text, fr in notes:
+            review_add(name, fr, text)
+        r = review_fix(name); got = {n["text"]: n for n in r["notes"]}
+        for (text, _), (want_on, want_line) in zip(notes, (("momo", "l2"), ("ravi", "l3"))):
+            n = got[text]; m = n.get("measured") or {}
+            meas[text] = {"status": n["status"], "check": n.get("check") or n.get("reason"), "shots": (n.get("edit") or {}).get("shots")}
+            if n["status"] != "verified":
+                bad.append(f"{text}: {meas[text]}"); continue
+            e = n["edit"]["shot.ots"]
+            if e["on"].lower() != want_on or e["line"] != want_line:
+                bad.append(f"{text}: framed {e} (wanted on {want_on}, line {want_line})")
+            if (m.get("over") or {}).get("view") != "back":
+                bad.append(f"{text}: the near character is not seen from behind ({m.get('over')})")
+            meas[text]["measured"] = {k: m[k] for k in ("on_head_covered", "over_side", "over_cut_by_frame")} | {"on_size": m["on"]["size"]}
+        ct = film_continuity(name); meas["continuity"] = {"issues": ct["issues"], "shots": [(x["shot"], x["size"], x["main"], x["order"]) for x in ct["shots"]]}
+        if ct["issues"]:
+            bad.append(f"continuity: {ct['issues']}")
+        ots_rows = [x for x in ct["shots"] if x.get("ots")]
+        if len(ots_rows) != 2 or any(x["order"] != ots_rows[0]["order"] for x in ct["shots"] if len(x["order"]) == 2):
+            bad.append(f"over-the-shoulder shots or left-right order: {meas['continuity']['shots']}")
+        qa = (_json(tmp / "build" / "qa.json", {}).get("checks") or {}); meas["qa_failed"] = [k for k, v in qa.items() if v is False]
+        ots_id = next((x["shot"] for x in ots_rows), None)
+        if ots_id:
+            pr = render_parity(name, ots_id); meas["parity"] = {k: {"min": v.get("min"), "colour": max(v.get("colour_diff") or [0]), "error": v.get("error")} for k, v in pr["renderers"].items()}
+            for k, v in pr["renderers"].items():
+                if not v.get("ok"):
+                    bad.append(f"parity {k}: {meas['parity'][k]}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas

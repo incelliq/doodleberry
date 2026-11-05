@@ -247,6 +247,34 @@ def layout_intent(text, cast_names):
     return None
 
 
+# ---------- WP-19: over-the-shoulder notes ("over Ravi's shoulder on Momo's answer", "make the last line an OTS") ----------
+OTS_RE = re.compile(r"\b(over[- ]the[- ]shoulder|ots)\b|\bover\s+(\w+)'s\s+shoulder\b")
+
+
+def ots_intent(text, cast_names):
+    """-> {"kind": "ots", "over": name|None, "on": name|None, "line": ordinal index|None, "size": "MS"|"MCU"|"CU"|None}
+    or None. "over X's shoulder" names who we look past; "on Y" / "at Y" / "of Y" whom we look at; a line named by
+    its ordinal ("the second line") or as "Y's answer/line"."""
+    t = text.lower(); m = OTS_RE.search(t)
+    if not m:
+        return None
+    names = {n.lower(): n for n in cast_names}
+    over = names.get(m.group(2)) if m.group(2) else None
+    on = None
+    for pat in (r"\b(?:on|at|of|onto|toward|towards)\s+(\w+)\b", r"\b(\w+)'s\s+(?:answer|line|reply|reaction)\b"):
+        for mm in re.finditer(pat, t):
+            if mm.group(1) in names and names[mm.group(1)] != over:
+                on = names[mm.group(1)]; break
+        if on:
+            break
+    line = None
+    mo = re.search(r"\b(first|second|third|fourth|fifth|last)\s+line\b", t)
+    if mo:
+        line = ORDINAL[mo.group(1)]
+    size = "CU" if re.search(r"\b(close[- ]?up|tight)\b", t) else "MCU" if re.search(r"\bmedium close\b", t) else None
+    return {"kind": "ots", "over": over, "on": on, "line": line, "size": size}
+
+
 # ---------- WP-19: notes about the timing of lines ----------
 LINE_WORDS = re.compile(r"\b(line|pause|beat|gap|silence|breath|answer|reply|cue|dialogue|rushed|rush)\b")
 MOTION_WORDS = re.compile(r"\b(arm|hand|head|leg|foot|body|wave|point|nod|shrug|gesture|jump|hop|walk|turn|look|glance|blink|camera|shot|cut)\w*\b")
