@@ -7642,6 +7642,10 @@ def test_golden(update=False, film=""):
         bad, meas = _graphcomp_test()
         failed += 1 if bad else 0
         results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "timestamp":   # WP-26: an RFC 3161 timestamp from a public authority (needs the network, so only when asked)
+        bad, meas = _timestamp_test()
+        failed += 1 if bad else 0
+        results.append({"timestamp": "a film's content credentials timestamped by a public RFC 3161 authority: c2patool validates the timestamp and the signature, and the signed time matches the clock", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "peepstalk":   # WP-16: Open Peeps lip-sync and gesture arms (renders three other renderers, so only when asked)
         bad, meas = _peepstalk_test()
         failed += 1 if bad else 0
@@ -11959,6 +11963,33 @@ def _living_test():
         for f in made:
             shutil.rmtree(FILMS / f, ignore_errors=True)
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _timestamp_test(tsa="http://timestamp.digicert.com"):
+    """WP-26 timestamping: a scratch copy of nib-hello's final signed with an RFC 3161 timestamp from a public
+    authority (DigiCert's, over the network): c2patool validates the timestamp as well as the studio's signature, and
+    the signed time is within ten minutes of this machine's clock"""
+    import datetime as _dt
+    import c2pa
+    from . import provenance as PV
+    if not PV.C2PATOOL.exists() or not (FILMS / "nib-hello" / "build" / "final.mp4").exists():
+        return [], {"skipped": "c2patool or nib-hello's final is not here"}
+    bad, meas = [], {}
+    zz = FILMS / "zz-tsa"; shutil.rmtree(zz, ignore_errors=True); shutil.copytree(FILMS / "nib-hello", zz)
+    try:
+        sg = film_sign("zz-tsa", timestamp=tsa); v = sg["signed"][0]["verify"]
+        with c2pa.Reader(str(zz / "build" / "final.mp4")) as r:
+            j = json.loads(r.json())
+        si = j["manifests"][j["active_manifest"]].get("signature_info") or {}
+        when = si.get("time"); skew = abs((_dt.datetime.fromisoformat(when) - _dt.datetime.now(_dt.timezone.utc)).total_seconds()) if when else None
+        meas = {"tsa": tsa, "state": v["state"], "time": when, "skew_s": round(skew, 1) if skew is not None else None, "timestamp_validated": "timeStamp.validated" in (v.get("success") or [])}
+        if not (sg["ok"] and meas["timestamp_validated"] and skew is not None and skew < 600):
+            bad.append(f"timestamp: {meas}")
+    except Exception as e:
+        bad.append(f"timestamp: {e!r} (is {tsa} reachable?)")
+    finally:
+        shutil.rmtree(zz, ignore_errors=True)
     return bad, meas
 
 

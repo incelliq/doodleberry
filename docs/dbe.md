@@ -756,7 +756,11 @@ is written beside each signed film. Read back with **c2patool 0.27.22**, the ref
 provenance`): Trusted with the root as a trust anchor (`assertion.bmffHash.match`, `claimSignature.validated`,
 `signingCredential.trusted`); without it, Valid with `signingCredential.untrusted` (a certificate from a CA on the
 C2PA trust list can replace the studio's). A copy with 64 bytes changed reads Invalid (`assertion.bmffHash.mismatch`);
-the QA check `content_credentials` holds every render to Trusted.
+the QA check `content_credentials` holds every render to Trusted. **Timestamps**: `film.sign` with `timestamp` (an
+RFC 3161 authority's URL) has the signature countersigned with the authority's time, so the credentials stay checkable
+after the signing certificate expires. Test `timestamp` (only when asked: it reaches DigiCert's public authority,
+http://timestamp.digicert.com): c2patool reads the film Trusted with `timeStamp.validated`, and the signed time is
+0.4 s from this machine's clock.
 
 **Recipes** (`film.verify`): the credentials, then the recipe against the film as it is now: which data and engine
 files differ from what was signed, and the twelve signed frames re-made in the player (`tools/frame_keys.mjs`, the
