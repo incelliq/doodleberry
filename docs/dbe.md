@@ -1794,7 +1794,12 @@ plate, one multilayer EXR per rendered frame (Blender 5 writes each pass as its 
 first; and with the OpenEXR binding read the header and the channels through separate opens, as each empties the
 other). In `rigid` they agree with the scene: the ground's position within 0.8 mm of its height and its normal
 straight up, mist rising from 0.002 by the camera to 0.51 at the horizon, Cryptomatte naming every body, and emission
-(the cel shading is emissive) within 0.005 of the picture on the objects.
+(the cel shading is emissive) within 0.005 of the picture on the objects. **Line art as editable strokes**:
+`"lineart": true` draws the 3D set's ink with Grease Pencil 3's Line Art instead of Freestyle (the camera keyed at the
+rendered frames so the bake sees what the renders see), bakes it to Grease Pencil strokes saved in `lineart.blend`
+(editable in Blender), and projects each frame's strokes to frame pixels in `lineart.json` (the ink as vectors for the
+2D side). In `rigid`: 12 and 16 strokes on the two frames checked, every sampled point within 2.5 px of an edge of the
+picture, and the saved .blend opens with the same strokes.
 
 ## ML assists, in-house (WP-43, part 1)
 Models used as assistants whose output is data a person accepts, on CPU (onnxruntime), pinned by sha256

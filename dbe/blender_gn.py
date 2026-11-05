@@ -10,6 +10,8 @@ REQ: {size: [W, H], fps, start, frames: [frame numbers to render] | count, camer
       colour, mass, friction, bounce, velocity: [vx, vy, vz] m/s} | {shape: cloth, size: [w, h] m, at: [x px, depth, top
       edge height], res}], wind (strength over the scene), substeps, iterations: rigid bodies under Bullet and cloth strips (Blender cloth, pinned
       along the top), baked, then rendered; bodies.json records where each is on every rendered frame
+     lineart: true (WP-42): Grease Pencil 3 Line Art draws the ink (not Freestyle), baked to editable strokes saved in
+      lineart.blend, and projected to frame pixels per frame in lineart.json; line_px
      passes: ["z", "mist", "normal", "position", "vector", "emit", "cryptomatte_object", ...] (WP-42): EEVEE's separate
       passes beside the picture, one multilayer EXR per frame
 
@@ -248,7 +250,22 @@ if R.get("zpass") or R.get("passes"):   # WP-43: depth ground truth, a multilaye
     sc.render.image_settings.color_depth = "32"
     if not R.get("passes"):   # depth ground truth wants the bare geometry; separate passes keep the ink of the picture
         sc.render.use_freestyle = False
+LA = None
+if R.get("lineart"):   # WP-42: Grease Pencil 3 Line Art draws the ink instead of Freestyle; baked to editable strokes
+    sc.render.use_freestyle = False
+    for f in frames:   # the camera keyed at the rendered frames, so the bake sees it where the renders do
+        cx, cy, z = sample_keys(keys, R.get("start", 0) + f / fps)
+        cam.location = ((cx - W / 2) * K, -D0 / z, -(cy - H / 2) * K); cam.keyframe_insert("location", frame=f + 1)
+    if R.get("kind") != "props":
+        sc.frame_start = min(frames) + 1; sc.frame_end = max(frames) + 1
+    bpy.ops.object.grease_pencil_add(type="LINEART_SCENE"); LA = bpy.context.active_object; LA.name = "lineart"
+    mod = next(m for m in LA.modifiers if m.type == "LINEART")
+    mod.radius = float(R.get("line_px", 3)) / 2 * K   # (a radius in metres; 1 px = 1 cm on the stage plane)
+    if hasattr(mod, "target_material") and LA.data.materials:
+        LA.data.materials[0].grease_pencil.color = hex_rgb(R.get("ink", "#24160e"))
+    bpy.ops.object.lineart_bake_strokes()
 track = {}
+lines = {}
 for f in frames:
     t = R.get("start", 0) + f / fps
     cx, cy, z = sample_keys(keys, t)
@@ -262,6 +279,16 @@ for f in frames:
                 zs = [v.z for v in vs]; lo = min(zs); bot = [v for v in vs if v.z < lo + 0.05]
                 track[f][o.name] = {"top": round(max(zs), 5), "low": round(lo, 5), "bottom_x": round(sum(v.x for v in bot) / len(bot), 5),
                                     "pinned_x": round(sum(v.x for v in vs if v.z > max(zs) - 1e-3) / max(1, sum(1 for v in vs if v.z > max(zs) - 1e-3)), 5)}
+    if LA is not None:   # the baked strokes of this frame, projected to frame pixels: the ink as editable vectors
+        from bpy_extras.object_utils import world_to_camera_view
+        lines[f] = []
+        for l in LA.data.layers:
+            fr_ = next((x for x in l.frames if x.frame_number == f + 1), None)
+            if fr_ is None:
+                continue
+            for st in fr_.drawing.strokes:
+                pts = [world_to_camera_view(sc, cam, LA.matrix_world @ p.position) for p in st.points]
+                lines[f].append([[round(q.x * W, 2), round((1 - q.y) * H, 2)] for q in pts if q.z > 0])
     multi = R.get("zpass") or R.get("passes")
     sc.render.filepath = os.path.join(OUT, f"f_{f:04d}.{'exr' if multi else 'png'}")
     bpy.ops.render.render(write_still=True)
@@ -276,4 +303,7 @@ for f in frames:
         ims.file_format = "OPEN_EXR_MULTILAYER"; ims.color_depth = "32"
 if track:
     json.dump({"floor_z": floor_z, "frames": track}, open(os.path.join(OUT, "bodies.json"), "w"))
+if LA is not None:
+    json.dump({"size": [W, H], "frames": lines}, open(os.path.join(OUT, "lineart.json"), "w"))
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "lineart.blend"), check_existing=False)   # the strokes, editable
 print("rendered", len(frames), "frames to", OUT)

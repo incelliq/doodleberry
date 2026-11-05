@@ -7348,7 +7348,7 @@ def test_golden(update=False, film=""):
     if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
         bad, meas = _rigid_test()
         failed += 1 if bad else 0
-        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels; a cloth banner hangs from its pinned edge and swings in a wind; the separate EEVEE passes (position, normal, mist, Cryptomatte, emission) agree with the scene", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels; a cloth banner hangs from its pinned edge and swings in a wind; the separate EEVEE passes (position, normal, mist, Cryptomatte, emission) agree with the scene; Grease Pencil Line Art bakes the ink to editable strokes that lie on the picture's edges", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "usd":   # WP-42: OpenUSD export
         bad, meas = _usd_test()
         failed += 1 if bad else 0
@@ -10557,6 +10557,29 @@ def _rigid_test():
         meas["passes"] = {"layers": sorted(L_), "ground_z_error": round(float(np.abs(L_["Position"]["Z"][band] - floor).max()), 5),
                           "ground_normal_z": round(float(np.median(L_["Normal"]["Z"][band])), 4), "mist_bottom_vs_horizon": [round(mist_bottom, 4), round(mist_horizon, 4)],
                           "crypto_names": sorted(man), "emission_vs_picture": round(float(np.abs(np.dstack([L_["Emission"][c] for c in "RGB"]) - np.dstack([L_["Combined"][c] for c in "RGB"]))[obj].mean()), 4)}
+        # Grease Pencil 3 Line Art: the ink baked to editable strokes; projected, they lie on the picture's edges, and the
+        # saved .blend opens with the same strokes
+        import cv2
+        lo_, _ = PR.cook({"crates_lines": {**node, "every": 60, "lineart": True}}, ctx, tmp / "cache")
+        key = lo_["crates_lines"]["items"][0]["src"].split("/")[1]; ld = tmp / "cache" / key
+        la = json.loads((ld / "lineart.json").read_text())
+        near, total, counts = 0, 0, {}
+        for f, strokes in la["frames"].items():
+            g = cv2.cvtColor(cv2.imread(str(ld / f"f_{int(f):04d}.png")), cv2.COLOR_BGR2GRAY)
+            dist = cv2.distanceTransform(255 - cv2.Canny(g, 30, 90), cv2.DIST_L2, 3)
+            counts[f] = len(strokes)
+            for st_ in strokes:
+                for x_, y_ in st_[::2]:
+                    if 0 <= int(y_) < dist.shape[0] and 0 <= int(x_) < dist.shape[1]:
+                        total += 1; near += dist[int(y_), int(x_)] <= 2.5
+        chk = tmp / "la_check.py"
+        chk.write_text("import bpy, json\nc = {}\nfor l in bpy.data.objects['lineart'].data.layers:\n    for fr in l.frames:\n        c[fr.frame_number - 1] = len(fr.drawing.strokes)\nprint('COUNTS', json.dumps(c))\n")
+        rr = subprocess.run([BLENDER, "-b", str(ld / "lineart.blend"), "--python", str(chk)], capture_output=True, text=True, timeout=600)
+        reopened = json.loads(next((l.split(" ", 1)[1] for l in rr.stdout.splitlines() if l.startswith("COUNTS")), "{}"))
+        meas["lineart"] = {"strokes_per_frame": counts, "points_on_edges": round(near / max(1, total), 3), "points_checked": total,
+                           "reopened_blend_strokes": {k: reopened.get(k) for k in counts}}
+        if not counts or min(counts.values()) < 5 or meas["lineart"]["points_on_edges"] < 0.9 or any(reopened.get(k) != v for k, v in counts.items()):
+            bad.append(f"lineart: {meas['lineart']}")
         pm = meas["passes"]
         if pm["ground_z_error"] > 1e-3 or pm["ground_normal_z"] < 0.999 or not mist_horizon > mist_bottom or not {"body0", "body1", "body2", "body3"} <= set(man) \
                 or pm["emission_vs_picture"] > 0.02:
