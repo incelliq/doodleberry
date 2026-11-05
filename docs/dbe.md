@@ -1136,8 +1136,20 @@ read after (out/critic/blind_keys/):
 - round 4 (an open hand on the admission instead): review-demo **won by the planner**, 24 to 23 (its point aims at
   Momo on the right words; the hand-keyed one swings toward the board first); direct-demo lost narrowly, 27 to 25
   (the hand-keyed Momo glances back with an open mouth before "Oh"; the planner's stands still through "Oh").
-The planner stands at two blind wins in eleven. What critics still ask for: a reaction before the admission (the
-caught glance), more personality in the accuser, and less static tails after the last line.
+The planner stood at two blind wins in eleven. What critics asked for next: a reaction before the admission (the
+caught glance), more personality in the accuser, and less static tails after the last line. So:
+- caught out: as the accusing line ends, the one accused starts (a surprised face and clip), the eyes dart away and
+  come back in the pause, and the face turns worried before the admission;
+- the accuser stands confident on the accusing line, then folds the arms (after a point held to the line's end) and
+  keeps them folded through the admission;
+- tails: after the punchline the one caught grins, glances away and back, then shrugs; the accuser, after the stare,
+  shakes the head slowly and a smile breaks.
+`acting2` checks the timing of all three on the scripted exchange. Round 5, fresh critics, new coins: the planner won
+**both**, review-demo 28 to 21 (the start "on 'back'" and the folded arms "read clearly as an unimpressed 'I'm
+waiting'"; the hand-keyed Ravi "stands with his arms limp through the payoff") and direct-demo 27 to 23 (the folded
+arms give "a clear, patient-but-unimpressed manner"; the planner's Momo "uses the 1.2 s pause before 'Oh.' better").
+Still faulted in both: Momo's open hand on "That telescope" reads as pointing away. The planner stands at four blind
+wins in thirteen, and has won the last three of four.
 
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:
