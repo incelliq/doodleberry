@@ -7,6 +7,8 @@
 //   id      the characters alone, each part one flat colour with crisp edges, at twice the scale (WP-37: Cryptomatte
 //           coverage comes from the 2 x 2 samples per pixel); ids.json names each colour
 //   motion  no picture: each part's screen matrix now and one frame on, per frame (motion/f_NNNNN.json; WP-37)
+//   depth   each compositor plane's coverage in a colour encoding its depth (thousandths), crisp: the master's Z
+//   left, right  the film as each eye sees it (the compositor's planes shifted by depth; WP-37 stereo)
 //   node tools/master.mjs PAGE.html OUT_DIR SCALE FPS PASSES [START END]
 import { createRequire } from 'module'; import fs from 'fs'; import path from 'path';
 const require = createRequire(import.meta.url); const { chromium } = require('playwright');
@@ -18,6 +20,7 @@ const CSS = {
   fill: 'html,body{background:transparent!important} #stage *{stroke:none!important}',
   matte: 'html,body{background:transparent!important}',
   id: 'html,body{background:transparent!important} #stage *{shape-rendering:crispEdges!important}',
+  depth: 'html,body{background:transparent!important} #stage *{shape-rendering:crispEdges!important}',
 };
 fs.mkdirSync(outDir, { recursive: true });
 const b = await chromium.launch({ args: ['--allow-file-access-from-files'] });
@@ -25,7 +28,8 @@ for (const pass of passes) {
   const ctx = await b.newContext({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: pass === 'id' ? 2 * scale : scale });
   const p = await ctx.newPage();
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  await p.goto('file://' + path.resolve(page) + (pass === 'matte' ? '?castonly=1&captions=0' : pass === 'id' || pass === 'motion' ? '?idpass=1&captions=0' : '?captions=0'));
+  const eye = pass === 'left' || pass === 'right' ? `&eye=${pass}` : '';   // WP-37 stereo: the two eyes
+  await p.goto('file://' + path.resolve(page) + (pass === 'matte' ? '?castonly=1&captions=0' : pass === 'id' || pass === 'motion' ? '?idpass=1&captions=0' : pass === 'depth' ? '?depthpass=1&captions=0' : '?captions=0' + eye));
   await p.waitForFunction(() => window.ready === true, null, { timeout: 60000 });
   const [w, h] = await p.evaluate(() => [window.FILM.width, window.FILM.height]);
   await p.setViewportSize({ width: w, height: h });
@@ -41,7 +45,7 @@ for (const pass of passes) {
     }
     await p.evaluate(tt => window.frameAtTime(tt), a + f / fps);
     await p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
-    await p.screenshot({ path: path.join(outDir, pass, `f_${String(f).padStart(5, '0')}.png`), omitBackground: pass === 'matte' || pass === 'fill' || pass === 'id' });
+    await p.screenshot({ path: path.join(outDir, pass, `f_${String(f).padStart(5, '0')}.png`), omitBackground: pass === 'matte' || pass === 'fill' || pass === 'id' || pass === 'depth' });
   }
   if (pass === 'id') fs.writeFileSync(path.join(outDir, 'id', 'ids.json'), JSON.stringify(await p.evaluate(() => window.IDMAP)));
   if (errs.length) { console.error(`${pass}: page errors: ` + errs.join(' | ')); process.exitCode = 2; }

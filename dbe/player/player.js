@@ -507,7 +507,7 @@
     if (sh.comp && window.COMP && (!bgOnly || compSplit) && !castOnly) {   // WP-36: depth planes with parallax and depth of field, per-plane nodes (castonly: the characters alone, for parity)
       const view = sh.camera ? (Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]) : sh.camera_auto ? autoCam(sh, tq, casts) : [W / 2, H / 2, 1];
       VIEW = view;
-      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS), split: compSplit,
+      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS), split: compSplit, eye: EYE, depthpass: DEPTHPASS,
         drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
     if (layered) {   // inside the camera's own transform, layer d gets the compositor's parallax: by 1/d, zooming by 1 + (z - 1)/d
       const [cx, cy, z] = VIEW || [W / 2, H / 2, 1];
@@ -516,14 +516,17 @@
         const k = (1 + (z - 1) / d) / z, px = W / 2 + (cx - W / 2) / d, py = H / 2 + (cy - H / 2) / d;
         return `<g data-depth="${d}" transform="translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${k.toFixed(5)}) translate(${(-px).toFixed(2)} ${(-py).toFixed(2)})">${l.svg}</g>`; }).join(''));
     }
+    if (DEPTHPASS && !(sh.comp && window.COMP)) { const dp = COMP.depthFill(1, W, H); svg = `<defs>${dp.def}</defs><g filter="url(#${dp.id})">${svg}</g>`; }   // a flat shot: all at depth 1
     { const [vx, vy, vz] = VIEW || [W / 2, H / 2, 1]; window.HEADS = Object.fromEntries(Object.entries(heads).map(([k, a]) => [k, [W / 2 + (a[0] - vx) * vz, H / 2 + (a[1] - vy) * vz]])); }   // where each speaker's head is on screen (comics, WP-30)
-    if (!bgOnly && !castOnly && q.get('bubbles') !== '0') { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub; }
+    if (!bgOnly && !castOnly && !DEPTHPASS && q.get('bubbles') !== '0') { const bub = bubblesFor(sh, tq, heads, VIEW); if (bub) svg += st.boil ? `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub; }
     // shot renders leave captions to the film-level pass (dbe/captions.py); the live web player draws them itself
-    if (!bgOnly && !castOnly && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
+    if (!bgOnly && !castOnly && !DEPTHPASS && !only && q.get('captions') !== '0' && sh.captions !== false && S.captions !== false) svg += captions(t);
     return svg;
   }
   const only = q.get('shot') ? S.shots.find(s => s.id === q.get('shot')) : null;
   const compSplit = q.get('comp') || null, bgOnly = q.get('bg') === '1' || !!compSplit;   // comp=back|front: a compositor shot's planes behind or in front of the characters (WP-14)
+  const EYE = q.get('eye');   // WP-37 stereo: left | right (the compositor shifts its planes by depth)
+  const DEPTHPASS = q.get('depthpass') === '1';   // WP-37 depth pass: each compositor plane one colour encoding its depth
   const IDPASS = q.get('idpass') === '1';   // WP-37 object-ID pass: the cast alone, each part one flat colour (crisp edges)
   const castOnly = q.get('castonly') === '1' || IDPASS, withProps = q.get('props') === '1';
   if (castOnly || compSplit === 'front') { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }

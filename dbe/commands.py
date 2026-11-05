@@ -3617,7 +3617,7 @@ def _reviewtiming_test():
         review_add(name, int(L[ids[-1]]["start"] * fps), "give the last line a beat before it")
         review_add(name, int(0.5 * fps), "the pause before the first line is too long")
         review_add(name, int(L[ids[1]]["start"] * fps), "this line feels somehow wrong")   # not a timing note
-        res = review_fix(name)
+        res = review_fix(name)["notes"]
         meas["notes"] = [{k: n.get(k) for k in ("text", "status", "target", "measured", "check", "reason")} for n in res]
         tm2 = _json(d / "timing.json"); L2 = {l["id"]: l for l in tm2["lines"]}
         meas["starts"] = {k: [round(L[k]["start"], 3), round(L2[k]["start"], 3)] for k in ids}
@@ -7326,6 +7326,14 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "stereo":   # WP-37: stereoscopic output from the compositor's depth planes
+        bad, meas = _stereo_test()
+        failed += 1 if bad else 0
+        results.append({"stereo": "each eye sees the compositor's planes shifted by separation x (1/convergence - 1/depth): far behind the screen, the stage on it, near in front; film.stereo packs side by side and anaglyph", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "hdr":   # WP-37: an HDR10 deliverable from the master
+        bad, meas = _hdr_test()
+        failed += 1 if bad else 0
+        results.append({"hdr": "film.hdr encodes the master as HDR10 (HEVC Main 10, BT.2020, PQ, mastering and content-light metadata); white decodes at about 203 cd/m2 and the picture returns to SDR intact", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "graphcomp":   # WP-36: the compositor edited in the graph view
         bad, meas = _graphcomp_test()
         failed += 1 if bad else 0
@@ -9979,6 +9987,96 @@ def film_from_master(name, size=None, view="texture", look=""):
             "qa": (qa.stdout or qa.stderr)[-1200:]}
 
 
+@command("film.hdr", name=("string", "film"), white_nits=("number", "where graphics white sits, cd/m2 (ITU-R BT.2408: 203)", 203),
+         size=("array", "delivery size [w, h] (default: the film's)", None))
+def film_hdr(name, white_nits=203, size=None):
+    """An HDR10 deliverable from the master (WP-37): build/final_hdr10.mp4, HEVC Main 10, BT.2020 primaries, PQ (SMPTE
+    ST 2084), with mastering-display and content-light metadata. The film is graded for SDR, so its colours are placed
+    in the HDR programme as BT.2408 asks: linear light, BT.709 to BT.2020 primaries, graphics white at 203 cd/m2 (no
+    expansion: nothing is invented above white). Checked by decoding it back: the tags, white's luminance, and the
+    picture taken back to SDR against the master's own."""
+    import io as _io
+    import math
+    import numpy as np
+    from PIL import Image
+    from . import master as MA
+    d = _film(name); s = _shots(name); out = d / "build" / "master"; man = _json(out / "MANIFEST.json")
+    if not man:
+        raise FileNotFoundError("no master: run film.master first")
+    W, H = size or s.get("size", [1080, 1920]); dst = d / "build" / "final_hdr10.mp4"
+    frames = sorted((out / "exr").glob(f"{name}.[0-9]*.exr"))
+    peak = math.ceil(white_nits)
+    x265 = ":".join(["colorprim=bt2020", "transfer=smpte2084", "colormatrix=bt2020nc", "range=limited", "hdr10=1", "hdr10-opt=1", "repeat-headers=1",
+                     # mastering display: BT.2020 primaries, D65, 1000 cd/m2 down to 0.0001 (units: 0.00002 and 0.0001 cd/m2)
+                     "master-display=G(8500,39850)B(6550,2300)R(35400,14600)WP(15635,16450)L(10000000,1)", f"max-cll={peak},{peak}", "crf=14", "preset=medium"])
+    cmd = ["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb48le", "-s", f"{W}x{H}", "-framerate", str(man["fps"]), "-i", "-"]
+    if (out / "audio" / "mix.wav").exists():
+        cmd += ["-i", str(out / "audio" / "mix.wav"), "-c:a", "aac", "-b:a", "192k", "-shortest"]
+    cmd += ["-vf", "scale=out_color_matrix=bt2020nc:out_range=tv,format=yuv420p10le", "-c:v", "libx265", "-x265-params", x265, "-tag:v", "hvc1",
+            "-color_primaries", "bt2020", "-color_trc", "smpte2084", "-colorspace", "bt2020nc", "-color_range", "tv", "-movflags", "+faststart", str(dst)]
+    pr = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    sdr_ref = {}
+    for i, f in enumerate(frames):
+        sdr = np.asarray(Image.fromarray(MA.display(MA.read_exr(f), "texture")).resize((W, H), Image.LANCZOS))
+        if i in (0, len(frames) // 2):
+            sdr_ref[i] = sdr.astype(np.float64)
+        pr.stdin.write((np.clip(MA.sdr_to_pq(sdr, white_nits), 0, 1) * 65535 + 0.5).astype("<u2").tobytes())
+    pr.stdin.close(); err = pr.stderr.read().decode(); pr.wait()
+    if pr.returncode:
+        raise RuntimeError(f"HDR encode failed: {err[-600:]}")
+    # read it back: the tags, then frames decoded to BT.2020 PQ RGB
+    pj = json.loads(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_streams", "-show_frames", "-read_intervals", "%+#1", "-of", "json", str(dst)],
+                                   capture_output=True, text=True).stdout)
+    st = pj["streams"][0]; side = [sd.get("side_data_type") for fr in pj.get("frames", []) for sd in fr.get("side_data_list", [])]
+    tags = {"codec": st.get("codec_name"), "profile": st.get("profile"), "pix_fmt": st.get("pix_fmt"), "primaries": st.get("color_primaries"),
+            "transfer": st.get("color_transfer"), "matrix": st.get("color_space"), "range": st.get("color_range"),
+            "mastering_display": any("Mastering display" in (x or "") for x in side), "content_light": any("Content light" in (x or "") for x in side)}
+    back = {}
+    for i, ref in sdr_ref.items():
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(dst), "-vf", f"select=eq(n\\,{i}),scale=in_color_matrix=bt2020nc:in_range=tv,format=rgb48le", "-frames:v", "1",
+                              "-f", "rawvideo", "-"], capture_output=True).stdout
+        if len(raw) != W * H * 6:
+            continue
+        pq = np.frombuffer(raw, "<u2").reshape(H, W, 3).astype(np.float64) / 65535
+        white = (ref.min(-1) >= 250)   # where the SDR picture is white: its luminance in the HDR programme
+        Y = MA.pq_decode(pq) @ np.array([0.2627, 0.6780, 0.0593])   # BT.2020 luminance, cd/m2
+        sdr_back = MA.pq_to_sdr(pq, white_nits) * 255
+        mse = float(((sdr_back - ref) ** 2).mean())
+        back[i] = {"white_nits_median": round(float(np.median(Y[white])), 1) if white.any() else None, "peak_nits": round(float(Y.max()), 1),
+                   "back_to_sdr_psnr_db": round(10 * math.log10(255 ** 2 / max(mse, 1e-9)), 2)}
+    return {"hdr": str(dst.relative_to(ROOT)), "frames": len(frames), "size": [W, H], "white_nits": white_nits, "tags": tags, "decoded": back}
+
+
+@command("film.stereo", name=("string", "film"), layout=("string", "sbs (full side by side, left eye first) | anaglyph (red-cyan, Dubois) | both", "both"),
+         start=("number", "from (film seconds; default the start)", None), end=("number", "to (default the end)", None))
+def film_stereo(name, layout="both", start=None, end=None):
+    """Stereoscopic output (WP-37): the film drawn for each eye, the compositor's depth planes shifted by
+    separation x (1/convergence - 1/depth) (shots.json comp.stereo, default 24 px at infinity, convergence 1: the
+    stage, where the characters stand, is on the screen; far planes behind it, near planes in front). Shots without
+    a comp are flat (both eyes alike). Writes build/final_stereo_sbs.mp4 (full side by side, 2W x H) and/or
+    build/final_anaglyph.mp4, with the mix."""
+    d = _film(name); s = _shots(name); fps = s.get("fps", 30); W, H = s.get("size", [1080, 1920])
+    tmp = d / "build" / "stereo_png"; shutil.rmtree(tmp, ignore_errors=True)
+    args = ["node", "tools/master.mjs", str(_player_page(name)), str(tmp), "1", str(fps), "left,right"] + ([str(start or 0), str(end)] if end is not None else [])
+    r = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, timeout=14400)
+    if r.returncode:
+        raise RuntimeError(f"stereo render failed: {r.stderr[-600:]}")
+    mix = d / "build" / "mix.wav"; out = {}
+    aud = (["-ss", str(start or 0), "-i", str(mix), "-c:a", "aac", "-b:a", "192k", "-shortest"] if mix.exists() else [])
+    for lay, fname, vf in (("sbs", "final_stereo_sbs.mp4", "[0:v][1:v]hstack=inputs=2"), ("anaglyph", "final_anaglyph.mp4", "[0:v][1:v]hstack=inputs=2,stereo3d=sbsl:arcd")):
+        if layout not in (lay, "both"):
+            continue
+        dst = d / "build" / fname
+        cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(fps), "-i", str(tmp / "left" / "f_%05d.png"), "-framerate", str(fps), "-i", str(tmp / "right" / "f_%05d.png")] + aud[:3] + \
+              ["-filter_complex", vf, "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p"] + aud[3:] + ["-movflags", "+faststart", str(dst)]
+        subprocess.run(cmd, check=True, capture_output=True)
+        pj = json.loads(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,nb_frames", "-of", "json", str(dst)], capture_output=True, text=True).stdout)["streams"][0]
+        out[lay] = {"file": str(dst.relative_to(ROOT)), "size": [pj["width"], pj["height"]], "frames": int(pj.get("nb_frames") or 0)}
+    n = len(list((tmp / "left").glob("f_*.png")))
+    shutil.rmtree(tmp, ignore_errors=True)
+    return {"frames": n, "fps": fps, "eye_size": [W, H], **out}
+
+
 @command("image.scopes", image=("string", "a picture (path in the repo)"), out=("string", "where to write the scopes PNG", "out/scopes.png"))
 def image_scopes(image, out="out/scopes.png"):
     """Scopes for a frame (WP-37): RGB histogram, luma waveform and vectorscope side by side; returns the luma range and
@@ -10052,6 +10150,18 @@ def _masterpasses_test(film="handshake-demo", t0=2.0):
         meas["motion"] = {"moving_px": int(on.sum()), "max_px": round(float(np.hypot(u, v).max()), 2), "error_left_in_place": round(e_still, 4), "error_warped": round(e_warp, 4)}
         if on.sum() < 500 or e_warp > 0.5 * e_still:
             bad.append(f"motion vectors: {meas['motion']}")
+        # depth (Z): on night-planes, every pixel is exactly one of its planes' depths, and the characters stand at 1
+        dtmp = tmp / "depth_np"
+        r = subprocess.run(["node", "tools/master.mjs", str(_player_page("night-planes")), str(dtmp), "1", "30", "depth,matte", "2.0", "2.034"], cwd=ROOT, capture_output=True, text=True, timeout=600)
+        if r.returncode:
+            bad.append(f"depth render: {r.stderr[-300:]}")
+        else:
+            Ld = MA.layers_for(dtmp, 0); Z = Ld["depth"]["Z"]; mt = Ld["matte"]["A"] > 0.99
+            planes = sorted({float(p_["depth"]) for p_ in next(x for x in _json(FILMS / "night-planes" / "shots.json")["shots"] if x.get("comp"))["comp"]["planes"]})
+            vals, cnt = np.unique(np.round(Z, 4), return_counts=True)
+            meas["depth"] = {"planes": planes, "values": {str(v): round(float(c / Z.size), 4) for v, c in zip(vals.tolist(), cnt)}, "under_characters": sorted(set(np.round(Z[mt], 4).tolist()))}
+            if any(min(abs(v - p_) for p_ in planes + [0.0]) > 1e-4 for v in vals.tolist()) or meas["depth"]["under_characters"] != [1.0]:
+                bad.append(f"depth: {meas['depth']}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
@@ -10137,6 +10247,75 @@ def _graphcomp_test():
             or out["added"]["last"] != {"type": "blur", "plane": "sky", "radius": 2} or out["added"]["boxes"] != out["boxes"] + 1 or out["roll"] != 5 \
             or out["refused"]["roll_still"] != 5 or "unknown name" not in out["refused"]["msg"]:
         bad.append(f"graph comp: {out}")
+    return bad, meas
+
+
+def _hdr_test():
+    """WP-37 HDR10: a three-frame master of a scratch copy of stretch-demo encoded by film.hdr; the file carries the
+    HDR10 tags and metadata, graphics white decodes at about 203 cd/m2, and the picture taken back to SDR matches"""
+    from . import master as MA
+    bad, meas = [], {}
+    name = "zz-hdr"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    for f in list((FILMS / "stretch-demo").glob("*.json")) + list((FILMS / "stretch-demo").glob("*.md")):
+        shutil.copy(f, d / f.name)
+    try:
+        tmp = d / "build" / "master_png"; ex = d / "build" / "master" / "exr"; ex.mkdir(parents=True)
+        r = subprocess.run(["node", "tools/master.mjs", str(_player_page(name)), str(tmp), "1", "30", "beauty", "3.0", "3.1"], cwd=ROOT, capture_output=True, text=True, timeout=600)
+        if r.returncode:
+            return [f"render: {r.stderr[-300:]}"], meas
+        for f in range(3):
+            MA.write_exr(ex / f"{name}.{f:05d}.exr", MA.layers_for(tmp, f), {"film": name, "colorspace": MA.WORK})
+        (d / "build" / "master" / "MANIFEST.json").write_text(json.dumps({"fps": 30, "frames": 3}))
+        r = film_hdr(name)
+        meas = {"tags": r["tags"], "decoded": r["decoded"]}
+        t = r["tags"]
+        if (t["codec"], t["profile"], t["pix_fmt"], t["primaries"], t["transfer"], t["matrix"]) != ("hevc", "Main 10", "yuv420p10le", "bt2020", "smpte2084", "bt2020nc") \
+                or not t["mastering_display"] or not t["content_light"]:
+            bad.append(f"tags: {t}")
+        for k, v in r["decoded"].items():
+            if v["white_nits_median"] is None or abs(v["white_nits_median"] - 203) > 6 or v["back_to_sdr_psnr_db"] < 38:
+                bad.append(f"frame {k}: {v}")
+        if not r["decoded"]:
+            bad.append("nothing decoded back")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _stereo_test():
+    """WP-37 stereo: dots on a far plane, the stage and a near plane, drawn for each eye, sit apart by exactly the
+    separation x (1/convergence - 1/depth); film.stereo packs a span of a copy of night-planes side by side and as
+    an anaglyph"""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "stereotest"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    name = "zz-stereo"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    try:
+        SEP, CONV = 40, 1
+        dot = lambda x, y, c: {"type": "shape", "svg": f"<circle cx='{x}' cy='{y}' r='10' fill='{c}'/>"}
+        comp = {"stereo": {"separation": SEP, "convergence": CONV}, "planes": [{"id": "far", "depth": 8, "items": [dot(270, 300, "#ff0000")]}, {"id": "stage", "depth": 1},
+                                                                           {"id": "near", "depth": 0.6, "items": [dot(270, 700, "#0000ff")]}]}
+        xs = {}
+        for eye in ("left", "right"):
+            spec = {"size": [540, 960], "bg": "#ffffff", "times": [0], "eye": eye, "stage": "<circle cx='270' cy='500' r='10' fill='#00ff00'/>", "comp": comp}
+            (tmp / f"{eye}.json").write_text(json.dumps(spec)); _run(["node", "tools/comp_still.mjs", str(tmp / f"{eye}.json"), str(tmp / eye)], timeout=300)
+            a = np.asarray(Image.open(tmp / eye / "c_0.png").convert("RGB")).astype(int)
+            for nm, m in (("far", (a[..., 0] > 200) & (a[..., 1] < 80) & (a[..., 2] < 80)), ("stage", (a[..., 1] > 200) & (a[..., 0] < 80) & (a[..., 2] < 80)),
+                          ("near", (a[..., 2] > 200) & (a[..., 0] < 80) & (a[..., 1] < 80))):
+                xs.setdefault(nm, {})[eye] = float(np.nonzero(m)[1].mean())
+        want = {"far": SEP * (1 / CONV - 1 / 8), "stage": 0.0, "near": SEP * (1 / CONV - 1 / 0.6)}
+        meas["disparity_px"] = {k: {"measured": round(v["right"] - v["left"], 2), "want": round(want[k], 2)} for k, v in xs.items()}
+        if any(abs(v["measured"] - v["want"]) > 0.6 for v in meas["disparity_px"].values()):
+            bad.append(f"disparity: {meas['disparity_px']}")
+        for f in list((FILMS / "night-planes").glob("*.json")) + list((FILMS / "night-planes").glob("*.md")):
+            shutil.copy(f, d / f.name)
+        r = film_stereo(name, "both", 0.0, 0.3)
+        meas["film"] = {k: r.get(k) for k in ("frames", "eye_size", "sbs", "anaglyph")}
+        if r["frames"] != 9 or r["sbs"]["size"] != [2 * r["eye_size"][0], r["eye_size"][1]] or r["anaglyph"]["size"] != r["eye_size"] or r["sbs"]["frames"] != 9:
+            bad.append(f"film.stereo: {meas['film']}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True); shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 

@@ -1827,6 +1827,31 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
     (max error 0.0 against the ID render), the ranks add up to the characters' matte (mean difference 0.002), oiiotool
     lists the layers, and warping the next frame back along the vectors matches this frame with a mean error of 0.028
     on the moving pixels, against 0.223 left in place.
+  - **Depth** (`depth.Z`, full float): the depth of the nearest compositor plane covering each pixel (1 everywhere in
+    a shot without a comp; 0 where nothing is drawn). The player's `?depthpass=1` fills each plane's coverage with a
+    colour that encodes its depth in thousandths, crisp and opaque (blends, opacity and light wrap left out, so a
+    half-transparent mist counts where it covers more than half). Two traps on the way, both Chromium's: filters work
+    in linear light at 8 bits unless told `color-interpolation-filters="sRGB"`, which rounded small code bytes away
+    (depth 1 read back as 0.232); and flooding before thresholding the alpha left edge pixels with scaled codes. The
+    ID pass's raster filter had both and is fixed the same way. In `masterpasses`, a frame of night-planes holds only
+    its planes' depths (8 for 56% of it, 3, 2, 1 for 28%, 0.6), and every character pixel is at 1.
+- **HDR10 deliverable** (part 3): `film.hdr {name, white_nits: 203}` encodes the master as
+  `build/final_hdr10.mp4`: HEVC Main 10 (x265), BT.2020 primaries, PQ (SMPTE ST 2084), limited range, with mastering-
+  display and content-light metadata (MaxCLL is graphics white: nothing in the picture is brighter). The film is graded
+  for SDR, so its colours go into the HDR programme as ITU-R BT.2408 asks: linear light, BT.709 to BT.2020 primaries
+  (BT.2087), graphics white at 203 cd/m2, with no expansion above white. It is checked by decoding it back. On
+  stretch-demo's full 4K master (134 frames, 7 min): the tags all read back; white decodes at 201.6 cd/m2; taken back
+  to SDR it matches the master's own picture at 42.3 to 43.2 dB. The decoded peak reaches 215 to 261 cd/m2 at hard
+  edges; our assumption, not measured, is that this is 4:2:0 and HEVC ringing above the 203 that was encoded. The
+  `hdr` test runs the same check on a three-frame master (201.6 cd/m2; 40.8 to 41.0 dB).
+- **Stereoscopic output** (part 3): `film.stereo {name, layout: sbs | anaglyph | both, start, end}` draws the film for
+  each eye (the player's `?eye=left|right`) and packs it full side by side (`build/final_stereo_sbs.mp4`, 2W x H, left
+  eye first) and as a red-cyan anaglyph (ffmpeg's Dubois matrix, `build/final_anaglyph.mp4`). The depth comes from the
+  compositor: each eye sees a plane shifted by half of separation x (1/convergence - 1/depth) (the comp's `"stereo"`, default
+  24 px at infinity and convergence 1), so the stage, where the characters stand, is on the screen, farther planes
+  behind it and nearer ones in front; a shot without a comp is flat. Test `stereo`: dots on planes at depths 8, 1 and
+  0.6 with a separation of 40 sit 34.99, 0.0 and -26.71 px apart between the eyes (35, 0 and -26.67 asked); a span of
+  night-planes packs to 2160 x 1920 side by side and 1080 x 1920 anaglyph, 9 frames each.
 
 ## Editor hand-off (WP-22)
 `film.handoff {name}` (after `film.render`) writes `films/<name>/build/handoff/`: the shots as rendered (`media/`), the

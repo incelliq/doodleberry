@@ -343,7 +343,7 @@
   // crisp edges (shape-rendering) gives every pixel exactly one id. Gradients, textures and opacity give way.
   function idSVG(svg, c) {
     const f = 'idf' + c.slice(1);
-    return `<filter id="${f}" x="0" y="0" width="1" height="1"><feFlood flood-color="${c}"/><feComposite in2="SourceAlpha" operator="in"/><feComponentTransfer><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer></filter>`
+    return `<filter id="${f}" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feComponentTransfer in="SourceAlpha" result="a"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer><feFlood flood-color="${c}"/><feComposite in2="a" operator="in"/></filter>`
       + svg.replace(/<defs>.*?<\/defs>/g, '').replace(/ fill="(?!none)[^"]*"/g, ` fill="${c}"`).replace(/ stroke="(?!none)[^"]*"/g, ` stroke="${c}"`)
         .replace(/ (opacity|fill-opacity|stroke-opacity)="[^"]*"/g, '').replace(/ style="mix-blend-mode:[^"]*"/g, '').replace(/<image /g, `<image filter="url(#${f})" `);
   }

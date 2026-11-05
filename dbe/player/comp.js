@@ -14,6 +14,7 @@
 //       // WP-42: screen-locked (the 3D render is framed by the shot camera already); items also "particles":
 //       // {"type": "particles", "kind": "confetti" | "snow" | "rain", "count": 90, "seed": 3, "rect": [x, y, w, h], "start": t}
 //     ],
+//     "stereo": {"separation": 24, "convergence": 1},   // WP-37: px of parallax at infinite depth; the depth on the screen
 //     "focus": 1, "dof": 3,                // blur px per unit of |1/depth - 1/focus| (0: everything sharp)
 //     "zoom": "scale" | "dolly",           // how planes zoom with the camera (dolly: true perspective, matches 3D renders)
 //     "nodes": [
@@ -246,6 +247,13 @@
   // zoom "scale" (default): a plane zooms by 1 + (z - 1) / d. zoom "dolly" (WP-42): true perspective, the camera moves in
   // by 1 - 1/z of its distance to the stage, so a plane zooms by d / (d - 1 + 1/z), exactly as a 3D render framed by
   // the same camera does (the stage, d = 1, zooms by z either way)
+  // WP-37 depth pass: depth d as a 24-bit colour (thousandths of a depth unit), filled over what a group draws, opaque
+  // and crisp, so a pixel decodes to exactly one depth: the nearest plane covering it
+  function depthFill(d, W, H) {
+    const code = Math.max(1, Math.min(16777215, Math.round(d * 1000))), hexc = '#' + code.toString(16).padStart(6, '0'), id = 'comp-dp' + code;
+    return { id, def: `<filter id="${id}" filterUnits="userSpaceOnUse" x="${-4 * W}" y="${-4 * H}" width="${9 * W}" height="${9 * H}" color-interpolation-filters="sRGB">`
+      + `<feComponentTransfer in="SourceAlpha" result="a"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer><feFlood flood-color="${hexc}"/><feComposite in2="a" operator="in"/></filter>` };
+  }
   function camFor(d, view, W, H, drift, t, model) {
     const [cx, cy, z] = view, zp = model === 'dolly' ? d / Math.max(1e-3, d - 1 + 1 / z) : 1 + (z - 1) / d;
     const px = W / 2 + (cx - W / 2) / d - (drift ? drift[0] * t : 0), py = H / 2 + (cy - H / 2) / d - (drift ? drift[1] * t : 0);
@@ -327,8 +335,16 @@
       if (mk) defs += maskFor(`${pid}-mask`, mk, W, H);
       const inner = mk && !mk.screen ? `<g mask="url(#${pid}-mask)">${content}</g>` : content;   // a plane mask moves with its plane
       // a screen-locked plane (WP-42: a 3D render already framed by the shot camera) does not move with the 2D camera
+      // WP-37 stereo: each eye sees the plane shifted by half the separation times (1/convergence - 1/depth): the plane
+      // at the convergence depth sits on the screen, farther ones behind it, nearer ones in front (screen-locked planes too)
+      const st = c.stereo || {}, eye = ctx.eye === 'left' ? -0.5 : ctx.eye === 'right' ? 0.5 : 0;
+      const par = eye ? eye * V(st.separation, t, ctx, 24) * (1 / V(st.convergence, t, ctx, 1) - 1 / d) : 0;
       let g = `<g${p.screen ? '' : ` transform="${camFor(d, ctx.view, W, H, p.drift, t, c.zoom)}"`}${fl ? ` filter="url(#${pid}-fx)"` : ''}>${inner}</g>`;
+      if (par) g = `<g transform="translate(${par.toFixed(3)} 0)">${g}</g>`;
       if (mk && mk.screen) g = `<g mask="url(#${pid}-mask)">${g}</g>`;                            // a screen mask stays put (a vignette)
+      if (ctx.depthpass) {   // WP-37 depth pass: the plane's coverage in one flat colour that encodes its depth (no blends, no wrap)
+        const dp = depthFill(d, W, H); defs += dp.def; g = `<g filter="url(#${dp.id})">${g}</g>`; drawn[p.id] = g; body += g; continue;
+      }
       const lw = nodes.find(n => n.type === 'lightwrap');
       let wrap = '';
       if (lw) {   // the planes behind (or those named), as drawn so far, blurred and screened onto this plane's inner edges
@@ -343,5 +359,5 @@
     if (roll) body = `<g transform="rotate(${(+roll).toFixed(3)} ${f2(W / 2)} ${f2(H / 2)})">${body}</g>`;
     return `<defs>${defs}</defs><g style="isolation:isolate">${body}</g>`;
   }
-  root.COMP = { compose, camFor, value: V, compile };
+  root.COMP = { compose, camFor, value: V, compile, depthFill };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -164,6 +164,11 @@ def layers_for(frame_dir, f, scale=None):
             continue
         lin = to_space(a[..., :3], SRC_SPACE, WORK) * a[..., 3:4]   # premultiplied, as EXR expects
         out[p] = {"R": lin[..., 0], "G": lin[..., 1], "B": lin[..., 2], "A": a[..., 3]}
+    dp = Path(frame_dir) / "depth" / name
+    if dp.exists():   # WP-37: Z from the depth pass (the nearest compositor plane's depth; 0 where nothing is drawn)
+        a = np.asarray(__import__("PIL.Image", fromlist=["Image"]).open(dp).convert("RGBA")).astype(np.uint32)
+        code = (a[..., 0] << 16) | (a[..., 1] << 8) | a[..., 2]
+        out["depth"] = {"Z": np.where(a[..., 3] > 127, code / 1000.0, 0.0).astype(np.float32)}
     idp = Path(frame_dir) / "id" / name
     if idp.exists():   # WP-37: Cryptomatte from the ID pass; motion vectors from it and the parts' matrices
         ids = json.loads((Path(frame_dir) / "id" / "ids.json").read_text())
@@ -181,7 +186,7 @@ def write_exr(path, layers, meta):
     layers = dict(layers); meta = {**meta, **layers.pop("_meta", {})}
     for lay, ch in layers.items():
         for c, arr in ch.items():   # Cryptomatte ids and motion vectors stay full float (a half float would break the ids)
-            full = lay.startswith(CRYPTO_LAYER) or lay == "forward"
+            full = lay.startswith(CRYPTO_LAYER) or lay in ("forward", "depth")
             chans[f"{lay}.{c}"] = np.ascontiguousarray(arr, dtype=np.float32 if full else np.float16)
     header = {"compression": OpenEXR.ZIP_COMPRESSION, "type": OpenEXR.scanlineimage,
               "chromaticities": AP1, **{k: str(v) for k, v in meta.items()}}
@@ -217,6 +222,48 @@ def display(acescg_rgba, view="texture"):
         out = to_space(rgb, WORK, SRC_SPACE)
     out = out * al + (1 - al)   # over white where there is no coverage
     return np.clip(out * 255 + 0.5, 0, 255).astype(np.uint8)
+
+
+# ---------- WP-37: an HDR10 deliverable (PQ, BT.2020) ----------
+REF_WHITE_NITS = 203.0   # ITU-R BT.2408: graphics white in a PQ programme
+M709_2020 = np.array([[0.6274040, 0.3292820, 0.0433136], [0.0690970, 0.9195400, 0.0113612], [0.0163916, 0.0880132, 0.8955950]], np.float64)   # BT.2087
+
+
+def srgb_to_linear(v):
+    v = np.asarray(v, np.float64)
+    return np.where(v <= 0.04045, v / 12.92, ((v + 0.055) / 1.055) ** 2.4)
+
+
+def linear_to_srgb(v):
+    v = np.clip(np.asarray(v, np.float64), 0, 1)
+    return np.where(v <= 0.0031308, 12.92 * v, 1.055 * v ** (1 / 2.4) - 0.055)
+
+
+def pq_encode(nits):
+    """SMPTE ST 2084 inverse EOTF: absolute luminance (cd/m2) -> signal 0..1"""
+    m1, m2, c1, c2, c3 = 2610 / 16384, 2523 / 4096 * 128, 3424 / 4096, 2413 / 4096 * 32, 2392 / 4096 * 32
+    y = np.clip(np.asarray(nits, np.float64) / 10000.0, 0, 1) ** m1
+    return ((c1 + c2 * y) / (1 + c3 * y)) ** m2
+
+
+def pq_decode(sig):
+    """SMPTE ST 2084 EOTF: signal 0..1 -> cd/m2"""
+    m1, m2, c1, c2, c3 = 2610 / 16384, 2523 / 4096 * 128, 3424 / 4096, 2413 / 4096 * 32, 2392 / 4096 * 32
+    e = np.clip(np.asarray(sig, np.float64), 0, 1) ** (1 / m2)
+    return 10000.0 * (np.maximum(e - c1, 0) / (c2 - c3 * e)) ** (1 / m1)
+
+
+def sdr_to_pq(srgb8, white=REF_WHITE_NITS):
+    """the artist's sRGB picture (8-bit) placed in a PQ / BT.2020 programme: linear light, BT.709 to BT.2020
+    primaries, graphics white at `white` nits, PQ-encoded -> float 0..1 RGB (BT.2020, PQ)"""
+    lin = srgb_to_linear(srgb8.astype(np.float64) / 255.0) @ M709_2020.T
+    return pq_encode(np.clip(lin, 0, None) * white)
+
+
+def pq_to_sdr(pq_rgb, white=REF_WHITE_NITS):
+    """the inverse, to check a decoded HDR frame against the SDR picture -> float 0..1 sRGB"""
+    lin = pq_decode(pq_rgb) / white
+    return linear_to_srgb(lin @ np.linalg.inv(M709_2020).T)
 
 
 def slate(path, info, size):
