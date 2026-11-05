@@ -10,6 +10,6 @@
  "files": "the whole 1.16 source release, unmodified",
  "patches": [],
  "use": "monochrome bitmap to vector tracing (scans and doodles to vector parts, WP-18)",
- "build": ["./configure --prefix={out} --disable-shared --quiet", "make -j4 --quiet", "make install --quiet"],
+ "build": ["./configure --prefix={out} --disable-shared --disable-zlib --quiet", "make -j4 --quiet", "make install --quiet"],
  "binary": "bin/potrace"
 }
