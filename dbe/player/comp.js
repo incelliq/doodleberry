@@ -15,6 +15,8 @@
 //       // {"type": "particles", "kind": "confetti" | "snow" | "rain", "count": 90, "seed": 3, "rect": [x, y, w, h], "start": t}
 //     ],
 //     "stereo": {"separation": 24, "convergence": 1},   // WP-37: px of parallax at infinite depth; the depth on the screen
+//     "linear": true,                      // WP-37: the planes' filters (grade, blur, glow, depth of field) work in linear light
+//                                          // (brighter, truer halos); blending between planes stays the browser's sRGB
 //     "focus": 1, "dof": 3,                // blur px per unit of |1/depth - 1/focus| (0: everything sharp)
 //     "zoom": "scale" | "dolly",           // how planes zoom with the camera (dolly: true perspective, matches 3D renders)
 //     "nodes": [
@@ -260,7 +262,7 @@
     return `translate(${f2(W / 2)} ${f2(H / 2)}) scale(${zp.toFixed(4)}) translate(${f2(-px)} ${f2(-py)})`;
   }
 
-  function filterFor(id, nodes, dofR) {
+  function filterFor(id, nodes, dofR, linear) {
     let prim = '', last = 'SourceGraphic', n = 0;
     const out = () => `r${n++}`;
     for (const nd of nodes) {
@@ -282,7 +284,7 @@
     }
     if (dofR > 0.05) { prim += `<feGaussianBlur in="${last}" stdDeviation="${dofR.toFixed(2)}" result="${out()}"/>`; last = `r${n - 1}`; }
     if (!prim) return null;
-    return `<filter id="${id}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">${prim}</filter>`;
+    return `<filter id="${id}" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="${linear ? 'linearRGB' : 'sRGB'}">${prim}</filter>`;
   }
 
   // WP-36: light wrap. The planes behind are drawn again (a copy, blurred) over this plane, screened, through a mask
@@ -329,7 +331,7 @@
       content += (p.items || []).map((it, k) => item(it, t, `${p.id}-${tag}`, k, ctx)).join('');
       content += (ctx.planeInk || {})[p.id] || '';
       const nodes = allNodes.filter(n => n.plane === p.id);
-      const fl = filterFor(`${pid}-fx`, nodes.filter(n => n.type !== 'mask' && n.type !== 'blend' && n.type !== 'lightwrap'), dof * Math.abs(1 / d - 1 / focus));
+      const fl = filterFor(`${pid}-fx`, nodes.filter(n => n.type !== 'mask' && n.type !== 'blend' && n.type !== 'lightwrap'), dof * Math.abs(1 / d - 1 / focus), !!c.linear);
       if (fl) defs += fl;
       const mk = nodes.find(n => n.type === 'mask'); const bl = nodes.find(n => n.type === 'blend');
       if (mk) defs += maskFor(`${pid}-mask`, mk, W, H);

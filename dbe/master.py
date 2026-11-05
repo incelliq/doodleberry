@@ -224,6 +224,60 @@ def display(acescg_rgba, view="texture"):
     return np.clip(out * 255 + 0.5, 0, 255).astype(np.uint8)
 
 
+# ---------- WP-37: EXR input (plates from other tools) ----------
+PRIMARIES = {   # EXR chromaticities (red, green, blue, white xy) -> the linear OCIO colour space they name
+    "ACEScg": (0.713, 0.293, 0.165, 0.830, 0.128, 0.044, 0.32168, 0.33767),
+    "ACES2065-1": (0.7347, 0.2653, 0.0, 1.0, 0.0001, -0.077, 0.32168, 0.33767),
+    "Linear Rec.709 (sRGB)": (0.64, 0.33, 0.30, 0.60, 0.15, 0.06, 0.3127, 0.3290),
+    "Linear P3-D65": (0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290),
+    "Linear Rec.2020": (0.708, 0.292, 0.170, 0.797, 0.131, 0.046, 0.3127, 0.3290),
+}
+
+
+def exr_space(header):
+    """the linear colour space an EXR's chromaticities name (no chromaticities: Rec.709, as the EXR spec says)"""
+    ch = header.get("chromaticities")
+    if ch is None:
+        return "Linear Rec.709 (sRGB)"
+    v = [float(x) for x in (ch if isinstance(ch, (list, tuple)) else np.asarray(ch).ravel())]
+    best = min(PRIMARIES, key=lambda k: sum((a - b) ** 2 for a, b in zip(PRIMARIES[k], v)))
+    if sum((a - b) ** 2 for a, b in zip(PRIMARIES[best], v)) > 1e-4:
+        raise ValueError(f"unknown EXR primaries {v}: give colorspace")
+    return best
+
+
+def exr_rgba(path, layer=""):
+    """an EXR's RGBA (premultiplied, float32) from a layer ('beauty') or the plain R, G, B, A channels, and its header"""
+    import OpenEXR
+    with OpenEXR.File(str(path), separate_channels=True) as fi:
+        hdr = dict(fi.header()); ch = fi.channels()
+        pre = f"{layer}." if layer else ""
+        if not layer and "R" not in ch and "beauty.R" in ch:
+            pre = "beauty."
+        get = lambda c: ch[pre + c].pixels.astype(np.float32) if pre + c in ch else None
+        rgb = [get(c) for c in "RGB"]
+        if rgb[0] is None:
+            raise ValueError(f"{path}: no {pre}R, G, B channels (channels: {', '.join(sorted(ch)[:12])})")
+        a = get("A")
+        return np.dstack(rgb + [a if a is not None else np.ones_like(rgb[0])]), hdr
+
+
+def exr_to_srgb(rgba, space, view="texture"):
+    """linear premultiplied RGBA in `space` -> straight sRGB RGBA 8-bit: through ACEScg, then the inverse of how our
+    pictures go in (texture), or the ACES output transform (aces) for scene-referred plates"""
+    al = np.clip(rgba[..., 3:4], 0, 1)
+    rgb = np.where(al > 1e-4, rgba[..., :3] / np.maximum(al, 1e-4), 0)
+    work = to_space(rgb, space, WORK) if space != WORK else rgb.astype(np.float32)
+    if view == "aces":
+        import PyOpenColorIO as O
+        cfg = O.Config.CreateFromFile(CONFIG)
+        t = O.DisplayViewTransform(src=WORK, display="sRGB - Display", view=cfg.getDefaultView("sRGB - Display"))
+        out = np.ascontiguousarray(work, np.float32).copy(); cfg.getProcessor(t).getDefaultCPUProcessor().applyRGB(out)
+    else:
+        out = to_space(work, WORK, SRC_SPACE)
+    return np.dstack([np.clip(out * 255 + 0.5, 0, 255), np.clip(al * 255 + 0.5, 0, 255)]).astype(np.uint8)
+
+
 # ---------- WP-37: an HDR10 deliverable (PQ, BT.2020) ----------
 REF_WHITE_NITS = 203.0   # ITU-R BT.2408: graphics white in a PQ programme
 M709_2020 = np.array([[0.6274040, 0.3292820, 0.0433136], [0.0690970, 0.9195400, 0.0113612], [0.0163916, 0.0880132, 0.8955950]], np.float64)   # BT.2087

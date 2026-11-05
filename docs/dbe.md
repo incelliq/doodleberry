@@ -1852,6 +1852,17 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
   behind it and nearer ones in front; a shot without a comp is flat. Test `stereo`: dots on planes at depths 8, 1 and
   0.6 with a separation of 40 sit 34.99, 0.0 and -26.71 px apart between the eyes (35, 0 and -26.67 asked); a span of
   night-planes packs to 2160 x 1920 side by side and 1080 x 1920 anaglyph, 9 frames each.
+- **EXR input** (part 3): `comp.ingest_exr {name, src, id, layer, colorspace, view}` turns an OpenEXR sequence from
+  another tool (a 3D render, a plate, our own master) into plate frames the player draws (`build/plates/<id>/`, sRGB
+  with straight alpha) and returns the comp item. Its colour space is read from the file's chromaticities (ACEScg,
+  ACES2065-1, Rec.709, P3-D65 or Rec.2020 primaries, linear; none means Rec.709, as the EXR spec says); `view: aces`
+  applies the ACES output transform for scene-referred renders. Test `exrin`: a frame of stretch-demo as our master's
+  beauty layer (ACEScg), as a plain linear Rec.709 EXR and with Rec.2020 primaries comes back to the picture it was,
+  exactly (max error 0).
+- **Linear light** (part 3): a comp's `"linear": true` runs its planes' filters (grade, blur, glow, depth of field) in
+  linear light, where light adds as it does in a camera: the `stereo` test blurs a bright dot on a dark field and finds
+  the halo at 40 and 60 px at 103 and 54 levels, against 56 and 26 in sRGB. Blending between planes (`blend` nodes,
+  plane opacity) stays the browser's, which composites in sRGB; CSS has no linear-light compositing.
 
 ## Editor hand-off (WP-22)
 `film.handoff {name}` (after `film.render`) writes `films/<name>/build/handoff/`: the shots as rendered (`media/`), the

@@ -7326,10 +7326,14 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "exrin":   # WP-37: EXR plates into the compositor
+        bad, meas = _exrin_test()
+        failed += 1 if bad else 0
+        results.append({"exrin": "comp.ingest_exr reads EXR plates in ACEScg (our master's beauty layer), linear Rec.709 and Rec.2020 primaries by their chromaticities and returns the picture they hold", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "stereo":   # WP-37: stereoscopic output from the compositor's depth planes
         bad, meas = _stereo_test()
         failed += 1 if bad else 0
-        results.append({"stereo": "each eye sees the compositor's planes shifted by separation x (1/convergence - 1/depth): far behind the screen, the stage on it, near in front; film.stereo packs side by side and anaglyph", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"stereo": "each eye sees the compositor's planes shifted by separation x (1/convergence - 1/depth): far behind the screen, the stage on it, near in front; film.stereo packs side by side and anaglyph; a blur in linear light lights its halo more than in sRGB", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "hdr":   # WP-37: an HDR10 deliverable from the master
         bad, meas = _hdr_test()
         failed += 1 if bad else 0
@@ -9987,6 +9991,46 @@ def film_from_master(name, size=None, view="texture", look=""):
             "qa": (qa.stdout or qa.stderr)[-1200:]}
 
 
+@command("comp.ingest_exr", name=("string", "film"), src=("string", "EXR frames: a glob (plates/sky.*.exr) or a printf pattern (sky.%04d.exr), from the film folder or the repo"),
+         id=("string", "plate id (written to build/plates/<id>/)"), layer=("string", "the layer to take (default: plain R, G, B, A, else beauty)", ""),
+         colorspace=("string", "the EXR's linear colour space (default: from its chromaticities; none means Rec.709)", ""),
+         view=("string", "texture (graphics: the inverse of how sRGB went in) | aces (scene-referred: the ACES output transform)", "texture"),
+         fps=("number", "frames per second of the sequence", 30))
+def comp_ingest_exr(name, src, id, layer="", colorspace="", view="texture", fps=30):
+    """EXR input for the compositor (WP-37): an OpenEXR sequence from another tool (a 3D render, a plate, our own
+    master) becomes sRGB plate frames the player draws (build/plates/<id>/f_NNNN.png, straight alpha), through
+    OpenColorIO from its colour space (read from the file's chromaticities: ACEScg, ACES2065-1, Rec.709, P3-D65 or
+    Rec.2020 primaries, linear). Returns the comp item to put on a plane."""
+    import glob as _glob
+    from PIL import Image
+    from . import master as MA
+    d = _film(name)
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,60}", id):
+        raise ValueError("plate ids are letters, digits, - and _")
+    base = d if (d / src.split("*")[0].split("%")[0]).parent.exists() else ROOT
+    if "%" in src:
+        files, i = [], 0
+        while (base / (src % i)).exists() or i == 0:
+            if (base / (src % i)).exists():
+                files.append(base / (src % i))
+            i += 1
+            if i > 100000:
+                break
+    else:
+        files = [Path(f) for f in sorted(_glob.glob(str(base / src)))]
+    if not files:
+        raise FileNotFoundError(f"no EXR frames at {src}")
+    out = d / "build" / "plates" / id; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+    spaces = set()
+    for k, f in enumerate(files):
+        rgba, hdr = MA.exr_rgba(f, layer)
+        sp = colorspace or MA.exr_space(hdr); spaces.add(sp)
+        Image.fromarray(MA.exr_to_srgb(rgba, sp, view), "RGBA").save(out / f"f_{k:04d}.png", compress_level=3)
+    H, W = rgba.shape[:2]
+    return {"plate": str(out.relative_to(ROOT)), "frames": len(files), "size": [W, H], "colorspace": sorted(spaces), "view": view,
+            "item": {"type": "plate", "src": f"plates/{id}/f_%04d.png", "start": 0, "fps": fps, "count": len(files)}}
+
+
 @command("film.hdr", name=("string", "film"), white_nits=("number", "where graphics white sits, cd/m2 (ITU-R BT.2408: 203)", 203),
          size=("array", "delivery size [w, h] (default: the film's)", None))
 def film_hdr(name, white_nits=203, size=None):
@@ -10308,6 +10352,20 @@ def _stereo_test():
         meas["disparity_px"] = {k: {"measured": round(v["right"] - v["left"], 2), "want": round(want[k], 2)} for k, v in xs.items()}
         if any(abs(v["measured"] - v["want"]) > 0.6 for v in meas["disparity_px"].values()):
             bad.append(f"disparity: {meas['disparity_px']}")
+        # linear light: the same blur of a bright dot on a dark field, in sRGB and in linear light; out from the dot the
+        # halo is brighter in linear light (light adds in linear terms; averaging encoded values darkens a halo)
+        halo = {}
+        for lin in (False, True):
+            cp = {"linear": lin, "planes": [{"id": "p", "depth": 1, "items": [{"type": "shape", "svg": "<rect x='0' y='0' width='540' height='960' fill='#101010'/><circle cx='270' cy='480' r='30' fill='#ffd060'/>"}]}],
+                  "nodes": [{"type": "blur", "plane": "p", "radius": 24}]}
+            tag = "lin" if lin else "srgb"
+            (tmp / f"{tag}.json").write_text(json.dumps({"size": [540, 960], "bg": "#000000", "times": [0], "comp": cp}))
+            _run(["node", "tools/comp_still.mjs", str(tmp / f"{tag}.json"), str(tmp / tag)], timeout=300)
+            a = np.asarray(Image.open(tmp / tag / "c_0.png").convert("L")).astype(float)
+            halo[tag] = [round(float(a[480, 270 + r]), 1) for r in (40, 60, 80)]
+        meas["blur_halo_levels_at_40_60_80_px"] = halo
+        if not all(l > s_ for l, s_ in zip(halo["lin"], halo["srgb"])):
+            bad.append(f"linear blur: {halo}")
         for f in list((FILMS / "night-planes").glob("*.json")) + list((FILMS / "night-planes").glob("*.md")):
             shutil.copy(f, d / f.name)
         r = film_stereo(name, "both", 0.0, 0.3)
@@ -10316,6 +10374,43 @@ def _stereo_test():
             bad.append(f"film.stereo: {meas['film']}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True); shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _exrin_test():
+    """WP-37 EXR input: a frame of stretch-demo as our own master layer (ACEScg), as a plain linear Rec.709 EXR and
+    with Rec.2020 primaries comes back through comp.ingest_exr to the picture it was"""
+    import numpy as np
+    import OpenEXR
+    from PIL import Image
+    from . import master as MA
+    bad, meas = [], {}
+    name = "zz-exrin"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    for f in list((FILMS / "stretch-demo").glob("*.json")) + list((FILMS / "stretch-demo").glob("*.md")):
+        shutil.copy(f, d / f.name)
+    try:
+        tmp = d / "build" / "src"; r = subprocess.run(["node", "tools/master.mjs", str(_player_page(name)), str(tmp), "1", "30", "beauty", "3.0", "3.034"], cwd=ROOT, capture_output=True, text=True, timeout=600)
+        if r.returncode:
+            return [f"render: {r.stderr[-300:]}"], meas
+        png = np.asarray(Image.open(tmp / "beauty" / "f_00000.png").convert("RGB")).astype(int)
+        ex = d / "exr"; ex.mkdir()
+        MA.write_exr(ex / "master.0000.exr", MA.layers_for(tmp, 0), {"film": name})   # beauty layer, ACEScg (AP1 chromaticities)
+        lin709 = MA.srgb_to_linear(png / 255.0).astype(np.float32)
+        for nm, rgb, chrom in (("rec709", lin709, MA.PRIMARIES["Linear Rec.709 (sRGB)"]), ("rec2020", (lin709 @ MA.M709_2020.T).astype(np.float32), MA.PRIMARIES["Linear Rec.2020"])):
+            chans = {c: np.ascontiguousarray(rgb[..., i], np.float32) for i, c in enumerate("RGB")}; chans["A"] = np.ones(rgb.shape[:2], np.float32)
+            with OpenEXR.File({"compression": OpenEXR.ZIP_COMPRESSION, "type": OpenEXR.scanlineimage, "chromaticities": chrom}, chans) as fo:
+                fo.write(str(ex / f"{nm}.0000.exr"))
+        for nm, srcpat in (("master", "exr/master.*.exr"), ("rec709", "exr/rec709.%04d.exr"), ("rec2020", "exr/rec2020.*.exr")):
+            res = comp_ingest_exr(name, srcpat, nm)
+            back = np.asarray(Image.open(ROOT / res["plate"] / "f_0000.png").convert("RGB")).astype(int)
+            meas[nm] = {"colorspace": res["colorspace"], "frames": res["frames"], "max_error": int(np.abs(back - png).max()), "mean_error": round(float(np.abs(back - png).mean()), 4),
+                        "item": res["item"]["src"]}
+        want = {"master": "ACEScg", "rec709": "Linear Rec.709 (sRGB)", "rec2020": "Linear Rec.2020"}
+        for nm, m in meas.items():
+            if m["colorspace"] != [want[nm]] or m["frames"] != 1 or m["max_error"] > 2:
+                bad.append(f"{nm}: {m}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 
