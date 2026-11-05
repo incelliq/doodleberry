@@ -7658,6 +7658,10 @@ def test_golden(update=False, film=""):
         bad, meas = _turns_test()
         failed += 1 if bad else 0
         results.append({"turns": "a turn from front to side drawn as three in-betweens: each moves steadily from one drawing to the other; the bake plays them one step each on twos around both switches, no squash; every renderer draws an in-between as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "lufsstream":   # WP-38: integrated loudness block by block
+        bad, meas = _lufsstream_test()
+        failed += 1 if bad else 0
+        results.append({"lufsstream": "integrated loudness measured block by block (filter state carried, 100 ms segments) equals pyloudnorm's within 1e-9 LU on stereo, mono, short, gated and silent signals, in a fraction of its memory", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "linearplanes":   # WP-37: compositor planes blended in linear light
         bad, meas = _linearplanes_test()
         failed += 1 if bad else 0
@@ -10748,6 +10752,40 @@ def _turns_test():
                     bad.append(f"parity {k} on an in-between: {v.get('min')}, colour {v.get('colour_diff')}, {v.get('error')}")
     finally:
         shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
+
+
+def _lufsstream_test():
+    """WP-38 loudness block by block (engine/audio.py lufs): against pyloudnorm's meter on stereo and mono signals,
+    a short one, quiet passages under the gates and silence, within 1e-9 LU; on 5 minutes of stereo, a fraction of
+    pyloudnorm's working memory"""
+    import tracemalloc
+    import numpy as np
+    import pyloudnorm as pyln
+    sys.path.insert(0, str(ROOT / "engine")); import audio as A
+    bad, meas = [], {}
+    m = pyln.Meter(A.SR); rng = np.random.default_rng(7)
+    def speechy(n, ch):
+        env = np.repeat(rng.random(n // 4800 + 1) ** 3, 4800)[:n]
+        x = rng.standard_normal((n, ch)) * env[:, None] * 0.2
+        return x if ch > 1 else x[:, 0]
+    cases = {"stereo_60s": speechy(60 * A.SR, 2), "mono_30s": speechy(30 * A.SR, 1), "short_0.7s": speechy(int(0.7 * A.SR), 2),
+             "quiet_gaps": np.concatenate([speechy(10 * A.SR, 2), np.zeros((10 * A.SR, 2)), 1e-5 * speechy(10 * A.SR, 2)])}
+    for k, x in cases.items():
+        a, b = m.integrated_loudness(x), A.lufs(x, m, block=1 << 15)
+        meas[k] = {"pyloudnorm": round(a, 6), "blockwise": round(b, 6), "diff": float(f"{abs(a - b):.2e}")}
+        if abs(a - b) > 1e-9:
+            bad.append(f"{k}: {meas[k]}")
+    sil = np.zeros((5 * A.SR, 2)); meas["silence"] = [m.integrated_loudness(sil), A.lufs(sil, m)]
+    if meas["silence"][1] != float("-inf"):
+        bad.append(f"silence: {meas['silence']}")
+    meas["silence"] = [str(v) for v in meas["silence"]]
+    x = speechy(5 * 60 * A.SR, 2); peaks = {}
+    for nm, fn in (("pyloudnorm", lambda: m.integrated_loudness(x)), ("blockwise", lambda: A.lufs(x, m))):
+        tracemalloc.start(); fn(); peaks[nm] = round(tracemalloc.get_traced_memory()[1] / 1e6, 1); tracemalloc.stop()
+    meas["working_memory_mb_5min"] = peaks; meas["signal_mb"] = round(x.nbytes / 1e6, 1)
+    if peaks["blockwise"] > 0.2 * peaks["pyloudnorm"]:
+        bad.append(f"memory: {peaks}")
     return bad, meas
 
 

@@ -611,6 +611,50 @@ def limit(x, ceiling_db=-1.6, inplace=False):  # leaves headroom for AAC oversho
     return x * (g[:, None] if x.ndim == 2 else g)
 
 
+def lufs(x, meter, block=1 << 20):
+    """integrated loudness (ITU-R BS.1770-4, as pyloudnorm's Meter measures it) block by block, in bounded memory:
+    the K-weighting filters run over each block with their state carried on (the same recursion as over the whole
+    signal), and the mean squares are kept per 100 ms segment; a 400 ms gating block is four segments (its bounds are
+    the same samples pyloudnorm uses), so only the order of summation differs: the last bits, not the result"""
+    import scipy.signal as ss
+    x = x if x.ndim == 2 else x[:, None]
+    n, ch = x.shape; rate = meter.rate; Tg = meter.block_size; step = 1.0 - meter.overlap
+    nb = int(np.round(((n / rate - Tg) / (Tg * step)))) + 1
+    if nb < 1:
+        return float("-inf")
+    bounds = [int(Tg * (k * step) * rate) for k in range(nb + 4)]   # l_j; u_j is l_(j+4)
+    seg = np.zeros((len(bounds) - 1, ch))
+    stages = list(meter._filters.values())
+    zi = [[ss.lfiltic(f.b, f.a, []) for f in stages] for _ in range(ch)]
+    k = 0
+    for s0 in range(0, n, block):
+        y = np.array(x[s0:s0 + block], dtype=np.float64)
+        for c in range(ch):
+            for si, f in enumerate(stages):
+                out, zi[c][si] = ss.lfilter(f.b, f.a, y[:, c], zi=zi[c][si]); y[:, c] = f.passband_gain * out
+        sq = y * y; e = s0 + len(y)
+        while k < len(bounds) - 1 and bounds[k] < e:   # the segments this block reaches into
+            a, b = max(bounds[k], s0), min(bounds[k + 1], e)
+            if b > a:
+                seg[k] += sq[a - s0:b - s0].sum(0)
+            if bounds[k + 1] <= e:
+                k += 1
+            else:
+                break
+    z = np.stack([seg[j:j + 4].sum(0) for j in range(nb)]) / (Tg * rate)   # (blocks, channels)
+    G = np.array([1.0, 1.0, 1.0, 1.41, 1.41][:ch])
+    with np.errstate(divide="ignore"):
+        l = -0.691 + 10.0 * np.log10((z * G).sum(1))
+        J = l >= -70.0
+        if not J.any():
+            return float("-inf")
+        Gr = -0.691 + 10.0 * np.log10((z[J].mean(0) * G).sum()) - 10.0
+        J = (l > Gr) & (l > -70.0)
+        if not J.any():
+            return float("-inf")
+        return float(-0.691 + 10.0 * np.log10((z[J].mean(0) * G).sum()))
+
+
 def _write(path, x, gain=None, block=1 << 20):
     """x (times gain) to a 24-bit WAV block by block: the same bytes as sf.write of the whole float32 array, without
     a full-length float32 (and scaled) copy of it"""
@@ -643,14 +687,14 @@ def main():
         voice = np.pad(voice, (0, max(0, n - len(voice))))[:n]
         voice = lp(hp(voice, 90, 2), 11000, 2)
         voice = compress(level_lines(voice, timing['lines'], meter))
-        voice *= 10 ** ((-16 - meter.integrated_loudness(voice)) / 20)
+        voice *= 10 ** ((-16 - lufs(voice, meter)) / 20)
     pres = presence(voice, n)
     speaking = lambda t: pres[min(n - 1, int(t * SR))] > 0.5
 
     # ---- score: bed sits 8 LU under the voice between lines, ducked by band under words
     mus, beats = music(score, total, speaking)
     mus = np.pad(mus, ((0, n - len(mus)), (0, 0)))
-    mus *= 10 ** ((V - 9 - meter.integrated_loudness(mus)) / 20)
+    mus *= 10 ** ((V - 9 - lufs(mus, meter)) / 20)
     ir = reverb_ir()
     mus = mus + reverb(mus, ir, 0.22)
     mus_d = multiband_duck(mus, pres)
@@ -660,9 +704,9 @@ def main():
     mo = mus; del mus
     mo[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
     for _ in range(3):
-        mo *= 10 ** ((-14 - meter.integrated_loudness(mo)) / 20); limit(mo, inplace=True)
+        mo *= 10 ** ((-14 - lufs(mo, meter)) / 20); limit(mo, inplace=True)
     _write(b / 'music.wav', mo)
-    music_lufs = round(meter.integrated_loudness(mo), 2); del mo
+    music_lufs = round(lufs(mo, meter), 2); del mo
 
     # ---- effects: each levelled to its type's target, dipped a little under speech
     fx = np.zeros((n + SR * 2, 2))
@@ -699,7 +743,7 @@ def main():
     mix[-fade:] *= (np.linspace(1, 0, fade) ** 2)[:, None]
     gain = 1.0
     for _ in range(4):
-        g = 10 ** ((-14 - meter.integrated_loudness(mix)) / 20)
+        g = 10 ** ((-14 - lufs(mix, meter)) / 20)
         gain *= g
         mix *= g; limit(mix, inplace=True)
     _write(b / 'mix.wav', mix)
@@ -715,7 +759,7 @@ def main():
     timing['sections'] = [{'kind': s['kind'], 'start': round(score['offset_s'] + s['from_beat'] * 60 / score['bpm'], 3)} for s in score['sections']]
     (film / 'timing.json').write_text(json.dumps(timing, indent=1))
     print(json.dumps({
-        'mix_lufs': round(meter.integrated_loudness(mix), 2),
+        'mix_lufs': round(lufs(mix, meter), 2),
         'mix_true_peak_db': round(true_peak_db(mix), 2),
         'music_lufs': music_lufs,
         'beats': len(beats), 'cues': len(cues),

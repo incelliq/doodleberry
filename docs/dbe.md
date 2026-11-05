@@ -1635,9 +1635,18 @@ Each step keeps the arithmetic per sample, so the output is the same: all six fi
 three stems) are byte-identical to before. The time went from 785 s to 572 s, and the peak memory from 8.9 GB to
 7.0 GB. A 3-million-sample check confirms the ducker alone is bit-identical.
 
+**Loudness block by block** (5 Nov 2026): the mixer's integrated-loudness passes (voice, music, music-only mix,
+final mix) used pyloudnorm's meter, which copies and filters the whole signal. `lufs` in engine/audio.py runs the same
+K-weighting filters block by block with their state carried on (the same recursion), keeps the mean squares per
+100 ms segment and builds each 400 ms gating block from four of them (its bounds are the same samples), so only the
+summation order differs. Test `lufsstream`: on stereo, mono, short, gated and silent signals it equals pyloudnorm
+within 4e-15 LU; on 5 minutes of stereo it needs 59 MB of working memory against 346 MB (on 20 minutes, 59 MB against
+1,382 MB, and 5.2 s against 7.4 s). A film's mix, music and effects come out byte-identical (ask-ravi-e01, rendered by
+the engine before and after). The reverbs already run in chunks with overlap-add.
+
 **Open:**
-- A truly streaming mixer (memory bounded whatever the length) would need the reverbs and the loudness passes done
-  block by block too; their results would then differ from today's in the last bits.
+- A mixer bounded in memory whatever the length would also have to synthesise the music and lay the effects into
+  the mix block by block (today they are full-length buffers).
 
 The `farm` test runs this end to end. Its pass mark: the three workers' time within 15% of the best split of these
 shots over three workers (from the one worker's own shot times), or under 0.4.
