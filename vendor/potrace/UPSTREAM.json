@@ -6,10 +6,19 @@
  "sha256": "be8248a17dedd6ccbaab2fcc45835bb0502d062e40fbded3bc56028ce5eb7acc",
  "license": "GPL-2.0-or-later",
  "class": "copyleft",
- "license_files": ["COPYING", "AUTHORS"],
+ "license_files": [
+  "COPYING",
+  "AUTHORS"
+ ],
  "files": "the whole 1.16 source release, unmodified",
  "patches": [],
  "use": "monochrome bitmap to vector tracing (scans and doodles to vector parts, WP-18)",
- "build": ["./configure --prefix={out} --disable-shared --disable-zlib --quiet", "make -j4 --quiet", "make install --quiet"],
- "binary": "bin/potrace"
+ "build": [
+  "touch -d '2000-01-01' configure.ac Makefile.am */Makefile.am m4/*.m4 && touch aclocal.m4 && touch configure config.h.in Makefile.in */Makefile.in",
+  "./configure --prefix={out} --disable-shared --disable-zlib --quiet",
+  "make -j4 --quiet",
+  "make install --quiet"
+ ],
+ "binary": "bin/potrace",
+ "build_note": "the first step orders the timestamps (sources old, then aclocal.m4, then configure and the Makefile.in files), so make uses the released autotools output instead of regenerating it with automake: a copy or checkout gives every file a new, arbitrary mtime"
 }
