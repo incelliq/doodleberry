@@ -32,6 +32,9 @@ what="${1:-all}"
 # /opt and ~/.local/opt
 if [ "$(id -u)" = 0 ] || [ -w /opt ]; then OPT="${DBE_OPT:-/opt}"; BIN="/usr/local/bin"; else OPT="${DBE_OPT:-$HOME/.local/opt}"; BIN="$HOME/.local/bin"; fi
 mkdir -p "$OPT" "$BIN"
+# has PATTERN CMD...: CMD's output contains PATTERN. (A pipe into grep -q fails under pipefail: grep exits at the first
+# match and CMD dies of SIGPIPE.)
+has() { local pat="$1" out; shift; out="$("$@" 2>/dev/null)" || true; [[ "$out" == *"$pat"* ]]; }
 
 system() {
   if command -v apt-get >/dev/null; then
@@ -44,7 +47,7 @@ system() {
     else echo "system: ok"; fi
   elif command -v dnf >/dev/null; then   # Fedora: ffmpeg with H.264 is RPM Fusion's (Fedora's own ffmpeg-free has no libx264)
     need=""
-    (command -v ffmpeg >/dev/null && ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libx264) || need="$need ffmpeg"
+    (command -v ffmpeg >/dev/null && has libx264 ffmpeg -hide_banner -encoders) || need="$need ffmpeg"
     command -v git >/dev/null || need="$need git"
     command -v node >/dev/null || need="$need nodejs"
     "$PY" -m pip --version >/dev/null 2>&1 || need="$need python3-pip"
@@ -143,7 +146,7 @@ locales_deps() {
 provenance_dl() {
   # c2patool (MIT / Apache-2.0), the Content Authenticity Initiative's reference tool: reads and verifies C2PA content credentials (WP-26)
   local ver="0.27.22" sha="6f138ad53da1a62f1cd6ee71c60727efa27d13b811f4c0ea8c2a8528968b358b"
-  if [ -x "$OPT"/c2patool/c2patool ] && "$OPT"/c2patool/c2patool --version 2>/dev/null | grep -q "$ver"; then echo "c2patool: $ver installed"; return; fi
+  if [ -x "$OPT"/c2patool/c2patool ] && has "$ver" "$OPT"/c2patool/c2patool --version; then echo "c2patool: $ver installed"; return; fi
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/c.tgz" "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v${ver}/c2patool-v${ver}-x86_64-unknown-linux-gnu.tar.gz"
   echo "$sha  $tmp/c.tgz" | sha256sum -c - || { echo "c2patool: checksum mismatch"; rm -rf "$tmp"; return 1; }
@@ -165,7 +168,7 @@ live_deps() {
 godot_dl() {
   # Godot 4.5-stable (MIT), the official Linux build checked against the release's SHA512-SUMS: renders export.godot's projects (WP-30)
   local ver="4.5-stable" sha="b5bd5d8a4dd3f44de1d123361beabaafa4825dd05b5e20fd2bfa540f32594f81d82e7c4e86fae420f4faee77d9def573b570f8b156e9c84a4dc2d5123d09e852"
-  if [ -x "$OPT"/godot/godot ] && "$OPT"/godot/godot --version --headless 2>/dev/null | grep -q "4.5.stable"; then echo "godot: $ver installed"; return; fi
+  if [ -x "$OPT"/godot/godot ] && has "4.5.stable" "$OPT"/godot/godot --version --headless; then echo "godot: $ver installed"; return; fi
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/g.zip" "https://github.com/godotengine/godot/releases/download/$ver/Godot_v${ver}_linux.x86_64.zip"
   echo "$sha  $tmp/g.zip" | sha512sum -c - || { echo "godot: checksum mismatch"; rm -rf "$tmp"; return 1; }
@@ -204,7 +207,7 @@ map_deps() {
 
 blender_dl() {
   local ver="5.2.3" sha="78486c018b4443efe5e75ab54c290ed8c15abafd249b862c2c9ce2530a918eec"
-  if [ -x "$OPT"/blender/blender ] && "$OPT"/blender/blender --version 2>/dev/null | grep -q "Blender $ver"; then echo "blender: $ver installed"; return; fi
+  if [ -x "$OPT"/blender/blender ] && has "Blender $ver" "$OPT"/blender/blender --version; then echo "blender: $ver installed"; return; fi
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/b.tar.xz" "https://download.blender.org/release/Blender${ver%.*}/blender-${ver}-linux-x64.tar.xz"
   echo "$sha  $tmp/b.tar.xz" | sha256sum -c - || { echo "blender: checksum mismatch"; rm -rf "$tmp"; return 1; }
@@ -232,4 +235,6 @@ case "$what" in
   all) system; python_deps; models; node_deps; physics_deps; dotlottie_deps; map_deps; live_deps; voices_dl; provenance_dl ;;
   *) echo "usage: bash tools/setup.sh [all|system|python|models|node|oss|blender|physics|dotlottie|maps|live|plates|godot|opentoonz|voices|locales|provenance]"; exit 2 ;;
 esac
-"$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]"
+if "$PY" -c "import numpy, jsonschema" 2>/dev/null; then
+  "$PY" -m dbe engine.doctor '{"deep": false}' | "$PY" -c "import json,sys; r=json.load(sys.stdin); print('doctor:', 'ok' if r['ok'] else 'missing ' + ', '.join(r['missing_required'])); [print('  fix:', f) for f in r['fixes']]" || echo "doctor: failed; run  $PY -m dbe engine.doctor  to see why"
+else echo "doctor: the Python packages are not installed yet; next:  DBE_PY=$PY bash tools/setup.sh python"; fi

@@ -121,8 +121,11 @@ def check(deep=True):
     mbp = ROOT / "tools" / "mapboard" / "node_modules" / "d3-geo"   # WP-16: makes and checks the map board's data
     add("node package d3-geo (map board)", "tools", mbp.exists(), False, str(mbp) if mbp.exists() else "not installed",
         "bash tools/setup.sh maps   (d3-geo, topojson-client, world-atlas: tools/mapboard, WP-16)")
-    from . import assists as ASM   # WP-43 ML assists: model files (fetched by tools/setup.sh models, or on first use)
-    for name in ("rife49", "depth_small"):
+    try:
+        from . import assists as ASM   # WP-43 ML assists: model files (fetched by tools/setup.sh models, or on first use)
+    except ImportError:   # numpy not installed yet: the core package check above already reports it
+        ASM = None
+    for name in (("rife49", "depth_small") if ASM else ()):
         mp = ASM.MODELS / ASM.REGISTRY[name]["file"]
         add(f"assist model {name}", "tools", mp.exists(), False, str(mp) if mp.exists() else "not downloaded",
             "bash tools/setup.sh models   (or let level.inbetween / depth.planes fetch it on first use)")

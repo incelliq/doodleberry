@@ -2945,6 +2945,12 @@ to `~/.local/opt` with links in `~/.local/bin` (`DBE_OPT` overrides it), and dbe
     bash tools/setup.sh blender    # optional: the Grease Pencil renderer, into ~/.local/opt
     python -m dbe engine.doctor
 
+The version checks in setup.sh capture a command's output and match it (`has PATTERN CMD`), not `CMD | grep -q`. Under
+`pipefail`, grep's early exit kills the command with SIGPIPE. On a Fedora desktop with RPM Fusion's ffmpeg, the
+libx264 check failed 4 runs in 5 that way. The doctor summary at the end of setup.sh waits until the Python packages
+are in; until then it names the next step. The doctor itself reports a missing numpy as a missing package instead of
+failing on the assists import.
+
 ## Keeping the docs true (WP-01)
 `python -m dbe docs.check` (also in `python -m dbe test`) checks that the build plan, the feature map, the work
 packages and the command registry agree:
