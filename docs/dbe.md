@@ -1892,7 +1892,7 @@ the strokes of the two views are paired by fill, then by how near they are in pl
 with the skull beside it); each pair is resampled to 64 points by arc length, lined up in start point and direction,
 and blended; a stroke without a partner shrinks to its centre underneath the others (the far ear goes behind the
 head) or grows from it; pivots blend; layer order and swap drawings (eyes, mouth) come from the nearer end. The loader
-shows in-between k for one step each, centred on the switch (`acting.turn_step`, on twos by default), the other way
+shows in-between k for one step each, centred on the switch (the puppet's `acting` `turn_step`, on twos by default), the other way
 round reversed, and drops the squash there. Test `turns` (only when asked) on pip, front to side in three: at rest
 the silhouette's IoU with the front drawing falls 1.0, 0.863, 0.747, 0.654, 0.601 while with the side one it rises
 0.601, 0.692, 0.798, 0.918, 1.0; in pip-park's third shot (a turn to the side and back) the bake plays the three two
