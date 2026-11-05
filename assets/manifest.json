@@ -836,6 +836,11 @@
    "name": "Xvfb (xvfb-run, Ubuntu package xvfb)",
    "license": "MIT/X11 (permissive)",
    "use": "WP-42 proc engine: a virtual display for Godot's Movie Maker renders"
+  },
+  {
+   "name": "shapely 2.2 (PyPI, GEOS)",
+   "license": "BSD-3-Clause (GEOS: LGPL-2.1, a linked library)",
+   "use": "WP-14 toon shading for Grease Pencil: the shade band by polygon difference"
   }
  ],
  "external": [

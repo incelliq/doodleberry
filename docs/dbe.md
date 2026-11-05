@@ -118,13 +118,18 @@ environment variables below).
     Lottie's and Grease Pencil's frames (it replaced the `comp=front` pass). Test `bubbles` (only when asked):
     juggle-demo's shot from Lottie carries the bubble where the SVG renderer draws it, 6.3 levels apart on its 14,051
     pixels against 185 without it.
-  - **Toon shading in Synfig**: each filled stroke of a (non-bendy) part gets a group at the toon's opacity holding the
-    shape in the shade colour, cut ("alpha over") by the same shape shifted toward the light. The shift is in the
-    part's own axes and animated per frame as the part turns, as puppet.js computes it. On fx-demo, Synfig's parity
-    stays 0.999 to 1.0. In the band the SVG renderer shades (8,054 px of a mid-shot frame), Synfig is 18.6 levels from
-    the shaded SVG and 33.3 from an unshaded copy; the rest is edge antialiasing.
-  - Still SVG-only: toon shading in Lottie and Grease Pencil (Lottie would need a track matte per stroke, Grease Pencil
-    a polygon difference per frame), and the media filters (pencil, crayon, marker, watercolour).
+  - **Toon shading in Synfig and Grease Pencil**. In Synfig each filled stroke of a (non-bendy) part gets a group at
+    the toon's opacity: the shape in the shade colour, cut ("alpha over") by the same shape shifted toward the light.
+    The shift is in the part's own axes, animated per frame as the part turns, as puppet.js computes it. Grease
+    Pencil gets the band as geometry, per frame: the shape minus itself shifted, by polygon difference (shapely),
+    drawn as a fill between the stroke's fill and its outline. Test `toon` (only when asked), on a copy of pip-park
+    with `style.toon`. Parity is 1.0 (Synfig) and 0.993 (Grease Pencil). In the band the SVG renderer shades (8,274
+    px), Synfig is 4.4 levels from the shaded picture and 44.8 from an unshaded copy. Grease Pencil is 19.6 against
+    31.1; it renders at half size, so its edges are softer. (A first measurement on fx-demo had read Synfig as nearer
+    the shaded picture while drawing no band at all: `toon: true` became an empty, falsy dict. The test now compares
+    against an unshaded copy.)
+  - Still SVG-only: toon shading in Lottie (it would need a track matte per stroke), and the media filters (pencil,
+    crayon, marker, watercolour).
 - **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
   far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
   overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,

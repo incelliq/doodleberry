@@ -930,7 +930,7 @@ def shot_render(name, shot, renderer=""):
         if not BLENDER:
             raise RuntimeError("Blender not found; set DBE_BLENDER")
         setv = _set_video(name, sh, bdir)
-        gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H))))
+        gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H), toon=(sh.get("style") or {}).get("toon"))))
         fr = bdir / f"{shot}_gp"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run([BLENDER, "-b", "--factory-startup", "--gpu-backend", "vulkan", "--python", "dbe/blender_gp.py", "--", str(gpj), str(fr / "f_"), "-", "0.5"], timeout=14400)
         _composite(setv, ["-framerate", str(fps), "-start_number", "1", "-i", str(fr / "f_%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
@@ -5230,7 +5230,7 @@ def export_blend(name, shot, background=True):
     why = RP.refusal("grease-pencil", sh, [_json(c["puppet"]) for c in baked["cast"]])
     if why:
         raise ValueError(f"shot {shot}: {why}")
-    gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H))))
+    gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H), toon=(sh.get("style") or {}).get("toon"))))
     bg = str(_bg_png(name, sh, bdir)) if background else "-"
     out = bdir / f"{shot}.blend"; out.unlink(missing_ok=True)
     env = {**os.environ, "DBE_GP_SAVE": str(out), "DBE_GP_SAVE_ONLY": "1"}
@@ -7357,6 +7357,10 @@ def test_golden(update=False, film=""):
         bad, meas = _engine_test()
         failed += 1 if bad else 0
         results.append({"engine": "a Godot project rendered in Movie Maker mode as a proc node: the same pixels twice, every frame different, drawn by the player in front of a shot", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "toon":   # WP-14: toon shading in Synfig and Grease Pencil (Blender renders, so only when asked)
+        bad, meas = _toon_test()
+        failed += 1 if bad else 0
+        results.append({"toon": "toon shading drawn by Synfig and Grease Pencil: in the band the SVG renderer shades, each is nearer the shaded picture than the unshaded one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "bubbles":   # WP-14: speech bubbles in non-SVG renders (renders a shot with Lottie, so only when asked)
         bad, meas = _bubbles_test()
         failed += 1 if bad else 0
@@ -10669,6 +10673,50 @@ def _bubbles_test():
             bad.append(f"bubbles: {meas}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _toon_test():
+    """WP-14 toon shading in Synfig and Grease Pencil: on a copy of pip-park with style.toon, in the band the SVG
+    renderer shades (against an unshaded copy), each renderer is nearer the shaded picture than the unshaded one"""
+    import numpy as np
+    from PIL import Image
+    from . import rparity as RP
+    bad, meas = [], {}
+    tmp = ROOT / "out" / "toontest"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    names = ("zz-toon", "zz-toon-off")
+    try:
+        for nm, on in zip(names, (True, False)):
+            d = FILMS / nm; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+            for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+                shutil.copy(f, d / f.name)
+            sh = _json(d / "shots.json")
+            for x in sh["shots"]:
+                x["renderer"] = "svg"
+                if on:
+                    x.setdefault("style", {})["toon"] = True
+            (d / "shots.json").write_text(json.dumps(sh))
+        par = render_parity(names[0], "s1", ["synfig", "grease-pencil"])
+        meas["parity"] = {k: v["min"] for k, v in par["renderers"].items()}; meas["refused"] = par.get("refusals")
+        mod = sys.modules[__name__]; t = [1.5]; dirs = {k: tmp / k for k in ("on", "off", "synfig", "gp")}
+        for p_ in dirs.values():
+            p_.mkdir()
+        a = RP.stills_svg(mod, names[0], "s1", t, dirs["on"])[0]; b = RP.stills_svg(mod, names[1], "s1", t, dirs["off"])[0]
+        got = {"synfig": RP.stills_synfig(mod, names[0], "s1", t, dirs["synfig"])[0], "grease-pencil": RP.stills_gp(mod, names[0], "s1", t, dirs["gp"])[0]}
+        L = lambda p_, sz=None: np.asarray(Image.open(p_).convert("RGBA").resize(sz) if sz else Image.open(p_).convert("RGBA")).astype(float)
+        A, B = L(a), L(b); sz = A.shape[1::-1]
+        band = (np.abs(A[..., :3] - B[..., :3]).max(-1) > 12) & (A[..., 3] > 250)
+        meas["band_px"] = int(band.sum())
+        for k, p_ in got.items():
+            X = L(p_, sz)
+            meas[k] = {"vs_shaded": round(float(np.abs(X[..., :3] - A[..., :3]).max(-1)[band].mean()), 2), "vs_unshaded": round(float(np.abs(X[..., :3] - B[..., :3]).max(-1)[band].mean()), 2)}
+        if meas["band_px"] < 2000 or meas["synfig"]["vs_shaded"] > 0.5 * meas["synfig"]["vs_unshaded"] or meas["grease-pencil"]["vs_shaded"] > 0.8 * meas["grease-pencil"]["vs_unshaded"] \
+                or min(meas["parity"].values()) < 0.97:
+            bad.append(f"toon: {meas}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+        for nm in names:
+            shutil.rmtree(FILMS / nm, ignore_errors=True)
     return bad, meas
 
 

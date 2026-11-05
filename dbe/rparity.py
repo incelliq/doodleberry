@@ -35,7 +35,7 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
     "props": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: baked as small puppets (tools/bake.mjs)
     "props with their own drawing": {"svg"},
     "motion effects (fx)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: each frame's drawing as a swap (dbe/fxbake.py)
-    "toon shading": {"svg", "synfig"},   # WP-14: Synfig cuts the shade band with an animated shifted copy
+    "toon shading": {"svg", "synfig", "grease-pencil"},   # WP-14: Synfig cuts the band with an animated shifted copy; Grease Pencil gets it as geometry
     "compositor planes (comp)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: back and front planes by the player around the renderer's characters
     "characters on compositor planes": {"svg"},
     "even-odd fills (holes)": {"svg", "synfig", "lottie", "grease-pencil"},   # v0.9 (Grease Pencil: keyhole polygons)
@@ -208,7 +208,7 @@ def stills_gp(C, name, shot, times, out):
     from . import exporters as X
     s, sh, bdir, baked = C._bake(name, shot)
     W, H = s.get("size", [1080, 1920]); fps = s.get("fps", 30)
-    gpj = out / "gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H))))
+    gpj = out / "gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H), toon=(sh.get("style") or {}).get("toon"))))
     frames = [round(t * fps) + 1 for t in times]   # Grease Pencil keyframes start at 1
     env = {**os.environ, "DBE_GP_FRAMES": ",".join(map(str, frames))}
     r = subprocess.run([C.BLENDER, "-b", "--factory-startup", "--python", "dbe/blender_gp.py", "--", str(gpj), str(out / "gp_"), "-", "0.5"],

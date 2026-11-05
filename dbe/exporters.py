@@ -352,6 +352,13 @@ def _raster_sif(strokes, assets_dir):
     return out
 
 
+def _toon_spec(toon):
+    """a shot's style.toon (true or an object) with puppet.js's defaults; None when off (never an empty, falsy dict)"""
+    if not toon:
+        return None
+    return {"dir": [-0.6, -0.8], "d": 11, "shade": "#2a1a10", "opacity": 0.26, **(toon if isinstance(toon, dict) else {})}
+
+
 def _toon_offsets(toon, mats):
     """per frame, the toon's offset toward the light in a part's own axes (puppet.js toonSVG): the world direction
     through the transpose of the part's matrix (without the placement, as the player computes it)"""
@@ -363,7 +370,7 @@ def _toon_offsets(toon, mats):
 def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None, toon=None):
     """toon: the shot's style.toon (WP-14), drawn as puppet.js draws it"""
     W, H = size
-    toon = ({} if toon is True else dict(toon)) if toon else None
+    toon = _toon_spec(toon)
     fps, n = baked["fps"], baked["frames"]
     U = 60.0  # pixels per synfig unit
     F = [1 / U, 0, 0, -1 / U, -W / 2 / U, H / 2 / U]  # screen px -> synfig units (y up)
@@ -504,8 +511,28 @@ def _keyhole(polys):
     return out
 
 
-def to_gp_frames(baked, size, per=6):
-    """per frame, a z-ordered list of world-space strokes (polylines) with fill/line colours, for blender_gp.py"""
+def _toon_band(polys, off):
+    """WP-14 toon shading as geometry: the shape minus itself shifted toward the light (screen offset), as polygons"""
+    from shapely.geometry import Polygon
+    from shapely.affinity import translate
+    from shapely.ops import unary_union
+    shp = unary_union([Polygon(q).buffer(0) for q in polys if len(q) >= 3])
+    band = shp.difference(translate(shp, off[0], off[1]))
+    geoms = [band] if band.geom_type == "Polygon" else list(getattr(band, "geoms", []))
+    out = []
+    for g in geoms:
+        if g.is_empty or g.area < 4:
+            continue
+        rings = [list(g.exterior.coords)[:-1]] + [list(r.coords)[:-1] for r in g.interiors]
+        out.append(_keyhole(rings) if len(rings) > 1 else rings[0])
+    return out
+
+
+def to_gp_frames(baked, size, per=6, toon=None):
+    """per frame, a z-ordered list of world-space strokes (polylines) with fill/line colours, for blender_gp.py.
+    toon: the shot's style.toon (WP-14): a filled stroke of a rigid part gets its shade band (the shape minus itself
+    shifted toward the light) as an extra fill between its fill and its outline, as puppet.js draws it"""
+    toon = _toon_spec(toon)
     out = {"fps": baked["fps"], "frames": baked["frames"], "size": list(size), "palette": {}, "data": []}
     pals = {}
     for f in range(baked["frames"]):
@@ -524,17 +551,40 @@ def to_gp_frames(baked, size, per=6):
                     Mp = G.mul(R, M[part["parent"]])
                     items.append(((fr.get("z") or {}).get(pid, part.get("z", 0)), ("bend", Mp, part["pivot"], ax, part["bend"].get("width", 40), th), part["strokes"]))
                     continue
-                items.append(((fr.get("z") or {}).get(pid, part.get("z", 0)), G.mul(R, M[pid]), part["strokes"]))
+                items.append(((fr.get("z") or {}).get(pid, part.get("z", 0)), G.mul(R, M[pid]), part["strokes"], M[pid]))
             for sid, shape in sw.items():
                 s = p["swaps"][sid]; m = G.mul(R, M.get(s["anchor"], G.I))
                 if (fr.get("shifts") or {}).get("@" + sid):
                     m = G.mul(m, [1, 0, 0, 1, *fr["shifts"]["@" + sid]])
                 if sid == "pupils" and fr.get("look"):
                     m = G.mul(m, [1, 0, 0, 1, fr["look"][0] * s.get("movable", 8), fr["look"][1] * s.get("movable", 8) * 0.7])
-                items.append((s.get("z", 40), m, s["shapes"][shape]))
+                items.append((s.get("z", 40), m, s["shapes"][shape], None))
             items.sort(key=lambda x: x[0])
-            for _, m, sts in items:
+            for it in items:
+                _, m, sts, Mpart = (it + (None,))[:4] if len(it) == 3 else it
                 for st in sts:
+                    if toon and Mpart is not None and not isinstance(m, tuple) and st.get("d") and st.get("fill") and not st.get("image") \
+                            and (st.get("opacity") is None or st["opacity"] > 0.9) and G.colour(st.get("fill"), pal):
+                        # the band: offset v in the part's axes (puppet.js: through the transpose of the part's matrix), then
+                        # carried to the screen by the part and placement matrices, as the SVG renderer shifts its copy
+                        lx, ly = toon.get("dir") or [-0.6, -0.8]; nn = math.hypot(lx, ly) or 1; dd = toon.get("d", 11)
+                        wx, wy = lx / nn * dd, ly / nn * dd
+                        vx, vy = Mpart[0] * wx + Mpart[1] * wy, Mpart[2] * wx + Mpart[3] * wy
+                        off = (m[0] * vx + m[2] * vy, m[1] * vx + m[3] * vy)
+                        subs_ = G.parse_path(st["d"])
+                        polys = [[G.apply(m, q) for q in G.sample(segs, per)] for segs, c in subs_ if c]
+                        line_ = G.colour(st.get("stroke"), pal)
+                        for q in polys:   # the fill first, then the band, then the outline
+                            strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in q], "closed": True, "fill": G.colour(st["fill"], pal), "line": None,
+                                            "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})
+                        for b in (_toon_band(polys, off) if polys else []):
+                            strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in b], "closed": True, "fill": toon.get("shade", "#2a1a10"), "line": None,
+                                            "w": 0, "op": toon.get("opacity", 0.26)})
+                        if line_:
+                            for segs, closed in subs_:
+                                strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in (G.apply(m, q) for q in G.sample(segs, per))], "closed": closed,
+                                                "fill": None, "line": line_, "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})
+                        continue
                     subs = G.parse_path(st.get("d") or "")
                     if st.get("rule") == "evenodd" and st.get("fill") and sum(1 for _, c in subs if c) > 1:
                         # v0.9 even-odd fill: Grease Pencil fills cannot have holes, so the outer contour and its holes
