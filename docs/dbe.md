@@ -128,8 +128,17 @@ environment variables below).
     31.1; it renders at half size, so its edges are softer. (A first measurement on fx-demo had read Synfig as nearer
     the shaded picture while drawing no band at all: `toon: true` became an empty, falsy dict. The test now compares
     against an unshaded copy.)
-  - Still SVG-only: toon shading in Lottie (it would need a track matte per stroke), and the media filters (pencil,
-    crayon, marker, watercolour).
+  - **Media in every renderer** (WP-15): a shot's `style.medium` (pencil, crayon, marker, watercolour) reaches Synfig,
+    Lottie and Grease Pencil through the player's own filter. `tools/media_frames.mjs` reads the filter definitions
+    from player.js (one definition) and draws each of the renderer's transparent character frames through it before
+    they go over the set; Lottie, for such a shot, renders its characters on transparency as it does for a comp. The
+    grain is laid in frame pixels, so under a zoomed camera it is finer or coarser than the player's. Test
+    `mediarenderers` (only when asked) puts a copy of pip-park in crayon and checks each renderer's frame is nearer the
+    crayon SVG render than the plain one, where the medium changes it. A first check, Synfig only: 24.4 levels from the crayon
+    render against 92.1 from the plain one, over 46,993 px; the three-renderer run is still being measured.
+  - Toon shading in Lottie (being measured): per shaded part, a track matte of its fills over a layer with the shade colour
+    and the fills shifted toward the light, at the toon's opacity; clipped per part, not per stroke. A first look shows the
+    bands (13,595 px of a pip-park frame change).
 - **Compositor and multiplane camera** (WP-36, `dbe/player/comp.js`): a shot's `"comp"` builds it from depth planes,
   far to near, each holding sets (`set`), items (`shape` with SVG, `gradient`, a seeded `stars` field, or any
   overlay) and cast members (`"plane"` on a cast entry; the shot's own set, cast and props are the plane `stage`,

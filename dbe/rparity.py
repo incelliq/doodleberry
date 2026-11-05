@@ -35,7 +35,7 @@ CAPABILITIES = {   # feature -> renderers that draw it (svg draws everything)
     "props": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: baked as small puppets (tools/bake.mjs)
     "props with their own drawing": {"svg"},
     "motion effects (fx)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: each frame's drawing as a swap (dbe/fxbake.py)
-    "toon shading": {"svg", "synfig", "grease-pencil"},   # WP-14: Synfig cuts the band with an animated shifted copy; Grease Pencil gets it as geometry
+    "toon shading": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: Synfig cuts the band with an animated shifted copy, Lottie through a track matte, Grease Pencil as geometry
     "compositor planes (comp)": {"svg", "synfig", "lottie", "grease-pencil"},   # WP-14: back and front planes by the player around the renderer's characters
     "characters on compositor planes": {"svg"},
     "even-odd fills (holes)": {"svg", "synfig", "lottie", "grease-pencil"},   # v0.9 (Grease Pencil: keyhole polygons)
@@ -290,10 +290,10 @@ def self_test(tmp):
     bad = [x for x in r["shots"] if not x["ok"]]
     if bad:
         fails.append(f"renderer parity: {bad}")
-    for film, want in (("fx-demo", "toon shading"),):
+    for film, want in (("fx-demo", "raster parts"),):   # (every renderer draws toon shading since WP-14; Grease Pencil still cannot draw raster parts)
         sh = C._shots(film)["shots"][0]
-        why = refusal("lottie", sh, [json.loads((ROOT / c["puppet"]).read_text()) for c in sh.get("cast", [])])   # (Synfig draws toon since WP-14)
+        why = refusal("grease-pencil", sh, [json.loads((ROOT / c["puppet"]).read_text()) for c in sh.get("cast", [])])
         got.setdefault("refusals", {})[film] = why
         if not why or want not in why:
-            fails.append(f"{film} should be refused by lottie for {want}: {why}")
+            fails.append(f"{film} should be refused by grease-pencil for {want}: {why}")
     return fails, got

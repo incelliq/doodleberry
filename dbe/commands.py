@@ -850,6 +850,14 @@ def _set_video(name, sh, bdir):
     return v
 
 
+def _medium_frames(fr, sh, pattern):
+    """WP-15: a shot's medium (pencil, crayon, marker, watercolour) on another renderer's character frames, through the
+    player's own filter (tools/media_frames.mjs reads it from player.js)"""
+    med = (sh.get("style") or {}).get("medium")
+    if med:
+        _run(["node", "tools/media_frames.mjs", str(fr), med, pattern], timeout=14400)
+
+
 def _front_frames(name, sh, bdir):
     """what goes over another renderer's characters, as RGBA frames, or None: a compositor shot's planes nearer than
     the characters (WP-14) and the speech bubbles (the player's overlay=1 pass draws both, posing the cast for where
@@ -925,6 +933,7 @@ def shot_render(name, shot, renderer=""):
         fr = bdir / f"{shot}_syn"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run(["synfig", str(sif), "-t", "png", "-o", str(fr / "f.png"), "-q"])
         frames = sorted(fr.glob("f.*.png"))
+        _medium_frames(fr, sh, r"^f\..*\.png$")
         _composite(setv, ["-framerate", str(fps), "-start_number", frames[0].stem.split(".")[-1], "-i", str(fr / "f.%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
     elif renderer == "grease-pencil":
         if not BLENDER:
@@ -933,14 +942,16 @@ def shot_render(name, shot, renderer=""):
         gpj = bdir / f"{shot}.gp.json"; gpj.write_text(json.dumps(X.to_gp_frames(baked, (W, H), toon=(sh.get("style") or {}).get("toon"))))
         fr = bdir / f"{shot}_gp"; shutil.rmtree(fr, ignore_errors=True); fr.mkdir()
         _run([BLENDER, "-b", "--factory-startup", "--gpu-backend", "vulkan", "--python", "dbe/blender_gp.py", "--", str(gpj), str(fr / "f_"), "-", "0.5"], timeout=14400)
+        _medium_frames(fr, sh, r"^f_\d+\.png$")
         _composite(setv, ["-framerate", str(fps), "-start_number", "1", "-i", str(fr / "f_%04d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
     elif renderer == "lottie":
-        lj = export_lottie(name, shot, **({"background": "none"} if sh.get("comp") else {}))["path"]
+        alone = bool(sh.get("comp") or (sh.get("style") or {}).get("medium"))   # characters on transparency, over the set (a comp, a medium)
+        lj = export_lottie(name, shot, **({"background": "none"} if alone else {}))["path"]
         page = bdir / f"{shot}.lottie.html"
         page.write_text(f"""<!doctype html><html><head><meta charset="utf-8"><style>html,body{{margin:0;background:{sh.get('lottie_bg', '#ffffff')}}}#a{{width:{W}px;height:{H}px}}</style></head><body><div id="a"></div>
 <script src="{ROOT}/engine/vendor/lottie/lottie.min.js"></script><script>const anim=lottie.loadAnimation({{container:document.getElementById('a'),renderer:'svg',loop:false,autoplay:false,animationData:{(ROOT / lj).read_text()}}});
 window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);anim.addEventListener('DOMLoaded',()=>{{window.ready=true;}});</script></body></html>""")
-        if sh.get("comp"):   # a compositor shot (WP-14): Lottie's characters on transparency, between the back and front planes
+        if alone:   # a compositor shot (WP-14): Lottie's characters on transparency, between the back and front planes; a medium (WP-15) filters them
             page.write_text(page.read_text().replace(f"background:{sh.get('lottie_bg', '#ffffff')}", "background:transparent"))
             lf = bdir / f"{shot}_lottie"; shutil.rmtree(lf, ignore_errors=True)
             env_keep = {"DBE_ALPHA": "1", "DBE_KEEP_FRAMES": str(lf)}; old_env = {k: os.environ.get(k) for k in env_keep}; os.environ.update(env_keep)
@@ -949,6 +960,7 @@ window.FRAMES={baked['frames']};window.renderFrame=f=>anim.goToAndStop(f,true);a
             finally:
                 for k, v in old_env.items():
                     os.environ.pop(k) if v is None else os.environ.__setitem__(k, v)
+            _medium_frames(lf, sh, r"^f\d+\.png$")
             _composite(_set_video(name, sh, bdir), ["-framerate", str(fps), "-i", str(lf / "f%05d.png")], W, H, out, _front_frames(name, sh, bdir), fps)
         else:
             _render_page(page, "", out)
@@ -983,7 +995,7 @@ def export_lottie(name, shot, background="plate", slots=False):
     img = None
     if background == "plate":
         img = "data:image/png;base64," + base64.b64encode(_bg_png(name, sh, bdir).read_bytes()).decode()
-    lj.write_text(json.dumps(X.to_lottie(baked, s.get("size", [1080, 1920]), name=f"{name}:{shot}", bg=sh.get("lottie_bg"), bg_image=img, slots=slots)))
+    lj.write_text(json.dumps(X.to_lottie(baked, s.get("size", [1080, 1920]), name=f"{name}:{shot}", bg=sh.get("lottie_bg"), bg_image=img, slots=slots, toon=(sh.get("style") or {}).get("toon"))))
     return {"path": str(lj.relative_to(ROOT)), "bytes": lj.stat().st_size}
 
 
@@ -7357,10 +7369,14 @@ def test_golden(update=False, film=""):
         bad, meas = _engine_test()
         failed += 1 if bad else 0
         results.append({"engine": "a Godot project rendered in Movie Maker mode as a proc node: the same pixels twice, every frame different, drawn by the player in front of a shot", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "mediarenderers":   # WP-15: media (pencil, crayon...) in every renderer (renders three times, so only when asked)
+        bad, meas = _media_renderers_test()
+        failed += 1 if bad else 0
+        results.append({"mediarenderers": "a shot in crayon rendered by Synfig, Lottie and Grease Pencil: where the medium changes the SVG render, each renderer's frame is nearer the crayon one than the plain one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "toon":   # WP-14: toon shading in Synfig and Grease Pencil (Blender renders, so only when asked)
         bad, meas = _toon_test()
         failed += 1 if bad else 0
-        results.append({"toon": "toon shading drawn by Synfig and Grease Pencil: in the band the SVG renderer shades, each is nearer the shaded picture than the unshaded one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"toon": "toon shading drawn by Synfig, Lottie and Grease Pencil: in the band the SVG renderer shades, each is nearer the shaded picture than the unshaded one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "bubbles":   # WP-14: speech bubbles in non-SVG renders (renders a shot with Lottie, so only when asked)
         bad, meas = _bubbles_test()
         failed += 1 if bad else 0
@@ -10696,13 +10712,15 @@ def _toon_test():
                 if on:
                     x.setdefault("style", {})["toon"] = True
             (d / "shots.json").write_text(json.dumps(sh))
-        par = render_parity(names[0], "s1", ["synfig", "grease-pencil"])
+        par = render_parity(names[0], "s1", ["synfig", "lottie", "grease-pencil"])
         meas["parity"] = {k: v["min"] for k, v in par["renderers"].items()}; meas["refused"] = par.get("refusals")
         mod = sys.modules[__name__]; t = [1.5]; dirs = {k: tmp / k for k in ("on", "off", "synfig", "gp")}
         for p_ in dirs.values():
             p_.mkdir()
         a = RP.stills_svg(mod, names[0], "s1", t, dirs["on"])[0]; b = RP.stills_svg(mod, names[1], "s1", t, dirs["off"])[0]
-        got = {"synfig": RP.stills_synfig(mod, names[0], "s1", t, dirs["synfig"])[0], "grease-pencil": RP.stills_gp(mod, names[0], "s1", t, dirs["gp"])[0]}
+        dirs["lottie"] = tmp / "lottie"; dirs["lottie"].mkdir()
+        got = {"synfig": RP.stills_synfig(mod, names[0], "s1", t, dirs["synfig"])[0], "lottie": RP.stills_lottie(mod, names[0], "s1", t, dirs["lottie"])[0],
+               "grease-pencil": RP.stills_gp(mod, names[0], "s1", t, dirs["gp"])[0]}
         L = lambda p_, sz=None: np.asarray(Image.open(p_).convert("RGBA").resize(sz) if sz else Image.open(p_).convert("RGBA")).astype(float)
         A, B = L(a), L(b); sz = A.shape[1::-1]
         band = (np.abs(A[..., :3] - B[..., :3]).max(-1) > 12) & (A[..., 3] > 250)
@@ -10710,9 +10728,50 @@ def _toon_test():
         for k, p_ in got.items():
             X = L(p_, sz)
             meas[k] = {"vs_shaded": round(float(np.abs(X[..., :3] - A[..., :3]).max(-1)[band].mean()), 2), "vs_unshaded": round(float(np.abs(X[..., :3] - B[..., :3]).max(-1)[band].mean()), 2)}
-        if meas["band_px"] < 2000 or meas["synfig"]["vs_shaded"] > 0.5 * meas["synfig"]["vs_unshaded"] or meas["grease-pencil"]["vs_shaded"] > 0.8 * meas["grease-pencil"]["vs_unshaded"] \
+        if meas["band_px"] < 2000 or meas["synfig"]["vs_shaded"] > 0.5 * meas["synfig"]["vs_unshaded"] or meas["lottie"]["vs_shaded"] > 0.5 * meas["lottie"]["vs_unshaded"] \
+                or meas["grease-pencil"]["vs_shaded"] > 0.8 * meas["grease-pencil"]["vs_unshaded"] \
                 or min(meas["parity"].values()) < 0.97:
             bad.append(f"toon: {meas}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+        for nm in names:
+            shutil.rmtree(FILMS / nm, ignore_errors=True)
+    return bad, meas
+
+
+def _media_renderers_test(renderers=("synfig", "lottie", "grease-pencil"), medium="crayon"):
+    """WP-15 media in every renderer: a copy of pip-park in crayon rendered by Synfig, Lottie and Grease Pencil; where
+    the medium changes the SVG render (against a plain copy), each renderer's frame is nearer the crayon one"""
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    names = ("zz-media", "zz-media-off"); tmp = ROOT / "out" / "mediatest"; shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
+    try:
+        for nm, med in zip(names, (medium, None)):
+            d = FILMS / nm; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+            for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+                shutil.copy(f, d / f.name)
+            sh = _json(d / "shots.json")
+            for x in sh["shots"]:
+                x["renderer"] = "svg"
+                if med:
+                    x.setdefault("style", {})["medium"] = med
+            (d / "shots.json").write_text(json.dumps(sh))
+        t = 1.5
+        for nm in names:
+            _run(["node", "tools/stills.mjs", str(_player_page(nm)), "shot=s1&captions=0&bubbles=0", str(tmp / nm), str(t)], timeout=300)
+        L = lambda p_, sz=None: np.asarray(Image.open(p_).convert("RGB").resize(sz) if sz else Image.open(p_).convert("RGB")).astype(float)
+        A, B = L(tmp / f"{names[0]}_{t}.png"), L(tmp / f"{names[1]}_{t}.png"); sz = A.shape[1::-1]
+        diff = np.abs(A - B).max(-1) > 20; meas["medium_px"] = int(diff.sum())
+        for r_ in renderers:
+            r = shot_render(names[0], "s1", r_); fp = tmp / f"{r_}.png"
+            _run(["ffmpeg", "-v", "error", "-y", "-ss", str(t), "-i", str(ROOT / r["path"]), "-frames:v", "1", str(fp)])
+            X = L(fp, sz)
+            meas[r_] = {"vs_medium": round(float(np.abs(X - A).max(-1)[diff].mean()), 2), "vs_plain": round(float(np.abs(X - B).max(-1)[diff].mean()), 2)}
+            if meas[r_]["vs_medium"] > 0.6 * meas[r_]["vs_plain"]:
+                bad.append(f"{r_}: {meas[r_]}")
+        if meas["medium_px"] < 5000:
+            bad.append(f"the medium changed too little: {meas['medium_px']}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
         for nm in names:

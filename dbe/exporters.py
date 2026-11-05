@@ -33,12 +33,13 @@ def raster_strokes(strokes):
     return [st for st in strokes if st.get("image") and not st.get("d")]
 
 
-def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=False):
+def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=False, toon=None):
     """bg: a solid colour layer; bg_image: a PNG data URI embedded as an image asset (the set plate). slots (WP-23):
     every colour taken from a puppet's palette names its slot ("sid": "skin", or "<puppet>.skin" with several in the
     cast) and the root "slots" holds each slot's value, so a dotLottie theme (or a player) can recolour by name"""
     W, H = size
     SL = {"on": slots, "prefix": "", "slots": {}}
+    toon = _toon_spec(toon)
 
     def colour_prop(v, pal):
         """a colour property; with slots, palette colours carry their slot id"""
@@ -213,6 +214,24 @@ def to_lottie(baked, size, name="doodleberry", bg=None, bg_image=None, slots=Fal
             if repl:
                 lay["ks"]["o"] = kf(vis, hold=True)
             part_layers += with_z(lay, vis, z_track(frs, pid, part.get("z", 0)), raster_strokes(part["strokes"]))
+            fills = [st for st in part["strokes"] if st.get("d") and not st.get("image") and G.colour(st.get("fill"), pal) and (st.get("opacity") is None or st["opacity"] > 0.9)]
+            if toon and fills and not part.get("bend"):
+                # WP-14 toon shading: a track matte (the part's fills) over a layer holding the shade colour with the same
+                # fills shifted toward the light on top, at the toon's opacity, as puppet.js clips its shifted copy
+                offs = _toon_offsets(toon, [G.part_matrices(p, fr["angles"], fr.get("shifts"), fr.get("scales"), fr.get("grow"))[pid] for fr in frs])
+                flat = [{k: v for k, v in st.items() if k not in ("stroke", "gradient", "texture")} for st in fills]
+                ident = lambda o: {"o": o, "r": {"a": 0, "k": 0}, "p": {"a": 0, "k": [0, 0, 0]}, "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]}}
+                zt = part.get("z", 0)
+                matte = {"ddd": 0, "ind": nid(), "ty": 4, "nm": f"{pid} toon matte", "parent": ids[pid], "td": 1, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                         "ks": ident(kf(vis, hold=True)), "shapes": shape_group(flat, pal), "_z": zt + 0.0011}
+                shifted = {"ty": "gr", "it": shape_group(flat, pal)[:] + [{"ty": "tr", "p": kf([[round(o[0], 2), round(o[1], 2)] for o in offs]), "a": {"a": 0, "k": [0, 0]},
+                                                                           "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}}]}
+                rect = {"ty": "gr", "it": [{"ty": "rc", "p": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [20000, 20000]}, "r": {"a": 0, "k": 0}},
+                                           {"ty": "fl", "c": {"a": 0, "k": G.hex_rgb(toon["shade"]) + [1]}, "o": {"a": 0, "k": 100}, "r": 1},
+                                           {"ty": "tr", "p": {"a": 0, "k": [0, 0]}, "a": {"a": 0, "k": [0, 0]}, "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}}]}
+                band = {"ddd": 0, "ind": nid(), "ty": 4, "nm": f"{pid} toon", "parent": ids[pid], "tt": 1, "sr": 1, "ao": 0, "ip": 0, "op": n, "st": 0, "bm": 0,
+                        "ks": ident(kf([round(toon["opacity"] * v, 2) for v in vis], hold=True)), "shapes": [shifted, rect], "_z": zt + 0.001}
+                part_layers += [matte, band]
         for sid, sw in (p.get("swaps") or {}).items():
             for shape, strokes in sw["shapes"].items():
                 if not strokes:
