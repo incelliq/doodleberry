@@ -1950,7 +1950,14 @@ Models used as assistants whose output is data a person accepts, on CPU (onnxrun
 - **Linear light** (part 3): a comp's `"linear": true` runs its planes' filters (grade, blur, glow, depth of field) in
   linear light, where light adds as it does in a camera: the `stereo` test blurs a bright dot on a dark field and finds
   the halo at 40 and 60 px at 103 and 54 levels, against 56 and 26 in sRGB. Blending between planes (`blend` nodes,
-  plane opacity) stays the browser's, which composites in sRGB; CSS has no linear-light compositing.
+  plane opacity) in the player stays the browser's, which composites in sRGB (CSS has no linear-light compositing),
+  so `comp.linear` does it outside the browser: each plane rendered alone on transparency (the player's
+  `?compplane=<id>`, `@top` for the bubbles; `tools/comp_planes.mjs`, which also reads each plane's blend mode and
+  opacity per frame), then composited far to near in float linear light (`dbe/master.py composite_linear`: normal,
+  multiply, screen, lighten, darken, overlay, plus-lighter, difference; light wrap is not redone). `film.master`
+  with `linear: true` takes compositor shots' beauty frames from it. Test `linearplanes`: a red veil at half opacity
+  over green comes out at [167, 120, 59], the linear mix exactly (the browser gives the sRGB mix, [135, 104, 59]);
+  where nothing is translucent the two agree to the level; a screened soft glow's falloff reads 117 against 103.
 
 **OpenUSD** (WP-42). `export.usd {name, shot, ascii}` writes the shot as a USD stage (`build/shots/<shot>.usda`, with
 its textures beside it; `dbe/usdexport.py`, on usd-core 26.11) from the bake every renderer draws: each part an Xform

@@ -507,7 +507,8 @@
     if (sh.comp && window.COMP && (!bgOnly || compSplit) && !castOnly) {   // WP-36: depth planes with parallax and depth of field, per-plane nodes (castonly: the characters alone, for parity)
       const view = sh.camera ? (Acting.sampleKeys(sh.camera, tq) || [W / 2, H / 2, 1]) : sh.camera_auto ? autoCam(sh, tq, casts) : [W / 2, H / 2, 1];
       VIEW = view;
-      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS), split: compSplit, eye: EYE, depthpass: DEPTHPASS,
+      const info = window.COMPINFO = { order: [] };
+      svg = boilDefs(st, t) + COMP.compose(sh, { W, H, t: tq, view, stage: world, planeInk, tag: Math.round(t * FPS), split: compSplit, eye: EYE, depthpass: DEPTHPASS, info, only: COMPPLANE && COMPPLANE !== '@top' ? COMPPLANE : null,
         drawSet: (name, opts, tt) => ((window.SETS || {})[name] || window.SETS.plain).draw(tt, opts, W, H), overlay }); }
     if (layered) {   // inside the camera's own transform, layer d gets the compositor's parallax: by 1/d, zooming by 1 + (z - 1)/d
       const [cx, cy, z] = VIEW || [W / 2, H / 2, 1];
@@ -517,6 +518,11 @@
         return `<g data-depth="${d}" transform="translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${k.toFixed(5)}) translate(${(-px).toFixed(2)} ${(-py).toFixed(2)})">${l.svg}</g>`; }).join(''));
     }
     if (DEPTHPASS && !(sh.comp && window.COMP)) { const dp = COMP.depthFill(1, W, H); svg = `<defs>${dp.def}</defs><g filter="url(#${dp.id})">${svg}</g>`; }   // a flat shot: all at depth 1
+    if (COMPPLANE === '@top') {   // WP-37 linear light: what the player draws over all the planes (the bubbles), alone
+      const bub = q.get('bubbles') !== '0' ? bubblesFor(sh, tq, heads, VIEW) : '';
+      return bub ? (st.boil ? boilDefs(st, t) + `<g filter="url(#${boilId(st, t)})">${bub}</g>` : bub) : '';
+    }
+    if (COMPPLANE) return svg;   // one plane alone: no bubbles or captions
     if (OVERLAY) {   // WP-14: what goes over another renderer's characters: the compositor's near planes and the bubbles
       let ov = st.boil ? boilDefs(st, t) : '';
       if (sh.comp && window.COMP) ov += COMP.compose(sh, { W, H, t: tq, view: VIEW || [W / 2, H / 2, 1], stage: '', planeInk, tag: Math.round(t * FPS), split: 'front',
@@ -533,11 +539,12 @@
   const only = q.get('shot') ? S.shots.find(s => s.id === q.get('shot')) : null;
   const compSplit = q.get('comp') || null, bgOnly = q.get('bg') === '1' || !!compSplit;   // comp=back|front: a compositor shot's planes behind or in front of the characters (WP-14)
   const OVERLAY = q.get('overlay') === '1';   // WP-14: the near compositor planes and the speech bubbles alone, on transparency
+  const COMPPLANE = q.get('compplane');   // WP-37 linear light: one compositor plane alone (or @top: the bubbles), on transparency
   const EYE = q.get('eye');   // WP-37 stereo: left | right (the compositor shifts its planes by depth)
   const DEPTHPASS = q.get('depthpass') === '1';   // WP-37 depth pass: each compositor plane one colour encoding its depth
   const IDPASS = q.get('idpass') === '1';   // WP-37 object-ID pass: the cast alone, each part one flat colour (crisp edges)
   const castOnly = q.get('castonly') === '1' || IDPASS, withProps = q.get('props') === '1';
-  if (castOnly || compSplit === 'front' || OVERLAY) { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
+  if (castOnly || compSplit === 'front' || OVERLAY || COMPPLANE) { document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent'; }
   // ?pre=&post= (seconds): handles before and after a shot, rendered for transitions made at assembly (WP-15)
   const t0 = only ? only.start - (+q.get('pre') || 0) : 0, t1 = only ? only.end + (+q.get('post') || 0) : S.shots[S.shots.length - 1].end;
   window.FILMTIME = { start: t0, end: t1, fps: FPS };

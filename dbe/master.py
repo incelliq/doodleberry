@@ -407,3 +407,32 @@ def apply_look(acescg_rgb, look):
     log = to_space(acescg_rgb, WORK, "ACEScct")
     O.Config.CreateRaw().getProcessor(t).getDefaultCPUProcessor().applyRGB(log)
     return to_space(log, "ACEScct", WORK)
+
+
+# ---------- WP-37: compositor planes blended in linear light ----------
+# The browser composites a compositor shot's planes in sRGB (8-bit, gamma-encoded), so a half-transparent plane or a
+# soft edge mixes encoded values and darkens. Rendered one by one (tools/comp_planes.mjs), the planes are composited
+# here far to near in linear light, in float, with each plane's blend mode and opacity (W3C compositing: the blend
+# mixes the backdrop with the source where both are, then source-over). Light wrap is not redone here.
+BLENDS = {
+    "normal": lambda b, s: s,
+    "multiply": lambda b, s: b * s,
+    "screen": lambda b, s: b + s - b * s,
+    "lighten": lambda b, s: np.maximum(b, s),
+    "darken": lambda b, s: np.minimum(b, s),
+    "overlay": lambda b, s: np.where(b <= 0.5, 2 * b * s, 1 - 2 * (1 - b) * (1 - s)),
+    "plus-lighter": lambda b, s: np.minimum(1.0, b + s),
+    "difference": lambda b, s: np.abs(b - s),
+}
+
+
+def composite_linear(layers, bg=(1.0, 1.0, 1.0)):
+    """layers: far to near [(rgba uint8 straight alpha, {"mode", "opacity"})] -> sRGB uint8 RGB, over `bg` (sRGB)"""
+    H, W = layers[0][0].shape[:2]
+    Cb = np.broadcast_to(srgb_to_linear(np.asarray(bg, np.float64)), (H, W, 3)).copy(); ab = np.ones((H, W, 1))
+    for px, info in layers:
+        info = info or {}; f = BLENDS.get(info.get("mode") or "normal", BLENDS["normal"])
+        Cs = srgb_to_linear(px[..., :3].astype(np.float64) / 255); a_s = px[..., 3:4].astype(np.float64) / 255 * float(info.get("opacity", 1) if info.get("opacity") is not None else 1)
+        mixed = (1 - ab) * Cs + ab * np.clip(f(Cb, Cs), 0, None)   # the blended colour where the backdrop is
+        Cb = a_s * mixed + (1 - a_s) * Cb   # source-over (the backdrop is opaque: over the background)
+    return np.clip(np.round(linear_to_srgb(np.clip(Cb, 0, 1)) * 255), 0, 255).astype(np.uint8)

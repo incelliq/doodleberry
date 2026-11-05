@@ -7622,6 +7622,10 @@ def test_golden(update=False, film=""):
         bad, meas = _graphcomp_test()
         failed += 1 if bad else 0
         results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "linearplanes":   # WP-37: compositor planes blended in linear light
+        bad, meas = _linearplanes_test()
+        failed += 1 if bad else 0
+        results.append({"linearplanes": "comp.linear composites a shot's planes in linear light: a half-opaque red veil over green comes out as the linear mix (the browser gives the sRGB one), opaque areas match the browser, a screened soft glow falls off brighter", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "compgroups":   # WP-36: nested groups and deformers in the compositor
         bad, meas = _compgroups_test()
         failed += 1 if bad else 0
@@ -10150,8 +10154,9 @@ def _master_frame(job):
 
 @command("film.master", name=("string", "film"), scale=("integer", "times the film size (2: 4K for a 1080x1920 film)", 2),
          fps=("integer", "frame rate of the master (0: the film's own; higher works, frames are functions of time)", 0),
-         passes=("array", "beauty, line, fill, matte; also id (Cryptomatte object ids) and motion (forward vectors, needs id)", None))
-def film_master(name, scale=2, fps=0, passes=None):
+         passes=("array", "beauty, line, fill, matte; also id (Cryptomatte object ids) and motion (forward vectors, needs id)", None),
+         linear=("boolean", "compositor shots' planes blended in linear light in the beauty pass (comp.linear)", False))
+def film_master(name, scale=2, fps=0, passes=None, linear=False):
     """Render a film's master (WP-37): every frame at `scale` times its size as a multi-pass OpenEXR (beauty, line,
     fill, matte layers; half float, premultiplied, ACEScg through OpenColorIO's ACES 2.1 studio config, lossless ZIP),
     with a slate, the mixed audio, captions and a checksum manifest in films/<name>/build/master/ (a cinema-style
@@ -10172,6 +10177,10 @@ def film_master(name, scale=2, fps=0, passes=None):
         raise RuntimeError(f"master render failed: {(r.stderr or r.stdout)[-1500:]}")
     info = [json.loads(l) for l in r.stdout.splitlines() if l.startswith("{")]
     n, mfps, size = info[0]["frames"], info[0]["fps"], info[0]["size"]
+    if linear and "beauty" in passes:   # WP-37: compositor shots' beauty frames from planes blended in linear light
+        for sh in s["shots"]:
+            if sh.get("comp"):
+                comp_linear(name, sh["id"], out=str(tmp / "beauty"), scale=scale, fps=mfps)
     t_render = time.time() - t0
     (out / "exr").mkdir(parents=True)
     meta = {"film": name, "colorspace": MA.WORK, "ocio_config": MA.CONFIG, "passes": ",".join(passes), "fps": mfps, "software": "Doodleberry (SVG player, WP-37)", "scale": scale}
@@ -10308,6 +10317,35 @@ def film_from_master(name, size=None, view="texture", look=""):
     qa = subprocess.run([PY, "engine/qa.py", f"films/{name}", "--video", "build/final_from_master.mp4"], cwd=ROOT, capture_output=True, text=True)
     return {"encode": str(dst.relative_to(ROOT)), "frames": len(frames), "size": [W, H], "view": view, "psnr_vs_own_render_db": psnr,
             "qa": (qa.stdout or qa.stderr)[-1200:]}
+
+
+@command("comp.linear", name=("string", "film"), shot=("string", "a compositor shot"), out=("string", "folder for the frames (default build/shots/<shot>_linear)", ""),
+         scale=("integer", "times the film size", 1), fps=("integer", "frame rate (0: the film's)", 0),
+         start=("number", "film seconds (default: the shot's start)", None), end=("number", "film seconds (default: the shot's end)", None))
+def comp_linear(name, shot, out="", scale=1, fps=0, start=None, end=None):
+    """A compositor shot's planes blended in linear light (WP-37): each plane rendered alone on transparency
+    (tools/comp_planes.mjs, the player's ?compplane=), then composited far to near in float linear light with its
+    blend mode and opacity (dbe/master.py composite_linear), the bubbles over all. The browser composites in sRGB, where
+    a half-transparent plane or a soft edge mixes encoded values and comes out darker. PNG frames named by film frame."""
+    from PIL import Image
+    import numpy as np
+    from . import master as MA
+    s, sh, _ = _shot(name, shot); fps = fps or s.get("fps", 30)
+    if not sh.get("comp"):
+        raise ValueError(f"shot {shot} has no compositor planes")
+    planes = [p["id"] for p in sorted([dict(p, i=i) for i, p in enumerate(sh["comp"].get("planes") or [])] + ([] if any(p["id"] == "stage" for p in sh["comp"].get("planes") or []) else [{"id": "stage", "depth": 1, "i": 10**6}]),
+                                      key=lambda p: (-(p.get("depth", 1) or 1), p["i"]))]
+    a, b = sh["start"] if start is None else start, sh["end"] if end is None else end
+    d = _film(name); od = Path(out) if out else d / "build" / "shots" / f"{shot}_linear"; tmp = d / "build" / "shots" / f"{shot}_planes"
+    shutil.rmtree(tmp, ignore_errors=True); od.mkdir(parents=True, exist_ok=True)
+    _run(["node", "tools/comp_planes.mjs", str(_player_page(name)), str(tmp), str(scale), str(fps), shot, str(a), str(b), ",".join(planes + ["@top"])], timeout=14400)
+    infos = {p: _json(tmp / p / "info.json", {}) for p in planes + ["@top"]}
+    frames = sorted(int(f.stem[2:]) for f in (tmp / planes[0]).glob("f_*.png"))
+    for f in frames:
+        lay = [(np.asarray(Image.open(tmp / p / f"f_{f:05d}.png").convert("RGBA")), infos[p].get(str(f))) for p in planes + ["@top"]]
+        Image.fromarray(MA.composite_linear(lay)).save(od / f"f_{f:05d}.png")
+    return {"frames": len(frames), "planes": planes, "dir": str(od.relative_to(ROOT)) if od.is_relative_to(ROOT) else str(od),
+            "light_wrap_not_redone": [p for p in planes if any((v or {}).get("lightwrap") for v in infos[p].values())]}
 
 
 @command("comp.ingest_exr", name=("string", "film"), src=("string", "EXR frames: a glob (plates/sky.*.exr) or a printf pattern (sky.%04d.exr), from the film folder or the repo"),
@@ -10527,6 +10565,59 @@ def _masterpasses_test(film="handshake-demo", t0=2.0):
                 bad.append(f"depth: {meas['depth']}")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _linearplanes_test():
+    """WP-37 linear light between planes: a copy of pip-park whose shot is built from planes: an opaque green far
+    plane, the stage (set none, the characters), a red veil at half opacity and a soft white glow screened on. The
+    planes composited by comp.linear against the browser's own composite: where the veil covers only green, linear
+    gives encode(0.5 lin(red) + 0.5 lin(green)) and the browser the sRGB mix; where no plane is translucent the two
+    agree; the screened glow's falloff is brighter in linear light."""
+    import numpy as np
+    from PIL import Image
+    from . import master as MA
+    bad, meas = [], {}
+    name = "zz-linear"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    try:
+        for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+            shutil.copy(f, d / f.name)
+        sj = _json(d / "shots.json"); sh = sj["shots"][0]; sj["shots"] = [sh]
+        for k in ("camera", "camera_auto", "transition"):
+            sh.pop(k, None)
+        sh["set"] = "none"; sh["bubbles"] = False
+        G, R = "#2f9e44", "#e03131"
+        sh["comp"] = {"planes": [
+            {"id": "far", "depth": 3, "items": [{"type": "shape", "svg": f"<rect x='-2000' y='-2000' width='6000' height='6000' fill='{G}'/>"}]},
+            {"id": "stage", "depth": 1},
+            {"id": "veil", "depth": 1, "opacity": 0.5, "items": [{"type": "shape", "svg": f"<rect x='0' y='0' width='300' height='1920' fill='{R}'/>"}]},
+            {"id": "glow", "depth": 1, "items": [{"type": "shape", "svg": "<circle cx='800' cy='300' r='120' fill='#ffffff'/>"}]}],
+            "nodes": [{"plane": "glow", "type": "blur", "radius": 40}, {"plane": "glow", "type": "blend", "mode": "screen"}]}
+        (d / "shots.json").write_text(json.dumps(sj, indent=1))
+        s = _shots(name); fps = s.get("fps", 30); shr = s["shots"][0]; f = round((shr["start"] + 1.0) * fps); t = f / fps
+        tmp = d / "build" / "lt"; tmp.mkdir(parents=True)
+        _run(["node", "tools/stills.mjs", str(_player_page(name)), f"shot={shr['id']}&captions=0", str(tmp / "b"), str(round(t - shr["start"], 6))], timeout=300)
+        br = np.asarray(Image.open(next(tmp.glob("b_*.png"))).convert("RGB")).astype(float)
+        r = comp_linear(name, shr["id"], out=str(tmp / "lin"), start=t, end=t + 0.5 / fps)
+        li = np.asarray(Image.open(tmp / "lin" / f"f_{f:05d}.png").convert("RGB")).astype(float)
+        hx = lambda h: np.array([int(h[i:i + 2], 16) for i in (1, 3, 5)], float)
+        want_lin = np.round(MA.linear_to_srgb(0.5 * MA.srgb_to_linear(hx(R) / 255) + 0.5 * MA.srgb_to_linear(hx(G) / 255)) * 255)
+        want_srgb = np.round(0.5 * hx(R) + 0.5 * hx(G))
+        vy = slice(1500, 1880); vx = slice(20, 280)   # the veil over green, below the characters
+        ov_l, ov_b = li[vy, vx].reshape(-1, 3).mean(0), br[vy, vx].reshape(-1, 3).mean(0)
+        plain_l, plain_b = li[1500:1880, 700:1000].reshape(-1, 3).mean(0), br[1500:1880, 700:1000].reshape(-1, 3).mean(0)
+        ring = lambda im: im[300, 800 + 150: 800 + 190].mean()   # the glow's soft falloff, beyond the disc
+        meas = {"veil": {"linear": ov_l.round(1).tolist(), "browser": ov_b.round(1).tolist(), "want_linear": want_lin.tolist(), "want_srgb_mix": want_srgb.tolist()},
+                "opaque_green": {"linear": plain_l.round(1).tolist(), "browser": plain_b.round(1).tolist()},
+                "glow_falloff": {"linear": round(float(ring(li)), 1), "browser": round(float(ring(br)), 1)}, "planes": r["planes"]}
+        if np.abs(ov_l - want_lin).max() > 2.5 or np.abs(ov_b - want_srgb).max() > 2.5:
+            bad.append(f"the veil: {meas['veil']}")
+        if np.abs(plain_l - plain_b).max() > 1.5:
+            bad.append(f"no translucency, yet they differ: {meas['opaque_green']}")
+        if not ring(li) > ring(br) + 3:
+            bad.append(f"the glow's falloff is not brighter in linear light: {meas['glow_falloff']}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 

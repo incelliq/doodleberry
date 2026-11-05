@@ -323,7 +323,9 @@
     // WP-14: ctx.split "back" draws only what is behind the characters (the planes farther than the stage, and the
     // stage's own set), "front" only the planes nearer; another renderer draws the characters between the two passes
     const si = order.findIndex(p => p.id === 'stage');
-    for (const p of order.filter((_, i) => !ctx.split || (ctx.split === 'back' ? i <= si : i > si))) {
+    // WP-37 linear light: ctx.only draws one plane alone (no blend or opacity wrapper, no light wrap); each plane's blend
+    // mode and opacity this frame go to ctx.info.blends, and the master composites the planes in linear light
+    for (const p of order.filter((_, i) => (!ctx.split || (ctx.split === 'back' ? i <= si : i > si)) && (!ctx.only || order[i].id === ctx.only))) {
       const d = Math.max(0.05, p.depth ?? 1), pid = `comp-${p.id}-${tag}`;
       let content = '';
       if (p.id === 'stage') content = ctx.stage;
@@ -347,6 +349,8 @@
       if (ctx.depthpass) {   // WP-37 depth pass: the plane's coverage in one flat colour that encodes its depth (no blends, no wrap)
         const dp = depthFill(d, W, H); defs += dp.def; g = `<g filter="url(#${dp.id})">${g}</g>`; drawn[p.id] = g; body += g; continue;
       }
+      if (ctx.info) (ctx.info.blends = ctx.info.blends || {})[p.id] = { mode: bl ? (bl.mode || 'normal') : 'normal', opacity: bl ? (bl.opacity ?? 1) : (p.opacity ?? 1), depth: d, lightwrap: !!nodes.find(n => n.type === 'lightwrap') };
+      if (ctx.only) { drawn[p.id] = g; body += g; continue; }
       const lw = nodes.find(n => n.type === 'lightwrap');
       let wrap = '';
       if (lw) {   // the planes behind (or those named), as drawn so far, blurred and screened onto this plane's inner edges
