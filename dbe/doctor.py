@@ -30,6 +30,13 @@ IMPORT_NAME = {"Pillow": "PIL", "piper-tts": "piper", "faster-whisper": "faster_
                "psd-tools": "psd_tools", "opencv-python-headless": "cv2"}
 
 
+def _pkg(apt, dnf):
+    """the install command for this system's package manager"""
+    if shutil.which("dnf"):
+        return f"sudo dnf install {dnf}"
+    return f"apt-get install -y {apt}"
+
+
 def requirements(fname):
     out = []
     f = ROOT / fname
@@ -79,13 +86,13 @@ def check(deep=True):
             good = not ver or (op == ">=" and _ver_tuple(have) >= _ver_tuple(ver)) or (op == "==" and have == ver)
             add(f"python package {name}", group, good, required and (op != "==" or good), f"{have}" + (f" (wants {op}{ver})" if ver and not good else ""),
                 f"python -m pip install '{name}{op or ''}{ver or ''}'")
-    for tool, group, required, fix in (("ffmpeg", "core", True, "apt-get install -y ffmpeg"), ("ffprobe", "core", True, "apt-get install -y ffmpeg"),
-                                       ("node", "core", True, "install Node.js 20 or newer"), ("git", "core", True, "apt-get install -y git"),
-                                       ("synfig", "tools", False, "apt-get install -y synfig   (Synfig renderer)"),
+    for tool, group, required, fix in (("ffmpeg", "core", True, _pkg("ffmpeg", "ffmpeg   (RPM Fusion's, with libx264)")), ("ffprobe", "core", True, _pkg("ffmpeg", "ffmpeg")),
+                                       ("node", "core", True, "install Node.js 20 or newer"), ("git", "core", True, _pkg("git", "git")),
+                                       ("synfig", "tools", False, _pkg("synfig", "synfig") + "   (Synfig renderer)"),
                                        ("blender", "tools", False, "bash tools/setup.sh blender   (Blender 5.2 LTS: the Grease Pencil renderer needs 4.3 or newer)"),
                                        ("pencil2d", "tools", False, "bash tools/setup.sh oss   (Pencil2D: drawn levels, WP-34)"),
                                        ("inkscape", "tools", False, "bash tools/setup.sh oss   (Inkscape: path booleans, WP-34)"),
-                                       ("melt", "tools", False, "apt-get install -y melt   (editor round trips)"),
+                                       ("melt", "tools", False, _pkg("melt", "mlt") + "   (editor round trips)"),
                                        ("krita", "tools", False, "bash tools/setup.sh oss   (Krita: .kra round-trip test, WP-18; .kra files are read without it)")):
         p = shutil.which(tool)
         add(f"program {tool}", group, p, required, p or "not on PATH", fix)
@@ -131,7 +138,14 @@ def check(deep=True):
         add(f"assist model {name}", "tools", mp.exists(), False, str(mp) if mp.exists() else "not downloaded",
             "bash tools/setup.sh models   (or let level.inbetween / depth.planes fetch it on first use)")
     egl = ctypes.util.find_library("EGL")
-    add("system library libEGL", "tools", egl, False, egl or "missing (MediaPipe's native library needs it)", "apt-get install -y libegl1 libgles2")
+    add("system library libEGL", "tools", egl, False, egl or "missing (MediaPipe's native library needs it)", _pkg("libegl1 libgles2", "mesa-libEGL libglvnd-gles"))
+    from . import oss as _OSS   # WP-34: MyPaint brushes for drawn levels and the in-between benchmark
+    try:
+        _OSS._lib(); mp = True
+    except OSError:
+        mp = False
+    add("system library libmypaint (MyPaint brushes)", "tools", mp, False, "found" if mp else "missing (drawn levels, level.inbetween's benchmark)",
+        _pkg("libmypaint-1.5-1 mypaint-brushes", "libmypaint mypaint-brushes"))
     kd = VOICES / "kokoro"
     for fn, sha in KOKORO_FILES.items():
         p = kd / fn

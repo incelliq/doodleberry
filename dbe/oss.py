@@ -63,7 +63,18 @@ _LIB = None
 def _lib():
     global _LIB
     if _LIB is None:
-        L = C.CDLL("libmypaint-1.5.so.1")
+        L = None
+        import ctypes.util
+        for nm in ("libmypaint-1.5.so.1", "libmypaint-1.6.so.1", "libmypaint.so.0", "libmypaint.so", ctypes.util.find_library("mypaint")):
+            try:
+                L = C.CDLL(nm) if nm else None
+            except OSError:
+                continue
+            if L:
+                break
+        if not L:
+            raise OSError("libmypaint: cannot open shared object file (install it: apt-get install libmypaint-1.5-1 mypaint-brushes, "
+                          "or on Fedora dnf install libmypaint mypaint-brushes)")
         sig = {"mypaint_brush_new": ([], C.c_void_p), "mypaint_brush_unref": ([C.c_void_p], None),
                "mypaint_brush_from_string": ([C.c_void_p, C.c_char_p], C.c_int), "mypaint_brush_new_stroke": ([C.c_void_p], None),
                "mypaint_brush_stroke_to": ([C.c_void_p, C.c_void_p, C.c_float, C.c_float, C.c_float, C.c_float, C.c_float, C.c_double], C.c_int),

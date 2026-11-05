@@ -7505,6 +7505,28 @@ def _doodle_page_test(work, meas):
     return bad
 
 
+def _guarded(fn):
+    """a test that cannot run here because an optional library, module or program is missing is reported as skipped,
+    and any other exception as that test's failure, so one test never stops the rest of the suite"""
+    import functools
+    import traceback
+
+    @functools.wraps(fn)
+    def run(*a, **k):
+        try:
+            return fn(*a, **k)
+        except ModuleNotFoundError as e:
+            return [], {"skipped": f"needs the Python module {e.name} (python -m dbe engine.doctor)"}
+        except OSError as e:
+            msg = str(e)
+            if "cannot open shared object file" in msg or (isinstance(e, FileNotFoundError) and e.filename and "/" not in str(e.filename)):
+                return [], {"skipped": f"needs {e.filename or msg.split(':')[0]} ({msg[:200]}; python -m dbe engine.doctor)"}
+            return [f"crashed: {type(e).__name__}: {msg[:300]}"], {"traceback": traceback.format_exc()[-1500:]}
+        except Exception as e:   # noqa: BLE001  (reported as this test's failure)
+            return [f"crashed: {type(e).__name__}: {str(e)[:300]}"], {"traceback": traceback.format_exc()[-1500:]}
+    return run
+
+
 @command("test", update=("boolean", "rewrite the golden frames instead of comparing", False),
          film=("string", "only cases for this film", ""))
 def test_golden(update=False, film=""):
@@ -7571,23 +7593,23 @@ def test_golden(update=False, film=""):
         failed += 1 if bad else 0
         results.append({"rparity": "svg, synfig and lottie draw the same characters; refusals say why", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "motion":   # juggling and physics (WP-09): siteswaps, beat grid, deterministic Rapier bakes
-        bad, meas = _motion_test()
+        bad, meas = _guarded(_motion_test)()
         failed += 1 if bad else 0
         results.append({"motion": "siteswaps, contacts on the beat grid, Rapier bakes rerun byte-equal", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "interact":   # interaction and locomotion (WP-11): paths, planted feet, IK/FK, handshakes
-        bad, meas = _interact_test()
+        bad, meas = _guarded(_interact_test)()
         failed += 1 if bad else 0
         results.append({"interact": "path walks without foot sliding, IK/FK blends, hands that meet", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "proc":   # procedural and 3D layer (WP-42): node cache, determinism, the GN set renders the same twice
-        bad, meas = _proc_test()
+        bad, meas = _guarded(_proc_test)()
         failed += 1 if bad else 0
         results.append({"proc": "graph re-cooks only changed nodes; cooks and Blender renders are deterministic", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "assists":   # ML assists (WP-43): each beats its baseline; outputs carry licence classes to posting
-        bad, meas = _assists_test()
+        bad, meas = _guarded(_assists_test)()
         failed += 1 if bad else 0
         results.append({"assists": "in-betweens and depth beat their baselines; assist outputs flagged at posting by licence", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "master":   # film-grade masters (WP-37): ACEScg multi-pass EXR, exact round trip, reference readers
-        bad, meas = _master_test()
+        bad, meas = _guarded(_master_test)()
         failed += 1 if bad else 0
         results.append({"master": "multi-pass ACEScg EXR read by oiiotool and ffmpeg; the colour round trip is exact", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "handoff":   # editor hand-off (WP-22): every interchange format reads back; melt renders the cut byte for byte
@@ -7599,63 +7621,63 @@ def test_golden(update=False, film=""):
         failed += 1 if bad else 0
         results.append({"handoff": "OTIO, Kdenlive, FCP7 XML, FCPXML and EDL read back; melt renders the cut identically", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "sound":   # sound editing (WP-40): edits and music swaps; the Studio page moves a foley hit and swaps music
-        bad, meas = _sound_test()
+        bad, meas = _guarded(_sound_test)()
         failed += 1 if bad else 0
         results.append({"sound": "a foley hit moved and a music span swapped in Studio land at the right frame after a remix", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "boards":   # Rig Canvas boards (WP-18): mouth chart, expressions, turnaround with an off-model check
-        bad, meas = _boards_test()
+        bad, meas = _guarded(_boards_test)()
         failed += 1 if bad else 0
         results.append({"boards": "mouth chart, expression and turnaround boards render; a view drawn off model is caught", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "stepped":   # WP-15: frames over a static plate match frames drawn whole
-        bad, meas = _stepped_test()
+        bad, meas = _guarded(_stepped_test)()
         failed += 1 if bad else 0
         results.append({"stepped": "a shot drawn without its static set and laid over the plate matches the frame drawn whole", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "transitions":   # WP-15: transitions made at assembly keep the length and pass the seam check
-        bad, meas = _transitions_test()
+        bad, meas = _guarded(_transitions_test)()
         failed += 1 if bad else 0
         results.append({"transitions": "dissolve and auto-length dip over handles: same length, blend centred on the cut, seams pass where a hard cut fails", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "gaze":   # WP-19: "Ravi should look at Momo when she answers", fixed and checked; the diff marks the frames
-        bad, meas = _gaze_test()
+        bad, meas = _guarded(_gaze_test)()
         failed += 1 if bad else 0
         results.append({"gaze": "a gaze note is fixed and verified by the critic, and the diff marks exactly the frames that changed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "graph":   # WP-20: a stale node says what changed, and re-making it touches only what follows
-        bad, meas = _graph_test()
+        bad, meas = _guarded(_graph_test)()
         failed += 1 if bad else 0
         results.append({"graph": "a changed shot shows the change and re-makes alone with what follows; the page does the same with progress", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "estimate":   # WP-20: render estimates against the renders measured here (leave one film out)
-        bad, meas = _estimate_test()
+        bad, meas = _guarded(_estimate_test)()
         failed += 1 if bad else 0
         results.append({"estimate": "each film's full render is estimated within 20% from the other films' renders", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "stickers":   # WP-23: one character to four sticker platforms within their limits; Lottie in two renderers
-        bad, meas = _stickers_test()
+        bad, meas = _guarded(_stickers_test)()
         failed += 1 if bad else 0
         results.append({"stickers": "Pip's pack for Telegram (WebM and TGS), WhatsApp, Giphy, iMessage and as Telegram, Discord and Slack emoji within each platform's limits; TGS alike in lottie-web and rlottie; the pack as a dotLottie whose themes draw alike in the dotLottie player and lottie-web", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "series":   # WP-28: a series bible, planned episodes, continuity across the films
-        bad, meas = _series_test()
+        bad, meas = _guarded(_series_test)()
         failed += 1 if bad else 0
         results.append({"series": "Ask Ravi planned from its bible (dates, gags, props, knowledge); its ten episode films pass continuity; eight planted breaks (voice, puppet, early and lost and missing props, a fact used early, a gag off cadence, a re-asked question) each caught; a gate review carried only to the facts it read; a seven-step tutorial made from nib-hello", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "library":   # WP-29: screen time per asset across the catalogue; creator packs into another project
-        bad, meas = _library_test()
+        bad, meas = _guarded(_library_test)()
         failed += 1 if bad else 0
         results.append({"library": "a screen-time report over the whole catalogue (every film covered, unregistered puppets named and unpaid); a contributor's royalty paid from it; a rig, a loop pack and a boil preset packed here and installed into another checkout, linted and baked there with its own tools, credited to their author; a tampered pack and a clashing clip name refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "handfont":   # WP-29: a handwriting font from a filled, photographed sample sheet
-        bad, meas = _handfont_test()
+        bad, meas = _guarded(_handfont_test)()
         failed += 1 if bad else 0
         results.append({"handfont": "a sheet filled with synthetic handwriting (Patrick Hand glyphs, jittered, photographed at an angle) becomes an OpenType font whose every glyph matches its sample and sits on the baseline at the sheet's x-height", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "mediums":   # WP-30: a film as a comic, a storybook, an interactive web film and a Godot project
-        bad, meas = _mediums_test()
+        bad, meas = _guarded(_mediums_test)()
         failed += 1 if bad else 0
         results.append({"mediums": "dialogue-demo as a printable comic and an interactive web film, pip-park as a storybook and a Godot project, each from the film's data alone and read back", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "team":   # WP-39: roles, locks, assignments and the audit log
-        bad, meas = _team_test()
+        bad, meas = _guarded(_team_test)()
         failed += 1 if bad else 0
         results.append({"team": "an artist session edits a character but cannot approve a post or render a film; a director can approve; a lock and an assignment keep others out and the owner breaks a lock; every change and refusal is in the audit log, through the CLI and the HTTP API", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "desk":   # WP-21: a director edits a film by chat alone; each role refused outside its subset
-        bad, meas = _desk_test()
+        bad, meas = _guarded(_desk_test)()
         failed += 1 if bad else 0
         results.append({"desk": "a director changes a copy of dialogue-demo by notes alone: a line's words (re-voiced), its length, the camera, the set, the music and the acting, then sees the storyboard and animatic; an artist's note to change a line is refused; each of the seven roles is refused a command outside its subset", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "farm":   # WP-38: a film rendered by three workers in about a third of one's time, frames identical
-        bad, meas = _farm_test()
+        bad, meas = _guarded(_farm_test)()
         failed += 1 if bad else 0
         results.append({"farm": "a seven-shot film rendered by one worker and by three (each pinned to its own core, standing for a machine): the same frames, in about a third of the time; then every shot from the shared cache", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "actout2":   # WP-12: head turn into the turn control, camera pan taken out, two people as two clips
@@ -7665,243 +7687,243 @@ def test_golden(update=False, film=""):
         failed += 1 if bad else 0
         results.append({"actout2": "a synthetic take with a head turn becomes a turn control track that the bake plays; a camera pan over a drawn background is found and taken out so the root does not drift; two people in one take become two clips", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "live":   # WP-12: the live page follows a webcam with the same angles as a recorded take
-        bad, meas = _live_test()
+        bad, meas = _guarded(_live_test)()
         failed += 1 if bad else 0
         results.append({"live": "the live page's per-frame retarget recovers synthetic takes' angles, and on a fake webcam (a COCO photo) MediaPipe in the page gives the same angles, median over the frames, as Python MediaPipe on that video", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "samples":   # WP-13: recorded CC0 samples stand in for mapped cues when a score asks
-        bad, meas = _samples_test()
+        bad, meas = _guarded(_samples_test)()
         failed += 1 if bad else 0
         results.append({"samples": "the sample library's files match their hashes; a score with samples on plays the mapped recordings (variants taking turns, grass and wood told apart), leaves unmapped cues synthesized, lists what played, and still mixes to the loudness bar; without it nothing changes", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "peeps":   # WP-16: Open Peeps (CC0) to a puppet with mix-and-match swap sets
-        bad, meas = _peeps_test()
+        bad, meas = _guarded(_peeps_test)()
         failed += 1 if bad else 0
         results.append({"peeps": "Open Peeps' site SVGs become one puppet whose swap sets rebuild any of the downloaded peeps: the puppet posed as a peep draws like that peep's own SVG", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "outputs":   # WP-23: several outputs from one render pass; the Studio channels view
-        bad, meas = _outputs_test()
+        bad, meas = _guarded(_outputs_test)()
         failed += 1 if bad else 0
         results.append({"outputs": "one render pass of nib-hello's shot gives a PNG sequence, WebM and ProRes with alpha (read back alike), and an MP4 and GIF over white with every frame; the Studio channels view shows that shot's alpha exactly", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "ots":   # WP-19: over-the-shoulder notes (renders review-demo and three other renderers, so only when asked)
-        bad, meas = _ots_test()
+        bad, meas = _guarded(_ots_test)()
         failed += 1 if bad else 0
         results.append({"ots": "\"Make Momo's answer an over-the-shoulder\" and \"over Momo's shoulder on Ravi for the third line\" on review-demo: shot.ots cuts the shot around each line; the on character at a medium shot or closer, head in frame and clear, the near one seen from behind, cut by the frame, in front and on its side of the line; continuity, QA and renderer parity hold", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "layoutnotes":   # WP-19: review notes about where a character stands and how close the camera is
-        bad, meas = _layout_notes_test()
+        bad, meas = _guarded(_layout_notes_test)()
         failed += 1 if bad else 0
         results.append({"layoutnotes": "\"Ravi should stand a little further left\" and \"push in\" on review-demo become shots.json edits the critic verifies on the baked frames (screen position, the main character's height), with continuity and QA held", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "comp2":   # WP-36 part 2: roll, keyed values and expressions, light wrap, region tracker
-        bad, meas = _comp2_test()
+        bad, meas = _guarded(_comp2_test)()
         failed += 1 if bad else 0
         results.append({"comp2": "on night-planes: camera roll turns the frame by the asked angle, a keyed grade brightens the sky over time, light wrap brightens only the foreground's edges, and a region tracked through a plate (sub-pixel) carries an attached shape to where the region went", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "humaaans":   # WP-16: Humaaans to a puppet with swap sets and joints
-        bad, meas = _humaaans_test()
+        bad, meas = _guarded(_humaaans_test)()
         failed += 1 if bad else 0
         results.append({"humaaans": "Humaaans' single pieces become one puppet whose swap sets rebuild the kit's finished figures at rest (silhouette IoU), and whose body leans and head nods at the waist and neck", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "looks":   # WP-37: ASC CDL looks
-        bad, meas = _looks_test()
+        bad, meas = _guarded(_looks_test)()
         failed += 1 if bad else 0
         results.append({"looks": "a CDL look saved as a .cc reads back through OpenColorIO unchanged; OpenColorIO's CDL matches the ASC formula; an identity look leaves the film's colours as they were; a warm look warms a frame of nib-hello", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "comp3":   # WP-42: animated parametric primitives and procedural growth
-        bad, meas = _comp3_test()
+        bad, meas = _guarded(_comp3_test)()
         failed += 1 if bad else 0
         results.append({"comp3": "a keyed circle has the area its radius says, a star gains points as its expression asks, and a seeded plant grows monotonically, stops when grown, renders identically twice and differs by seed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "reviewotio":   # WP-19: review notes to and from OpenTimelineIO (OpenRV, xSTUDIO)
-        bad, meas = _review_otio_test()
+        bad, meas = _guarded(_review_otio_test)()
         failed += 1 if bad else 0
         results.append({"reviewotio": "review notes go out as OTIO markers at their frames and a marker added in a review tool comes back as a note, without duplicating the old ones", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "blend":   # WP-14: a shot as a saved .blend project (Blender; minutes, only when asked)
-        bad, meas = _blend_test()
+        bad, meas = _guarded(_blend_test)()
         failed += 1 if bad else 0
         results.append({"blend": "pip-park's shot saved as a .blend, opened again in Blender, renders a frame identical to the Grease Pencil renderer's own", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parallax":   # WP-15: set depth layers move with a moving camera by 1/depth
-        bad, meas = _parallax_test()
+        bad, meas = _guarded(_parallax_test)()
         failed += 1 if bad else 0
         results.append({"parallax": "the forest set's depth layers move under a 300 px camera pan by 300/depth on screen, and the panned frame has no uncovered edge", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "compplanes":   # WP-14: a compositor shot from another renderer (minutes; only when asked)
-        bad, meas = _compplanes_test()
+        bad, meas = _guarded(_compplanes_test)()
         failed += 1 if bad else 0
         results.append({"compplanes": "night-planes rendered with Lottie (its character between the player's back and front planes, the bubbles over it) matches the SVG render", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "pagesort":   # WP-18: sums and hands or pens on a doodle page are not characters
-        bad, meas = _pagesort_test()
+        bad, meas = _guarded(_pagesort_test)()
         failed += 1 if bad else 0
         results.append({"pagesort": "a page with two doodles, a written sum and a hand holding a pen gives two doodles; the sum is left out as writing and the hand and pen as not a drawing", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "mirror":   # WP-18: the mirror tool
-        bad, meas = _mirror_test()
+        bad, meas = _guarded(_mirror_test)()
         failed += 1 if bad else 0
         results.append({"mirror": "Nib's left arm mirrored to the right (raster) and Ravi's right arm chain mirrored to the left (vector): arms posed at +-30 degrees draw as mirror images of each other", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "dressup":   # WP-18: named layer sets, gradient and texture fills (puppet v0.13)
-        bad, meas = _dressup_test()
+        bad, meas = _guarded(_dressup_test)()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "engine":   # WP-42: live renders from a game engine (Godot) into the comp
-        bad, meas = _engine_test()
+        bad, meas = _guarded(_engine_test)()
         failed += 1 if bad else 0
         results.append({"engine": "a Godot project rendered in Movie Maker mode as a proc node: the same pixels twice, every frame different, drawn by the player in front of a shot", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "mediarenderers":   # WP-15: media (pencil, crayon...) in every renderer (renders three times, so only when asked)
-        bad, meas = _media_renderers_test()
+        bad, meas = _guarded(_media_renderers_test)()
         failed += 1 if bad else 0
         results.append({"mediarenderers": "a shot in crayon rendered by Synfig, Lottie and Grease Pencil: where the medium changes the SVG render, each renderer's frame is nearer the crayon one than the plain one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "toon":   # WP-14: toon shading in Synfig and Grease Pencil (Blender renders, so only when asked)
-        bad, meas = _toon_test()
+        bad, meas = _guarded(_toon_test)()
         failed += 1 if bad else 0
         results.append({"toon": "toon shading drawn by Synfig, Lottie and Grease Pencil: in the band the SVG renderer shades, each is nearer the shaded picture than the unshaded one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "bubbles":   # WP-14: speech bubbles in non-SVG renders (renders a shot with Lottie, so only when asked)
-        bad, meas = _bubbles_test()
+        bad, meas = _guarded(_bubbles_test)()
         failed += 1 if bad else 0
         results.append({"bubbles": "a shot rendered by Lottie carries the speech bubbles where the SVG renderer draws them (the player's overlay pass)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
-        bad, meas = _rigid_test()
+        bad, meas = _guarded(_rigid_test)()
         failed += 1 if bad else 0
         results.append({"rigid": "boxes and a ball under Bullet (Blender's rigid body world) come to rest where their sizes say, stay put, and a rerun gives the same positions and pixels; a cloth banner hangs from its pinned edge and swings in a wind; the separate EEVEE passes (position, normal, mist, Cryptomatte, emission) agree with the scene; Grease Pencil Line Art bakes the ink to editable strokes that lie on the picture's edges", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "usd":   # WP-42: OpenUSD export
-        bad, meas = _usd_test()
+        bad, meas = _guarded(_usd_test)()
         failed += 1 if bad else 0
         results.append({"usd": "a shot exported to OpenUSD passes OpenUSD's validators; read back, every part's pivot sits where the bake puts it, the mouth shown is the bake's, and the stage's fills cover the characters as the player draws them", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "exrin":   # WP-37: EXR plates into the compositor
-        bad, meas = _exrin_test()
+        bad, meas = _guarded(_exrin_test)()
         failed += 1 if bad else 0
         results.append({"exrin": "comp.ingest_exr reads EXR plates in ACEScg (our master's beauty layer), linear Rec.709 and Rec.2020 primaries by their chromaticities and returns the picture they hold", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "stereo":   # WP-37: stereoscopic output from the compositor's depth planes
-        bad, meas = _stereo_test()
+        bad, meas = _guarded(_stereo_test)()
         failed += 1 if bad else 0
         results.append({"stereo": "each eye sees the compositor's planes shifted by separation x (1/convergence - 1/depth): far behind the screen, the stage on it, near in front; film.stereo packs side by side and anaglyph; a blur in linear light lights its halo more than in sRGB", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "hdr":   # WP-37: an HDR10 deliverable from the master
-        bad, meas = _hdr_test()
+        bad, meas = _guarded(_hdr_test)()
         failed += 1 if bad else 0
         results.append({"hdr": "film.hdr encodes the master as HDR10 (HEVC Main 10, BT.2020, PQ, mastering and content-light metadata); white decodes at about 203 cd/m2 and the picture returns to SDR intact", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "graphcomp":   # WP-36: the compositor edited in the graph view
-        bad, meas = _graphcomp_test()
+        bad, meas = _guarded(_graphcomp_test)()
         failed += 1 if bad else 0
         results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "bvhreal":   # WP-12: a real motion-capture BVH (fetches 8 MB of a public take, runs Blender; only when asked)
-        bad, meas = _bvhreal_test()
+        bad, meas = _guarded(_bvhreal_test)()
         failed += 1 if bad else 0
         results.append({"bvhreal": "a real motion-capture BVH (BEAT, 74 joints, T-pose rest) onto Ravi: forward kinematics as Blender reads it, real out-of-plane motion, hanging arms read as hanging, each limb's direction on the picture as Blender projects it, no joint faster than a person's", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "timestamp":   # WP-26: an RFC 3161 timestamp from a public authority (needs the network, so only when asked)
-        bad, meas = _timestamp_test()
+        bad, meas = _guarded(_timestamp_test)()
         failed += 1 if bad else 0
         results.append({"timestamp": "a film's content credentials timestamped by a public RFC 3161 authority: c2patool validates the timestamp and the signature, and the signed time matches the clock", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "peepstalk":   # WP-16: Open Peeps lip-sync and gesture arms (renders three other renderers, so only when asked)
-        bad, meas = _peepstalk_test()
+        bad, meas = _guarded(_peepstalk_test)()
         failed += 1 if bad else 0
         results.append({"peepstalk": "Open Peeps talk and gesture: faces split at the nose into face and mouth, eight viseme mouths that change only the mouth, arms hidden at rest on every outfit and out in a gesture, arm gestures from the planner, and every renderer drawing a pointing, talking peep as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "turns":   # WP-43: morphs between views (renders three other renderers, so only when asked)
-        bad, meas = _turns_test()
+        bad, meas = _guarded(_turns_test)()
         failed += 1 if bad else 0
         results.append({"turns": "a turn from front to side drawn as three in-betweens: each moves steadily from one drawing to the other; the bake plays them one step each on twos around both switches, no squash; every renderer draws an in-between as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kenneyprops":   # WP-16: the labelled Kenney prop library
-        bad, meas = _kenneyprops_test()
+        bad, meas = _guarded(_kenneyprops_test)()
         failed += 1 if bad else 0
         results.append({"kenneyprops": "six Kenney packs labelled one by one into a prop library (1,020 sprites): every index well formed, every pack here matching its sha256s, and props.make drawing one (a teapot) where the prop stands", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "sketch":   # WP-43: sound sketches (runs AudioLDM, CLAP and AST on the CPU, mixes a film twice; only when asked)
-        bad, meas = _sketch_test()
+        bad, meas = _guarded(_sketch_test)()
         failed += 1 if bad else 0
         results.append({"sketch": "sound sketches from a few words (AudioLDM, best of four seeds by CLAP): an independent tagger hears the expected sound in at least half of six; repeatable; cued in a film, the sketch is in its effects and its model flagged at posting", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "mixstream":   # WP-38: the streaming mixer against the whole-array one (mixes two films twice, so only when asked)
-        bad, meas = _mixstream_test()
+        bad, meas = _guarded(_mixstream_test)()
         failed += 1 if bad else 0
         results.append({"mixstream": "the streaming mixer (disk-backed buffers, block by block) writes the same bytes as the whole-array mixer for every file, rooms included, and its limiter matches across block boundaries", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "lufsstream":   # WP-38: integrated loudness block by block
-        bad, meas = _lufsstream_test()
+        bad, meas = _guarded(_lufsstream_test)()
         failed += 1 if bad else 0
         results.append({"lufsstream": "integrated loudness measured block by block (filter state carried, 100 ms segments) equals pyloudnorm's within 1e-9 LU on stereo, mono, short, gated and silent signals, in a fraction of its memory", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "linearplanes":   # WP-37: compositor planes blended in linear light
-        bad, meas = _linearplanes_test()
+        bad, meas = _guarded(_linearplanes_test)()
         failed += 1 if bad else 0
         results.append({"linearplanes": "comp.linear composites a shot's planes in linear light: a half-opaque red veil over green comes out as the linear mix (the browser gives the sRGB one), opaque areas match the browser, a screened soft glow falls off brighter", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "compgroups":   # WP-36: nested groups and deformers in the compositor
-        bad, meas = _compgroups_test()
+        bad, meas = _guarded(_compgroups_test)()
         failed += 1 if bad else 0
         results.append({"compgroups": "a dot and a bar in a scaled, waved child group inside a rotating parent land where the composed motion puts them; a shear moves a bar's foot by its amount; a frame renders the same twice", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "masterpasses":   # WP-37: Cryptomatte and motion vectors in the master
-        bad, meas = _masterpasses_test()
+        bad, meas = _guarded(_masterpasses_test)()
         failed += 1 if bad else 0
         results.append({"masterpasses": "the master's Cryptomatte layers decode back to every part's coverage and add up to the characters' matte, and its forward motion vectors carry the next frame back onto this one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "reviewphone":   # WP-19: review on a phone
-        bad, meas = _reviewphone_test()
+        bad, meas = _guarded(_reviewphone_test)()
         failed += 1 if bad else 0
         results.append({"reviewphone": "the Studio served to the network asks for its key (page and API refused without it, a cookie after it), and the review room at phone size (iPhone 13): no sideways scroll, the picture under 60% of the screen, the note box on screen, a tap and a drag on the bar land on their frames, a note pinned at the frame", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "reviewtiming":   # WP-19 (re-voices and renders a scratch film several times, so only when asked)
-        bad, meas = _reviewtiming_test()
+        bad, meas = _guarded(_reviewtiming_test)()
         failed += 1 if bad else 0
         results.append({"reviewtiming": "review notes about when lines come in ('give the last line a beat before it', 'the pause before the first line is too long') change the silence before the line, re-voice, and are verified on the voice track; a vague note goes to a person", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "timeline2":   # WP-19 (re-voices a scratch film twice, so only when asked)
-        bad, meas = _timeline2_test()
+        bad, meas = _guarded(_timeline2_test)()
         failed += 1 if bad else 0
         results.append({"timeline2": "on the Studio timeline: the cut after a shot dragged (both shots follow), a camera key added on the camera lane with the framing there and anchored to a line, dragged, typed and deleted, and a line dragged later (re-voiced: it moves, the one before stays) then undone", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "acting2":   # WP-10: personality profiles, an agent's gesture tags, camera beats on a stare
-        bad, meas = _acting2_test()
+        bad, meas = _guarded(_acting2_test)()
         failed += 1 if bad else 0
         results.append({"acting2": "the same scene acted by an excitable Ravi and a shy Priya, then with the profiles swapped: each moves well over twice as much when excitable, the shy one never points or celebrates; an agent's tags checked against the clip library and the profile, the accepted one placed on its word; a stare pushes the camera in on who reacts", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "sound2":   # WP-13: footsteps per surface, a room per set
-        bad, meas = _sound2_test()
+        bad, meas = _guarded(_sound2_test)()
         failed += 1 if bad else 0
         results.append({"sound2": "footsteps on grass, tile, wood, concrete and carpet each sound like themselves (told apart by their spectra far beyond their own variation); the outdoor room dies away in a fraction of the hall's time; a film's step cues carry their set's surface and its mix its rooms", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "text2":   # WP-17: thought clouds, narration boxes, a typewriter that pauses on punctuation
-        bad, meas = _text2_test()
+        bad, meas = _guarded(_text2_test)()
         failed += 1 if bad else 0
         results.append({"text2": "the sound-off cut of a dialogue film with a narrator and a thought shows a narration box, a thought cloud and speech bubbles, types with pauses on punctuation, and passes the reading-time rule", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "templates":   # WP-16: a quadruped, a bird and an object with a face, each with a clip set on every renderer
-        bad, meas = _templates_test()
+        bad, meas = _guarded(_templates_test)()
         failed += 1 if bad else 0
         results.append({"templates": "Biscuit (quadruped), Pim (bird) and Kettle (object with a face) pass their templates' lint, and a shot playing each one's whole clip library draws alike in the SVG player, Synfig, Lottie and Grease Pencil", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "palette":   # WP-16: palette variants per scene, alike in every renderer
-        bad, meas = _palette_test()
+        bad, meas = _guarded(_palette_test)()
         failed += 1 if bad else 0
         results.append({"palette": "night, sick, cold and warm recolour every character identically in the player (puppet.js) and the bake (geom.py); a night shot of Pip and Biscuit draws alike in Synfig, Lottie and Grease Pencil and is clearly darker and bluer than the same shot by day", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "translate":   # WP-25: machine-translation drafts
-        bad, meas = _translate_test()
+        bad, meas = _guarded(_translate_test)()
         failed += 1 if bad else 0
         results.append({"translate": "data-demo drafted in Spanish and Sinhala by NLLB keeps every data binding and never touches a string a person wrote; a localized version lists the drafts nobody has reviewed, records the model so the posting gate flags it, and clears the flag once they are reviewed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "rtl_chart":   # WP-25: charts read right to left in right-to-left films
-        bad, meas = _rtl_chart_test()
+        bad, meas = _guarded(_rtl_chart_test)()
         failed += 1 if bad else 0
         results.append({"rtl_chart": "the Arabic data-demo draws its bar chart right to left: the bars' heights read from the left are the English chart's reversed", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "opentoonz":   # WP-34: a drawn shot as an OpenToonz scene, rendered by OpenToonz itself
-        bad, meas = _opentoonz_test()
+        bad, meas = _guarded(_opentoonz_test)()
         failed += 1 if bad else 0
         results.append({"opentoonz": "level-demo's shot as an OpenToonz 1.8 scene: two drawn levels, the cut-out character listed as not exported, the xsheet exposing every frame's drawing; OpenToonz's tcomposer renders it and three frames match the player's drawing of the same characters", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "grow":   # WP-11: recursive scale (v0.11)
-        bad, meas = _grow_test()
+        bad, meas = _guarded(_grow_test)()
         failed += 1 if bad else 0
         results.append({"grow": "a grown part carries its children (same matrices in puppet.js and geom.py), IK reaches with grown bones, and every renderer draws it", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "covers_l10n":   # WP-25: covers per language
-        bad, meas = _covers_l10n_test()
+        bad, meas = _guarded(_covers_l10n_test)()
         failed += 1 if bad else 0
         results.append({"covers_l10n": "Sinhala and Arabic covers lettered in their own scripts, read back by OCR, Arabic right to left", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "continuity":   # WP-19: 180-degree rule, screen direction, eyelines, shot sizes
-        bad, meas = _continuity_test()
+        bad, meas = _guarded(_continuity_test)()
         failed += 1 if bad else 0
         results.append({"continuity": "a cut-up dialogue with none of the faults has no issues; each fault (sides swapped, eyeline away, direction reversed) is found by its rule; a marked line cross is accepted", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "svgexport":   # WP-23: a film frame as SVG, animated SVG
-        bad, meas = _svgexport_test()
+        bad, meas = _guarded(_svgexport_test)()
         failed += 1 if bad else 0
         results.append({"svgexport": "a frame as a standalone SVG and an animated SVG both draw as the player does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "correctives":   # WP-11: angle-driven correctives (format v0.12)
-        bad, meas = _correctives_test()
+        bad, meas = _guarded(_correctives_test)()
         failed += 1 if bad else 0
         results.append({"correctives": "a forearm's angle drives the bicep's scale and the hand's angle exactly, and every renderer draws it", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kinetic":   # WP-15: kinetic typography synced to spoken words
-        bad, meas = _kinetic_test()
+        bad, meas = _guarded(_kinetic_test)()
         failed += 1 if bad else 0
         results.append({"kinetic": "a line's words appear on screen as they are spoken", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "boilmove":   # WP-15: line boil only while something moves
-        bad, meas = _boilmove_test()
+        bad, meas = _guarded(_boilmove_test)()
         failed += 1 if bad else 0
         results.append({"boilmove": "the line boil advances while a character moves and holds still when nothing does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "motionblur":   # WP-15: sub-frame motion blur
-        bad, meas = _motionblur_test()
+        bad, meas = _guarded(_motionblur_test)()
         failed += 1 if bad else 0
         results.append({"motionblur": "a fast move rendered with sub-frame motion blur: same frames, each the mean of its samples, visibly smeared", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "media":   # WP-15: pencil, crayon, marker, watercolour
-        bad, meas = _media_test()
+        bad, meas = _guarded(_media_test)()
         failed += 1 if bad else 0
         results.append({"media": "each medium changes the drawing the way the medium would: pencil grey and grainy, crayon broken, marker see-through, watercolour bled", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "matchcut":   # WP-15: match cuts
-        bad, meas = _matchcut_test()
+        bad, meas = _guarded(_matchcut_test)()
         failed += 1 if bad else 0
         results.append({"matchcut": "after film.match_cut the main character's silhouette lands where it was across the cut", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "autoweights":   # WP-11: automatic vertex weights from bone influence
-        bad, meas = _autoweights_test()
+        bad, meas = _guarded(_autoweights_test)()
         failed += 1 if bad else 0
         results.append({"autoweights": "a leg drawn in one piece becomes a mesh weighted over thigh, shin and foot: unchanged at rest, bent at the knee like the rigid cut of the same drawing, and still one piece", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "posebench":   # WP-12: pose detectors by measured accuracy (minutes on the CPU; only when asked)
@@ -7912,75 +7934,75 @@ def test_golden(update=False, film=""):
         failed += 1 if bad else 0
         results.append({"posebench": "MediaPipe, RTMPose, YOLO11-pose, Sapiens and OpenPose each run on the 80 COCO photos and are ranked by OKS", "status": "FAIL" if bad else "ok", "measured": r, **({"cases": bad} if bad else {})})
     if not film or film == "cmu":   # WP-12: CMU motion capture to 2D
-        bad, meas = _cmu_test()
+        bad, meas = _guarded(_cmu_test)()
         failed += 1 if bad else 0
         results.append({"cmu": "a CMU walk (subject 02 trial 01) seen from the side walks: thighs alternate, each arm swings against its leg, a stride about once a second, bones keep their length, and it plays on Pip in the player", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "sprites":   # WP-30: sprite sheets
-        bad, meas = _sprites_test()
+        bad, meas = _guarded(_sprites_test)()
         failed += 1 if bad else 0
         results.append({"sprites": "Biscuit's clips as one sprite sheet: every frame rebuilt from the sheet and atlas equals the player's own still, and Godot 4.5 plays a clip from the SpriteFrames resource matching the stills", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "vectorize":   # WP-14/33: raster parts traced with the vendored potrace and vtracer
-        bad, meas = _vectorize_test()
+        bad, meas = _guarded(_vectorize_test)()
         failed += 1 if bad else 0
         results.append({"vectorize": "Nib's raster line art traced to vector draws like the raster original in the player and alike in Synfig, Lottie and Grease Pencil (which refuses the raster Nib); a painted image goes through vtracer and keeps its shape", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "prosody":   # WP-13: prosody direction
-        bad, meas = _prosody_test()
+        bad, meas = _guarded(_prosody_test)()
         failed += 1 if bad else 0
         results.append({"prosody": "one sentence voiced plain and as whisper, shout, excited, calm and sad: a whisper has no voicing left, a shout is higher and brighter, excited has the widest intonation and is quicker, calm and sad are narrower and slower, sad is the lowest and darkest; Whisper still understands every one", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "branching":   # WP-30: branching interactive films
-        bad, meas = _branching_test()
+        bad, meas = _guarded(_branching_test)()
         failed += 1 if bad else 0
         results.append({"branching": "a film with a branch after shot 2 (choose shot 3 or shot 4, then shot 5) exports as an interactive page that stops at the branch, offers both choices, plays the chosen shot and goes on to shot 5 without the other; a branch naming an unknown shot is refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "bvh":   # WP-12: BVH motion out and in
-        bad, meas = _bvh_test()
+        bad, meas = _guarded(_bvh_test)()
         failed += 1 if bad else 0
         results.append({"bvh": "four library clips go out as BVH whose joints sit where the puppet's own geometry puts them, Blender's importer reads the same joint positions, and they come back as clips within 0.6 degrees, both as our skeleton and renamed to motion-capture joint names (read as a 3D skeleton)", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "plates":   # WP-16: anatomy plates
-        bad, meas = _plates_test()
+        bad, meas = _guarded(_plates_test)()
         failed += 1 if bad else 0
         results.append({"plates": "anatomy plates fetch and match their recorded hashes; a shot showing the brain plate draws the image itself (not an empty card), its labels appear at their times, and the film's credits name Servier Medical Art and CC BY 4.0", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "outfits":   # WP-16: outfits as swap sets
-        bad, meas = _outfits_test()
+        bad, meas = _guarded(_outfits_test)()
         failed += 1 if bad else 0
         results.append({"outfits": "a generated character with two outfits lints clean; a shot cast with each outfit draws it alike in Synfig, Lottie and Grease Pencil; the body changes colour and the face does not", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "bible":   # WP-16: character bibles and continuity
-        bad, meas = _bible_test()
+        bad, meas = _guarded(_bible_test)()
         failed += 1 if bad else 0
         results.append({"bible": "a scratch film that gives Ravi the wrong voice and a clip his bible rules out, and Momo a French line with no French voice chosen, is caught on all three; the real films report only what is known", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "family":   # WP-16: character family looks
-        bad, meas = _family_test()
+        bad, meas = _guarded(_family_test)()
         failed += 1 if bad else 0
         results.append({"family": "three families of three: inside a family every member has the same line weight, ink, eye and head size and colours from the family's palettes; between families those differ by the family's factors; every member lints clean; a mixed shot draws alike in Synfig, Lottie and Grease Pencil", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "mapboard":   # WP-16: the map board set
-        bad, meas = _mapboard_test()
+        bad, meas = _guarded(_mapboard_test)()
         failed += 1 if bad else 0
         results.append({"mapboard": "the map board's projection agrees with d3-geo on every map, Natural Earth puts five capitals inside their countries, the set is a pure function of time, and in the player a pin lands where the projection says", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "living":   # WP-27: corrections everywhere, companion guides, living films, intake, rebrand
-        bad, meas = _living_test()
+        bad, meas = _guarded(_living_test)()
         failed += 1 if bad else 0
         results.append({"living": "one correction reaches the voice, bubbles, title, credits, page and package; a companion guide reproduces every number and catches a changed source; a living film logs its update; send-a-myth intake; a rebrand re-makes a film", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "provenance":   # WP-26: content credentials, recipes, disclosure, consent
-        bad, meas = _provenance_test()
+        bad, meas = _guarded(_provenance_test)()
         failed += 1 if bad else 0
         results.append({"provenance": "finals signed with C2PA and verified by c2patool; tampering caught; signed frames re-made to the same keys and a changed film caught; disclosure per platform; a voice or likeness without consent refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "analytics":   # WP-31: exports in, checklist, retention onto films, experiments, polls, a re-ranked plan, the business view
-        bad, meas = _analytics_test()
+        bad, meas = _guarded(_analytics_test)()
         failed += 1 if bad else 0
         results.append({"analytics": "exports read and matched; a rehearsal on simulated numbers: effects recovered, Q2 re-ranked with every row explained and plan.check passing; checklist, retention on shots and lines, hook test, poll, business view, API connector", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "l10n":   # WP-25: world languages end to end
-        bad, meas = _l10n_test()
+        bad, meas = _guarded(_l10n_test)()
         failed += 1 if bad else 0
         results.append({"l10n": "strings, locale formats, right-to-left and complex scripts, libass shaping, cultural rules, forty languages' fonts; Arabic and Sinhala versions rendered, QA'd and read back by OCR", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "access":   # WP-24: flash check, colour vision, audio description, reduced motion, three aspects
-        bad, meas = _access_test()
+        bad, meas = _guarded(_access_test)()
         failed += 1 if bad else 0
         results.append({"access": "flash check catches flashing (general, red, by area) and passes motion; colour-blind simulation; audio description in pauses and holds, heard by Whisper; reduced motion steadies the camera; three aspects pass QA from one command", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "alpha":   # WP-23: a shot's characters with alpha, and the film as GIF / APNG / line-art GIF
-        bad, meas = _alpha_formats_test()
+        bad, meas = _guarded(_alpha_formats_test)()
         failed += 1 if bad else 0
         results.append({"alpha": "a shot's cast as WebM (VP9 alpha) and ProRes 4444 read back alike to its frames; a print still with trim, bleed and CMYK, sharper than an enlarged frame; the film as GIF, APNG and a 32-colour line-art GIF within their palettes", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kra":   # Krita .kra import (WP-18): layers read from the tiles match the OpenRaster they came from
-        bad, meas = _kra_test()
+        bad, meas = _guarded(_kra_test)()
         failed += 1 if bad else 0
         results.append({"kra": "Krita .kra layers match their OpenRaster source pixel for pixel; a puppet imports the same from either", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "parity":   # the parity matrix stays valid (WP-41): commands and work packages it names exist
@@ -8139,7 +8161,12 @@ def test_golden(update=False, film=""):
                 failed += 1
                 Image.fromarray(np.clip(d * 4, 0, 255).astype(np.uint8)).save(gdir / f"{case['shot']}_{t}.diff.png")
             results.append({"frame": str(g.relative_to(ROOT)), "status": "ok" if ok else "FAIL", "mean_abs": round(mean, 3), "pixels_over_32": round(over, 5)})
-    return {"passed": failed == 0, "failed": failed, "results": results}
+    skipped = []
+    for r in results:
+        m = r.get("measured")
+        if r.get("status") == "ok" and isinstance(m, dict) and "skipped" in m:
+            r["status"] = "skipped"; skipped.append(next((k for k in r if k not in ("status", "measured", "cases")), "?"))
+    return {"passed": failed == 0, "failed": failed, "skipped": skipped, "results": results}
 
 
 # ---------------- packaging ----------------
