@@ -330,7 +330,8 @@ def plan_film(film_dir, spans=None):
                 tl["clips"].insert(0, {"clip": "idle", "start": 0, "fadeIn": 0, "auto": True})
             my_x = (c.get("place") or {}).get("x", 540) if isinstance(c.get("place"), dict) else 540
             pname, prof = profile_of(me, pz, c["puppet"])
-            clips, look, blinks, emo, poses = plan_cast(pz.get("template", "humanoid"), in_shot, me, {k: v for k, v in xs.items() if k != me}, my_x, pro_of,
+            # a puppet may act with humanoid gestures on another template (acting.gestures; Open Peeps' busts with arms)
+            clips, look, blinks, emo, poses = plan_cast((pz.get("acting") or {}).get("gestures") or pz.get("template", "humanoid"), in_shot, me, {k: v for k, v in xs.items() if k != me}, my_x, pro_of,
                                                         (pz.get("acting") or {}).get("energy", 1.0), prof, library(pz))
             tl["clips"] += clips
             # the same auto gesture twice within half a second (a listener's reaction and a beat) reads as a stutter: keep the first

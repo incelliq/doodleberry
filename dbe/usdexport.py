@@ -106,7 +106,7 @@ def _geometry(stage, path, strokes, pal, tex_dir, per=6, bend=None):
         fill, line = G.colour(st.get("fill"), pal), G.colour(st.get("stroke"), pal)
         closed = [[tuple(p) for p in G.sample(segs, per)] for segs, c in subs if c]
         if fill and closed:
-            polys = [X._keyhole(closed)] if st.get("rule") == "evenodd" and len(closed) > 1 else closed
+            polys = [X._keyhole(g) for g in X.evenodd_groups(closed)] if st.get("rule") == "evenodd" and len(closed) > 1 else closed
             P, idx, cnt = [], [], []
             for poly in polys:
                 pts, tris = earclip(poly); base = len(P); P += pts

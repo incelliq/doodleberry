@@ -1296,6 +1296,27 @@ the site's piece. `cast.import_peeps` uses the kit when it is here: 30 bodies, 4
 (with none) and 9 accessories. The `peeps` test rebuilds the same four site peeps from the kit puppet (ink IoU 0.989
 to 0.998). The site calls one face "Smiling", which is the kit's "Smile"; the test matches it by its drawing.
 
+**Talking and gesturing peeps.** The kit draws each face whole, so for lip-sync each is split at its nose (the piece
+almost every face shares): what starts below it is the mouth. The faces lose their mouths, and a `mouth` swap set takes
+the kit's own mouths for the visemes (closed from Serious, small Cute, mid Concerned Fear, wide Explaining, O Cheeky,
+F/V Hectic's teeth, smile Smile, frown Solemn; the faces share one frame, so a mouth from one face sits right on
+another) and each face's own as `rest-<face>`; a layer set per face picks the face with its resting mouth. The bust
+bodies draw their arms into one outline with the body, so arms are added: original ones in the kit's manner (a white
+sleeve and hand, a heavy black line), hung from each shoulder behind the body. The arm parts draw nothing themselves;
+their drawings are swaps that a gesture clip shows while it plays, so no arm shows at rest, even through an outfit's
+gaps (a mug, hands on hips). The humanoid arm clips (point, wave, present, open palms, shrug) are copied in, and the
+puppet's `acting.gestures: "humanoid"` lets the gesture planner use them. An outfit with arms drawn at its sides keeps
+them, so while a gesture plays that side shows two arms. Renderers: the kit draws everything as filled shapes with
+even-odd holes nested to any depth, which Synfig and Grease Pencil (and the USD export) took as one outline with holes;
+they now split an even-odd fill by nesting (`evenodd_groups`: a contour inside an even number of others fills, inside
+an odd number cuts, each hole going to the smallest contour round it). Test `peepstalk` (only when asked): all 30
+faces split, nothing left below a nose; the eight mouths change nothing above the nose (0 px) and the closest two
+differ by 89 px; across 30 outfits a rest frame with arms equals the one without, pixel for pixel, while a point, a
+wave and a present bring out 14,473 to 17,326 px of arm; the planner gives a peep a point and open palms; Synfig,
+Lottie and Grease Pencil draw a pointing, talking peep as the SVG renderer does (parity 1.0, 1.0, 1.0; before the
+even-odd fix Synfig and Grease Pencil were 85.6 and 37.9 levels off in colour). Sana's hijab (one hole) is unchanged
+(parity 1.0, colour 0).
+
 **Full-body peeps** (`"body": "standing"` or `"sitting"`). The kit's 34 headless poses (23 standing, 11 sitting)
 get the head on top at the kit's own full-size layout. That layout was read from the kit's "a person" files and 48
 templates on the owner's machine: every standing template puts the head (124.68, -107.60) from the pose and every

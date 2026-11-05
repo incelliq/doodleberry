@@ -335,11 +335,12 @@ def _shapes_sif(strokes, pal, grads=None, toon=None, fps=30):
         closed_subs = [segs for segs, closed in subs if closed]
         fx = ""
         if fill and st.get("rule") == "evenodd" and len(closed_subs) > 1:
-            # v0.9 even-odd fill: the first contour fills, the others cut holes ("alpha over"), inside a group so the
-            # cuts only reach this stroke
+            # v0.9 even-odd fill: each filled contour with the holes directly inside it ("alpha over"), a group each so
+            # the cuts reach only their own shape; contours nested deeper fill again, in later groups (evenodd_groups)
             cut = '<param name="blend_method"><integer value="19"/></param>'
-            inner = region(closed_subs[0]) + "".join(region(sg, cut) for sg in closed_subs[1:])
-            fx = f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{inner}</canvas></param></layer>'
+            pts = [G.sample(sg, 6) for sg in closed_subs]; key = {id(q): sg for q, sg in zip(pts, closed_subs)}
+            fx = "".join(f'<layer type="group" active="true" version="0.3"><param name="canvas"><canvas>{region(key[id(g[0])]) + "".join(region(key[id(h)], cut) for h in g[1:])}</canvas></param></layer>'
+                         for g in evenodd_groups(pts))
         elif fill:
             fx = "".join(region(sg) for sg in closed_subs)
         if fx and st.get("gradient") and (grads or {}).get(st["gradient"]):
@@ -516,6 +517,28 @@ def to_synfig(baked, size, bg_png=None, transparent=False, assets_dir=None, toon
     return head + body + "</canvas>\n"
 
 
+def _inside(pt, poly):
+    x, y = pt; c = False; n = len(poly)
+    for i in range(n):
+        (x1, y1), (x2, y2) = poly[i], poly[(i + 1) % n]
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / ((y2 - y1) or 1e-12):
+            c = not c
+    return c
+
+
+def evenodd_groups(polys):
+    """an even-odd fill's contours as filled shapes with their holes: [[outer, hole, ...], ...]. A contour inside an
+    even number of others fills, an odd number cuts; each hole belongs to the smallest contour around it. (A compound
+    path may hold many separate shapes nested to any depth, as Open Peeps' drawings do.)"""
+    def area(q):
+        return abs(sum(q[i][0] * q[(i + 1) % len(q)][1] - q[(i + 1) % len(q)][0] * q[i][1] for i in range(len(q))) / 2)
+    polys = [q for q in polys if len(q) >= 3]; A = [area(q) for q in polys]
+    holders = [[j for j in range(len(polys)) if j != i and A[j] > A[i] and _inside(polys[i][0], polys[j])] for i in range(len(polys))]
+    depth = [len(h) for h in holders]
+    parent = [min(h, key=lambda j: A[j]) if h else None for h in holders]
+    return [[polys[i]] + [polys[k] for k in range(len(polys)) if depth[k] % 2 == 1 and parent[k] == i] for i in range(len(polys)) if depth[i] % 2 == 0]
+
+
 # ======================= Grease Pencil frames =======================
 def _keyhole(polys):
     """one simple polygon for an even-odd fill: the largest contour, with each other contour cut in through a bridge"""
@@ -617,8 +640,9 @@ def to_gp_frames(baked, size, per=6, toon=None):
                                 polys.append([G.apply(Mp, G.bend_point(q, piv, ax, wd, th)) for q in G.sample(segs, per)])
                             else:
                                 polys.append([G.apply(m, q) for q in G.sample(segs, per)])
-                        strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in _keyhole(polys)], "closed": True,
-                                        "fill": G.colour(st.get("fill"), pal), "line": None, "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})
+                        for grp in evenodd_groups(polys):   # each filled contour with its own holes, as one keyhole polygon
+                            strokes.append({"pts": [[round(x, 1), round(y, 1)] for x, y in _keyhole(grp)], "closed": True,
+                                            "fill": G.colour(st.get("fill"), pal), "line": None, "w": st.get("width", 3) * fr.get("s", 1), "op": st.get("opacity", 1)})
                         st = {**st, "fill": None}
                     for segs, closed in subs:
                         if isinstance(m, tuple) and m and m[0] == "bend":

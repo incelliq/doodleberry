@@ -3264,7 +3264,7 @@ def _peeps_test():
         for label, folder in sources:
             r = cast_import_peeps(folder=folder, out=f"out/peeps_test/peep_{label}.puppet.json")
             meas[f"{label}_swap_sets"] = r["swap_sets"]
-            if r["lint"] or min(r["swap_sets"].values()) < 5:
+            if r["lint"] or min(v for k, v in r["swap_sets"].items() if k in ("outfit", "hair", "expression", "beard_style", "accessory")) < 5:
                 bad.append(f"{label}: kit or lint: {r['swap_sets']}, {r['lint']}")
         if atoms.is_dir():   # full-body poses: lint clean, and every head sits on its pose's neck
             from . import peeps as PE
@@ -3295,6 +3295,8 @@ def _peeps_test():
                         want = PE._bbox(sp["swaps"][k_]["shapes"][v])
                         best = min(kp["swaps"][k_]["shapes"].items(), key=lambda kv: sum(abs(a - b) for a, b in zip(PE._bbox(kv[1]) or (0, 0, 0, 0), want or (0, 0, 0, 0))))
                         pose[k_] = best[0]; meas.setdefault("renamed", {})[v] = best[0]
+            if pose.get("expression") and f"rest-{pose['expression']}" in _json(ROOT / r["puppet"])["swaps"].get("mouth", {}).get("shapes", {}):
+                pose["mouth"] = f"rest-{pose['expression']}"   # the face's own mouth (faces and mouths are split for lip-sync)
             spec = {"size": [256, 340], "bg": "#808080", "items": [{"puppet": r["puppet"], "x": 120, "y": 324, "s": 1, "pose": pose}]}
             (tmp / "spec.json").write_text(json.dumps(spec))
             subprocess.run(["node", str(ROOT / "tools" / "pose_still.mjs"), str(tmp / "spec.json"), str(tmp / "p.png")], check=True, cwd=ROOT, timeout=120)
@@ -7640,6 +7642,10 @@ def test_golden(update=False, film=""):
         bad, meas = _graphcomp_test()
         failed += 1 if bad else 0
         results.append({"graphcomp": "the compositor as a graph: a box per plane and node, a grade brightened from its box brightens the preview, a node added, the camera rolled, a bad expression refused", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if film == "peepstalk":   # WP-16: Open Peeps lip-sync and gesture arms (renders three other renderers, so only when asked)
+        bad, meas = _peepstalk_test()
+        failed += 1 if bad else 0
+        results.append({"peepstalk": "Open Peeps talk and gesture: faces split at the nose into face and mouth, eight viseme mouths that change only the mouth, arms hidden at rest on every outfit and out in a gesture, arm gestures from the planner, and every renderer drawing a pointing, talking peep as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "turns":   # WP-43: morphs between views (renders three other renderers, so only when asked)
         bad, meas = _turns_test()
         failed += 1 if bad else 0
@@ -10585,6 +10591,91 @@ def _masterpasses_test(film="handshake-demo", t0=2.0):
             meas["depth"] = {"planes": planes, "values": {str(v): round(float(c / Z.size), 4) for v, c in zip(vals.tolist(), cnt)}, "under_characters": sorted(set(np.round(Z[mt], 4).tolist()))}
             if any(min(abs(v - p_) for p_ in planes + [0.0]) > 1e-4 for v in vals.tolist()) or meas["depth"]["under_characters"] != [1.0]:
                 bad.append(f"depth: {meas['depth']}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return bad, meas
+
+
+def _peepstalk_test():
+    """WP-16 Open Peeps that talk and gesture (the kit here, else skipped): every face is split at its nose into the
+    face and its mouth; the eight viseme mouths change only the mouth (the eyes and brows stay pixel for pixel); the
+    arms hidden at rest on every outfit (a rest frame with them is the frame without them, exactly); a point brings an
+    arm out; the gesture planner gives the peep arm gestures; Synfig, Lottie and Grease Pencil draw a pointing,
+    talking peep as the SVG renderer does."""
+    import tempfile
+    import numpy as np
+    from PIL import Image
+    from . import peeps as PE, gestures as GS
+    atoms = ROOT / "assets" / "external" / "openpeeps-kit" / "Separate Atoms"
+    if not atoms.is_dir():
+        return [], {"skipped": "the Open Peeps kit is not here (assets/external/openpeeps-kit)"}
+    bad, meas = [], {}
+    tmp = Path(tempfile.mkdtemp(prefix="peepstalk_", dir=ROOT / "out"))
+    try:
+        r = cast_import_peeps(out=str((tmp / "peep.puppet.json").relative_to(ROOT))); pp = r["puppet"]; pz = _json(ROOT / pp)
+        ls = r["lipsync"]; meas["visemes_from"] = ls["visemes"]; meas["faces_split"] = ls["faces_split"]
+        nose_bottom = ls["nose_box"][3]
+        low = [nm for nm, sts in pz["swaps"]["expression"]["shapes"].items() for st in sts for sp in PE._subpaths(st["d"]) if (PE._sbox(sp) or (0, 0, 0, 0))[1] >= nose_bottom + 2]
+        if ls["faces_split"] != len(pz["swaps"]["expression"]["shapes"]) or set(ls["visemes"]) != {"closed", "small", "mid", "wide", "O", "FV", "smile", "frown"} or low:
+            bad.append(f"faces and mouths: split {ls['faces_split']}, visemes {ls['visemes']}, mouth left in {sorted(set(low))[:5]}")
+        def still(items, name):
+            (tmp / f"{name}.json").write_text(json.dumps({"size": [260 * len(items), 360], "bg": "#ffffff", "flush": True, "items": items}))
+            subprocess.run(["node", "tools/pose_still.mjs", str(tmp / f"{name}.json"), str(tmp / f"{name}.png")], check=True, cwd=ROOT, timeout=300)
+            return np.asarray(Image.open(tmp / f"{name}.png").convert("L")).astype(int)
+        vis = ["closed", "small", "mid", "wide", "O", "FV", "smile", "frown"]
+        im = still([{"puppet": pp, "x": 130 + 260 * i, "y": 340, "pose": {"s": 1.0, "expression": "Calm", "outfit": "Tee-1", "mouth": v}} for i, v in enumerate(vis)], "vis")
+        tiles = [im[:, i * 260:(i + 1) * 260] for i in range(len(vis))]
+        # the nose's bottom on screen: artboard y + (340 - ground) at scale 1
+        cut = int(nose_bottom + 340 - pz["ground"])
+        above = max(int((np.abs(tiles[i][:cut] - tiles[0][:cut]) > 8).sum()) for i in range(len(vis)))
+        mouth_diff = min(int((np.abs(tiles[i][cut:] - tiles[j][cut:]) > 8).sum()) for i in range(len(vis)) for j in range(i + 1, len(vis)))
+        meas["visemes"] = {"px_changed_above_the_nose": above, "fewest_px_between_two_mouths": mouth_diff}
+        if above or mouth_diff < 30:
+            bad.append(f"visemes: {meas['visemes']}")
+        noarms = json.loads(json.dumps(pz))
+        for k in [k for k in noarms["parts"] if k.startswith(("upperarm", "forearm", "hand_"))]:
+            del noarms["parts"][k]
+        for k in [k for k in noarms["swaps"] if k.startswith(("arm_", "hand_"))]:
+            del noarms["swaps"][k]
+        (tmp / "noarms.puppet.json").write_text(json.dumps(noarms)); pn = str((tmp / "noarms.puppet.json").relative_to(ROOT))
+        outs = list(pz["swaps"]["outfit"]["shapes"])
+        a = still([{"puppet": pp, "x": 130 + 260 * i, "y": 340, "pose": {"s": 1.0, "outfit": o}} for i, o in enumerate(outs)], "rest_a")
+        b = still([{"puppet": pn, "x": 130 + 260 * i, "y": 340, "pose": {"s": 1.0, "outfit": o}} for i, o in enumerate(outs)], "rest_b")
+        g = still([{"puppet": pp, "x": 130, "y": 340, "pose": {"s": 1.0, "outfit": "Tee-1"}, "timeline": {"clips": [{"clip": "idle", "start": 0}, {"clip": c_, "start": 0, "weight": 3}]}, "t": 0.5}
+                   for c_ in ("point_R", "wave_L", "present_R")], "gest")
+        rest1 = b[:, :260]
+        meas["arms"] = {"outfits": len(outs), "px_showing_at_rest": int((np.abs(a - b) > 8).sum()),
+                        "px_out_in_gestures": [int((np.abs(g[:, i * 260:(i + 1) * 260] - rest1) > 8).sum()) for i in range(3)]}
+        if meas["arms"]["px_showing_at_rest"] or min(meas["arms"]["px_out_in_gestures"]) < 400:
+            bad.append(f"arms: {meas['arms']}")
+        def wl(text, t0):
+            ws = text.split(); return [{"text": w, "start": round(t0 + 0.3 * i, 3), "end": round(t0 + 0.3 * i + 0.25, 3)} for i, w in enumerate(ws)]
+        ex = [{"speaker": "peep", "text": "Look at that over there!", "start": 0.5}, {"speaker": "pip", "text": "Where?", "start": 3.0},
+              {"speaker": "peep", "text": "There, behind the big tree.", "start": 4.0}]
+        for l in ex:
+            l["words"] = wl(l["text"], l["start"]); l["end"] = l["words"][-1]["end"]
+        lib = {**_json(ROOT / "puppet" / "clips" / f"{pz.get('template', 'doodle')}.json", {"clips": {}})["clips"], **pz["clips"]}
+        plan = GS.plan_cast(pz["acting"]["gestures"], ex, "peep", {"pip": 800}, 300, lambda w: [{"db": 0.0, "dur": 0.25, "f0": 0.0} for _ in w], lib=set(lib))[0]
+        meas["planned"] = sorted({k["clip"] for k in plan})
+        if not {"point_R", "talk_open_palms", "present_R"} & set(meas["planned"]):
+            bad.append(f"the planner gave the peep no arm gestures: {meas['planned']}")
+        # parity: a copy of pip-park with the peep pointing and talking
+        name = "zz-peepstalk"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+        try:
+            for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+                shutil.copy(f, d / f.name)
+            sj = _json(d / "shots.json"); sh = sj["shots"][0]; sj["shots"] = [sh]
+            c0 = sh["cast"][0]; c0["puppet"] = pp; c0["place"] = {"x": 540, "y": 1500, "s": 3.0}
+            c0["timeline"] = {"clips": [{"clip": "idle", "start": 0}, {"clip": "point_R", "start": 1.0, "end": 2.6, "weight": 3}], "visemes_from": c0.get("timeline", {}).get("visemes_from", "pip")}
+            for k in ("props", "fx"):
+                sh.pop(k, None)
+            (d / "shots.json").write_text(json.dumps(sj))
+            pr = render_parity(name, sh["id"], times=[1.6]); meas["parity"] = {k: v.get("min") for k, v in pr["renderers"].items()}
+            for k, v in pr["renderers"].items():
+                if not v.get("ok"):
+                    bad.append(f"parity {k}: {v.get('min')}, colour {v.get('colour_diff')}, {v.get('error')}")
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return bad, meas
