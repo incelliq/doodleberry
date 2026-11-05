@@ -1168,8 +1168,12 @@ aims away from the card); nib-hello **lost** 8 to 17: Nib, a doodle-template pup
 since every gesture rule but talk was for humanoids. So a puppet of another template now gets what its own clips can
 say: a greeting waves from its first word, an exclamation hops on the word it ends on, a statement leans in, a plain
 no shakes (`acting2` checks the first two). Round 8 on Nib: still lost, but 16 to 25: the wave on "Hi!" now matches,
-while the hand-keyed hop on "purpose!" lands in a held, wide-armed ta-da that the doodle template has no clip for.
-Eight blind wins in nineteen.
+while the hand-keyed hop on "purpose!" lands in a held, wide-armed ta-da. That ta-da is the template's `arms_up`
+preset, held: the planner now writes it for a puppet of another template (the one planned pose kept: held presets
+read stiff on humanoids), from just before the hop to 1.1 s after (`acting2` checks it). Round 9 on Nib: lost 20 to
+22. The critic now found the planner's arms-out jump on "on purpose" "earlier and more cleanly" placed, clear of the
+bubble, and preferred the hand-keyed one for its anticipation (an arm out on the walk-in, a squash before "Hi!") and
+a head tilt on "wobble". Eight blind wins in twenty.
 
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:

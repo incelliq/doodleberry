@@ -120,7 +120,7 @@ NEUTRAL = {"tempo": 1.0, "energy": 1.0, "beat_gap": 0.9, "beat_words": 4, "point
            "listen_nod": 0.8, "look_away": 0, "never": [], "react": "surprised"}
 
 
-def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None, lib=None):
+def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None, lib=None, presets=None):
     """prof: a personality profile (cast/profiles.json; None = neutral, the earlier gesture choices); lib: the clip names the
     character can play (tagged gestures and profile choices outside it fall back)"""
     P = {**NEUTRAL, **(prof or {})}; never = set(P.get("never") or [])
@@ -189,6 +189,9 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                     if i is not None:
                         t0 = max(ln["start"], words[i]["start"] - 0.12)
                         clips.append(style({"clip": "hop", "start": round(t0, 3), "weight": 3, "auto": True, "why": "exclamation"})); used.append(words[i]["start"]); busy_until = t0 + 0.7
+                        if presets and "arms_up" in presets:   # and lands in a held ta-da (round 8: the hand-keyed Nib's
+                            # wide-armed hold after "purpose!" was what the critic missed)
+                            poses.append([round(t0 - 0.2, 3), "arms_up"]); poses.append([round(t0 + 1.1, 3), "neutral"])
                 elif not ques and order and can("lean_in") and not used:   # a statement: lean in on its strongest word
                     i = order[0]; t0 = max(ln["start"], words[i]["start"] - 0.2)
                     clips.append(style({"clip": "lean_in", "start": round(t0, 3), "end": round(min(ln["end"] + 0.2, t0 + 1.4), 3), "weight": 2.5, "auto": True, "why": "statement"}))
@@ -332,6 +335,10 @@ def plan_film(film_dir, spans=None):
     def library(pz):
         f = root / "puppet" / "clips" / f"{pz.get('template', 'humanoid')}.json"
         return set(json.loads(f.read_text())["clips"]) | set(pz.get("clips") or {}) if f.exists() else None
+
+    def presets_of(pz):
+        f = root / "puppet" / "clips" / f"{pz.get('template', 'humanoid')}.json"
+        return set((json.loads(f.read_text()).get("presets") or {}) if f.exists() else {}) | set(pz.get("poses") or {})
     for sh in shots["shots"]:
         cast = sh.get("cast") or []
         xs = {}
@@ -354,7 +361,7 @@ def plan_film(film_dir, spans=None):
             pname, prof = profile_of(me, pz, c["puppet"])
             # a puppet may act with humanoid gestures on another template (acting.gestures; Open Peeps' busts with arms)
             clips, look, blinks, emo, poses = plan_cast((pz.get("acting") or {}).get("gestures") or pz.get("template", "humanoid"), in_shot, me, {k: v for k, v in xs.items() if k != me}, my_x, pro_of,
-                                                        (pz.get("acting") or {}).get("energy", 1.0), prof, library(pz))
+                                                        (pz.get("acting") or {}).get("energy", 1.0), prof, library(pz), presets_of(pz))
             tl["clips"] += clips
             # the same auto gesture twice within half a second (a listener's reaction and a beat) reads as a stutter: keep the first
             seen, kept = [], []
@@ -368,6 +375,9 @@ def plan_film(film_dir, spans=None):
             tl["clips"] = kept
             if not tl.get("poses_manual"):   # body presets are no longer planned: clear any an earlier plan left behind
                 tl.pop("poses", None)
+                gest = (pz.get("acting") or {}).get("gestures") or pz.get("template", "humanoid")
+                if poses and gest != "humanoid":   # except a doodle's held ta-da after an exclamation
+                    tl["poses"] = [[0, "neutral"]] + sorted(poses, key=lambda k: k[0])
             if emo and not tl.get("emotion_manual"):   # how it feels, held between lines (WP-10)
                 emo = sorted(emo, key=lambda k: k[0]); tl["emotion"] = [k for i, k in enumerate(emo) if i == 0 or k[1] != emo[i - 1][1]]
             # (body presets per emotion were tried and dropped: a blind critic read a held preset as a stiff pose and a

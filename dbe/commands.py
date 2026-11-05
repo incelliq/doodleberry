@@ -13343,10 +13343,12 @@ def _acting2_test():
     for l in dl:
         l["words"] = wl(l["text"], l["start"]); l["end"] = l["words"][-1]["end"]
     dlib = set(_json(ROOT / "puppet" / "clips" / "doodle.json")["clips"])
-    dp = GS.plan_cast("doodle", dl, "nib", {}, 540, flat, lib=dlib)[0]
+    _dpl = GS.plan_cast("doodle", dl, "nib", {}, 540, flat, lib=dlib, presets=set(_json(ROOT / "puppet" / "clips" / "doodle.json").get("presets") or {}))
+    dp, dposes = _dpl[0], _dpl[4]
     wv = next((k for k in dp if k["clip"].startswith("wave")), None); hp_ = next((k for k in dp if k["clip"] == "hop"), None)
-    meas["doodle"] = {"wave": [wv["clip"], wv["start"]] if wv else None, "hop": hp_["start"] if hp_ else None, "last_word": dl[1]["words"][-1]["start"]}
-    if not (wv and wv["start"] <= dl[0]["words"][0]["start"] and hp_ and abs(hp_["start"] - (dl[1]["words"][-1]["start"] - 0.12)) < 1e-6):
+    meas["doodle"] = {"wave": [wv["clip"], wv["start"]] if wv else None, "hop": hp_["start"] if hp_ else None, "last_word": dl[1]["words"][-1]["start"], "poses": dposes}
+    if not (wv and wv["start"] <= dl[0]["words"][0]["start"] and hp_ and abs(hp_["start"] - (dl[1]["words"][-1]["start"] - 0.12)) < 1e-6
+            and [p_[1] for p_ in dposes] == ["arms_up", "neutral"] and dposes[0][0] < hp_["start"] < dposes[1][0]):
         bad.append(f"doodle gestures: {meas['doodle']}")
     pm2, mlk2, *_ = GS.plan_cast("humanoid", ex2, "momo", {"ravi": 300}, 700, flat)
     own = at(pm2, "present_R", "owning up (at it)"); back = [v for t, v in mlk2 if ex2[3]["start"] <= t <= ex2[3]["end"] and v[0] > 0]
