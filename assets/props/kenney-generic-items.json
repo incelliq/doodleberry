@@ -1,9 +1,10 @@
 {
  "pack": "Kenney Generic Items",
+ "slug": "generic-items",
  "license": "CC0-1.0",
  "source_url": "https://kenney.nl/assets/generic-items",
  "zip_sha256": "93f622e46a86f26c8c718cc133c99b545059758abdba65b335c687a581efa059",
- "folder": "assets/external/kenney/generic-items/PNG/Colored (not in git)",
+ "folder": "PNG/Colored",
  "labelled": "by eye from the drawings, 5 Nov 2026; 'unsure' marks the few that could be something else",
  "items": [
   {

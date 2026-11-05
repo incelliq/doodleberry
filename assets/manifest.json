@@ -990,6 +990,56 @@
    "class": "public-domain",
    "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
    "use": "a prop library: 163 sprites labelled by eye in assets/props/kenney-generic-items.json (label, category, sha256 each); props.make draws one as a prop; unpacked from the downloaded zip by props.import_kenney (zip sha256 in the index)"
+  },
+  {
+   "id": "kenney-board-game-icons",
+   "path": "assets/external/kenney/board-game-icons/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/board-game-icons",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "a prop library: 255 sprites (PNG/Default (64px)) labelled by eye on the owner's machine in assets/props/kenney-board-game-icons.json (label, category, sha256 each); downloaded by the owner in a browser, unpacked by props.import_kenney (zip sha256 in the index)"
+  },
+  {
+   "id": "kenney-foliage-pack",
+   "path": "assets/external/kenney/foliage-pack/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/foliage-pack",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "a prop library: 106 sprites (PNG/Default size) labelled by eye on the owner's machine in assets/props/kenney-foliage-pack.json (label, category, sha256 each); downloaded by the owner in a browser, unpacked by props.import_kenney (zip sha256 in the index)"
+  },
+  {
+   "id": "kenney-background-elements-remastered",
+   "path": "assets/external/kenney/background-elements-remastered/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/background-elements-remastered",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "a prop library: 69 sprites (PNG/Default) labelled by eye on the owner's machine in assets/props/kenney-background-elements-remastered.json (label, category, sha256 each); downloaded by the owner in a browser, unpacked by props.import_kenney (zip sha256 in the index)"
+  },
+  {
+   "id": "kenney-sports-pack",
+   "path": "assets/external/kenney/sports-pack/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/sports-pack",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "a prop library: 187 sprites (PNG) labelled by eye on the owner's machine in assets/props/kenney-sports-pack.json (label, category, sha256 each); downloaded by the owner in a browser, unpacked by props.import_kenney (zip sha256 in the index)"
+  },
+  {
+   "id": "kenney-emotes-pack",
+   "path": "assets/external/kenney/emotes-pack/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/emotes-pack",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "a prop library: 240 sprites (PNG/Vector) labelled by eye on the owner's machine in assets/props/kenney-emotes-pack.json (label, category, sha256 each); downloaded by the owner in a browser, unpacked by props.import_kenney (zip sha256 in the index)"
   }
  ]
 }

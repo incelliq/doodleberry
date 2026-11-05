@@ -1,0 +1,758 @@
+{
+ "pack": "Kenney Foliage Pack",
+ "slug": "foliage-pack",
+ "license": "CC0-1.0",
+ "source_url": "https://kenney.nl/assets/foliage-pack",
+ "zip_sha256": "33bd564f2cebb6a68bee9a798650d669571a389a437b0bd601d257ca2b5e7aed",
+ "folder": "PNG/Default size",
+ "labelled": "by eye from the drawings, 5 Nov 2026 (on the owner's machine, from numbered contact sheets on light and dark grounds; 'unsure' marks those that could be something else)",
+ "items": [
+  {
+   "n": 1,
+   "label": "green canopy tile, top-left corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_001.png",
+   "sha256": "5f1652ae2bb37f091b8d59e9e4747c5acbd3d3a02fa25af84633dcf0a41e3c9f"
+  },
+  {
+   "n": 2,
+   "label": "green canopy tile, top edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_002.png",
+   "sha256": "6496040e60fa3ad61f7fcf538f4f4d197ab0f83fd4914083e089ea7c9b6f16ba"
+  },
+  {
+   "n": 3,
+   "label": "green canopy tile, top-right corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_003.png",
+   "sha256": "7136e810708af85feb5005be32d553fbd2451581035e9fa6e1410038ba237c2d"
+  },
+  {
+   "n": 4,
+   "label": "green canopy tile, inner corner, opening top-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_004.png",
+   "sha256": "8fcd89848f3db3978b145a7c96e582257f5f89995ac47d46830fe22cf70ef2f5"
+  },
+  {
+   "n": 5,
+   "label": "green canopy tile, inner corner, opening top-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_005.png",
+   "sha256": "2cb34fca8cf2d967f40d2072081c623439ddbaff94b5e30c13e2de924aaa3027"
+  },
+  {
+   "n": 6,
+   "label": "green canopy tile, corner nub, bottom-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_006.png",
+   "sha256": "34ba3479a6a98c0d7a78f7cebe54d9adc19eaf9459aef76ad6e472e62e98b480"
+  },
+  {
+   "n": 7,
+   "label": "green canopy tile, bottom strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_007.png",
+   "sha256": "290198b118e92e780d6a7712b4b167c69eca311cb4bc5d4cd60bf410160611cc"
+  },
+  {
+   "n": 8,
+   "label": "green canopy tile, corner nub, bottom-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_008.png",
+   "sha256": "e2730ac6a37100dbc6ba9a99195ecd6c3b33fb99dcdf03efec3a7fe3873c25f5"
+  },
+  {
+   "n": 9,
+   "label": "orange canopy tile, top-left corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_009.png",
+   "sha256": "8b6807241602b06519e70e629e7273699442f757776e62ed70578fe039a6c7be"
+  },
+  {
+   "n": 10,
+   "label": "orange canopy tile, top edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_010.png",
+   "sha256": "2df7d59704129b27caa824db2c96b73e12f8008fb1bbe137062fa0c31a672111"
+  },
+  {
+   "n": 11,
+   "label": "orange canopy tile, top-right corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_011.png",
+   "sha256": "22e19eab94b8d62195b96a67df03ec1e9ea4722f3c0fb3292c7ec7abeeac853c"
+  },
+  {
+   "n": 12,
+   "label": "orange canopy tile, inner corner, opening top-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_012.png",
+   "sha256": "eb23c8d7d96d752f473fd678250e749f439cb61f217f1824b17d789d0c676812"
+  },
+  {
+   "n": 13,
+   "label": "orange canopy tile, inner corner, opening top-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_013.png",
+   "sha256": "03b9c60de710062e22c0a3890c5588fd71a3158652603d94e7eeb8bf35025fdc"
+  },
+  {
+   "n": 14,
+   "label": "orange canopy tile, corner nub, bottom-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_014.png",
+   "sha256": "07581e0053738893635a50931a70d3fbf5b6cde9435337c5493bc8c6d95f00dc"
+  },
+  {
+   "n": 15,
+   "label": "orange canopy tile, bottom strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_015.png",
+   "sha256": "3c46bc1112589cedc695a378e0f5900689d142c8272bedc19fb843efd5161e8e"
+  },
+  {
+   "n": 16,
+   "label": "orange canopy tile, corner nub, bottom-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_016.png",
+   "sha256": "6ef735a5f69df112e727a02b1091aaf64d401ee3a3b78c09c42cf2a7f258290f"
+  },
+  {
+   "n": 17,
+   "label": "green canopy tile, left edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_017.png",
+   "sha256": "f9f361c4c7b07f2888a86ccabcdc1d56432224e0ca8a567ddc0624933eea0f9f"
+  },
+  {
+   "n": 18,
+   "label": "green canopy tile, solid fill",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_018.png",
+   "sha256": "5cdfe13170f1da78a9f4e522f26fe15a2cc8e79d3176360179daf195f1e7187e"
+  },
+  {
+   "n": 19,
+   "label": "green canopy tile, right edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_019.png",
+   "sha256": "8db0d75dd348e631f44f1ceb0eeecbab14b4a9b0b73af162b5752f3f689f0f31"
+  },
+  {
+   "n": 20,
+   "label": "green canopy tile, inner corner, opening bottom-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_020.png",
+   "sha256": "610db755c1690d704184cf05b10530858738a714f07dffc52b3c612e0141f238"
+  },
+  {
+   "n": 21,
+   "label": "green canopy tile, inner corner, opening bottom-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_021.png",
+   "sha256": "f8cdbabc931af97feb58324976432dba37f8030d139736b3631e1143918db5be"
+  },
+  {
+   "n": 22,
+   "label": "green canopy tile, right strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_022.png",
+   "sha256": "fa23bfb1825eb0ab19097be9249883e8e88ecf5161eed1979bad0c9c0823104a"
+  },
+  {
+   "n": 23,
+   "label": "green canopy tile, solid fill",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_023.png",
+   "sha256": "91ea11ad0bdf6b5d39f938e6f787ce1df34141a1c0916e82d77fca29b9fc296b"
+  },
+  {
+   "n": 24,
+   "label": "green canopy tile, left strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_024.png",
+   "sha256": "5646ad087df40172fcf2df0c3359755432b2c21447c0dbf25ad41a83b13e3bb7"
+  },
+  {
+   "n": 25,
+   "label": "orange canopy tile, left edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_025.png",
+   "sha256": "451c7bd2052c7419f376a505c44441461f12b4190957744f80d06f6d86d72a88"
+  },
+  {
+   "n": 26,
+   "label": "orange canopy tile, solid fill",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_026.png",
+   "sha256": "2546d8624461eb5f8ce5a2f18b493bb710bd0050273dd7cfd124dc3334613f7e"
+  },
+  {
+   "n": 27,
+   "label": "orange canopy tile, right edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_027.png",
+   "sha256": "80e86eb91792f2b5d630fc753eb0acb0d3a392c792929b194a1a6444c8c5f53e"
+  },
+  {
+   "n": 28,
+   "label": "orange canopy tile, inner corner, opening bottom-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_028.png",
+   "sha256": "38cfffdb2ec858f239c48b2a9599516e3a43182d8a769cbbb9656394c08713f1"
+  },
+  {
+   "n": 29,
+   "label": "orange canopy tile, inner corner, opening bottom-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_029.png",
+   "sha256": "28e3d4bad1749759ecb6317dab8ecd7aa6a010c45ae0399918e8a1acea29eeb5"
+  },
+  {
+   "n": 30,
+   "label": "orange canopy tile, right strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_030.png",
+   "sha256": "3c161afcdd20f041051c02ecc282ccaf8dbac00b982e4dd31773e136aa60c676"
+  },
+  {
+   "n": 31,
+   "label": "orange canopy tile, solid fill",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_031.png",
+   "sha256": "68b86f0dec09c459981701a063d673ee4a0482ef377d6ccbd165511dd8a6493d"
+  },
+  {
+   "n": 32,
+   "label": "orange canopy tile, left strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_032.png",
+   "sha256": "b613b5c04721588e0ba889a01a01d9b3023e1175152c6c4071eee38799c052d7"
+  },
+  {
+   "n": 33,
+   "label": "green canopy tile, bottom-left corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_033.png",
+   "sha256": "aa8a8478d0c42f5b7610665744e0c411a36b605e9fa082b6bdd1d32852f4964e"
+  },
+  {
+   "n": 34,
+   "label": "green canopy tile, bottom edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_034.png",
+   "sha256": "067a90788a3fde8d2fddfa981fdcda870263b00f67862fd8bc1c54d5594e89a8"
+  },
+  {
+   "n": 35,
+   "label": "green canopy tile, bottom-right corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_035.png",
+   "sha256": "ee7f31fd9cf0ac016c25abb61682b480eeda9cc635377b3acce5a6355210e20f"
+  },
+  {
+   "n": 36,
+   "label": "green canopy tile, corner nub, top-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_036.png",
+   "sha256": "da8ab3ba4970f1b0ce35f338837ee0ef4bfa6a7786c3140c109a675f279c7cd1"
+  },
+  {
+   "n": 37,
+   "label": "green canopy tile, top strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_037.png",
+   "sha256": "b94e4e0e3468946b4f4363fa05a308accd5fcc916bddf17b0ae52365a4ccfc96"
+  },
+  {
+   "n": 38,
+   "label": "green canopy tile, corner nub, top-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_038.png",
+   "sha256": "c2ba322066d22bd48aee0187aeb56ac826b2f4dc1dddd383f93e039051723876"
+  },
+  {
+   "n": 39,
+   "label": "orange canopy tile, bottom-left corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_039.png",
+   "sha256": "36ac20f5a32a7c183cee5cbc01374139b4539881f5c98d16d2ade7d1629ef670"
+  },
+  {
+   "n": 40,
+   "label": "orange canopy tile, bottom edge",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_040.png",
+   "sha256": "0e302032ed36a5ba8111f7ef5d1fe5aaf25d47223f0ae6fcbcc19525091ada1b"
+  },
+  {
+   "n": 41,
+   "label": "orange canopy tile, bottom-right corner",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_041.png",
+   "sha256": "350da6c08bff6c1cf361b4e8714c013dccd78bbb9a0a22c96fda956833a9801e"
+  },
+  {
+   "n": 42,
+   "label": "orange canopy tile, corner nub, top-right",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_042.png",
+   "sha256": "f2e77c1cbc6eac4ee7197e0f0273f8ad819e88e370c906d16c9665cab29c7a6c"
+  },
+  {
+   "n": 43,
+   "label": "orange canopy tile, top strip",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_043.png",
+   "sha256": "16d5c14a2e709ee152abd3263ba92a96eb7b15f0d3e62360f9bc8d164b2cf680"
+  },
+  {
+   "n": 44,
+   "label": "orange canopy tile, corner nub, top-left",
+   "category": "tiles",
+   "file": "Leaves/foliagePack_leaves_044.png",
+   "sha256": "decb3a3ed89d4e40f9082b614bae5275c93c2e9a302edfd07411d5fd2a165a55"
+  },
+  {
+   "n": 45,
+   "label": "blue flower",
+   "category": "flowers",
+   "file": "foliagePack_001.png",
+   "sha256": "ef93f7d0a064f617b85b00e3f88a4897bb847f224fa0b16a5b401fb64e54f0ba"
+  },
+  {
+   "n": 46,
+   "label": "blue flower bud",
+   "category": "flowers",
+   "file": "foliagePack_002.png",
+   "sha256": "a54504f7c68b962637605391ec7599e4c1b6f3c55aed1873bc49ce2fb7daf8bc",
+   "unsure": true
+  },
+  {
+   "n": 47,
+   "label": "purple flower spike",
+   "category": "flowers",
+   "file": "foliagePack_003.png",
+   "sha256": "ec282cd1de1dbcfedbc593e4155add82a7b29594f6938f62cc675ef8e388e77b",
+   "unsure": true
+  },
+  {
+   "n": 48,
+   "label": "slim pine tree",
+   "category": "trees",
+   "file": "foliagePack_004.png",
+   "sha256": "2feea0ef147fd2452fedf3c22cc4516637b98c129bc0eec49313d46e011b516d"
+  },
+  {
+   "n": 49,
+   "label": "pine tree",
+   "category": "trees",
+   "file": "foliagePack_005.png",
+   "sha256": "e4f1891a4029e3f386d1d86cd15541bff3a229dd897fbad93cce733dd6c3f665"
+  },
+  {
+   "n": 50,
+   "label": "tall narrow green tree",
+   "category": "trees",
+   "file": "foliagePack_006.png",
+   "sha256": "8c8b225b9678b8d8c5503f9373c1d05e28acfc8cf8b05a0be706162b5e28d264"
+  },
+  {
+   "n": 51,
+   "label": "round green tree",
+   "category": "trees",
+   "file": "foliagePack_007.png",
+   "sha256": "043e0dc6dba0ecb76d8fb632d1b854cca0bdb3856cc79cf302834f5591199475"
+  },
+  {
+   "n": 52,
+   "label": "narrow green tree",
+   "category": "trees",
+   "file": "foliagePack_008.png",
+   "sha256": "8c2e8a0070b1378bd60dd55a80b9961b07c6a57013f704a7e1a98a09dc31b23a"
+  },
+  {
+   "n": 53,
+   "label": "green tree",
+   "category": "trees",
+   "file": "foliagePack_009.png",
+   "sha256": "466233471c846fb8b6481c9b30a3d02cbecef26913e0ea42453d00fbc3ec020c"
+  },
+  {
+   "n": 54,
+   "label": "wide green tree",
+   "category": "trees",
+   "file": "foliagePack_010.png",
+   "sha256": "debe6383061c5d1c2fa3653f19a096ede4a7bb807457e6771cc263c6db3afe6e"
+  },
+  {
+   "n": 55,
+   "label": "slim green poplar",
+   "category": "trees",
+   "file": "foliagePack_011.png",
+   "sha256": "03983c62280dc153a5d05be1bb339cc190837ac97ad19e49c98d26a6c859bc96"
+  },
+  {
+   "n": 56,
+   "label": "tall narrow orange tree",
+   "category": "trees",
+   "file": "foliagePack_012.png",
+   "sha256": "832e1c6c9561f200199493ce5316f1ef5c5f754c653d9aac20dde90de7e400f4"
+  },
+  {
+   "n": 57,
+   "label": "round orange tree",
+   "category": "trees",
+   "file": "foliagePack_013.png",
+   "sha256": "789b0c57d105844fef7a3ad012e18502361bf8173d378261dae7abf042b94532"
+  },
+  {
+   "n": 58,
+   "label": "narrow orange tree",
+   "category": "trees",
+   "file": "foliagePack_014.png",
+   "sha256": "c9e4c26876bff3fe65efa55367a352f42583977e855f15d4fca997816e584d61"
+  },
+  {
+   "n": 59,
+   "label": "orange tree",
+   "category": "trees",
+   "file": "foliagePack_015.png",
+   "sha256": "f96202fc709ef9dd7bc2b0006643c7c1cb04641d4db18642212ed802a41fdc52"
+  },
+  {
+   "n": 60,
+   "label": "wide orange tree",
+   "category": "trees",
+   "file": "foliagePack_016.png",
+   "sha256": "4e40000896724be83ec74182557bb5eb3abd5f9def9eabbeeb35db841fa99670"
+  },
+  {
+   "n": 61,
+   "label": "slim orange poplar",
+   "category": "trees",
+   "file": "foliagePack_017.png",
+   "sha256": "1390737a626403b062c286191d18668fc814d2a62d20382736245e1e57f0575c"
+  },
+  {
+   "n": 62,
+   "label": "large grass leaves",
+   "category": "grass",
+   "file": "foliagePack_018.png",
+   "sha256": "04eecb6413b606979cf630fd587e2c3e01bf4c2626b308bbe695930d3018f72f"
+  },
+  {
+   "n": 63,
+   "label": "grass tuft",
+   "category": "grass",
+   "file": "foliagePack_019.png",
+   "sha256": "2c9960b4661049a51c9bd870c4bb800b96a929876e3ad2e798910803496c27e4"
+  },
+  {
+   "n": 64,
+   "label": "tall grass blades",
+   "category": "grass",
+   "file": "foliagePack_020.png",
+   "sha256": "5354da3609bdb2fa55b0a87b79d34cce037cc4e51665501de4c7d3de564423d1"
+  },
+  {
+   "n": 65,
+   "label": "two grass blades",
+   "category": "grass",
+   "file": "foliagePack_021.png",
+   "sha256": "c4f1f5c8e03c79c142b720c3e2ec0ff76a50324d989c82bb74cfe85839f9d6a7"
+  },
+  {
+   "n": 66,
+   "label": "bare tree",
+   "category": "trees",
+   "file": "foliagePack_022.png",
+   "sha256": "5954c97d385830ec294ba90a2fa8028c1cfcffdd47606e5f12daf477b8f54eb4"
+  },
+  {
+   "n": 67,
+   "label": "bare tree",
+   "category": "trees",
+   "file": "foliagePack_023.png",
+   "sha256": "157a847257c1b124adb6a42df47efa6fa8bd2c88acadaa4ea09e4dfa0f27cd0d"
+  },
+  {
+   "n": 68,
+   "label": "slim bare tree",
+   "category": "trees",
+   "file": "foliagePack_024.png",
+   "sha256": "8cb8dc0225c6de7682bcecc192cf90e4c7e64367ed2c06f5ad73f07113439b93"
+  },
+  {
+   "n": 69,
+   "label": "thin bare trunk",
+   "category": "trees",
+   "file": "foliagePack_025.png",
+   "sha256": "14348dbd6638069be76840966afebd2169561607d0731b5479864275f2ab0532"
+  },
+  {
+   "n": 70,
+   "label": "thin pale bare trunk",
+   "category": "trees",
+   "file": "foliagePack_026.png",
+   "sha256": "ee121bbe9a05bc462541e690df7ff9e4f94957b880afb99562fec16a9cdf03c0"
+  },
+  {
+   "n": 71,
+   "label": "slim snowy pine tree",
+   "category": "trees",
+   "file": "foliagePack_027.png",
+   "sha256": "d3c655e0666c50eb165993ebd23853eb5a83fad21e4d50afba999da871dde22c"
+  },
+  {
+   "n": 72,
+   "label": "wide snowy pine tree",
+   "category": "trees",
+   "file": "foliagePack_028.png",
+   "sha256": "a94a838b630b62e8340c7e59d5ad4bc200719a212d8729a9e2dc37ed2b1a5922"
+  },
+  {
+   "n": 73,
+   "label": "snowy pine tree",
+   "category": "trees",
+   "file": "foliagePack_029.png",
+   "sha256": "45b69623b3936ec54787044b129fa08cf16556ddc0118a534b69ef4a00eb4b1d"
+  },
+  {
+   "n": 74,
+   "label": "slim frosted pine tree",
+   "category": "trees",
+   "file": "foliagePack_030.png",
+   "sha256": "982f81ccc4948974e03f7da109e05ca197db9fb284cc13147d29e9e2712e197c"
+  },
+  {
+   "n": 75,
+   "label": "wide frosted pine tree",
+   "category": "trees",
+   "file": "foliagePack_031.png",
+   "sha256": "a193363b9521ad543f813886fdc4a22daa0e60587884bff2523939572f457a0e"
+  },
+  {
+   "n": 76,
+   "label": "frosted pine tree",
+   "category": "trees",
+   "file": "foliagePack_032.png",
+   "sha256": "581f1161b0b41828cf1687b01467a956efa9717f7ca5eb6751a0ec380952b28e"
+  },
+  {
+   "n": 77,
+   "label": "pale bare tree (birch)",
+   "category": "trees",
+   "file": "foliagePack_033.png",
+   "sha256": "40488d0d224f2b63812f7abdfce3103bd856b287ff8a7356014a158fc9c5022b",
+   "unsure": true
+  },
+  {
+   "n": 78,
+   "label": "pale bare tree (birch)",
+   "category": "trees",
+   "file": "foliagePack_034.png",
+   "sha256": "a67c5555fd904c403774acf29895407fea3457c75dffacc0315272648a03e844",
+   "unsure": true
+  },
+  {
+   "n": 79,
+   "label": "pale bare tree (birch)",
+   "category": "trees",
+   "file": "foliagePack_035.png",
+   "sha256": "ed19309bf3362bac63c63ebb3fdcf38420d449542d5c291439c4b12373b8512a",
+   "unsure": true
+  },
+  {
+   "n": 80,
+   "label": "pine treetop, no trunk",
+   "category": "treetops",
+   "file": "foliagePack_036.png",
+   "sha256": "1225e76ccb7ab7d083448919997976c2a2994b1b8e92965f2a8e7022adcd6632"
+  },
+  {
+   "n": 81,
+   "label": "tall narrow green treetop",
+   "category": "treetops",
+   "file": "foliagePack_037.png",
+   "sha256": "878b56cb1517c8f45932949dc4083f732e5ede918b71971ff249799cd13ded82"
+  },
+  {
+   "n": 82,
+   "label": "round green treetop",
+   "category": "treetops",
+   "file": "foliagePack_038.png",
+   "sha256": "5b7b2f61562380291cb268315a3f365858fbb2486d5781e7c4b84ef95f914b92"
+  },
+  {
+   "n": 83,
+   "label": "narrow green treetop",
+   "category": "treetops",
+   "file": "foliagePack_039.png",
+   "sha256": "8fb33f0b0bd65b237d60e88747cfd5a83d9a3d8e0e6ccd3b3a36c777422fdf3c"
+  },
+  {
+   "n": 84,
+   "label": "green treetop",
+   "category": "treetops",
+   "file": "foliagePack_040.png",
+   "sha256": "24ff7fa1953cd435f230654b91d88098a23e55a29ea5156450f84be7b35acf31"
+  },
+  {
+   "n": 85,
+   "label": "wide green treetop",
+   "category": "treetops",
+   "file": "foliagePack_041.png",
+   "sha256": "2ae71d3a9eb2116d88b887cdc995e175057eea37ae0254efe2a27946ff6db442"
+  },
+  {
+   "n": 86,
+   "label": "slim green poplar top",
+   "category": "treetops",
+   "file": "foliagePack_042.png",
+   "sha256": "11341b70b4e42a934401f0f839e3e3bd74a38f68b129326d2d2c7c9e64242452"
+  },
+  {
+   "n": 87,
+   "label": "tall narrow orange treetop",
+   "category": "treetops",
+   "file": "foliagePack_043.png",
+   "sha256": "a7d9de493cc82f4d61289b991806028257fd8afdefa130d977d6fe452ec54994"
+  },
+  {
+   "n": 88,
+   "label": "round orange treetop",
+   "category": "treetops",
+   "file": "foliagePack_044.png",
+   "sha256": "dc9703934a819cc235084b2967fc0672a3a9a8469d6b3ce568fce794d55fd1b8"
+  },
+  {
+   "n": 89,
+   "label": "narrow orange treetop",
+   "category": "treetops",
+   "file": "foliagePack_045.png",
+   "sha256": "d13b6a8b9d832cf66af2394c1fed22cd105d0105a5e734f09f11aca2a65a665a"
+  },
+  {
+   "n": 90,
+   "label": "orange treetop",
+   "category": "treetops",
+   "file": "foliagePack_046.png",
+   "sha256": "9fbe3a689c749fb1821c06133b2c3b4d597984979f2421e12897ea2efe77ae80"
+  },
+  {
+   "n": 91,
+   "label": "wide orange treetop",
+   "category": "treetops",
+   "file": "foliagePack_047.png",
+   "sha256": "b71a742ccb558ddbb83c20018c4164bfbe1b4a22cb50dc27e31c1189d87cc73d"
+  },
+  {
+   "n": 92,
+   "label": "slim orange poplar top",
+   "category": "treetops",
+   "file": "foliagePack_048.png",
+   "sha256": "c052c39d38556faa396ffae43bc35bc305f290f4aa3d6124839a1d5ae02c04a8"
+  },
+  {
+   "n": 93,
+   "label": "round green bush",
+   "category": "bushes",
+   "file": "foliagePack_049.png",
+   "sha256": "dc5193d13dc8488b6cc572d5d0870a71878130930a757f2396681b24d9e6d741"
+  },
+  {
+   "n": 94,
+   "label": "low green bush",
+   "category": "bushes",
+   "file": "foliagePack_050.png",
+   "sha256": "ac254f6b62590a1092022e4054312377143839eccc2f16a4f7bc97aefbf9818f"
+  },
+  {
+   "n": 95,
+   "label": "low wide green bush",
+   "category": "bushes",
+   "file": "foliagePack_051.png",
+   "sha256": "237be43d3b98d317e0b746f3de21763cee5ad3d6ce27628bdb70ba1867748558"
+  },
+  {
+   "n": 96,
+   "label": "flat green hedge",
+   "category": "bushes",
+   "file": "foliagePack_052.png",
+   "sha256": "0dd56484da4c61c6101fe31c41ce49240bf4e0558c93e3b28d64ba8de07a53d3"
+  },
+  {
+   "n": 97,
+   "label": "tall grey rock",
+   "category": "rocks",
+   "file": "foliagePack_053.png",
+   "sha256": "66f77fc6dabaccccea15c717be3c9efe2c4cca064f779c8135f7d8fffa2f7c17"
+  },
+  {
+   "n": 98,
+   "label": "low grey rock",
+   "category": "rocks",
+   "file": "foliagePack_054.png",
+   "sha256": "e1c1c1e055c8f1e597b7ea1120479490f85d2ffe4dcdb8e54788c4c3ba6e87bb"
+  },
+  {
+   "n": 99,
+   "label": "grey rock",
+   "category": "rocks",
+   "file": "foliagePack_055.png",
+   "sha256": "be70594db22269e32e3885cb56ccb389ff8c15bf2a812c2b7aa86b94c180d563"
+  },
+  {
+   "n": 100,
+   "label": "tall mossy rock",
+   "category": "rocks",
+   "file": "foliagePack_056.png",
+   "sha256": "5d07a885352164dc9e125529682e7525019c1f520ca90e2b76c6703ac34b001a"
+  },
+  {
+   "n": 101,
+   "label": "low mossy rock",
+   "category": "rocks",
+   "file": "foliagePack_057.png",
+   "sha256": "aadcfd5aa59aee90477cc7f7ad09f9c45a711fd404f5177f1a891416c1f827e7"
+  },
+  {
+   "n": 102,
+   "label": "mossy rock",
+   "category": "rocks",
+   "file": "foliagePack_058.png",
+   "sha256": "39ac716de1843d8d3052160736bb295753545c58200339aba2006b3d02cebeb8"
+  },
+  {
+   "n": 103,
+   "label": "tall snowy rock",
+   "category": "rocks",
+   "file": "foliagePack_059.png",
+   "sha256": "50d5fa0b8458073e5e0b9c81f947b932703d631fc7bd617c52a86f750b77bc11"
+  },
+  {
+   "n": 104,
+   "label": "low snowy rock",
+   "category": "rocks",
+   "file": "foliagePack_060.png",
+   "sha256": "9c9183ec137e033ffcf6ce67790bbc3dd739f50fafe04025f1f5d234190d1b76"
+  },
+  {
+   "n": 105,
+   "label": "snowy rock",
+   "category": "rocks",
+   "file": "foliagePack_061.png",
+   "sha256": "144390f373690599022eef94eaf7d7d96bd4aa4698b27d67551142ff49e6ce18"
+  },
+  {
+   "n": 106,
+   "label": "red flower",
+   "category": "flowers",
+   "file": "foliagePack_062.png",
+   "sha256": "847bd291245e046d526378d962c345fbecfb9bf5ebd1a3414788aa8b39b8d103"
+  }
+ ]
+}

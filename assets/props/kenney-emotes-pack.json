@@ -1,0 +1,1723 @@
+{
+ "pack": "Kenney Emotes Pack",
+ "slug": "emotes-pack",
+ "license": "CC0-1.0",
+ "source_url": "https://kenney.nl/assets/emotes-pack",
+ "zip_sha256": "96ab3f2c92d7acd860942efca1c9f1295184b11d3db5c79c28da82036e496526",
+ "folder": "PNG/Vector",
+ "labelled": "by eye from the drawings, 5 Nov 2026 (on the owner's machine, from numbered contact sheets on light and dark grounds; 'unsure' marks those that could be something else)",
+ "items": [
+  {
+   "n": 1,
+   "label": "empty square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote__.png",
+   "sha256": "22567ba096567822def0717d912fa158887de05657d3b5af08fc6b92bccb20bb"
+  },
+  {
+   "n": 2,
+   "label": "orange surprise marks, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_alert.png",
+   "sha256": "bebdf06bb1c38cab54a4531f78651c61d531ae02c8fd464644eb87862c296b3b",
+   "unsure": true
+  },
+  {
+   "n": 3,
+   "label": "red anger mark, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_anger.png",
+   "sha256": "607146cd4774b9b1f6fa4ca051a0de92917d140490b34b09d576fd04acb40f2c"
+  },
+  {
+   "n": 4,
+   "label": "gloom lines, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_bars.png",
+   "sha256": "b70ca444bf7a10c5ce199a66e6af86f54d4e2f936db7129ce8a9072b935a5b21",
+   "unsure": true
+  },
+  {
+   "n": 5,
+   "label": "dollar sign, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_cash.png",
+   "sha256": "72b5e7d6aab31552c5b40ba941caf22aac1248399e8e83ace23529dd305f6aaf"
+  },
+  {
+   "n": 6,
+   "label": "blue ring, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_circle.png",
+   "sha256": "490dac806b5170a5a78e505b32719e269777004fc0103a78d3d67e9c1744e3e7",
+   "unsure": true
+  },
+  {
+   "n": 7,
+   "label": "grey storm cloud, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_cloud.png",
+   "sha256": "791c39d0f9f33bb34f7251e4d3139d54dc97c3aad326392392829cecc65f21e7"
+  },
+  {
+   "n": 8,
+   "label": "red cross, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_cross.png",
+   "sha256": "b6c87db06ce8710b2e6ddad3ee7a5f9e4bf3f613e34ca050a46c28875e0f1cfe"
+  },
+  {
+   "n": 9,
+   "label": "one dot, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_dots1.png",
+   "sha256": "3324774045eada79dfb559cacd0270c6c3fb4a81cb69f51febb756109a31daf1"
+  },
+  {
+   "n": 10,
+   "label": "two dots, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_dots2.png",
+   "sha256": "2c3f55e67168f39b0192a7f92ac85dacd73a76e755b9b90ab03191960853beaa"
+  },
+  {
+   "n": 11,
+   "label": "three dots, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_dots3.png",
+   "sha256": "1e876e76c7f5efe9d5c734310cb66b4292c513dffc326093ea9a744050c0923d"
+  },
+  {
+   "n": 12,
+   "label": "sweat drop, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_drop.png",
+   "sha256": "a6253d1cb34f29275e21d03bbcffcb555daa9fb372a3638a422f91a087fb83d8"
+  },
+  {
+   "n": 13,
+   "label": "two sweat drops, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_drops.png",
+   "sha256": "8f37d3f12361d0c0ddd96e16c400b68bd54267893661b873d5e14643fc4cd586"
+  },
+  {
+   "n": 14,
+   "label": "red exclamation mark, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_exclamation.png",
+   "sha256": "ea478d2811eadd440cf5c69b9236410d5ce0d0e12f0e19db9864ec28334bacb9"
+  },
+  {
+   "n": 15,
+   "label": "double exclamation mark, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_exclamations.png",
+   "sha256": "1a1ad3d84e306d9ea349c65fe6de50ea46f9d0dada99ea0613883f535f857585"
+  },
+  {
+   "n": 16,
+   "label": "angry face, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_faceAngry.png",
+   "sha256": "edcbad27f5937a13754ff7518115bc7900ca600911f9e1a1a9883913aec3a5cb"
+  },
+  {
+   "n": 17,
+   "label": "happy face, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_faceHappy.png",
+   "sha256": "01bacb8e21e904842a8d593d2d30da86dfd70ae86feb4562c0a151f419975fe1"
+  },
+  {
+   "n": 18,
+   "label": "sad face, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_faceSad.png",
+   "sha256": "a0b1b9308281d4747b8f22fe5f8d28e5a7ed783c94b40aeca6a2138b05bd8143"
+  },
+  {
+   "n": 19,
+   "label": "heart, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_heart.png",
+   "sha256": "9a71a6967896c0d30c8735f4e371cba2d3aee91e6a976d2736715ee274a34549"
+  },
+  {
+   "n": 20,
+   "label": "broken heart, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_heartBroken.png",
+   "sha256": "831177e36f78abfc60a79cad97f87128fe314d01e738b68040fe3d2ae8cf7a26"
+  },
+  {
+   "n": 21,
+   "label": "two hearts, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_hearts.png",
+   "sha256": "b82256f37b836d8ea604f64fcbfef504148a0ba00276bf86dfff3345d3ea96bd"
+  },
+  {
+   "n": 22,
+   "label": "light bulb, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_idea.png",
+   "sha256": "0acfe35b80dbb5df5d243c75c179e51fd37386acb151e54ed8ff8866751a7b6b"
+  },
+  {
+   "n": 23,
+   "label": "\"HA HA\" laugh, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_laugh.png",
+   "sha256": "e0aea59a754f788ab5900b32240d4acd67f0290171e35cbd2a2e4f5833ef2418"
+  },
+  {
+   "n": 24,
+   "label": "music note, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_music.png",
+   "sha256": "feb0b6223ac5ad8bc199f70768bc59ad0aaa2b53bb1341b31904db264a0f7b75"
+  },
+  {
+   "n": 25,
+   "label": "question mark, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_question.png",
+   "sha256": "eae4c78a1b9771c50b4ea3de11b4940d553d6b89bed4dddf5235a451dd7a31e7"
+  },
+  {
+   "n": 26,
+   "label": "single Z (sleep), square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_sleep.png",
+   "sha256": "a8152dde0e8ee81eff04ccf2a798dfbfaacd03d40c8a9ba2fa5007677cc3f43a"
+  },
+  {
+   "n": 27,
+   "label": "zZ (sleeping), square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_sleeps.png",
+   "sha256": "96b7cd344dc595374e9cc110fcc490d72843bf5e6323fc66ea0ac91a7215cfdc"
+  },
+  {
+   "n": 28,
+   "label": "star, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_star.png",
+   "sha256": "41e22f49f486dfec068ffd25f25e860450c33e4ff78787669d405aa2dd168dba"
+  },
+  {
+   "n": 29,
+   "label": "sparkles, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_stars.png",
+   "sha256": "cd5dd47528be06d110e6646e8622b680cb15d490c2e5b6be857b622a742c1ba9",
+   "unsure": true
+  },
+  {
+   "n": 30,
+   "label": "spiral, square speech bubble",
+   "category": "emotes",
+   "file": "Style 1/emote_swirl.png",
+   "sha256": "2ddfac1a29f4231737bd14993a595eafc94d12e46aeb92a455eca7d8b0821805"
+  },
+  {
+   "n": 31,
+   "label": "empty square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote__.png",
+   "sha256": "31a90107d44aae1f91512ef81db76de78a06e22a08d623c9245cfe9338b81bdc"
+  },
+  {
+   "n": 32,
+   "label": "orange surprise marks, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_alert.png",
+   "sha256": "efa7a0c88a12ab1a9bf68ab514bfe71be07ffdf2d98d72d17616361bd8f5e879",
+   "unsure": true
+  },
+  {
+   "n": 33,
+   "label": "red anger mark, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_anger.png",
+   "sha256": "e5fa7118ad2c6a8831bee9ea56258a8dbac03b8dafbea81199d89267c05ad01a"
+  },
+  {
+   "n": 34,
+   "label": "gloom lines, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_bars.png",
+   "sha256": "22615e49d2fcd83ce81ae44ccdf5e242f03d4493a6f5e6e628441f8fd9fb48e6",
+   "unsure": true
+  },
+  {
+   "n": 35,
+   "label": "dollar sign, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_cash.png",
+   "sha256": "c260face9402f915aeacb2eaa203ca1584927f766ab456efb8e98f3893750a46"
+  },
+  {
+   "n": 36,
+   "label": "blue ring, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_circle.png",
+   "sha256": "501b77ff57fb0d8012c0236fb13adecba14f6587e7c10e106aaf6a3c99577162",
+   "unsure": true
+  },
+  {
+   "n": 37,
+   "label": "grey storm cloud, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_cloud.png",
+   "sha256": "071bb8a98c9a039932c2c162cb02294db26018d04f8323bba2a7427c38f051d5"
+  },
+  {
+   "n": 38,
+   "label": "red cross, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_cross.png",
+   "sha256": "ceadb0d406d74f87eb6fb57ff2da0b9ab0660656941875a5ff6502265de8dc26"
+  },
+  {
+   "n": 39,
+   "label": "one dot, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_dots1.png",
+   "sha256": "acbfad70263790b4c32cb55e81bffde8208c40e04a893ef2825342a6621ed419"
+  },
+  {
+   "n": 40,
+   "label": "two dots, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_dots2.png",
+   "sha256": "1e0dbfa65bdb15f0e42df3b5f6fdcae28a59b92301b88821bef10b7ce686e756"
+  },
+  {
+   "n": 41,
+   "label": "three dots, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_dots3.png",
+   "sha256": "702386a8b2522c09339d11800160791cb818f9de66416f0cf8f07d4d47090601"
+  },
+  {
+   "n": 42,
+   "label": "sweat drop, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_drop.png",
+   "sha256": "78600d21a5c8e07a5b07cfb3413599dc054ec4ee2e83cc74f942f75d56477990"
+  },
+  {
+   "n": 43,
+   "label": "two sweat drops, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_drops.png",
+   "sha256": "6c7a266e23fa3e976022527912acfa7d0c8cf11e091c9132592223380207ac5d"
+  },
+  {
+   "n": 44,
+   "label": "red exclamation mark, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_exclamation.png",
+   "sha256": "44714493f61abfc6c69232e0d74c45d23e2bbf634bafb5c81e771bf8a83db791"
+  },
+  {
+   "n": 45,
+   "label": "double exclamation mark, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_exclamations.png",
+   "sha256": "0f93a0e6c9cf6f52422eba04df43044cbe6e304d319237803988c0cb265721c9"
+  },
+  {
+   "n": 46,
+   "label": "angry face, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_faceAngry.png",
+   "sha256": "f7e499bb63eeeed2c942f8d57b8833068e46b052bbecc480679e7ea4dbf3c958"
+  },
+  {
+   "n": 47,
+   "label": "happy face, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_faceHappy.png",
+   "sha256": "ee92ef2b99694a2c9ffcc444624855a27a12cf27fb1e973f605866e4fae7ea8b"
+  },
+  {
+   "n": 48,
+   "label": "sad face, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_faceSad.png",
+   "sha256": "ba8de5ef71cb3a47313b3a5d4f488506fca20f4ade0c82ca3996ea04309854ec"
+  },
+  {
+   "n": 49,
+   "label": "heart, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_heart.png",
+   "sha256": "4a64e2c82ee17ea47f8b202084b1e7de336df67d0589c1ea8ccda4aebb848eb1"
+  },
+  {
+   "n": 50,
+   "label": "broken heart, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_heartBroken.png",
+   "sha256": "8499628d4777ca5bceba567710745f8282e09f685b3ada8dde745e0053f9b1ba"
+  },
+  {
+   "n": 51,
+   "label": "two hearts, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_hearts.png",
+   "sha256": "a111f5a5f700ad23e8e6da93ca746807b94504682c4f48b6cd66776b45a5d0fa"
+  },
+  {
+   "n": 52,
+   "label": "light bulb, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_idea.png",
+   "sha256": "2f298cf3b9b3b1c2bed6f1a67ca9230e5bebf83f4f00479020f68e3a4e654fc2"
+  },
+  {
+   "n": 53,
+   "label": "\"HA HA\" laugh, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_laugh.png",
+   "sha256": "62971425eb79574192b4be3d63924175e72ecfae7126024158dcfc0132aa4b9d"
+  },
+  {
+   "n": 54,
+   "label": "music note, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_music.png",
+   "sha256": "b557add599f871c7e36a6a1bfed8113c8397c74bcb637a370f1e3cbae17b7d50"
+  },
+  {
+   "n": 55,
+   "label": "question mark, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_question.png",
+   "sha256": "eab5d3d6e57b6b4ef13eefb8eb4e68c73981bef8eb5d68234846735883c39d9d"
+  },
+  {
+   "n": 56,
+   "label": "single Z (sleep), square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_sleep.png",
+   "sha256": "505916d97f4e53196bb4cecae1480dbd520ec095eb6a241387be03073d07aa5c"
+  },
+  {
+   "n": 57,
+   "label": "zZ (sleeping), square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_sleeps.png",
+   "sha256": "40681c4113b620b6a663d40b608f9540e82bc3227cffddfbfbcabb26ce64763e"
+  },
+  {
+   "n": 58,
+   "label": "star, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_star.png",
+   "sha256": "9bd093d7ff51b0f5ab562fad2e4d8e3380ac9d37a3997e538521b31c89aed3b3"
+  },
+  {
+   "n": 59,
+   "label": "sparkles, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_stars.png",
+   "sha256": "0429d48c484374ccba5740e9389999ae3412fd174738df76b0f26dc2aae7265c",
+   "unsure": true
+  },
+  {
+   "n": 60,
+   "label": "spiral, square speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 2/emote_swirl.png",
+   "sha256": "dd5a6dc26944fb562d9f6831df1370016422b9feb3f07cf7dbc00079ade357ad"
+  },
+  {
+   "n": 61,
+   "label": "empty round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote__.png",
+   "sha256": "91b75341ee0dd43b4ac528e38a9efd6d30db49309efe1cc48304707927cf64d6"
+  },
+  {
+   "n": 62,
+   "label": "orange surprise marks, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_alert.png",
+   "sha256": "1e34bc727cf5b823d6b4b2c6fa26df897658056389cca6b623f668d2e31d6593",
+   "unsure": true
+  },
+  {
+   "n": 63,
+   "label": "red anger mark, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_anger.png",
+   "sha256": "0af999a6d654027cf441912396067d16d934271375654ffc24e5e438d2827236"
+  },
+  {
+   "n": 64,
+   "label": "gloom lines, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_bars.png",
+   "sha256": "bdc545e15f93b95d73e10c10c20c784b387f7862a72bfab8d0ace86ab20d8df4",
+   "unsure": true
+  },
+  {
+   "n": 65,
+   "label": "dollar sign, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_cash.png",
+   "sha256": "96a6507857e1717fccb7ddb69721d36c88f9a1781063a7adaf6d67894fdbc1e8"
+  },
+  {
+   "n": 66,
+   "label": "blue ring, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_circle.png",
+   "sha256": "84a3ecde6a09b8ab1ba1e265977f9a5bef1dd1a6b84959cfe8104f9a725c0c0a",
+   "unsure": true
+  },
+  {
+   "n": 67,
+   "label": "grey storm cloud, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_cloud.png",
+   "sha256": "92af909e77b652312bf13eeac93a6ba5170658bd0f09c6e18f94f892bac1a723"
+  },
+  {
+   "n": 68,
+   "label": "red cross, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_cross.png",
+   "sha256": "7c41eb4b63fdb1d477545af8c894b08c4c3778641bfe62ef1d76653438011630"
+  },
+  {
+   "n": 69,
+   "label": "one dot, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_dots1.png",
+   "sha256": "ea094dd74c8f896881cecee081f48908b7df73dfd43750156d8e7a7cea4102e1"
+  },
+  {
+   "n": 70,
+   "label": "two dots, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_dots2.png",
+   "sha256": "789ab4430db0672f93eda3be19129c08b7baf2fd2b251c2466185325d26d09c1"
+  },
+  {
+   "n": 71,
+   "label": "three dots, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_dots3.png",
+   "sha256": "44c75415ac49d97cb9b520e023b833d3d8d0d4a39aa2dcc7296d7db1ec3e8238"
+  },
+  {
+   "n": 72,
+   "label": "sweat drop, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_drop.png",
+   "sha256": "f28862b7802c304f0bf9c4801bdcc6958ff88a5f43d6b35a40fcb321d24705f5"
+  },
+  {
+   "n": 73,
+   "label": "two sweat drops, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_drops.png",
+   "sha256": "cdd37f9b663087033b1579cbce7d8d404237bb95e744c3098171e34fd00a7aac"
+  },
+  {
+   "n": 74,
+   "label": "red exclamation mark, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_exclamation.png",
+   "sha256": "1e6bd5bf2e20be7695ce8c9b80ef7f4caa54b42032f468e018360ba40b55d139"
+  },
+  {
+   "n": 75,
+   "label": "double exclamation mark, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_exclamations.png",
+   "sha256": "ab230d7a3c6897f46e905f679de334f53a140ba4bbc7f46c58280752a8013aeb"
+  },
+  {
+   "n": 76,
+   "label": "angry face, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_faceAngry.png",
+   "sha256": "ba942d234ad6cfcda85404e2dffb0db7f5ed1353b77c5b8480470be0d82b9089"
+  },
+  {
+   "n": 77,
+   "label": "happy face, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_faceHappy.png",
+   "sha256": "bf1bffa11effa6b15cddbe62cbe1ff35d0eaec69854c54e918d42aea7aa4b814"
+  },
+  {
+   "n": 78,
+   "label": "sad face, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_faceSad.png",
+   "sha256": "77aeee41ce59ccecb4cd1d941a1d5de9bd1f63230a38f71beaadde52f7142b3c"
+  },
+  {
+   "n": 79,
+   "label": "heart, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_heart.png",
+   "sha256": "61b5c9f4eb0c1259c3daf196e83d9552719ce67cbca1df9b395fbd4b7ed1d9da"
+  },
+  {
+   "n": 80,
+   "label": "broken heart, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_heartBroken.png",
+   "sha256": "0f893a949df183e12c8d3939e5daf91ca8ff7b7714c2a06a2d9df978d145dcaf"
+  },
+  {
+   "n": 81,
+   "label": "two hearts, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_hearts.png",
+   "sha256": "c72a1c5a5248c97173ee3c2f2358c5751b7c1ea241ace93bbaa7e980b23ab4bc"
+  },
+  {
+   "n": 82,
+   "label": "light bulb, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_idea.png",
+   "sha256": "354c425f3d9374d3c12140e56b106e80d52993381fd4b1c10ca5091ecf7b89f6"
+  },
+  {
+   "n": 83,
+   "label": "\"HA HA\" laugh, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_laugh.png",
+   "sha256": "c4f8014e3b9cbbff6d58ba57eb0fd2f57c36c59e00181dbec518aa7da1a480bc"
+  },
+  {
+   "n": 84,
+   "label": "music note, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_music.png",
+   "sha256": "866af0534876dc0f8e61e0b3d71411ecdc6bcf1707f2e7873f9af949438c97ab"
+  },
+  {
+   "n": 85,
+   "label": "question mark, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_question.png",
+   "sha256": "6faa979270b126d0da4d3e5231a1d277842e7021a0a9856feed662cbba269b1f"
+  },
+  {
+   "n": 86,
+   "label": "single Z (sleep), round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_sleep.png",
+   "sha256": "26da5869c565a5eadc2e043900f944ae062b41240f72ef98a1cc6f2434365459"
+  },
+  {
+   "n": 87,
+   "label": "zZ (sleeping), round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_sleeps.png",
+   "sha256": "204893e07a0ce2431bfe816ef67c90946447ab4be0076e19d9d54598a2872524"
+  },
+  {
+   "n": 88,
+   "label": "star, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_star.png",
+   "sha256": "97e71662453153f0bd13203cc1fb08eb95fc25b2ca185a8da8a36257a5c2bc54"
+  },
+  {
+   "n": 89,
+   "label": "sparkles, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_stars.png",
+   "sha256": "222b5d7b8e4cf05fae0a69c0b0a596f2bfb989de42bd5c67ed6fe5f2399a01f7",
+   "unsure": true
+  },
+  {
+   "n": 90,
+   "label": "spiral, round speech bubble",
+   "category": "emotes",
+   "file": "Style 3/emote_swirl.png",
+   "sha256": "d6c9850f90484bde8366b0391d5c9c43fa383e44dee430da9b2108c5694a8fe6"
+  },
+  {
+   "n": 91,
+   "label": "empty round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote__.png",
+   "sha256": "6efbbaf36027e881da7021fb97b6db39d8baecc5969b463eb61ac679c3998785"
+  },
+  {
+   "n": 92,
+   "label": "orange surprise marks, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_alert.png",
+   "sha256": "a632347db6fa13c7f2b83befe7fabd6f9c01c3c97a88af70b8e307a0902a7d05",
+   "unsure": true
+  },
+  {
+   "n": 93,
+   "label": "red anger mark, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_anger.png",
+   "sha256": "b67850dcbab7a61aaa0e37e684f07756a3b59297644995fc55c00684ac516351"
+  },
+  {
+   "n": 94,
+   "label": "gloom lines, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_bars.png",
+   "sha256": "2802b371faafee15e028c73bbbd864a13facddad40287dc223bf3d2a2bef6211",
+   "unsure": true
+  },
+  {
+   "n": 95,
+   "label": "dollar sign, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_cash.png",
+   "sha256": "9695795f7085ca9e59afdbdacb0efad959d8427c3cbb345c5cd607428775655e"
+  },
+  {
+   "n": 96,
+   "label": "blue ring, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_circle.png",
+   "sha256": "4e0c54143c22cd9690e07e8f12c81ed18268ae4bf51d5b8e993fcfa36b4129e6",
+   "unsure": true
+  },
+  {
+   "n": 97,
+   "label": "grey storm cloud, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_cloud.png",
+   "sha256": "8e2e624051bde963780228bd47f627070519e699fdb136e74f3a399dbdef8c10"
+  },
+  {
+   "n": 98,
+   "label": "red cross, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_cross.png",
+   "sha256": "439889569bb3cbc38959de0046f744d234e18189b630c98bdd51ac22ed5bcf56"
+  },
+  {
+   "n": 99,
+   "label": "one dot, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_dots1.png",
+   "sha256": "ff5779eaac6639134e3126c5bbbd57afe97e406f2466c3f93fca3cb99bca269e"
+  },
+  {
+   "n": 100,
+   "label": "two dots, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_dots2.png",
+   "sha256": "ab2edae20ae14423fb8cab4cd9f1a5321f27d4083870c1602f507837b7300c3e"
+  },
+  {
+   "n": 101,
+   "label": "three dots, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_dots3.png",
+   "sha256": "f8532cbd15cc6500d3753f81650ee881c95176df068e2a9edaca8ac2287ec7c3"
+  },
+  {
+   "n": 102,
+   "label": "sweat drop, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_drop.png",
+   "sha256": "77e9637a81a9f2161f79201530738ef94c8a22f869a86c372b7a8fc5cb690811"
+  },
+  {
+   "n": 103,
+   "label": "two sweat drops, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_drops.png",
+   "sha256": "3acfe7d4537eb1df93406ae51548d778d0f4666f9f805f16a07c881849363aa8"
+  },
+  {
+   "n": 104,
+   "label": "red exclamation mark, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_exclamation.png",
+   "sha256": "97c7c1f30fdaa29067df4d6ba5b0b80c47d145ac05fe200d76b592330b182e98"
+  },
+  {
+   "n": 105,
+   "label": "double exclamation mark, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_exclamations.png",
+   "sha256": "90206efb360e01eecd0379863cb4dcfe985f05730b9274e68797c6305496ebc5"
+  },
+  {
+   "n": 106,
+   "label": "angry face, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_faceAngry.png",
+   "sha256": "9c2993a6ffa2c7de0859f67671e1bd22fc239be61a2841d3189d523d91522fd1"
+  },
+  {
+   "n": 107,
+   "label": "happy face, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_faceHappy.png",
+   "sha256": "e7372efad6b293aa55b10742f2b39206a0ac85d07b7fd68640f7f6264c0755a6"
+  },
+  {
+   "n": 108,
+   "label": "sad face, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_faceSad.png",
+   "sha256": "0f67f29e8524763e4ec3d532c40290bc8c2a21bcde8439d4c5cb1d3a2b68ed83"
+  },
+  {
+   "n": 109,
+   "label": "heart, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_heart.png",
+   "sha256": "1061b5a1a786298ef83b0449a1791e32f1df9d7a0e2ff4804c21dd06f286ac9f"
+  },
+  {
+   "n": 110,
+   "label": "broken heart, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_heartBroken.png",
+   "sha256": "f2122135f2d43b15b735a7ec0b2a326f647fbe4818e99316f237639724d3cbce"
+  },
+  {
+   "n": 111,
+   "label": "two hearts, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_hearts.png",
+   "sha256": "a4cf03114d31347dec707ff73b2b42d3a01e94c2de90b209b6119006b28f9dbd"
+  },
+  {
+   "n": 112,
+   "label": "light bulb, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_idea.png",
+   "sha256": "e4c8972d97f5ab7f8bec6085e92b9d9b26a4a86942fef06353be7190e53f72bd"
+  },
+  {
+   "n": 113,
+   "label": "\"HA HA\" laugh, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_laugh.png",
+   "sha256": "01b5c2c34a723bba93aea6749f59616063e804026d1977cb5ad76ca095861be3"
+  },
+  {
+   "n": 114,
+   "label": "music note, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_music.png",
+   "sha256": "e3b1332aa8d1adef32949e8fd5551b14dd59d9ec8425bfd665d57aed19e04ac4"
+  },
+  {
+   "n": 115,
+   "label": "question mark, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_question.png",
+   "sha256": "415724c1c4e199f8ec75a8592abdc2f029d98f54c30d8938430ea0279c384a89"
+  },
+  {
+   "n": 116,
+   "label": "single Z (sleep), round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_sleep.png",
+   "sha256": "629535843349f7a3cda9d598127843d6cd8208442923efba07818841fb16bd98"
+  },
+  {
+   "n": 117,
+   "label": "zZ (sleeping), round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_sleeps.png",
+   "sha256": "486b42a0c2b425d29db3de8acc4fdfa59801efdf38f562aa1bca5b447fc52d25"
+  },
+  {
+   "n": 118,
+   "label": "star, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_star.png",
+   "sha256": "9540638749b0f24d8f47348a9a1417257e4139ee1bd26fd2310ad4588fba19d3"
+  },
+  {
+   "n": 119,
+   "label": "sparkles, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_stars.png",
+   "sha256": "56eb4289cbc6c756a6bef352896adcc5f24dc527e3d06e4359672af0c05d84e7",
+   "unsure": true
+  },
+  {
+   "n": 120,
+   "label": "spiral, round speech bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 4/emote_swirl.png",
+   "sha256": "ee24a39592f53b4fc25c5998e8f018d94c1b23caa3dc014fa9aa5cb1fe555dec"
+  },
+  {
+   "n": 121,
+   "label": "empty square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote__.png",
+   "sha256": "c03c3aaba8f23073385c290a76addef26270ab8265b427a4fba84b3574fb828d"
+  },
+  {
+   "n": 122,
+   "label": "orange surprise marks, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_alert.png",
+   "sha256": "d23c1ce8214bcef916c7aa509685e79b6b8cc1393709545565eed93aa00b7a51",
+   "unsure": true
+  },
+  {
+   "n": 123,
+   "label": "red anger mark, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_anger.png",
+   "sha256": "477771a477d0859cd51db8c712ec96fb8a4d6134c7ed4a74caa79fe0c4598dbb"
+  },
+  {
+   "n": 124,
+   "label": "gloom lines, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_bars.png",
+   "sha256": "a363006a809b624f17adb7a70ae25f7dceed0ba0590545da5e03084089300fa5",
+   "unsure": true
+  },
+  {
+   "n": 125,
+   "label": "dollar sign, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_cash.png",
+   "sha256": "5dff966c4e6d15aa78fffc5ecac9c3fac7efa65e6498667c40d51d04a7a91b4b"
+  },
+  {
+   "n": 126,
+   "label": "blue ring, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_circle.png",
+   "sha256": "397b3b9a349aab90442f4cce5302c1ee1f4f7d13beec3c8351dd56278bbbaa50",
+   "unsure": true
+  },
+  {
+   "n": 127,
+   "label": "grey storm cloud, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_cloud.png",
+   "sha256": "01b68f16d0872a8213c825f956b8ce6f092069b84eeb2ed48e63dddd03d2bf39"
+  },
+  {
+   "n": 128,
+   "label": "red cross, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_cross.png",
+   "sha256": "007c8e118fc5be015afb0313c479e20491bd78cac9644671c0fedff6e81cf28a"
+  },
+  {
+   "n": 129,
+   "label": "one dot, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_dots1.png",
+   "sha256": "07fc9b0a47b612bd7aa1d1c5bd346296cf109b81b5916f89a08e1e5b91631b6f"
+  },
+  {
+   "n": 130,
+   "label": "two dots, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_dots2.png",
+   "sha256": "9a735dbc1fa4bcdd4bae822813548da5a74692bb08e9fd1148337c09d04f4677"
+  },
+  {
+   "n": 131,
+   "label": "three dots, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_dots3.png",
+   "sha256": "bda9bad16b605f233b0fcada75ac89398d040a20f2e0ea5c16bb0c61125dc343"
+  },
+  {
+   "n": 132,
+   "label": "sweat drop, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_drop.png",
+   "sha256": "e1b5165e61353b312058012e4ddf228f0db01b912634827d1dbe5da0e2889cc5"
+  },
+  {
+   "n": 133,
+   "label": "two sweat drops, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_drops.png",
+   "sha256": "d8d23ddc29c4e7a3414d7de952614f471d5347c3d148187ee775fa67c35e9615"
+  },
+  {
+   "n": 134,
+   "label": "red exclamation mark, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_exclamation.png",
+   "sha256": "a2680f14c5d5fd7aa5d8024300673aa02b0461ef2f0e265b1e46c9533d4446be"
+  },
+  {
+   "n": 135,
+   "label": "double exclamation mark, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_exclamations.png",
+   "sha256": "bc12d85408eb80e5a5dce5137893cb15ef3427cb34750bd43f3547ede167da40"
+  },
+  {
+   "n": 136,
+   "label": "angry face, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_faceAngry.png",
+   "sha256": "59bf79064fcbdee85eaea75aaa8c201af0043ff9da895706fb4d0e843cfbbb48"
+  },
+  {
+   "n": 137,
+   "label": "happy face, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_faceHappy.png",
+   "sha256": "d9c4558b89bdaaa2b923cfac0971c8d9a45d4d4b4c4aa67a55acdb2acad66aef"
+  },
+  {
+   "n": 138,
+   "label": "sad face, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_faceSad.png",
+   "sha256": "0d5e839b60ddf22742a21050c8b3c24c66525a6766e68373bd821919a61b08dc"
+  },
+  {
+   "n": 139,
+   "label": "heart, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_heart.png",
+   "sha256": "c80c0c89c352ba0dda94c51765d7eb415abf4321a04e6909b81278155461685b"
+  },
+  {
+   "n": 140,
+   "label": "broken heart, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_heartBroken.png",
+   "sha256": "9b692865d315e8a56ba9bb8aceb066f22eb39679f422b1b743f16c17941f153d"
+  },
+  {
+   "n": 141,
+   "label": "two hearts, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_hearts.png",
+   "sha256": "b1c3d6c80fea9732279157ee3478d5b3d9d1952677784cf0d88ea864fa86fa24"
+  },
+  {
+   "n": 142,
+   "label": "light bulb, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_idea.png",
+   "sha256": "820002d8bafe47ea955fcb030cd4af2e800b0a7bd31990f308bb96051333d75d"
+  },
+  {
+   "n": 143,
+   "label": "\"HA HA\" laugh, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_laugh.png",
+   "sha256": "46c7f9902ec3b2b5b76f2685ff88468e049a9082b5b2a5e8f4bacd3e1acfbc23"
+  },
+  {
+   "n": 144,
+   "label": "music note, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_music.png",
+   "sha256": "32141db762b8a7c5c8cc519310447f4927cc6f4d091c5451cc8bffed44fefe1f"
+  },
+  {
+   "n": 145,
+   "label": "question mark, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_question.png",
+   "sha256": "d80523eae969c268455464d8dba1ace9ef4790bb3cae60dbbfa553d1296a63c4"
+  },
+  {
+   "n": 146,
+   "label": "single Z (sleep), square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_sleep.png",
+   "sha256": "252c35c4c355134e452edad888af84d890d9293ff4af3297408a9891d99cd2c4"
+  },
+  {
+   "n": 147,
+   "label": "zZ (sleeping), square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_sleeps.png",
+   "sha256": "f0197b3600f414167f248a124c56bcf9b7ae190856db20d9164f5d0bc49fc105"
+  },
+  {
+   "n": 148,
+   "label": "star, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_star.png",
+   "sha256": "4c8a9943b60b9e11d119c7799fb6e991200fe6c81f01288846de3eb21cdd3cce"
+  },
+  {
+   "n": 149,
+   "label": "sparkles, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_stars.png",
+   "sha256": "c11033be378ca20bf526f0d091671827c9ab7df41601cacc605b552714bf4796",
+   "unsure": true
+  },
+  {
+   "n": 150,
+   "label": "spiral, square thought bubble",
+   "category": "emotes",
+   "file": "Style 5/emote_swirl.png",
+   "sha256": "bcb154daa74b3fa11f30a68d2cbdfa5c39a19a8ef3ef187932034d4c4230ec82"
+  },
+  {
+   "n": 151,
+   "label": "empty square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote__.png",
+   "sha256": "a68cd6e87a15c0b1af040f754f1ae806ba5986bed7a299094b3e71dc604ae483"
+  },
+  {
+   "n": 152,
+   "label": "orange surprise marks, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_alert.png",
+   "sha256": "0bfe22644998f49af8d100e76f986c28f23f3011e99a55069a3e802613402fa1",
+   "unsure": true
+  },
+  {
+   "n": 153,
+   "label": "red anger mark, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_anger.png",
+   "sha256": "1a940e664e718e0cb826a64751bdde10aa4a39bc22ddd943331b5fe20f3df782"
+  },
+  {
+   "n": 154,
+   "label": "gloom lines, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_bars.png",
+   "sha256": "b4766913aea9dc8457b8a6c26b980f34d420d64fa729b23060a188f61fb213f2",
+   "unsure": true
+  },
+  {
+   "n": 155,
+   "label": "dollar sign, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_cash.png",
+   "sha256": "80bf963c458bfb8bc90d16ec611ebc399eb8ed18d71ec5daa34385bdfdcfad9b"
+  },
+  {
+   "n": 156,
+   "label": "blue ring, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_circle.png",
+   "sha256": "19f749392ac0afe88deeb53679e68e5f310b66da287de05dc4d7e38e5727f6f4",
+   "unsure": true
+  },
+  {
+   "n": 157,
+   "label": "grey storm cloud, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_cloud.png",
+   "sha256": "f3051e53101556eee0caad8f576ac7b8257f97a4f46e46a79894a54cf58a797f"
+  },
+  {
+   "n": 158,
+   "label": "red cross, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_cross.png",
+   "sha256": "e3d0f528a54d07c4829b5fd846b615a1d1b5c3da5fb13bc53d441340ee52a0e5"
+  },
+  {
+   "n": 159,
+   "label": "one dot, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_dots1.png",
+   "sha256": "ebe1aed8b6c67a850fd20506d96c70e70da51c2e3cbaae3f2f3fc3a5966f279a"
+  },
+  {
+   "n": 160,
+   "label": "two dots, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_dots2.png",
+   "sha256": "fd29da8c3f23910f6fcd523cab9618b71b808a5651d07ce4087ce5341baf6348"
+  },
+  {
+   "n": 161,
+   "label": "three dots, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_dots3.png",
+   "sha256": "5d9b463d1caa75f40e1168f508873dcc2529d3bc1c95ea8a4eb4074ef67a5206"
+  },
+  {
+   "n": 162,
+   "label": "sweat drop, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_drop.png",
+   "sha256": "389737c4a988b347a3cb068c3f67f2d67bbb8ea7f319dfa1576a5c1065c04ecf"
+  },
+  {
+   "n": 163,
+   "label": "two sweat drops, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_drops.png",
+   "sha256": "264cda5f8d7c58bb2cea7885c49815f3adddf82d49f55178a9c2d98de03781d8"
+  },
+  {
+   "n": 164,
+   "label": "red exclamation mark, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_exclamation.png",
+   "sha256": "a44a2df632704ee668049847ccd329d1d33da455629ad8f0c7146bd407770fd4"
+  },
+  {
+   "n": 165,
+   "label": "double exclamation mark, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_exclamations.png",
+   "sha256": "dcefabff87a8ef371cf28a8a0459a7e6d6c6ab2e2b9826e14728e1a8eea85af4"
+  },
+  {
+   "n": 166,
+   "label": "angry face, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_faceAngry.png",
+   "sha256": "5910a0b44e0f6972682a2e2cc0024b33c1f3408d5096bf9f953d1d43539645e6"
+  },
+  {
+   "n": 167,
+   "label": "happy face, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_faceHappy.png",
+   "sha256": "861587d5dcadd95f2dfcfaf61a381820159e47e0878e6c7b497e2f91966ebb84"
+  },
+  {
+   "n": 168,
+   "label": "sad face, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_faceSad.png",
+   "sha256": "b769adba317cdc05378c96fa336cf67acb8967232e644b50aba112cd6200cbb8"
+  },
+  {
+   "n": 169,
+   "label": "heart, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_heart.png",
+   "sha256": "d46f28139a3c5168324566d4b55df8ebe75b9d098df20cb06a756c1e252826b3"
+  },
+  {
+   "n": 170,
+   "label": "broken heart, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_heartBroken.png",
+   "sha256": "01339459c3f29c293e2ccbb61d63033dcdac35f176b5815a786763f4d666f3a1"
+  },
+  {
+   "n": 171,
+   "label": "two hearts, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_hearts.png",
+   "sha256": "d241d0af0352de4fd4726fd85f28901977fe5c2dd846aaca66e219f93c414012"
+  },
+  {
+   "n": 172,
+   "label": "light bulb, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_idea.png",
+   "sha256": "1f1b5e8f10e31cd02ff26b3a97525e987100ee542a1f08084cb764601de91a5d"
+  },
+  {
+   "n": 173,
+   "label": "\"HA HA\" laugh, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_laugh.png",
+   "sha256": "bee189c39cfd20f0f25bffa6773d5ee7f37fa07c85d091033cdbbb3703e862f2"
+  },
+  {
+   "n": 174,
+   "label": "music note, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_music.png",
+   "sha256": "2a02a3efc5db26090a88e9b01060cb670c2258c71426ec77968acecccf580825"
+  },
+  {
+   "n": 175,
+   "label": "question mark, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_question.png",
+   "sha256": "343222758c9efee8e46c3e05404c6da7c0ef3a1db9b631f92884486539fe5844"
+  },
+  {
+   "n": 176,
+   "label": "single Z (sleep), square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_sleep.png",
+   "sha256": "66e391b0029a18e59de8275c7e050d6e013d14036988b84b1e17109dda6c1689"
+  },
+  {
+   "n": 177,
+   "label": "zZ (sleeping), square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_sleeps.png",
+   "sha256": "ca7300280d58e710e334abc25ee665fd0be74623e78e18f6e4a050e100e6b9f1"
+  },
+  {
+   "n": 178,
+   "label": "star, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_star.png",
+   "sha256": "7d3e82bb111794a140ca2cec3dd79fe8edcf9bcbfba5f0be01eefd725d03d5f7"
+  },
+  {
+   "n": 179,
+   "label": "sparkles, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_stars.png",
+   "sha256": "54c1640a2aa98582aa56812389747cc7ceb19f1e674701713ab7c5883ef5a1a6",
+   "unsure": true
+  },
+  {
+   "n": 180,
+   "label": "spiral, square thought bubble, blue outline",
+   "category": "emotes",
+   "file": "Style 6/emote_swirl.png",
+   "sha256": "11e997d05f0c672cebad6b2a5b8a2711b9638b8b81da682e5898721244d5f43e"
+  },
+  {
+   "n": 181,
+   "label": "empty spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote__.png",
+   "sha256": "affaba4a576f05933a426924d8a7a4fb21731b8c5f7845ba6df991e655c080ef"
+  },
+  {
+   "n": 182,
+   "label": "orange surprise marks, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_alert.png",
+   "sha256": "27db90984f138db9c77c024807d4151589aede74e59ac7ff975c4c8f7b57f7b0",
+   "unsure": true
+  },
+  {
+   "n": 183,
+   "label": "red anger mark, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_anger.png",
+   "sha256": "0d7de5d231674d6ec286b00f5663da0d20552391d1f4a087f2af18fd51a0e55d"
+  },
+  {
+   "n": 184,
+   "label": "gloom lines, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_bars.png",
+   "sha256": "a69ad020bb0664cc048d8a26386d3c9bf61392584ef3fe9e56790038199fcab5",
+   "unsure": true
+  },
+  {
+   "n": 185,
+   "label": "dollar sign, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_cash.png",
+   "sha256": "779cc89bef8f8e705d49d70a66e2f774ad8b12eabc6cf595c099c6cfcf6fc3b0"
+  },
+  {
+   "n": 186,
+   "label": "blue ring, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_circle.png",
+   "sha256": "b73df2008d292896cf57b74c1af232fe9f6cba4e98accf1231f71ba17ab4d77e",
+   "unsure": true
+  },
+  {
+   "n": 187,
+   "label": "grey storm cloud, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_cloud.png",
+   "sha256": "a2724071e3982cd4c082070120f691628e62d862d3857d67a2e911c306f976b9"
+  },
+  {
+   "n": 188,
+   "label": "red cross, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_cross.png",
+   "sha256": "e3224af9a1e4791562c176d0ec64866095df1d9f9df7f331518173d558983e0a"
+  },
+  {
+   "n": 189,
+   "label": "one dot, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_dots1.png",
+   "sha256": "8d8b53ab750c75f8eaf8d4111032b42523d80f8a46e1ff5af0cedf1106437f29"
+  },
+  {
+   "n": 190,
+   "label": "two dots, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_dots2.png",
+   "sha256": "4b465305e3bc5b3045fe5193b1107b9b0c06358cf3bef7ba749236a18012b1dc"
+  },
+  {
+   "n": 191,
+   "label": "three dots, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_dots3.png",
+   "sha256": "462ffb0ed667175157e0a46e08e6974c0fd5bb464638eabb7b45af9540027241"
+  },
+  {
+   "n": 192,
+   "label": "sweat drop, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_drop.png",
+   "sha256": "2cfc81615bd9dd6870629bf0207624c5aeae1fc6f85251daf2bd4cdd664e797a"
+  },
+  {
+   "n": 193,
+   "label": "two sweat drops, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_drops.png",
+   "sha256": "1b39bebdbc1bbb7569e8fc96278c57f33ba5556e6139fb98d6da5deaa44271f1"
+  },
+  {
+   "n": 194,
+   "label": "red exclamation mark, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_exclamation.png",
+   "sha256": "bd950dc8ffa436e56ad7388b06cf2e3d205291e6f157a87817ea8a2eed93ead1"
+  },
+  {
+   "n": 195,
+   "label": "double exclamation mark, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_exclamations.png",
+   "sha256": "c637e56584ad53cb625027fdcf152bf63319f4a433ba6919254be74d86b89854"
+  },
+  {
+   "n": 196,
+   "label": "angry face, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_faceAngry.png",
+   "sha256": "eab744e8cd6dc36741c569f158b5b39e83d9c8172218053e43778cb429d2ca5c"
+  },
+  {
+   "n": 197,
+   "label": "happy face, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_faceHappy.png",
+   "sha256": "60bc7484b23a099d2e687a94571fe29a44e0f423064d86e6dc20a146bf23c505"
+  },
+  {
+   "n": 198,
+   "label": "sad face, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_faceSad.png",
+   "sha256": "8cc5e0a475237e54aea580de354dfc65b577f4d569a4722dc089128db38b0c3b"
+  },
+  {
+   "n": 199,
+   "label": "heart, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_heart.png",
+   "sha256": "b10b7c826695c92e5b9725bf6d87a6d25888a50d078202710918bc0ce973e5d4"
+  },
+  {
+   "n": 200,
+   "label": "broken heart, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_heartBroken.png",
+   "sha256": "ac9939bffcabfdca8a964eba63cff0085a1dd98d1c573c2419e030845eb32199"
+  },
+  {
+   "n": 201,
+   "label": "two hearts, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_hearts.png",
+   "sha256": "907e7624c42541f2b0bbf8c22b60de8958251791fed568c5550ed7844f99f6d2"
+  },
+  {
+   "n": 202,
+   "label": "light bulb, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_idea.png",
+   "sha256": "17d8d8da3904e7d8a91c066da1970a10e034c846295f772ff65273f08137ac3a"
+  },
+  {
+   "n": 203,
+   "label": "\"HA HA\" laugh, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_laugh.png",
+   "sha256": "7a06bb3333e4636111d1254dc7c549899b6a5cb78ea6f3cbe3969d11b79bec12"
+  },
+  {
+   "n": 204,
+   "label": "music note, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_music.png",
+   "sha256": "744392c19cb8537f58b82b0ff84b22384765e5a04ae44611b18c618fad3fb1fe"
+  },
+  {
+   "n": 205,
+   "label": "question mark, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_question.png",
+   "sha256": "02211f119e14ce2e71fefec12b1228b26935bd016dae5a01923004974ecff9f9"
+  },
+  {
+   "n": 206,
+   "label": "single Z (sleep), spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_sleep.png",
+   "sha256": "b3ab6a34e0240e0fee19c6bf9f1eb560406b2f92238f2dcb2743a5467a8fd96b"
+  },
+  {
+   "n": 207,
+   "label": "zZ (sleeping), spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_sleeps.png",
+   "sha256": "71a581e90b213fa385b8e46623c152c1a5edefb2c130a06b599f7a75ccfece7d"
+  },
+  {
+   "n": 208,
+   "label": "star, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_star.png",
+   "sha256": "e1f7d825e12eb16f4eafc979d08d25c114389907efac988a3d86993ffecb7aff"
+  },
+  {
+   "n": 209,
+   "label": "sparkles, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_stars.png",
+   "sha256": "207df505601aa16f937217feb8340aaf43fc545070aaddd071aeddc90a550940",
+   "unsure": true
+  },
+  {
+   "n": 210,
+   "label": "spiral, spiky shout bubble",
+   "category": "emotes",
+   "file": "Style 7/emote_swirl.png",
+   "sha256": "c94ef79f333f52f565b573ec821e397ef62c24fc22d1c130c21b34f9b9a17ac2"
+  },
+  {
+   "n": 211,
+   "label": "empty image",
+   "category": "emotes",
+   "file": "Style 8/emote__.png",
+   "sha256": "a9681cd3b39bae17f566e047fb3c65ca799fb80d7a69aa5610cdeeb1532c26fd"
+  },
+  {
+   "n": 212,
+   "label": "orange surprise marks, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_alert.png",
+   "sha256": "76084cee5cffd35b9900e067c779640da11828f7997ea60d1f19b10e528b6715",
+   "unsure": true
+  },
+  {
+   "n": 213,
+   "label": "red anger mark, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_anger.png",
+   "sha256": "4751aaec486036493dd1820a76c98e2294cc3fdbee6352ddbd6cd069864d9526"
+  },
+  {
+   "n": 214,
+   "label": "gloom lines, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_bars.png",
+   "sha256": "1d796fb0357afe245e5b3fe6eb3166a5fcbee21261081a01b6c92a235ceac135",
+   "unsure": true
+  },
+  {
+   "n": 215,
+   "label": "dollar sign, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_cash.png",
+   "sha256": "2590d15a11f165dcdb71b7da4d0976a0b5ae6b442c108af4bb2cd48b81938600"
+  },
+  {
+   "n": 216,
+   "label": "blue ring, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_circle.png",
+   "sha256": "f3600a06a7d0b8fb9c958051b47492b6c85d8fc10e27c686d2074158abe5b285",
+   "unsure": true
+  },
+  {
+   "n": 217,
+   "label": "grey storm cloud, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_cloud.png",
+   "sha256": "644331e6f6a379383a2c825141b7a893a121e9471b5647992107fb953990a363"
+  },
+  {
+   "n": 218,
+   "label": "red cross, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_cross.png",
+   "sha256": "b32dcb3866a37fced475089fbf694cc521919d0f0c897fa5fff8917e83270b88"
+  },
+  {
+   "n": 219,
+   "label": "one dot, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_dots1.png",
+   "sha256": "b86504a4a18c496973b8022c566e16c7ff62acaad02f3aed7f9b8c4fcdb8b5c6"
+  },
+  {
+   "n": 220,
+   "label": "two dots, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_dots2.png",
+   "sha256": "205350adfda25468b3fbf7d574c88cd0d35446239e1f695d4ed5936759a22402"
+  },
+  {
+   "n": 221,
+   "label": "three dots, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_dots3.png",
+   "sha256": "3b7efab033b0d4398b466c08a94852ad472d68bdca709e81cd8d2d23fdbb70ae"
+  },
+  {
+   "n": 222,
+   "label": "sweat drop, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_drop.png",
+   "sha256": "0d8b04abb3fcd68e31805d86ba5f1b2ae3af69f6712b33efe16257f967a91a7b"
+  },
+  {
+   "n": 223,
+   "label": "two sweat drops, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_drops.png",
+   "sha256": "55e702b54616f146bac84228372355b2f1723944fbb55ab7282871f984abd1b8"
+  },
+  {
+   "n": 224,
+   "label": "red exclamation mark, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_exclamation.png",
+   "sha256": "958037d40583342726819047438c71da9a9d8ae7a9b0680fe80138ae7e390df8"
+  },
+  {
+   "n": 225,
+   "label": "double exclamation mark, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_exclamations.png",
+   "sha256": "a76107f66adb1ebb05e9c97bfe7b8aa0038d045d44a4addefd899a3f01307312"
+  },
+  {
+   "n": 226,
+   "label": "angry face, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_faceAngry.png",
+   "sha256": "caf106bc325ab33e93f1908db11292531427fe9c6071c6116f77ab1ffc3ead2a"
+  },
+  {
+   "n": 227,
+   "label": "happy face, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_faceHappy.png",
+   "sha256": "32ea75d89c2500059ce183c0e5fbc3eb762f5612698735bd59cd00c528849067"
+  },
+  {
+   "n": 228,
+   "label": "sad face, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_faceSad.png",
+   "sha256": "478b8b2a5710db3fe1a22238a36005368367de5d5eb42b4bed3edd9b4a5d66eb"
+  },
+  {
+   "n": 229,
+   "label": "heart, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_heart.png",
+   "sha256": "03d6ef9e12338028ba54c452115490e4ac8209a0f760db5415d2077cc5281ac5"
+  },
+  {
+   "n": 230,
+   "label": "broken heart, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_heartBroken.png",
+   "sha256": "7ec03d5088b7765b90bcf5f2ec3556235db70df15650c089f9b042f7074b5973"
+  },
+  {
+   "n": 231,
+   "label": "two hearts, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_hearts.png",
+   "sha256": "cdfd531b67ced552a531cbc5ee2e74f280a292641c3f8524df0ba678c2aa88d7"
+  },
+  {
+   "n": 232,
+   "label": "light bulb, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_idea.png",
+   "sha256": "867da2c86de8b349bb8e2f144005185f6b924d4269b03b47b85f4d4fa54f7f2a"
+  },
+  {
+   "n": 233,
+   "label": "\"HA HA\" laugh, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_laugh.png",
+   "sha256": "6c431db8adad7667f82ac6ac18f01f09518fc15bc94b127c8e8f99cf5267e22f"
+  },
+  {
+   "n": 234,
+   "label": "music note, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_music.png",
+   "sha256": "f6f086eab29266e5fcefe8d1d6a62430f789edfdbc224c235a58f0da26da64fb"
+  },
+  {
+   "n": 235,
+   "label": "question mark, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_question.png",
+   "sha256": "879e91a67c0a83277217066e837017829e06661ae43a792402637473f1a99144"
+  },
+  {
+   "n": 236,
+   "label": "single Z (sleep), no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_sleep.png",
+   "sha256": "ec5e35b87282d5a4bbc4e23df71e4b3d86baaf2b54fe563499363ea00dbc48d3"
+  },
+  {
+   "n": 237,
+   "label": "zZ (sleeping), no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_sleeps.png",
+   "sha256": "442c09aad0ba1bf52a3341fb799f37acc1fae2db78ae5feabcac8cb1dddaeefa"
+  },
+  {
+   "n": 238,
+   "label": "star, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_star.png",
+   "sha256": "686e221cc2d9bdc934a26b52be649f0b4d0f007cd48c22793ec4befd6939be88"
+  },
+  {
+   "n": 239,
+   "label": "sparkles, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_stars.png",
+   "sha256": "f2c9d12d29ddd7f00c3a667f813574b9de20c512245e1b70ba9c1cac00b09603",
+   "unsure": true
+  },
+  {
+   "n": 240,
+   "label": "spiral, no bubble",
+   "category": "emotes",
+   "file": "Style 8/emote_swirl.png",
+   "sha256": "b9203b94196ab98ff6351eee295976236baf79c9bddb6d563b6fb3d437473495"
+  }
+ ]
+}

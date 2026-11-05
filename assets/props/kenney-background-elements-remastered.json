@@ -1,0 +1,494 @@
+{
+ "pack": "Kenney Background Elements (Remastered)",
+ "slug": "background-elements-remastered",
+ "license": "CC0-1.0",
+ "source_url": "https://kenney.nl/assets/background-elements-remastered",
+ "zip_sha256": "9c904f0b7c52a15aeb2cbf454de641620cfb9025b1611a0a21bd8c46992f4568",
+ "folder": "PNG/Default",
+ "labelled": "by eye from the drawings, 5 Nov 2026 (on the owner's machine, from numbered contact sheets on light and dark grounds; 'unsure' marks those that could be something else)",
+ "items": [
+  {
+   "n": 1,
+   "label": "low green bush",
+   "category": "bushes",
+   "file": "bush1.png",
+   "sha256": "f6ceb8dabd62a7c3fea8ed2b911e8e8d0f49cbbd7df437d4111ee0a9b1b4fdc6"
+  },
+  {
+   "n": 2,
+   "label": "green leafy tuft",
+   "category": "bushes",
+   "file": "bush2.png",
+   "sha256": "35c2208432844c0a47928b665af316e9483fdba8135f0411c79774752ec596dc"
+  },
+  {
+   "n": 3,
+   "label": "green spiky tuft",
+   "category": "bushes",
+   "file": "bush3.png",
+   "sha256": "ec79019ce17949918a167cbb6039ac6e9e2d291a40e7ec1946937861605e4372"
+  },
+  {
+   "n": 4,
+   "label": "green grass clump",
+   "category": "bushes",
+   "file": "bush4.png",
+   "sha256": "057cb137674cd2c53525dc543d84794963aaa5ef1e619793ffd57cc16220e1b4"
+  },
+  {
+   "n": 5,
+   "label": "low teal bush",
+   "category": "bushes",
+   "file": "bushAlt1.png",
+   "sha256": "0662f29f484d529a8a35c1933cb78b262b07a86d840ee194384432c8594a21c0"
+  },
+  {
+   "n": 6,
+   "label": "tall teal leafy tuft",
+   "category": "bushes",
+   "file": "bushAlt2.png",
+   "sha256": "f1980a90691426caab9c7f8df4a8bb9e5ed2cafcb47c1c8c447f4f2a74170df3"
+  },
+  {
+   "n": 7,
+   "label": "teal leafy tuft",
+   "category": "bushes",
+   "file": "bushAlt3.png",
+   "sha256": "dc19835fc28eac408c747e4ec7f8086376ba90ea72b98abbf0ab9cb1a9430f76"
+  },
+  {
+   "n": 8,
+   "label": "teal grass clump",
+   "category": "bushes",
+   "file": "bushAlt4.png",
+   "sha256": "82048a3396f5e4af93799d1840db2c7c43c132dec5adaba79bf5e07c13523566"
+  },
+  {
+   "n": 9,
+   "label": "low orange bush",
+   "category": "bushes",
+   "file": "bushOrange1.png",
+   "sha256": "2a777096323affae861f2b66af18737373d47ba5c2653456498828fe6b31d0ef"
+  },
+  {
+   "n": 10,
+   "label": "orange leafy tuft",
+   "category": "bushes",
+   "file": "bushOrange2.png",
+   "sha256": "1e372f9d6a0672a1684b3dabf4a184a755e269960cc5d37b4bb483ff2fd947fd"
+  },
+  {
+   "n": 11,
+   "label": "broad orange leafy tuft",
+   "category": "bushes",
+   "file": "bushOrange3.png",
+   "sha256": "f0def2754a89f9e819562618cce50ce5341cd80230cca53263c7b401ec818a06"
+  },
+  {
+   "n": 12,
+   "label": "orange grass clump",
+   "category": "bushes",
+   "file": "bushOrange4.png",
+   "sha256": "bc768c984d9d5208b53f41a8ea2cbe21c48d45b3e79ce97d1341d382a8f00718"
+  },
+  {
+   "n": 13,
+   "label": "cactus with two arms",
+   "category": "cacti",
+   "file": "cactus1.png",
+   "sha256": "9912acdb4d959ebd370a8be8b45184df3bfc422849e8919d690b9f79cf0f8207"
+  },
+  {
+   "n": 14,
+   "label": "cactus with one arm, right",
+   "category": "cacti",
+   "file": "cactus2.png",
+   "sha256": "74013f9f4aff0eb174186b32a9cadcace0709ce61a54b0a6300c209aaaeaabc6"
+  },
+  {
+   "n": 15,
+   "label": "cactus with one arm, left",
+   "category": "cacti",
+   "file": "cactus3.png",
+   "sha256": "9d19abb4f7b444cf7d900402cf80cb90fb9dd84275d948f692ebcb1f0be91b0d"
+  },
+  {
+   "n": 16,
+   "label": "small grey castle, green turrets",
+   "category": "buildings",
+   "file": "castleSmall.png",
+   "sha256": "8daebd211f4a1ac39d554fd51476317a7b4e1c084681c0627a5ea8078e2f489d"
+  },
+  {
+   "n": 17,
+   "label": "small beige castle, red turrets",
+   "category": "buildings",
+   "file": "castleSmallAlt.png",
+   "sha256": "0cb27ba2e2b7196ee7456042dec23faedb048508f786d4ecbb1041e761b2317b"
+  },
+  {
+   "n": 18,
+   "label": "grey castle wall",
+   "category": "buildings",
+   "file": "castleWall.png",
+   "sha256": "e136905ad0dc971ad39dd4863e2b6f2e86148150ee1255049354114791ec2e54"
+  },
+  {
+   "n": 19,
+   "label": "beige castle wall",
+   "category": "buildings",
+   "file": "castleWallAlt.png",
+   "sha256": "4134459c2ce8ab524b368b820fe8d2ccb64139fe9f1cd06e047b9d6b27996e81"
+  },
+  {
+   "n": 20,
+   "label": "wide cloud",
+   "category": "clouds",
+   "file": "cloud1.png",
+   "sha256": "6b2120c1750118e8a28630f295e63085e3cd8898f8ef1f844a014b540058efe9"
+  },
+  {
+   "n": 21,
+   "label": "tall puffy cloud",
+   "category": "clouds",
+   "file": "cloud2.png",
+   "sha256": "e849528756598ef97106aa7c2332c0a6702edd8f7fb5601a12aa559a8cd465cb"
+  },
+  {
+   "n": 22,
+   "label": "wide cloud",
+   "category": "clouds",
+   "file": "cloud3.png",
+   "sha256": "3482086e01c2101ca215a2865e25500374de95e9688ffc4bd6198945d0a6f406"
+  },
+  {
+   "n": 23,
+   "label": "flat cloud",
+   "category": "clouds",
+   "file": "cloud4.png",
+   "sha256": "3c4168be0cc24d442b47dca5ebab4482c132dbcc1295cd1712cf51a1f8d963f5"
+  },
+  {
+   "n": 24,
+   "label": "small cloud",
+   "category": "clouds",
+   "file": "cloud5.png",
+   "sha256": "1ddea77231a36d7ba032880833c2dc5a7db65f0cbf241d18d190f5d1603d4a71"
+  },
+  {
+   "n": 25,
+   "label": "big puffy cloud",
+   "category": "clouds",
+   "file": "cloud6.png",
+   "sha256": "b04f0236962a698c7198b34b2d7f9d853491ffa02b011a2245a1a67b50a42078"
+  },
+  {
+   "n": 26,
+   "label": "wide cloud",
+   "category": "clouds",
+   "file": "cloud7.png",
+   "sha256": "28b988a1e52cb8f619005285348b2e3fde47043e7862217d2c45421f10a68740"
+  },
+  {
+   "n": 27,
+   "label": "long thin cloud",
+   "category": "clouds",
+   "file": "cloud8.png",
+   "sha256": "ab2749b21ff3072f484650c2742f64ec3eb2d298fbe4b068c16d362dd9ac0c19"
+  },
+  {
+   "n": 28,
+   "label": "wooden fence",
+   "category": "fences",
+   "file": "fence.png",
+   "sha256": "7b6b540a576266a74a7e2b9185f64f1c81af4369b461c5ce1fab63bb9f79c9cc"
+  },
+  {
+   "n": 29,
+   "label": "green iron railings",
+   "category": "fences",
+   "file": "fenceIron.png",
+   "sha256": "578f93cc761d6a328af8622357ae7d6b57e93e631fcebe8abda1d4cbdac64be7"
+  },
+  {
+   "n": 30,
+   "label": "tall blue house, green roof",
+   "category": "houses",
+   "file": "house1.png",
+   "sha256": "f421e3812e17e821ad09972fa199fc76fb1019160ad50725ee0116580f98bc9f"
+  },
+  {
+   "n": 31,
+   "label": "wide blue house, green roof",
+   "category": "houses",
+   "file": "house2.png",
+   "sha256": "5cd83ea25c5b4c4cd7659ccb95b4fc740eeddf6dbfff9e68196700a0d341e27c"
+  },
+  {
+   "n": 32,
+   "label": "tall cream house, red roof",
+   "category": "houses",
+   "file": "houseAlt1.png",
+   "sha256": "93aeedaa3767374f832ceb687c6a9d8c816547a90065c63009e897b53861cd3f"
+  },
+  {
+   "n": 33,
+   "label": "wide cream house, red roof",
+   "category": "houses",
+   "file": "houseAlt2.png",
+   "sha256": "5a8e73bc5de602b7dc97b61b4a5982d0cc50913c329b77bf0d312ab4b340d46d"
+  },
+  {
+   "n": 34,
+   "label": "small blue house, green roof",
+   "category": "houses",
+   "file": "houseSmall1.png",
+   "sha256": "7401bbd995f9c4b219be87873ecbfc92aaf4e041ba3f60b26fefdd6c93b92480"
+  },
+  {
+   "n": 35,
+   "label": "blue two-storey house, green roof",
+   "category": "houses",
+   "file": "houseSmall2.png",
+   "sha256": "e12773b86b921ff00a49c1f4dc0481457e0470a029079cdc23a9dd8046e8c412"
+  },
+  {
+   "n": 36,
+   "label": "small cream house, red roof",
+   "category": "houses",
+   "file": "houseSmallAlt1.png",
+   "sha256": "513c4d37cdb51d76fa82688aa8e665595545a31eca034bf9d75b71525e133f02"
+  },
+  {
+   "n": 37,
+   "label": "cream two-storey house, red roof",
+   "category": "houses",
+   "file": "houseSmallAlt2.png",
+   "sha256": "16eba1b4acaf604e14ea4cc89fb86069bc727af0c72326b18413f955c74f51f1"
+  },
+  {
+   "n": 38,
+   "label": "crescent moon",
+   "category": "sky",
+   "file": "moon.png",
+   "sha256": "78b234c3bda5ba16d4efef8ee3e4396c1afe3d6fa4915284e9d95adc39a9d53d"
+  },
+  {
+   "n": 39,
+   "label": "full moon",
+   "category": "sky",
+   "file": "moonFull.png",
+   "sha256": "bcdf03ac31fc5c41e771b397d42b9f469f653efde0a4074f3c36c1408639bc71"
+  },
+  {
+   "n": 40,
+   "label": "sandstone pyramid",
+   "category": "monuments",
+   "file": "pyramid.png",
+   "sha256": "3a3061b244ab8562e855560141a47d8848f999debbc7c8d754e063481230b285"
+  },
+  {
+   "n": 41,
+   "label": "stepped stone pyramid",
+   "category": "monuments",
+   "file": "pyramidMayan.png",
+   "sha256": "2e35b70dac77ddb83e6e4556c52f247b27c3a1a0bbf41e86ab4310e50a5e763b"
+  },
+  {
+   "n": 42,
+   "label": "sun",
+   "category": "sky",
+   "file": "sun.png",
+   "sha256": "81a02dcd8bd9f762871649a51a4628999a4a4d20ef101e300c1cac9edc537fff"
+  },
+  {
+   "n": 43,
+   "label": "slim grey tower, green roof",
+   "category": "buildings",
+   "file": "tower.png",
+   "sha256": "882ccf594fbe515c7849e2f1e7b78b721cf82db8a088f99710262a7e6b5350de"
+  },
+  {
+   "n": 44,
+   "label": "slim beige tower, red roof",
+   "category": "buildings",
+   "file": "towerAlt.png",
+   "sha256": "4e0d197798cc240040c8adbcf8210057113ab6063307f1a962652d293e278497"
+  },
+  {
+   "n": 45,
+   "label": "stout grey tower, green roof",
+   "category": "buildings",
+   "file": "towerSmall.png",
+   "sha256": "8049ffdb1742b6b88b2c7bc3a1678ac5e77502ec4481c43ec13fc647df400a0f"
+  },
+  {
+   "n": 46,
+   "label": "stout beige tower, red roof",
+   "category": "buildings",
+   "file": "towerSmallAlt.png",
+   "sha256": "a14524eb6fab45e3486068ed9bb80bf16a03ce13542833ff033c012ff1af6d3f"
+  },
+  {
+   "n": 47,
+   "label": "green cypress tree",
+   "category": "trees",
+   "file": "tree.png",
+   "sha256": "5f07341535ceacfc88f92e079ca55374f2234c100e5b45b3d0221c9865b2378f"
+  },
+  {
+   "n": 48,
+   "label": "bare dead tree",
+   "category": "trees",
+   "file": "treeDead.png",
+   "sha256": "2c774b7b95395b85f22ab0a8457eed8ce4f1a8c5c5f5c09dfc852e84a1ec6f12"
+  },
+  {
+   "n": 49,
+   "label": "frosted tree",
+   "category": "trees",
+   "file": "treeFrozen.png",
+   "sha256": "6992b6170ae2889cbee38ccfe6520039d49555988f522eb0eb253776e4c7bdee"
+  },
+  {
+   "n": 50,
+   "label": "tall green tree",
+   "category": "trees",
+   "file": "treeLong.png",
+   "sha256": "118936f5f36bfcbea695f98dbae197f05a5f185cc2c7d6da14774f55f5f1587f"
+  },
+  {
+   "n": 51,
+   "label": "tall frosted tree",
+   "category": "trees",
+   "file": "treeLongFrozen.png",
+   "sha256": "e01d23626c947372de0733ca636f3a8dd350561a6c0e7d5fbe4a4d5949f21a18"
+  },
+  {
+   "n": 52,
+   "label": "tall orange tree, birch trunk",
+   "category": "trees",
+   "file": "treeLongOrange.png",
+   "sha256": "19a7345a16869910d46f44e3729088cacee19de4c72dc345502a2ddd3724689a"
+  },
+  {
+   "n": 53,
+   "label": "tall snow-capped tree",
+   "category": "trees",
+   "file": "treeLongSnow.png",
+   "sha256": "93433f528cdba9d4f6533997cc401e4d42c4ebd820fdaef01aa6b5a580a8eb21"
+  },
+  {
+   "n": 54,
+   "label": "orange tree, birch trunk",
+   "category": "trees",
+   "file": "treeOrange.png",
+   "sha256": "db9543bea60ec729fea3dd5ab0415769817a4a7fda888ad0f8a96d0e5f23b3e4"
+  },
+  {
+   "n": 55,
+   "label": "palm tree",
+   "category": "trees",
+   "file": "treePalm.png",
+   "sha256": "879b25be33f10856165e6f6871e782cf283b7fe10c0706e7bb1241c238c641aa"
+  },
+  {
+   "n": 56,
+   "label": "pine tree",
+   "category": "trees",
+   "file": "treePine.png",
+   "sha256": "d3e3e6cfa8dd3840d3185d5068a448352379f2c325485544df023cfea837c6ce"
+  },
+  {
+   "n": 57,
+   "label": "frosted pine tree",
+   "category": "trees",
+   "file": "treePineFrozen.png",
+   "sha256": "c28b1716ae1ae4812e088bee8834e045dce713a0885cd53214a95b7f311c25df"
+  },
+  {
+   "n": 58,
+   "label": "orange pine tree",
+   "category": "trees",
+   "file": "treePineOrange.png",
+   "sha256": "30b79819ee4c7aa63eee33ef53c33977ba78b6ec89dc5d3da6b191ee64a96163"
+  },
+  {
+   "n": 59,
+   "label": "snowy pine tree",
+   "category": "trees",
+   "file": "treePineSnow.png",
+   "sha256": "c7a6593f9e2df21b4ca40b24951024367d50ef2cf91666df921ee48fbc0a8ce9"
+  },
+  {
+   "n": 60,
+   "label": "small green pine tree",
+   "category": "trees",
+   "file": "treeSmall_green1.png",
+   "sha256": "2224591d446aebb602bcc8a338cf5210a8275d74a59bfa29f8c1efd805f9236b"
+  },
+  {
+   "n": 61,
+   "label": "small green cone tree",
+   "category": "trees",
+   "file": "treeSmall_green2.png",
+   "sha256": "03ff55e980d5d62e6415dad2f717157b54675a76e5154e40ccb0c3f3ab66784f"
+  },
+  {
+   "n": 62,
+   "label": "small round green tree",
+   "category": "trees",
+   "file": "treeSmall_green3.png",
+   "sha256": "90c91239ec1ab260f6fdd74af4596dfea4bbd2d8dcdadcaa4d24b2b64a742400"
+  },
+  {
+   "n": 63,
+   "label": "small teal pine tree",
+   "category": "trees",
+   "file": "treeSmall_greenAlt1.png",
+   "sha256": "568e03e740567e7fcfbc8044adbc715009f59004f38780fbaefc17b245ed2af7"
+  },
+  {
+   "n": 64,
+   "label": "small teal cone tree",
+   "category": "trees",
+   "file": "treeSmall_greenAlt2.png",
+   "sha256": "bf05f5733315077969dcb8736e066d733ea4c2ade056ea84a55a6d206b6f3b4b"
+  },
+  {
+   "n": 65,
+   "label": "small round teal tree",
+   "category": "trees",
+   "file": "treeSmall_greenAlt3.png",
+   "sha256": "bb5408cf06497f7d314750c61a75be2cd735daba94f9d0eec1d579775b2d9a0a"
+  },
+  {
+   "n": 66,
+   "label": "small orange pine tree",
+   "category": "trees",
+   "file": "treeSmall_orange1.png",
+   "sha256": "52e1aad075e7f792e0227fc8273770369be8dd1515cd5f6996780e881b650e8d"
+  },
+  {
+   "n": 67,
+   "label": "small orange cone tree",
+   "category": "trees",
+   "file": "treeSmall_orange2.png",
+   "sha256": "2c5cdc17522a8ac0166db0b4876f3da97ce0dff7cd3ba947c45be3ffbda29fa9"
+  },
+  {
+   "n": 68,
+   "label": "small round orange tree",
+   "category": "trees",
+   "file": "treeSmall_orange3.png",
+   "sha256": "84af01fbf754f48f82a396f48b82758d1b595f40116d467c8990ae5e1cff0d67"
+  },
+  {
+   "n": 69,
+   "label": "snow-capped teal tree",
+   "category": "trees",
+   "file": "treeSnow.png",
+   "sha256": "44ce075f4ff970fe7e49bea184d60d4853b429d0a27ea8d881a85beeed03b422"
+  }
+ ]
+}

@@ -1304,6 +1304,45 @@ the other packs wait for the owner's downloads). `props.library {query, category
 own drawing). Test `kenneyprops`: 163 items, every file matching; a teapot made this way into a pip-park copy shows
 10,315 pixels of its blue where it stands, none elsewhere and none without it.
 
+**Five more packs (labelled on the owner's machine).** The owner downloaded Board Game Icons, Foliage, Background
+Elements (Remastered), Sports and Emotes in a browser. The helper session on that machine labelled them in the same
+way, from numbered contact sheets on light and dark grounds, and checked the owner's zips against its earlier
+copies byte for byte. Each pack has its own index, `assets/props/kenney-<slug>.json`, in the same form (number,
+label, category, file, sha256; the zip's sha256). The indexes came back with sha256s that matched the copies taken
+in. 857 sprites, 1,020 with Generic Items:
+
+| Pack (slug) | Set labelled | Items | Unsure | Categories |
+|---|---|---|---|---|
+| board-game-icons | PNG/Default (64px), white icons | 255 | 20 | dice 51, cards 41, tags 34, pieces 16, shapes 13, arrows 12, timers 11, tokens 10, 21 more |
+| foliage-pack | PNG/Default size with Leaves/ | 106 | 5 | tiles 44, trees 28, treetops 13, rocks 9, flowers 4, grass 4, bushes 4 |
+| background-elements-remastered | PNG/Default | 69 | 0 | trees 23, bushes 12, buildings 8, clouds 8, houses 8, cacti 3, sky 3, fences 2, monuments 2 |
+| sports-pack | all of PNG/ (no default set) | 187 | 58 | players 68, goals 49, markings 32, balls 20, equipment 11, flags 4, cards 3 |
+| emotes-pack | PNG/Vector, styles 1-8 | 240 | 32 | emotes 240 (30 emotes in 8 bubble styles) |
+
+Most of the unsure items are small (the golf ball, the puck, pieces of the sports field), the four lying-down
+players in each Sports colour, and Board Game Icons' six byte-identical pairs (a d3 is the same file as a d6, a d20
+as a d8). Those pairs keep the labels their file names give. Notes from the labelling:
+
+- The four Sports colours hold the same 14 players.
+- Each Emotes style holds the same 30 emotes.
+- Style 8's `emote__` is an empty image.
+
+`props.library {query, category, pack}` now searches every index, and each item carries its pack. `here` is true
+when every pack asked for is unpacked here; `packs` gives the same per pack.
+
+`props.make {item, pack}` takes a label from any pack, or a number with a pack (a bare number still means Generic
+Items). `props.import_kenney {zip}` reads the pack from the zip's name (`kenney_<slug>.zip`, a browser's
+`(1)` suffix too). It checks the zip and every file against that pack's index, in the index's own folder.
+
+Test `kenneyprops` now covers all six indexes:
+
+- each is numbered 1..N, every item has a label, a category and a sha256, and the zip has a sha256;
+- the counts are 163, 255, 106, 69, 187 and 240;
+- every pack unpacked here matches its index file by file.
+
+Only Generic Items is unpacked in this container. The other five are checked file by file wherever they have been
+imported (the owner's machine).
+
 ## Open Peeps (WP-16)
 `cast.import_peeps` (with `"fetch": true` to download first; CC0, by Pablo Stanley) turns openpeeps.com's per-peep
 SVGs into one puppet. The site offers only finished peeps, not the parts kit, which is a Sketch or Figma file behind

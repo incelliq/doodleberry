@@ -1,0 +1,1816 @@
+{
+ "pack": "Kenney Board Game Icons",
+ "slug": "board-game-icons",
+ "license": "CC0-1.0",
+ "source_url": "https://kenney.nl/assets/board-game-icons",
+ "zip_sha256": "05f4358381d8b16b303b2f056393b76ce3f6a58228599e88caa2eab11d4c2946",
+ "folder": "PNG/Default (64px)",
+ "labelled": "by eye from the drawings, 5 Nov 2026 (on the owner's machine, from numbered contact sheets on light and dark grounds; 'unsure' marks those that could be something else)",
+ "items": [
+  {
+   "n": 1,
+   "label": "clockwise arrow",
+   "category": "arrows",
+   "file": "arrow_clockwise.png",
+   "sha256": "f5bb2399f1e87537e03f38f732786af5d8512fbf2e847075e37c81025a3a76ea"
+  },
+  {
+   "n": 2,
+   "label": "counter-clockwise arrow",
+   "category": "arrows",
+   "file": "arrow_counterclockwise.png",
+   "sha256": "b9eeaef1c13da76de40fc22b5df08003f65b82de2453a9d59c3dbf9999f98e43"
+  },
+  {
+   "n": 3,
+   "label": "four-way move arrow",
+   "category": "arrows",
+   "file": "arrow_cross.png",
+   "sha256": "c9660c4e306fe5448c706a5c577d6d5ff640943c5381844d2a1ce052f986ac72"
+  },
+  {
+   "n": 4,
+   "label": "four-way arrow with divider",
+   "category": "arrows",
+   "file": "arrow_cross_divided.png",
+   "sha256": "1e4426d25d40299f3c893094fe5534c24cb3be8af982607105b5bb9569ba9623"
+  },
+  {
+   "n": 5,
+   "label": "diagonal two-way arrow",
+   "category": "arrows",
+   "file": "arrow_diagonal.png",
+   "sha256": "d3adef671f089146ce61794749b20a9e29366e20ed6c984dcbbd356b952e565c"
+  },
+  {
+   "n": 6,
+   "label": "diagonal expand arrows",
+   "category": "arrows",
+   "file": "arrow_diagonal_cross.png",
+   "sha256": "883e3c95bb806a13c99ee2303302eef7c41c4cd74b53119d76a804016815afe7"
+  },
+  {
+   "n": 7,
+   "label": "diagonal expand arrows, divided",
+   "category": "arrows",
+   "file": "arrow_diagonal_cross_divided.png",
+   "sha256": "836546017e83160df9bd6972825bcc8aff43a13e4f6b11676e5d72d44c54a60e"
+  },
+  {
+   "n": 8,
+   "label": "horizontal two-way arrow",
+   "category": "arrows",
+   "file": "arrow_horizontal.png",
+   "sha256": "1ee1437a38d6dc9904ebe12c8608bc21373b52ebd0ec396d673103964a275d7a"
+  },
+  {
+   "n": 9,
+   "label": "swap arrows",
+   "category": "arrows",
+   "file": "arrow_reserve.png",
+   "sha256": "82f2f267a64e6041615539bcdd7e8becfef536968bc0dc98e40f45003dd834fb"
+  },
+  {
+   "n": 10,
+   "label": "right arrow",
+   "category": "arrows",
+   "file": "arrow_right.png",
+   "sha256": "b8b226be84eaf319c62529bc1137cc72a7b4058962fc965aef9e13ba1db79273"
+  },
+  {
+   "n": 11,
+   "label": "curved right arrow",
+   "category": "arrows",
+   "file": "arrow_right_curve.png",
+   "sha256": "45ce9c4804ddbddea523ac19e035ae5e7bd57151812a837a15d1cf3e3f57784b"
+  },
+  {
+   "n": 12,
+   "label": "rotate arrows",
+   "category": "arrows",
+   "file": "arrow_rotate.png",
+   "sha256": "19297a543ea87ef7917afd14d7461341827237e0af60c92d4bfa0c33a142e30e"
+  },
+  {
+   "n": 13,
+   "label": "laurel wreath",
+   "category": "awards",
+   "file": "award.png",
+   "sha256": "9993c300a733efc79895fc44505e51da7e6e3026bcf9344c2a06b83c58bb9bfd"
+  },
+  {
+   "n": 14,
+   "label": "closed book",
+   "category": "books",
+   "file": "book_closed.png",
+   "sha256": "e794bb51d6e652e9d78742bcdeedfa9d980875c10f550565bf1aa7789094e24f"
+  },
+  {
+   "n": 15,
+   "label": "open book",
+   "category": "books",
+   "file": "book_open.png",
+   "sha256": "e370a4e599fef6dac061f89282f457ea310c4d591edc0c1d1e59a330216eb8b7"
+  },
+  {
+   "n": 16,
+   "label": "bow and arrow",
+   "category": "weapons",
+   "file": "bow.png",
+   "sha256": "f543d61f915de5d8bc7dcccc56fc750d7ad33aee1b939f6b705ca7f7ad8797d4"
+  },
+  {
+   "n": 17,
+   "label": "campfire",
+   "category": "fire",
+   "file": "campfire.png",
+   "sha256": "28afaddf7e8242cec29818195d9e7ae0800e6dbc17c5b59d5aa6bc1dade552ff"
+  },
+  {
+   "n": 18,
+   "label": "playing card",
+   "category": "cards",
+   "file": "card.png",
+   "sha256": "e503116a6fc4d6d41d79c49e9ad041b6da65b50c8865cd46aa09fb1055cdecc1"
+  },
+  {
+   "n": 19,
+   "label": "card with plus",
+   "category": "cards",
+   "file": "card_add.png",
+   "sha256": "dc0c9d0ddee7330635107e5ba604fc4db7aeede47d08c2eb06c45007290e8b87"
+  },
+  {
+   "n": 20,
+   "label": "tilted card outline",
+   "category": "cards",
+   "file": "card_diagonal.png",
+   "sha256": "9b0c5f0c73b0f3acb54df75528d7b5091b8cda2fe949feae39f6d77aa78515d7"
+  },
+  {
+   "n": 21,
+   "label": "card lying flat",
+   "category": "cards",
+   "file": "card_down.png",
+   "sha256": "1a2672c23ab2b0515a544d0443f63a5d7bdf15c89e1ef9d3edaf9d0cad5a8ecc"
+  },
+  {
+   "n": 22,
+   "label": "card lying flat, outline",
+   "category": "cards",
+   "file": "card_down_outline.png",
+   "sha256": "aff03f9930c8f2b36d464ef0b3839004f739e28e18ddf056449bc9565f4e9a8b"
+  },
+  {
+   "n": 23,
+   "label": "flip card",
+   "category": "cards",
+   "file": "card_flip.png",
+   "sha256": "5543c0de48ffd3dc43fe35500974340dfcdb51882c9603746868915af4d5136e"
+  },
+  {
+   "n": 24,
+   "label": "flip cards both ways",
+   "category": "cards",
+   "file": "card_flipdouble.png",
+   "sha256": "25924b77ae123658ad304b8f3ed2f782919ae3e81c57db3729d0f79f8ff5951c"
+  },
+  {
+   "n": 25,
+   "label": "lift card from table",
+   "category": "cards",
+   "file": "card_lift.png",
+   "sha256": "635252328df93354b1c55582e425b152e26526248db1b952ac1abe46021c53f2"
+  },
+  {
+   "n": 26,
+   "label": "card outline",
+   "category": "cards",
+   "file": "card_outline.png",
+   "sha256": "b1253edbe8ccac5c1197794b58803328caa1f4ff6781b94bde8dea8f1a8c14d0"
+  },
+  {
+   "n": 27,
+   "label": "lift card from table, outline",
+   "category": "cards",
+   "file": "card_outline_lift.png",
+   "sha256": "52e5268b2e70f6a92d496519388aaba4befe2543c65ccb2f24d2dea6d781960c"
+  },
+  {
+   "n": 28,
+   "label": "place card on table, outline",
+   "category": "cards",
+   "file": "card_outline_place.png",
+   "sha256": "4062336b877db1bcf9cdd3577e02d7c7189f5eabe0bc72813b8f67e4faf022dc"
+  },
+  {
+   "n": 29,
+   "label": "card outline with cross",
+   "category": "cards",
+   "file": "card_outline_remove.png",
+   "sha256": "874fea657bd46a2c49027974b8bf5d1bac76c204ed4623589f97a9533ac8abec"
+  },
+  {
+   "n": 30,
+   "label": "place card on table",
+   "category": "cards",
+   "file": "card_place.png",
+   "sha256": "9ead38cf6ee55fabdc1003aa730d03b9a94c6e14d0ae10c4c377970c20666aad"
+  },
+  {
+   "n": 31,
+   "label": "tilted card with cross",
+   "category": "cards",
+   "file": "card_remove.png",
+   "sha256": "0fce815431e987c244c8e0a50169125e7e0e3a53e6596d8e49d252cfb4a380d7"
+  },
+  {
+   "n": 32,
+   "label": "rotate card",
+   "category": "cards",
+   "file": "card_rotate.png",
+   "sha256": "370bb5d760db113d5d75fd1600de2c10b7592f86ce2cb0cfb1096aa41d643918"
+  },
+  {
+   "n": 33,
+   "label": "card with minus",
+   "category": "cards",
+   "file": "card_subtract.png",
+   "sha256": "5b9ce00d864bb2a47ab3375dca83b2f5370456f3c73a2e6ccc316793d735f2f7"
+  },
+  {
+   "n": 34,
+   "label": "tapped card",
+   "category": "cards",
+   "file": "card_tap.png",
+   "sha256": "0074d329973f047c6ba0821d87770e61fb17e98b42754f498577740a290490de"
+  },
+  {
+   "n": 35,
+   "label": "tap card down",
+   "category": "cards",
+   "file": "card_tap_down.png",
+   "sha256": "1ebc01d0ad597d658b5b9a9dd864938a8224e1fd523dc7db1456ef745a286ff1"
+  },
+  {
+   "n": 36,
+   "label": "tap card, dashed outline",
+   "category": "cards",
+   "file": "card_tap_outline.png",
+   "sha256": "6429c8cc408ed3ac3a03b9e82d85e4d1f9ebc29b9464bb5e24f03272c16db090"
+  },
+  {
+   "n": 37,
+   "label": "tap card down, dashed outline",
+   "category": "cards",
+   "file": "card_tap_outline_down.png",
+   "sha256": "dbecd4ce9e1030016cb3aeb13d92cf53dc78534bab322701738bdd0d14ddb3ed"
+  },
+  {
+   "n": 38,
+   "label": "tap card up, dashed outline",
+   "category": "cards",
+   "file": "card_tap_outline_up.png",
+   "sha256": "c84e9bdf754ef06775eddabbb6bf1306650f947636836ab4e046b5e244fbe36d"
+  },
+  {
+   "n": 39,
+   "label": "tap card up",
+   "category": "cards",
+   "file": "card_tap_up.png",
+   "sha256": "8f6713d8c80d9ce0869fa8af336409e86445eac7083c1908cf4d84c2f41f3126"
+  },
+  {
+   "n": 40,
+   "label": "card target frame",
+   "category": "cards",
+   "file": "card_target.png",
+   "sha256": "51c87ce3cc4e23f411ab0ac64f42d3ddd9ec2befd11d220e5a5438e07da25686"
+  },
+  {
+   "n": 41,
+   "label": "card collection",
+   "category": "cards",
+   "file": "cards_collection.png",
+   "sha256": "d03d1b7735195faea67404f3ffa3f8fb30dc2fa51abe3f99ae9346be203d7685"
+  },
+  {
+   "n": 42,
+   "label": "card collection, outline",
+   "category": "cards",
+   "file": "cards_collection_outline.png",
+   "sha256": "038193ad0b5586282033e8441de4984bc02c6915034ad60beacc6054966029eb"
+  },
+  {
+   "n": 43,
+   "label": "two tilted cards",
+   "category": "cards",
+   "file": "cards_diagonal.png",
+   "sha256": "76827f9570c167bd08a525ca1a96ab7ef3c2551daed100dd37f123997feabf6a"
+  },
+  {
+   "n": 44,
+   "label": "fan of two cards",
+   "category": "cards",
+   "file": "cards_fan.png",
+   "sha256": "0acdaeddf4e57648ec1b6fc84bae1cf1acce0a6d71f8b8f5dae687776bed2495"
+  },
+  {
+   "n": 45,
+   "label": "fan of two cards, outline",
+   "category": "cards",
+   "file": "cards_fan_outline.png",
+   "sha256": "0e1af75a17caa2926ad5e01d99273994c74409d642cceb997eb3836cba7952be"
+  },
+  {
+   "n": 46,
+   "label": "swap two cards",
+   "category": "cards",
+   "file": "cards_flip.png",
+   "sha256": "dac77e3ad1b15c1d8dacaa2556ae07c9a73abe23905e2084e4a22c38743dedf6"
+  },
+  {
+   "n": 47,
+   "label": "card with return arrow",
+   "category": "cards",
+   "file": "cards_order.png",
+   "sha256": "58aeea8e4a9a6d33e7a119b79ada7a76c1950c8ce60dad9d64f57152c0ab9677"
+  },
+  {
+   "n": 48,
+   "label": "return card to tray",
+   "category": "cards",
+   "file": "cards_return.png",
+   "sha256": "f8d8d006741769ee5e8292bdbb4df0b3340ab1af0cc1a52e1bc29469598aa48b"
+  },
+  {
+   "n": 49,
+   "label": "peek at deck",
+   "category": "cards",
+   "file": "cards_seek.png",
+   "sha256": "a3d5cd52369114427c268cf24534ba044512083a7fcf4dc0cd5fbdc29e075d67"
+  },
+  {
+   "n": 50,
+   "label": "peek at top card",
+   "category": "cards",
+   "file": "cards_seek_top.png",
+   "sha256": "dd19430e8847a7f74f72b2ff6797df807b8364201087a72fadb02fce330d7d1c"
+  },
+  {
+   "n": 51,
+   "label": "shift deck",
+   "category": "cards",
+   "file": "cards_shift.png",
+   "sha256": "c16daa8148802040c45fb0ec8502c7f9f4254115885d58b4f41f82d436e2905a"
+  },
+  {
+   "n": 52,
+   "label": "shuffle cards",
+   "category": "cards",
+   "file": "cards_shuffle.png",
+   "sha256": "a5f95767018db2d4361d8a8cc7542c6909a1c8340bcfaf971d9732df1bb86f66"
+  },
+  {
+   "n": 53,
+   "label": "deck with skull",
+   "category": "cards",
+   "file": "cards_skull.png",
+   "sha256": "a9166f60fd324c530b6aa984943e50a4008c6758a520b5e53a07b05d0612cc89"
+  },
+  {
+   "n": 54,
+   "label": "card stack",
+   "category": "cards",
+   "file": "cards_stack.png",
+   "sha256": "4819d7350c1b3f55ff5eeff1a8c24406b16fde5b32d9393713442ceca2f923f3"
+  },
+  {
+   "n": 55,
+   "label": "card stack with cross",
+   "category": "cards",
+   "file": "cards_stack_cross.png",
+   "sha256": "8dd9b766aa49bbdf503db969a6361ce408561d999647a9739bee6c354ce79944"
+  },
+  {
+   "n": 56,
+   "label": "tall card stack",
+   "category": "cards",
+   "file": "cards_stack_high.png",
+   "sha256": "6dc611a928f4bb6722aec7c6f99e4fd8010c497efa03a16b68d68076f53d9cbf"
+  },
+  {
+   "n": 57,
+   "label": "take card from deck",
+   "category": "cards",
+   "file": "cards_take.png",
+   "sha256": "ad9e42ab287d0cf14eef04ea2155b470456646d7b386098adaac83142b5b49a6"
+  },
+  {
+   "n": 58,
+   "label": "card under deck",
+   "category": "cards",
+   "file": "cards_under.png",
+   "sha256": "02c37a45db10707f95022461b27e8bf7ef67132fd6e2d1d496a11b31f29c5c35"
+  },
+  {
+   "n": 59,
+   "label": "meeple",
+   "category": "pieces",
+   "file": "character.png",
+   "sha256": "2141ff7fa296511d53f22f960fd9446f4744cdee8efeea1d94c2f8855a654c9d"
+  },
+  {
+   "n": 60,
+   "label": "lift game piece",
+   "category": "pieces",
+   "file": "character_lift.png",
+   "sha256": "ba54b3fa04cc1ff483057a84da85291b02791fe32be82d89184a4f0ef2b0f5a7",
+   "unsure": true
+  },
+  {
+   "n": 61,
+   "label": "place game piece",
+   "category": "pieces",
+   "file": "character_place.png",
+   "sha256": "1bb0e938754f7f28f869005c12ba1e0ee83e6a02e0656ebcb01e1c236d7a2753",
+   "unsure": true
+  },
+  {
+   "n": 62,
+   "label": "meeple with cross",
+   "category": "pieces",
+   "file": "character_remove.png",
+   "sha256": "bb41f96271d8b72669bd2e95b1c65fa706b03089376e3c98ca7628db90b34e36"
+  },
+  {
+   "n": 63,
+   "label": "chess bishop",
+   "category": "chess",
+   "file": "chess_bishop.png",
+   "sha256": "75e26729e20d7cafd978c6ca88c6ef3e21ec33146b11e1de1c6be61dde0e85bd"
+  },
+  {
+   "n": 64,
+   "label": "chess king",
+   "category": "chess",
+   "file": "chess_king.png",
+   "sha256": "5a3d0c73617cbca692336071e3188729b6ec00228702485433f630587d63b269"
+  },
+  {
+   "n": 65,
+   "label": "chess knight",
+   "category": "chess",
+   "file": "chess_knight.png",
+   "sha256": "dce54729bbad7fa259110ebde1b11b245dd17730d3671aa8717235c7d394075e"
+  },
+  {
+   "n": 66,
+   "label": "chess pawn",
+   "category": "chess",
+   "file": "chess_pawn.png",
+   "sha256": "1d34c11882bd1fb7da9586d4a547df56e15767fbd9f51f90b00bf7d2dca7bd1a"
+  },
+  {
+   "n": 67,
+   "label": "chess queen",
+   "category": "chess",
+   "file": "chess_queen.png",
+   "sha256": "d2f669c2014da73c110c65337f18f5f3cc6d5436360121600373fce87260efd7"
+  },
+  {
+   "n": 68,
+   "label": "chess rook",
+   "category": "chess",
+   "file": "chess_rook.png",
+   "sha256": "8e4357d4ec3a5ae4357d8d8cfb3ebf0edff4e0d7db65595bb87e7dad7e5ed7e8"
+  },
+  {
+   "n": 69,
+   "label": "crown",
+   "category": "crowns",
+   "file": "crown_a.png",
+   "sha256": "471bc3b1948d6a72ef272fa82ecb9e53a6728d57fb48029599f44be5226ac0ba"
+  },
+  {
+   "n": 70,
+   "label": "ornate crown",
+   "category": "crowns",
+   "file": "crown_b.png",
+   "sha256": "cca78d16e8c7ff0eb70357d7ab0c5b683de6aab7b5395f3395084d8f08ff991b"
+  },
+  {
+   "n": 71,
+   "label": "ten-sided die",
+   "category": "dice",
+   "file": "d10.png",
+   "sha256": "376d4f70303b9326b130517407b6ad4cda7c151ddbf1f4b9c5b71b739dc2003a"
+  },
+  {
+   "n": 72,
+   "label": "ten-sided die, labelled D10",
+   "category": "dice",
+   "file": "d10_number.png",
+   "sha256": "c6a577fc5903866410bd581223b0a93eb80b4008822dc8879917f28f3b0823c8"
+  },
+  {
+   "n": 73,
+   "label": "ten-sided die, outline",
+   "category": "dice",
+   "file": "d10_outline.png",
+   "sha256": "e6ab37daba84009f6ed1c9b0375a78c8d5cac1eadb3e16810fe1a3d36502ae87"
+  },
+  {
+   "n": 74,
+   "label": "ten-sided die outline, labelled D10",
+   "category": "dice",
+   "file": "d10_outline_number.png",
+   "sha256": "4e03afae992d81932a48389a2bd855b92e535f25de6c1debad4ed1507f4cb4b8"
+  },
+  {
+   "n": 75,
+   "label": "twelve-sided die",
+   "category": "dice",
+   "file": "d12.png",
+   "sha256": "fcd74648a9c40472e0cd9157e716e71f6acd9a650dfa6d397ddde29be3b6ee6b"
+  },
+  {
+   "n": 76,
+   "label": "twelve-sided die, labelled D12",
+   "category": "dice",
+   "file": "d12_number.png",
+   "sha256": "cbb30fab4d0a185114db0262ae8947b62a307d98e1dac0ebc6aa4853e1ad06c0"
+  },
+  {
+   "n": 77,
+   "label": "twelve-sided die, outline",
+   "category": "dice",
+   "file": "d12_outline.png",
+   "sha256": "5e0f03bd9f5576e4eb2d8bacb33c552f95d583cc75f97725d68400d35dfa2d45"
+  },
+  {
+   "n": 78,
+   "label": "twelve-sided die outline, labelled D12",
+   "category": "dice",
+   "file": "d12_outline_number.png",
+   "sha256": "49762e744c84fde1958b527256b08d0d88ee9bd4340761ab5209d99127ddc598"
+  },
+  {
+   "n": 79,
+   "label": "two-sided die (coin)",
+   "category": "dice",
+   "file": "d2.png",
+   "sha256": "88b030066b7478056a0684316143d8db86f2fec9734f1560b4d46f9151e7b094",
+   "unsure": true
+  },
+  {
+   "n": 80,
+   "label": "twenty-sided die",
+   "category": "dice",
+   "file": "d20.png",
+   "sha256": "53e06319b520b28bd0ec679c23cb816da33cbd223dce0ca4a6b92c9eb5076e29",
+   "unsure": true
+  },
+  {
+   "n": 81,
+   "label": "twenty-sided die, labelled D20",
+   "category": "dice",
+   "file": "d20_number.png",
+   "sha256": "f1c5b9b32ef88b5f141893c83144444754a977e4fd93693a246361e5c7f15b03"
+  },
+  {
+   "n": 82,
+   "label": "twenty-sided die, outline",
+   "category": "dice",
+   "file": "d20_outline.png",
+   "sha256": "d7773a76ff3d7ae2864850c93dd212bd83e435426235364b47cd6610b2155a3c",
+   "unsure": true
+  },
+  {
+   "n": 83,
+   "label": "twenty-sided die outline, labelled D20",
+   "category": "dice",
+   "file": "d20_outline_number.png",
+   "sha256": "fc358552f6c4f9fbb38cc1cf0c8bd09094451b89097018df218157021119e6dc"
+  },
+  {
+   "n": 84,
+   "label": "two-sided die, labelled D2",
+   "category": "dice",
+   "file": "d2_number.png",
+   "sha256": "bd4ec8140365070a7882480e82c08d7df46ce982a1496eeb4d4a1772c3caf13f"
+  },
+  {
+   "n": 85,
+   "label": "two-sided die, outline",
+   "category": "dice",
+   "file": "d2_outline.png",
+   "sha256": "2c199a08ec6ca811ae4a11b654032ede08af1ac5a4eaa903f57c765495513863",
+   "unsure": true
+  },
+  {
+   "n": 86,
+   "label": "two-sided die outline, labelled D2",
+   "category": "dice",
+   "file": "d2_outline_number.png",
+   "sha256": "e56e3892638712275ea22231c018ed993008e691b03b2e0a11cdf1b2338a820d"
+  },
+  {
+   "n": 87,
+   "label": "three-sided die",
+   "category": "dice",
+   "file": "d3.png",
+   "sha256": "6b092301978c768ca80cb87d43db5a99b886c5134cf944ac5ded52aa5a212fe9",
+   "unsure": true
+  },
+  {
+   "n": 88,
+   "label": "three-sided die, labelled D3",
+   "category": "dice",
+   "file": "d3_number.png",
+   "sha256": "ad7e35dee1302d2cdedc2afeff4f5fa364cfe6c64b69cdbdb1ef682ffc93605a"
+  },
+  {
+   "n": 89,
+   "label": "three-sided die, outline",
+   "category": "dice",
+   "file": "d3_outline.png",
+   "sha256": "d0d0c9c50c75852041e70f80e9f394fd2bbfc0be3ef98896dd7f96ad6ce238da",
+   "unsure": true
+  },
+  {
+   "n": 90,
+   "label": "three-sided die outline, labelled D3",
+   "category": "dice",
+   "file": "d3_outline_number.png",
+   "sha256": "195e3250ccb710c5c4564e797ffb6ab100a9b96d6d182c35d7100455e8d496ff"
+  },
+  {
+   "n": 91,
+   "label": "four-sided die",
+   "category": "dice",
+   "file": "d4.png",
+   "sha256": "0df37b252bc7325c1f7e2e93d06be435ac40d8d3b34251b924ef2d8cca5b4269"
+  },
+  {
+   "n": 92,
+   "label": "four-sided die, labelled D4",
+   "category": "dice",
+   "file": "d4_number.png",
+   "sha256": "8693ce3733d25ddd58421d127147c71216968ba5034ec94fae6cefb05b905125"
+  },
+  {
+   "n": 93,
+   "label": "four-sided die, outline",
+   "category": "dice",
+   "file": "d4_outline.png",
+   "sha256": "9d5b7631d6640587eb17b7fe75d6f4a43770a7bcdbe87088b0ae1ab26ee2ce47"
+  },
+  {
+   "n": 94,
+   "label": "four-sided die outline, labelled D4",
+   "category": "dice",
+   "file": "d4_outline_number.png",
+   "sha256": "b6ebd0e295febe6f89f7a7d81af46156fd5e1ceae5e18c39a6b775c3d60279c7"
+  },
+  {
+   "n": 95,
+   "label": "six-sided die",
+   "category": "dice",
+   "file": "d6.png",
+   "sha256": "6b092301978c768ca80cb87d43db5a99b886c5134cf944ac5ded52aa5a212fe9",
+   "unsure": true
+  },
+  {
+   "n": 96,
+   "label": "six-sided die, labelled D6",
+   "category": "dice",
+   "file": "d6_number.png",
+   "sha256": "35679599bbd2a3ed47f99301b609a94f0ed7910f910b1d6983760da7d7759786"
+  },
+  {
+   "n": 97,
+   "label": "six-sided die, outline",
+   "category": "dice",
+   "file": "d6_outline.png",
+   "sha256": "d0d0c9c50c75852041e70f80e9f394fd2bbfc0be3ef98896dd7f96ad6ce238da",
+   "unsure": true
+  },
+  {
+   "n": 98,
+   "label": "six-sided die outline, labelled D6",
+   "category": "dice",
+   "file": "d6_outline_number.png",
+   "sha256": "96c73e5330d15fa75755b75d99efd0a2e3bb42adeda172c35bd1dc6d93bfd1d3"
+  },
+  {
+   "n": 99,
+   "label": "eight-sided die",
+   "category": "dice",
+   "file": "d8.png",
+   "sha256": "53e06319b520b28bd0ec679c23cb816da33cbd223dce0ca4a6b92c9eb5076e29",
+   "unsure": true
+  },
+  {
+   "n": 100,
+   "label": "eight-sided die, labelled D8",
+   "category": "dice",
+   "file": "d8_number.png",
+   "sha256": "5844c4d0c93cb4bc0c220b5f8b91b807efd7512a366c5f32d07b2450facb64cc"
+  },
+  {
+   "n": 101,
+   "label": "eight-sided die, outline",
+   "category": "dice",
+   "file": "d8_outline.png",
+   "sha256": "d7773a76ff3d7ae2864850c93dd212bd83e435426235364b47cd6610b2155a3c",
+   "unsure": true
+  },
+  {
+   "n": 102,
+   "label": "eight-sided die outline, labelled D8",
+   "category": "dice",
+   "file": "d8_outline_number.png",
+   "sha256": "5cb4ec4d2d7dd45bd68aa8a78a2a2d9fe38ddb2d156df0ac4bb1a87b0dca485d"
+  },
+  {
+   "n": 103,
+   "label": "pair of blank dice",
+   "category": "dice",
+   "file": "dice.png",
+   "sha256": "49dab68a4d0f600715a836a9960e32da6f949e215f884da2cb233abd2cbb6719"
+  },
+  {
+   "n": 104,
+   "label": "die face one",
+   "category": "dice",
+   "file": "dice_1.png",
+   "sha256": "adc7d94160c0a88c566534743216d37a51f2393cbd8f3cba036b04b973e88254"
+  },
+  {
+   "n": 105,
+   "label": "die face two",
+   "category": "dice",
+   "file": "dice_2.png",
+   "sha256": "a4063a192b0cf8af404d2f5365f7d7ae983195602df88beb9f73cb98de6ecddd"
+  },
+  {
+   "n": 106,
+   "label": "die face three",
+   "category": "dice",
+   "file": "dice_3.png",
+   "sha256": "9e9d333fce2213414a3a9603aff39dc9fa6a70a6d08d97d2d66a0dfe2bf779f2"
+  },
+  {
+   "n": 107,
+   "label": "pair of 3D dice, blank",
+   "category": "dice",
+   "file": "dice_3D.png",
+   "sha256": "857521bb0a6f42307943b760d40bcf6e97ea88605d5d5df90ec8aee9571e6b13"
+  },
+  {
+   "n": 108,
+   "label": "pair of 3D dice with pips",
+   "category": "dice",
+   "file": "dice_3D_detailed.png",
+   "sha256": "7927911a8db44dbd93df6556fd78e4e82ef5a17edee792dee3c0f3cf6a785b4f"
+  },
+  {
+   "n": 109,
+   "label": "die face four",
+   "category": "dice",
+   "file": "dice_4.png",
+   "sha256": "07610cfef9ce00bb284c277623a0c42c0291538da539163851bfed1430c5b438"
+  },
+  {
+   "n": 110,
+   "label": "die face five",
+   "category": "dice",
+   "file": "dice_5.png",
+   "sha256": "07a5b7baeda27fe7ab2031777c9c087012174d0a447859a2e7fb01d39bc54fd8"
+  },
+  {
+   "n": 111,
+   "label": "die face six",
+   "category": "dice",
+   "file": "dice_6.png",
+   "sha256": "f97d196a78f02303f9299346d99b19f6a2579431e39c581570d305eb67749f97"
+  },
+  {
+   "n": 112,
+   "label": "die top seen close up",
+   "category": "dice",
+   "file": "dice_close.png",
+   "sha256": "3d582720e0bfa56a8408e24866f1f75ab1c565cd332e2f035049250dc1d43375",
+   "unsure": true
+  },
+  {
+   "n": 113,
+   "label": "pair of dice with pips",
+   "category": "dice",
+   "file": "dice_detailed.png",
+   "sha256": "99a4d84ad444ccf54fd3f85b8aa0e55c36c294b80c0e359c6625601dbf8ae06e"
+  },
+  {
+   "n": 114,
+   "label": "blank die face",
+   "category": "dice",
+   "file": "dice_empty.png",
+   "sha256": "d464e0b82b25f02d6acfd7967e9997f2566541d08c05aba6df610ab883095ad9"
+  },
+  {
+   "n": 115,
+   "label": "die rolling out",
+   "category": "dice",
+   "file": "dice_out.png",
+   "sha256": "6b98da2348e29aec45788cc20d128e7765324e24ad15b001641841c9f469332f"
+  },
+  {
+   "n": 116,
+   "label": "die with question mark",
+   "category": "dice",
+   "file": "dice_question.png",
+   "sha256": "043c86c8a527da2faf758f467bef5734c509f5cbc50c9d44ca762608cf3557c4"
+  },
+  {
+   "n": 117,
+   "label": "die with shield",
+   "category": "dice",
+   "file": "dice_shield.png",
+   "sha256": "643d5d5119eec64f10db4a1f369e912d4bb1465abef4a604dedd99d4850eb8fe"
+  },
+  {
+   "n": 118,
+   "label": "die with skull",
+   "category": "dice",
+   "file": "dice_skull.png",
+   "sha256": "70502fe06c8430c1e2e80829cd0b3d409148f98df49e7aedda55304900d35657"
+  },
+  {
+   "n": 119,
+   "label": "die with sword",
+   "category": "dice",
+   "file": "dice_sword.png",
+   "sha256": "8a117089515f2413e8a4b8c2898b6322816a487f72d78631b256475c153717f5"
+  },
+  {
+   "n": 120,
+   "label": "east arrow",
+   "category": "directions",
+   "file": "direction_e.png",
+   "sha256": "c36bee334ce3547e1de3fb5f7f16d95a55f8a9629a879750edc0c55b245107e8"
+  },
+  {
+   "n": 121,
+   "label": "north arrow",
+   "category": "directions",
+   "file": "direction_n.png",
+   "sha256": "ec2ea1907eebfec4f7d95bfa3c56fbb97a536aa7ae93ac628a4a9edf9a830285"
+  },
+  {
+   "n": 122,
+   "label": "south arrow",
+   "category": "directions",
+   "file": "direction_s.png",
+   "sha256": "baaf0f135ee438a08ac1e9989f37be8a787c7812653451c7a16db59c73af8730"
+  },
+  {
+   "n": 123,
+   "label": "west arrow",
+   "category": "directions",
+   "file": "direction_w.png",
+   "sha256": "69cc3699bda44127943a08a7fd691243cfcee8f6602ff60178f5d740d750a714"
+  },
+  {
+   "n": 124,
+   "label": "dollar sign",
+   "category": "money",
+   "file": "dollar.png",
+   "sha256": "f9a5639524eba39ecd17e13c7482c261a4e4debda62494386f3c9cf44b94b18a"
+  },
+  {
+   "n": 125,
+   "label": "starburst (exploding die)",
+   "category": "dice",
+   "file": "exploding.png",
+   "sha256": "d81629106784a945be5e89dec8f58c1929f99b1badea740fd661fd7f765a5cb9",
+   "unsure": true
+  },
+  {
+   "n": 126,
+   "label": "starburst with six (exploding six)",
+   "category": "dice",
+   "file": "exploding_6.png",
+   "sha256": "ff6ebebc2009f70f823e7c6c4bb25ad660b5501f61b87188c89a234bc42d97db"
+  },
+  {
+   "n": 127,
+   "label": "flame",
+   "category": "fire",
+   "file": "fire.png",
+   "sha256": "abb008c210b9bb81f41307550fa7b1a67808b512984a81dacab5eaa217b915ba"
+  },
+  {
+   "n": 128,
+   "label": "square flag",
+   "category": "flags",
+   "file": "flag_square.png",
+   "sha256": "2b574ff544a5afd848d7c7872c7a5e553675447056a1e545d222afaf4e6ab956"
+  },
+  {
+   "n": 129,
+   "label": "pennant flag",
+   "category": "flags",
+   "file": "flag_triangle.png",
+   "sha256": "87dedf6f5667daefcc5dc41df9c089fa6bae26411026052bf38e35a197718a3c"
+  },
+  {
+   "n": 130,
+   "label": "empty flask",
+   "category": "flasks",
+   "file": "flask_empty.png",
+   "sha256": "74e2a82df1e09889bfd5fb09a77b29cf06a8e5d85da6f388f14bc37cdc013733"
+  },
+  {
+   "n": 131,
+   "label": "full flask",
+   "category": "flasks",
+   "file": "flask_full.png",
+   "sha256": "cf22df3e9621a298005c9cb6105bcb22470528e8b9aab47c55ea4b07fd2ceaf6"
+  },
+  {
+   "n": 132,
+   "label": "half-full flask",
+   "category": "flasks",
+   "file": "flask_half.png",
+   "sha256": "5ad54d57f5bb9dae719b1b9c4ee3fd93e9b297f2987d020011137a4380b46e31"
+  },
+  {
+   "n": 133,
+   "label": "empty round marker",
+   "category": "markers",
+   "file": "flip_empty.png",
+   "sha256": "2c199a08ec6ca811ae4a11b654032ede08af1ac5a4eaa903f57c765495513863",
+   "unsure": true
+  },
+  {
+   "n": 134,
+   "label": "full round marker",
+   "category": "markers",
+   "file": "flip_full.png",
+   "sha256": "88b030066b7478056a0684316143d8db86f2fec9734f1560b4d46f9151e7b094",
+   "unsure": true
+  },
+  {
+   "n": 135,
+   "label": "half-filled round marker",
+   "category": "markers",
+   "file": "flip_half.png",
+   "sha256": "7a5ec2c6bb339bddc04cd7d72bab7d27a46a1abafa57b982540f807f0cfe7414"
+  },
+  {
+   "n": 136,
+   "label": "round marker with check",
+   "category": "markers",
+   "file": "flip_head.png",
+   "sha256": "b7890c2fdce6e02e78555c1ae14e04b29648e732fdabc797977de39e12c2a811"
+  },
+  {
+   "n": 137,
+   "label": "round marker with cross",
+   "category": "markers",
+   "file": "flip_tails.png",
+   "sha256": "91bacbc368d5ec93879af683fec2dc926c54a2d287dfa6a02858d366b1fa70b2"
+  },
+  {
+   "n": 138,
+   "label": "open hand",
+   "category": "hands",
+   "file": "hand.png",
+   "sha256": "177daf732b80a60d4f3b6ae8f59b87e3139a194d97607393847412c7a22afd2c"
+  },
+  {
+   "n": 139,
+   "label": "hand holding card",
+   "category": "hands",
+   "file": "hand_card.png",
+   "sha256": "dc67315560d79feb96c94a48d1d1f0b4876a338e994f23b34767325ff7e533c0"
+  },
+  {
+   "n": 140,
+   "label": "hand with cross",
+   "category": "hands",
+   "file": "hand_cross.png",
+   "sha256": "bfc5ba9c68429e31e87f59f52d0d8c219f8aee4060c5e8a7e9719a1d3418a7b4"
+  },
+  {
+   "n": 141,
+   "label": "hand holding cube",
+   "category": "hands",
+   "file": "hand_cube.png",
+   "sha256": "56be5b26d8d3a32a458072dbe00993f1e01971a0317267ec482b5c65d78df7ee"
+  },
+  {
+   "n": 142,
+   "label": "hand holding hexagon",
+   "category": "hands",
+   "file": "hand_hexagon.png",
+   "sha256": "4deddeb773105465de9028aa77a8fb02410e085f63fd9515ab8d4595b04fb372"
+  },
+  {
+   "n": 143,
+   "label": "hand holding token",
+   "category": "hands",
+   "file": "hand_token.png",
+   "sha256": "43b08c850cefedae6c154785dd6ae3b6c078937148af8a0f5ef21c9527e7f49f"
+  },
+  {
+   "n": 144,
+   "label": "hand holding ring token",
+   "category": "hands",
+   "file": "hand_token_open.png",
+   "sha256": "3288d0260ebc9ab6d3b75ebfaf819acd3d8b63b6270e60fefc0b07545c124a24"
+  },
+  {
+   "n": 145,
+   "label": "hexagon",
+   "category": "shapes",
+   "file": "hexagon.png",
+   "sha256": "c0768b651f0eac8c38f57e6c45e79ed625343ba7d64070d696f0b4beba4a11de"
+  },
+  {
+   "n": 146,
+   "label": "arrow into hexagon",
+   "category": "shapes",
+   "file": "hexagon_in.png",
+   "sha256": "05d7b6c9aa7d23eb68cf25a8dd25596a17af8d704ff38ddcd84bd415a3c33eee"
+  },
+  {
+   "n": 147,
+   "label": "arrow out of hexagon",
+   "category": "shapes",
+   "file": "hexagon_out.png",
+   "sha256": "48bd6b9c173992c2342540542186fe6d776febd7839c621550dfabc6d71cdc86"
+  },
+  {
+   "n": 148,
+   "label": "hexagon outline",
+   "category": "shapes",
+   "file": "hexagon_outline.png",
+   "sha256": "c3b75ca1d3d6eb937f82263d680e412753d34bed7590bd3ed8b12c68c29ff128"
+  },
+  {
+   "n": 149,
+   "label": "hexagon with question mark",
+   "category": "shapes",
+   "file": "hexagon_question.png",
+   "sha256": "ffb7ef4a0d17931ece5021816b8a5c19f421ce5a306bfa1b419a832d6b0d1bb1"
+  },
+  {
+   "n": 150,
+   "label": "swap hexagons",
+   "category": "shapes",
+   "file": "hexagon_switch.png",
+   "sha256": "a5a17aa37f7a22d71f20c721ebce116f6a3aebd593f2ede150ac56cb90121331"
+  },
+  {
+   "n": 151,
+   "label": "thick hexagon tile",
+   "category": "shapes",
+   "file": "hexagon_tile.png",
+   "sha256": "4883561f906bfa639066f4581987e0eeb74f5f564c4338cae70710dbb74e65d6"
+  },
+  {
+   "n": 152,
+   "label": "hourglass",
+   "category": "timers",
+   "file": "hourglass.png",
+   "sha256": "5cda84a0007be4653198abde3ab18646fcdbec0425ad4fb0fa0454d5e9059821"
+  },
+  {
+   "n": 153,
+   "label": "hourglass, sand at bottom",
+   "category": "timers",
+   "file": "hourglass_bottom.png",
+   "sha256": "c358199780b03c2b12d083db8299c430d9c1bc420627f1b8dbd602866113d722"
+  },
+  {
+   "n": 154,
+   "label": "hourglass, sand at top",
+   "category": "timers",
+   "file": "hourglass_top.png",
+   "sha256": "d126dc383d603b93b39941a64acbc353344eb4855e863b687103c105bbe0ab7c"
+  },
+  {
+   "n": 155,
+   "label": "closed padlock",
+   "category": "locks",
+   "file": "lock_closed.png",
+   "sha256": "4f86100f2d4db8cfeb7162c1ad050ed91d70bea3eb44953678f17f029d462f7a"
+  },
+  {
+   "n": 156,
+   "label": "open padlock",
+   "category": "locks",
+   "file": "lock_open.png",
+   "sha256": "e9d0d3081a7918eb0f4224585c78a648f3b5407bd43addb5b702da00f671eb2e"
+  },
+  {
+   "n": 157,
+   "label": "notepad with pencil",
+   "category": "notes",
+   "file": "notepad.png",
+   "sha256": "31fd9129829a4a9efa8ded87319ec97b712f76434a8d5e178962dc8de5cd992f"
+  },
+  {
+   "n": 158,
+   "label": "writing on notepad",
+   "category": "notes",
+   "file": "notepad_write.png",
+   "sha256": "2050f34e6e50490959f52503f3dfa727cff9e1543c803e4ffe52bdc3574a94f8"
+  },
+  {
+   "n": 159,
+   "label": "pawn",
+   "category": "pieces",
+   "file": "pawn.png",
+   "sha256": "861044c9a920b07376d8dc58f49415e54c79164d5d3a0d4bb8c0ef34ac9514e7"
+  },
+  {
+   "n": 160,
+   "label": "swap pawns clockwise",
+   "category": "pieces",
+   "file": "pawn_clockwise.png",
+   "sha256": "b0fbafcf7e78f0f5e8f6e0473789e3e13258b8ae734bfd52887790e5ba73d29b"
+  },
+  {
+   "n": 161,
+   "label": "swap pawns counter-clockwise",
+   "category": "pieces",
+   "file": "pawn_counterclockwise.png",
+   "sha256": "72290db2c2c87a37c002d05c24b79d3f26d38781e498f9b883add4738719b78f"
+  },
+  {
+   "n": 162,
+   "label": "pawn moving down",
+   "category": "pieces",
+   "file": "pawn_down.png",
+   "sha256": "a20f180a67c2a4a5df0e5054319428b3461879d51ed0870b396e2f958c954765"
+  },
+  {
+   "n": 163,
+   "label": "knocked-over pawn",
+   "category": "pieces",
+   "file": "pawn_flip.png",
+   "sha256": "52dfb258e3272c5cc7666fd11a96c8e94765901e173388eb08413322110cb8f2",
+   "unsure": true
+  },
+  {
+   "n": 164,
+   "label": "pawn moving left",
+   "category": "pieces",
+   "file": "pawn_left.png",
+   "sha256": "835c176a2bb255ebc74f5d262bff8368a1a61ec7a65bd10132f68f37927a2f6b"
+  },
+  {
+   "n": 165,
+   "label": "pawns swapping places",
+   "category": "pieces",
+   "file": "pawn_reverse.png",
+   "sha256": "b41d45b0f279edba0d819314b77eaab6e7b57140df7d22151dbf019e7f35b019"
+  },
+  {
+   "n": 166,
+   "label": "pawn moving right",
+   "category": "pieces",
+   "file": "pawn_right.png",
+   "sha256": "1122df9b527a1c9404836feb7817ff564feae88b0451cf94428712c4357aaf53"
+  },
+  {
+   "n": 167,
+   "label": "pawn skipped",
+   "category": "pieces",
+   "file": "pawn_skip.png",
+   "sha256": "94f28b7f3ccf9f6559fb9ca7d3307ae3117646dcd17f4a68738dcd67eea59c1d"
+  },
+  {
+   "n": 168,
+   "label": "two pawns at a table",
+   "category": "pieces",
+   "file": "pawn_table.png",
+   "sha256": "7456a554050e005976525cacd597ec11572e35206096f88c29b9eaf23c379aad"
+  },
+  {
+   "n": 169,
+   "label": "pawn moving up",
+   "category": "pieces",
+   "file": "pawn_up.png",
+   "sha256": "181a00ccb3ecf8aae072916e3f2742e6d75d9ef976a6456372e165af581c95e4"
+  },
+  {
+   "n": 170,
+   "label": "group of pawns",
+   "category": "pieces",
+   "file": "pawns.png",
+   "sha256": "5288cfcd4791af321607714c3a334b025158ee2784f54750452da7503cc99b77"
+  },
+  {
+   "n": 171,
+   "label": "pentagon",
+   "category": "shapes",
+   "file": "pentagon.png",
+   "sha256": "a4ed6c55560370ef95c015d2b9a0ad677a55f721b606512c6449225558dbc4ef"
+  },
+  {
+   "n": 172,
+   "label": "pentagon outline",
+   "category": "shapes",
+   "file": "pentagon_outline.png",
+   "sha256": "3930f1ad499d50c5ce98e607fa9bf6b9420d2e1d86b586a7a350f4e76a064f9d"
+  },
+  {
+   "n": 173,
+   "label": "pentagon with question mark",
+   "category": "shapes",
+   "file": "pentagon_question.png",
+   "sha256": "1f9629a419ad65a9b992c94fef49707fdfe49d04dbc2f4b3dd30de0c3be94576"
+  },
+  {
+   "n": 174,
+   "label": "money pouch",
+   "category": "bags",
+   "file": "pouch.png",
+   "sha256": "52a1742e0edc2cd9275ed015c8fc961aa1ee21e005876b1a967cab1a4bb0f7b3"
+  },
+  {
+   "n": 175,
+   "label": "put into pouch",
+   "category": "bags",
+   "file": "pouch_add.png",
+   "sha256": "b52f7b6c8acc54018b917f84c60cf6735b982f42b9896a9b1cdbe0351d6a9ab6"
+  },
+  {
+   "n": 176,
+   "label": "take out of pouch",
+   "category": "bags",
+   "file": "pouch_remove.png",
+   "sha256": "0f789b07d2a5f3e27068609f455e1fdba2b5bb6d4da2c9f3a1f9ec5ff8b2d278"
+  },
+  {
+   "n": 177,
+   "label": "jigsaw piece",
+   "category": "puzzles",
+   "file": "puzzle.png",
+   "sha256": "ed0825bd7dcfca0a4bb8c759072189c19092194d2bd750836bc94b03293eabb5"
+  },
+  {
+   "n": 178,
+   "label": "apple",
+   "category": "resources",
+   "file": "resource_apple.png",
+   "sha256": "e728eaa8faa86a229ba777bea5b166e79ff9750030e572a16cf69e378005ebfa"
+  },
+  {
+   "n": 179,
+   "label": "iron ingot",
+   "category": "resources",
+   "file": "resource_iron.png",
+   "sha256": "2db20a5919ca93d5b3eb0386eb0037aeaa7ab2c9af12dd20ea197987de9a9581"
+  },
+  {
+   "n": 180,
+   "label": "log",
+   "category": "resources",
+   "file": "resource_lumber.png",
+   "sha256": "f737cfd62a8ca51b36c706b5ad6900eede30437a0f882ff805f39561bab7dbb8"
+  },
+  {
+   "n": 181,
+   "label": "stack of planks",
+   "category": "resources",
+   "file": "resource_planks.png",
+   "sha256": "36e57483fa3c1807b06ffa4697f021f9f4bf6bb5e6a3710852a498c960301451",
+   "unsure": true
+  },
+  {
+   "n": 182,
+   "label": "wheat",
+   "category": "resources",
+   "file": "resource_wheat.png",
+   "sha256": "7960d64ff604c3548f8988cde5b0fd1df3b2f17f496bb19b509450a05d82d413"
+  },
+  {
+   "n": 183,
+   "label": "wooden board",
+   "category": "resources",
+   "file": "resource_wood.png",
+   "sha256": "8da5fa6e6a866d1860e44e26c56b9feb5e42e094b95e00a0a3ce48151fe8d29f",
+   "unsure": true
+  },
+  {
+   "n": 184,
+   "label": "rhombus",
+   "category": "shapes",
+   "file": "rhombus.png",
+   "sha256": "02ef311806dd46fd56c54657b618f7bcb6e8cf1654b21eecf22a10fc118fc1e3"
+  },
+  {
+   "n": 185,
+   "label": "rhombus outline",
+   "category": "shapes",
+   "file": "rhombus_outline.png",
+   "sha256": "4dba717177a15d0fc20b9d4713201be4c70a4fae0ead0b94e8d86c94e3cb9027"
+  },
+  {
+   "n": 186,
+   "label": "rhombus with question mark",
+   "category": "shapes",
+   "file": "rhombus_question.png",
+   "sha256": "ca0630b562173c32f5d6fef3be0d047f2e8b0f80c6227ebdba7948a68b1a5c62"
+  },
+  {
+   "n": 187,
+   "label": "shield",
+   "category": "weapons",
+   "file": "shield.png",
+   "sha256": "b33a110feb7bd0d9ae50573e4c1d584214c44ff33a806edd7ef1e50798930794"
+  },
+  {
+   "n": 188,
+   "label": "skull",
+   "category": "symbols",
+   "file": "skull.png",
+   "sha256": "2810116ed232f9c28ee43aa77e6c92063e01386109d5c343a34e96b5756d2bf4"
+  },
+  {
+   "n": 189,
+   "label": "spinner",
+   "category": "spinners",
+   "file": "spinner.png",
+   "sha256": "46cfc92aaa2bdeadb98d2635c5b426e4a50da46f4a22fc02da7dc31ca1cb2edc"
+  },
+  {
+   "n": 190,
+   "label": "spinner segment",
+   "category": "spinners",
+   "file": "spinner_segment.png",
+   "sha256": "07ba14fbbf5930470f7c1a5cb14fadfd34a7bf9c5b6c3f509cbb66cf78be9951"
+  },
+  {
+   "n": 191,
+   "label": "church",
+   "category": "buildings",
+   "file": "structure_church.png",
+   "sha256": "fb42e7a4ff3fd207748efcc68775687d49d9b556d3353ee1591d08003be43e65",
+   "unsure": true
+  },
+  {
+   "n": 192,
+   "label": "barn",
+   "category": "buildings",
+   "file": "structure_farm.png",
+   "sha256": "c0acdafa5035ad26be96235f9aafcf8808e679a39126ee53f7ee1d5a19750af7"
+  },
+  {
+   "n": 193,
+   "label": "castle gate",
+   "category": "buildings",
+   "file": "structure_gate.png",
+   "sha256": "eaf5b9632da41f58951fdb5265aa41f271c610a0e4a916370ce1593b0833e20a"
+  },
+  {
+   "n": 194,
+   "label": "house",
+   "category": "buildings",
+   "file": "structure_house.png",
+   "sha256": "71190a8ad081078a00cca71a47e5f9d94e45c11b4094cf34c3877186c670c9d0"
+  },
+  {
+   "n": 195,
+   "label": "tower",
+   "category": "buildings",
+   "file": "structure_tower.png",
+   "sha256": "21810be122fc5d5d10940f6b39aa7282e9d7542e698d253801e2ff7c93797948"
+  },
+  {
+   "n": 196,
+   "label": "castle wall",
+   "category": "buildings",
+   "file": "structure_wall.png",
+   "sha256": "44d8f58da5933e3f176d04ecd2c3940aba8a2062914e0bece86d111ee02f4ce6"
+  },
+  {
+   "n": 197,
+   "label": "watchtower",
+   "category": "buildings",
+   "file": "structure_watchtower.png",
+   "sha256": "00f9dc5bf668853b03216ed1e980b34b49e5eccbfc26837d61a7743436be66ad"
+  },
+  {
+   "n": 198,
+   "label": "club suit",
+   "category": "suits",
+   "file": "suit_clubs.png",
+   "sha256": "bebf5809d030d038be253d2488be8b1ac017be7beb38266dc348fc6d9a63b3eb"
+  },
+  {
+   "n": 199,
+   "label": "diamond suit",
+   "category": "suits",
+   "file": "suit_diamonds.png",
+   "sha256": "4452d508a8ff85402d23ce0da8c1cedc524a988189c05ec2099dacdb70e6ce79"
+  },
+  {
+   "n": 200,
+   "label": "heart suit",
+   "category": "suits",
+   "file": "suit_hearts.png",
+   "sha256": "c616c1fc3e0d36b42a6539967c63980dc00bee3f3bc37a9ce24a042b4c182e57"
+  },
+  {
+   "n": 201,
+   "label": "broken heart",
+   "category": "suits",
+   "file": "suit_hearts_broken.png",
+   "sha256": "4617f655f851763e7f088e5a2c1e3680fb40d62c540e740e1f2c53c5a2420523"
+  },
+  {
+   "n": 202,
+   "label": "spade suit",
+   "category": "suits",
+   "file": "suit_spades.png",
+   "sha256": "fd62f980eeea036daf73193b120507a600bfc470d637554c8f8de00c82eb5ff1"
+  },
+  {
+   "n": 203,
+   "label": "sword",
+   "category": "weapons",
+   "file": "sword.png",
+   "sha256": "07a44a155f1b284b578c731f21a16442959bd753cae008ca39d7965e72f0d372"
+  },
+  {
+   "n": 204,
+   "label": "corner tag 1",
+   "category": "tags",
+   "file": "tag_1.png",
+   "sha256": "4790d2129f5cc7aef1e6df2aef8c615c121c81732096a8d9e67a892946cbfff3"
+  },
+  {
+   "n": 205,
+   "label": "corner tag 10",
+   "category": "tags",
+   "file": "tag_10.png",
+   "sha256": "579f584c4af3e3484758111bb7d5c0abb50dff9669072e629bdc1d165407c288"
+  },
+  {
+   "n": 206,
+   "label": "corner tag 2",
+   "category": "tags",
+   "file": "tag_2.png",
+   "sha256": "b39443657570eb8908f14f12fd0c0fca19483eda7c61c91e522163688f5e5225"
+  },
+  {
+   "n": 207,
+   "label": "corner tag 3",
+   "category": "tags",
+   "file": "tag_3.png",
+   "sha256": "7ba9aac8577ae9f638ca8c7555cc8699becd0b524392457bdc582ffe6be1a481"
+  },
+  {
+   "n": 208,
+   "label": "corner tag 4",
+   "category": "tags",
+   "file": "tag_4.png",
+   "sha256": "ea2b1993a06e140d806f3bc45c2a263341960e5ddafb53ad1e15db2a88ab15eb"
+  },
+  {
+   "n": 209,
+   "label": "corner tag 5",
+   "category": "tags",
+   "file": "tag_5.png",
+   "sha256": "20c3b5c3ab878c859aa6666d4b4721dee30fd3fd0313e3a3e3b2cc1da2f942af"
+  },
+  {
+   "n": 210,
+   "label": "corner tag 6",
+   "category": "tags",
+   "file": "tag_6.png",
+   "sha256": "331a171e0dd18cbd4c6c327d0ab9b356bcbce059435936caff174473df4d1f2d"
+  },
+  {
+   "n": 211,
+   "label": "corner tag 7",
+   "category": "tags",
+   "file": "tag_7.png",
+   "sha256": "1edba1f523a86d25db80761df83ce608f00ba0d7c7c4d58bb0c712d8a983436b"
+  },
+  {
+   "n": 212,
+   "label": "corner tag 8",
+   "category": "tags",
+   "file": "tag_8.png",
+   "sha256": "c504e7a77db4df4fd43ad86e7b8822fdf984ef13094f1ef1ce6ac426207f2869"
+  },
+  {
+   "n": 213,
+   "label": "corner tag 9",
+   "category": "tags",
+   "file": "tag_9.png",
+   "sha256": "b714909186189af7f2311c6e569407962f4574a824e4e9a4c85de9475ae26115"
+  },
+  {
+   "n": 214,
+   "label": "corner tag, blank die",
+   "category": "tags",
+   "file": "tag_d6.png",
+   "sha256": "462f06dae275cd06c6c360ec53a522559252b2844f6affb1f18d5badfa0fadfd"
+  },
+  {
+   "n": 215,
+   "label": "corner tag, die one",
+   "category": "tags",
+   "file": "tag_d6_1.png",
+   "sha256": "5a888bb3c6efdf0869431ba7869d16f0eb5bac391db8043d34f69758ab195e8b"
+  },
+  {
+   "n": 216,
+   "label": "corner tag, die two",
+   "category": "tags",
+   "file": "tag_d6_2.png",
+   "sha256": "61ea0b759c7789cd362e00e386f28d0bc6b57a779eb5f9243348f541ab1655ae"
+  },
+  {
+   "n": 217,
+   "label": "corner tag, die three",
+   "category": "tags",
+   "file": "tag_d6_3.png",
+   "sha256": "96bcdb80988166d0ac5cc62dfe927848228578c4eda7d215179fe8dbdf92b904"
+  },
+  {
+   "n": 218,
+   "label": "corner tag, die four",
+   "category": "tags",
+   "file": "tag_d6_4.png",
+   "sha256": "da3d9dad293242738767f587ede6fd9a6275cb524a918e50fcefbf6aabd9d78a"
+  },
+  {
+   "n": 219,
+   "label": "corner tag, die five",
+   "category": "tags",
+   "file": "tag_d6_5.png",
+   "sha256": "d1305942f02a4968d3b5d53b4b58faf79f3d5b0e2d957f0b9b6867ea2e6154d0"
+  },
+  {
+   "n": 220,
+   "label": "corner tag, die six",
+   "category": "tags",
+   "file": "tag_d6_6.png",
+   "sha256": "b9abae9f4949b2876f019f695b78b3de703ff81a6751724a610ff66969a42c87"
+  },
+  {
+   "n": 221,
+   "label": "corner tag, check",
+   "category": "tags",
+   "file": "tag_d6_check.png",
+   "sha256": "a7d79516294d633605e16e13d3027eb3b3c279d4f7f73682462a4cfbacd25964"
+  },
+  {
+   "n": 222,
+   "label": "corner tag, cross",
+   "category": "tags",
+   "file": "tag_d6_cross.png",
+   "sha256": "bfdff31571849288402879422d82d8c82b828e0ddaa6b4aa5d1b7419d2b506bb"
+  },
+  {
+   "n": 223,
+   "label": "corner tag, infinity",
+   "category": "tags",
+   "file": "tag_d6_infinte.png",
+   "sha256": "3bf73803b985f5681107500ff9db29b292f193d69622fc0058e896d440b5b5fa"
+  },
+  {
+   "n": 224,
+   "label": "corner tag, blank round",
+   "category": "tags",
+   "file": "tag_empty.png",
+   "sha256": "2def54a5ecbe2dd189823dbaafcded955881323a9f73e40323bbfbef1e165f92"
+  },
+  {
+   "n": 225,
+   "label": "corner tag, round infinity",
+   "category": "tags",
+   "file": "tag_infinite.png",
+   "sha256": "0e304b01421e33ec21b24b00ce5d2b52e598d4d62fcdb68e1956e1f3c43ef107"
+  },
+  {
+   "n": 226,
+   "label": "corner tag, blank shield",
+   "category": "tags",
+   "file": "tag_shield.png",
+   "sha256": "b4e5378d3453eb17b2cd9e0f725e2c06df954201b4222317a27439eb07eb26e1"
+  },
+  {
+   "n": 227,
+   "label": "corner tag, shield 1",
+   "category": "tags",
+   "file": "tag_shield_1.png",
+   "sha256": "599252516d3aa92a8dbd2e423ea645414e3ed5a2df9e92e1f32b40c7a2e2e3dd"
+  },
+  {
+   "n": 228,
+   "label": "corner tag, shield 10",
+   "category": "tags",
+   "file": "tag_shield_10.png",
+   "sha256": "00bb0bc10cac22595cca0e9d13893f98087ae7acbbad949de6fe136c118c94e2"
+  },
+  {
+   "n": 229,
+   "label": "corner tag, shield 2",
+   "category": "tags",
+   "file": "tag_shield_2.png",
+   "sha256": "2c0422fb6731e264695a3ddc8c96af4acb1257ab2cb1db5ccf7b059d5fd75850"
+  },
+  {
+   "n": 230,
+   "label": "corner tag, shield 3",
+   "category": "tags",
+   "file": "tag_shield_3.png",
+   "sha256": "ac91acafbb56447fbcd1514fc487fa02134ab50546cc83a0bc5b256a8bc54c2e"
+  },
+  {
+   "n": 231,
+   "label": "corner tag, shield 4",
+   "category": "tags",
+   "file": "tag_shield_4.png",
+   "sha256": "1383d88bde4c8721e8e183ac5d94398caf39f2d3974e58707dc88ae7600db020"
+  },
+  {
+   "n": 232,
+   "label": "corner tag, shield 5",
+   "category": "tags",
+   "file": "tag_shield_5.png",
+   "sha256": "48ad8f63676d7347980a0c71f423d54fda2b0a072e1f4f0b0b5dd804ab74ea74"
+  },
+  {
+   "n": 233,
+   "label": "corner tag, shield 6",
+   "category": "tags",
+   "file": "tag_shield_6.png",
+   "sha256": "3ac215306bbada7c1d0be638ff4e46705d5ac18eb29c71e62553ee4e45dd4d9c"
+  },
+  {
+   "n": 234,
+   "label": "corner tag, shield 7",
+   "category": "tags",
+   "file": "tag_shield_7.png",
+   "sha256": "c2474f102af69c012acd1774bd056c9e841d7755ded88876f982eae7f5aba0ef"
+  },
+  {
+   "n": 235,
+   "label": "corner tag, shield 8",
+   "category": "tags",
+   "file": "tag_shield_8.png",
+   "sha256": "771a52c996ca6c57164fbfa5ae79f7f31d313ee8c78c9f9b6509aef0ef3ec5a9"
+  },
+  {
+   "n": 236,
+   "label": "corner tag, shield 9",
+   "category": "tags",
+   "file": "tag_shield_9.png",
+   "sha256": "7dc76699e4d2206e1997609dd89457c8752ce4bbe98048a5d28399b527b562fc"
+  },
+  {
+   "n": 237,
+   "label": "corner tag, shield infinity",
+   "category": "tags",
+   "file": "tag_shield_infinite.png",
+   "sha256": "e8d10a58cd688b1fc4bf531586b0931659c5992601b307d90ea3a8d0cc9aa657"
+  },
+  {
+   "n": 238,
+   "label": "timer dial, empty",
+   "category": "timers",
+   "file": "timer_0.png",
+   "sha256": "fa0660aae82507205587ed037e1cccab29ab50cd344d38555a2d602fca618a48"
+  },
+  {
+   "n": 239,
+   "label": "timer dial, full",
+   "category": "timers",
+   "file": "timer_100.png",
+   "sha256": "18366cc20803e1cb5a8cc289a44e8eb0a8680c3d500aebd7b2976fb0fb068817"
+  },
+  {
+   "n": 240,
+   "label": "timer dial, quarter (top right)",
+   "category": "timers",
+   "file": "timer_CCW_25.png",
+   "sha256": "caad35b45dc9a082792bec5721f80c1f206ab46e5ae68e76b19de7cc1e1faece"
+  },
+  {
+   "n": 241,
+   "label": "timer dial, half (right)",
+   "category": "timers",
+   "file": "timer_CCW_50.png",
+   "sha256": "57f0b374e0a26f675b6a799d5e0e2d9b68314deb20b8a3ec160affbd46894d57"
+  },
+  {
+   "n": 242,
+   "label": "timer dial, three quarters",
+   "category": "timers",
+   "file": "timer_CCW_75.png",
+   "sha256": "7662a5daf81fa78541fd01b62dd225c4c5adaa4c9eb032b0394ba2bbc3cfdeca"
+  },
+  {
+   "n": 243,
+   "label": "timer dial, quarter (top left)",
+   "category": "timers",
+   "file": "timer_CW_25.png",
+   "sha256": "c61504260172727af7438d0b0e76e67bb510fdb30bc25376601b84f246051fa1"
+  },
+  {
+   "n": 244,
+   "label": "timer dial, half (left)",
+   "category": "timers",
+   "file": "timer_CW_50.png",
+   "sha256": "fff008da6dae10fb43ca759243c721e28a1973360567bdc3071663c8c528f27e"
+  },
+  {
+   "n": 245,
+   "label": "timer dial, three quarters (other way)",
+   "category": "timers",
+   "file": "timer_CW_75.png",
+   "sha256": "b04c0bb8d3b3019c5f631e16dda05b0ac68da2af40e59693e7dcf04ca3019ccd"
+  },
+  {
+   "n": 246,
+   "label": "ring token",
+   "category": "tokens",
+   "file": "token.png",
+   "sha256": "8d123380791b61861fdaf841b87950bc189349fdd8e522a3daea984086f80fb6"
+  },
+  {
+   "n": 247,
+   "label": "add token",
+   "category": "tokens",
+   "file": "token_add.png",
+   "sha256": "2405a891efb21b32b3108f8989c7bf219d061d7fcb3a7d7a7ec6cf73c84f653a"
+  },
+  {
+   "n": 248,
+   "label": "give token",
+   "category": "tokens",
+   "file": "token_give.png",
+   "sha256": "8e3723ef769d51ea4d3b8fa25b8037156e088a4ca6b4bc2a44a1a2b98e9e5dc1"
+  },
+  {
+   "n": 249,
+   "label": "token in",
+   "category": "tokens",
+   "file": "token_in.png",
+   "sha256": "dc667268b2bf7566fb3b4348b0ef8165e1510e194a8e21abf8a28008a6cba3e5"
+  },
+  {
+   "n": 250,
+   "label": "token out",
+   "category": "tokens",
+   "file": "token_out.png",
+   "sha256": "389f26f92f84ebb089026a00b175180962c3f3a7f5a4d495d1c8ac4393a112a1"
+  },
+  {
+   "n": 251,
+   "label": "remove token",
+   "category": "tokens",
+   "file": "token_remove.png",
+   "sha256": "9ae756e07dcedf50a80c4d3c4d0e65b1470dc30569d5736e11d17e5fdd053b72"
+  },
+  {
+   "n": 252,
+   "label": "subtract token",
+   "category": "tokens",
+   "file": "token_subtract.png",
+   "sha256": "c9ec41c85e4544b64c3f47e021fc61a9afb8547b802fef78981e37d374acb5d2"
+  },
+  {
+   "n": 253,
+   "label": "two tokens",
+   "category": "tokens",
+   "file": "tokens.png",
+   "sha256": "ab29f205a1d4bf035f5c1ebcaf6bddae588287be511fd447d617f7ab995a8ea1"
+  },
+  {
+   "n": 254,
+   "label": "tokens with shadow",
+   "category": "tokens",
+   "file": "tokens_shadow.png",
+   "sha256": "cbaab3fff83cdbd97568c9617927e9367e30c3b4999c6cdc6cd27b4792eba460"
+  },
+  {
+   "n": 255,
+   "label": "three tokens",
+   "category": "tokens",
+   "file": "tokens_stack.png",
+   "sha256": "d0038a88240c322c794e8ce1f4926a1ec300e1631d92a7ccdafcdd70e6f89f51"
+  }
+ ]
+}

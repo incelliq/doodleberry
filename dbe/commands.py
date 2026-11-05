@@ -669,58 +669,93 @@ def sound_sketch(name, prompt, seconds=2.5, seed=0, candidates=4):
     return {"file": str(f.relative_to(d)), "seconds": round(len(y) / 48000, 3), "heard_as": SK.tags([y])[0], "cue": {"type": "sketch", "file": str(f.relative_to(d))}}
 
 
-@command("props.import_kenney", zip=("string", "the pack's zip as downloaded from kenney.nl on the owner's machine"), pack=("string", "a kenney.nl asset slug", "generic-items"))
-def props_import_kenney(zip, pack="generic-items"):
+KENNEY = ROOT / "assets" / "external" / "kenney"   # the unpacked packs (not in git)
+
+
+def _kenney_packs(pack=""):
+    """the labelled Kenney indexes, assets/props/kenney-<slug>.json: {slug: index}, Generic Items first"""
+    out = {}
+    for f in sorted(KENNEY_ITEMS.parent.glob("kenney-*.json"), key=lambda f: (f != KENNEY_ITEMS, f.name)):
+        idx = _json(f, {}); slug = idx.get("slug") or f.stem[len("kenney-"):]
+        if not pack or pack == slug:
+            out[slug] = idx
+    if pack and not out:
+        raise ValueError(f"no labelled Kenney pack {pack!r} (packs: {', '.join(_kenney_packs())})")
+    return out
+
+
+def _kenney_dir(slug, idx):
+    return KENNEY / slug / idx.get("folder", "PNG")
+
+
+@command("props.import_kenney", zip=("string", "the pack's zip as downloaded from kenney.nl on the owner's machine"),
+         pack=("string", "the kenney.nl asset slug (empty: read from the zip's name, kenney_<slug>.zip)", ""))
+def props_import_kenney(zip, pack=""):
     """Unpack a Kenney pack (CC0) downloaded on the owner's machine into assets/external/kenney/<pack>/ (not in git)
-    and check its files against the labelled index (assets/props/kenney-<pack>.json, sha256 per item), when there is
-    one. (kenney.nl hands its downloads to a browser; this does not fetch them.)"""
+    and check the zip and every file against the labelled index (assets/props/kenney-<pack>.json, sha256 each), when
+    there is one. (kenney.nl hands its downloads to a browser; this does not fetch them.)"""
     import hashlib
     import zipfile
-    d = ROOT / "assets" / "external" / "kenney"; d.mkdir(parents=True, exist_ok=True)
     src = Path(zip) if Path(zip).is_absolute() else ROOT / zip
-    z = d / f"{pack}.zip"
+    if not pack:
+        m = re.match(r"kenney_([a-z0-9-]+)", src.name)
+        if not m:
+            raise ValueError(f"cannot tell the pack from {src.name!r}: give pack (the kenney.nl slug)")
+        pack = m.group(1)
+    KENNEY.mkdir(parents=True, exist_ok=True); z = KENNEY / f"{pack}.zip"
     if src.resolve() != z.resolve():
         shutil.copy(src, z)
-    shutil.rmtree(d / pack, ignore_errors=True); zipfile.ZipFile(z).extractall(d / pack)
-    idx = _json(ROOT / "assets" / "props" / f"kenney-{pack}.json", {}); bad = []
+    shutil.rmtree(KENNEY / pack, ignore_errors=True); zipfile.ZipFile(z).extractall(KENNEY / pack)
+    idx = _json(KENNEY_ITEMS.parent / f"kenney-{pack}.json", {}); bad = []
     for it in idx.get("items", []):
-        f = d / pack / "PNG" / "Colored" / it["file"]
+        f = _kenney_dir(pack, idx) / it["file"]
         if not f.exists() or hashlib.sha256(f.read_bytes()).hexdigest() != it["sha256"]:
             bad.append(it["file"])
-    return {"zip": str(z.relative_to(ROOT)), "zip_sha256": hashlib.sha256(z.read_bytes()).hexdigest(), "items_checked": len(idx.get("items", [])), "changed_or_missing": bad}
+    zs = hashlib.sha256(z.read_bytes()).hexdigest()
+    return {"pack": pack, "zip": str(z.relative_to(ROOT)), "zip_sha256": zs, "zip_matches_index": zs == idx.get("zip_sha256") if idx else None,
+            "items_checked": len(idx.get("items", [])), "changed_or_missing": bad}
 
 
-@command("props.library", query=("string", "words to look for in the labels (empty: all)", ""), category=("string", "a category (tools, kitchen, ...)", ""))
-def props_library(query="", category=""):
-    """The labelled prop library (WP-16): Kenney's Generic Items (CC0), 163 numbered sprites each named by eye, with
-    a category; those that could be read otherwise are marked unsure. Whether the pack is here to draw from."""
-    idx = _json(KENNEY_ITEMS, {"items": []}); words = [w for w in query.lower().split() if w]
-    items = [it for it in idx["items"] if (not category or it["category"] == category) and all(w in it["label"].lower() for w in words)]
-    here = (ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored").is_dir()
-    return {"pack": idx.get("pack"), "license": idx.get("license"), "here": here, "count": len(items),
-            "categories": sorted({it["category"] for it in idx["items"]}), "items": items}
+@command("props.library", query=("string", "words to look for in the labels (empty: all)", ""), category=("string", "a category (tools, kitchen, dice, trees, ...)", ""),
+         pack=("string", "one pack's slug (generic-items, board-game-icons, foliage-pack, background-elements-remastered, sports-pack, emotes-pack; empty: all)", ""))
+def props_library(query="", category="", pack=""):
+    """The labelled prop library (WP-16): Kenney packs (CC0) with every sprite numbered and named by eye, with a
+    category; those that could be read otherwise are marked unsure. Generic Items (163) labelled here; Board Game
+    Icons (255), Foliage (106), Background Elements (69), Sports (187) and Emotes (240) on the owner's machine. Each item
+    carries its pack; `here` says whether every pack asked for is unpacked here to draw from."""
+    packs = _kenney_packs(pack); words = [w for w in query.lower().split() if w]
+    items = [{**it, "pack": slug} for slug, idx in packs.items() for it in idx.get("items", [])
+             if (not category or it["category"] == category) and all(w in it["label"].lower() for w in words)]
+    info = {slug: {"pack": idx.get("pack"), "license": idx.get("license"), "items": len(idx.get("items", [])), "here": _kenney_dir(slug, idx).is_dir(),
+                   "categories": sorted({it["category"] for it in idx.get("items", [])})} for slug, idx in packs.items()}
+    one = packs[pack] if pack else {}
+    return {"pack": one.get("pack"), "license": one.get("license") if pack else sorted({i["license"] for i in info.values()}),
+            "here": all(i["here"] for i in info.values()), "packs": info, "count": len(items),
+            "categories": sorted({c for i in info.values() for c in i["categories"]}), "items": items}
 
 
-@command("props.make", item=("string", "a label (or its number) from props.library"), r=("number", "half the prop's largest side, px", 60),
-         x=("number", "where it stands (x)", 540), y=("number", "where it stands (y)", 1400))
-def props_make(item, r=60, x=540, y=1400):
+@command("props.make", item=("string", "a label (or its number, with pack) from props.library"), r=("number", "half the prop's largest side, px", 60),
+         x=("number", "where it stands (x)", 540), y=("number", "where it stands (y)", 1400),
+         pack=("string", "the pack to take it from (empty: the first pack with that label; a number then means Generic Items)", ""))
+def props_make(item, r=60, x=540, y=1400, pack=""):
     """A shots.json prop from the library: the item's drawing as its body (an image, its largest side 2r, centred on
     the prop's point), held at (x, y); attach it, path it or drop it as any prop. SVG renderer only (a prop with its
     own drawing)."""
     import base64
     from PIL import Image
-    idx = _json(KENNEY_ITEMS, {"items": []})
-    it = next((i for i in idx["items"] if str(i["n"]) == str(item) or i["label"].lower() == str(item).lower()), None) \
-        or next((i for i in idx["items"] if str(item).lower() in i["label"].lower()), None)
-    if not it:
+    packs = _kenney_packs(pack); key = str(item).lower()
+    pool = [(slug, idx, it) for slug, idx in packs.items() for it in idx.get("items", [])]
+    num = [q for q in pool if str(q[2]["n"]) == str(item) and (pack or q[0] == "generic-items")]
+    hit = (num or [q for q in pool if q[2]["label"].lower() == key] or [q for q in pool if key in q[2]["label"].lower()] or [None])[0]
+    if not hit:
         raise ValueError(f"no prop {item!r} in the library (props.library)")
-    f = ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored" / it["file"]
+    slug, idx, it = hit; f = _kenney_dir(slug, idx) / it["file"]
     if not f.exists():
-        raise FileNotFoundError("the Kenney pack is not here: download it from kenney.nl, then python -m dbe props.import_kenney '{\"zip\": \"...\"}'")
+        raise FileNotFoundError(f"the Kenney pack {slug} is not here: download it from kenney.nl, then python -m dbe props.import_kenney '{{\"zip\": \"...\"}}'")
     w, h = Image.open(f).size; k = 2 * r / max(w, h); W, H = round(w * k, 1), round(h * k, 1)
     data = "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode()
     return {"prop": {"r": r, "attach": [[0, [x, y]]], "svg": f'<image href="{data}" x="{-W / 2}" y="{-H / 2}" width="{W}" height="{H}"/>',
-                     "label": it["label"], "source": f"Kenney Generic Items #{it['n']} (CC0)"}, "item": it}
+                     "label": it["label"], "source": f"{idx.get('pack', 'Kenney')} #{it['n']} (CC0)"}, "item": {**it, "pack": slug}}
 
 
 @command("puppet.lint", path=("string", "path to a .puppet.json"))
@@ -7741,7 +7776,7 @@ def test_golden(update=False, film=""):
     if not film or film == "kenneyprops":   # WP-16: the labelled Kenney prop library
         bad, meas = _kenneyprops_test()
         failed += 1 if bad else 0
-        results.append({"kenneyprops": "Kenney's Generic Items labelled one by one into a prop library: every file matching its sha256, and props.make drawing one (a teapot) where the prop stands", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+        results.append({"kenneyprops": "six Kenney packs labelled one by one into a prop library (1,020 sprites): every index well formed, every pack here matching its sha256s, and props.make drawing one (a teapot) where the prop stands", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "sketch":   # WP-43: sound sketches (runs AudioLDM, CLAP and AST on the CPU, mixes a film twice; only when asked)
         bad, meas = _sketch_test()
         failed += 1 if bad else 0
@@ -10881,22 +10916,37 @@ def _lufsstream_test():
     return bad, meas
 
 
+KENNEY_COUNTS = {"generic-items": 163, "board-game-icons": 255, "foliage-pack": 106, "background-elements-remastered": 69, "sports-pack": 187, "emotes-pack": 240}
+
+
 def _kenneyprops_test():
-    """WP-16 the labelled Kenney prop library: 163 labelled items, every file here matching its sha256 in the index;
+    """WP-16 the labelled Kenney prop library: six indexes (1,020 sprites), each numbered 1..N with a label, a
+    category and a sha256 per item and its zip's sha256; every pack unpacked here matching its index file by file;
     props.make draws one (the teapot) into a shot: in a still of a pip-park copy, the teapot's own colour is where the
     prop stands and nowhere without it"""
     import hashlib
     import numpy as np
     from PIL import Image
-    bad, meas = [], {}
-    lib = props_library()
+    bad, meas = [], {"packs": {}}
+    for slug, idx in _kenney_packs().items():
+        its = idx.get("items", [])
+        shape = [it.get("n") for it in its] == list(range(1, len(its) + 1)) and all(it.get("label") and it.get("category") and re.fullmatch(r"[0-9a-f]{64}", it.get("sha256", "")) for it in its) \
+            and re.fullmatch(r"[0-9a-f]{64}", idx.get("zip_sha256", "")) and idx.get("license") == "CC0-1.0"
+        m = {"items": len(its), "categories": len({it["category"] for it in its}), "unsure": sum(1 for it in its if it.get("unsure")), "index_well_formed": bool(shape)}
+        root = _kenney_dir(slug, idx)
+        if root.is_dir():
+            m["files_not_matching"] = sum(1 for it in its if not (root / it["file"]).exists() or hashlib.sha256((root / it["file"]).read_bytes()).hexdigest() != it["sha256"])
+        else:
+            m["files"] = "not here"
+        meas["packs"][slug] = m
+        if not shape or len(its) != KENNEY_COUNTS.get(slug) or m.get("files_not_matching"):
+            bad.append(f"{slug}: {m}")
+    if set(meas["packs"]) != set(KENNEY_COUNTS):
+        bad.append(f"packs: {sorted(meas['packs'])}")
+    lib = props_library(pack="generic-items")
     if not lib["here"]:
-        return [], {"skipped": "the Kenney pack is not here (download it from kenney.nl, then props.import_kenney with the zip)"}
-    root = ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored"
-    wrong = [it["file"] for it in lib["items"] if hashlib.sha256((root / it["file"]).read_bytes()).hexdigest() != it["sha256"]]
-    meas["library"] = {"items": lib["count"], "categories": len(lib["categories"]), "unsure": sum(1 for it in lib["items"] if it.get("unsure")), "files_not_matching": len(wrong)}
-    if lib["count"] != 163 or wrong:
-        bad.append(f"library: {meas['library']}")
+        meas["teapot"] = "skipped: Generic Items is not here (download it from kenney.nl, then props.import_kenney with the zip)"
+        return bad, meas
     name = "zz-kenney"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
     try:
         for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
