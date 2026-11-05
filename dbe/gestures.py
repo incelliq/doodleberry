@@ -25,6 +25,10 @@ import numpy as np
 POINT_WORDS = {"you", "your", "this", "that", "these", "those", "look", "here", "there"}
 NEGATION = re.compile(r"\b(no|nope|not|never|nothing|nobody|didn'?t|wasn'?t|isn'?t|aren'?t|don'?t|doesn'?t|won'?t|can'?t)\b")
 ADMIT = re.compile(r"^\W*(oh|uh|um|ah|er|erm|well|oops|whoops|heh)\b", re.I)
+# where the accusing line puts the thing on the accused ("sticking out behind your back", "in your pocket"): the
+# admission then indicates it there, not the listener (WP-10, blind critics: the open hand toward the listener on
+# "That telescope" read as pointing away from it)
+ON_ME = re.compile(r"\b(behind|under|in|on|inside|up)\s+(your|his|her|their)\s+(back|pocket|pockets|bag|backpack|sleeve|shirt|jumper|hoodie|coat|jacket|hat)\b", re.I)
 
 
 def denial_of(text, prev):
@@ -176,12 +180,17 @@ def plan_cast(template, lines, me, others_x, my_x, pro_of, energy=1.0, prof=None
                 wtxt = re.sub(r"\W", "", words[i]["text"].lower())
                 if caught:   # owning up ("Oh. That telescope."): an open hand toward the listener after the interjection, held
                     # through the line; blind critics read the hand-keyed arm held out as giving in, a bare idle as flat
-                    pc = "present_R" if towards >= my_x else "present_L"
+                    acc = next((x.get("text", "") for x in reversed(lines[:li]) if x["speaker"] != me), "")
+                    on_me = bool(ON_ME.search(acc))   # the thing is on me: indicate it there, with a glance back at it
+                    pc = ("present_L" if towards >= my_x else "present_R") if on_me else ("present_R" if towards >= my_x else "present_L")
                     k = 1 if len(words) > 1 else 0
                     if can(pc) and words[k]["start"] > busy_until:
                         t0 = max(ln["start"], words[k]["start"] - 0.15)
-                        clips.append(style({"clip": pc, "start": round(t0, 3), "end": round(ln["end"] + 0.1, 3), "weight": 3, "auto": True, "why": "owning up"}))
+                        clips.append(style({"clip": pc, "start": round(t0, 3), "end": round(ln["end"] + 0.1, 3), "weight": 3, "auto": True, "why": "owning up" + (" (at it)" if on_me else "")}))
                         used.append(words[k]["start"])
+                        if on_me:   # look round at it on the word, back to the listener by the line's end
+                            look.append([round(t0, 3), [-1.0 if towards >= my_x else 1.0, 0.45]])
+                            look.append([round(max(t0 + 0.5, ln["end"] - 0.15), 3), [1.0 if towards >= my_x else -1.0, 0.1]])
                     break
                 if wtxt in POINT_WORDS and humanoid and P["point"] != "none" and all(abs(words[i]["start"] - u) > gap for u in used) and words[i]["start"] > busy_until:
                     # the point comes up with the clause, not on the word: as early as 1.5 s before it (never before the

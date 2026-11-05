@@ -1148,8 +1148,13 @@ caught glance), more personality in the accuser, and less static tails after the
 **both**, review-demo 28 to 21 (the start "on 'back'" and the folded arms "read clearly as an unimpressed 'I'm
 waiting'"; the hand-keyed Ravi "stands with his arms limp through the payoff") and direct-demo 27 to 23 (the folded
 arms give "a clear, patient-but-unimpressed manner"; the planner's Momo "uses the 1.2 s pause before 'Oh.' better").
-Still faulted in both: Momo's open hand on "That telescope" reads as pointing away. The planner stands at four blind
-wins in thirteen, and has won the last three of four.
+Still faulted in both: Momo's open hand on "That telescope" reads as pointing away. So when the accusing line puts
+the thing on the one accused ("behind your back", "in your pocket", `ON_ME`), the admission's open hand goes toward
+it, away from the listener, with a look round at it on the word and back to the listener by the line's end (`acting2`
+checks it). Round 6, fresh critics, coins flipped (the planner was Version 2 both times): the planner won **both**
+again, review-demo 28 to 22 and direct-demo 28 to 21 ("pulls the telescope round on 'That telescope'"; the
+hand-keyed arm held out "points away from the prop"). The planner stands at six blind wins in fifteen, and has won
+the last five of six.
 
 ## Sound depth (WP-13, part 1)
 **Footsteps by surface.** engine/audio.py synthesises a step for each floor:
