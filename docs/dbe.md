@@ -1214,11 +1214,50 @@ were checked against Kenney's own zip, downloaded on the owner's machine by the 
 sha256 hashes were compared one by one across ten groups and all matched. Both copies hold 128 distinct files with the
 same two duplicate pairs. The copy had renamed `impactBell_heavy_000` to `impact_bell_heavy_000`; the library keeps
 Kenney's names.
-Test `samples` uses a 7 s music-and-effects film with four grass steps, two wood steps, a thud and a pop:
+**Three more packs** (5 Nov 2026): Interface Sounds (100 files), UI Audio (51) and RPG Audio (51), all Kenney's and
+CC0. The owner downloaded them in a browser. The Remote Control helper hashed every file on the owner's machine and
+compared all 130 Impact hashes too; every one matched. The library pins the owner's files under Kenney's own names.
+Byte-identical copies on GitHub fill this container: all 282 files matched, and the RPG copy had only renamed them
+(`bookFlip1` became `book_flip_1`). Calinou's Godot ports were converted to WAV, so they can't match by hash and
+are not used.
+
+`sound.import_pack` now handles a pack already in the library differently: it places each file whose sha256
+matches a pinned one, under the pinned name, and lists the pinned files it did not find. A renamed copy or the
+pack's zip (`{"folder": "kenney_rpg-audio.zip", "pack": "kenney-rpg"}`) both work, and the pins never change.
+
+Each cue type maps to one group. A mapping was made only where a group's name and its measurements both fit the
+cue's synthesized sound. The measurements:
+
+- the dominant pitch over the sound;
+- CLAP's similarity to the synthesized cue;
+- AST's AudioSet labels. AST can't tell most short UI blips apart (mostly "Music" or "Sound effect").
+
+| Cue | Group | Why |
+|---|---|---|
+| tick | kenney-interface:tick (3) | 0.04 s clicks, named so |
+| ping | kenney-interface:glass (6) | steady bell-like tones (1.9-2.2 kHz, one 7.3 kHz); CLAP's nearest for ping (0.57) |
+| chime | kenney-interface:confirmation (4) | rising two-note tones in 4 of 4 |
+| lens_open, lens_close | kenney-interface:open, close (4 each) | rising in 4 of 4 and falling in 4 of 4, like the synthesized iris sweeps |
+| grow, wilt | kenney-interface:maximize, minimize (9 each) | rising in 9 of 9, falling in 9 of 9; CLAP's nearest for grow (0.62) |
+| flip | kenney-rpg:bookFlip (3) | page turns |
+| stamp | kenney-rpg:bookPlace (3) | a low falling thud (about 400 to 260 Hz), AST "Whack, thwack" |
+| step (no surface) | kenney-rpg:footstep (10) | footsteps; steps with a surface keep Impact's |
+
+These stay synthesized: pop, pop_small, swish, whoosh, scratch, zap, buzz, sparkle, twinkle and the rest. Their
+candidates were guesses, or measured against them. For example, every select blip rises where pop_small falls, and
+Interface's scratch lasts 0.16 s where the pen-on-paper cue lasts up to 8 s. UI Audio has no mapping. Any cue can
+still name a recording from any pack, for example `{"type": "thud", "sample": "kenney-rpg:doorClose"}`.
+
+Test `samples` uses a 12 s music-and-effects film with four grass steps, two wood steps, a thud and a pop, then one
+cue of each other mapped type:
 - with samples on, the four grass steps play four different recordings and the two wood steps two;
 - the recordings are told apart (spectral centroid 3.4 to 4.2 kHz on grass, 0.29 to 0.32 kHz on wood);
 - the pop stays synthesized, the mix holds -14.0 LUFS and -1.6 dBTP, and the posting gate lists the pack (CC0, not
   flagged);
+- every mapped cue plays a recording from its pack (a pack not here at all is expected synthesized); the ten
+  new ones measured: tick, ping, chime, lens open and close, grow, wilt from Interface, flip, stamp and a step
+  from RPG, with the mix at -14.0 LUFS and -1.6 dBTP and the posting gate listing Impact, Interface and RPG
+  (CC0, not flagged);
 - with samples off, nothing is listed.
 
 ## Bubbles and text, finished (WP-17)

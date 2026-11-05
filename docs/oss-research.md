@@ -384,6 +384,20 @@ Kitsu in the service (**AGPL**, unverified).
 - **Where**: https://kenney.nl/assets/generic-items, downloaded once through the page's own flow (not repeated: the other packs wait for the owner's downloads; `props.import_kenney` takes the zip); zip sha256 in assets/props/kenney-generic-items.json; files in assets/external/kenney/ (not in git).
 - **Use**: a labelled prop library (`props.library`, `props.make`); labels made by eye, nine marked unsure.
 
+## Kenney Interface Sounds, UI Audio, RPG Audio (WP-13, 5 Nov 2026)
+- **What**:
+  - Interface Sounds 1.0: 100 files, 20 groups (tick, glass, confirmation, open, close, maximize, minimize, ...).
+  - UI Audio: 51 files (clicks, rollovers, 38 switches).
+  - RPG Audio: 51 files (books, doors, cloth, coins, knives, 10 footsteps).
+  - All are .ogg (44.1 kHz; RPG 48 kHz).
+- **Licence**: CC0-1.0 (the packs' own License.txt).
+- **Where**: kenney.nl, downloaded by the owner in a browser and hashed on the owner's machine. The zip sha256s are in assets/sounds.json. Byte-identical copies on GitHub fill this container:
+  - ShadowBlip/OpenGamepadUI (Interface);
+  - TinyTakinTeller/TakinGodotTemplate (UI);
+  - Boyquotes/kenney-rpg-audio-for-godot (RPG, files renamed).
+  Calinou's Godot ports are WAV conversions, so they don't match by hash and are not used.
+- **Use**: the sample library (`sound.import_pack`, `sound.samples`). Ten cue types are mapped.
+
 ## Kenney Board Game Icons, Foliage, Background Elements, Sports, Emotes (WP-16, 5 Nov 2026)
 - **What**: 857 sprites. Board Game Icons 255 (white), Foliage 106, Background Elements (Remastered) 69, Sports 187 and Emotes 240.
 - **Licence**: CC0-1.0 (public domain; credit welcome).

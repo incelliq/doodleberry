@@ -940,6 +940,36 @@
    "use": "recorded footsteps and impacts for cues mapped in assets/sounds.json, when a score asks for samples (WP-13); every file pinned by sha256 there"
   },
   {
+   "id": "kenney-interface",
+   "path": "assets/external/sounds/kenney-interface/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/interface-sounds",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Sound effects: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "100 interface sounds; stand in for tick, ping, chime, lens_open, lens_close, grow and wilt, when a score asks for samples (WP-13); every file pinned in assets/sounds.json by the sha256 of the owner's own download"
+  },
+  {
+   "id": "kenney-rpg",
+   "path": "assets/external/sounds/kenney-rpg/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/rpg-audio",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Sound effects: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "51 foley sounds (books, doors, cloth, coins, footsteps); stand in for flip, stamp and steps without a surface, when a score asks for samples (WP-13); every file pinned in assets/sounds.json by the sha256 of the owner's own download"
+  },
+  {
+   "id": "kenney-ui",
+   "path": "assets/external/sounds/kenney-ui/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/ui-audio",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Sound effects: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "51 clicks, rollovers and switches; no cue mapped, a cue can name one with \"sample\", when a score asks for samples (WP-13); every file pinned in assets/sounds.json by the sha256 of the owner's own download"
+  },
+  {
    "id": "openpeeps",
    "path": "assets/external/openpeeps/",
    "in_git": false,

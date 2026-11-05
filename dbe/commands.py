@@ -3323,7 +3323,7 @@ def _samples_test():
         score = {"length_s": 12.0, "bpm": 100, "offset_s": 0, "voice": False, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 19, "chords": ["F", "C", "Dm", "Bb"], "end_chord": "F"}]}
         cues = [{"t": t, "type": "step", "surface": "grass", "pan": 0.0} for t in (1.0, 1.5, 2.0, 2.5)] + [{"t": t, "type": "step", "surface": "wood", "pan": 0.0} for t in (3.5, 4.0)] \
             + [{"t": 5.0, "type": "thud", "pan": 0.0}, {"t": 6.0, "type": "pop", "pan": 0.0}] \
-            + [{"t": 7.0 + 0.7 * i, "type": k, "pan": 0.0} for i, k in enumerate(sorted(mapped))]
+            + [{"t": 7.0 + 0.45 * i, "type": k, "pan": 0.0} for i, k in enumerate(sorted(mapped))]
         (d / "timing.json").write_text(json.dumps({"lines": []})); (d / "script.json").write_text(json.dumps({"lines": []}))
         (d / "build" / "cues.json").write_text(json.dumps(cues))
         out = {}
@@ -3358,7 +3358,7 @@ def _samples_test():
             got = played.get(k, "").split(":", 1)[0] or None
             if got != want_pack:
                 bad.append(f"cue {k}: played {played.get(k, 'synthesized')}, expected {want_pack or 'synthesized (pack not here)'}")
-            elif want_pack and diff(7.0 + 0.7 * i) < 1e-3:
+            elif want_pack and diff(7.0 + 0.45 * i) < 1e-3:
                 bad.append(f"cue {k}: the recording did not reach the mix")
         from . import vendoring as V
         pv = V.provenance(d, {}, [{"path": f"sound pack {k}", "license": lib_["license"], "class": lib_["class"]} for k, lib_ in _json(ROOT / "assets" / "sounds.json")["packs"].items()
