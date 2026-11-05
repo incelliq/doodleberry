@@ -9,7 +9,8 @@ nodes downstream of it and nothing else. Everything is seeded: a cook is a pure 
                 "face": "center", "plane": "crowd", "seed": 7, "cheer": {"clips": ["clap", "celebrate"], "start": t, "end": t, "share": 0.6}},
       "confetti": {"op": "particles", "kind": "confetti" | "snow" | "rain", "count": 90, "rect": [...], "start": t, "seed": 3, "plane": "front"},
       "city": {"op": "gn_set", "kind": "city", "seed": 11, "blocks": {...}, "palette": [...], "plane": "set3d"},
-      "crates": {"op": "rigid", "bodies": [{"shape": "box", "size": 1, "at": [540, 6, 4]}, ...], "plane": "set3d"}}}
+      "crates": {"op": "rigid", "bodies": [{"shape": "box", "size": 1, "at": [540, 6, 4]}, ...], "plane": "set3d"},
+      "game": {"op": "engine", "project": "films/x/godot", "scene": "res://main.tscn", "plane": "engine"}}}
 
 Outputs land in the shot: crowd members are appended to its cast (tagged "solved": "proc") on their compositor plane;
 particles and plates become items on compositor planes (a gn_set plane is screen-locked: its render already has the
@@ -25,7 +26,7 @@ from pathlib import Path
 
 from . import ROOT
 
-VERSION = {"scatter": 1, "crowd": 1, "particles": 1, "gn_set": 1, "rigid": 1}
+VERSION = {"scatter": 1, "crowd": 1, "particles": 1, "gn_set": 1, "rigid": 1, "engine": 1}
 GN_SCRIPT = ROOT / "dbe" / "blender_gn.py"
 
 
@@ -170,6 +171,50 @@ def op_gn_set(p, ins, ctx, cache):
     return res
 
 
+GODOT = next((str(p) for p in (Path("/opt/godot/godot"), Path.home() / "godot" / "godot") if p.exists()), None)
+
+
+def _project_hash(proj):
+    """a Godot project's own files (not its .godot import cache), so editing a scene or script re-cooks the node"""
+    h = hashlib.sha256()
+    for f in sorted(proj.rglob("*")):
+        if f.is_file() and ".godot" not in f.parts:
+            h.update(str(f.relative_to(proj)).encode()); h.update(f.read_bytes())
+    return h.hexdigest()[:16]
+
+
+def op_engine(p, ins, ctx, cache):
+    """WP-42: live renders from a game engine into the comp. Godot 4 renders the project (its main scene, or `scene`) in
+    Movie Maker mode at the shot's size and frame rate with a fixed step (so a frame is a function of its number) under
+    a virtual display, into a screen-locked plate. The shot's span and camera reach the project as
+    --doodleberry-request=<json> (OS.get_cmdline_user_args()) for scripts that want to follow the 2D camera."""
+    import shutil
+    if not GODOT:
+        raise RuntimeError("engine needs Godot 4 (/opt/godot/godot: bash tools/setup.sh godot)")
+    proj = (ROOT / p["project"]).resolve()
+    if not (proj / "project.godot").exists():
+        raise FileNotFoundError(f"no Godot project at {p['project']}")
+    out = cache / ctx["key"]; shutil.rmtree(out, ignore_errors=True); out.mkdir(parents=True)
+    n = ctx["frames"]; W, H = ctx["size"]
+    rq = out / "request.json"; rq.write_text(json.dumps({"size": [W, H], "fps": ctx["fps"], "start": ctx["start"], "frames": n, "camera": ctx["camera"]}))
+    args = ["xvfb-run", "-a", "-s", f"-screen 0 {max(W, 1280)}x{max(H, 1024)}x24", GODOT, "--path", str(proj), "--rendering-driver", "opengl3",
+            "--write-movie", str(out / "m.png"), "--fixed-fps", str(ctx["fps"]), "--quit-after", str(n), "--resolution", f"{W}x{H}"]
+    if p.get("scene"):
+        args.append(p["scene"])
+    args += ["--", f"--doodleberry-request={rq}"]
+    r = subprocess.run(args, capture_output=True, text=True, timeout=7200, cwd=str(ROOT))
+    for k in range(n):   # Movie Maker numbers frames m00000000.png...; it writes one more at the end
+        src = out / f"m{k:08d}.png"
+        if not src.exists():
+            raise RuntimeError(f"godot wrote no frame {k}: {(r.stderr or r.stdout)[-800:]}")
+        src.rename(out / f"f_{k:04d}.png")
+    for extra in out.glob("m*"):
+        extra.unlink()
+    hashes = {f"f_{k:04d}.png": pixel_hash(out / f"f_{k:04d}.png") for k in range(n)}
+    item = {"type": "plate", "src": f"proc/{ctx['key']}/f_%04d.png", "start": ctx["start"], "fps": ctx["fps"], "count": n, "proc": ctx["node"]}
+    return {"items": [item], "plane": p.get("plane", "engine"), "screen": True, "frames": hashes}
+
+
 OPS = {"scatter": op_scatter, "crowd": op_crowd, "particles": op_particles}
 
 
@@ -189,6 +234,8 @@ def cook(nodes, ctx, cache, force=(), dry=False):
             dep["ctx"] = {"size": ctx["size"], "floor": ctx["floor"]}
         if op in ("gn_set", "rigid"):   # the render depends on the camera, the span and the script too
             dep.update(ctx={k: ctx[k] for k in ("size", "fps", "start", "frames", "camera", "floor")}, script=script)
+        if op == "engine":   # the render depends on the span, the camera and every file of the project
+            dep.update(ctx={k: ctx[k] for k in ("size", "fps", "start", "frames", "camera")}, project=_project_hash((ROOT / node["project"]).resolve()))
         key = f"{op}-{_h(dep)}"
         keys[n] = key
         f = cache / f"{key}.json"
@@ -201,7 +248,7 @@ def cook(nodes, ctx, cache, force=(), dry=False):
         t0 = time.time()
         c = {**ctx, "node": n, "key": key}
         res = op_gn_set({**node, "kind": "props"} if op == "rigid" else node, [outs[i] for i in inputs(node)], c, cache) if op in ("gn_set", "rigid") \
-            else OPS[op](node, [outs[i] for i in inputs(node)], c)
+            else op_engine(node, [outs[i] for i in inputs(node)], c, cache) if op == "engine" else OPS[op](node, [outs[i] for i in inputs(node)], c)
         f.write_text(json.dumps(res))
         outs[n] = res; cooked.append(n); secs[n] = round(time.time() - t0, 2)
     return outs, {"cooked": cooked, "cached": cached, "keys": keys, "seconds": secs}
@@ -214,7 +261,7 @@ def apply(shot, outs):
     planes = comp.setdefault("planes", [])
     for pl in planes:
         pl["items"] = [it for it in pl.get("items", []) if "proc" not in it]
-    depths = {"set3d": 40, "crowd": 1.12, "front": 0.8}
+    depths = {"set3d": 40, "crowd": 1.12, "front": 0.8, "engine": 30}
     planes[:] = [pl for pl in planes if not pl.get("proc_plane")]   # depth planes a crowd made last time
     for n, o in outs.items():
         if o.get("cast"):

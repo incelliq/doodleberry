@@ -1801,6 +1801,15 @@ rendered frames so the bake sees what the renders see), bakes it to Grease Penci
 2D side). In `rigid`: 12 and 16 strokes on the two frames checked, every sampled point within 2.5 px of an edge of the
 picture, and the saved .blend opens with the same strokes.
 
+**Live renders from a game engine** (WP-42). An `engine` node, `{"op": "engine", "project": "<a Godot 4 project>",
+"scene": "res://...", "plane": "engine"}`, renders the project in Godot's Movie Maker mode (a fixed step per frame, so
+a frame is a function of its number) at the shot's size and frame rate under a virtual display (Xvfb), into a
+screen-locked compositor plate; a transparent viewport (`rendering/viewport/transparent_background`) composites over
+the shot. The shot's span and camera reach the project as `--doodleberry-request=<json>` for scripts that follow the
+2D camera; the node's cache key covers every file of the project. Test `engine` with `tests/godot/spin` (a turning
+box) in front of a scratch copy of pip-park's first shot: 171 frames, every one different, the same pixels on a forced
+second cook, and the player's frame equal to Godot's plate wherever the box is (all of its 296,933 pixels).
+
 ## ML assists, in-house (WP-43, part 1)
 Models used as assistants whose output is data a person accepts, on CPU (onnxruntime), pinned by sha256
 (`dbe/assists.py`, fetched by `bash tools/setup.sh models` or on first use):

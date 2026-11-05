@@ -7345,6 +7345,10 @@ def test_golden(update=False, film=""):
         bad, meas = _dressup_test()
         failed += 1 if bad else 0
         results.append({"dressup": "layer sets pick a costume's drawings together (from a pose or keyed in a timeline, the pose's own picks winning; dbe/geom.py agrees); gradient fills match between the SVG loader, Lottie and Synfig; textures are drawn over the fill", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "engine":   # WP-42: live renders from a game engine (Godot) into the comp
+        bad, meas = _engine_test()
+        failed += 1 if bad else 0
+        results.append({"engine": "a Godot project rendered in Movie Maker mode as a proc node: the same pixels twice, every frame different, drawn by the player in front of a shot", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if film == "rigid":   # WP-42: Bullet rigid bodies as a proc node (Blender renders twice, so only when asked)
         bad, meas = _rigid_test()
         failed += 1 if bad else 0
@@ -9675,8 +9679,9 @@ def comp_track(name, shot, id, src, region, start=0, fps=30, scale=1):
          force=("array", "node ids to cook again even if cached", None),
          block=("object", "a proc block to store first ({nodes: {...}, floor}); empty: the shot's own", None))
 def proc_cook(name, shot, force=None, block=None):
-    """Cook a shot's procedural graph (WP-42): scatter, crowd (cast members with seeded variation), particles and
-    gn_set (a Geometry Nodes 3D set rendered by Blender, framed by the shot camera, behind the 2D puppets). Every node
+    """Cook a shot's procedural graph (WP-42): scatter, crowd (cast members with seeded variation), particles, gn_set (a
+    Geometry Nodes 3D set rendered by Blender, framed by the shot camera, behind the 2D puppets), rigid (Bullet rigid
+    bodies and cloth strips in that set) and engine (a Godot project rendered live into a plate). Every node
     is cached by a hash of its operation, parameters, inputs and context, so only changed nodes and the nodes
     downstream of them cook again. Writes the crowd and the compositor items into shots.json; returns which nodes were
     cooked and which came from the cache."""
@@ -9688,6 +9693,44 @@ def proc_cook(name, shot, force=None, block=None):
     (d / "shots.json").write_text(json.dumps(raw, indent=1, ensure_ascii=False))
     _player_page(name)
     return rep
+
+
+def _engine_test():
+    """WP-42 live renders from a game engine: tests/godot/spin (a box turning, transparent background) rendered by Godot
+    in Movie Maker mode as a proc node, twice the same pixels, every frame different, and composited in front of a
+    scratch copy of pip-park's first shot, where the player draws it over the set"""
+    import numpy as np
+    from PIL import Image
+    from . import proc as PR
+    bad, meas = [], {}
+    if not PR.GODOT:
+        return ["Godot not found"], meas
+    name = "zz-engine"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+        shutil.copy(f, d / f.name)
+    try:
+        block = {"nodes": {"game": {"op": "engine", "project": "tests/godot/spin", "plane": "front"}}}
+        r1 = proc_cook(name, "s1", block=block); r2 = proc_cook(name, "s1", force=["game"])
+        cache = d / "build" / "proc"
+        o = json.loads((cache / f"{r1['keys']['game']}.json").read_text())
+        meas["cook"] = {"cooked": r1["cooked"], "frames": len(o["frames"]), "distinct": len(set(o["frames"].values())), "key_same": r1["keys"] == r2["keys"]}
+        o2 = json.loads((cache / f"{r2['keys']['game']}.json").read_text())
+        meas["rerun_same_pixels"] = o2["frames"] == o["frames"]
+        sh = next(x for x in _shots(name)["shots"] if x["id"] == "s1")
+        t = sh["start"] + 1.0
+        r = subprocess.run(["node", "tools/stills.mjs", str(_player_page(name)), "shot=s1&captions=0", str(d / "build" / "still"), f"{t:.3f}"], cwd=ROOT, capture_output=True, text=True, timeout=600)
+        im = np.asarray(Image.open(d / "build" / f"still_{t:.3f}.png").convert("RGB")).astype(int)
+        plate = np.asarray(Image.open(cache / r2["keys"]["game"] / f"f_{round(1.0 * 30):04d}.png").convert("RGBA")).astype(int)
+        if plate.shape[:2] != im.shape[:2]:
+            plate = np.asarray(Image.fromarray(plate.astype(np.uint8)).resize(im.shape[1::-1], Image.NEAREST)).astype(int)
+        box = plate[..., 3] > 250
+        meas["box_px"] = int(box.sum())
+        meas["frame_matches_plate_on_box"] = round(float((np.abs(im[box] - plate[box][:, :3]).max(-1) <= 12).mean()), 3)
+        if meas["cook"]["frames"] != meas["cook"]["distinct"] or not meas["rerun_same_pixels"] or meas["box_px"] < 1000 or meas["frame_matches_plate_on_box"] < 0.95:
+            bad.append(f"engine: {meas}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    return bad, meas
 
 
 def _proc_test():

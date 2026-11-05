@@ -831,6 +831,11 @@
    "name": "usd-core 26.11 (OpenUSD, Pixar; PyPI)",
    "license": "TOST-1.0 (the Tomorrow Open Source Technology License, Apache-2.0 based, permissive)",
    "use": "WP-42 export.usd: a shot as an OpenUSD stage, checked with OpenUSD's validation framework (dbe/usdexport.py)"
+  },
+  {
+   "name": "Xvfb (xvfb-run, Ubuntu package xvfb)",
+   "license": "MIT/X11 (permissive)",
+   "use": "WP-42 proc engine: a virtual display for Godot's Movie Maker renders"
   }
  ],
  "external": [
