@@ -19,7 +19,15 @@ def main():
         from .server import mcp_stdio
         return mcp_stdio()
     args = json.loads(a[1]) if len(a) > 1 else {}
-    print(json.dumps(call(a[0], args), indent=1, default=str))
+    try:
+        print(json.dumps(call(a[0], args), indent=1, default=str))
+    except ModuleNotFoundError as e:
+        core = {"numpy", "PIL", "jsonschema", "scipy", "babel", "soundfile", "pyloudnorm"}
+        if e.name not in core:
+            raise
+        sys.exit(f"dbe: the Python package {e.name!r} is not installed for {sys.executable} (Python {sys.version.split()[0]}).\n"
+                 "Is the right virtual environment active? e.g.  source ~/.venvs/doodleberry/bin/activate\n"
+                 "or install the packages into this one:  DBE_PY=python bash tools/setup.sh python")
 
 
 if __name__ == "__main__":
