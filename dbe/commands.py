@@ -3302,22 +3302,28 @@ def review_fix(name, id=""):
 
 
 def _samples_test():
-    """WP-13 sample library on zz-samples: a music-and-effects film (no voice), 7 s, with four steps on grass, two on
-    wood, a thud and a pop. Mixed with "samples": true and without."""
+    """WP-13 sample library on zz-samples: a music-and-effects film (no voice), 12 s, with four steps on grass, two on
+    wood, a thud and a pop, then one cue of each type the other packs stand in for (tick, ping, chime, lens open and
+    close, page flip, stamp). Mixed with "samples": true and without. A pack that is not here at all is reported and
+    its cues are expected synthesized; a pack here with a file missing or changed fails."""
     import numpy as np
     import soundfile as sf
     lib = sound_samples()
     if not lib["packs"] or not any(p["present_and_matching"] for p in lib["packs"].values()):
         return [], {"skipped": "no sample pack here (python -m dbe sound.import_pack ...; see docs/dbe.md)"}
     bad, meas = [], {"packs": lib["packs"]}
+    here = {pid for pid, p in lib["packs"].items() if p["present_and_matching"] == p["files"]}
     for pid, p in lib["packs"].items():
-        if p["present_and_matching"] != p["files"]:
+        if 0 < p["present_and_matching"] < p["files"]:
             bad.append(f"{pid}: {p['files'] - p['present_and_matching']} files missing or changed")
+    meas["not_here"] = sorted(set(lib["packs"]) - here)
+    mapped = {k: v.split(":", 1)[0] for k, v in lib["map"].items() if "/" not in k and k != "thud"}   # cue type -> pack
     name = "zz-samples"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); (d / "build").mkdir(parents=True)
     try:
-        score = {"length_s": 7.0, "bpm": 100, "offset_s": 0, "voice": False, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 11, "chords": ["F", "C", "Dm", "Bb"], "end_chord": "F"}]}
+        score = {"length_s": 12.0, "bpm": 100, "offset_s": 0, "voice": False, "sections": [{"kind": "main", "from_beat": 0, "to_beat": 19, "chords": ["F", "C", "Dm", "Bb"], "end_chord": "F"}]}
         cues = [{"t": t, "type": "step", "surface": "grass", "pan": 0.0} for t in (1.0, 1.5, 2.0, 2.5)] + [{"t": t, "type": "step", "surface": "wood", "pan": 0.0} for t in (3.5, 4.0)] \
-            + [{"t": 5.0, "type": "thud", "pan": 0.0}, {"t": 6.0, "type": "pop", "pan": 0.0}]
+            + [{"t": 5.0, "type": "thud", "pan": 0.0}, {"t": 6.0, "type": "pop", "pan": 0.0}] \
+            + [{"t": 7.0 + 0.7 * i, "type": k, "pan": 0.0} for i, k in enumerate(sorted(mapped))]
         (d / "timing.json").write_text(json.dumps({"lines": []})); (d / "script.json").write_text(json.dumps({"lines": []}))
         (d / "build" / "cues.json").write_text(json.dumps(cues))
         out = {}
@@ -3345,6 +3351,15 @@ def _samples_test():
             bad.append(f"grass and wood recordings overlap in brightness: {meas['centroid_hz']}")
         diff = lambda t: float(np.abs(out[True]["fx"][int(t * sr): int((t + 0.2) * sr)] - out[False]["fx"][int(t * sr): int((t + 0.2) * sr)]).max())
         meas["changed_vs_synth"] = {"step": round(diff(1.0), 4), "pop (unmapped)": round(diff(6.0), 4)}
+        played = {u["type"]: u["sample"] for u in used}
+        meas["mapped_cues"] = {k: played.get(k, "synthesized") for k in sorted(mapped)}
+        for i, k in enumerate(sorted(mapped)):
+            want_pack = mapped[k] if mapped[k] in here else None
+            got = played.get(k, "").split(":", 1)[0] or None
+            if got != want_pack:
+                bad.append(f"cue {k}: played {played.get(k, 'synthesized')}, expected {want_pack or 'synthesized (pack not here)'}")
+            elif want_pack and diff(7.0 + 0.7 * i) < 1e-3:
+                bad.append(f"cue {k}: the recording did not reach the mix")
         from . import vendoring as V
         pv = V.provenance(d, {}, [{"path": f"sound pack {k}", "license": lib_["license"], "class": lib_["class"]} for k, lib_ in _json(ROOT / "assets" / "sounds.json")["packs"].items()
                                   if any(u["sample"].startswith(k + ":") for u in used)])
@@ -11712,36 +11727,69 @@ def film_handoff(name, melt=True):
 
 
 # ---------------- sound editing (WP-40) ----------------
-@command("sound.import_pack", folder=("string", "a folder of recorded samples (.ogg, .wav, .flac; searched recursively), absolute or from the project root"),
-         pack=("string", "pack id, e.g. kenney-impact"), source=("string", "where the files came from (a URL)"), license=("string", "SPDX id, e.g. CC0-1.0"),
+@command("sound.import_pack", folder=("string", "a folder of recorded samples (.ogg, .wav, .flac; searched recursively) or the pack's zip, absolute or from the project root"),
+         pack=("string", "pack id, e.g. kenney-impact"), source=("string", "where the files came from (a URL); not needed for a pack already in the library", ""),
+         license=("string", "SPDX id, e.g. CC0-1.0; not needed for a pack already in the library", ""),
          name=("string", "display name", ""), map=("object", "cue type (or type/surface) -> group in this pack, e.g. {\"step/grass\": \"footstep_grass\"}", None))
-def sound_import_pack(folder, pack, source, license, name="", map=None):
+def sound_import_pack(folder, pack, source="", license="", name="", map=None):
     """A recorded sample pack into the sample library (WP-13): the files are copied to assets/external/sounds/<pack>/
     (git-ignored, like every downloaded pack) and recorded in assets/sounds.json (tracked) with their sha256, licence
     and class, and which cues they can stand in for. A film plays them when its score says "samples": true (or lists
     pack ids): mapped cues use the recording (variants take turns), the rest stay synthesized, and build/
-    samples_used.json lists what played. A file whose hash no longer matches is not played."""
+    samples_used.json lists what played. A file whose hash no longer matches is not played.
+    A pack already in the library keeps its pinned files: each file given is matched to them by sha256 and copied under
+    the library's name (copies that renamed files still fit); the result lists the pinned files not found."""
     import hashlib
+    import tempfile
+    import zipfile
     from . import vendoring as V
     src = Path(folder) if Path(folder).is_absolute() else ROOT / folder
-    files = sorted(f for f in src.rglob("*") if f.suffix.lower() in (".ogg", ".wav", ".flac") and f.is_file() and not f.name.lower().startswith("preview"))
-    if not files:
-        raise ValueError(f"no .ogg, .wav or .flac files under {src}")
-    names = [f.name for f in files]
-    if len(set(names)) != len(names):
-        raise ValueError("two files share a name; the library keys samples by file name")
-    dst = ROOT / "assets" / "external" / "sounds" / pack; dst.mkdir(parents=True, exist_ok=True)
-    hashes = {}
-    for f in files:
-        b = f.read_bytes(); hashes[f.name] = hashlib.sha256(b).hexdigest(); (dst / f.name).write_bytes(b)
-    regp = ROOT / "assets" / "sounds.json"; reg = _json(regp, {"note": "", "packs": {}, "map": {}})
-    reg["note"] = "recorded sample packs (WP-13): files in assets/external/sounds/<pack>/ (not in git), pinned by sha256; map: cue type or type/surface -> pack:group"
-    reg["packs"][pack] = {**reg["packs"].get(pack, {}), "name": name or pack, "source": source, "license": license, "class": V.classify(license), "dir": f"assets/external/sounds/{pack}", "files": hashes}
-    for k, g in (map or {}).items():
-        reg["map"][k] = f"{pack}:{g}"
-    regp.write_text(json.dumps(reg, indent=1) + "\n")
-    groups = sorted({n.rsplit(".", 1)[0].rstrip("0123456789").rstrip("_") for n in names})
-    return {"pack": pack, "files": len(hashes), "groups": groups, "license": license, "class": reg["packs"][pack]["class"], "mapped": {k: v for k, v in reg["map"].items() if v.startswith(pack + ":")}}
+    tmp = None
+    if src.suffix.lower() == ".zip":
+        tmp = tempfile.TemporaryDirectory(); zipfile.ZipFile(src).extractall(tmp.name); src = Path(tmp.name)
+    try:
+        files = sorted(f for f in src.rglob("*") if f.suffix.lower() in (".ogg", ".wav", ".flac") and f.is_file() and not f.name.lower().startswith("preview"))
+        if not files:
+            raise ValueError(f"no .ogg, .wav or .flac files under {folder}")
+        regp = ROOT / "assets" / "sounds.json"; reg = _json(regp, {"note": "", "packs": {}, "map": {}})
+        pinned = (reg["packs"].get(pack) or {}).get("files")
+        dst = ROOT / "assets" / "external" / "sounds" / pack; dst.mkdir(parents=True, exist_ok=True)
+        if pinned:   # a known pack: place what matches, under the library's names
+            by_hash = {}
+            for n, h in pinned.items():
+                by_hash.setdefault(h, []).append(n)
+            placed, extra = set(), []
+            for f in files:
+                b = f.read_bytes(); h = hashlib.sha256(b).hexdigest()
+                if h in by_hash:
+                    for n in by_hash[h]:
+                        (dst / n).write_bytes(b); placed.add(n)
+                else:
+                    extra.append(f.name)
+            for k, g in (map or {}).items():
+                reg["map"][k] = f"{pack}:{g}"
+            if map:
+                regp.write_text(json.dumps(reg, indent=1) + "\n")
+            return {"pack": pack, "files": len(pinned), "placed": len(placed), "missing": sorted(set(pinned) - placed), "not_in_library": sorted(extra),
+                    "mapped": {k: v for k, v in reg["map"].items() if v.startswith(pack + ":")}}
+        if not (source and license):
+            raise ValueError("a new pack needs its source and license")
+        names = [f.name for f in files]
+        if len(set(names)) != len(names):
+            raise ValueError("two files share a name; the library keys samples by file name")
+        hashes = {}
+        for f in files:
+            b = f.read_bytes(); hashes[f.name] = hashlib.sha256(b).hexdigest(); (dst / f.name).write_bytes(b)
+        reg["note"] = "recorded sample packs (WP-13): files in assets/external/sounds/<pack>/ (not in git), pinned by sha256; map: cue type or type/surface -> pack:group"
+        reg["packs"][pack] = {**reg["packs"].get(pack, {}), "name": name or pack, "source": source, "license": license, "class": V.classify(license), "dir": f"assets/external/sounds/{pack}", "files": hashes}
+        for k, g in (map or {}).items():
+            reg["map"][k] = f"{pack}:{g}"
+        regp.write_text(json.dumps(reg, indent=1) + "\n")
+        groups = sorted({n.rsplit(".", 1)[0].rstrip("0123456789").rstrip("_") for n in names})
+        return {"pack": pack, "files": len(hashes), "groups": groups, "license": license, "class": reg["packs"][pack]["class"], "mapped": {k: v for k, v in reg["map"].items() if v.startswith(pack + ":")}}
+    finally:
+        if tmp:
+            tmp.cleanup()
 
 
 @command("sound.samples")
