@@ -140,9 +140,12 @@ oss_deps() {
 pencil2d_flatpak() {
   # Pencil2D from Flathub, reached as `pencil2d` through a small wrapper in $BIN (dbe looks the program up on PATH)
   if command -v pencil2d >/dev/null; then echo "pencil2d: $(command -v pencil2d)"; return; fi
-  if ! command -v flatpak >/dev/null; then echo "pencil2d: not packaged for this system; install flatpak, then: flatpak install --user flathub org.pencil2d.Pencil2D"; return; fi
+  if ! command -v flatpak >/dev/null; then echo "pencil2d: not packaged for this system; install flatpak, add Flathub (flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo), then: flatpak install --user flathub org.pencil2d.Pencil2D"; return; fi
   if ! flatpak info org.pencil2d.Pencil2D >/dev/null 2>&1; then
-    echo "pencil2d: not installed. Run:  flatpak install --user flathub org.pencil2d.Pencil2D   then  bash tools/setup.sh oss  again"; return
+    echo "pencil2d: not installed. Run:"
+    echo "  flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo"
+    echo "  flatpak install --user flathub org.pencil2d.Pencil2D"
+    echo "  then  bash tools/setup.sh oss  again"; return
   fi
   printf '%s\n' '#!/bin/sh' '# Pencil2D from Flathub (written by tools/setup.sh oss); host files so dbe can hand it projects and read frames back' \
     'exec flatpak run --filesystem=host --env=QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-}" org.pencil2d.Pencil2D "$@"' > "$BIN/pencil2d"

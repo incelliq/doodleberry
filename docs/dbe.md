@@ -3031,8 +3031,8 @@ what is missing. Fedora's names were checked against its package index (Fedora 4
 - **oss**: inkscape, synfig, libmypaint, mypaint2-brushes (the MyPaint 2.0 brush set the Debian package gives, so
   brush strokes match), OpenColorIO-tools, OpenImageIO-utils (oiiotool), mlt (melt), frei0r-plugins, krita and
   xorg-x11-server-Xvfb (xvfb-run).
-- **Pencil2D**: Fedora has no package. With the Flathub app installed (`flatpak install --user flathub
-  org.pencil2d.Pencil2D`), `setup.sh oss` writes a `pencil2d` wrapper in `~/.local/bin`, run with host file
+- **Pencil2D**: Fedora has no package. With the Flathub app installed (`flatpak remote-add --user --if-not-exists flathub
+  https://dl.flathub.org/repo/flathub.flatpakrepo`, then `flatpak install --user flathub org.pencil2d.Pencil2D`), `setup.sh oss` writes a `pencil2d` wrapper in `~/.local/bin`, run with host file
   access, which dbe finds on PATH. Not yet tried on a real Fedora machine; the logic was tested with stand-in
   dnf, rpm and flatpak.
 - **locales**: google-noto-fonts-all and google-noto-sans-cjk-fonts (for fonts-noto-core and fonts-noto-cjk),
