@@ -11050,6 +11050,17 @@ def _fromsheet_test():
         meas["ink_cover"] = [round(v, 3) for v in drawn]
         if min(drawn) < 0.05:
             bad.append(f"the loader drew little: {meas['ink_cover']}")
+    # the same figure in an ankle-length skirt: the skirt goes with the hips and the legs start at its hem
+    d.rectangle([360, 460, 540, 690], fill=shorts, outline=ink, width=4)
+    im.save(tmp / "skirt.png")
+    try:
+        pz2, rep2 = FSH.build(str(tmp / "skirt.png"), "Testskirt")
+        hem_y = to_img(pz2["parts"]["thigh_L"]["pivot"])[1]
+        meas["skirt"] = {"detected": bool(rep2["landmarks"].get("skirt")), "leg_joint_y": round(hem_y), "hem_y": 690}
+        if not rep2["landmarks"].get("skirt") or abs(hem_y - 690) > 0.04 * Hf:
+            bad.append(f"long skirt: {meas['skirt']}")
+    except Exception as e:
+        bad.append(f"long skirt: {e}")
     shutil.rmtree(tmp, ignore_errors=True); pf.unlink(missing_ok=True)
     return bad, meas
 

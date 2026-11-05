@@ -112,8 +112,11 @@ def landmarks(fig):
         r = [(s, e) for s, e in _runs(fig[y]) if e - s > 3]
         if len(r) >= 2:
             crotch = y; break
-    if crotch is None or crotch > top + 0.93 * H:
-        raise ValueError("no gap between the legs found: draw the legs apart with the feet visible")
+    skirt = crotch is None or crotch > top + 0.8 * H
+    if skirt:   # a long skirt, dress or sari: the legs part only below its hem
+        crotch = next((y for y in range(int(top + 0.8 * H), bot) if len([r for r in _runs(fig[y]) if r[1] - r[0] > 3]) >= 2), None)
+        if crotch is None or crotch > top + 0.97 * H:
+            raise ValueError("no gap between the legs or feet found: draw the legs (or at least the feet) apart")
     gaps = [(r1[1], r2[0]) for r1, r2 in zip(_runs(fig[crotch + 5])[:-1], _runs(fig[crotch + 5])[1:])]
     gx = min(gaps, key=lambda g: abs((g[0] + g[1]) / 2 - cx)) if gaps else (cx, cx)
     leg_mid = (gx[0] + gx[1]) / 2
@@ -132,7 +135,10 @@ def landmarks(fig):
         hip_x = float(np.nanmedian(cxs[: max(3, int(0.3 * n))]))
         legs[side] = {"hip": (hip_x, crotch - 0.03 * H), "knee": (float(np.nanmedian(cxs[int(0.4 * n): int(0.6 * n)])), crotch + 0.5 * a),
                       "ankle": (float(np.nanmedian(cxs[max(0, a - 10): a + 1])), ankle_y), "thick": float(shin)}
-    return {"top": int(top), "bot": int(bot), "left": int(left), "right": int(right), "H": int(H), "torso": (tl, tr), "cx": cx,
+    if skirt:   # the leg's joint at the hem: the feet shuffle under it
+        for Lg in legs.values():
+            Lg["hip"] = (Lg["hip"][0], crotch - 0.01 * H)
+    return {"skirt": bool(skirt), "top": int(top), "bot": int(bot), "left": int(left), "right": int(right), "H": int(H), "torso": (tl, tr), "cx": cx,
             "band": (int(a0), int(a1)), "neck_y": float(neck_y), "crotch": int(crotch), "arms": arms, "legs": legs}
 
 
@@ -156,7 +162,10 @@ def part_masks(fig, lm, rgb=None):
     hair = np.zeros(shp, bool)
     if rgb is not None:   # the hair's colour (the top of the head): hair touching a sleeve stays with the head
         top_rows = fig & (np.arange(shp[0])[:, None] < lm["top"] + 0.06 * lm["H"])
-        hc = _mode_colour(rgb[top_rows]); hair = np.abs(rgb - hc).sum(-1) < 45
+        hc = _mode_colour(rgb[top_rows]); hair = (np.abs(rgb - hc).sum(-1) < 45) & fig
+        # only hair-coloured areas joined to the hair on top of the head (grey edge pixels along an outline elsewhere
+        # can be near a grey hair's colour)
+        lab, _ = ND.label(hair); ids = np.unique(lab[top_rows & hair]); hair = np.isin(lab, ids[ids > 0])
     tl, tr = lm["torso"]; a0, a1 = lm["band"]
     yy, xx = np.mgrid[: shp[0], : shp[1]]
     arm_any = np.zeros(shp, bool); caps = {}
@@ -203,6 +212,8 @@ def part_masks(fig, lm, rgb=None):
         masks[f"upperarm_{side}"], masks[f"forearm_{side}"], masks[f"hand_{side}"] = up, fo, ha
         piv[f"upperarm_{side}"], piv[f"forearm_{side}"], piv[f"hand_{side}"] = P, e, w
     body = fig & ~arm_any
+    # anything left beside the torso at arm height is stray (edge pixels of the arms), not body
+    body &= ~(((yy >= a0 - 0.06 * lm["H"]) & (yy <= a1 + 0.06 * lm["H"])) & ((xx < tl - 3) | (xx > tr + 3)) & ~ND.binary_dilation(hair, iterations=5))
     neck_y, crotch = lm["neck_y"], lm["crotch"]
     head = body & (yy < neck_y + 0.03 * lm["H"])
     # all of the hair goes with the head, wherever its tips reach (with its outline): the hair touching the head
@@ -212,7 +223,8 @@ def part_masks(fig, lm, rgb=None):
     head = head | hair_all
     masks["head"] = head; piv["head"] = (lm["cx"], neck_y)
     # hips: the band above the crotch (the shorts' or skirt's top), torso above it
-    hip_top = crotch - 0.12 * lm["H"]
+    # (with a long skirt the hips are the skirt: from halfway between the arms and the hem down to the hem)
+    hip_top = (a1 + 0.45 * (crotch - a1)) if lm.get("skirt") else crotch - 0.12 * lm["H"]
     legs_any = np.zeros(shp, bool)
     for side, Lg in lm["legs"].items():
         lo = (xx < (lm["legs"]["L"]["hip"][0] + lm["legs"]["R"]["hip"][0]) / 2) if side == "L" else (xx >= (lm["legs"]["L"]["hip"][0] + lm["legs"]["R"]["hip"][0]) / 2)
@@ -220,7 +232,7 @@ def part_masks(fig, lm, rgb=None):
         legs_any |= leg
         h, k, a = Lg["hip"], Lg["knee"], Lg["ankle"]
         r = Lg["thick"] * 0.6
-        th = leg & (yy < k[1]) | (body & lo & _disc(shp, h, r) & (yy >= hip_top))
+        th = leg & (yy < k[1]) | ((leg if lm.get("skirt") else body & lo) & _disc(shp, h, r) & (yy >= hip_top))   # under a skirt no cloth swings with the leg
         sh = leg & (yy >= k[1]) & (yy < a[1]) | (leg & _disc(shp, k, r))
         ft = leg & (yy >= a[1]) | (leg & _disc(shp, a, r * 0.8))
         masks[f"thigh_{side}"], masks[f"shin_{side}"], masks[f"foot_{side}"] = th, sh, ft
@@ -255,7 +267,9 @@ def face_features(rgb, head_mask):
     fy0, fy1 = np.where(face)[0].min(), np.where(face)[0].max()
     fx = np.where(face)[1]; fcx = (fx.min() + fx.max()) / 2; fw = fx.max() - fx.min()
     # eyes: the two darkest sizeable blobs either side of the centre, in the face's upper-middle
-    cand = [b for b in blobs if fy0 + 0.2 * (fy1 - fy0) < b["c"][1] < fy0 + 0.7 * (fy1 - fy0) and b["dark"] > 0.3 and b["n"] > 40]
+    for b in blobs:   # how solid a mark is: an eye is a filled dot, a glasses rim a ring
+        x0, y0, x1, y1 = b["box"]; b["solid"] = b["n"] / max(1, (x1 - x0 + 1) * (y1 - y0 + 1))
+    cand = [b for b in blobs if fy0 + 0.2 * (fy1 - fy0) < b["c"][1] < fy0 + 0.7 * (fy1 - fy0) and b["dark"] > 0.3 and b["n"] > 40 and b["solid"] > 0.4]
     left = [b for b in cand if b["c"][0] < fcx - 0.08 * fw]; right = [b for b in cand if b["c"][0] > fcx + 0.08 * fw]
     eyes = [max(left, key=lambda b: b["n"] * b["dark"]), max(right, key=lambda b: b["n"] * b["dark"])] if left and right else []
     # mouth: the widest mark below the eyes and within about an eye spacing of them (the nose is narrower; the chin
@@ -434,5 +448,5 @@ def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
               "meta": {"author": "cast.from_sheet", "source": "generated character sheet", "model": model or "unrecorded",
                        "license": license_id or "unrecorded", "note": "drawn by an image model from a written description; check it resembles no existing character"}}
     report.update({"eyes": len(ff["eyes"]), "mouth": bool(ff["mouth"]), "scale": round(s, 4), "palette": palette,
-                   "landmarks": {k: lm[k] for k in ("band", "torso", "crotch", "neck_y", "H")}})
+                   "landmarks": {k: lm[k] for k in ("band", "torso", "crotch", "neck_y", "H", "skirt")}})
     return puppet, report

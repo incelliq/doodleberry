@@ -1362,9 +1362,23 @@ these steps:
 - **Provenance:** the model and its licence go into the puppet's `meta` for the posting gate. Check every result
   for resemblance to existing characters, as for any character.
 
-Tried on Nila, a girl in a t-shirt and shorts generated on the owner's machine. Her images and puppet stay out of git
-until the model's licence is recorded. Not handled yet: an ankle-length skirt or sari, where the legs only part at
-the feet. The command then stops with "no gap between the legs found".
+**Long skirts and saris.** When the legs part only in the bottom fifth of the figure, the garment counts as a long
+skirt:
+
+- the hips are the skirt, from halfway between the arms and the hem down to the hem;
+- the legs are what shows below the hem, jointed at the hem, so the feet shuffle under it;
+- no cloth swings with a leg.
+
+**Glasses.** An eye must be a solid mark (it fills at least 40% of its box), so a glasses rim is not taken for an eye.
+The hair is only the hair-coloured area joined to the top of the head. Grey edge pixels along an outline can be near a
+grey hair's colour. Anything left beside the torso at arm height (other than hair and its outline) is dropped.
+
+Tried on two characters generated on the owner's machine. Their images and puppets stay out of git until the model's
+licence is recorded.
+- **Nila**, a girl in a t-shirt and shorts.
+- **Aunty Kamala**, in an ankle-length sari, with glasses: skirt detected, legs jointed at the hem, both eyes found
+  inside the rims, the mouth found. She waves and blinks behind her glasses. She has no mouth sheet yet, so she says
+  only her own smile.
 
 - **Nila:** every part found. At rest the arms hang clear of the body and the hair stays with the head. Posed, she
   waves, steps, blinks and says O, FV, mid and wide with her own mouths.
@@ -1376,7 +1390,8 @@ Test `fromsheet` draws its own T-pose figure (shapes with dark outlines, so the 
 - every pivot within 2.1% of the figure's height of where it was drawn (shoulders exact);
 - the arms hang after the swing;
 - both eyes and the mouth are lifted into swaps;
-- the loader draws the puppet at rest and posed.
+- the loader draws the puppet at rest and posed;
+- the same figure in an ankle-length skirt counts as skirted, with the legs jointed at the hem (684 against 690 drawn).
 
 ## Kenney prop library (WP-16)
 Kenney's Generic Items (CC0) is 163 sprites named only by number, so each was labelled by eye from its drawing (on
