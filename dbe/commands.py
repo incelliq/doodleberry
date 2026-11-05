@@ -644,6 +644,67 @@ def puppet_turns(puppet, a="base", b="side", steps=3, out=""):
     return {"path": str(dst.relative_to(ROOT)), "views": [k for k in q["views"] if k.startswith(f"turn:{a}>{b}:")]}
 
 
+KENNEY_ITEMS = ROOT / "assets" / "props" / "kenney-generic-items.json"
+
+
+@command("props.import_kenney", pack=("string", "a kenney.nl asset slug", "generic-items"))
+def props_import_kenney(pack="generic-items"):
+    """Download a Kenney pack (CC0) the way the site's own page does (its download-link endpoint, which answers a
+    browser's request with a signed URL) into assets/external/kenney/<pack>/ (not in git), and check the files
+    against the labelled index (assets/props/kenney-<pack>.json, sha256 per item)."""
+    import hashlib
+    import http.cookiejar
+    import urllib.request
+    import zipfile
+    d = ROOT / "assets" / "external" / "kenney"; d.mkdir(parents=True, exist_ok=True)
+    jar = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    hdr = {"User-Agent": "Mozilla/5.0", "Referer": f"https://kenney.nl/assets/{pack}"}
+    page = op.open(urllib.request.Request(f"https://kenney.nl/assets/{pack}", headers=hdr), timeout=60).read().decode("utf8", "replace")
+    did = re.search(r"data-download-id=['\"]([^'\"]+)", page).group(1)
+    link = json.loads(op.open(urllib.request.Request(f"https://kenney.nl/download-link/{did}", headers={**hdr, "X-Requested-With": "XMLHttpRequest", "Accept": "application/json"}), timeout=60).read())["url"]
+    z = d / f"{pack}.zip"; z.write_bytes(op.open(urllib.request.Request(link, headers=hdr), timeout=300).read())
+    shutil.rmtree(d / pack, ignore_errors=True); zipfile.ZipFile(z).extractall(d / pack)
+    idx = _json(ROOT / "assets" / "props" / f"kenney-{pack}.json", {}); bad = []
+    for it in idx.get("items", []):
+        f = d / pack / "PNG" / "Colored" / it["file"]
+        if not f.exists() or hashlib.sha256(f.read_bytes()).hexdigest() != it["sha256"]:
+            bad.append(it["file"])
+    return {"zip": str(z.relative_to(ROOT)), "zip_sha256": hashlib.sha256(z.read_bytes()).hexdigest(), "items_checked": len(idx.get("items", [])), "changed_or_missing": bad}
+
+
+@command("props.library", query=("string", "words to look for in the labels (empty: all)", ""), category=("string", "a category (tools, kitchen, ...)", ""))
+def props_library(query="", category=""):
+    """The labelled prop library (WP-16): Kenney's Generic Items (CC0), 163 numbered sprites each named by eye, with
+    a category; those that could be read otherwise are marked unsure. Whether the pack is here to draw from."""
+    idx = _json(KENNEY_ITEMS, {"items": []}); words = [w for w in query.lower().split() if w]
+    items = [it for it in idx["items"] if (not category or it["category"] == category) and all(w in it["label"].lower() for w in words)]
+    here = (ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored").is_dir()
+    return {"pack": idx.get("pack"), "license": idx.get("license"), "here": here, "count": len(items),
+            "categories": sorted({it["category"] for it in idx["items"]}), "items": items}
+
+
+@command("props.make", item=("string", "a label (or its number) from props.library"), r=("number", "half the prop's largest side, px", 60),
+         x=("number", "where it stands (x)", 540), y=("number", "where it stands (y)", 1400))
+def props_make(item, r=60, x=540, y=1400):
+    """A shots.json prop from the library: the item's drawing as its body (an image, its largest side 2r, centred on
+    the prop's point), held at (x, y); attach it, path it or drop it as any prop. SVG renderer only (a prop with its
+    own drawing)."""
+    import base64
+    from PIL import Image
+    idx = _json(KENNEY_ITEMS, {"items": []})
+    it = next((i for i in idx["items"] if str(i["n"]) == str(item) or i["label"].lower() == str(item).lower()), None) \
+        or next((i for i in idx["items"] if str(item).lower() in i["label"].lower()), None)
+    if not it:
+        raise ValueError(f"no prop {item!r} in the library (props.library)")
+    f = ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored" / it["file"]
+    if not f.exists():
+        raise FileNotFoundError("the Kenney pack is not here: python -m dbe props.import_kenney")
+    w, h = Image.open(f).size; k = 2 * r / max(w, h); W, H = round(w * k, 1), round(h * k, 1)
+    data = "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode()
+    return {"prop": {"r": r, "attach": [[0, [x, y]]], "svg": f'<image href="{data}" x="{-W / 2}" y="{-H / 2}" width="{W}" height="{H}"/>',
+                     "label": it["label"], "source": f"Kenney Generic Items #{it['n']} (CC0)"}, "item": it}
+
+
 @command("puppet.lint", path=("string", "path to a .puppet.json"))
 def puppet_lint(path):
     """Check a puppet against its template (missing parts, swaps, raw colours)."""
@@ -7658,6 +7719,10 @@ def test_golden(update=False, film=""):
         bad, meas = _turns_test()
         failed += 1 if bad else 0
         results.append({"turns": "a turn from front to side drawn as three in-betweens: each moves steadily from one drawing to the other; the bake plays them one step each on twos around both switches, no squash; every renderer draws an in-between as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "kenneyprops":   # WP-16: the labelled Kenney prop library
+        bad, meas = _kenneyprops_test()
+        failed += 1 if bad else 0
+        results.append({"kenneyprops": "Kenney's Generic Items labelled one by one into a prop library: every file matching its sha256, and props.make drawing one (a teapot) where the prop stands", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "lufsstream":   # WP-38: integrated loudness block by block
         bad, meas = _lufsstream_test()
         failed += 1 if bad else 0
@@ -10786,6 +10851,48 @@ def _lufsstream_test():
     meas["working_memory_mb_5min"] = peaks; meas["signal_mb"] = round(x.nbytes / 1e6, 1)
     if peaks["blockwise"] > 0.2 * peaks["pyloudnorm"]:
         bad.append(f"memory: {peaks}")
+    return bad, meas
+
+
+def _kenneyprops_test():
+    """WP-16 the labelled Kenney prop library: 163 labelled items, every file here matching its sha256 in the index;
+    props.make draws one (the teapot) into a shot: in a still of a pip-park copy, the teapot's own colour is where the
+    prop stands and nowhere without it"""
+    import hashlib
+    import numpy as np
+    from PIL import Image
+    bad, meas = [], {}
+    lib = props_library()
+    if not lib["here"]:
+        return [], {"skipped": "the Kenney pack is not here (python -m dbe props.import_kenney)"}
+    root = ROOT / "assets" / "external" / "kenney" / "generic-items" / "PNG" / "Colored"
+    wrong = [it["file"] for it in lib["items"] if hashlib.sha256((root / it["file"]).read_bytes()).hexdigest() != it["sha256"]]
+    meas["library"] = {"items": lib["count"], "categories": len(lib["categories"]), "unsure": sum(1 for it in lib["items"] if it.get("unsure")), "files_not_matching": len(wrong)}
+    if lib["count"] != 163 or wrong:
+        bad.append(f"library: {meas['library']}")
+    name = "zz-kenney"; d = FILMS / name; shutil.rmtree(d, ignore_errors=True); d.mkdir()
+    try:
+        for f in list((FILMS / "pip-park").glob("*.json")) + list((FILMS / "pip-park").glob("*.md")):
+            shutil.copy(f, d / f.name)
+        sj = _json(d / "shots.json"); sh = sj["shots"][0]; sj["shots"] = [sh]
+        for k in ("camera", "camera_auto", "fx"):
+            sh.pop(k, None)
+        X, Y = 860, 1500; sh["props"] = [props_make("teapot", r=80, x=X, y=Y)["prop"]]
+        (d / "shots.json").write_text(json.dumps(sj))
+        tmp = d / "build" / "k"; tmp.mkdir(parents=True)
+        _run(["node", "tools/stills.mjs", str(_player_page(name)), f"shot={sh['id']}&captions=0", str(tmp / "a"), "1.0"], timeout=300)
+        im = np.asarray(Image.open(next(tmp.glob("a_*.png"))).convert("RGB")).astype(int)
+        teal = (np.abs(im - np.array([0x4a, 0x90, 0xd9])).sum(-1) < 60)   # the teapot's blue
+        near = teal[Y - 90:Y + 90, X - 90:X + 90].sum(); far = teal.sum() - near
+        sh["props"] = []; (d / "shots.json").write_text(json.dumps(sj))
+        _run(["node", "tools/stills.mjs", str(_player_page(name)), f"shot={sh['id']}&captions=0", str(tmp / "b"), "1.0"], timeout=300)
+        im2 = np.asarray(Image.open(next(tmp.glob("b_*.png"))).convert("RGB")).astype(int)
+        without = int((np.abs(im2 - np.array([0x4a, 0x90, 0xd9])).sum(-1) < 60)[Y - 90:Y + 90, X - 90:X + 90].sum())
+        meas["teapot_px"] = {"at_the_prop": int(near), "elsewhere": int(far), "there_without_it": without}
+        if near < 2000 or without > 50:
+            bad.append(f"the teapot prop: {meas['teapot_px']}")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     return bad, meas
 
 

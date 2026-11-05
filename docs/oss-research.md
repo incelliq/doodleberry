@@ -378,3 +378,9 @@ Kitsu in the service (**AGPL**, unverified).
 - **Where**: a public mirror of samples on Hugging Face (juniorrios/beat-samples-bvh); the first 20 s of one take, fetched by byte range into out/bvh_real/ (not in git).
 - **Use**: the fixture of test `bvhreal`, the first real motion-capture BVH through `clip.bvh_import` (bones against the puppet's rest, camera-aimed bones held, joint speed limited).
 
+## Kenney Generic Items (WP-16, 5 Nov 2026)
+- **What**: 163 flat-colour sprites (tools, kitchen, computer, medical, travel...), PNG coloured and white, a spritesheet and an ungrouped vector sheet.
+- **Licence**: CC0-1.0 (public domain; credit welcome).
+- **Where**: https://kenney.nl/assets/generic-items, through the page's own download-link flow (`props.import_kenney`); zip sha256 in assets/props/kenney-generic-items.json; files in assets/external/kenney/ (not in git).
+- **Use**: a labelled prop library (`props.library`, `props.make`); labels made by eye, nine marked unsure.
+

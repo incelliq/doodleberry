@@ -1,0 +1,1323 @@
+{
+ "pack": "Kenney Generic Items",
+ "license": "CC0-1.0",
+ "source_url": "https://kenney.nl/assets/generic-items",
+ "zip_sha256": "93f622e46a86f26c8c718cc133c99b545059758abdba65b335c687a581efa059",
+ "folder": "assets/external/kenney/generic-items/PNG/Colored (not in git)",
+ "labelled": "by eye from the drawings, 5 Nov 2026; 'unsure' marks the few that could be something else",
+ "items": [
+  {
+   "n": 1,
+   "label": "power drill",
+   "category": "tools",
+   "file": "genericItem_color_001.png",
+   "sha256": "2741250b74a8a839b90dc2c92e1d025f38080fa0502641cbcb2801bc7565a8f6",
+   "white_file": "genericItem_white_001.png"
+  },
+  {
+   "n": 2,
+   "label": "jigsaw",
+   "category": "tools",
+   "file": "genericItem_color_002.png",
+   "sha256": "d0f8bc0a6400c228a991e4acabce9f223f5269f8ee23fb33e56dea5dcae02352",
+   "white_file": "genericItem_white_002.png"
+  },
+  {
+   "n": 3,
+   "label": "striped cup",
+   "category": "kitchen",
+   "file": "genericItem_color_003.png",
+   "sha256": "6be6a9e9f1d0923179bf6e2fd8a4ed74ee1ba1c280fb90e4a28f3491ad863e36",
+   "white_file": "genericItem_white_003.png"
+  },
+  {
+   "n": 4,
+   "label": "adjustable wrench",
+   "category": "tools",
+   "file": "genericItem_color_004.png",
+   "sha256": "02314e781fe7fb88f03c9ce94fb19f03bbf55bd9126f5cdee988f24c69c5f44a",
+   "white_file": "genericItem_white_004.png"
+  },
+  {
+   "n": 5,
+   "label": "screwdriver",
+   "category": "tools",
+   "file": "genericItem_color_005.png",
+   "sha256": "19598dc10988b7d661dd0a3f3e4a4a543bfb36e507ac9739b0539533341a526a",
+   "white_file": "genericItem_white_005.png"
+  },
+  {
+   "n": 6,
+   "label": "masonry trowel",
+   "category": "tools",
+   "file": "genericItem_color_006.png",
+   "sha256": "c39aa5ad0d3edb9ee3821b251f8df241408d71f317ea7de4415f7d9536a447d4",
+   "white_file": "genericItem_white_006.png"
+  },
+  {
+   "n": 7,
+   "label": "open-ended wrench",
+   "category": "tools",
+   "file": "genericItem_color_007.png",
+   "sha256": "0120bb8e17acb9b0e5c33164e01eaae1afb523addc142791e9b7e041de5f2128",
+   "white_file": "genericItem_white_007.png"
+  },
+  {
+   "n": 8,
+   "label": "pipe wrench",
+   "category": "tools",
+   "file": "genericItem_color_008.png",
+   "sha256": "8068ef18e1abd52e0903f1f95e441a05c3a9380ba72a6a42921bda82e34b2d04",
+   "white_file": "genericItem_white_008.png"
+  },
+  {
+   "n": 9,
+   "label": "pliers",
+   "category": "tools",
+   "file": "genericItem_color_009.png",
+   "sha256": "efb2dd5caa8c39752404937f23bbc080c24d412c2aee61c864cae7db0f6f4b23",
+   "white_file": "genericItem_white_009.png"
+  },
+  {
+   "n": 10,
+   "label": "hammer",
+   "category": "tools",
+   "file": "genericItem_color_010.png",
+   "sha256": "79746e9e164042b491accb1b10b6f47a3c747771b0be7938c1b2841c093ca8da",
+   "white_file": "genericItem_white_010.png"
+  },
+  {
+   "n": 11,
+   "label": "paintbrush",
+   "category": "tools",
+   "file": "genericItem_color_011.png",
+   "sha256": "a129844ea9ddc205505f525c9c3bcc2a2c04f2db0630318a505804cc208fdd16",
+   "white_file": "genericItem_white_011.png"
+  },
+  {
+   "n": 12,
+   "label": "caulking gun",
+   "category": "tools",
+   "file": "genericItem_color_012.png",
+   "sha256": "bcd5b55940784f5a9d30611531a8a6625f17f12135e6b6a965b43af636b027b3",
+   "white_file": "genericItem_white_012.png",
+   "unsure": true
+  },
+  {
+   "n": 13,
+   "label": "utility knife",
+   "category": "tools",
+   "file": "genericItem_color_013.png",
+   "sha256": "501154d58221454d2d0e2a3faab4ddbfa0adddfc1247063109838a6cb1d40c76",
+   "white_file": "genericItem_white_013.png"
+  },
+  {
+   "n": 14,
+   "label": "paint roller",
+   "category": "tools",
+   "file": "genericItem_color_014.png",
+   "sha256": "6162ceb5fc9026bff6ac15165a638ac6fca7dfd17a409f52d2d8505711126e8c",
+   "white_file": "genericItem_white_014.png"
+  },
+  {
+   "n": 15,
+   "label": "chisel",
+   "category": "tools",
+   "file": "genericItem_color_015.png",
+   "sha256": "f0796c8bb191b2028264423f3a5ad5be839aaf92353345cdceb138e886601940",
+   "white_file": "genericItem_white_015.png"
+  },
+  {
+   "n": 16,
+   "label": "hand saw",
+   "category": "tools",
+   "file": "genericItem_color_016.png",
+   "sha256": "849052af12b2af6dac0399b382b76b738c6398b4688ca7f5fdffb4a52ad0fe51",
+   "white_file": "genericItem_white_016.png"
+  },
+  {
+   "n": 17,
+   "label": "hacksaw",
+   "category": "tools",
+   "file": "genericItem_color_017.png",
+   "sha256": "02e7cb4e6af8bdef210ddaffc8b13ac5033fbc9d95fa4a9d72365507e981928c",
+   "white_file": "genericItem_white_017.png"
+  },
+  {
+   "n": 18,
+   "label": "bolt",
+   "category": "tools",
+   "file": "genericItem_color_018.png",
+   "sha256": "4d0f1ecc20e89d5f0e5dc904a26705503788dd8f3209f6df44d033f50696e5af",
+   "white_file": "genericItem_white_018.png"
+  },
+  {
+   "n": 19,
+   "label": "nail",
+   "category": "tools",
+   "file": "genericItem_color_019.png",
+   "sha256": "81f7eb478fb25d712dc6539ac53429bc684cd5fdce1e48b6708b069e9d632e31",
+   "white_file": "genericItem_white_019.png"
+  },
+  {
+   "n": 20,
+   "label": "putty knife",
+   "category": "tools",
+   "file": "genericItem_color_020.png",
+   "sha256": "40c35b3a0474dfe76f443ad2cd50118c7ad1931f212126c694db0b0461bd5a1a",
+   "white_file": "genericItem_white_020.png"
+  },
+  {
+   "n": 21,
+   "label": "pickaxe",
+   "category": "tools",
+   "file": "genericItem_color_021.png",
+   "sha256": "8447582ceb5861e41f337d983dc1ab46e77fced4601329c90a74d17cbb7f3c9c",
+   "white_file": "genericItem_white_021.png"
+  },
+  {
+   "n": 22,
+   "label": "shovel",
+   "category": "tools",
+   "file": "genericItem_color_022.png",
+   "sha256": "f2a4895eb120f8e470a1c4ff6e0560e6630aa467ef3f48a1ccfc7ff019fcd980",
+   "white_file": "genericItem_white_022.png"
+  },
+  {
+   "n": 23,
+   "label": "sledgehammer",
+   "category": "tools",
+   "file": "genericItem_color_023.png",
+   "sha256": "dc6032ae6077bf465b98bcfd2ca106109cf1dddb197dab815095dc1224f1774f",
+   "white_file": "genericItem_white_023.png"
+  },
+  {
+   "n": 24,
+   "label": "pencil",
+   "category": "stationery",
+   "file": "genericItem_color_024.png",
+   "sha256": "f86f294897f64452243875083ca73e24ee3a5058e3a1ff3de6bcecc700556cd6",
+   "white_file": "genericItem_white_024.png"
+  },
+  {
+   "n": 25,
+   "label": "pen",
+   "category": "stationery",
+   "file": "genericItem_color_025.png",
+   "sha256": "d1dc314590c1d2e984ef6a5712d8c51fd1dd618a66a5498754be80898f4f5966",
+   "white_file": "genericItem_white_025.png"
+  },
+  {
+   "n": 26,
+   "label": "marker",
+   "category": "stationery",
+   "file": "genericItem_color_026.png",
+   "sha256": "a117d8d8751846a7e0ccaf58432cbccd61feff82426032f96cc4c4fd52650282",
+   "white_file": "genericItem_white_026.png"
+  },
+  {
+   "n": 27,
+   "label": "artist's brush (orange)",
+   "category": "art",
+   "file": "genericItem_color_027.png",
+   "sha256": "f66e953349a8d5c80ca18b778c9fcdaaddc912c64f85f855d423b81e4a00a7da",
+   "white_file": "genericItem_white_027.png"
+  },
+  {
+   "n": 28,
+   "label": "artist's brush (blue)",
+   "category": "art",
+   "file": "genericItem_color_028.png",
+   "sha256": "3730cdd99f671b56fdacefe415ef15ca2c4f62cf1511a5d5132a932694f7a844",
+   "white_file": "genericItem_white_028.png"
+  },
+  {
+   "n": 29,
+   "label": "quill",
+   "category": "stationery",
+   "file": "genericItem_color_029.png",
+   "sha256": "f4319537b30dc68143ef0e644a0fac93304ce260e6da35956f4b62f5dc50f574",
+   "white_file": "genericItem_white_029.png"
+  },
+  {
+   "n": 30,
+   "label": "ink bottle",
+   "category": "stationery",
+   "file": "genericItem_color_030.png",
+   "sha256": "ef233b6441726f365237a9b9418ca2bc21a9288c5084ef5714f334f7a1feeb54",
+   "white_file": "genericItem_white_030.png"
+  },
+  {
+   "n": 31,
+   "label": "paint palette",
+   "category": "art",
+   "file": "genericItem_color_031.png",
+   "sha256": "a3ad7020598c580079d4c2dd3458d561b2278fb88b82e52b71fbc84b7268a313",
+   "white_file": "genericItem_white_031.png"
+  },
+  {
+   "n": 32,
+   "label": "open notebook",
+   "category": "stationery",
+   "file": "genericItem_color_032.png",
+   "sha256": "0fa9a7cd3b80192fbfe17cd4d6496632e6b6b3340d9302ae5626cf99b5e4b762",
+   "white_file": "genericItem_white_032.png"
+  },
+  {
+   "n": 33,
+   "label": "open book",
+   "category": "stationery",
+   "file": "genericItem_color_033.png",
+   "sha256": "09773563c86bb7d3a42f0a584cbc4b1f267e96b8bfc44c7dc246988d365eeeb3",
+   "white_file": "genericItem_white_033.png"
+  },
+  {
+   "n": 34,
+   "label": "notebook",
+   "category": "stationery",
+   "file": "genericItem_color_034.png",
+   "sha256": "8b8164a7f8d011c0b163fb3348d605658c80a904b52c54776bf1be40768a9128",
+   "white_file": "genericItem_white_034.png"
+  },
+  {
+   "n": 35,
+   "label": "hardback book",
+   "category": "stationery",
+   "file": "genericItem_color_035.png",
+   "sha256": "5240592719d9f2acff63a6170022a9024186865aebb8ba7d83dcff74db6c2a51",
+   "white_file": "genericItem_white_035.png"
+  },
+  {
+   "n": 36,
+   "label": "folder",
+   "category": "stationery",
+   "file": "genericItem_color_036.png",
+   "sha256": "0c1b03d43d9aff3125ba80f608521a786157c3df15323da84c4a89c63d269b5b",
+   "white_file": "genericItem_white_036.png"
+  },
+  {
+   "n": 37,
+   "label": "notepad",
+   "category": "stationery",
+   "file": "genericItem_color_037.png",
+   "sha256": "0f0e2af0e9afdbcb1544d947dc7da9002188afd882466f9651002ac5be022b58",
+   "white_file": "genericItem_white_037.png"
+  },
+  {
+   "n": 38,
+   "label": "clipboard",
+   "category": "stationery",
+   "file": "genericItem_color_038.png",
+   "sha256": "99180fac4d5768d86355ae88624d587409d4267f804fc93f353cb327b17f64d0",
+   "white_file": "genericItem_white_038.png"
+  },
+  {
+   "n": 39,
+   "label": "film camera",
+   "category": "camera",
+   "file": "genericItem_color_039.png",
+   "sha256": "b84cf50b62eb6710a038ace2a966bc0aa1b5a0fd846037fe8c03d94ba3470f20",
+   "white_file": "genericItem_white_039.png"
+  },
+  {
+   "n": 40,
+   "label": "camera boom",
+   "category": "camera",
+   "file": "genericItem_color_040.png",
+   "sha256": "fe448e992a8ab900665d19ff5c1216b1fdadafc8f206369d196aa0edbf1b27d7",
+   "white_file": "genericItem_white_040.png",
+   "unsure": true
+  },
+  {
+   "n": 41,
+   "label": "compact camera (silver)",
+   "category": "camera",
+   "file": "genericItem_color_041.png",
+   "sha256": "2ca9d21eb88f48458fca500307e9b0fc206171761ed7769def2b4234d14f7ada",
+   "white_file": "genericItem_white_041.png"
+  },
+  {
+   "n": 42,
+   "label": "compact camera (black)",
+   "category": "camera",
+   "file": "genericItem_color_042.png",
+   "sha256": "0a359c7d9e41423891bb18ef862e5e8f2c116411ee244d174c78e27e52712c6d",
+   "white_file": "genericItem_white_042.png"
+  },
+  {
+   "n": 43,
+   "label": "tripod head",
+   "category": "camera",
+   "file": "genericItem_color_043.png",
+   "sha256": "60c5d206787dab483ed5525ef2842a5e1fe968075e669005d531ecf3b9198cd8",
+   "white_file": "genericItem_white_043.png",
+   "unsure": true
+  },
+  {
+   "n": 44,
+   "label": "photo print",
+   "category": "camera",
+   "file": "genericItem_color_044.png",
+   "sha256": "8df1e088c55cdb396e1f4de762179932c801f3ae5d2bed24b0ea69789d71906a",
+   "white_file": "genericItem_white_044.png"
+  },
+  {
+   "n": 45,
+   "label": "video camera",
+   "category": "camera",
+   "file": "genericItem_color_045.png",
+   "sha256": "7fa5f9e83ca6e059788d1410d26715b651117587a08e6031fa0653a1b13cb6ca",
+   "white_file": "genericItem_white_045.png"
+  },
+  {
+   "n": 46,
+   "label": "shoulder video camera",
+   "category": "camera",
+   "file": "genericItem_color_046.png",
+   "sha256": "33ef79a4243562e80df568dbedbce2b605cac8fe0f470353cb5be4ba81cc45d6",
+   "white_file": "genericItem_white_046.png"
+  },
+  {
+   "n": 47,
+   "label": "cine camera",
+   "category": "camera",
+   "file": "genericItem_color_047.png",
+   "sha256": "b0ccf1b5eed0f9dbfec42fcdff88268bffe4981dfb591bc9efdb4ba56f5ab090",
+   "white_file": "genericItem_white_047.png"
+  },
+  {
+   "n": 48,
+   "label": "camera lens",
+   "category": "camera",
+   "file": "genericItem_color_048.png",
+   "sha256": "497677ac4f1d3ddb48b0ea368ff81278b31d0cc68170134f6537dec4dd48c596",
+   "white_file": "genericItem_white_048.png"
+  },
+  {
+   "n": 49,
+   "label": "laptop (closed lid view)",
+   "category": "computer",
+   "file": "genericItem_color_049.png",
+   "sha256": "04731e03c9f9c6ed2336c905f1473cfe8d5f12abd52f58dc87b3ddd15c98bdb3",
+   "white_file": "genericItem_white_049.png",
+   "unsure": true
+  },
+  {
+   "n": 50,
+   "label": "laptop",
+   "category": "computer",
+   "file": "genericItem_color_050.png",
+   "sha256": "fbf0b8d61d580254c26951272db0bdc27d71cd8ce372eab4c3dbbb81ae26a62f",
+   "white_file": "genericItem_white_050.png"
+  },
+  {
+   "n": 51,
+   "label": "old monitor",
+   "category": "computer",
+   "file": "genericItem_color_051.png",
+   "sha256": "96fc1041b0671e0a1b66d80caa8569be9c71eca3d69ce96d236f4214b214b9f9",
+   "white_file": "genericItem_white_051.png"
+  },
+  {
+   "n": 52,
+   "label": "monitor",
+   "category": "computer",
+   "file": "genericItem_color_052.png",
+   "sha256": "45ec80842b114889cf90b720bb7e2ea872614bcba5652237b2b299c5e2904618",
+   "white_file": "genericItem_white_052.png"
+  },
+  {
+   "n": 53,
+   "label": "widescreen monitor",
+   "category": "computer",
+   "file": "genericItem_color_053.png",
+   "sha256": "ab50c589d0a9cb8b768a6d3432558c684d88c16012ae8952763c9e728f801387",
+   "white_file": "genericItem_white_053.png"
+  },
+  {
+   "n": 54,
+   "label": "computer tower (black)",
+   "category": "computer",
+   "file": "genericItem_color_054.png",
+   "sha256": "ab0cef6cc54e99232e48e73a3fbf868f62c9d02bcb384934324fe165ffdf2ac2",
+   "white_file": "genericItem_white_054.png"
+  },
+  {
+   "n": 55,
+   "label": "computer tower (beige)",
+   "category": "computer",
+   "file": "genericItem_color_055.png",
+   "sha256": "dce58166380ae67cd80b4d9ce4735cf01687850dc01d106ba93d740df6dc27ed",
+   "white_file": "genericItem_white_055.png"
+  },
+  {
+   "n": 56,
+   "label": "keyboard (black)",
+   "category": "computer",
+   "file": "genericItem_color_056.png",
+   "sha256": "e5bb70c6cea2698e7fc4840c92e32e31932a9d1281e44fe73e4c913ecc9ecb47",
+   "white_file": "genericItem_white_056.png"
+  },
+  {
+   "n": 57,
+   "label": "keyboard (beige)",
+   "category": "computer",
+   "file": "genericItem_color_057.png",
+   "sha256": "aaab2c27a428c571fd16f3cb4c839c902533db745cfcfcede3e19997b5f35b26",
+   "white_file": "genericItem_white_057.png"
+  },
+  {
+   "n": 58,
+   "label": "mouse (black)",
+   "category": "computer",
+   "file": "genericItem_color_058.png",
+   "sha256": "02aee1c826be9f45e66712cb19d727395b7dee1d960b19cf0694efa315945bf3",
+   "white_file": "genericItem_white_058.png"
+  },
+  {
+   "n": 59,
+   "label": "mouse (beige)",
+   "category": "computer",
+   "file": "genericItem_color_059.png",
+   "sha256": "1e85a41a7c86b29053ac3100660fad3035bd537db9505aca0c1febcb73cc5165",
+   "white_file": "genericItem_white_059.png"
+  },
+  {
+   "n": 60,
+   "label": "drawing tablet",
+   "category": "computer",
+   "file": "genericItem_color_060.png",
+   "sha256": "428a5171c820fe1266e842d562b4ce35e37349429d451c430487c8795c19d2b5",
+   "white_file": "genericItem_white_060.png"
+  },
+  {
+   "n": 61,
+   "label": "stylus",
+   "category": "computer",
+   "file": "genericItem_color_061.png",
+   "sha256": "a116714bfe25a05f4bfe29653d3c8d7f198c9655eec7688b1b6b15b1a0a48814",
+   "white_file": "genericItem_white_061.png"
+  },
+  {
+   "n": 62,
+   "label": "remote control",
+   "category": "electronics",
+   "file": "genericItem_color_062.png",
+   "sha256": "229d1d21d06edeffda6c4a07fcaf58d3e9b06c0ae26d9c34c26979fcfb7c6bac",
+   "white_file": "genericItem_white_062.png"
+  },
+  {
+   "n": 63,
+   "label": "walkie-talkie",
+   "category": "electronics",
+   "file": "genericItem_color_063.png",
+   "sha256": "f6b0cdc33e84e8c646fddc9294ae81e993221b948d74fae2810c8f809deec66f",
+   "white_file": "genericItem_white_063.png"
+  },
+  {
+   "n": 64,
+   "label": "cordless phone",
+   "category": "electronics",
+   "file": "genericItem_color_064.png",
+   "sha256": "1170fc7571ece51ca67526d53e9fcf01c5268df3ae7e2b6d3507ab69a0efa809",
+   "white_file": "genericItem_white_064.png"
+  },
+  {
+   "n": 65,
+   "label": "smartphone",
+   "category": "electronics",
+   "file": "genericItem_color_065.png",
+   "sha256": "da6f91c67739d572aaa3997b7bb671af97904f89be2adb3a3c7769455233fd07",
+   "white_file": "genericItem_white_065.png"
+  },
+  {
+   "n": 66,
+   "label": "music player",
+   "category": "electronics",
+   "file": "genericItem_color_066.png",
+   "sha256": "edc024ecaaf06d54452a8aa087164020652626dedbaad7f75174240be4d13907",
+   "white_file": "genericItem_white_066.png"
+  },
+  {
+   "n": 67,
+   "label": "handheld device",
+   "category": "electronics",
+   "file": "genericItem_color_067.png",
+   "sha256": "8d5b14d39382d78ba33dd71d0275280ac4aea7131722cfda67933e647cca7e76",
+   "white_file": "genericItem_white_067.png",
+   "unsure": true
+  },
+  {
+   "n": 68,
+   "label": "cassette player",
+   "category": "electronics",
+   "file": "genericItem_color_068.png",
+   "sha256": "c171f2f3c45bd2ae2d3bc552c600453ae09b8fa49eaf12ab531881bdca09a4ef",
+   "white_file": "genericItem_white_068.png"
+  },
+  {
+   "n": 69,
+   "label": "tablet",
+   "category": "electronics",
+   "file": "genericItem_color_069.png",
+   "sha256": "c62174468ac5214f2f55bbb87c28f0685c4634a375c859cf8446d8b857d2f16f",
+   "white_file": "genericItem_white_069.png"
+  },
+  {
+   "n": 70,
+   "label": "small stylus",
+   "category": "electronics",
+   "file": "genericItem_color_070.png",
+   "sha256": "990c05a708fc35e5d1833208d591a2af3aa58b9e3afe1269d095d673bf55fb37",
+   "white_file": "genericItem_white_070.png"
+  },
+  {
+   "n": 71,
+   "label": "e-reader",
+   "category": "electronics",
+   "file": "genericItem_color_071.png",
+   "sha256": "674646fa8b62aea6cde3467e7f2ecdc8c1c4fc6d68ebc0c9414f2d7edfc9b1b9",
+   "white_file": "genericItem_white_071.png",
+   "unsure": true
+  },
+  {
+   "n": 72,
+   "label": "handheld console",
+   "category": "electronics",
+   "file": "genericItem_color_072.png",
+   "sha256": "b3b228a67612f29056fd5e9b91e608e6a12bc3b92649242298080ec6b711d899",
+   "white_file": "genericItem_white_072.png"
+  },
+  {
+   "n": 73,
+   "label": "USB stick",
+   "category": "computer",
+   "file": "genericItem_color_073.png",
+   "sha256": "cc1a572651337fcceba15409bbb10bbcfe16783f7720d17834b6dd6b851460c3",
+   "white_file": "genericItem_white_073.png"
+  },
+  {
+   "n": 74,
+   "label": "desk calculator",
+   "category": "electronics",
+   "file": "genericItem_color_074.png",
+   "sha256": "87a765c8fc433d36850e1cf59f828a58c9a0a492bd36d241e02c788b48eb2c95",
+   "white_file": "genericItem_white_074.png"
+  },
+  {
+   "n": 75,
+   "label": "motherboard",
+   "category": "computer",
+   "file": "genericItem_color_075.png",
+   "sha256": "c79d3a5cd3000b662abc44c69c72299312954280127d138526a4a8e5e6531661",
+   "white_file": "genericItem_white_075.png"
+  },
+  {
+   "n": 76,
+   "label": "memory stick (RAM)",
+   "category": "computer",
+   "file": "genericItem_color_076.png",
+   "sha256": "44df275902df0a8c8d256b5a039714e3661de5cd04afdefc5458fe0ee3097776",
+   "white_file": "genericItem_white_076.png"
+  },
+  {
+   "n": 77,
+   "label": "graphics card",
+   "category": "computer",
+   "file": "genericItem_color_077.png",
+   "sha256": "a4c5fef327184907e78bede57d2fdfbe420753af8a3efeba2e9229daebb971e9",
+   "white_file": "genericItem_white_077.png"
+  },
+  {
+   "n": 78,
+   "label": "graphics card (large)",
+   "category": "computer",
+   "file": "genericItem_color_078.png",
+   "sha256": "5b917f0cb424a299ca5516d9920179ec6728b794d7a773ac593cacf9a02bf868",
+   "white_file": "genericItem_white_078.png"
+  },
+  {
+   "n": 79,
+   "label": "joystick",
+   "category": "games",
+   "file": "genericItem_color_079.png",
+   "sha256": "141ea6e34904570a99523e797939764afcda747d50c483501fbcfaaf5786e6e5",
+   "white_file": "genericItem_white_079.png"
+  },
+  {
+   "n": 80,
+   "label": "arcade stick",
+   "category": "games",
+   "file": "genericItem_color_080.png",
+   "sha256": "a9b97665652ac9d25bf8579e2f67d8219604bade035142b73a2c2c60d4633074",
+   "white_file": "genericItem_white_080.png"
+  },
+  {
+   "n": 81,
+   "label": "retro game controller",
+   "category": "games",
+   "file": "genericItem_color_081.png",
+   "sha256": "d1e96a5307af28f408b1a5a42a9ae1fa3f5f48210b17105772ebc5b8f40af59d",
+   "white_file": "genericItem_white_081.png"
+  },
+  {
+   "n": 82,
+   "label": "game controller",
+   "category": "games",
+   "file": "genericItem_color_082.png",
+   "sha256": "19e888ff07ba447833a2ff49082217616dff1fbec032c8c748a4fccf685a9647",
+   "white_file": "genericItem_white_082.png"
+  },
+  {
+   "n": 83,
+   "label": "microphone",
+   "category": "electronics",
+   "file": "genericItem_color_083.png",
+   "sha256": "e0426ae1658ad0c632cb09aba8c6200a5ba3f6931c7f5c0efe16514114d30294",
+   "white_file": "genericItem_white_083.png"
+  },
+  {
+   "n": 84,
+   "label": "headphones",
+   "category": "electronics",
+   "file": "genericItem_color_084.png",
+   "sha256": "ff610aae6c442a5db8611a478169bee636243e0f9eb91cebb6f45496eaf1f385",
+   "white_file": "genericItem_white_084.png"
+  },
+  {
+   "n": 85,
+   "label": "disc (silver)",
+   "category": "electronics",
+   "file": "genericItem_color_085.png",
+   "sha256": "ed243d643f0c7d3c89cf8d0fcb2e00423bcb9898601e43cff21227d9ac76e30c",
+   "white_file": "genericItem_white_085.png"
+  },
+  {
+   "n": 86,
+   "label": "mouse pointer (icon)",
+   "category": "icons",
+   "file": "genericItem_color_086.png",
+   "sha256": "f7e7f16a5ee16d4b33199c12087f9dbe8917787a8336ca7ff69f1e1072709520",
+   "white_file": "genericItem_white_086.png"
+  },
+  {
+   "n": 87,
+   "label": "hourglass",
+   "category": "household",
+   "file": "genericItem_color_087.png",
+   "sha256": "6fece9402623497b5255e9ffd9fc27ed25004f6352777991993243b8bec02397",
+   "white_file": "genericItem_white_087.png"
+  },
+  {
+   "n": 88,
+   "label": "disc (gold)",
+   "category": "electronics",
+   "file": "genericItem_color_088.png",
+   "sha256": "d1904b1f5f284596e08ee3da35bf24fc5228567ab01c8c9fb35859e32dbefb94",
+   "white_file": "genericItem_white_088.png"
+  },
+  {
+   "n": 89,
+   "label": "capsule (orange)",
+   "category": "medical",
+   "file": "genericItem_color_089.png",
+   "sha256": "5945efd4a0f25ef244ff23414c55e8246e0a9cdb35b9bc97b44c2ea1757dc49e",
+   "white_file": "genericItem_white_089.png"
+  },
+  {
+   "n": 90,
+   "label": "capsule (blue)",
+   "category": "medical",
+   "file": "genericItem_color_090.png",
+   "sha256": "2c46a27a743bac47da404b882f74afd5fbfebd34b76ac92f4347cbe46646890d",
+   "white_file": "genericItem_white_090.png"
+  },
+  {
+   "n": 91,
+   "label": "flashlight",
+   "category": "household",
+   "file": "genericItem_color_091.png",
+   "sha256": "31c4a77860db1835e993e6ac6a5668e2ccf0fb612d76ff747f52a45d5f71fe8c",
+   "white_file": "genericItem_white_091.png",
+   "unsure": true
+  },
+  {
+   "n": 92,
+   "label": "move cursor (icon)",
+   "category": "icons",
+   "file": "genericItem_color_092.png",
+   "sha256": "f0cdbe8c8be146903e7d63bce214c5c3497083d4c107930ebaa2731ee798b90d",
+   "white_file": "genericItem_white_092.png"
+  },
+  {
+   "n": 93,
+   "label": "syringe",
+   "category": "medical",
+   "file": "genericItem_color_093.png",
+   "sha256": "a8c6da44fb48e39bc24aee60842d13563987d5faa92c53766624f51a9d2b615b",
+   "white_file": "genericItem_white_093.png"
+  },
+  {
+   "n": 94,
+   "label": "dropper",
+   "category": "medical",
+   "file": "genericItem_color_094.png",
+   "sha256": "19f5080992600d6228a29f6f91bd98b900a5d99f364b297ea031f5a17b68d883",
+   "white_file": "genericItem_white_094.png"
+  },
+  {
+   "n": 95,
+   "label": "toothbrush",
+   "category": "household",
+   "file": "genericItem_color_095.png",
+   "sha256": "2d20a24aaed71013b70b23381b7a65966fab6e83d8d429f69e914fb4990a9a3e",
+   "white_file": "genericItem_white_095.png"
+  },
+  {
+   "n": 96,
+   "label": "pill (white)",
+   "category": "medical",
+   "file": "genericItem_color_096.png",
+   "sha256": "446c788a2a9e7164e16affee41a9db3b33a2b671696d491fc754093250c58cc0",
+   "white_file": "genericItem_white_096.png"
+  },
+  {
+   "n": 97,
+   "label": "pill (pink)",
+   "category": "medical",
+   "file": "genericItem_color_097.png",
+   "sha256": "acf47f18b8d2e0dc2826f9c7bd743e0ac9955290c99ed4d50e5de833a5ccef52",
+   "white_file": "genericItem_white_097.png"
+  },
+  {
+   "n": 98,
+   "label": "eraser",
+   "category": "stationery",
+   "file": "genericItem_color_098.png",
+   "sha256": "757e7b3f137442bc5712dbe4fbf83aa1fd4b57f28db53ba8e520c41717de5888",
+   "white_file": "genericItem_white_098.png"
+  },
+  {
+   "n": 99,
+   "label": "medicine box",
+   "category": "medical",
+   "file": "genericItem_color_099.png",
+   "sha256": "d9760efd0e142d9f0c09512a100c5534845c682d77081025fed6ce380781110e",
+   "white_file": "genericItem_white_099.png"
+  },
+  {
+   "n": 100,
+   "label": "sticking plaster",
+   "category": "medical",
+   "file": "genericItem_color_100.png",
+   "sha256": "327869c2a3f9853cf846dc8fbde9bf4fb63189784505634238513ffbd15cdf94",
+   "white_file": "genericItem_white_100.png"
+  },
+  {
+   "n": 101,
+   "label": "bone",
+   "category": "medical",
+   "file": "genericItem_color_101.png",
+   "sha256": "31566d0e0f508f4a447c7426356a868130729670dd4e00ca56e713c543880beb",
+   "white_file": "genericItem_white_101.png"
+  },
+  {
+   "n": 102,
+   "label": "first-aid kit",
+   "category": "medical",
+   "file": "genericItem_color_102.png",
+   "sha256": "3973db2a4229e25ffc899ae2e8b12e9f500c09c41ee1ab4a538a7a76dafcd0f1",
+   "white_file": "genericItem_white_102.png"
+  },
+  {
+   "n": 103,
+   "label": "medicine bottle",
+   "category": "medical",
+   "file": "genericItem_color_103.png",
+   "sha256": "49b85707fefe55cba946e6517a235d40b45dff6047512428223b2d1ba347568a",
+   "white_file": "genericItem_white_103.png"
+  },
+  {
+   "n": 104,
+   "label": "tall medicine bottle",
+   "category": "medical",
+   "file": "genericItem_color_104.png",
+   "sha256": "06d714e83fdc90b8e645c11b2983199e749a793ce47aa753177892fdef8c6a79",
+   "white_file": "genericItem_white_104.png"
+  },
+  {
+   "n": 105,
+   "label": "round flask",
+   "category": "science",
+   "file": "genericItem_color_105.png",
+   "sha256": "140e8d1ec237ea58c5df3118064f8a43ce763b0404ae4f51d2fc201003d7f6c9",
+   "white_file": "genericItem_white_105.png"
+  },
+  {
+   "n": 106,
+   "label": "test tube",
+   "category": "science",
+   "file": "genericItem_color_106.png",
+   "sha256": "f2c9487e52ad69e976815a1479a776646e4e95a16afd78d73d34bfbd79e98ebd",
+   "white_file": "genericItem_white_106.png"
+  },
+  {
+   "n": 107,
+   "label": "beaker",
+   "category": "science",
+   "file": "genericItem_color_107.png",
+   "sha256": "ff797736f731a393500585975f37d7b219944201ced2f4c7f7f7ab4a0dbe27a6",
+   "white_file": "genericItem_white_107.png"
+  },
+  {
+   "n": 108,
+   "label": "conical flask",
+   "category": "science",
+   "file": "genericItem_color_108.png",
+   "sha256": "4f1b18d3ad65dd4b034d2f662e8269ec917919656d771f61aa81f155a57a1fa9",
+   "white_file": "genericItem_white_108.png"
+  },
+  {
+   "n": 109,
+   "label": "test-tube rack",
+   "category": "science",
+   "file": "genericItem_color_109.png",
+   "sha256": "68dc7c2ad07ed5e0458d29d2ed67e9fdd554ac43f36b38d164432c462c953c1c",
+   "white_file": "genericItem_white_109.png"
+  },
+  {
+   "n": 110,
+   "label": "stethoscope",
+   "category": "medical",
+   "file": "genericItem_color_110.png",
+   "sha256": "e35c7f65f30efa28850fb4f54a86bac7969a6a6a28c63477fd0a30d1030f9cc2",
+   "white_file": "genericItem_white_110.png"
+  },
+  {
+   "n": 111,
+   "label": "microscope",
+   "category": "science",
+   "file": "genericItem_color_111.png",
+   "sha256": "9a05710385dfd857887d939ce69ac806ff523102b0a45cb163f00eac03fade9e",
+   "white_file": "genericItem_white_111.png"
+  },
+  {
+   "n": 112,
+   "label": "mortar",
+   "category": "science",
+   "file": "genericItem_color_112.png",
+   "sha256": "a234223d9aa81f73aa74baa8ddb2fbb30b38ba6f9fd1f65b82c103f03d0086a3",
+   "white_file": "genericItem_white_112.png"
+  },
+  {
+   "n": 113,
+   "label": "crutch",
+   "category": "medical",
+   "file": "genericItem_color_113.png",
+   "sha256": "f8c98685e9113fbdc00970fd6bb5be3196bb60f07c59c945572709d942d726fb",
+   "white_file": "genericItem_white_113.png"
+  },
+  {
+   "n": 114,
+   "label": "cooking pot",
+   "category": "kitchen",
+   "file": "genericItem_color_114.png",
+   "sha256": "27881aa00bc37538f5b91c5f125c25a168dfb50d874f5e1f40889b5f6b700ec5",
+   "white_file": "genericItem_white_114.png"
+  },
+  {
+   "n": 115,
+   "label": "ladle",
+   "category": "kitchen",
+   "file": "genericItem_color_115.png",
+   "sha256": "416d13afcf5863b1009f79d36c1937d48d92cbe4ffa55f30e3fb6ee9888915d3",
+   "white_file": "genericItem_white_115.png"
+  },
+  {
+   "n": 116,
+   "label": "frying pan",
+   "category": "kitchen",
+   "file": "genericItem_color_116.png",
+   "sha256": "3929e6bf0e23512e86ab3eb6f52466e4c74e0272a3ae8f11f5ebd17ace01e092",
+   "white_file": "genericItem_white_116.png"
+  },
+  {
+   "n": 117,
+   "label": "plate",
+   "category": "kitchen",
+   "file": "genericItem_color_117.png",
+   "sha256": "2cb13227fdf8eeb7428f82842b364d1054cb9827784693177ca4d681d9820396",
+   "white_file": "genericItem_white_117.png"
+  },
+  {
+   "n": 118,
+   "label": "glass (blue)",
+   "category": "kitchen",
+   "file": "genericItem_color_118.png",
+   "sha256": "0453ea9a5e7f1f8ae533149e636721d36dff2834eba9c7b8b5638101a206e223",
+   "white_file": "genericItem_white_118.png"
+  },
+  {
+   "n": 119,
+   "label": "glass (yellow)",
+   "category": "kitchen",
+   "file": "genericItem_color_119.png",
+   "sha256": "cdab2aab42131e8ea636cef2066fa0141c0e8ef60e02a83dbabb17fde35fa5ef",
+   "white_file": "genericItem_white_119.png"
+  },
+  {
+   "n": 120,
+   "label": "small bowl",
+   "category": "kitchen",
+   "file": "genericItem_color_120.png",
+   "sha256": "0137f862e9b668828c1435222e92de94da6f29a5081a7c7de7fcf06b2e42e116",
+   "white_file": "genericItem_white_120.png"
+  },
+  {
+   "n": 121,
+   "label": "glass mug",
+   "category": "kitchen",
+   "file": "genericItem_color_121.png",
+   "sha256": "5d73b0be71b39fb345adb116c6ff88bc8307720a1e98980c5e60c4e17a183fa8",
+   "white_file": "genericItem_white_121.png"
+  },
+  {
+   "n": 122,
+   "label": "salt shaker",
+   "category": "kitchen",
+   "file": "genericItem_color_122.png",
+   "sha256": "6dea7f304a1edb9258d54ae1cdda08cf68f5764d6e5b6f19812d3231de55ede9",
+   "white_file": "genericItem_white_122.png"
+  },
+  {
+   "n": 123,
+   "label": "pepper shaker",
+   "category": "kitchen",
+   "file": "genericItem_color_123.png",
+   "sha256": "7477e1a26727f9b1723ff73d381d6165bdf4567ede69a8df31964fb23e160454",
+   "white_file": "genericItem_white_123.png"
+  },
+  {
+   "n": 124,
+   "label": "coffee pot",
+   "category": "kitchen",
+   "file": "genericItem_color_124.png",
+   "sha256": "cd675ae29ce27b7977e9ffbdbc08b0a146c5d82b69ee97010a4613a6823d4462",
+   "white_file": "genericItem_white_124.png"
+  },
+  {
+   "n": 125,
+   "label": "teapot",
+   "category": "kitchen",
+   "file": "genericItem_color_125.png",
+   "sha256": "d48f2508a2da1ef15f8cb46cc6654472ca8c5943b0074b7d6af65921fd1ae3f0",
+   "white_file": "genericItem_white_125.png"
+  },
+  {
+   "n": 126,
+   "label": "travel mug",
+   "category": "kitchen",
+   "file": "genericItem_color_126.png",
+   "sha256": "ae4680b38f9832c5ee99c2843a91452b31a388923fcf48d2976ee04ba737b091",
+   "white_file": "genericItem_white_126.png"
+  },
+  {
+   "n": 127,
+   "label": "bottle",
+   "category": "kitchen",
+   "file": "genericItem_color_127.png",
+   "sha256": "37052490ba58deb208f43a55cee9b0aa0ca6c0e7a51ca3278e82bb5c9bbbe880",
+   "white_file": "genericItem_white_127.png"
+  },
+  {
+   "n": 128,
+   "label": "patterned bowl",
+   "category": "kitchen",
+   "file": "genericItem_color_128.png",
+   "sha256": "8c5813bca24fea07c52eb0fca5f57a922f8be6f5a751d25bdb58e9d1a50147f8",
+   "white_file": "genericItem_white_128.png",
+   "unsure": true
+  },
+  {
+   "n": 129,
+   "label": "fork",
+   "category": "kitchen",
+   "file": "genericItem_color_129.png",
+   "sha256": "edc330e5275f7806ed533b5f2d8d3b1fc22af7f13e9559388aca160fb0db7bff",
+   "white_file": "genericItem_white_129.png"
+  },
+  {
+   "n": 130,
+   "label": "spoon",
+   "category": "kitchen",
+   "file": "genericItem_color_130.png",
+   "sha256": "b73b4d30c85abb8f952f447b1581ffb7370be4cf2003cf6be7f4323d29304cee",
+   "white_file": "genericItem_white_130.png"
+  },
+  {
+   "n": 131,
+   "label": "table knife",
+   "category": "kitchen",
+   "file": "genericItem_color_131.png",
+   "sha256": "4454112d6fa08b2d4a19db368521ac425d74687e72f7055297174a89451d171b",
+   "white_file": "genericItem_white_131.png"
+  },
+  {
+   "n": 132,
+   "label": "oven glove",
+   "category": "kitchen",
+   "file": "genericItem_color_132.png",
+   "sha256": "9266e1c63f0abb65066a7b3ffc871b8b4c28a6369700a671a6d17b0430c86f1e",
+   "white_file": "genericItem_white_132.png"
+  },
+  {
+   "n": 133,
+   "label": "chopping board",
+   "category": "kitchen",
+   "file": "genericItem_color_133.png",
+   "sha256": "294a832ed49cd5644ece1be32bfc323303480830ceed94c03499b25a378240ac",
+   "white_file": "genericItem_white_133.png"
+  },
+  {
+   "n": 134,
+   "label": "kitchen knife",
+   "category": "kitchen",
+   "file": "genericItem_color_134.png",
+   "sha256": "62d36bd6f029a0c31cc5c92315acb9d7d6983fc0e6bfff7e18f0fd0e0eda9059",
+   "white_file": "genericItem_white_134.png"
+  },
+  {
+   "n": 135,
+   "label": "spatula",
+   "category": "kitchen",
+   "file": "genericItem_color_135.png",
+   "sha256": "c0536f0a90c0690c686576479e1dbca101eabd81d4fd195f0e4e0c81dbe93960",
+   "white_file": "genericItem_white_135.png"
+  },
+  {
+   "n": 136,
+   "label": "tongs",
+   "category": "kitchen",
+   "file": "genericItem_color_136.png",
+   "sha256": "123afd26254cb57f820e60492fd60fdcb0156ebd278d67881a25b3406fb04a7f",
+   "white_file": "genericItem_white_136.png"
+  },
+  {
+   "n": 137,
+   "label": "blender",
+   "category": "kitchen",
+   "file": "genericItem_color_137.png",
+   "sha256": "a86c004104e1f7aea2def8febb9508fe44d1f7bc8091110a7d1e63dba62f5c21",
+   "white_file": "genericItem_white_137.png"
+  },
+  {
+   "n": 138,
+   "label": "toaster",
+   "category": "kitchen",
+   "file": "genericItem_color_138.png",
+   "sha256": "eb19e2009da7c3032709501936a4dd806429e6903b3791f5bd0be158c4bb1c64",
+   "white_file": "genericItem_white_138.png"
+  },
+  {
+   "n": 139,
+   "label": "stand mixer",
+   "category": "kitchen",
+   "file": "genericItem_color_139.png",
+   "sha256": "668756b5a195b588ef01dfd9c0b3191b7e453b9df8654eea50b623cc822d63a2",
+   "white_file": "genericItem_white_139.png"
+  },
+  {
+   "n": 140,
+   "label": "rolling pin",
+   "category": "kitchen",
+   "file": "genericItem_color_140.png",
+   "sha256": "968e15a94d45a01b0b764f59a7ffd607b5befd559e770658905bd8dab5665454",
+   "white_file": "genericItem_white_140.png"
+  },
+  {
+   "n": 141,
+   "label": "briefcase (brown)",
+   "category": "travel",
+   "file": "genericItem_color_141.png",
+   "sha256": "553b1285cdaf23300de1812769da33374d666fe768bdcb7284e14b57d9dbf786",
+   "white_file": "genericItem_white_141.png"
+  },
+  {
+   "n": 142,
+   "label": "wheeled suitcase",
+   "category": "travel",
+   "file": "genericItem_color_142.png",
+   "sha256": "e2d5100b0357bb849bf77eeee9695eaf67e4191f352483f4e126246079cacd34",
+   "white_file": "genericItem_white_142.png"
+  },
+  {
+   "n": 143,
+   "label": "shopping bag",
+   "category": "travel",
+   "file": "genericItem_color_143.png",
+   "sha256": "817c0d156aef1c4ed2a7efe062299cb9665c939e6aa40670a52d7c9e3633d6a2",
+   "white_file": "genericItem_white_143.png"
+  },
+  {
+   "n": 144,
+   "label": "handbag",
+   "category": "travel",
+   "file": "genericItem_color_144.png",
+   "sha256": "e01018f6bc9ee49d49b1d55eca6f35c9a69bd2089b8b533f0934112677cd711d",
+   "white_file": "genericItem_white_144.png"
+  },
+  {
+   "n": 145,
+   "label": "briefcase (black)",
+   "category": "travel",
+   "file": "genericItem_color_145.png",
+   "sha256": "838458b38572aefb9772be7e02cfd39c05a6f51bdea16681a6920e2f039ac63f",
+   "white_file": "genericItem_white_145.png"
+  },
+  {
+   "n": 146,
+   "label": "backpack",
+   "category": "travel",
+   "file": "genericItem_color_146.png",
+   "sha256": "4bec12d18e4ec1da635fc66027776ef9ebc97b13717efcd6d86b71bd37240a74",
+   "white_file": "genericItem_white_146.png"
+  },
+  {
+   "n": 147,
+   "label": "steering wheel",
+   "category": "travel",
+   "file": "genericItem_color_147.png",
+   "sha256": "095a5ec40852425a46c0d2316752e47fae30c3079f831e8ce1f2a451ad2068cc",
+   "white_file": "genericItem_white_147.png"
+  },
+  {
+   "n": 148,
+   "label": "passport",
+   "category": "travel",
+   "file": "genericItem_color_148.png",
+   "sha256": "fc0d4a551cde302ec49c06398b2f386b780e054e746f2cb2d021ba24e6a35c15",
+   "white_file": "genericItem_white_148.png"
+  },
+  {
+   "n": 149,
+   "label": "ID card",
+   "category": "travel",
+   "file": "genericItem_color_149.png",
+   "sha256": "d86582e36dc8a76c5c24e607f68475aa2b44b32075b487a8bb6d04f669785c92",
+   "white_file": "genericItem_white_149.png"
+  },
+  {
+   "n": 150,
+   "label": "name badge",
+   "category": "travel",
+   "file": "genericItem_color_150.png",
+   "sha256": "d82ebf2d9f9572c94884f5299c702ac8e326ab1f45019023d4225c6c33014f96",
+   "white_file": "genericItem_white_150.png"
+  },
+  {
+   "n": 151,
+   "label": "lanyard badge",
+   "category": "travel",
+   "file": "genericItem_color_151.png",
+   "sha256": "1abfb8844040e59536194c1993443d8d18cf928528ab648cfd81b60ae4df547f",
+   "white_file": "genericItem_white_151.png"
+  },
+  {
+   "n": 152,
+   "label": "service bell",
+   "category": "household",
+   "file": "genericItem_color_152.png",
+   "sha256": "3f20fdcd34eb68525dc8e8f176d4275a42d24726bd5ce2ea44038cee53d9ddeb",
+   "white_file": "genericItem_white_152.png"
+  },
+  {
+   "n": 153,
+   "label": "door hanger",
+   "category": "household",
+   "file": "genericItem_color_153.png",
+   "sha256": "6ed20a8249f2df5dd801721640ef73855ea2b4aa5278c2fee103167e16d066fe",
+   "white_file": "genericItem_white_153.png"
+  },
+  {
+   "n": 154,
+   "label": "key with fob",
+   "category": "household",
+   "file": "genericItem_color_154.png",
+   "sha256": "69b1f1c41a753f7262f6942dd22d7e68b47c7fd5b639dc0d1c807e5fa93b596a",
+   "white_file": "genericItem_white_154.png"
+  },
+  {
+   "n": 155,
+   "label": "key",
+   "category": "household",
+   "file": "genericItem_color_155.png",
+   "sha256": "e152cfd76ee1af3de999d804372379271f0b2485a616f6b6bb2bd4230a6ae8d9",
+   "white_file": "genericItem_white_155.png"
+  },
+  {
+   "n": 156,
+   "label": "ticket",
+   "category": "travel",
+   "file": "genericItem_color_156.png",
+   "sha256": "3e98f08fbc3bd6d93f05ea9555f057d588e71e42794f513b8a4282695c12dfc6",
+   "white_file": "genericItem_white_156.png"
+  },
+  {
+   "n": 157,
+   "label": "wallet",
+   "category": "travel",
+   "file": "genericItem_color_157.png",
+   "sha256": "eece5d49d17bb5ecf977f5682c6e1fa8787d486e9646a66c5a4e22ad69e0ea24",
+   "white_file": "genericItem_white_157.png"
+  },
+  {
+   "n": 158,
+   "label": "banknotes",
+   "category": "money",
+   "file": "genericItem_color_158.png",
+   "sha256": "026ac6a52aaa5011e3112b091ab4f51a824d8dcdada5168aec129d39e938f085",
+   "white_file": "genericItem_white_158.png"
+  },
+  {
+   "n": 159,
+   "label": "coin (gold)",
+   "category": "money",
+   "file": "genericItem_color_159.png",
+   "sha256": "6818cd0a6e103004b0ce304692b53b2689a7d38633b331abcae3b7ab80aa618a",
+   "white_file": "genericItem_white_159.png"
+  },
+  {
+   "n": 160,
+   "label": "coin (silver)",
+   "category": "money",
+   "file": "genericItem_color_160.png",
+   "sha256": "11b5c24ee9ddc023d52a611c2e97382fb05701bdba8f69e4f41983944309b3f3",
+   "white_file": "genericItem_white_160.png"
+  },
+  {
+   "n": 161,
+   "label": "coin (bronze)",
+   "category": "money",
+   "file": "genericItem_color_161.png",
+   "sha256": "14050004d229f40f2eecd5f54281a299881830ace9c0b39f4aa46a932aa950a5",
+   "white_file": "genericItem_white_161.png"
+  },
+  {
+   "n": 162,
+   "label": "compass",
+   "category": "travel",
+   "file": "genericItem_color_162.png",
+   "sha256": "7b368cccf10dbd3dad2c72bab7a7a810ea449e8e0472bc1a44db5b1f72b2fb2e",
+   "white_file": "genericItem_white_162.png"
+  },
+  {
+   "n": 163,
+   "label": "glue gun",
+   "category": "tools",
+   "file": "genericItem_color_163.png",
+   "sha256": "8a0c760060e8eeef8a18964fd84c45941b8b9a1c07fbbbaef6ab8bee9d991b2e",
+   "white_file": "genericItem_white_163.png",
+   "unsure": true
+  }
+ ]
+}

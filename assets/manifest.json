@@ -956,6 +956,16 @@
    "class": "non-commercial",
    "credit": "BEAT: A Large-Scale Semantic and Emotional Multi-Modal Dataset for Conversational Gestures Synthesis (Liu et al., 2022)",
    "provenance": "the first 8 MB of 1_wayne_0_1_8.bvh by an HTTP range request, cut to whole frames (20 s at 120 fps) by dbe/commands.py _beat_take; a test fixture for the BVH importer (test bvhreal), not used in films"
+  },
+  {
+   "id": "kenney-generic-items",
+   "path": "assets/external/kenney/generic-items/",
+   "in_git": false,
+   "source_url": "https://kenney.nl/assets/generic-items",
+   "license": "CC0-1.0",
+   "class": "public-domain",
+   "credit": "Props: Kenney (www.kenney.nl), CC0 (credit welcome, not required)",
+   "use": "a prop library: 163 sprites labelled by eye in assets/props/kenney-generic-items.json (label, category, sha256 each); props.make draws one as a prop; fetched by props.import_kenney (zip sha256 in the index)"
   }
  ]
 }

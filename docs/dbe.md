@@ -1275,6 +1275,20 @@ every exporter. Test `outfits`: a character with a coat (jacket, trousers) and a
 in each draws alike in Synfig, Lottie and Grease Pencil (1.0); against its own clothes the torso changes (mean
 difference 50 and 73 levels) and the face does not (0).
 
+## Kenney prop library (WP-16)
+Kenney's Generic Items (CC0) is 163 sprites named only by number, so each was labelled by eye from its drawing (on
+light and dark grounds, since some are white): `assets/props/kenney-generic-items.json` holds each item's number,
+label, category (kitchen 28, tools 23, computer 18, electronics 16, medical 14, travel 14, stationery 13, camera 10,
+household 7, science 7, games 4, money 4, art 3, icons 2) and the sha256 of its file; nine that could be read
+otherwise are marked `unsure` (a caulking gun, a camera boom, a tripod head, a closed laptop, a handheld device, an
+e-reader, a flashlight, a patterned bowl, a glue gun). `props.import_kenney` fetches the pack the way kenney.nl's own
+page does (its download-link endpoint gives a browser a signed URL; a bare request is refused, which is why the site
+had answered 403 here before) into `assets/external/kenney/` (not in git) and checks every file against the index.
+`props.library {query, category}` searches the labels; `props.make {item, r, x, y}` turns one into a shots.json prop
+(its drawing as the body, its largest side 2r), to attach, path or drop like any prop (SVG renderer: a prop with its
+own drawing). Test `kenneyprops`: 163 items, every file matching; a teapot made this way into a pip-park copy shows
+10,315 pixels of its blue where it stands, none elsewhere and none without it.
+
 ## Open Peeps (WP-16)
 `cast.import_peeps` (with `"fetch": true` to download first; CC0, by Pablo Stanley) turns openpeeps.com's per-peep
 SVGs into one puppet. The site offers only finished peeps, not the parts kit, which is a Sketch or Figma file behind
