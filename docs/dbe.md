@@ -2932,6 +2932,19 @@ and Playwright only if `require('playwright')` fails. For a cloud environment, p
 script. Models live in `DBE_VOICES` (default `~/voices`) and `DBE_MODELS` (default `~/.cache/doodleberry/models`),
 wheels in `DBE_WHEELS`; none of them go in git.
 
+**A desktop without root (Fedora and the like).** `tools/setup.sh system` knows `dnf` as well as `apt`: it checks
+for ffmpeg with H.264 (RPM Fusion's; Fedora's own `ffmpeg-free` has no libx264, and the two conflict, so never let dnf
+swap the full one out with `--allowerasing`), git, Node, pip and libEGL, and prints the one `sudo dnf install` line for
+whatever is missing. Without root, the tools that go to `/opt` in a container (Blender, Godot, c2patool, OpenToonz) go
+to `~/.local/opt` with links in `~/.local/bin` (`DBE_OPT` overrides it), and dbe looks in `DBE_OPT`, `/opt` and
+`~/.local/opt`. Keep the Python packages in a virtual environment:
+
+    python3 -m venv ~/.venvs/doodleberry && source ~/.venvs/doodleberry/bin/activate
+    bash tools/setup.sh system     # prints the sudo dnf line, if anything is missing
+    DBE_PY=python bash tools/setup.sh python && bash tools/setup.sh models && bash tools/setup.sh node
+    bash tools/setup.sh blender    # optional: the Grease Pencil renderer, into ~/.local/opt
+    python -m dbe engine.doctor
+
 ## Keeping the docs true (WP-01)
 `python -m dbe docs.check` (also in `python -m dbe test`) checks that the build plan, the feature map, the work
 packages and the command registry agree:

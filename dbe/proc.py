@@ -20,6 +20,7 @@ import glob
 import hashlib
 import json
 import math
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -171,7 +172,7 @@ def op_gn_set(p, ins, ctx, cache):
     return res
 
 
-GODOT = next((str(p) for p in (Path("/opt/godot/godot"), Path.home() / "godot" / "godot") if p.exists()), None)
+GODOT = next((str(p) for p in [Path(d) / "godot" / "godot" for d in (os.environ.get("DBE_OPT"), "/opt", str(Path.home() / ".local" / "opt")) if d] + [Path.home() / "godot" / "godot"] if p.exists()), None)
 
 
 def _project_hash(proj):
@@ -190,7 +191,7 @@ def op_engine(p, ins, ctx, cache):
     --doodleberry-request=<json> (OS.get_cmdline_user_args()) for scripts that want to follow the 2D camera."""
     import shutil
     if not GODOT:
-        raise RuntimeError("engine needs Godot 4 (/opt/godot/godot: bash tools/setup.sh godot)")
+        raise RuntimeError("engine needs Godot 4 (/opt/godot/godot or ~/.local/opt/godot/godot: bash tools/setup.sh godot)")
     proj = (ROOT / p["project"]).resolve()
     if not (proj / "project.godot").exists():
         raise FileNotFoundError(f"no Godot project at {p['project']}")

@@ -26,13 +26,15 @@ depicts a real person (meta.likeness) needs the same for its likeness.
 """
 import datetime as dt
 import hashlib
+import os
 import json
 import subprocess
 from pathlib import Path
 
 from . import ROOT
 
-C2PATOOL = Path("/opt/c2patool/c2patool")
+C2PATOOL = next((p for p in [Path(d) / "c2patool" / "c2patool" for d in (os.environ.get("DBE_OPT"), "/opt", str(Path.home() / ".local" / "opt")) if d]
+                 if p.exists()), Path("/opt/c2patool/c2patool"))   # /opt, or ~/.local/opt without root (tools/setup.sh)
 IPTC = "http://cv.iptc.org/newscodes/digitalsourcetype/"
 EKU_DOC_SIGNING = "1.3.6.1.5.5.7.3.36"
 

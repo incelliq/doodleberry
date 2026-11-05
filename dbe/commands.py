@@ -5314,7 +5314,8 @@ def film_comic(name, kind="comic", dsf=1.0):
             "page_images": sorted(str(p.relative_to(ROOT)) for p in od.glob("page*.png")), "ok": not missing and pics == len(items)}
 
 
-GODOT = os.environ.get("DBE_GODOT") or next((p for p in ("/opt/godot/godot", shutil.which("godot") or "") if p and Path(p).exists()), None)
+OPTS = [d for d in (os.environ.get("DBE_OPT"), "/opt", str(Path.home() / ".local" / "opt")) if d]   # where tools/setup.sh puts tools: /opt, or ~/.local/opt without root
+GODOT = os.environ.get("DBE_GODOT") or next((p for p in [f"{d}/godot/godot" for d in OPTS] + [shutil.which("godot") or ""] if p and Path(p).exists()), None)
 
 
 def _godot_render_check(name, od, sid, n, size):
@@ -5340,8 +5341,8 @@ def _godot_render_check(name, od, sid, n, size):
     return {"engine": ver[0] if ver else "?", "frames": len(got), "compare": res, "ok": all(x["mean_abs"] < 4 and x["px_over_32"] < 0.03 and x["line_f1"] >= 0.9 for x in res)}
 
 
-TCOMPOSER = os.environ.get("DBE_TCOMPOSER") or next((p for p in ("/opt/opentoonz/bin/tcomposer", shutil.which("tcomposer") or "") if p and Path(p).exists()), None)
-TOONZ_STUFF = Path(os.environ.get("DBE_TOONZ_STUFF") or "/opt/opentoonz/stuff")
+TCOMPOSER = os.environ.get("DBE_TCOMPOSER") or next((p for p in [f"{d}/opentoonz/bin/tcomposer" for d in OPTS] + [shutil.which("tcomposer") or ""] if p and Path(p).exists()), None)
+TOONZ_STUFF = Path(os.environ.get("DBE_TOONZ_STUFF") or next((f"{d}/opentoonz/stuff" for d in OPTS if Path(f"{d}/opentoonz/stuff").is_dir()), "/opt/opentoonz/stuff"))
 
 
 def _tcomposer_check(name, sh, od, n, size, skipped):

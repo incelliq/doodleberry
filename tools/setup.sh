@@ -28,6 +28,10 @@ PY="${DBE_PY:-python3}"
 VOICES="${DBE_VOICES:-$HOME/voices}"
 WHEELS="${DBE_WHEELS:-$HOME/.cache/doodleberry/wheels}"
 what="${1:-all}"
+# tools go to /opt (root, containers) or, without root, to ~/.local/opt with links in ~/.local/bin; dbe looks in DBE_OPT,
+# /opt and ~/.local/opt
+if [ "$(id -u)" = 0 ] || [ -w /opt ]; then OPT="${DBE_OPT:-/opt}"; BIN="/usr/local/bin"; else OPT="${DBE_OPT:-$HOME/.local/opt}"; BIN="$HOME/.local/bin"; fi
+mkdir -p "$OPT" "$BIN"
 
 system() {
   if command -v apt-get >/dev/null; then
@@ -38,7 +42,20 @@ system() {
     if [ -n "$need" ]; then
       echo "apt: installing$need"; (apt-get install -y -q $need || (apt-get update -q && apt-get install -y -q $need))
     else echo "system: ok"; fi
-  else echo "system: no apt-get; install ffmpeg, git and libEGL with your package manager"; fi
+  elif command -v dnf >/dev/null; then   # Fedora: ffmpeg with H.264 is RPM Fusion's (Fedora's own ffmpeg-free has no libx264)
+    need=""
+    (command -v ffmpeg >/dev/null && ffmpeg -hide_banner -encoders 2>/dev/null | grep -q libx264) || need="$need ffmpeg"
+    command -v git >/dev/null || need="$need git"
+    command -v node >/dev/null || need="$need nodejs"
+    "$PY" -m pip --version >/dev/null 2>&1 || need="$need python3-pip"
+    "$PY" -c "import ctypes.util,sys; sys.exit(0 if ctypes.util.find_library('EGL') else 1)" || need="$need mesa-libEGL libglvnd-gles"
+    if [ -z "$need" ]; then echo "system: ok"
+    elif [ "$(id -u)" = 0 ]; then dnf install -y $need
+    else
+      echo "system: missing$need. Run:  sudo dnf install$need"
+      case "$need" in *ffmpeg*) echo "  (ffmpeg with H.264 comes from RPM Fusion: https://rpmfusion.org/Configuration, then: sudo dnf swap ffmpeg-free ffmpeg --allowerasing)";; esac
+    fi
+  else echo "system: no apt-get or dnf; install ffmpeg (with libx264), git, Node.js and libEGL with your package manager"; fi
 }
 
 python_deps() {
@@ -80,7 +97,10 @@ node_deps() {
   if NODE_PATH="${NODE_PATH:-}:$(npm root -g 2>/dev/null)" node -e "require('playwright')" 2>/dev/null; then
     echo "node: playwright ok"
   else
-    npm install -g playwright && npx playwright install chromium
+    # root installs it globally; without root it goes into the checkout's node_modules (git-ignored), where the tools'
+    # require('playwright') finds it; the browser itself goes to ~/.cache/ms-playwright either way
+    if [ "$(id -u)" = 0 ]; then npm install -g playwright@1.63.0 && npx playwright install chromium
+    else npm install --no-save --no-audit --no-fund playwright@1.63.0 && npx playwright install chromium; fi
   fi
 }
 
@@ -123,11 +143,11 @@ locales_deps() {
 provenance_dl() {
   # c2patool (MIT / Apache-2.0), the Content Authenticity Initiative's reference tool: reads and verifies C2PA content credentials (WP-26)
   local ver="0.27.22" sha="6f138ad53da1a62f1cd6ee71c60727efa27d13b811f4c0ea8c2a8528968b358b"
-  if [ -x /opt/c2patool/c2patool ] && /opt/c2patool/c2patool --version 2>/dev/null | grep -q "$ver"; then echo "c2patool: $ver installed"; return; fi
+  if [ -x "$OPT"/c2patool/c2patool ] && "$OPT"/c2patool/c2patool --version 2>/dev/null | grep -q "$ver"; then echo "c2patool: $ver installed"; return; fi
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/c.tgz" "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v${ver}/c2patool-v${ver}-x86_64-unknown-linux-gnu.tar.gz"
   echo "$sha  $tmp/c.tgz" | sha256sum -c - || { echo "c2patool: checksum mismatch"; rm -rf "$tmp"; return 1; }
-  tar xzf "$tmp/c.tgz" -C "$tmp" && mkdir -p /opt/c2patool && cp "$tmp/c2patool/c2patool" /opt/c2patool/ && rm -rf "$tmp"
+  tar xzf "$tmp/c.tgz" -C "$tmp" && mkdir -p "$OPT"/c2patool && cp "$tmp/c2patool/c2patool" "$OPT"/c2patool/ && rm -rf "$tmp"
 }
 
 dotlottie_deps() {
@@ -145,30 +165,30 @@ live_deps() {
 godot_dl() {
   # Godot 4.5-stable (MIT), the official Linux build checked against the release's SHA512-SUMS: renders export.godot's projects (WP-30)
   local ver="4.5-stable" sha="b5bd5d8a4dd3f44de1d123361beabaafa4825dd05b5e20fd2bfa540f32594f81d82e7c4e86fae420f4faee77d9def573b570f8b156e9c84a4dc2d5123d09e852"
-  if [ -x /opt/godot/godot ] && /opt/godot/godot --version --headless 2>/dev/null | grep -q "4.5.stable"; then echo "godot: $ver installed"; return; fi
+  if [ -x "$OPT"/godot/godot ] && "$OPT"/godot/godot --version --headless 2>/dev/null | grep -q "4.5.stable"; then echo "godot: $ver installed"; return; fi
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/g.zip" "https://github.com/godotengine/godot/releases/download/$ver/Godot_v${ver}_linux.x86_64.zip"
   echo "$sha  $tmp/g.zip" | sha512sum -c - || { echo "godot: checksum mismatch"; rm -rf "$tmp"; return 1; }
-  mkdir -p /opt/godot && python3 -c "import zipfile,sys;zipfile.ZipFile(sys.argv[1]).extractall('/opt/godot')" "$tmp/g.zip" && rm -rf "$tmp"
-  chmod +x "/opt/godot/Godot_v${ver}_linux.x86_64" && ln -sf "/opt/godot/Godot_v${ver}_linux.x86_64" /opt/godot/godot
+  mkdir -p "$OPT"/godot && python3 -c "import zipfile,sys;zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$tmp/g.zip" "$OPT/godot" && rm -rf "$tmp"
+  chmod +x "$OPT/godot/Godot_v${ver}_linux.x86_64" && ln -sf "$OPT/godot/Godot_v${ver}_linux.x86_64" "$OPT"/godot/godot
 }
 
 opentoonz_build() {
   # OpenToonz 1.8.0 (BSD-3-Clause): its bundled libtiff (OpenToonz needs its changes), then only the tcomposer target
-  local tag="v1.8.0" commit="065cc1404ba43019b22a2577d529134c3e01931b" src="/opt/src/opentoonz-1.8.0"
-  if [ -x /opt/opentoonz/bin/tcomposer ] && [ -d /opt/opentoonz/stuff ]; then echo "opentoonz: tcomposer installed"; return; fi
+  local tag="v1.8.0" commit="065cc1404ba43019b22a2577d529134c3e01931b" src="$OPT/src/opentoonz-1.8.0"
+  if [ -x "$OPT"/opentoonz/bin/tcomposer ] && [ -d "$OPT"/opentoonz/stuff ]; then echo "opentoonz: tcomposer installed"; return; fi
   DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends build-essential cmake pkg-config libboost-all-dev qtbase5-dev libqt5svg5-dev qtscript5-dev qttools5-dev qttools5-dev-tools \
     libqt5opengl5-dev qtmultimedia5-dev libqt5multimedia5-plugins libqt5serialport5-dev libsuperlu-dev liblz4-dev libusb-1.0-0-dev liblzo2-dev \
     libpng-dev libjpeg-dev libglew-dev freeglut3-dev libfreetype-dev libjson-c-dev libmypaint-dev libopencv-dev libturbojpeg0-dev libopenblas-dev xvfb
-  [ -d "$src/.git" ] || { mkdir -p /opt/src && git clone --depth 1 --branch "$tag" https://github.com/opentoonz/opentoonz "$src"; }
+  [ -d "$src/.git" ] || { mkdir -p "$OPT"/src && git clone --depth 1 --branch "$tag" https://github.com/opentoonz/opentoonz "$src"; }
   [ "$(git -C "$src" rev-parse HEAD)" = "$commit" ] || { echo "opentoonz: $src is not $tag ($commit)"; return 1; }
   (cd "$src/thirdparty/tiff-4.0.3" && { [ -f libtiff/.libs/libtiff.a ] || { ./configure --with-pic --disable-jbig --disable-lzma && make -j"$(nproc)"; }; })
-  mkdir -p "$src/toonz/build" && (cd "$src/toonz/build" && cmake ../sources -DCMAKE_BUILD_TYPE=Release -DWITH_TRANSLATION=OFF -DCMAKE_INSTALL_PREFIX=/opt/opentoonz \
+  mkdir -p "$src/toonz/build" && (cd "$src/toonz/build" && cmake ../sources -DCMAKE_BUILD_TYPE=Release -DWITH_TRANSLATION=OFF -DCMAKE_INSTALL_PREFIX="$OPT"/opentoonz \
     && make -j"$(nproc)" tcomposer)
-  local b="$src/toonz/build"; mkdir -p /opt/opentoonz/bin /opt/opentoonz/lib/opentoonz
-  cp "$b/bin/tcomposer" /opt/opentoonz/bin/ && cp -P "$b"/lib/opentoonz/*.so* /opt/opentoonz/lib/opentoonz/   # export.opentoonz sets LD_LIBRARY_PATH to it
-  rm -rf /opt/opentoonz/stuff && cp -r "$src/stuff" /opt/opentoonz/stuff
-  LD_LIBRARY_PATH=/opt/opentoonz/lib/opentoonz /opt/opentoonz/bin/tcomposer 2>&1 | head -2 || true
+  local b="$src/toonz/build"; mkdir -p "$OPT"/opentoonz/bin "$OPT"/opentoonz/lib/opentoonz
+  cp "$b/bin/tcomposer" "$OPT"/opentoonz/bin/ && cp -P "$b"/lib/opentoonz/*.so* "$OPT"/opentoonz/lib/opentoonz/   # export.opentoonz sets LD_LIBRARY_PATH to it
+  rm -rf "$OPT"/opentoonz/stuff && cp -r "$src/stuff" "$OPT"/opentoonz/stuff
+  LD_LIBRARY_PATH="$OPT"/opentoonz/lib/opentoonz "$OPT"/opentoonz/bin/tcomposer 2>&1 | head -2 || true
 }
 
 plates_dl() {
@@ -184,11 +204,11 @@ map_deps() {
 
 blender_dl() {
   local ver="5.2.3" sha="78486c018b4443efe5e75ab54c290ed8c15abafd249b862c2c9ce2530a918eec"
-  if [ -x /opt/blender/blender ] && /opt/blender/blender --version 2>/dev/null | grep -q "Blender $ver"; then echo "blender: $ver installed"; return; fi
+  if [ -x "$OPT"/blender/blender ] && "$OPT"/blender/blender --version 2>/dev/null | grep -q "Blender $ver"; then echo "blender: $ver installed"; return; fi
   local tmp; tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/b.tar.xz" "https://download.blender.org/release/Blender${ver%.*}/blender-${ver}-linux-x64.tar.xz"
   echo "$sha  $tmp/b.tar.xz" | sha256sum -c - || { echo "blender: checksum mismatch"; rm -rf "$tmp"; return 1; }
-  tar -xf "$tmp/b.tar.xz" -C /opt && ln -sfn "/opt/blender-${ver}-linux-x64" /opt/blender && ln -sf /opt/blender/blender /usr/local/bin/blender
+  tar -xf "$tmp/b.tar.xz" -C "$OPT" && ln -sfn "$OPT/blender-${ver}-linux-x64" "$OPT"/blender && ln -sf "$OPT"/blender/blender "$BIN"/blender
   rm -rf "$tmp"; blender --version | head -1
 }
 
