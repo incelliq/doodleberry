@@ -1329,6 +1329,49 @@ every exporter. Test `outfits`: a character with a coat (jacket, trousers) and a
 in each draws alike in Synfig, Lottie and Grease Pencil (1.0); against its own clothes the torso changes (mean
 difference 50 and 73 levels) and the face does not (0).
 
+## Characters from a generated sheet (cast.from_sheet)
+`cast.from_sheet {sheet, name, mouths?, mouths_extra?, model, license}` makes a humanoid puppet from one full-colour
+character an image model drew front-on in a **T-pose** on white (arms straight out at shoulder height, legs apart,
+feet showing, no ground shadow), with an optional sheet of mouth shapes drawn alone. `dbe/fromsheet.py` does it in
+these steps:
+
+- **The figure:** the white page is flooded from its border; what is left is the figure.
+- **The torso, arms and head:** the torso's sides come from rows through the middle of the body. The arm band is the
+  rows that reach well past the torso on both sides; the head is everything above it, plus all of the hair (found by
+  its colour), wherever the tips reach.
+- **The arms:** the arm's thickness along its length gives the elbow, and the wrist where it widens into the hand.
+  Between shoulder and wrist, each column keeps only the run through the arm's line, so hair tips touching a sleeve
+  stay with the head.
+- **The legs:** the first row with a gap between the legs is the crotch, and the ankle is where the leg widens into
+  the shoe.
+- **The parts:** each part is the figure's own pixels in its region plus a round cap over its joint, so the parts
+  overlap where they turn. The arms are swung down about the shoulders to the template's rest pose (arms hanging).
+- **The face:** the eyes are the two darkest marks in the face's upper middle. The mouth is the first mark below them
+  that is wider than a nose. Both are painted over with the skin colour and become the eyes swap (open as drawn,
+  closed as a lid line) and the mouth swap.
+- **The mouths:** the face's own smile is "closed" and "smile", flipped it is "frown". A mouth sheet in reading order
+  (closed smile, slightly open, ah, oh, oo, ee, m, l), scaled so its smile is the face's mouth's width, gives
+  small, wide, O and FV. "mid" is the tongue-to-teeth mouth from `mouths_extra` (or ee). The sheet's "m" is not used:
+  models draw it as full coloured lips, out of style with a line-drawn smile.
+- **Raster parts:** the parts are raster strokes; `puppet.vectorize` traces them.
+- **Provenance:** the model and its licence go into the puppet's `meta` for the posting gate. Check every result
+  for resemblance to existing characters, as for any character.
+
+Tried on two characters generated on the owner's machine (Nila, a girl in a t-shirt and shorts, and Aunty Kamala, in
+a sari). Their images and puppets stay out of git until the model's licence is recorded.
+
+- **Nila:** every part found. At rest the arms hang clear of the body and the hair stays with the head. Posed, she
+  waves, steps, blinks and says O, FV, mid and wide with her own mouths.
+- **Artefacts:** a large thigh turn shows a notch where the shorts were cut, and the T-pose's shoulder line stays a
+  short horizontal edge beside the neck.
+
+Test `fromsheet` draws its own T-pose figure (shapes with dark outlines, so the joints are known):
+
+- every pivot within 2.1% of the figure's height of where it was drawn (shoulders exact);
+- the arms hang after the swing;
+- both eyes and the mouth are lifted into swaps;
+- the loader draws the puppet at rest and posed.
+
 ## Kenney prop library (WP-16)
 Kenney's Generic Items (CC0) is 163 sprites named only by number, so each was labelled by eye from its drawing (on
 light and dark grounds, since some are white): `assets/props/kenney-generic-items.json` holds each item's number,

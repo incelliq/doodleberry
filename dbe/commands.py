@@ -4447,6 +4447,25 @@ def doodle_say(puppet, text, voice="kokoro:af_heart"):
     return {"audio": str(wav.relative_to(ROOT)), "lead": lead, "duration": round(lead + dur + 0.6, 2), "timeline": tl, "visemes": len(r["visemes"]), "voice": voice}
 
 
+@command("cast.from_sheet", sheet=("string", "a generated character drawn front-on in a T-pose on white (path from the project root or absolute)"),
+         name=("string", "the character's name"), mouths=("string", "optional: a sheet of mouth shapes drawn alone (closed smile, slightly open, ah, oh, oo, ee, m, l)", ""),
+         mouths_extra=("string", "optional: a second sheet whose second mouth is the tongue-to-teeth 'l' (mid)", ""),
+         model=("string", "the image model that drew it (recorded for the posting gate)", ""), license=("string", "that model's licence, SPDX id or name", ""),
+         out=("string", "where to write the puppet (default cast/<name>.puppet.json)", ""))
+def cast_from_sheet(sheet, name, mouths="", mouths_extra="", model="", license="", out=""):
+    """A humanoid puppet from one generated character sheet (dbe/fromsheet.py): the figure is found on the white
+    page, cut into the template's parts at its shoulders, elbows, wrists, neck, hips, knees and ankles (each part with a
+    round cap over its joint), the arms swung down to the template's rest pose, the eyes and mouth lifted into the
+    eyes and mouth swaps, and a mouth sheet scaled to the face's own mouth fills the lip-sync shapes. Parts are raster;
+    puppet.vectorize traces them. Check the result in the Rig Canvas, and that it resembles no existing character."""
+    from . import fromsheet as FSH
+    rp = lambda p: str(Path(p) if Path(p).is_absolute() else ROOT / p) if p else None
+    pz, rep = FSH.build(rp(sheet), name, mouths=rp(mouths), mouths_extra=rp(mouths_extra), model=model, license_id=license)
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    o = ROOT / (out or f"cast/{slug}.puppet.json"); o.parent.mkdir(parents=True, exist_ok=True); o.write_text(json.dumps(pz))
+    return {"puppet": str(o.relative_to(ROOT)), "bytes": o.stat().st_size, **rep}
+
+
 @command("doodle.keep", id=("string", "doodle id"), name=("string", "the character's name"), owner=("string", "who drew it (the rights holder)"),
          voice=("string", "the character's voice", "kokoro:af_heart"))
 def doodle_keep(id, name, owner, voice="kokoro:af_heart"):
@@ -7811,6 +7830,10 @@ def test_golden(update=False, film=""):
         bad, meas = _guarded(_turns_test)()
         failed += 1 if bad else 0
         results.append({"turns": "a turn from front to side drawn as three in-betweens: each moves steadily from one drawing to the other; the bake plays them one step each on twos around both switches, no squash; every renderer draws an in-between as the SVG renderer does", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "fromsheet":   # a humanoid puppet from a generated character sheet
+        bad, meas = _guarded(_fromsheet_test)()
+        failed += 1 if bad else 0
+        results.append({"fromsheet": "a T-pose figure drawn on white is cut into the humanoid parts with joints where they were drawn, the arms hang at rest, the eyes and mouth come off the face into swaps", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kenneyprops":   # WP-16: the labelled Kenney prop library
         bad, meas = _guarded(_kenneyprops_test)()
         failed += 1 if bad else 0
@@ -10960,6 +10983,75 @@ def _lufsstream_test():
 
 
 KENNEY_COUNTS = {"generic-items": 163, "board-game-icons": 255, "foliage-pack": 106, "background-elements-remastered": 69, "sports-pack": 187, "emotes-pack": 240}
+
+
+def _fromsheet_test():
+    """cast.from_sheet on a T-pose figure drawn here (shapes with dark outlines on white, so the joints are known):
+    every part found, each joint's pivot within 4% of the figure's height of where it was drawn, the arms hanging
+    after the swing, the eyes and the mouth lifted into swaps, and the puppet drawn by the loader at rest and posed"""
+    import tempfile
+    from PIL import Image, ImageDraw
+    from . import fromsheet as FSH
+    bad, meas = [], {}
+    W, H = 900, 760; im = Image.new("RGB", (W, H), "white"); d = ImageDraw.Draw(im)
+    ink, skin, shirt, shorts, hair, shoe = (60, 30, 15), (196, 120, 80), (210, 160, 60), (60, 140, 140), (20, 20, 20), (250, 250, 250)
+    cx, sh_y = 450, 300
+    d.rectangle([180, 280, 720, 320], fill=skin, outline=ink, width=4)                  # arms straight out
+    d.ellipse([150, 270, 200, 330], fill=skin, outline=ink, width=4); d.ellipse([700, 270, 750, 330], fill=skin, outline=ink, width=4)   # hands
+    d.rectangle([370, 270, 530, 470], fill=shirt, outline=ink, width=4)                 # torso
+    d.rectangle([370, 460, 530, 540], fill=shorts, outline=ink, width=4)                # shorts
+    d.rectangle([385, 540, 435, 690], fill=skin, outline=ink, width=4); d.rectangle([465, 540, 515, 690], fill=skin, outline=ink, width=4)   # legs
+    d.ellipse([360, 680, 445, 730], fill=shoe, outline=ink, width=4); d.ellipse([455, 680, 540, 730], fill=shoe, outline=ink, width=4)       # shoes
+    d.rectangle([425, 240, 475, 285], fill=skin, outline=ink, width=4)                 # neck
+    d.ellipse([360, 60, 540, 230], fill=hair, outline=ink, width=4)                    # hair
+    d.ellipse([380, 95, 520, 255], fill=skin, outline=ink, width=4)                    # face
+    d.ellipse([415, 150, 433, 170], fill=ink); d.ellipse([467, 150, 485, 170], fill=ink)   # eyes
+    d.arc([425, 190, 475, 220], 20, 160, fill=ink, width=4)                            # smile
+    tmp = Path(tempfile.mkdtemp()); im.save(tmp / "sheet.png")
+    try:
+        pz, rep = FSH.build(str(tmp / "sheet.png"), "Testfig")
+    except Exception as e:
+        return [f"build failed: {e}"], {}
+    lm = rep["landmarks"]; meas["landmarks"] = lm
+    top, bot = 60, 730; s = rep["scale"]; Hf = bot - top
+    to_img = lambda p: ((p[0] - 300) / s + (lm["torso"][0] + lm["torso"][1]) / 2, (p[1] - FSH.GROUND) / s + bot)
+    want = {"head": (cx, None), "thigh_L": (410, 535), "thigh_R": (490, 535), "shin_L": (410, None), "foot_L": (402, None)}
+    errs = {}
+    for part, (wx, wy) in want.items():
+        gx, gy = to_img(pz["parts"][part]["pivot"])
+        e = max(abs(gx - wx), abs(gy - wy) if wy is not None else 0) / Hf; errs[part] = round(e, 3)
+        if e > 0.04:
+            bad.append(f"{part} pivot at {gx:.0f},{gy:.0f}, drawn at {wx},{wy}")
+    # the shoulders where the arms leave the torso; the arms hang: elbow and wrist straight below the shoulder
+    for side in ("L", "R"):
+        sx, sy = to_img(pz["parts"][f"upperarm_{side}"]["pivot"]); ex, ey = to_img(pz["parts"][f"forearm_{side}"]["pivot"])
+        wx_, wy_ = to_img(pz["parts"][f"hand_{side}"]["pivot"])
+        errs[f"shoulder_{side}"] = round((abs(sx - (370 if side == "L" else 530)) + abs(sy - sh_y)) / Hf, 3)
+        if errs[f"shoulder_{side}"] > 0.05:
+            bad.append(f"shoulder {side} at {sx:.0f},{sy:.0f}")
+        if not (abs(ex - sx) < 0.03 * Hf and ey > sy + 0.1 * Hf and wy_ > ey + 0.05 * Hf):
+            bad.append(f"arm {side} does not hang: shoulder {sx:.0f},{sy:.0f} elbow {ex:.0f},{ey:.0f} wrist {wx_:.0f},{wy_:.0f}")
+    meas["pivot_error_of_height"] = errs
+    if rep["eyes"] != 2 or not rep["mouth"]:
+        bad.append(f"face features: eyes {rep['eyes']}, mouth {rep['mouth']}")
+    # the loader draws it at rest and posed
+    pf = ROOT / "out" / "fromsheet-test.puppet.json"; pf.parent.mkdir(exist_ok=True); pf.write_text(json.dumps(pz))
+    rel = str(pf.relative_to(ROOT))
+    spec = {"size": [700, 520], "flush": True, "bg": "#ffffff", "items": [{"puppet": rel, "x": 175, "y": 500, "s": 0.5, "pose": {}},
+            {"puppet": rel, "x": 525, "y": 500, "s": 0.5, "pose": {"angles": {"upperarm_R": -150, "thigh_L": -30}, "mouth": "smile", "eyes": "closed"}}]}
+    (tmp / "spec.json").write_text(json.dumps(spec))
+    r = subprocess.run(["node", "tools/pose_still.mjs", str(tmp / "spec.json"), str(tmp / "o.png")], cwd=ROOT, capture_output=True, text=True, timeout=300)
+    if r.returncode:
+        bad.append(f"loader: {r.stderr[-300:]}")
+    else:
+        import numpy as np
+        a = np.asarray(Image.open(tmp / "o.png").convert("RGB")).astype(int)
+        drawn = [(np.abs(a[:, x0:x1] - 255).sum(-1) > 60).mean() for x0, x1 in ((0, 350), (350, 700))]
+        meas["ink_cover"] = [round(v, 3) for v in drawn]
+        if min(drawn) < 0.05:
+            bad.append(f"the loader drew little: {meas['ink_cover']}")
+    shutil.rmtree(tmp, ignore_errors=True); pf.unlink(missing_ok=True)
+    return bad, meas
 
 
 def _kenneyprops_test():
