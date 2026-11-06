@@ -1371,7 +1371,16 @@ skirt:
 
 **Glasses.** An eye must be a solid mark (it fills at least 40% of its box), so a glasses rim is not taken for an eye.
 The hair is only the hair-coloured area joined to the top of the head. Grey edge pixels along an outline can be near a
-grey hair's colour. Anything left beside the torso at arm height (other than hair and its outline) is dropped.
+grey hair's colour. Beside the torso down to arm height, what joins the head from above (hair, a bun, their shading
+and edges) is the head's; anything else there is dropped as a stray edge of the arms.
+
+**Head turns.** The head is everything above the neck's narrowest row (found through the middle, hair aside); below
+it the head keeps only the neck's own columns, and the torso starts at that row with no hair in it. A turned head so
+takes no strip of shoulder, shirt outline or hair edge with it, and leaves none behind. (At first the head ran down
+past the top of the shirt, and Kamala's bun lost a corner to the stray rule.)
+
+**Crowded mouth sheets.** A mouth's marks (a smile and its chin line) are grouped by how close they are. When the
+usual reach finds fewer than six mouths on a sheet drawn tighter, a smaller reach is tried.
 
 Tried on two characters generated on the owner's machine. Their images and puppets stay out of git until the model's
 licence is recorded.
@@ -1391,7 +1400,60 @@ Test `fromsheet` draws its own T-pose figure (shapes with dark outlines, so the 
 - the arms hang after the swing;
 - both eyes and the mouth are lifted into swaps;
 - the loader draws the puppet at rest and posed;
-- the same figure in an ankle-length skirt counts as skirted, with the legs jointed at the hem (684 against 690 drawn).
+- the same figure in an ankle-length skirt counts as skirted, with the legs jointed at the hem (684 against 690 drawn);
+- below the face the head is no wider than the neck (55 px against 50 drawn; it took the shoulder's 159 before).
+
+A puppet cut from one finished picture has nothing drawn under its overlaps, so a big move still shows a cut (a thigh
+notch, a skirt-hem gap). For characters that will act, generate a cut-out kit instead (next section).
+
+## Characters from a cut-out kit (cast.from_kit)
+Professional cut-out rigs (Toon Boom Harmony, Moho, Spine) are drawn for the rig and built to the model sheet: every
+part is drawn whole, including what another part covers; limbs bend with bones or meshes instead of hinging at a cut;
+a part turns only a little from how it was drawn, and bigger moves swap in another drawing. `cast.from_kit {kit, name,
+sheet?, view?, mouths?, mouths_extra?, model, license}` (`dbe/fromkit.py`) builds a humanoid puppet that way from
+pictures an image model drew. The prompts are in `docs/character-kit.md`.
+
+- **The kit:** one sheet on white. Top row: the head (ending at the jaw), the torso (with the neck, closed shoulders,
+  no sleeves) and the hips (shorts, or a skirt to the ankles). Bottom row: the two arms (each whole, sleeve to hand,
+  with a rounded top), then the two legs (whole, to the shoe), or the two feet under a long skirt. Pieces are named by
+  their place; any other count is refused.
+- **Joints from each piece's shape:** a limb's top joint is the centre of its rounded top, the wrist or ankle is where
+  it widens into the hand or shoe, the elbow or knee halfway. The torso's neck is its narrow top, and its shoulders
+  are where it is widest below the neck. The hips' leg openings and crotch (or the hem) place the legs.
+- **Fitted to the model sheet** (`sheet`, a turnaround; `view` picks the front view, 0 = leftmost): every piece is
+  laid onto the front view at the scale, angle (limbs only) and place where most of its pixels land on their own flat
+  colour. Landing on a part drawn in front of it (legs under the shorts, the torso under the head and arms) counts
+  neither way. The torso goes first, then the hips and arms near it at about its scale, then the legs inside the hips'
+  width. The search is coarse on a smaller drawing, then fine. The head is cut from the model itself at the neck's
+  narrowest row (eyes, nose and mouth filled first so they do not break the rows), so the face is the design's. Each
+  piece takes the model's flat colours, and the neck takes the face's skin when it is a shade of it.
+- **Without a sheet** the pieces are put together at their joints as the kit drew them (jaw over the neck, arm tops
+  just inside the shoulders, hips 0.18 of their height under the waist, legs at the crotch, ankles just under a hem).
+  Image models do not keep proportions from one picture to the next, so this is only as true to the design as the kit.
+- **Rig:** each arm and leg stays one drawing, a mesh skinned to its three bones (`puppet.auto_weights`, triangles
+  grown 1.6 units so flat colours show no seams), so it bends in an arc at the elbow or knee. Both arms hang in front
+  of the torso. The head is limited to ±15° and the torso to ±12°. Eyes and mouth become swaps as in `cast.from_sheet`.
+- **Warnings** (in the result) when the torso looks like it has sleeves (much wider at the shoulders than the body),
+  when it is very tall for its width (a head or skirt drawn into it), and when a piece fits the model poorly.
+- Mesh strokes draw in the SVG renderer only, like every mesh stroke.
+
+Tried on the owner's machine (images and puppets stay out of git until the image model's licence is recorded):
+
+- **Nila**, from a kit and her turnaround: fitted at 0.57 to 0.73 of the kit's size, 64 to 93% of each piece on its
+  own colour, about 45 s. Next to her model sheet she has the design's head and proportions. She steps, tilts her
+  head, folds her arms and holds them out with no cuts showing.
+  - That kit's torso still has sleeves, so a raised arm leaves an empty one behind (flagged).
+  - A waving hand passes behind her big hair (the template's layer order).
+- **Aunty Kamala**: the model drew her torso piece with her head and skirt in it, so she waits for a corrected kit
+  (flagged as very tall).
+
+Test `fromkit` draws its own kit (shapes with dark outlines) and a model sheet of the same parts put together at 0.8
+the size:
+
+- alone and fitted, every joint within 9 units (of 820) of where the parts were drawn to meet;
+- fitted, every piece at 0.77 to 0.80 with 78 to 97% on its own colour, and the head from the sheet;
+- each limb one mesh over its three bones, and bending the elbow moves the hand up and out;
+- a sleeved torso is flagged, and a skirt kit stands its ankles 14 units under the hem.
 
 ## Kenney prop library (WP-16)
 Kenney's Generic Items (CC0) is 163 sprites named only by number, so each was labelled by eye from its drawing (on

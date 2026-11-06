@@ -212,14 +212,25 @@ def part_masks(fig, lm, rgb=None):
         masks[f"upperarm_{side}"], masks[f"forearm_{side}"], masks[f"hand_{side}"] = up, fo, ha
         piv[f"upperarm_{side}"], piv[f"forearm_{side}"], piv[f"hand_{side}"] = P, e, w
     body = fig & ~arm_any
-    # anything left beside the torso at arm height is stray (edge pixels of the arms), not body
-    body &= ~(((yy >= a0 - 0.06 * lm["H"]) & (yy <= a1 + 0.06 * lm["H"])) & ((xx < tl - 3) | (xx > tr + 3)) & ~ND.binary_dilation(hair, iterations=5))
+    # beside the torso down to arm height: what joins the head from above (hair, a bun, their shading and edges) is the
+    # head's; the rest is stray (edge pixels of the arms), not body
+    beside = body & (yy <= a1 + 0.06 * lm["H"]) & ((xx < tl - 3) | (xx > tr + 3))
+    lab, _ = ND.label(beside); ids = np.unique(lab[beside & (yy < a0 - 0.06 * lm["H"])])
+    beside_head = np.isin(lab, ids[ids > 0]) | (beside & ND.binary_dilation(hair, iterations=5))
+    body &= ~beside | beside_head
     neck_y, crotch = lm["neck_y"], lm["crotch"]
-    head = body & (yy < neck_y + 0.03 * lm["H"])
+    # the neck: the narrowest run through the middle (hair aside) between the chin and the shoulders. Below it the
+    # head keeps only the neck's columns, so no strip of shoulder and its outline turns with the head
+    cxi, skin = int(lm["cx"]), body & ~hair
+    neck = [(r1 - r0, y, r0, r1) for y in range(int(neck_y - 0.06 * lm["H"]), int(neck_y + 0.03 * lm["H"]))
+            for r0, r1 in _runs(skin[y]) if r0 <= cxi < r1]
+    _, y_n, n0, n1 = min(neck) if neck else (0, int(neck_y + 0.03 * lm["H"]), 0, shp[1])
+    head = body & ((yy < y_n) | ((yy < neck_y + 0.03 * lm["H"]) & (xx >= n0 - 2) & (xx < n1 + 2)))
     # all of the hair goes with the head, wherever its tips reach (with its outline): the hair touching the head
     lab, _ = ND.label(hair & body)
     ids = np.unique(lab[head & hair]); ids = ids[ids > 0]
     hair_all = ND.binary_dilation(np.isin(lab, ids), iterations=3) & body
+    hair_all |= beside_head
     head = head | hair_all
     masks["head"] = head; piv["head"] = (lm["cx"], neck_y)
     # hips: the band above the crotch (the shorts' or skirt's top), torso above it
@@ -237,7 +248,13 @@ def part_masks(fig, lm, rgb=None):
         ft = leg & (yy >= a[1]) | (leg & _disc(shp, a, r * 0.8))
         masks[f"thigh_{side}"], masks[f"shin_{side}"], masks[f"foot_{side}"] = th, sh, ft
         piv[f"thigh_{side}"], piv[f"shin_{side}"], piv[f"foot_{side}"] = h, k, a
-    trunk = body & ~legs_any & (yy >= neck_y - 0.01 * lm["H"]) & ~(hair_all & (yy >= neck_y + 0.03 * lm["H"]))
+    trunk = body & ~legs_any & (yy >= y_n) & ~hair_all   # above the neck, and the hair, are the head's
+    # bits of the hair's edge cut off from the body go with the hair
+    lab, n = ND.label(trunk)
+    if n > 1:
+        core = 1 + int(np.argmax(ND.sum(trunk, lab, range(1, n + 1))))
+        ids = np.unique(lab[ND.binary_dilation(hair_all, iterations=2) & trunk])
+        fringe = np.isin(lab, ids[(ids > 0) & (ids != core)]); trunk &= ~fringe; masks["head"] = head | fringe
     masks["torso"] = trunk & (yy < hip_top + 0.02 * lm["H"])
     masks["hip"] = trunk & (yy >= hip_top - 0.02 * lm["H"])
     mid_hip = (lm["cx"], hip_top)
@@ -287,15 +304,19 @@ def face_features(rgb, head_mask):
 def mouth_sheet(path, white_tol=40):
     """the mouths on a sheet, in reading order (rows top to bottom, left to right): [RGBA crops]"""
     rgb = _load(path); fig = (255 - rgb).sum(-1) >= white_tol
-    # marks of one mouth (a smile and its chin line) close together; mouths are far apart
-    lab, n = ND.label(ND.binary_dilation(fig, iterations=max(4, int(0.02 * max(fig.shape)))))
-    items = []
-    for i in range(1, n + 1):
-        by, bx = np.where(lab == i)
-        if len(by) < 300:
-            continue
-        m = (lab == i) & fig; by, bx = np.where(m)
-        items.append(((by.min() + by.max()) / 2, (bx.min() + bx.max()) / 2, (bx.min(), by.min(), bx.max() + 1, by.max() + 1), m))
+    # marks of one mouth (a smile and its chin line) close together; mouths are further apart (on a crowded sheet,
+    # closer: then a smaller reach, until at least six mouths come apart)
+    for frac in (0.02, 0.012, 0.008):
+        lab, n = ND.label(ND.binary_dilation(fig, iterations=max(4, int(frac * max(fig.shape)))))
+        items = []
+        for i in range(1, n + 1):
+            by, bx = np.where(lab == i)
+            if len(by) < 300:
+                continue
+            m = (lab == i) & fig; by, bx = np.where(m)
+            items.append(((by.min() + by.max()) / 2, (bx.min() + bx.max()) / 2, (bx.min(), by.min(), bx.max() + 1, by.max() + 1), m))
+        if len(items) >= 6:
+            break
     if not items:
         return []
     hs = sorted(it[0] for it in items); rowh = np.median([it[2][3] - it[2][1] for it in items])
@@ -326,6 +347,62 @@ def _uri(im):
     return "data:image/png;base64," + base64.b64encode(b.getvalue()).decode()
 
 
+def lift_face(rgb, ff):
+    """the drawing with the eyes and the mouth painted over in the skin colour (only inside the face)"""
+    out = rgb.copy(); lift = np.zeros(rgb.shape[:2], bool)
+    for b in ff["eyes"] + ([ff["mouth"]] if ff["mouth"] else []):
+        lift |= ND.binary_dilation(b["m"], iterations=2) & ff["face"]
+    out[lift] = ff["skin"]
+    return out
+
+
+def face_swaps(rgb, ff, ax, ay, s, mouths=None, mouths_extra=None, report=None):
+    """the eyes swap (open as drawn, closed as a lid line) and the mouth swap (the face's own smile and frown; a mouth
+    sheet scaled to that smile fills the lip-sync shapes), placed with ax, ay (image px -> artboard) at scale s"""
+    report = {} if report is None else report
+    # eyes: open = the drawn eyes; closed = a curved lid line where each eye was; half = the eye's top half lifted
+    swaps = {}
+    if len(ff["eyes"]) == 2:
+        op, cl = [], []
+        for b in ff["eyes"]:
+            x0, y0, x1, y1 = b["box"]; m = b["m"][y0:y1 + 1, x0:x1 + 1]
+            crop = Image.fromarray(np.dstack([rgb[y0:y1 + 1, x0:x1 + 1], m * 255]).astype(np.uint8), "RGBA")
+            op.append({"image": _uri(crop), "x": round(ax(x0), 1), "y": round(ay(y0), 1), "w": round((x1 - x0 + 1) * s, 1), "h": round((y1 - y0 + 1) * s, 1)})
+            cxe, cye, wx = ax((x0 + x1) / 2), ay((y0 + y1) / 2), (x1 - x0) * s / 2
+            cl.append({"d": f"M{cxe - wx:.1f} {cye:.1f} Q{cxe:.1f} {cye + wx * 0.55:.1f} {cxe + wx:.1f} {cye:.1f}", "fill": "none", "stroke": "ink", "width": round(max(2.5, 0.22 * wx), 1)})
+        swaps["eyes"] = {"anchor": "head", "z": 42, "shapes": {"open": op, "closed": cl}}
+    # mouth: the face's own mouth is the smile; a sheet of mouths fills the lip-sync shapes at its scale
+    if ff["mouth"]:
+        x0, y0, x1, y1 = ff["mouth"]["box"]; m = ff["mouth"]["m"][y0:y1 + 1, x0:x1 + 1]
+        own = Image.fromarray(np.dstack([rgb[y0:y1 + 1, x0:x1 + 1], m * 255]).astype(np.uint8), "RGBA")
+        mcx, mcy, mw = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0 + 1)
+
+        def place(im, k=None, flip=False):
+            k = k or 1.0
+            w, h = im.size[0] * k * s, im.size[1] * k * s
+            if flip:
+                im = im.transpose(Image.FLIP_TOP_BOTTOM)
+            return [{"image": _uri(im), "x": round(ax(mcx) - w / 2, 1), "y": round(ay(mcy) - h * 0.35, 1), "w": round(w, 1), "h": round(h, 1)}]
+        # closed (m, b, p and at rest) is the face's own closed smile, as drawn
+        shapes = {"closed": place(own, 1.0), "smile": place(own, 1.0)}
+        shapes["frown"] = place(own, 1.0, flip=True)
+        sheet_m = mouth_sheet(mouths) if mouths else []
+        extra = mouth_sheet(mouths_extra) if mouths_extra else []
+        report["mouth_sheet"] = len(sheet_m)
+        if len(sheet_m) >= 6:
+            k = mw / sheet_m[0].size[0]   # the sheet's closed smile is drawn the face's mouth's width
+            if len(sheet_m) >= 8:   # smile, slightly open, ah, oh, oo, ee, m, l
+                pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[5],
+                        "mid": (extra[1] if len(extra) >= 2 else sheet_m[5])}
+            else:                   # smile, slightly open, ah, oh, ee, l
+                pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[4], "mid": sheet_m[5]}
+            for sh, im in pick.items():
+                shapes[sh] = place(im, k)
+            report["mouth_scale"] = round(k, 3)
+        swaps["mouth"] = {"anchor": "head", "z": 45, "shapes": shapes}
+    return swaps
+
+
 def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
     """-> (puppet dict, report)"""
     rgb = _load(sheet)
@@ -334,12 +411,7 @@ def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
     masks, piv, caps = part_masks(fig, lm, rgb)
     ff = face_features(rgb, masks["head"])
     rgba = np.dstack([rgb, np.full(rgb.shape[:2], 255)]).astype(np.uint8)
-    # lift the eyes and the mouth off the face: paint them over with the skin colour (only inside the face)
-    head_rgb = rgb.copy()
-    lift = np.zeros(fig.shape, bool)
-    for b in ff["eyes"] + ([ff["mouth"]] if ff["mouth"] else []):
-        lift |= ND.binary_dilation(b["m"], iterations=2) & ff["face"]
-    head_rgb[lift] = ff["skin"]
+    head_rgb = lift_face(rgb, ff)
     # scale and placement on the artboard: soles on the ground, the body's centre at x = 300
     s = HEIGHT / max(1, lm["H"])
     ax = lambda x: (x - lm["cx"]) * s + ARTBOARD[0] / 2
@@ -396,47 +468,8 @@ def build(sheet, name, mouths=None, mouths_extra=None, model="", license_id=""):
                        "strokes": [{"image": _uri(crop), "x": round(ax(bb[0]), 1), "y": round(ay(bb[1]), 1),
                                     "w": round((bb[2] - bb[0]) * s, 1), "h": round((bb[3] - bb[1]) * s, 1)}]}
         report[part] = {"pixels": int(masks[part].sum()), "pivot": parts[part]["pivot"]}
-    # eyes: open = the drawn eyes; closed = a curved lid line where each eye was; half = the eye's top half lifted
-    swaps = {}
+    swaps = face_swaps(rgb, ff, ax, ay, s, mouths, mouths_extra, report)
     ink = _hex(ff["ink"])
-    if len(ff["eyes"]) == 2:
-        op, cl = [], []
-        for b in ff["eyes"]:
-            x0, y0, x1, y1 = b["box"]; m = b["m"][y0:y1 + 1, x0:x1 + 1]
-            crop = Image.fromarray(np.dstack([rgb[y0:y1 + 1, x0:x1 + 1], m * 255]).astype(np.uint8), "RGBA")
-            op.append({"image": _uri(crop), "x": round(ax(x0), 1), "y": round(ay(y0), 1), "w": round((x1 - x0 + 1) * s, 1), "h": round((y1 - y0 + 1) * s, 1)})
-            cxe, cye, wx = ax((x0 + x1) / 2), ay((y0 + y1) / 2), (x1 - x0) * s / 2
-            cl.append({"d": f"M{cxe - wx:.1f} {cye:.1f} Q{cxe:.1f} {cye + wx * 0.55:.1f} {cxe + wx:.1f} {cye:.1f}", "fill": "none", "stroke": "ink", "width": round(max(2.5, 0.22 * wx), 1)})
-        swaps["eyes"] = {"anchor": "head", "z": 42, "shapes": {"open": op, "closed": cl}}
-    # mouth: the face's own mouth is the smile; a sheet of mouths fills the lip-sync shapes at its scale
-    if ff["mouth"]:
-        x0, y0, x1, y1 = ff["mouth"]["box"]; m = ff["mouth"]["m"][y0:y1 + 1, x0:x1 + 1]
-        own = Image.fromarray(np.dstack([rgb[y0:y1 + 1, x0:x1 + 1], m * 255]).astype(np.uint8), "RGBA")
-        mcx, mcy, mw = (x0 + x1) / 2, (y0 + y1) / 2, (x1 - x0 + 1)
-
-        def place(im, k=None, flip=False):
-            k = k or 1.0
-            w, h = im.size[0] * k * s, im.size[1] * k * s
-            if flip:
-                im = im.transpose(Image.FLIP_TOP_BOTTOM)
-            return [{"image": _uri(im), "x": round(ax(mcx) - w / 2, 1), "y": round(ay(mcy) - h * 0.35, 1), "w": round(w, 1), "h": round(h, 1)}]
-        # closed (m, b, p and at rest) is the face's own closed smile, as drawn
-        shapes = {"closed": place(own, 1.0), "smile": place(own, 1.0)}
-        shapes["frown"] = place(own, 1.0, flip=True)
-        sheet_m = mouth_sheet(mouths) if mouths else []
-        extra = mouth_sheet(mouths_extra) if mouths_extra else []
-        report["mouth_sheet"] = len(sheet_m)
-        if len(sheet_m) >= 6:
-            k = mw / sheet_m[0].size[0]   # the sheet's closed smile is drawn the face's mouth's width
-            if len(sheet_m) >= 8:   # smile, slightly open, ah, oh, oo, ee, m, l
-                pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[5],
-                        "mid": (extra[1] if len(extra) >= 2 else sheet_m[5])}
-            else:                   # smile, slightly open, ah, oh, ee, l
-                pick = {"small": sheet_m[1], "wide": sheet_m[2], "O": sheet_m[3], "FV": sheet_m[4], "mid": sheet_m[5]}
-            for sh, im in pick.items():
-                shapes[sh] = place(im, k)
-            report["mouth_scale"] = round(k, 3)
-        swaps["mouth"] = {"anchor": "head", "z": 45, "shapes": shapes}
     palette = {"skin": _hex(ff["skin"]), "ink": ink, "eye": "#ffffff"}
     for slot, part in (("cloth1", "torso"), ("cloth2", "hip"), ("shoe", "foot_L")):
         px = rgb[masks[part] & (rgb.sum(-1) > 120)]

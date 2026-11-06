@@ -4466,6 +4466,27 @@ def cast_from_sheet(sheet, name, mouths="", mouths_extra="", model="", license="
     return {"puppet": str(o.relative_to(ROOT)), "bytes": o.stat().st_size, **rep}
 
 
+@command("cast.from_kit", kit=("string", "a generated cut-out kit on white: head, torso and hips in the top row; the two arms, then the two legs (or feet under a long skirt) below; each part whole and apart"),
+         name=("string", "the character's name"), sheet=("string", "optional but recommended: the character's model sheet (a turnaround); every piece is fitted onto its front view and the head is taken from it", ""),
+         view=("integer", "which figure on the model sheet, counting from the left from 0, is the front view", 0),
+         mouths=("string", "optional: a sheet of mouth shapes drawn alone (six: closed smile, slightly open, ah, oh, ee, l; or eight)", ""),
+         mouths_extra=("string", "optional: a second sheet whose second mouth is the tongue-to-teeth 'l' (mid)", ""),
+         model=("string", "the image model that drew it (recorded for the posting gate)", ""), license=("string", "that model's licence, SPDX id or name", ""),
+         out=("string", "where to write the puppet (default cast/<name>.puppet.json)", ""))
+def cast_from_kit(kit, name, sheet="", view=0, mouths="", mouths_extra="", model="", license="", out=""):
+    """A humanoid puppet from a cut-out kit (dbe/fromkit.py): parts an image model drew whole and apart, fitted onto the
+    character's model sheet as a rig is built to its model sheet. Each arm and leg stays one drawing skinned to its
+    three bones, so it bends instead of showing a cut; the head and torso get joint limits; the eyes and mouth become
+    swaps. Warnings say when a piece is not what a kit needs (sleeves on the torso, a head inside it) or fits the model
+    poorly. Check the result in the Rig Canvas, and that it resembles no existing character."""
+    from . import fromkit as FK
+    rp = lambda p: str(Path(p) if Path(p).is_absolute() else ROOT / p) if p else None
+    pz, rep = FK.build(rp(kit), name, sheet=rp(sheet), view=int(view), mouths=rp(mouths), mouths_extra=rp(mouths_extra), model=model, license_id=license)
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    o = ROOT / (out or f"cast/{slug}.puppet.json"); o.parent.mkdir(parents=True, exist_ok=True); o.write_text(json.dumps(pz))
+    return {"puppet": str(o.relative_to(ROOT)), "bytes": o.stat().st_size, **rep}
+
+
 @command("doodle.keep", id=("string", "doodle id"), name=("string", "the character's name"), owner=("string", "who drew it (the rights holder)"),
          voice=("string", "the character's voice", "kokoro:af_heart"))
 def doodle_keep(id, name, owner, voice="kokoro:af_heart"):
@@ -7834,6 +7855,10 @@ def test_golden(update=False, film=""):
         bad, meas = _guarded(_fromsheet_test)()
         failed += 1 if bad else 0
         results.append({"fromsheet": "a T-pose figure drawn on white is cut into the humanoid parts with joints where they were drawn, the arms hang at rest, the eyes and mouth come off the face into swaps", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
+    if not film or film == "fromkit":   # a humanoid puppet from a generated cut-out kit, fitted to its model sheet
+        bad, meas = _guarded(_fromkit_test)()
+        failed += 1 if bad else 0
+        results.append({"fromkit": "a cut-out kit drawn whole and apart is put together at its joints and, with a model sheet, fitted onto its front view at the sheet's scale with the sheet's own head; each limb one mesh that bends; a sleeved torso flagged; a skirt kit stands its ankles under the hem", "status": "FAIL" if bad else "ok", "measured": meas, **({"cases": bad} if bad else {})})
     if not film or film == "kenneyprops":   # WP-16: the labelled Kenney prop library
         bad, meas = _guarded(_kenneyprops_test)()
         failed += 1 if bad else 0
@@ -11032,6 +11057,12 @@ def _fromsheet_test():
         if not (abs(ex - sx) < 0.03 * Hf and ey > sy + 0.1 * Hf and wy_ > ey + 0.05 * Hf):
             bad.append(f"arm {side} does not hang: shoulder {sx:.0f},{sy:.0f} elbow {ex:.0f},{ey:.0f} wrist {wx_:.0f},{wy_:.0f}")
     meas["pivot_error_of_height"] = errs
+    # a turned head takes no shoulder with it: below the face (to 255) the head is no wider than the neck (50 drawn)
+    import numpy as np
+    rgb_ = FSH._load(str(tmp / "sheet.png")); fig_ = FSH.figure_mask(rgb_); masks_ = FSH.part_masks(fig_, FSH.landmarks(fig_), rgb_)[0]
+    meas["head_width_below_face"] = int(max((np.ptp(np.where(r)[0]) + 1 for r in masks_["head"][262:] if r.any()), default=0))
+    if meas["head_width_below_face"] > 60:
+        bad.append(f"the head takes {meas['head_width_below_face']} px of shoulder below the face (the neck is 50)")
     if rep["eyes"] != 2 or not rep["mouth"]:
         bad.append(f"face features: eyes {rep['eyes']}, mouth {rep['mouth']}")
     # the loader draws it at rest and posed
@@ -11061,6 +11092,131 @@ def _fromsheet_test():
             bad.append(f"long skirt: {meas['skirt']}")
     except Exception as e:
         bad.append(f"long skirt: {e}")
+    shutil.rmtree(tmp, ignore_errors=True); pf.unlink(missing_ok=True)
+    return bad, meas
+
+
+def _fromkit_test():
+    """cast.from_kit on a cut-out kit drawn here (each part whole and apart, so the joints are known), alone and with a
+    model sheet (the same parts put together at 0.8 the size): seven pieces named by place; each joint where the parts
+    were drawn to meet (shoulders just inside the torso, the jaw over the neck, the legs in their openings, wrists and
+    ankles where hand and shoe begin); with the sheet, every piece fitted at 0.8 and the head the sheet's own; each limb
+    one mesh over its three bones; the loader bends the elbow; a torso with sleeves is flagged; a skirt kit stands its
+    ankles under the hem"""
+    import tempfile
+    import numpy as np
+    from PIL import Image, ImageDraw
+    from . import fromkit as FK
+    bad, meas = [], {}
+    ink, skin, shirt, shorts, hair, shoe = (60, 30, 15), (196, 120, 80), (210, 160, 60), (60, 140, 140), (20, 20, 20), (250, 250, 250)
+
+    def part(d, name, T, k=1.0, sleeves=False, skirt=False, x=0):
+        """one part, drawn through T (kit px -> image px) at k times the size"""
+        lw = max(2, round(4 * k)); B = lambda x0, y0, x1, y1: [*T(x0, y0), *T(x1, y1)]
+        if name == "head":
+            d.ellipse(B(100, 60, 300, 250), fill=hair, outline=ink, width=lw); d.ellipse(B(120, 90, 280, 260), fill=skin, outline=ink, width=lw)
+            d.ellipse(B(160, 150, 178, 170), fill=ink); d.ellipse(B(222, 150, 240, 170), fill=ink); d.arc(B(175, 195, 225, 225), 20, 160, fill=ink, width=lw)
+        elif name == "torso":
+            d.rectangle(B(570, 60, 630, 130), fill=skin, outline=ink, width=lw)
+            if sleeves:
+                d.ellipse(B(455, 110, 545, 190), fill=shirt, outline=ink, width=lw); d.ellipse(B(655, 110, 745, 190), fill=shirt, outline=ink, width=lw)
+            d.rounded_rectangle(B(500, 110, 700, 330), round(30 * k), fill=shirt, outline=ink, width=lw)
+        elif name == "hips":
+            pts = [(950, 100), (1150, 100), (1170, 400), (930, 400)] if skirt else [(950, 100), (1150, 100), (1150, 240), (1060, 240), (1050, 180), (1040, 240), (950, 240)]
+            d.polygon([T(*q) for q in pts], fill=shorts, outline=ink, width=lw)
+        elif name == "arm":   # sleeve, forearm, hand
+            d.ellipse(B(x, 400, x + 60, 460), fill=shirt, outline=ink, width=lw); d.rectangle(B(x, 430, x + 60, 500), fill=shirt, outline=ink, width=lw)
+            d.rectangle(B(x + 10, 500, x + 50, 660), fill=skin, outline=ink, width=lw); d.ellipse(B(x - 5, 650, x + 65, 730), fill=skin, outline=ink, width=lw)
+        else:                 # a leg (a foot under a skirt) and its shoe
+            t = 560 if skirt else 400
+            d.ellipse(B(x, t, x + 60, t + 60), fill=skin, outline=ink, width=lw); d.rectangle(B(x, t + 30, x + 60, 680), fill=skin, outline=ink, width=lw)
+            d.ellipse(B(x - 20, 670, x + 90, 730), fill=shoe, outline=ink, width=lw)
+
+    def kit(**kw):
+        im = Image.new("RGB", (1400, 800), "white"); d = ImageDraw.Draw(im); I = lambda x, y: (x, y)
+        for nm in ("head", "torso", "hips"):
+            part(d, nm, I, **kw)
+        for nm, x in (("arm", 100), ("arm", 300), ("leg", 950), ("leg", 1150)):
+            part(d, nm, I, x=x, **kw)
+        return im
+
+    # the model sheet: the parts put together at 0.8 the size, waist at (300, 400): each part's joint on its socket
+    k = 0.8; Wy = lambda y: 400 + (y - 330) * k; Wx = lambda x: 300 + (x - 600) * k; hips_y = 330 - 0.18 * 141
+    at = lambda jx, jy, sx, sy: (lambda x, y: (sx + (x - jx) * k, sy + (y - jy) * k))
+    sheet = Image.new("RGB", (600, 760), "white"); d = ImageDraw.Draw(sheet)
+    part(d, "leg", at(980, 430, Wx(995 - 450), Wy(180 + hips_y - 100)), k, x=950); part(d, "leg", at(1180, 430, Wx(1105 - 450), Wy(180 + hips_y - 100)), k, x=1150)
+    part(d, "hips", at(1050, 100, Wx(600), Wy(hips_y)), k); part(d, "torso", at(600, 330, Wx(600), Wy(330)), k)
+    part(d, "arm", at(130, 430, Wx(507.5), Wy(150)), k, x=100); part(d, "arm", at(330, 430, Wx(692.5), Wy(150)), k, x=300)
+    part(d, "head", at(200, 260, Wx(600), Wy(90)), k)
+
+    tmp = Path(tempfile.mkdtemp())
+    builds = {}
+    try:
+        kit().save(tmp / "kit.png"); sheet.save(tmp / "sheet.png")
+        builds["kit"] = FK.build(str(tmp / "kit.png"), "Testkit")
+        builds["sheet"] = FK.build(str(tmp / "kit.png"), "Testkit", sheet=str(tmp / "sheet.png"))
+    except Exception as e:
+        return [f"build failed: {e}"], {}
+    tol = 0.03 * 820
+    for how, (pz, rep) in builds.items():
+        P = pz["parts"]; s = rep["scale"] * (k if how == "sheet" else 1)   # artboard units per kit px
+        pv = lambda p: np.array(P[p]["pivot"], float)
+        # where the joints should land, from the drawing: relative to the waist (the torso's bottom at its axis, 600, 330)
+        want = {"head": (600, 60 + 0.6 * 50), "upperarm_L": (500 + 0.25 * 30, 120 + 30), "upperarm_R": (700 - 0.25 * 30, 120 + 30),
+                "thigh_L": (995 - 450, 180 + hips_y - 100), "thigh_R": (1105 - 450, 180 + hips_y - 100)}
+        errs = {}
+        for p, (x, y) in want.items():
+            e = float(np.abs(pv(p) - pv("hip") - np.array([(x - 600) * s, (y - 330) * s])).max()); errs[p] = round(e, 1)
+            if e > tol:
+                bad.append(f"{how}: {p} joint {e:.0f} units from where it was drawn to meet")
+        for sd in "LR":   # down each limb: wrist where the hand starts (~655), ankle where the shoe starts (~672)
+            for a, b, dy in ((f"upperarm_{sd}", f"hand_{sd}", 655 - 430), (f"thigh_{sd}", f"foot_{sd}", 672 - 430)):
+                e = float(np.abs(pv(b) - pv(a) - np.array([0, dy * s])).max()); errs[b] = round(e, 1)
+                if e > tol:
+                    bad.append(f"{how}: {b} joint {e:.0f} units off down its limb")
+        meas[f"{how}_joint_error_units"] = errs
+        if rep["eyes"] != 2 or not rep["mouth"] or rep["warnings"]:
+            bad.append(f"{how}: eyes {rep['eyes']}, mouth {rep['mouth']}, warnings {rep['warnings']}")
+        for sd in "LR":
+            for chain in ((f"upperarm_{sd}", f"forearm_{sd}", f"hand_{sd}"), (f"thigh_{sd}", f"shin_{sd}", f"foot_{sd}")):
+                st = P[chain[0]]["strokes"]
+                ws = {q for x in st for w in x.get("mesh", {}).get("weights", []) for q, _ in w}
+                if len(st) != 1 or "mesh" not in st[0] or ws != set(chain) or any(P[q]["strokes"] for q in chain[1:]):
+                    bad.append(f"{how}: {chain[0]} is not one mesh over {chain}: weights over {sorted(ws)}")
+        if P["head"].get("limits") != [-15, 15]:
+            bad.append(f"{how}: head limits {P['head'].get('limits')}")
+    fit = builds["sheet"][1]["fit"]; meas["sheet_fit"] = fit
+    if any(abs(v["scale"] - k) > 0.05 or v["match"] < 0.7 for v in fit.values()):
+        bad.append(f"pieces not fitted at {k}: {fit}")
+    # the loader draws it, and bending the elbow moves the hand up and out
+    pz = builds["sheet"][0]
+    pf = ROOT / "out" / "fromkit-test.puppet.json"; pf.parent.mkdir(exist_ok=True); pf.write_text(json.dumps(pz)); rel = str(pf.relative_to(ROOT))
+    shots = []
+    for pose in ({}, {"angles": {"forearm_R": -100}}):
+        (tmp / "spec.json").write_text(json.dumps({"size": [400, 520], "flush": True, "bg": "#ffffff", "items": [{"puppet": rel, "x": 200, "y": 500, "s": 0.5, "pose": pose}]}))
+        r = subprocess.run(["node", "tools/pose_still.mjs", str(tmp / "spec.json"), str(tmp / "o.png")], cwd=ROOT, capture_output=True, text=True, timeout=300)
+        if r.returncode:
+            bad.append(f"loader: {r.stderr[-300:]}"); break
+        shots.append(np.asarray(Image.open(tmp / "o.png").convert("RGB")).astype(int))
+    if len(shots) == 2:
+        sk = [np.abs(a - np.array(skin)).sum(-1) < 40 for a in shots]
+        drawn = [int((np.abs(a - 255).sum(-1) > 60).sum()) for a in shots]
+        gone, came = np.argwhere(sk[0] & ~sk[1]), np.argwhere(sk[1] & ~sk[0])
+        meas["bend"] = {"drawn_px": drawn, "skin_left_at": gone.mean(0).round().tolist() if len(gone) else None, "skin_came_at": came.mean(0).round().tolist() if len(came) else None}
+        if not (len(gone) and len(came) and came.mean(0)[0] < gone.mean(0)[0] - 10 and came.mean(0)[1] > gone.mean(0)[1]):
+            bad.append(f"bending the elbow did not raise the hand outward: {meas['bend']}")
+        if abs(drawn[1] - drawn[0]) > 0.15 * drawn[0]:
+            bad.append(f"the bent arm lost or gained much of the drawing: {drawn}")
+    # a torso with sleeves is flagged; a skirt kit stands its ankles just under the hem
+    try:
+        kit(sleeves=True).save(tmp / "sleeves.png"); meas["sleeves_warning"] = bool(FK.build(str(tmp / "sleeves.png"), "T")[1]["warnings"])
+        kit(skirt=True).save(tmp / "skirt.png"); pz3, rep3 = FK.build(str(tmp / "skirt.png"), "T"); s3 = rep3["scale"]
+        hem = pz3["parts"]["hip"]["pivot"][1] + (400 + 330 - 0.18 * 301 - 100 - 330) * s3
+        meas["skirt"] = {"detected": rep3["skirt"], "ankle_below_hem_units": round(pz3["parts"]["foot_L"]["pivot"][1] - hem, 1)}
+        if not meas["sleeves_warning"] or not rep3["skirt"] or not 0 < meas["skirt"]["ankle_below_hem_units"] < 0.05 * 820:
+            bad.append(f"sleeves {meas['sleeves_warning']}, skirt {meas['skirt']}")
+    except Exception as e:
+        bad.append(f"sleeves or skirt kit: {e}")
     shutil.rmtree(tmp, ignore_errors=True); pf.unlink(missing_ok=True)
     return bad, meas
 
